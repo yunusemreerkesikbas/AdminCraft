@@ -1,0 +1,1663 @@
+---
+alwaysApply: true
+---
+
+-- =================================================================
+-- SaaS CMS Platform - Multi-Language Database Schema
+-- Architecture: Clean Architecture + Multi-Tenant + i18n
+-- =================================================================
+
+-- =================================================================
+-- MASTER DATABASE: platform_management
+-- Purpose: Platform-level data, tenant management
+-- =================================================================
+
+CREATE DATABASE IF NOT EXISTS platform_management 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
+USE platform_management;
+
+-- -----------------------------------------------------------------
+-- SUPPORTED LANGUAGES TABLE
+-- Centralized language configuration
+-- -----------------------------------------------------------------
+CREATE TABLE supported_languages (
+    id TINYINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(5) UNIQUE NOT NULL COMMENT 'ISO 639-1 code: tr, en, de',
+    name VARCHAR(50) NOT NULL COMMENT 'Turkish, English, German',
+    native_name VARCHAR(50) NOT NULL COMMENT 'Türkçe, English, Deutsch',
+    flag_icon VARCHAR(10) NULL COMMENT 'Flag emoji or icon code',
+    direction ENUM('ltr', 'rtl') DEFAULT 'ltr',
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_code (code),
+    INDEX idx_active (is_active),
+    INDEX idx_sort (sort_order)
+) ENGINE=InnoDB COMMENT='Supported platform languages';
+
+-- Insert default languages
+INSERT INTO supported_languages (code, name, native_name, flag_icon, sort_order) VALUES
+('tr', 'Turkish', 'Türkçe', '🇹🇷', 1),
+('en', 'English', 'English', '🇺🇸', 2);
+
+-- -----------------------------------------------------------------
+-- TENANTS TABLE
+-- Enhanced with multi-language configuration
+-- -----------------------------------------------------------------
+CREATE TABLE tenants (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Basic Info
+    subdomain VARCHAR(50) UNIQUE NOT NULL COMMENT 'customer1.platform.com',
+    company_name VARCHAR(100) NOT NULL,
+    database_name VARCHAR(50) UNIQUE NOT NULL COMMENT 'tenant_1_db',
+    
+    -- Status Management
+    status ENUM('pending', 'active', 'suspended', 'maintenance') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    activated_at TIMESTAMP NULL,
+    
+    -- Language Configuration
+    default_language VARCHAR(5) NOT NULL DEFAULT 'tr' COMMENT 'Default language code',
+    supported_languages JSON NOT NULL DEFAULT '["tr"]' COMMENT 'Array of supported language codes',
+    
+    -- Contact Information
+    admin_email VARCHAR(100) NOT NULL,
+    admin_name VARCHAR(100) NOT NULL,
+    admin_language VARCHAR(5) DEFAULT 'tr' COMMENT 'Admin preferred language',
+    phone VARCHAR(20) NULL,
+    
+    -- Domain Configuration
+    custom_domain VARCHAR(100) NULL COMMENT 'customer.com',
+    ssl_enabled BOOLEAN DEFAULT FALSE,
+    ssl_certificate_path VARCHAR(255) NULL,
+    
+    -- Technical Configuration
+    database_version VARCHAR(10) DEFAULT '1.0',
+    last_backup_at TIMESTAMP NULL,
+    storage_used_mb BIGINT DEFAULT 0,
+    
+    -- Localization Settings
+    timezone VARCHAR(50) DEFAULT 'Europe/Istanbul',
+    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
+    time_format VARCHAR(10) DEFAULT '24h',
+    currency VARCHAR(3) DEFAULT 'TRY',
+    
+    -- Metadata
+    notes TEXT NULL,
+    created_by VARCHAR(100) DEFAULT 'system',
+    
+    -- Foreign Key Constraints
+    FOREIGN KEY (default_language) REFERENCES supported_languages(code),
+    
+    INDEX idx_subdomain (subdomain),
+    INDEX idx_status (status),
+    INDEX idx_default_language (default_language),
+    INDEX idx_custom_domain (custom_domain),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='Multi-language tenant registry';
+
+-- -----------------------------------------------------------------
+-- PLATFORM ADMINS TABLE
+-- Platform administrators with language preferences
+-- -----------------------------------------------------------------
+CREATE TABLE platform_admins (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    role ENUM('super_admin', 'admin', 'support') DEFAULT 'admin',
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (preferred_language) REFERENCES supported_languages(code),
+    INDEX idx_email (email),
+    INDEX idx_role (role),
+    INDEX idx_language (preferred_language)
+) ENGINE=InnoDB COMMENT='Platform administrators';
+
+-- -----------------------------------------------------------------
+-- TENANT ACTIVITIES LOG
+-- Multi-language activity tracking
+-- -----------------------------------------------------------------
+CREATE TABLE tenant_activities (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    activity_type ENUM('created', 'activated', 'suspended', 'domain_added', 'backup_created', 
+                      'login', 'content_published', 'language_added', 'language_removed') NOT NULL,
+    description_key VARCHAR(100) NOT NULL COMMENT 'i18n message key',
+    description_params JSON NULL COMMENT 'Parameters for i18n message',
+    language VARCHAR(5) NULL COMMENT 'Language of the activity',
+    metadata JSON NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    performed_by VARCHAR(100) NULL,
+    performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    INDEX idx_tenant_activity (tenant_id, activity_type),
+    INDEX idx_language (language),
+    INDEX idx_performed_at (performed_at)
+) ENGINE=InnoDB COMMENT='Multi-language tenant activity tracking';
+
+-- =================================================================
+-- TENANT DATABASE TEMPLATE SCHEMA
+-- Schema replicated for each tenant: tenant_{id}_db
+-- =================================================================
+
+-- -----------------------------------------------------------------
+-- USERS TABLE (Per Tenant)
+-- Tenant users with language preferences
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Authentication
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    
+    -- Profile
+    full_name VARCHAR(100) NOT NULL,
+    avatar_url VARCHAR(255) NULL,
+    
+    -- Authorization
+    role ENUM('admin', 'editor', 'viewer') DEFAULT 'editor',
+    permissions JSON NULL COMMENT 'Additional granular permissions',
+    
+    -- Localization Preferences
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    timezone VARCHAR(50) DEFAULT 'Europe/Istanbul',
+    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
+    
+    -- Status
+    is_active BOOLEAN DEFAULT TRUE,
+    email_verified_at TIMESTAMP NULL,
+    last_login_at TIMESTAMP NULL,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NULL,
+    
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_email (email),
+    INDEX idx_role (role),
+    INDEX idx_language (preferred_language),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB COMMENT='Tenant users with language preferences';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TYPES TABLE
+-- Multi-language content type definitions
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_types (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Basic Info
+    name VARCHAR(50) UNIQUE NOT NULL COMMENT 'page, blog_post, product',
+    
+    -- Multi-Language Display Names
+    display_name_tr VARCHAR(100) NULL,
+    display_name_en VARCHAR(100) NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    
+    -- Configuration
+    icon VARCHAR(50) NULL COMMENT 'FontAwesome icon class',
+    fields JSON NOT NULL COMMENT 'Field definitions with types, validation, i18n labels',
+    
+    -- Feature Flags
+    is_active BOOLEAN DEFAULT TRUE,
+    is_system BOOLEAN DEFAULT FALSE COMMENT 'Cannot be deleted',
+    supports_multi_language BOOLEAN DEFAULT TRUE,
+    supports_seo BOOLEAN DEFAULT TRUE,
+    supports_scheduling BOOLEAN DEFAULT TRUE,
+    supports_comments BOOLEAN DEFAULT FALSE,
+    
+    -- URL Configuration
+    url_pattern_tr VARCHAR(100) NULL COMMENT '/{slug}, /blog/{slug}',
+    url_pattern_en VARCHAR(100) NULL,
+    
+    -- Metadata
+    created_by BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    INDEX idx_name (name),
+    INDEX idx_active (is_active),
+    INDEX idx_system (is_system),
+    INDEX idx_multi_language (supports_multi_language)
+) ENGINE=InnoDB COMMENT='Multi-language content type definitions';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENTS TABLE
+-- Multi-language content with translation linking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE contents (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    content_type_id BIGINT NOT NULL,
+    
+    -- Basic Content Info
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL,
+    excerpt TEXT NULL,
+    content_data JSON NOT NULL COMMENT 'All content fields as JSON',
+    
+    -- Language Support
+    language VARCHAR(5) NOT NULL DEFAULT 'tr',
+    translation_group_id BIGINT NULL COMMENT 'Groups related translations',
+    
+    -- Status Management
+    status ENUM('draft', 'published', 'archived', 'scheduled') DEFAULT 'draft',
+    published_at TIMESTAMP NULL,
+    scheduled_at TIMESTAMP NULL,
+    
+    -- SEO Data (Language Specific)
+    meta_title VARCHAR(60) NULL,
+    meta_description VARCHAR(160) NULL,
+    meta_keywords VARCHAR(255) NULL,
+    canonical_url VARCHAR(255) NULL,
+    
+    -- Open Graph (Language Specific)
+    og_title VARCHAR(60) NULL,
+    og_description VARCHAR(160) NULL,
+    og_image VARCHAR(255) NULL,
+    og_type VARCHAR(50) DEFAULT 'article',
+    
+    -- Hierarchy Support
+    parent_id BIGINT NULL COMMENT 'For page hierarchy',
+    sort_order INT DEFAULT 0,
+    
+    -- Versioning
+    version INT DEFAULT 1,
+    is_latest_version BOOLEAN DEFAULT TRUE,
+    
+    -- Analytics
+    view_count BIGINT DEFAULT 0,
+    last_viewed_at TIMESTAMP NULL,
+    
+    -- Workflow
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT NULL,
+    reviewed_by BIGINT NULL COMMENT 'For translation review workflow',
+    reviewed_at TIMESTAMP NULL,
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (content_type_id) REFERENCES content_types(id),
+    FOREIGN KEY (parent_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translation_group_id) REFERENCES contents(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id),
+    FOREIGN KEY (reviewed_by) REFERENCES users(id),
+    
+    UNIQUE KEY uk_slug_language (slug, language),
+    INDEX idx_content_type_status (content_type_id, status),
+    INDEX idx_language (language),
+    INDEX idx_translation_group (translation_group_id),
+    INDEX idx_published_at (published_at),
+    INDEX idx_parent (parent_id),
+    INDEX idx_sort_order (sort_order),
+    INDEX idx_latest_version (is_latest_version),
+    FULLTEXT idx_search (title, excerpt),
+    INDEX idx_scheduled (scheduled_at, status)
+) ENGINE=InnoDB COMMENT='Multi-language content items';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TRANSLATIONS TABLE
+-- Translation relationship and workflow tracking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_translations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    original_content_id BIGINT NOT NULL,
+    translated_content_id BIGINT NOT NULL,
+    source_language VARCHAR(5) NOT NULL,
+    target_language VARCHAR(5) NOT NULL,
+    
+    -- Translation Workflow
+    translation_status ENUM('pending', 'in_progress', 'review', 'completed') DEFAULT 'pending',
+    translator_id BIGINT NULL,
+    reviewer_id BIGINT NULL,
+    
+    -- Quality Metrics
+    translation_quality_score DECIMAL(3,2) NULL COMMENT '0.00 to 1.00',
+    auto_translated BOOLEAN DEFAULT FALSE,
+    human_reviewed BOOLEAN DEFAULT FALSE,
+    
+    -- Workflow Timestamps
+    translation_started_at TIMESTAMP NULL,
+    translation_completed_at TIMESTAMP NULL,
+    review_completed_at TIMESTAMP NULL,
+    
+    -- Metadata
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (original_content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translated_content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translator_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+    
+    UNIQUE KEY uk_translation_pair (original_content_id, target_language),
+    INDEX idx_translation_status (translation_status),
+    INDEX idx_languages (source_language, target_language),
+    INDEX idx_translator (translator_id),
+    INDEX idx_quality (translation_quality_score)
+) ENGINE=InnoDB COMMENT='Content translation workflow';
+*/
+
+-- -----------------------------------------------------------------
+-- MEDIA FILES TABLE
+-- Multi-language media metadata
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE media_files (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- File Properties
+    original_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL COMMENT 'UUID-based filename',
+    file_path VARCHAR(500) NOT NULL,
+    file_url VARCHAR(500) NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_extension VARCHAR(10) NOT NULL,
+    
+    -- Image Properties
+    width INT NULL,
+    height INT NULL,
+    
+    -- Multi-Language Metadata
+    alt_text_tr VARCHAR(255) NULL,
+    alt_text_en VARCHAR(255) NULL,
+    caption_tr TEXT NULL,
+    caption_en TEXT NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    
+    -- Organization
+    folder_path VARCHAR(255) DEFAULT '/',
+    tags JSON NULL COMMENT 'Array of tags for organization',
+    
+    -- Usage Analytics
+    usage_count INT DEFAULT 0,
+    last_used_at TIMESTAMP NULL,
+    
+    -- Metadata
+    uploaded_by BIGINT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (uploaded_by) REFERENCES users(id),
+    
+    INDEX idx_file_name (file_name),
+    INDEX idx_mime_type (mime_type),
+    INDEX idx_folder (folder_path),
+    INDEX idx_uploaded_by (uploaded_by),
+    INDEX idx_usage (usage_count),
+    FULLTEXT idx_search_tr (original_name, alt_text_tr, caption_tr),
+    FULLTEXT idx_search_en (original_name, alt_text_en, caption_en)
+) ENGINE=InnoDB COMMENT='Multi-language media metadata';
+*/
+
+-- -----------------------------------------------------------------
+-- SITE SETTINGS TABLE
+-- Multi-language site configuration
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE site_settings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value JSON NULL,
+    language VARCHAR(5) NULL COMMENT 'NULL for global settings',
+    setting_type ENUM('text', 'number', 'boolean', 'json', 'file', 'i18n_text') DEFAULT 'text',
+    category VARCHAR(50) DEFAULT 'general',
+    display_name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_public BOOLEAN DEFAULT FALSE,
+    sort_order INT DEFAULT 0,
+    updated_by BIGINT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (updated_by) REFERENCES users(id),
+    
+    UNIQUE KEY uk_key_language (setting_key, language),
+    INDEX idx_category (category),
+    INDEX idx_language (language),
+    INDEX idx_public (is_public),
+    INDEX idx_type (setting_type)
+) ENGINE=InnoDB COMMENT='Multi-language site settings';
+*/
+
+-- -----------------------------------------------------------------
+-- MENUS TABLE
+-- Language-specific navigation menus
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE menus (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT 'primary, footer, sidebar',
+    language VARCHAR(5) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    UNIQUE KEY uk_name_language (name, language),
+    INDEX idx_language (language),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB COMMENT='Language-specific menus';
+*/
+
+-- -----------------------------------------------------------------
+-- MENU ITEMS TABLE
+-- Multi-language menu items with hierarchy
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE menu_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    menu_id BIGINT NOT NULL,
+    
+    -- Item Properties
+    title VARCHAR(100) NOT NULL,
+    url VARCHAR(255) NULL,
+    content_id BIGINT NULL COMMENT 'Link to content item',
+    external_url VARCHAR(255) NULL,
+    target VARCHAR(10) DEFAULT '_self',
+    css_class VARCHAR(100) NULL,
+    icon VARCHAR(50) NULL,
+    
+    -- Hierarchy
+    parent_id BIGINT NULL,
+    sort_order INT DEFAULT 0,
+    
+    -- Visibility
+    is_active BOOLEAN DEFAULT TRUE,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (menu_id) REFERENCES menus(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES menu_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE SET NULL,
+    
+    INDEX idx_menu_sort (menu_id, sort_order),
+    INDEX idx_parent (parent_id),
+    INDEX idx_active (is_active),
+    INDEX idx_content (content_id)
+) ENGINE=InnoDB COMMENT='Multi-language menu items';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TAGS TABLE
+-- Multi-language content tagging
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    slug VARCHAR(50) NOT NULL,
+    language VARCHAR(5) NOT NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    color VARCHAR(7) NULL COMMENT 'Hex color code',
+    usage_count INT DEFAULT 0,
+    translation_group_id BIGINT NULL COMMENT 'Link related language versions',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE KEY uk_slug_language (slug, language),
+    INDEX idx_name (name),
+    INDEX idx_language (language),
+    INDEX idx_usage (usage_count),
+    INDEX idx_translation_group (translation_group_id)
+) ENGINE=InnoDB COMMENT='Multi-language content tags';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TAG RELATIONS
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_tag_relations (
+    content_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (content_id, tag_id),
+    FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES content_tags(id) ON DELETE CASCADE,
+    
+    INDEX idx_tag_content (tag_id, content_id)
+) ENGINE=InnoDB COMMENT='Content to tag relationships';
+*/
+
+-- -----------------------------------------------------------------
+-- USER SESSIONS TABLE
+-- Session management with language tracking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE user_sessions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    session_token VARCHAR(255) UNIQUE NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_active (user_id, is_active),
+    INDEX idx_token (session_token),
+    INDEX idx_expires (expires_at),
+    INDEX idx_language (preferred_language)
+) ENGINE=InnoDB COMMENT='Session management with language';
+*/
+
+-- =================================================================
+-- MULTI-LANGUAGE HELPER VIEWS
+-- =================================================================
+
+-- Language-aware content view
+/*
+CREATE VIEW content_with_translations AS
+SELECT 
+    c.id,
+    c.content_type_id,
+    c.title,
+    c.slug,
+    c.language,
+    c.status,
+    c.published_at,
+    c.translation_group_id,
+    COUNT(ct.translated_content_id) as translation_count,
+    GROUP_CONCAT(DISTINCT ct.target_language) as available_languages
+FROM contents c
+LEFT JOIN content_translations ct ON c.id = ct.original_content_id
+WHERE c.is_latest_version = TRUE
+GROUP BY c.id;
+*/
+
+-- =================================================================
+-- SAMPLE DATA AND INITIALIZATION
+-- =================================================================
+
+-- Sample platform admin
+INSERT INTO platform_admins (email, password_hash, full_name, preferred_language, role) VALUES
+('admin@platform.com', '$2y$10$example_hash_here', 'Platform Administrator', 'tr', 'super_admin');
+
+-- Sample tenant with multi-language support
+INSERT INTO tenants (
+    subdomain, company_name, database_name, status,
+    admin_email, admin_name, admin_language,
+    default_language, supported_languages,
+    timezone, currency
+) VALUES (
+    'demo', 'Demo Şirketi A.Ş.', 'tenant_demo_db', 'active',
+    'admin@demo.com', 'Ahmet Yılmaz', 'tr',
+    'tr', '["tr", "en"]',
+    'Europe/Istanbul', 'TRY'
+);
+
+-- =================================================================
+-- TENANT DATABASE CREATION PROCEDURE
+-- =================================================================
+
+DELIMITER //
+
+CREATE PROCEDURE CreateMultiLanguageTenantDatabase(
+    IN tenant_id BIGINT, 
+    IN db_name VARCHAR(50),
+    IN default_lang VARCHAR(5),
+    IN supported_langs JSON
+)
+BEGIN
+    DECLARE sql_stmt TEXT;
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE table_name VARCHAR(100);
+    
+    -- Cursor for table creation
+    DECLARE table_cursor CURSOR FOR 
+        SELECT 'users', 'content_types', 'contents', 'content_translations',
+               'media_files', 'site_settings', 'menus', 'menu_items',
+               'content_tags', 'content_tag_relations', 'user_sessions';
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    -- Create database
+    SET sql_stmt = CONCAT('CREATE DATABASE IF NOT EXISTS ', db_name, 
+                         ' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Use database
+    SET sql_stmt = CONCAT('USE ', db_name);
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Create all tenant tables (implementation would read from template)
+    -- Insert default content types
+    CALL InsertDefaultContentTypes(default_lang, supported_langs);
+    
+    -- Create default menus for each language
+    CALL CreateDefaultMenus(supported_langs);
+    
+    -- Insert default site settings
+    CALL InsertDefaultSiteSettings(default_lang, supported_langs);
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- PERFORMANCE OPTIMIZATIONS
+-- =================================================================
+
+-- Partitioning for large content tables (future optimization)
+/*
+ALTER TABLE contents 
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2024 VALUES LESS THAN (2025),
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p_future VALUES LESS THAN MAXVALUE
+);
+*/
+
+-- Full-text search optimization
+/*
+ALTER TABLE contents ADD FULLTEXT(title, excerpt);
+ALTER TABLE media_files ADD FULLTEXT(original_name, alt_text_tr, alt_text_en);
+*/
+
+-- =================================================================
+-- MIGRATION SCRIPTS FOR MULTI-LANGUAGE SUPPORT
+-- =================================================================
+
+-- Migration: Add language support to existing tenant
+DELIMITER //
+
+CREATE PROCEDURE AddLanguageToTenant(
+    IN tenant_db_name VARCHAR(50),
+    IN new_language VARCHAR(5)
+)
+BEGIN
+    DECLARE sql_stmt TEXT;
+    
+    -- Use tenant database
+    SET sql_stmt = CONCAT('USE ', tenant_db_name);
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Add language columns to media_files if not exists
+    SET sql_stmt = CONCAT('ALTER TABLE media_files ADD COLUMN alt_text_', new_language, ' VARCHAR(255) NULL');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    SET sql_stmt = CONCAT('ALTER TABLE media_files ADD COLUMN caption_', new_language, ' TEXT NULL');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Create default menu for new language
+    INSERT INTO menus (name, language, display_name) VALUES
+    ('primary', new_language, 'Primary Menu'),
+    ('footer', new_language, 'Footer Menu');
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- BACKUP AND MAINTENANCE PROCEDURES
+-- =================================================================
+
+-- Language-aware backup procedure
+DELIMITER //
+
+CREATE PROCEDURE BackupTenantWithLanguages(IN tenant_id BIGINT)
+BEGIN
+    DECLARE db_name VARCHAR(50);
+    DECLARE supported_langs JSON;
+    DECLARE backup_path VARCHAR(255);
+    
+    -- Get tenant info
+    SELECT database_name, supported_languages 
+    INTO db_name, supported_langs
+    FROM tenants 
+    WHERE id = tenant_id;
+    
+    -- Create backup with language metadata
+    SET backup_path = CONCAT('/backups/', db_name, '_', 
+                           DATE_FORMAT(NOW(), '%Y%m%d_%H%i%s'), 
+                           '_multilang.sql');
+    
+    -- Update backup timestamp
+    UPDATE tenants 
+    SET last_backup_at = NOW() 
+    WHERE id = tenant_id;
+    
+    -- Log activity with language info
+    INSERT INTO tenant_activities (
+        tenant_id, activity_type, description_key, 
+        description_params, performed_by
+    ) VALUES (
+        tenant_id, 'backup_created', 'backup.created',
+        JSON_OBJECT('backup_path', backup_path, 'languages', supported_langs),
+        'system'
+    );
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- ANALYTICS AND REPORTING VIEWS
+-- =================================================================
+
+-- Multi-language content statistics
+CREATE VIEW content_language_stats AS
+SELECT 
+    language,
+    COUNT(*) as total_contents,
+    COUNT(CASE WHEN status = 'published' THEN 1 END) as published_contents,
+    COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft_contents,
+    AVG(view_count) as avg_views,
+    MAX(updated_at) as last_update
+FROM contents
+WHERE is_latest_version = TRUE
+GROUP BY language;
+
+-- Translation completion rates
+CREATE VIEW translation_completion_stats AS
+SELECT 
+    source_language,
+    target_language,
+    COUNT(*) as total_translations,
+    COUNT(CASE WHEN translation_status = 'completed' THEN 1 END) as completed,
+    COUNT(CASE WHEN translation_status = 'pending' THEN 1 END) as pending,
+    AVG(translation_quality_score) as avg_quality,
+    COUNT(CASE WHEN human_reviewed = TRUE THEN 1 END) as human_reviewed
+FROM content_translations
+GROUP BY source_language, target_language;
+
+-- =================================================================
+-- INDEXES FOR PERFORMANCE
+-- =================================================================
+
+-- Composite indexes for common queries
+-- Already defined in table creation, but additional ones:
+
+/*
+-- Multi-language content queries
+CREATE INDEX idx_content_lang_status_published ON contents(language, status, published_at);
+CREATE INDEX idx_content_translation_group_lang ON contents(translation_group_id, language);
+
+-- Media file language queries  
+CREATE INDEX idx_media_usage_lang ON media_files(usage_count, uploaded_at);
+
+-- Translation workflow queries
+CREATE INDEX idx_translation_workflow ON content_translations(translation_status, translator_id);
+CREATE INDEX idx_translation_quality ON content_translations(translation_quality_score, human_reviewed);
+
+-- Menu language queries
+CREATE INDEX idx_menu_lang_active ON menus(language, is_active);
+CREATE INDEX idx_menu_items_menu_sort ON menu_items(menu_id, sort_order, is_active);
+*/-- =================================================================
+-- SaaS CMS Platform - Multi-Language Database Schema
+-- Architecture: Clean Architecture + Multi-Tenant + i18n
+-- =================================================================
+
+-- =================================================================
+-- MASTER DATABASE: platform_management
+-- Purpose: Platform-level data, tenant management
+-- =================================================================
+
+CREATE DATABASE IF NOT EXISTS platform_management 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
+USE platform_management;
+
+-- -----------------------------------------------------------------
+-- SUPPORTED LANGUAGES TABLE
+-- Centralized language configuration
+-- -----------------------------------------------------------------
+CREATE TABLE supported_languages (
+    id TINYINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(5) UNIQUE NOT NULL COMMENT 'ISO 639-1 code: tr, en, de',
+    name VARCHAR(50) NOT NULL COMMENT 'Turkish, English, German',
+    native_name VARCHAR(50) NOT NULL COMMENT 'Türkçe, English, Deutsch',
+    flag_icon VARCHAR(10) NULL COMMENT 'Flag emoji or icon code',
+    direction ENUM('ltr', 'rtl') DEFAULT 'ltr',
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_code (code),
+    INDEX idx_active (is_active),
+    INDEX idx_sort (sort_order)
+) ENGINE=InnoDB COMMENT='Supported platform languages';
+
+-- Insert default languages
+INSERT INTO supported_languages (code, name, native_name, flag_icon, sort_order) VALUES
+('tr', 'Turkish', 'Türkçe', '🇹🇷', 1),
+('en', 'English', 'English', '🇺🇸', 2);
+
+-- -----------------------------------------------------------------
+-- TENANTS TABLE
+-- Enhanced with multi-language configuration
+-- -----------------------------------------------------------------
+CREATE TABLE tenants (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Basic Info
+    subdomain VARCHAR(50) UNIQUE NOT NULL COMMENT 'customer1.platform.com',
+    company_name VARCHAR(100) NOT NULL,
+    database_name VARCHAR(50) UNIQUE NOT NULL COMMENT 'tenant_1_db',
+    
+    -- Status Management
+    status ENUM('pending', 'active', 'suspended', 'maintenance') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    activated_at TIMESTAMP NULL,
+    
+    -- Language Configuration
+    default_language VARCHAR(5) NOT NULL DEFAULT 'tr' COMMENT 'Default language code',
+    supported_languages JSON NOT NULL DEFAULT '["tr"]' COMMENT 'Array of supported language codes',
+    
+    -- Contact Information
+    admin_email VARCHAR(100) NOT NULL,
+    admin_name VARCHAR(100) NOT NULL,
+    admin_language VARCHAR(5) DEFAULT 'tr' COMMENT 'Admin preferred language',
+    phone VARCHAR(20) NULL,
+    
+    -- Domain Configuration
+    custom_domain VARCHAR(100) NULL COMMENT 'customer.com',
+    ssl_enabled BOOLEAN DEFAULT FALSE,
+    ssl_certificate_path VARCHAR(255) NULL,
+    
+    -- Technical Configuration
+    database_version VARCHAR(10) DEFAULT '1.0',
+    last_backup_at TIMESTAMP NULL,
+    storage_used_mb BIGINT DEFAULT 0,
+    
+    -- Localization Settings
+    timezone VARCHAR(50) DEFAULT 'Europe/Istanbul',
+    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
+    time_format VARCHAR(10) DEFAULT '24h',
+    currency VARCHAR(3) DEFAULT 'TRY',
+    
+    -- Metadata
+    notes TEXT NULL,
+    created_by VARCHAR(100) DEFAULT 'system',
+    
+    -- Foreign Key Constraints
+    FOREIGN KEY (default_language) REFERENCES supported_languages(code),
+    
+    INDEX idx_subdomain (subdomain),
+    INDEX idx_status (status),
+    INDEX idx_default_language (default_language),
+    INDEX idx_custom_domain (custom_domain),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='Multi-language tenant registry';
+
+-- -----------------------------------------------------------------
+-- PLATFORM ADMINS TABLE
+-- Platform administrators with language preferences
+-- -----------------------------------------------------------------
+CREATE TABLE platform_admins (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    role ENUM('super_admin', 'admin', 'support') DEFAULT 'admin',
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (preferred_language) REFERENCES supported_languages(code),
+    INDEX idx_email (email),
+    INDEX idx_role (role),
+    INDEX idx_language (preferred_language)
+) ENGINE=InnoDB COMMENT='Platform administrators';
+
+-- -----------------------------------------------------------------
+-- TENANT ACTIVITIES LOG
+-- Multi-language activity tracking
+-- -----------------------------------------------------------------
+CREATE TABLE tenant_activities (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    activity_type ENUM('created', 'activated', 'suspended', 'domain_added', 'backup_created', 
+                      'login', 'content_published', 'language_added', 'language_removed') NOT NULL,
+    description_key VARCHAR(100) NOT NULL COMMENT 'i18n message key',
+    description_params JSON NULL COMMENT 'Parameters for i18n message',
+    language VARCHAR(5) NULL COMMENT 'Language of the activity',
+    metadata JSON NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    performed_by VARCHAR(100) NULL,
+    performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    INDEX idx_tenant_activity (tenant_id, activity_type),
+    INDEX idx_language (language),
+    INDEX idx_performed_at (performed_at)
+) ENGINE=InnoDB COMMENT='Multi-language tenant activity tracking';
+
+-- =================================================================
+-- TENANT DATABASE TEMPLATE SCHEMA
+-- Schema replicated for each tenant: tenant_{id}_db
+-- =================================================================
+
+-- -----------------------------------------------------------------
+-- USERS TABLE (Per Tenant)
+-- Tenant users with language preferences
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Authentication
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    
+    -- Profile
+    full_name VARCHAR(100) NOT NULL,
+    avatar_url VARCHAR(255) NULL,
+    
+    -- Authorization
+    role ENUM('admin', 'editor', 'viewer') DEFAULT 'editor',
+    permissions JSON NULL COMMENT 'Additional granular permissions',
+    
+    -- Localization Preferences
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    timezone VARCHAR(50) DEFAULT 'Europe/Istanbul',
+    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
+    
+    -- Status
+    is_active BOOLEAN DEFAULT TRUE,
+    email_verified_at TIMESTAMP NULL,
+    last_login_at TIMESTAMP NULL,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NULL,
+    
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_email (email),
+    INDEX idx_role (role),
+    INDEX idx_language (preferred_language),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB COMMENT='Tenant users with language preferences';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TYPES TABLE
+-- Multi-language content type definitions
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_types (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Basic Info
+    name VARCHAR(50) UNIQUE NOT NULL COMMENT 'page, blog_post, product',
+    
+    -- Multi-Language Display Names
+    display_name_tr VARCHAR(100) NULL,
+    display_name_en VARCHAR(100) NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    
+    -- Configuration
+    icon VARCHAR(50) NULL COMMENT 'FontAwesome icon class',
+    fields JSON NOT NULL COMMENT 'Field definitions with types, validation, i18n labels',
+    
+    -- Feature Flags
+    is_active BOOLEAN DEFAULT TRUE,
+    is_system BOOLEAN DEFAULT FALSE COMMENT 'Cannot be deleted',
+    supports_multi_language BOOLEAN DEFAULT TRUE,
+    supports_seo BOOLEAN DEFAULT TRUE,
+    supports_scheduling BOOLEAN DEFAULT TRUE,
+    supports_comments BOOLEAN DEFAULT FALSE,
+    
+    -- URL Configuration
+    url_pattern_tr VARCHAR(100) NULL COMMENT '/{slug}, /blog/{slug}',
+    url_pattern_en VARCHAR(100) NULL,
+    
+    -- Metadata
+    created_by BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    INDEX idx_name (name),
+    INDEX idx_active (is_active),
+    INDEX idx_system (is_system),
+    INDEX idx_multi_language (supports_multi_language)
+) ENGINE=InnoDB COMMENT='Multi-language content type definitions';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENTS TABLE
+-- Multi-language content with translation linking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE contents (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    content_type_id BIGINT NOT NULL,
+    
+    -- Basic Content Info
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL,
+    excerpt TEXT NULL,
+    content_data JSON NOT NULL COMMENT 'All content fields as JSON',
+    
+    -- Language Support
+    language VARCHAR(5) NOT NULL DEFAULT 'tr',
+    translation_group_id BIGINT NULL COMMENT 'Groups related translations',
+    
+    -- Status Management
+    status ENUM('draft', 'published', 'archived', 'scheduled') DEFAULT 'draft',
+    published_at TIMESTAMP NULL,
+    scheduled_at TIMESTAMP NULL,
+    
+    -- SEO Data (Language Specific)
+    meta_title VARCHAR(60) NULL,
+    meta_description VARCHAR(160) NULL,
+    meta_keywords VARCHAR(255) NULL,
+    canonical_url VARCHAR(255) NULL,
+    
+    -- Open Graph (Language Specific)
+    og_title VARCHAR(60) NULL,
+    og_description VARCHAR(160) NULL,
+    og_image VARCHAR(255) NULL,
+    og_type VARCHAR(50) DEFAULT 'article',
+    
+    -- Hierarchy Support
+    parent_id BIGINT NULL COMMENT 'For page hierarchy',
+    sort_order INT DEFAULT 0,
+    
+    -- Versioning
+    version INT DEFAULT 1,
+    is_latest_version BOOLEAN DEFAULT TRUE,
+    
+    -- Analytics
+    view_count BIGINT DEFAULT 0,
+    last_viewed_at TIMESTAMP NULL,
+    
+    -- Workflow
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT NULL,
+    reviewed_by BIGINT NULL COMMENT 'For translation review workflow',
+    reviewed_at TIMESTAMP NULL,
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (content_type_id) REFERENCES content_types(id),
+    FOREIGN KEY (parent_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translation_group_id) REFERENCES contents(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (updated_by) REFERENCES users(id),
+    FOREIGN KEY (reviewed_by) REFERENCES users(id),
+    
+    UNIQUE KEY uk_slug_language (slug, language),
+    INDEX idx_content_type_status (content_type_id, status),
+    INDEX idx_language (language),
+    INDEX idx_translation_group (translation_group_id),
+    INDEX idx_published_at (published_at),
+    INDEX idx_parent (parent_id),
+    INDEX idx_sort_order (sort_order),
+    INDEX idx_latest_version (is_latest_version),
+    FULLTEXT idx_search (title, excerpt),
+    INDEX idx_scheduled (scheduled_at, status)
+) ENGINE=InnoDB COMMENT='Multi-language content items';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TRANSLATIONS TABLE
+-- Translation relationship and workflow tracking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_translations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    original_content_id BIGINT NOT NULL,
+    translated_content_id BIGINT NOT NULL,
+    source_language VARCHAR(5) NOT NULL,
+    target_language VARCHAR(5) NOT NULL,
+    
+    -- Translation Workflow
+    translation_status ENUM('pending', 'in_progress', 'review', 'completed') DEFAULT 'pending',
+    translator_id BIGINT NULL,
+    reviewer_id BIGINT NULL,
+    
+    -- Quality Metrics
+    translation_quality_score DECIMAL(3,2) NULL COMMENT '0.00 to 1.00',
+    auto_translated BOOLEAN DEFAULT FALSE,
+    human_reviewed BOOLEAN DEFAULT FALSE,
+    
+    -- Workflow Timestamps
+    translation_started_at TIMESTAMP NULL,
+    translation_completed_at TIMESTAMP NULL,
+    review_completed_at TIMESTAMP NULL,
+    
+    -- Metadata
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (original_content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translated_content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (translator_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+    
+    UNIQUE KEY uk_translation_pair (original_content_id, target_language),
+    INDEX idx_translation_status (translation_status),
+    INDEX idx_languages (source_language, target_language),
+    INDEX idx_translator (translator_id),
+    INDEX idx_quality (translation_quality_score)
+) ENGINE=InnoDB COMMENT='Content translation workflow';
+*/
+
+-- -----------------------------------------------------------------
+-- MEDIA FILES TABLE
+-- Multi-language media metadata
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE media_files (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- File Properties
+    original_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL COMMENT 'UUID-based filename',
+    file_path VARCHAR(500) NOT NULL,
+    file_url VARCHAR(500) NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_extension VARCHAR(10) NOT NULL,
+    
+    -- Image Properties
+    width INT NULL,
+    height INT NULL,
+    
+    -- Multi-Language Metadata
+    alt_text_tr VARCHAR(255) NULL,
+    alt_text_en VARCHAR(255) NULL,
+    caption_tr TEXT NULL,
+    caption_en TEXT NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    
+    -- Organization
+    folder_path VARCHAR(255) DEFAULT '/',
+    tags JSON NULL COMMENT 'Array of tags for organization',
+    
+    -- Usage Analytics
+    usage_count INT DEFAULT 0,
+    last_used_at TIMESTAMP NULL,
+    
+    -- Metadata
+    uploaded_by BIGINT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (uploaded_by) REFERENCES users(id),
+    
+    INDEX idx_file_name (file_name),
+    INDEX idx_mime_type (mime_type),
+    INDEX idx_folder (folder_path),
+    INDEX idx_uploaded_by (uploaded_by),
+    INDEX idx_usage (usage_count),
+    FULLTEXT idx_search_tr (original_name, alt_text_tr, caption_tr),
+    FULLTEXT idx_search_en (original_name, alt_text_en, caption_en)
+) ENGINE=InnoDB COMMENT='Multi-language media metadata';
+*/
+
+-- -----------------------------------------------------------------
+-- SITE SETTINGS TABLE
+-- Multi-language site configuration
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE site_settings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value JSON NULL,
+    language VARCHAR(5) NULL COMMENT 'NULL for global settings',
+    setting_type ENUM('text', 'number', 'boolean', 'json', 'file', 'i18n_text') DEFAULT 'text',
+    category VARCHAR(50) DEFAULT 'general',
+    display_name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_public BOOLEAN DEFAULT FALSE,
+    sort_order INT DEFAULT 0,
+    updated_by BIGINT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (updated_by) REFERENCES users(id),
+    
+    UNIQUE KEY uk_key_language (setting_key, language),
+    INDEX idx_category (category),
+    INDEX idx_language (language),
+    INDEX idx_public (is_public),
+    INDEX idx_type (setting_type)
+) ENGINE=InnoDB COMMENT='Multi-language site settings';
+*/
+
+-- -----------------------------------------------------------------
+-- MENUS TABLE
+-- Language-specific navigation menus
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE menus (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT 'primary, footer, sidebar',
+    language VARCHAR(5) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    UNIQUE KEY uk_name_language (name, language),
+    INDEX idx_language (language),
+    INDEX idx_active (is_active)
+) ENGINE=InnoDB COMMENT='Language-specific menus';
+*/
+
+-- -----------------------------------------------------------------
+-- MENU ITEMS TABLE
+-- Multi-language menu items with hierarchy
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE menu_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    menu_id BIGINT NOT NULL,
+    
+    -- Item Properties
+    title VARCHAR(100) NOT NULL,
+    url VARCHAR(255) NULL,
+    content_id BIGINT NULL COMMENT 'Link to content item',
+    external_url VARCHAR(255) NULL,
+    target VARCHAR(10) DEFAULT '_self',
+    css_class VARCHAR(100) NULL,
+    icon VARCHAR(50) NULL,
+    
+    -- Hierarchy
+    parent_id BIGINT NULL,
+    sort_order INT DEFAULT 0,
+    
+    -- Visibility
+    is_active BOOLEAN DEFAULT TRUE,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (menu_id) REFERENCES menus(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES menu_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE SET NULL,
+    
+    INDEX idx_menu_sort (menu_id, sort_order),
+    INDEX idx_parent (parent_id),
+    INDEX idx_active (is_active),
+    INDEX idx_content (content_id)
+) ENGINE=InnoDB COMMENT='Multi-language menu items';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TAGS TABLE
+-- Multi-language content tagging
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    slug VARCHAR(50) NOT NULL,
+    language VARCHAR(5) NOT NULL,
+    description_tr TEXT NULL,
+    description_en TEXT NULL,
+    color VARCHAR(7) NULL COMMENT 'Hex color code',
+    usage_count INT DEFAULT 0,
+    translation_group_id BIGINT NULL COMMENT 'Link related language versions',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE KEY uk_slug_language (slug, language),
+    INDEX idx_name (name),
+    INDEX idx_language (language),
+    INDEX idx_usage (usage_count),
+    INDEX idx_translation_group (translation_group_id)
+) ENGINE=InnoDB COMMENT='Multi-language content tags';
+*/
+
+-- -----------------------------------------------------------------
+-- CONTENT TAG RELATIONS
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE content_tag_relations (
+    content_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (content_id, tag_id),
+    FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES content_tags(id) ON DELETE CASCADE,
+    
+    INDEX idx_tag_content (tag_id, content_id)
+) ENGINE=InnoDB COMMENT='Content to tag relationships';
+*/
+
+-- -----------------------------------------------------------------
+-- USER SESSIONS TABLE
+-- Session management with language tracking
+-- -----------------------------------------------------------------
+/*
+CREATE TABLE user_sessions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    session_token VARCHAR(255) UNIQUE NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    preferred_language VARCHAR(5) DEFAULT 'tr',
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_active (user_id, is_active),
+    INDEX idx_token (session_token),
+    INDEX idx_expires (expires_at),
+    INDEX idx_language (preferred_language)
+) ENGINE=InnoDB COMMENT='Session management with language';
+*/
+
+-- =================================================================
+-- MULTI-LANGUAGE HELPER VIEWS
+-- =================================================================
+
+-- Language-aware content view
+/*
+CREATE VIEW content_with_translations AS
+SELECT 
+    c.id,
+    c.content_type_id,
+    c.title,
+    c.slug,
+    c.language,
+    c.status,
+    c.published_at,
+    c.translation_group_id,
+    COUNT(ct.translated_content_id) as translation_count,
+    GROUP_CONCAT(DISTINCT ct.target_language) as available_languages
+FROM contents c
+LEFT JOIN content_translations ct ON c.id = ct.original_content_id
+WHERE c.is_latest_version = TRUE
+GROUP BY c.id;
+*/
+
+-- =================================================================
+-- SAMPLE DATA AND INITIALIZATION
+-- =================================================================
+
+-- Sample platform admin
+INSERT INTO platform_admins (email, password_hash, full_name, preferred_language, role) VALUES
+('admin@platform.com', '$2y$10$example_hash_here', 'Platform Administrator', 'tr', 'super_admin');
+
+-- Sample tenant with multi-language support
+INSERT INTO tenants (
+    subdomain, company_name, database_name, status,
+    admin_email, admin_name, admin_language,
+    default_language, supported_languages,
+    timezone, currency
+) VALUES (
+    'demo', 'Demo Şirketi A.Ş.', 'tenant_demo_db', 'active',
+    'admin@demo.com', 'Ahmet Yılmaz', 'tr',
+    'tr', '["tr", "en"]',
+    'Europe/Istanbul', 'TRY'
+);
+
+-- =================================================================
+-- TENANT DATABASE CREATION PROCEDURE
+-- =================================================================
+
+DELIMITER //
+
+CREATE PROCEDURE CreateMultiLanguageTenantDatabase(
+    IN tenant_id BIGINT, 
+    IN db_name VARCHAR(50),
+    IN default_lang VARCHAR(5),
+    IN supported_langs JSON
+)
+BEGIN
+    DECLARE sql_stmt TEXT;
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE table_name VARCHAR(100);
+    
+    -- Cursor for table creation
+    DECLARE table_cursor CURSOR FOR 
+        SELECT 'users', 'content_types', 'contents', 'content_translations',
+               'media_files', 'site_settings', 'menus', 'menu_items',
+               'content_tags', 'content_tag_relations', 'user_sessions';
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    -- Create database
+    SET sql_stmt = CONCAT('CREATE DATABASE IF NOT EXISTS ', db_name, 
+                         ' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Use database
+    SET sql_stmt = CONCAT('USE ', db_name);
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Create all tenant tables (implementation would read from template)
+    -- Insert default content types
+    CALL InsertDefaultContentTypes(default_lang, supported_langs);
+    
+    -- Create default menus for each language
+    CALL CreateDefaultMenus(supported_langs);
+    
+    -- Insert default site settings
+    CALL InsertDefaultSiteSettings(default_lang, supported_langs);
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- PERFORMANCE OPTIMIZATIONS
+-- =================================================================
+
+-- Partitioning for large content tables (future optimization)
+/*
+ALTER TABLE contents 
+PARTITION BY RANGE (YEAR(created_at)) (
+    PARTITION p2024 VALUES LESS THAN (2025),
+    PARTITION p2025 VALUES LESS THAN (2026),
+    PARTITION p_future VALUES LESS THAN MAXVALUE
+);
+*/
+
+-- Full-text search optimization
+/*
+ALTER TABLE contents ADD FULLTEXT(title, excerpt);
+ALTER TABLE media_files ADD FULLTEXT(original_name, alt_text_tr, alt_text_en);
+*/
+
+-- =================================================================
+-- MIGRATION SCRIPTS FOR MULTI-LANGUAGE SUPPORT
+-- =================================================================
+
+-- Migration: Add language support to existing tenant
+DELIMITER //
+
+CREATE PROCEDURE AddLanguageToTenant(
+    IN tenant_db_name VARCHAR(50),
+    IN new_language VARCHAR(5)
+)
+BEGIN
+    DECLARE sql_stmt TEXT;
+    
+    -- Use tenant database
+    SET sql_stmt = CONCAT('USE ', tenant_db_name);
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Add language columns to media_files if not exists
+    SET sql_stmt = CONCAT('ALTER TABLE media_files ADD COLUMN alt_text_', new_language, ' VARCHAR(255) NULL');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    SET sql_stmt = CONCAT('ALTER TABLE media_files ADD COLUMN caption_', new_language, ' TEXT NULL');
+    SET @sql = sql_stmt;
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Create default menu for new language
+    INSERT INTO menus (name, language, display_name) VALUES
+    ('primary', new_language, 'Primary Menu'),
+    ('footer', new_language, 'Footer Menu');
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- BACKUP AND MAINTENANCE PROCEDURES
+-- =================================================================
+
+-- Language-aware backup procedure
+DELIMITER //
+
+CREATE PROCEDURE BackupTenantWithLanguages(IN tenant_id BIGINT)
+BEGIN
+    DECLARE db_name VARCHAR(50);
+    DECLARE supported_langs JSON;
+    DECLARE backup_path VARCHAR(255);
+    
+    -- Get tenant info
+    SELECT database_name, supported_languages 
+    INTO db_name, supported_langs
+    FROM tenants 
+    WHERE id = tenant_id;
+    
+    -- Create backup with language metadata
+    SET backup_path = CONCAT('/backups/', db_name, '_', 
+                           DATE_FORMAT(NOW(), '%Y%m%d_%H%i%s'), 
+                           '_multilang.sql');
+    
+    -- Update backup timestamp
+    UPDATE tenants 
+    SET last_backup_at = NOW() 
+    WHERE id = tenant_id;
+    
+    -- Log activity with language info
+    INSERT INTO tenant_activities (
+        tenant_id, activity_type, description_key, 
+        description_params, performed_by
+    ) VALUES (
+        tenant_id, 'backup_created', 'backup.created',
+        JSON_OBJECT('backup_path', backup_path, 'languages', supported_langs),
+        'system'
+    );
+    
+END //
+
+DELIMITER ;
+
+-- =================================================================
+-- ANALYTICS AND REPORTING VIEWS
+-- =================================================================
+
+-- Multi-language content statistics
+CREATE VIEW content_language_stats AS
+SELECT 
+    language,
+    COUNT(*) as total_contents,
+    COUNT(CASE WHEN status = 'published' THEN 1 END) as published_contents,
+    COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft_contents,
+    AVG(view_count) as avg_views,
+    MAX(updated_at) as last_update
+FROM contents
+WHERE is_latest_version = TRUE
+GROUP BY language;
+
+-- Translation completion rates
+CREATE VIEW translation_completion_stats AS
+SELECT 
+    source_language,
+    target_language,
+    COUNT(*) as total_translations,
+    COUNT(CASE WHEN translation_status = 'completed' THEN 1 END) as completed,
+    COUNT(CASE WHEN translation_status = 'pending' THEN 1 END) as pending,
+    AVG(translation_quality_score) as avg_quality,
+    COUNT(CASE WHEN human_reviewed = TRUE THEN 1 END) as human_reviewed
+FROM content_translations
+GROUP BY source_language, target_language;
+
+-- =================================================================
+-- INDEXES FOR PERFORMANCE
+-- =================================================================
+
+-- Composite indexes for common queries
+-- Already defined in table creation, but additional ones:
+
+/*
+-- Multi-language content queries
+CREATE INDEX idx_content_lang_status_published ON contents(language, status, published_at);
+CREATE INDEX idx_content_translation_group_lang ON contents(translation_group_id, language);
+
+-- Media file language queries  
+CREATE INDEX idx_media_usage_lang ON media_files(usage_count, uploaded_at);
+
+-- Translation workflow queries
+CREATE INDEX idx_translation_workflow ON content_translations(translation_status, translator_id);
+CREATE INDEX idx_translation_quality ON content_translations(translation_quality_score, human_reviewed);
+
+-- Menu language queries
+CREATE INDEX idx_menu_lang_active ON menus(language, is_active);
+CREATE INDEX idx_menu_items_menu_sort ON menu_items(menu_id, sort_order, is_active);
+*/
