@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS tenants (
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     role ENUM('SUPER_ADMIN', 'TENANT_ADMIN', 'EDITOR', 'VIEWER') DEFAULT 'VIEWER',
@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS users (
     last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_email_tenant (email, tenant_id),
     INDEX idx_email (email),
     INDEX idx_tenant_id (tenant_id),
     INDEX idx_role (role),
     INDEX idx_is_active (is_active),
+    INDEX idx_tenant_role (tenant_id, role),
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
