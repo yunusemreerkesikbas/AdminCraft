@@ -40,9 +40,13 @@ public class DatabaseConfig {
 
     @Primary
     @Bean
-    @ConfigurationProperties("spring.datasource")
     public DataSource dataSource() {
-        return DataSourceBuilder.create().build();
+        return DataSourceBuilder.create()
+            .url(environment.getProperty("spring.datasource.url"))
+            .username(environment.getProperty("spring.datasource.username"))
+            .password(environment.getProperty("spring.datasource.password"))
+            .driverClassName(environment.getProperty("spring.datasource.driver-class-name"))
+            .build();
     }
 
     @Primary
