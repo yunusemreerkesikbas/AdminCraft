@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -53,7 +54,7 @@ public class Tenant {
     @CollectionTable(name = "tenant_supported_languages", 
                     joinColumns = @JoinColumn(name = "tenant_id"))
     @Column(name = "language")
-    private Set<Language> supportedLanguages = Set.of(Language.TR);
+    private Set<Language> supportedLanguages = new HashSet<>(Set.of(Language.TR));
     
     @Email(message = "validation.email.invalid")
     @NotBlank(message = "validation.admin.email.required")

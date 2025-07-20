@@ -68,7 +68,9 @@ public record CreateTenantRequest(
         }
         // Ensure default language is in supported languages
         if (!supportedLanguages.contains(defaultLanguage)) {
-            supportedLanguages = Set.of(defaultLanguage);
+            var mutableLanguages = new java.util.HashSet<>(supportedLanguages);
+            mutableLanguages.add(defaultLanguage);
+            supportedLanguages = Set.copyOf(mutableLanguages);
         }
     }
 }
