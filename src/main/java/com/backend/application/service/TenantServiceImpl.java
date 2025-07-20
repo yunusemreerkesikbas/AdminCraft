@@ -96,7 +96,7 @@ public class TenantServiceImpl implements TenantService {
         }
         if (request.customDomain() != null) {
             if (!request.customDomain().isEmpty() && 
-                tenantRepository.existsByCustomDomain(request.customDomain())) {
+                tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
                 throw new IllegalArgumentException("Custom domain already exists: " + request.customDomain());
             }
             tenant.setCustomDomain(request.customDomain());

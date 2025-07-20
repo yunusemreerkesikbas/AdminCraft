@@ -76,6 +76,11 @@ public class TenantRepositoryImpl implements TenantRepository {
     }
 
     @Override
+    public boolean existsByCustomDomainAndIdNot(String customDomain, Long id) {
+        return tenantJpaRepository.existsByCustomDomainAndIdNot(customDomain, id);
+    }
+
+    @Override
     public long countByStatus(TenantStatus status) {
         return tenantJpaRepository.countByStatus(status);
     }

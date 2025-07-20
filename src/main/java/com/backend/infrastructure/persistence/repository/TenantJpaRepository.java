@@ -29,6 +29,8 @@ public interface TenantJpaRepository extends JpaRepository<Tenant, Long> {
 
     boolean existsByCustomDomain(String customDomain);
 
+    boolean existsByCustomDomainAndIdNot(String customDomain, Long id);
+
     long countByStatus(TenantStatus status);
 
     @Query("SELECT t FROM Tenant t WHERE t.status = :status ORDER BY t.createdAt DESC")

@@ -32,5 +32,7 @@ public interface TenantRepository {
     
     boolean existsByCustomDomain(String customDomain);
     
+    boolean existsByCustomDomainAndIdNot(String customDomain, Long id);
+    
     long countByStatus(TenantStatus status);
 }
