@@ -1,14 +1,16 @@
 package com.backend.domain.enums;
 
-public enum Language {
-    TR("tr", "Türkçe", "Turkish"),
-    EN("en", "İngilizce", "English");
+public enum TenantStatus {
+    PENDING("pending", "Onay Bekliyor", "Pending Approval"),
+    ACTIVE("active", "Aktif", "Active"),
+    SUSPENDED("suspended", "Askıya Alındı", "Suspended"),
+    MAINTENANCE("maintenance", "Bakım", "Maintenance");
 
     private final String code;
     private final String displayNameTr;
     private final String displayNameEn;
 
-    Language(String code, String displayNameTr, String displayNameEn) {
+    TenantStatus(String code, String displayNameTr, String displayNameEn) {
         this.code = code;
         this.displayNameTr = displayNameTr;
         this.displayNameEn = displayNameEn;
@@ -16,10 +18,6 @@ public enum Language {
 
     public String getCode() {
         return code;
-    }
-
-    public String getDisplayName() {
-        return displayNameTr; // Default to Turkish for backward compatibility
     }
 
     public String getDisplayName(Language language) {
@@ -38,12 +36,12 @@ public enum Language {
         return displayNameEn;
     }
 
-    public static Language fromCode(String code) {
-        for (Language language : values()) {
-            if (language.code.equals(code)) {
-                return language;
+    public static TenantStatus fromCode(String code) {
+        for (TenantStatus status : values()) {
+            if (status.code.equals(code)) {
+                return status;
             }
         }
-        throw new IllegalArgumentException("Unsupported language code: " + code);
+        throw new IllegalArgumentException("Unsupported tenant status code: " + code);
     }
 }
