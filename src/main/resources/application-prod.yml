@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+
+logging:
+  level:
+    com.backend: INFO
+    org.hibernate: WARN
+    org.springframework.security: WARN 
