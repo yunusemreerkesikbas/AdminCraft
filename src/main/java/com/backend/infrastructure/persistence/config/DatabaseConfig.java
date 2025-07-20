@@ -71,9 +71,11 @@ public class DatabaseConfig {
         Properties properties = new Properties();
         
         // Use configurable properties instead of hardcoded values
-        properties.put("hibernate.dialect", 
+        // Check for Hibernate-specific property first, then Spring Boot's database-platform, finally default
+        String dialect = environment.getProperty("spring.jpa.properties.hibernate.dialect",
             environment.getProperty("spring.jpa.database-platform", 
                 "org.hibernate.dialect.MySQL8Dialect"));
+        properties.put("hibernate.dialect", dialect);
         properties.put("hibernate.hbm2ddl.auto", ddlAuto);
         properties.put("hibernate.show_sql", showSql);
         
