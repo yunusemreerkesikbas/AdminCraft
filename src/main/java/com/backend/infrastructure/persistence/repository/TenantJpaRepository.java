@@ -39,6 +39,6 @@ public interface TenantJpaRepository extends JpaRepository<Tenant, Long> {
     @Query("SELECT t FROM Tenant t WHERE t.storageUsedMb > :threshold")
     List<Tenant> findTenantsExceedingStorageThreshold(@Param("threshold") Long threshold);
 
-    @Query("SELECT COUNT(t) FROM Tenant t WHERE t.status = 'ACTIVE' AND t.activatedAt >= CURRENT_DATE")
+    @Query("SELECT COUNT(t) FROM Tenant t WHERE t.activatedAt >= CURRENT_DATE")
     long countTenantsActivatedToday();
 }

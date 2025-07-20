@@ -154,10 +154,11 @@ public class TenantServiceImpl implements TenantService {
     @Override
     @Transactional
     public void deleteTenant(Long id) {
-        if (!tenantRepository.findById(id).isPresent()) {
-            throw new IllegalArgumentException("Tenant not found with id: " + id);
+        try {
+            tenantRepository.deleteById(id);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            throw new IllegalArgumentException("Tenant not found with id: " + id, e);
         }
-        tenantRepository.deleteById(id);
     }
 
     @Override
