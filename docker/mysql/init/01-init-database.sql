@@ -205,9 +205,27 @@ CREATE TABLE IF NOT EXISTS menus (
     FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default super admin user (password: admin123)
-INSERT IGNORE INTO users (email, password_hash, full_name, role, preferred_language, tenant_id, is_active, email_verified) 
-VALUES ('admin@admincraft.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRdvX7kS33ROuwQVDWnOBf9O7l6', 'Super Admin', 'SUPER_ADMIN', 'TR', NULL, TRUE, TRUE);
+-- SECURITY NOTE: Initial Super Admin Setup
+-- ==========================================
+-- For security reasons, no default admin user is created in the database initialization.
+-- The initial super admin user must be created through one of these secure methods:
+--
+-- 1. Application Setup Endpoint: /api/setup (recommended for production)
+--    - Requires environment variable ADMIN_SETUP_TOKEN for authorization
+--    - Allows setting secure email and password
+--    - Automatically disabled after first admin user creation
+--
+-- 2. Application Startup Process (for development)
+--    - Use environment variables: INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD
+--    - Password will be properly hashed using BCrypt
+--
+-- 3. Manual Creation via Application API (after deployment)
+--    - Use the standard user creation endpoint with appropriate authentication
+--
+-- This approach ensures:
+-- - No hardcoded credentials in source code
+-- - Proper password hashing and validation
+-- - Secure setup process aligned with Clean Architecture principles
 
 -- Note: Default content types should be created when tenants are created through the application
 -- This ensures proper tenant isolation and follows Clean Architecture principles
