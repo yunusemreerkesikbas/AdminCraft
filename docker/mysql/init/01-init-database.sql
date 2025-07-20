@@ -209,12 +209,8 @@ CREATE TABLE IF NOT EXISTS menus (
 INSERT IGNORE INTO users (email, password_hash, full_name, role, preferred_language, tenant_id, is_active, email_verified) 
 VALUES ('admin@admincraft.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRdvX7kS33ROuwQVDWnOBf9O7l6', 'Super Admin', 'SUPER_ADMIN', 'TR', NULL, TRUE, TRUE);
 
--- Insert default content types for new tenants
-INSERT IGNORE INTO content_types (name, display_name, description, fields, supports_multi_language, tenant_id, is_active) 
-VALUES 
-('page', 'Sayfa', 'Statik sayfa içerikleri', '{"title":{"type":"string","required":true},"content":{"type":"text","required":true},"excerpt":{"type":"text","required":false}}', TRUE, 1, TRUE),
-('blog_post', 'Blog Yazısı', 'Blog yazıları', '{"title":{"type":"string","required":true},"content":{"type":"text","required":true},"excerpt":{"type":"text","required":false},"featured_image":{"type":"image","required":false}}', TRUE, 1, TRUE),
-('product', 'Ürün', 'E-ticaret ürünleri', '{"title":{"type":"string","required":true},"description":{"type":"text","required":true},"price":{"type":"number","required":true},"images":{"type":"image_array","required":false}}', TRUE, 1, TRUE);
+-- Note: Default content types should be created when tenants are created through the application
+-- This ensures proper tenant isolation and follows Clean Architecture principles
 
 -- Create indexes for better performance
 CREATE INDEX idx_contents_tenant_language_status ON contents(tenant_id, language, status);
