@@ -40,37 +40,72 @@ public record CreateTenantRequest(
     @Size(max = 1000, message = "validation.notes.size")
     String notes
 ) {
-    public CreateTenantRequest {
-        // Compact canonical constructor for validation
-        if (subdomain != null) {
-            subdomain = subdomain.toLowerCase().trim();
-        }
-        if (companyName != null) {
-            companyName = companyName.trim();
-        }
-        if (adminEmail != null) {
-            adminEmail = adminEmail.toLowerCase().trim();
-        }
-        if (adminName != null) {
-            adminName = adminName.trim();
-        }
-        if (timezone == null || timezone.isEmpty()) {
-            timezone = "Europe/Istanbul";
-        }
-        if (currency == null || currency.isEmpty()) {
-            currency = "TRY";
-        }
-        if (defaultLanguage == null) {
-            defaultLanguage = Language.TR;
-        }
-        if (supportedLanguages == null || supportedLanguages.isEmpty()) {
-            supportedLanguages = Set.of(defaultLanguage);
-        }
-        // Ensure default language is in supported languages
-        if (!supportedLanguages.contains(defaultLanguage)) {
-            var mutableLanguages = new java.util.HashSet<>(supportedLanguages);
-            mutableLanguages.add(defaultLanguage);
-            supportedLanguages = Set.copyOf(mutableLanguages);
-        }
+    // Regular constructor with validation and normalization
+    public CreateTenantRequest(
+        String subdomain,
+        String companyName,
+        String adminEmail,
+        String adminName,
+        String phone,
+        Language defaultLanguage,
+        Set<Language> supportedLanguages,
+        String timezone,
+        String currency,
+        String notes
+    ) {
+        // Normalize input data
+        this.subdomain = normalizeString(subdomain, true);
+        this.companyName = normalizeString(companyName, false);
+        this.adminEmail = normalizeString(adminEmail, true);
+        this.adminName = normalizeString(adminName, false);
+        this.phone = phone;
+        this.timezone = normalizeStringWithDefault(timezone, "Europe/Istanbul");
+        this.currency = normalizeStringWithDefault(currency, "TRY");
+        this.notes = notes;
+        
+        // Handle language logic properly
+        var languageResult = normalizeLanguages(defaultLanguage, supportedLanguages);
+        this.defaultLanguage = languageResult.defaultLang();
+        this.supportedLanguages = languageResult.supportedLangs();
     }
+    
+    private static String normalizeString(String value, boolean toLowerCase) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return toLowerCase ? trimmed.toLowerCase() : trimmed;
+    }
+    
+    private static String normalizeStringWithDefault(String value, String defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+    
+    private static LanguageResult normalizeLanguages(Language defaultLanguage, Set<Language> supportedLanguages) {
+        // If supported languages provided but no default, pick first from supported
+        if (defaultLanguage == null && supportedLanguages != null && !supportedLanguages.isEmpty()) {
+            Language firstSupported = supportedLanguages.iterator().next();
+            return new LanguageResult(firstSupported, supportedLanguages);
+        }
+        
+        // If no default language provided, use TR as fallback
+        Language finalDefault = (defaultLanguage != null) ? defaultLanguage : Language.TR;
+        
+        // If no supported languages provided, use default language
+        if (supportedLanguages == null || supportedLanguages.isEmpty()) {
+            return new LanguageResult(finalDefault, Set.of(finalDefault));
+        }
+        
+        // Ensure default language is in supported languages
+        if (!supportedLanguages.contains(finalDefault)) {
+            var mutableLanguages = new java.util.HashSet<>(supportedLanguages);
+            mutableLanguages.add(finalDefault);
+            return new LanguageResult(finalDefault, Set.copyOf(mutableLanguages));
+        }
+        
+        return new LanguageResult(finalDefault, supportedLanguages);
+    }
+    
+    private record LanguageResult(Language defaultLang, Set<Language> supportedLangs) {}
 }
