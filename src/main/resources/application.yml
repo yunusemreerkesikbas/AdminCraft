@@ -1,0 +1,87 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: AdminCraft
+  
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/admincraft_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+    username: ${DB_USERNAME:admincraft_user}
+    password: ${DB_PASSWORD:admincraft_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        show_sql: true
+    show-sql: true
+  
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    cache-duration: 3600
+  
+  web:
+    locale: tr
+    locale-resolver: accept_header
+
+logging:
+  level:
+    com.backend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/admincraft_dev?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/admincraft_prod?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    
+logging:
+  level:
+    com.backend: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
