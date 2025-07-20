@@ -1,0 +1,84 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: AdminCraft
+  
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/admincraft_db
+    username: ${DB_USERNAME:admincraft_user}
+    password: ${DB_PASSWORD:admincraft_password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+    show-sql: true
+  
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    cache-duration: 3600
+  
+  web:
+    locale: tr
+    locale-resolver: accept_header
+
+logging:
+  level:
+    com.backend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/admincraft_dev
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    
+logging:
+  level:
+    com.backend: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
