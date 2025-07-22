@@ -9,11 +9,25 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.util.HtmlUtils;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "contents")
+@Table(name = "contents",
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"tenant_id", "slug", "language"}, name = "uk_content_slug_tenant_lang")
+       },
+       indexes = {
+           @Index(columnList = "tenant_id", name = "idx_content_tenant"),
+           @Index(columnList = "slug", name = "idx_content_slug"),
+           @Index(columnList = "status", name = "idx_content_status"),
+           @Index(columnList = "language", name = "idx_content_language"),
+           @Index(columnList = "content_type_id", name = "idx_content_type"),
+           @Index(columnList = "parent_content_id", name = "idx_content_parent"),
+           @Index(columnList = "published_at", name = "idx_content_published_at"),
+           @Index(columnList = "created_at", name = "idx_content_created_at")
+       })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -156,11 +170,36 @@ public class Content {
         if (slug == null || slug.isEmpty()) {
             slug = generateSlugFromTitle();
         }
+        sanitizeInputs();
     }
     
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        sanitizeInputs();
+    }
+    
+    private void sanitizeInputs() {
+        if (title != null) {
+            title = HtmlUtils.htmlEscape(title.trim());
+        }
+        if (excerpt != null) {
+            excerpt = HtmlUtils.htmlEscape(excerpt.trim());
+        }
+        // Note: 'data' field intentionally not sanitized as it may contain legitimate HTML content
+        // XSS protection should be handled at presentation layer when rendering
+        if (metaTitle != null) {
+            metaTitle = HtmlUtils.htmlEscape(metaTitle.trim());
+        }
+        if (metaDescription != null) {
+            metaDescription = HtmlUtils.htmlEscape(metaDescription.trim());
+        }
+        if (metaKeywords != null) {
+            metaKeywords = HtmlUtils.htmlEscape(metaKeywords.trim());
+        }
+        if (notes != null) {
+            notes = HtmlUtils.htmlEscape(notes.trim());
+        }
     }
     
     // Business methods

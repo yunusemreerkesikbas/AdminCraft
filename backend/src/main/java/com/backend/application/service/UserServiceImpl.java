@@ -6,9 +6,11 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +24,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
     
     @Override
     public User createUser(User user) {
@@ -507,6 +509,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    @Transactional(timeout = 30)
     public void bulkUpdateRole(List<Long> userIds, UserRole role) {
         List<User> users = userRepository.findByIdIn(userIds);
         
@@ -519,6 +522,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    @Transactional(timeout = 30)
     public void bulkActivate(List<Long> userIds) {
         List<User> users = userRepository.findByIdIn(userIds);
         
@@ -532,6 +536,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    @Transactional(timeout = 30)
     public void bulkDeactivate(List<Long> userIds) {
         List<User> users = userRepository.findByIdIn(userIds);
         
@@ -544,6 +549,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    @Transactional(timeout = 60)
     public void deleteUsersByTenantId(Long tenantId) {
         userRepository.deleteByTenantId(tenantId);
         log.info("All users deleted for tenant: {}", tenantId);

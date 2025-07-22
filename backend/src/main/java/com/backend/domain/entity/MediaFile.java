@@ -12,7 +12,19 @@ import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "media_files")
+@Table(name = "media_files",
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = "file_name", name = "uk_media_filename")
+       },
+       indexes = {
+           @Index(columnList = "tenant_id", name = "idx_media_tenant"),
+           @Index(columnList = "file_name", name = "idx_media_filename"),
+           @Index(columnList = "mime_type", name = "idx_media_mimetype"),
+           @Index(columnList = "folder", name = "idx_media_folder"),
+           @Index(columnList = "category", name = "idx_media_category"),
+           @Index(columnList = "uploaded_by", name = "idx_media_uploader"),
+           @Index(columnList = "created_at", name = "idx_media_created_at")
+       })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

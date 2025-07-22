@@ -373,6 +373,7 @@ public class ContentServiceImpl implements ContentService {
     }
     
     @Override
+    @Transactional(timeout = 30)
     public void bulkPublish(List<Long> contentIds, Long userId) {
         List<Content> contents = contentRepository.findByIdIn(contentIds);
         

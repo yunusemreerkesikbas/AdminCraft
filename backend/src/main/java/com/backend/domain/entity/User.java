@@ -9,11 +9,24 @@ import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.web.util.HtmlUtils;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users",
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"email", "tenant_id"}, name = "uk_user_email_tenant"),
+           @UniqueConstraint(columnNames = "email", name = "uk_user_email")
+       },
+       indexes = {
+           @Index(columnList = "tenant_id", name = "idx_user_tenant"),
+           @Index(columnList = "email", name = "idx_user_email"),
+           @Index(columnList = "role", name = "idx_user_role"),
+           @Index(columnList = "is_active", name = "idx_user_active"),
+           @Index(columnList = "created_at", name = "idx_user_created_at")
+       })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +42,7 @@ public class User {
     private String email;
     
     @NotBlank(message = "validation.password.required")
+    @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "validation.password.hash.invalid")
     @Size(min = 60, max = 60, message = "validation.password.hash.size")
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
@@ -118,11 +132,34 @@ public class User {
         if (fullName == null && firstName != null && lastName != null) {
             fullName = firstName + " " + lastName;
         }
+        sanitizeInputs();
     }
     
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        sanitizeInputs();
+    }
+    
+    private void sanitizeInputs() {
+        if (fullName != null) {
+            fullName = HtmlUtils.htmlEscape(fullName.trim());
+        }
+        if (firstName != null) {
+            firstName = HtmlUtils.htmlEscape(firstName.trim());
+        }
+        if (lastName != null) {
+            lastName = HtmlUtils.htmlEscape(lastName.trim());
+        }
+        if (jobTitle != null) {
+            jobTitle = HtmlUtils.htmlEscape(jobTitle.trim());
+        }
+        if (department != null) {
+            department = HtmlUtils.htmlEscape(department.trim());
+        }
+        if (notes != null) {
+            notes = HtmlUtils.htmlEscape(notes.trim());
+        }
     }
     
     // Business methods
