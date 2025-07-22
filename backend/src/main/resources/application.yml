@@ -33,7 +33,7 @@ spring:
   
   web:
     locale: tr
-    locale-resolver: accept_header
+    locale-resolver: accept-header
 
 logging:
   level:
