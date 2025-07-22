@@ -42,7 +42,7 @@ public class User {
     private String email;
     
     @NotBlank(message = "validation.password.required")
-    @Pattern(regexp = "^\\$2[ayb]\\$.{56}$", message = "validation.password.hash.invalid")
+    @Pattern(regexp = "^\\$2[ayb]\\$[0-9]{2}\\$[A-Za-z0-9./]{53}$", message = "validation.password.hash.invalid")
     @Size(min = 60, max = 60, message = "validation.password.hash.size")
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;

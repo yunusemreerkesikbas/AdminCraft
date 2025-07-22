@@ -27,17 +27,20 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     
     /**
-     * Checks if a string is a valid BCrypt hash by verifying the prefix.
-     * BCrypt hashes can start with $2a$, $2b$, or $2y$.
+     * Checks if a string is a valid BCrypt hash by verifying the complete structure.
+     * BCrypt hashes must follow the pattern: $2[ayb]$XX$[53 chars of Base64]
+     * where XX is a two-digit cost factor.
      * 
      * @param hash the string to check
-     * @return true if the string appears to be a BCrypt hash
+     * @return true if the string is a properly formatted BCrypt hash
      */
     private boolean isBCryptHash(String hash) {
-        if (hash == null || hash.length() < 4) {
+        if (hash == null || hash.length() != 60) {
             return false;
         }
-        return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
+        
+        // Validate BCrypt hash structure: $2[ayb]$XX$[53 Base64 chars]
+        return hash.matches("^\\$2[ayb]\\$[0-9]{2}\\$[A-Za-z0-9./]{53}$");
     }
     
     @Override

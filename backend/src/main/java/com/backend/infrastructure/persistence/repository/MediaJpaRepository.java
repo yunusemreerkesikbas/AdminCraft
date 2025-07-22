@@ -32,6 +32,9 @@ public interface MediaJpaRepository extends JpaRepository<MediaFile, Long> {
     List<MediaFile> findByMimeType(String mimeType);
     List<MediaFile> findByTenantIdAndMimeType(Long tenantId, String mimeType);
     
+    @Query("SELECT m FROM MediaFile m WHERE m.mimeType LIKE :mimeTypePrefix")
+    List<MediaFile> findByMimeTypeStartingWith(@Param("mimeTypePrefix") String mimeTypePrefix);
+    
     @Query("SELECT m FROM MediaFile m WHERE m.tenantId = :tenantId AND m.mimeType LIKE :mimeTypePrefix")
     List<MediaFile> findByTenantIdAndMimeTypeStartingWith(@Param("tenantId") Long tenantId, 
                                                         @Param("mimeTypePrefix") String mimeTypePrefix);

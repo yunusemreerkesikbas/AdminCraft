@@ -87,7 +87,7 @@ public class MediaRepositoryImpl implements MediaRepository {
     // These would need to be implemented with appropriate JPA repository methods
     
     @Override public List<MediaFile> findByMimeTypeStartingWith(String mimeTypePrefix) { 
-        return mediaJpaRepository.findByTenantIdAndMimeTypeStartingWith(1L, mimeTypePrefix); // Placeholder
+        return mediaJpaRepository.findByMimeTypeStartingWith(mimeTypePrefix);
     }
     @Override public List<MediaFile> findByTenantIdAndMimeTypeStartingWith(Long tenantId, String mimeTypePrefix) { 
         return mediaJpaRepository.findByTenantIdAndMimeTypeStartingWith(tenantId, mimeTypePrefix); 

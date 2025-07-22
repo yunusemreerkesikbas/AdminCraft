@@ -239,7 +239,7 @@ SELECT
     TRUE as is_system_type,
     1 as sort_order,
     'file-text' as icon,
-    1 as created_by
+    NULL as created_by
 FROM tenants t
 WHERE t.status = 'ACTIVE';
 
@@ -255,7 +255,7 @@ SELECT
     TRUE as is_system_type,
     2 as sort_order,
     'edit' as icon,
-    1 as created_by
+    NULL as created_by
 FROM tenants t
 WHERE t.status = 'ACTIVE';
 
