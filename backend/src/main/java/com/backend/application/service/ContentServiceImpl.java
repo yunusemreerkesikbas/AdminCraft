@@ -28,8 +28,8 @@ public class ContentServiceImpl implements ContentService {
         log.debug("Creating new content with title: {}", content.getTitle());
         
         // Validate unique slug for tenant and language
-        if (contentRepository.existsByTenantIdAndSlug(content.getTenantId(), content.getSlug())) {
-            throw new IllegalArgumentException("Content with slug '" + content.getSlug() + "' already exists for this tenant");
+        if (contentRepository.existsByTenantIdAndSlugAndLanguage(content.getTenantId(), content.getSlug(), content.getLanguage())) {
+            throw new IllegalArgumentException("Content with slug '" + content.getSlug() + "' already exists for this tenant in language " + content.getLanguage());
         }
         
         // Set defaults
@@ -63,8 +63,8 @@ public class ContentServiceImpl implements ContentService {
         
         // Check slug uniqueness if slug is being changed
         if (!existingContent.getSlug().equals(content.getSlug()) &&
-            contentRepository.existsByTenantIdAndSlug(content.getTenantId(), content.getSlug())) {
-            throw new IllegalArgumentException("Content with slug '" + content.getSlug() + "' already exists for this tenant");
+            contentRepository.existsByTenantIdAndSlugAndLanguage(content.getTenantId(), content.getSlug(), content.getLanguage())) {
+            throw new IllegalArgumentException("Content with slug '" + content.getSlug() + "' already exists for this tenant in language " + content.getLanguage());
         }
         
         Content updatedContent = contentRepository.save(content);
@@ -312,7 +312,7 @@ public class ContentServiceImpl implements ContentService {
         String slug = baseSlug;
         int counter = 1;
         
-        while (contentRepository.existsByTenantIdAndSlug(tenantId, slug)) {
+        while (contentRepository.existsByTenantIdAndSlugAndLanguage(tenantId, slug, language)) {
             slug = baseSlug + "-" + counter;
             counter++;
         }
@@ -323,7 +323,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     @Transactional(readOnly = true)
     public boolean isSlugAvailable(String slug, Long tenantId, Language language) {
-        return !contentRepository.existsByTenantIdAndSlug(tenantId, slug);
+        return !contentRepository.existsByTenantIdAndSlugAndLanguage(tenantId, slug, language);
     }
     
     @Override

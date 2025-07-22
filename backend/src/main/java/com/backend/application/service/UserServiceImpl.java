@@ -26,6 +26,20 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     
+    /**
+     * Checks if a string is a valid BCrypt hash by verifying the prefix.
+     * BCrypt hashes can start with $2a$, $2b$, or $2y$.
+     * 
+     * @param hash the string to check
+     * @return true if the string appears to be a BCrypt hash
+     */
+    private boolean isBCryptHash(String hash) {
+        if (hash == null || hash.length() < 4) {
+            return false;
+        }
+        return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
+    }
+    
     @Override
     public User createUser(User user) {
         log.debug("Creating new user with email: {}", user.getEmail());
@@ -36,7 +50,7 @@ public class UserServiceImpl implements UserService {
         }
         
         // Hash password if provided
-        if (user.getPasswordHash() != null && !user.getPasswordHash().startsWith("$2a$")) {
+        if (user.getPasswordHash() != null && !isBCryptHash(user.getPasswordHash())) {
             user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         }
         

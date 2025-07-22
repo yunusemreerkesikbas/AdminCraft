@@ -167,6 +167,11 @@ public class ContentRepositoryImpl implements ContentRepository {
         return contentJpaRepository.existsByTenantIdAndSlug(tenantId, slug);
     }
     
+    @Override
+    public boolean existsByTenantIdAndSlugAndLanguage(Long tenantId, String slug, Language language) {
+        return contentJpaRepository.existsByTenantIdAndSlugAndLanguage(tenantId, slug, language);
+    }
+    
     // Implementing remaining methods - delegating to JPA repository
     // Due to space constraints, implementing key methods and placeholders for others
     

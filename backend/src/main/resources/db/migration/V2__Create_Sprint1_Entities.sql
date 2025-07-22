@@ -1,4 +1,4 @@
-bu ref-- Sprint 1 Backend Entities Migration
+-- Sprint 1 Backend Entities Migration
 -- AdminCraft SaaS CMS Platform - Clean Architecture + Multi-Language
 
 -- ================================================================

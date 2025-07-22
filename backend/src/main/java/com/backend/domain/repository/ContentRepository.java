@@ -53,6 +53,7 @@ public interface ContentRepository {
     Optional<Content> findByTenantIdAndSlug(Long tenantId, String slug);
     Optional<Content> findByTenantIdAndSlugAndLanguage(Long tenantId, String slug, Language language);
     boolean existsByTenantIdAndSlug(Long tenantId, String slug);
+    boolean existsByTenantIdAndSlugAndLanguage(Long tenantId, String slug, Language language);
     
     // Publishing queries
     List<Content> findByStatusAndPublishedAtBefore(ContentStatus status, LocalDateTime dateTime);
