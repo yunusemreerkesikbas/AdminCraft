@@ -8,7 +8,7 @@
 
 INSERT INTO tenants (
     subdomain, company_name, database_name, status, default_language, 
-    supported_languages, plan_type, contact_email, contact_name, contact_phone,
+    admin_email, admin_name, phone,
     created_at, updated_at
 ) VALUES 
 -- Turkish Newspaper
@@ -18,8 +18,6 @@ INSERT INTO tenants (
     'turkiye_gazetesi_db', 
     'ACTIVE', 
     'TR',
-    '["TR", "EN"]',
-    'PROFESSIONAL',
     'info@turkiye-gazetesi.com',
     'Ahmet Yılmaz',
     '+90 212 555 1234',
@@ -33,8 +31,6 @@ INSERT INTO tenants (
     'tech_blog_db', 
     'ACTIVE', 
     'EN',
-    '["EN", "TR"]',
-    'BASIC',
     'admin@tech-blog.com',
     'John Smith',
     '+1 555 987 6543',
@@ -48,8 +44,6 @@ INSERT INTO tenants (
     'online_magaza_db', 
     'PENDING', 
     'TR',
-    '["TR", "EN"]',
-    'ENTERPRISE',
     'destek@online-magaza.com',
     'Fatma Kaya',
     '+90 532 123 4567',
@@ -63,8 +57,6 @@ INSERT INTO tenants (
     'travel_stories_db', 
     'ACTIVE', 
     'EN',
-    '["EN", "TR", "DE"]',
-    'BASIC',
     'hello@travel-stories.com',
     'Emma Wilson',
     '+44 20 7946 0958',
@@ -78,8 +70,6 @@ INSERT INTO tenants (
     'kurumsal_firma_db', 
     'SUSPENDED', 
     'TR',
-    '["TR"]',
-    'PROFESSIONAL',
     'iletisim@kurumsal-firma.com',
     'Mehmet Özkan',
     '+90 216 444 5566',
