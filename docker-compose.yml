@@ -27,6 +27,8 @@ services:
       PMA_USER: root
       PMA_PASSWORD: 1234
       PMA_ARBITRARY: 1
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
       - "8081:80"
     depends_on:

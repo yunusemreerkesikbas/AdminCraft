@@ -290,10 +290,17 @@ public class Content {
         if (title == null) {
             return "content-" + System.currentTimeMillis();
         }
-        return title.toLowerCase()
+        String processedSlug = title.toLowerCase()
                    .replaceAll("[^a-zA-Z0-9\\s-]", "")
                    .replaceAll("\\s+", "-")
                    .replaceAll("-+", "-")
                    .replaceAll("^-|-$", "");
+        
+        // Fallback for empty processed title (e.g., title with only special characters)
+        if (processedSlug.isEmpty()) {
+            return "content-" + System.currentTimeMillis();
+        }
+        
+        return processedSlug;
     }
 }

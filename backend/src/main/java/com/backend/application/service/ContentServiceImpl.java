@@ -153,9 +153,13 @@ public class ContentServiceImpl implements ContentService {
             throw new IllegalArgumentException("Translation already exists for language: " + targetLanguage);
         }
         
+        // Generate unique slug using the existing utility method
+        String baseSlugWithLanguage = parentContent.getSlug() + "-" + targetLanguage.name().toLowerCase();
+        String uniqueSlug = generateUniqueSlug(baseSlugWithLanguage, parentContent.getTenantId(), targetLanguage);
+        
         Content translation = new Content();
         translation.setTitle(parentContent.getTitle() + " (" + targetLanguage.name() + ")");
-        translation.setSlug(parentContent.getSlug() + "-" + targetLanguage.name().toLowerCase());
+        translation.setSlug(uniqueSlug);
         translation.setExcerpt(parentContent.getExcerpt());
         translation.setData(parentContent.getData());
         translation.setLanguage(targetLanguage);
@@ -166,7 +170,8 @@ public class ContentServiceImpl implements ContentService {
         translation.setCreatedBy(userId);
         
         Content savedTranslation = contentRepository.save(translation);
-        log.info("Translation created for content {} in language {}", parentContentId, targetLanguage);
+        log.info("Translation created for content {} in language {} with unique slug: {}", 
+                 parentContentId, targetLanguage, uniqueSlug);
         
         return savedTranslation;
     }
