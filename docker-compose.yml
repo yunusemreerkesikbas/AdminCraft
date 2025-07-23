@@ -7,14 +7,24 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: admincraft-db
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
       TZ: Europe/Istanbul
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql/conf/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
     networks:
       - admincraft-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --init-connect='SET NAMES utf8mb4'
+      --skip-character-set-client-handshake
+      --default-time-zone='+03:00'
 
   # phpMyAdmin for database management
   phpmyadmin:
@@ -27,6 +37,10 @@ services:
       PMA_USER: root
       PMA_PASSWORD: 1234
       PMA_ARBITRARY: 1
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      UPLOAD_LIMIT: 20M
+      MEMORY_LIMIT: 128M
     ports:
       - "8081:80"
     depends_on:

@@ -1,5 +1,8 @@
 package com.backend.domain.enums;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum Language {
     TR("tr", "Türkçe", "Turkish"),
     EN("en", "İngilizce", "English");
@@ -38,12 +41,20 @@ public enum Language {
         return displayNameEn;
     }
 
-    public static Language fromCode(String code) {
-        for (Language language : values()) {
-            if (language.code.equals(code)) {
-                return language;
-            }
+    public static Optional<Language> fromCode(String code) {
+        if (code == null) {
+            return Optional.empty();
         }
-        throw new IllegalArgumentException("Unsupported language code: " + code);
+        return Arrays.stream(values())
+                .filter(language -> language.code.equalsIgnoreCase(code.trim()))
+                .findFirst();
+    }
+    
+    public static Language fromCodeOrDefault(String code, Language defaultLanguage) {
+        return fromCode(code).orElse(defaultLanguage);
+    }
+    
+    public static Language fromCodeOrDefault(String code) {
+        return fromCodeOrDefault(code, TR); // Default to Turkish
     }
 }

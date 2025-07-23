@@ -26,12 +26,12 @@ spring:
         show_sql: true
     show-sql: true
     defer-datasource-initialization: true
-  
+
   sql:
     init:
       mode: always
       data-locations: classpath:data.sql
-  
+
   messages:
     basename: i18n/messages
     encoding: UTF-8

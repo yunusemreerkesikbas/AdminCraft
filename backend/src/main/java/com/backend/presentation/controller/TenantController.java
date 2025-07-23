@@ -40,7 +40,7 @@ public class TenantController {
             @Valid @RequestBody CreateTenantRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = createTenantUseCase.execute(request, displayLanguage);
             String message = messageSource.getMessage("tenant.created.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -57,7 +57,7 @@ public class TenantController {
             @PathVariable Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = tenantService.getTenantById(id, displayLanguage);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
@@ -72,7 +72,7 @@ public class TenantController {
             @PathVariable String subdomain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = tenantService.getTenantBySubdomain(subdomain, displayLanguage);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
@@ -87,7 +87,7 @@ public class TenantController {
             @RequestParam(required = false) TenantStatus status,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             List<TenantResponse> response = status != null 
                 ? tenantService.getTenantsByStatus(status, displayLanguage)
                 : tenantService.getAllTenants(displayLanguage);
@@ -105,7 +105,7 @@ public class TenantController {
             @Valid @RequestBody UpdateTenantRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = tenantService.updateTenant(id, request, displayLanguage);
             String message = messageSource.getMessage("tenant.updated.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -121,7 +121,7 @@ public class TenantController {
             @PathVariable Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = activateTenantUseCase.execute(id, displayLanguage);
             String message = messageSource.getMessage("tenant.activated.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -137,7 +137,7 @@ public class TenantController {
             @PathVariable Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = tenantService.suspendTenant(id, displayLanguage);
             String message = messageSource.getMessage("tenant.suspended.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -153,7 +153,7 @@ public class TenantController {
             @PathVariable Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCode(languageCode);
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
             TenantResponse response = tenantService.setMaintenanceMode(id, displayLanguage);
             String message = messageSource.getMessage("tenant.maintenance.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
