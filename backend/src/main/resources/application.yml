@@ -11,7 +11,7 @@ spring:
     active: dev
   
   datasource:
-    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -25,6 +25,12 @@ spring:
         format_sql: true
         show_sql: true
     show-sql: true
+    defer-datasource-initialization: true
+  
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
   
   messages:
     basename: i18n/messages
@@ -50,7 +56,7 @@ spring:
       on-profile: dev
   
   datasource:
-    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: root
     password: 1234
     
@@ -66,7 +72,7 @@ spring:
       on-profile: docker
   
   datasource:
-    url: jdbc:mysql://${DB_HOST:mysql-db}:${DB_PORT:3306}/${DB_NAME:admincraft-db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+    url: jdbc:mysql://${DB_HOST:mysql-db}:${DB_PORT:3306}/${DB_NAME:admincraft-db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
   
@@ -86,7 +92,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate  # Production uses validate for safety
     show-sql: false
     
 logging:
@@ -104,6 +110,14 @@ admincraft:
     jwt:
       secret: ${JWT_SECRET:YourSecretKeyForJWTTokensShouldBeAtLeast256BitsLong}
       expiration: 86400000 # 24 hours
+      refresh-expiration: 604800000 # 7 days
   i18n:
     default-language: TR
     supported-languages: TR,EN
+
+# JWT Token configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:AdminCraftSecretKeyForJWTTokenGeneration2024!@#$%^&*()}
+    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds

@@ -2,11 +2,11 @@
 -- Supports Turkish (TR) and English (EN) languages
 
 -- Create main database if not exists
-CREATE DATABASE IF NOT EXISTS admincraft_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS admincraft-db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS admincraft_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Use main database
-USE admincraft_db;
+USE admincraft-db;
 
 -- Create tenant table first (needed for foreign keys)
 CREATE TABLE IF NOT EXISTS tenants (

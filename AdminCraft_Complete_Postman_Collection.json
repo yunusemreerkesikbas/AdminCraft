@@ -1,0 +1,1189 @@
+{
+	"info": {
+		"_postman_id": "admincraft-sprint1-complete",
+		"name": "AdminCraft Sprint 1 - Complete API Collection",
+		"description": "AdminCraft SaaS CMS Platform - Clean Architecture + Multi-Language\nComplete API collection for all Sprint 1 controllers with dummy data scenarios",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "admincraft-2025"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login - Demo Company Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@democompany.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Login - TechStart Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@techstart.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Login - Editor User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"editor@democompany.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{refreshToken}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/auth/refresh"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🏢 Tenant Management",
+			"item": [
+				{
+					"name": "Create Tenant - Turkish Company",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subdomain\": \"turkiye-gazetesi\",\n  \"companyName\": \"Türkiye Gazetesi\",\n  \"defaultLanguage\": \"TR\",\n  \"supportedLanguages\": [\"TR\", \"EN\"],\n  \"planType\": \"PROFESSIONAL\",\n  \"contactEmail\": \"info@turkiye-gazetesi.com\",\n  \"contactName\": \"Ahmet Yılmaz\",\n  \"contactPhone\": \"+90 212 555 1234\"\n}"
+						},
+						"url": "{{baseUrl}}/api/tenants"
+					}
+				},
+				{
+					"name": "Create Tenant - Tech Blog",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subdomain\": \"tech-blog\",\n  \"companyName\": \"Tech Blog Platform\",\n  \"defaultLanguage\": \"EN\",\n  \"supportedLanguages\": [\"EN\", \"TR\"],\n  \"planType\": \"BASIC\",\n  \"contactEmail\": \"admin@tech-blog.com\",\n  \"contactName\": \"John Smith\",\n  \"contactPhone\": \"+1 555 987 6543\"\n}"
+						},
+						"url": "{{baseUrl}}/api/tenants"
+					}
+				},
+				{
+					"name": "Create Tenant - E-commerce Store",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subdomain\": \"online-magaza\",\n  \"companyName\": \"Online Mağaza Ltd\",\n  \"defaultLanguage\": \"TR\",\n  \"supportedLanguages\": [\"TR\", \"EN\"],\n  \"planType\": \"ENTERPRISE\",\n  \"contactEmail\": \"destek@online-magaza.com\",\n  \"contactName\": \"Fatma Kaya\",\n  \"contactPhone\": \"+90 532 123 4567\"\n}"
+						},
+						"url": "{{baseUrl}}/api/tenants"
+					}
+				},
+				{
+					"name": "Get All Tenants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants"
+					}
+				},
+				{
+					"name": "Get Tenant by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/1"
+					}
+				},
+				{
+					"name": "Get Tenant by Subdomain",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/subdomain/tech-blog"
+					}
+				},
+				{
+					"name": "Update Tenant",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyName\": \"Türkiye Gazetesi - Güncellenmiş\",\n  \"supportedLanguages\": [\"TR\", \"EN\"],\n  \"planType\": \"ENTERPRISE\",\n  \"contactEmail\": \"yeni-info@turkiye-gazetesi.com\",\n  \"contactName\": \"Mehmet Demir\",\n  \"contactPhone\": \"+90 212 555 9876\"\n}"
+						},
+						"url": "{{baseUrl}}/api/tenants/1"
+					}
+				},
+				{
+					"name": "Activate Tenant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/1/activate"
+					}
+				},
+				{
+					"name": "Suspend Tenant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/2/suspend"
+					}
+				},
+				{
+					"name": "Set Maintenance Mode",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/3/maintenance"
+					}
+				},
+				{
+					"name": "Check Subdomain Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/tenants/check/subdomain/yeni-site"
+					}
+				},
+				{
+					"name": "Get Tenant Count by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tenants/stats/count?status=ACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tenants", "stats", "count"],
+							"query": [
+								{
+									"key": "status",
+									"value": "ACTIVE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👥 User Management",
+			"item": [
+				{
+					"name": "Create Super Admin User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@admincraft.com\",\n  \"password\": \"AdminCraft123!\",\n  \"fullName\": \"Sistem Yöneticisi\",\n  \"firstName\": \"Sistem\",\n  \"lastName\": \"Yöneticisi\",\n  \"role\": \"SUPER_ADMIN\",\n  \"preferredLanguage\": \"TR\",\n  \"tenantId\": 1,\n  \"phone\": \"+90 555 000 0001\",\n  \"jobTitle\": \"Sistem Yöneticisi\",\n  \"department\": \"IT\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users"
+					}
+				},
+				{
+					"name": "Create Tenant Admin - Turkish Newspaper",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@turkiye-gazetesi.com\",\n  \"password\": \"TurkiyeGazete123!\",\n  \"fullName\": \"Ahmet Yılmaz\",\n  \"firstName\": \"Ahmet\",\n  \"lastName\": \"Yılmaz\",\n  \"role\": \"TENANT_ADMIN\",\n  \"preferredLanguage\": \"TR\",\n  \"tenantId\": 1,\n  \"phone\": \"+90 212 555 1234\",\n  \"jobTitle\": \"Genel Koordinatör\",\n  \"department\": \"Yönetim\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users"
+					}
+				},
+				{
+					"name": "Create Editor - Tech Blog",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"editor@tech-blog.com\",\n  \"password\": \"TechBlog123!\",\n  \"fullName\": \"John Smith\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"role\": \"EDITOR\",\n  \"preferredLanguage\": \"EN\",\n  \"tenantId\": 2,\n  \"phone\": \"+1 555 987 6543\",\n  \"jobTitle\": \"Content Editor\",\n  \"department\": \"Editorial\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users"
+					}
+				},
+				{
+					"name": "Create Writer - Turkish Newspaper",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"yazar@turkiye-gazetesi.com\",\n  \"password\": \"Yazar123!\",\n  \"fullName\": \"Elif Demir\",\n  \"firstName\": \"Elif\",\n  \"lastName\": \"Demir\",\n  \"role\": \"EDITOR\",\n  \"preferredLanguage\": \"TR\",\n  \"tenantId\": 1,\n  \"phone\": \"+90 532 111 2233\",\n  \"jobTitle\": \"Haber Editörü\",\n  \"department\": \"Haber\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users"
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/users"
+					}
+				},
+				{
+					"name": "Get Users by Tenant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users?tenantId=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/users/1"
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Ahmet Yılmaz - Güncellendi\",\n  \"firstName\": \"Ahmet\",\n  \"lastName\": \"Yılmaz\",\n  \"phone\": \"+90 212 555 9999\",\n  \"jobTitle\": \"Genel Koordinatör - Senior\",\n  \"department\": \"Üst Yönetim\",\n  \"preferredLanguage\": \"TR\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users/2"
+					}
+				},
+				{
+					"name": "Change User Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"TurkiyeGazete123!\",\n  \"newPassword\": \"YeniSifre456!\",\n  \"confirmPassword\": \"YeniSifre456!\"\n}"
+						},
+						"url": "{{baseUrl}}/api/users/2/change-password"
+					}
+				}
+			]
+		},
+		{
+			"name": "📝 Content Type Management",
+			"item": [
+				{
+					"name": "Create Content Type - News Article (TR)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"news-article\",\n  \"displayName\": \"Haber Makalesi\",\n  \"displayNameTr\": \"Haber Makalesi\",\n  \"displayNameEn\": \"News Article\",\n  \"description\": \"Güncel haber içerikleri için\",\n  \"descriptionTr\": \"Güncel haber içerikleri için kullanılır\",\n  \"descriptionEn\": \"Used for current news content\",\n  \"tenantId\": 1,\n  \"supportsMultiLanguage\": true,\n  \"supportsSeo\": true,\n  \"supportsScheduling\": true,\n  \"supportsComments\": true,\n  \"requiresApproval\": true,\n  \"sortOrder\": 1,\n  \"icon\": \"newspaper\",\n  \"color\": \"#FF5722\"\n}"
+						},
+						"url": "{{baseUrl}}/api/content-types"
+					}
+				},
+				{
+					"name": "Create Content Type - Tech Tutorial",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"tech-tutorial\",\n  \"displayName\": \"Tech Tutorial\",\n  \"displayNameTr\": \"Teknoloji Eğitimi\",\n  \"displayNameEn\": \"Tech Tutorial\",\n  \"description\": \"Technical tutorials and guides\",\n  \"descriptionTr\": \"Teknik eğitimler ve kılavuzlar\",\n  \"descriptionEn\": \"Technical tutorials and guides\",\n  \"tenantId\": 2,\n  \"supportsMultiLanguage\": true,\n  \"supportsSeo\": true,\n  \"supportsScheduling\": false,\n  \"supportsComments\": true,\n  \"requiresApproval\": false,\n  \"sortOrder\": 1,\n  \"icon\": \"code\",\n  \"color\": \"#4CAF50\"\n}"
+						},
+						"url": "{{baseUrl}}/api/content-types"
+					}
+				},
+				{
+					"name": "Create Content Type - Product Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"product-review\",\n  \"displayName\": \"Ürün İncelemesi\",\n  \"displayNameTr\": \"Ürün İncelemesi\",\n  \"displayNameEn\": \"Product Review\",\n  \"description\": \"Ürün incelemesi ve değerlendirmeleri\",\n  \"descriptionTr\": \"Ürün incelemesi ve değerlendirmeleri için\",\n  \"descriptionEn\": \"For product reviews and evaluations\",\n  \"tenantId\": 3,\n  \"supportsMultiLanguage\": true,\n  \"supportsSeo\": true,\n  \"supportsScheduling\": true,\n  \"supportsComments\": true,\n  \"requiresApproval\": true,\n  \"sortOrder\": 2,\n  \"icon\": \"star\",\n  \"color\": \"#9C27B0\"\n}"
+						},
+						"url": "{{baseUrl}}/api/content-types"
+					}
+				},
+				{
+					"name": "Get All Content Types",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/content-types"
+					}
+				},
+				{
+					"name": "Get Content Types by Tenant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/content-types?tenantId=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "content-types"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Content Type",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"displayName\": \"Haber Makalesi - Güncellenmiş\",\n  \"displayNameTr\": \"Haber Makalesi - Güncellenmiş\",\n  \"displayNameEn\": \"News Article - Updated\",\n  \"description\": \"Güncel haber ve analiz içerikleri için\",\n  \"supportsComments\": false,\n  \"color\": \"#FF9800\"\n}"
+						},
+						"url": "{{baseUrl}}/api/content-types/1"
+					}
+				}
+			]
+		},
+		{
+			"name": "📄 Content Management",
+			"item": [
+				{
+					"name": "Create Content - Turkish News",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Türkiye'de Teknoloji Sektörü Büyüyor\",\n  \"slug\": \"turkiye-teknoloji-sektoru-buyuyor\",\n  \"excerpt\": \"Türkiye'deki teknoloji şirketleri 2024 yılında rekor büyüme gösterdi.\",\n  \"data\": \"<p>Türkiye'deki teknoloji sektörü 2024 yılında <strong>%25</strong> büyüme kaydetti. Bu büyüme özellikle <em>yapay zeka</em> ve <em>bulut teknolojileri</em> alanında yaşandı.</p><h2>Sektör Liderleri</h2><ul><li>Yazılım geliştirme şirketleri</li><li>E-ticaret platformları</li><li>Fintech startupları</li></ul><p>Uzmanlar, bu trendin 2025 yılında da devam edeceğini öngörüyor.</p>\",\n  \"status\": \"DRAFT\",\n  \"language\": \"TR\",\n  \"contentTypeId\": 1,\n  \"tenantId\": 1,\n  \"metaTitle\": \"Türkiye Teknoloji Sektörü 2024 Büyüme Raporu\",\n  \"metaDescription\": \"Türkiye teknoloji sektörünün 2024 yılındaki %25 büyüme performansı ve gelecek öngörüleri.\",\n  \"metaKeywords\": \"türkiye, teknoloji, büyüme, 2024, yapay zeka\",\n  \"isFeatured\": true,\n  \"template\": \"news-article\",\n  \"createdBy\": 2\n}"
+						},
+						"url": "{{baseUrl}}/api/contents"
+					}
+				},
+				{
+					"name": "Create Content - English Tech Tutorial",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Getting Started with React 18 Hooks\",\n  \"slug\": \"getting-started-react-18-hooks\",\n  \"excerpt\": \"Learn how to use the latest React 18 hooks in your applications.\",\n  \"data\": \"<p>React 18 introduced several new hooks that make state management and side effects easier to handle.</p><h2>New Hooks Overview</h2><h3>1. useId Hook</h3><p>The <code>useId</code> hook generates unique IDs that are stable across server and client rendering:</p><pre><code>import { useId } from 'react';\\n\\nfunction MyComponent() {\\n  const id = useId();\\n  return &lt;div id={id}&gt;Unique content&lt;/div&gt;;\\n}</code></pre><h3>2. useTransition Hook</h3><p>Mark updates as non-urgent to keep UI responsive:</p><pre><code>import { useTransition, useState } from 'react';\\n\\nfunction SearchComponent() {\\n  const [isPending, startTransition] = useTransition();\\n  const [query, setQuery] = useState('');\\n  \\n  const handleSearch = (value) => {\\n    startTransition(() => {\\n      setQuery(value);\\n    });\\n  };\\n}</code></pre><p>These hooks improve performance and user experience significantly.</p>\",\n  \"status\": \"PUBLISHED\",\n  \"language\": \"EN\",\n  \"contentTypeId\": 2,\n  \"tenantId\": 2,\n  \"metaTitle\": \"React 18 Hooks Tutorial - Complete Guide\",\n  \"metaDescription\": \"Complete guide to React 18 hooks including useId, useTransition, and performance optimization tips.\",\n  \"metaKeywords\": \"react, hooks, javascript, tutorial, react18\",\n  \"isFeatured\": true,\n  \"template\": \"tutorial\",\n  \"createdBy\": 3,\n  \"publishedAt\": \"2024-01-20T10:00:00Z\"\n}"
+						},
+						"url": "{{baseUrl}}/api/contents"
+					}
+				},
+				{
+					"name": "Create Content - Turkish Translation of Tutorial",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"React 18 Hook'ları ile Başlangıç\",\n  \"slug\": \"react-18-hooklari-baslangic\",\n  \"excerpt\": \"Uygulamalarınızda en yeni React 18 hook'larını nasıl kullanacağınızı öğrenin.\",\n  \"data\": \"<p>React 18, durum yönetimi ve yan etkileri ele almayı kolaylaştıran birçok yeni hook sundu.</p><h2>Yeni Hook'lara Genel Bakış</h2><h3>1. useId Hook</h3><p><code>useId</code> hook'u, sunucu ve istemci renderlaması arasında kararlı olan benzersiz ID'ler üretir:</p><pre><code>import { useId } from 'react';\\n\\nfunction MyComponent() {\\n  const id = useId();\\n  return &lt;div id={id}&gt;Benzersiz içerik&lt;/div&gt;;\\n}</code></pre><h3>2. useTransition Hook</h3><p>UI'yi duyarlı tutmak için güncellemeleri acil olmayan olarak işaretleyin:</p><pre><code>import { useTransition, useState } from 'react';\\n\\nfunction SearchComponent() {\\n  const [isPending, startTransition] = useTransition();\\n  const [query, setQuery] = useState('');\\n  \\n  const handleSearch = (value) => {\\n    startTransition(() => {\\n      setQuery(value);\\n    });\\n  };\\n}</code></pre><p>Bu hook'lar performansı ve kullanıcı deneyimini önemli ölçüde artırır.</p>\",\n  \"status\": \"DRAFT\",\n  \"language\": \"TR\",\n  \"parentContentId\": 2,\n  \"contentTypeId\": 2,\n  \"tenantId\": 2,\n  \"metaTitle\": \"React 18 Hook'ları Eğitimi - Tam Kılavuz\",\n  \"metaDescription\": \"useId, useTransition dahil React 18 hook'ları ve performans optimizasyonu ipuçları ile tam kılavuz.\",\n  \"metaKeywords\": \"react, hooks, javascript, eğitim, react18\",\n  \"template\": \"tutorial\",\n  \"createdBy\": 4\n}"
+						},
+						"url": "{{baseUrl}}/api/contents"
+					}
+				},
+				{
+					"name": "Get All Contents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/contents"
+					}
+				},
+				{
+					"name": "Get Contents by Tenant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/contents?tenantId=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "contents"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Content by Slug",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"url": "{{baseUrl}}/api/contents/slug/getting-started-react-18-hooks"
+					}
+				},
+				{
+					"name": "Publish Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/contents/1/publish"
+					}
+				},
+				{
+					"name": "Schedule Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"scheduledAt\": \"2024-01-25T09:00:00Z\"\n}"
+						},
+						"url": "{{baseUrl}}/api/contents/3/schedule"
+					}
+				},
+				{
+					"name": "Update Content",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Türkiye'de Teknoloji Sektörü Hızla Büyüyor - Güncellenmiş\",\n  \"excerpt\": \"Türkiye'deki teknoloji şirketleri 2024 yılında rekor büyüme gösterdi. Yeni veriler daha da iyimser.\",\n  \"isFeatured\": true,\n  \"metaKeywords\": \"türkiye, teknoloji, büyüme, 2024, yapay zeka, startup\"\n}"
+						},
+						"url": "{{baseUrl}}/api/contents/1"
+					}
+				}
+			]
+		},
+		{
+			"name": "🖼️ Media Management",
+			"item": [
+				{
+					"name": "Upload Media - Company Logo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "tenantId",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "folder",
+									"value": "logos",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "branding",
+									"type": "text"
+								},
+								{
+									"key": "altTextTr",
+									"value": "Türkiye Gazetesi Logo",
+									"type": "text"
+								},
+								{
+									"key": "altTextEn",
+									"value": "Turkey Newspaper Logo",
+									"type": "text"
+								},
+								{
+									"key": "isPublic",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/media/upload"
+					}
+				},
+				{
+					"name": "Create Media Record - Sample Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"originalName\": \"teknoloji-haberi-gorsel.jpg\",\n  \"fileName\": \"tech-news-image-001.jpg\",\n  \"filePath\": \"/uploads/images/tech-news-image-001.jpg\",\n  \"mimeType\": \"image/jpeg\",\n  \"fileSize\": 245760,\n  \"fileExtension\": \"jpg\",\n  \"width\": 800,\n  \"height\": 600,\n  \"altTextTr\": \"Teknoloji sektörü büyüme grafiği\",\n  \"altTextEn\": \"Technology sector growth chart\",\n  \"descriptionTr\": \"Türkiye teknoloji sektörü 2024 büyüme istatistikleri\",\n  \"descriptionEn\": \"Turkey technology sector 2024 growth statistics\",\n  \"titleTr\": \"Teknoloji Büyüme Grafiği\",\n  \"titleEn\": \"Technology Growth Chart\",\n  \"tenantId\": 1,\n  \"uploadedBy\": 2,\n  \"folder\": \"news-images\",\n  \"category\": \"charts\",\n  \"isPublic\": true,\n  \"storageProvider\": \"local\"\n}"
+						},
+						"url": "{{baseUrl}}/api/media"
+					}
+				},
+				{
+					"name": "Create Media Record - Profile Photo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"originalName\": \"john-smith-profile.jpg\",\n  \"fileName\": \"profile-john-smith-002.jpg\",\n  \"filePath\": \"/uploads/profiles/profile-john-smith-002.jpg\",\n  \"mimeType\": \"image/jpeg\",\n  \"fileSize\": 128560,\n  \"fileExtension\": \"jpg\",\n  \"width\": 400,\n  \"height\": 400,\n  \"altTextTr\": \"John Smith profil fotoğrafı\",\n  \"altTextEn\": \"John Smith profile photo\",\n  \"descriptionTr\": \"Tech Blog editörü John Smith'in profil fotoğrafı\",\n  \"descriptionEn\": \"Profile photo of Tech Blog editor John Smith\",\n  \"titleTr\": \"John Smith\",\n  \"titleEn\": \"John Smith\",\n  \"tenantId\": 2,\n  \"uploadedBy\": 3,\n  \"folder\": \"profiles\",\n  \"category\": \"user-avatars\",\n  \"isPublic\": false,\n  \"storageProvider\": \"local\"\n}"
+						},
+						"url": "{{baseUrl}}/api/media"
+					}
+				},
+				{
+					"name": "Create Media Record - Tutorial Screenshot",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"originalName\": \"react-18-hooks-screenshot.png\",\n  \"fileName\": \"react18-hooks-demo-003.png\",\n  \"filePath\": \"/uploads/tutorials/react18-hooks-demo-003.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 512000,\n  \"fileExtension\": \"png\",\n  \"width\": 1200,\n  \"height\": 800,\n  \"altTextTr\": \"React 18 hooks kod örneği ekran görüntüsü\",\n  \"altTextEn\": \"React 18 hooks code example screenshot\",\n  \"descriptionTr\": \"React 18 useId ve useTransition hook'ları kod örneği\",\n  \"descriptionEn\": \"React 18 useId and useTransition hooks code example\",\n  \"titleTr\": \"React 18 Hooks Kodu\",\n  \"titleEn\": \"React 18 Hooks Code\",\n  \"tenantId\": 2,\n  \"uploadedBy\": 3,\n  \"folder\": \"tutorial-images\",\n  \"category\": \"screenshots\",\n  \"isPublic\": true,\n  \"storageProvider\": \"local\"\n}"
+						},
+						"url": "{{baseUrl}}/api/media"
+					}
+				},
+				{
+					"name": "Get All Media Files",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/media"
+					}
+				},
+				{
+					"name": "Get Media Files by Tenant",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/media?tenantId=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "media"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Media by Folder",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/media?tenantId=2&folder=tutorial-images",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "media"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "2"
+								},
+								{
+									"key": "folder",
+									"value": "tutorial-images"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Media File by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/media/1"
+					}
+				},
+				{
+					"name": "Update Media Metadata",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"altTextTr\": \"Güncellenmiş teknoloji büyüme grafiği\",\n  \"altTextEn\": \"Updated technology growth chart\",\n  \"descriptionTr\": \"2024 yılı son çeyrek verileri ile güncellenmiş grafik\",\n  \"descriptionEn\": \"Chart updated with Q4 2024 data\",\n  \"category\": \"updated-charts\",\n  \"isPublic\": true\n}"
+						},
+						"url": "{{baseUrl}}/api/media/1"
+					}
+				},
+				{
+					"name": "Search Media Files",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/media/search?tenantId=1&query=teknoloji",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "media", "search"],
+							"query": [
+								{
+									"key": "tenantId",
+									"value": "1"
+								},
+								{
+									"key": "query",
+									"value": "teknoloji"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set dynamic variables",
+					"pm.environment.set('currentTimestamp', new Date().toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Basic response validation",
+					"pm.test('Status code is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+					"});",
+					"",
+					"pm.test('Response has correct structure', function () {",
+					"    const responseJson = pm.response.json();",
+					"    pm.expect(responseJson).to.have.property('result');",
+					"    pm.expect(responseJson).to.have.property('message');",
+					"});",
+					"",
+					"// Save response data for subsequent requests",
+					"if (pm.response.code === 201) {",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.data && responseJson.data.id) {",
+					"        pm.environment.set('lastCreatedId', responseJson.data.id);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "currentUserId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "currentTenantId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "tenantId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "contentTypeId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "contentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "mediaId",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
