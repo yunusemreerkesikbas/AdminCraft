@@ -15,7 +15,8 @@
       "Bash(git commit:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr diff:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

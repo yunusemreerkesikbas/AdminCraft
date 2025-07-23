@@ -25,6 +25,12 @@ spring:
         format_sql: true
         show_sql: true
     show-sql: true
+    defer-datasource-initialization: true
+  
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
   
   messages:
     basename: i18n/messages
@@ -86,7 +92,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate  # Production uses validate for safety
     show-sql: false
     
 logging:
@@ -104,6 +110,14 @@ admincraft:
     jwt:
       secret: ${JWT_SECRET:YourSecretKeyForJWTTokensShouldBeAtLeast256BitsLong}
       expiration: 86400000 # 24 hours
+      refresh-expiration: 604800000 # 7 days
   i18n:
     default-language: TR
     supported-languages: TR,EN
+
+# JWT Token configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:myDefaultSecretKeyForJwtTokenGeneration2024}
+    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds

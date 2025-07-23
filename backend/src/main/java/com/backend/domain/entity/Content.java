@@ -287,9 +287,10 @@ public class Content {
     }
     
     private String generateSlugFromTitle() {
-        if (title == null) {
+        if (title == null || title.trim().isEmpty()) {
             return "content-" + System.currentTimeMillis();
         }
+        
         String processedSlug = title.toLowerCase()
                    .replaceAll("[^a-zA-Z0-9\\s-]", "")
                    .replaceAll("\\s+", "-")
@@ -299,6 +300,11 @@ public class Content {
         // Fallback for empty processed title (e.g., title with only special characters)
         if (processedSlug.isEmpty()) {
             return "content-" + System.currentTimeMillis();
+        }
+        
+        // Ensure minimum length for readability
+        if (processedSlug.length() < 3) {
+            return processedSlug + "-" + System.currentTimeMillis();
         }
         
         return processedSlug;

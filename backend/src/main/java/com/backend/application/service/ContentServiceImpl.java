@@ -146,17 +146,29 @@ public class ContentServiceImpl implements ContentService {
     
     @Override
     public Content createTranslation(Long parentContentId, Language targetLanguage, Long userId) {
-        Content parentContent = contentRepository.findById(parentContentId)
-            .orElseThrow(() -> new IllegalArgumentException("Parent content not found"));
+        log.debug("Creating translation for content {} in language {}", parentContentId, targetLanguage);
         
+        Content parentContent = contentRepository.findById(parentContentId)
+            .orElseThrow(() -> new IllegalArgumentException("Parent content not found with ID: " + parentContentId));
+        
+        // Check if translation already exists for this language
         if (contentRepository.existsByParentContentIdAndLanguage(parentContentId, targetLanguage)) {
-            throw new IllegalArgumentException("Translation already exists for language: " + targetLanguage);
+            throw new IllegalArgumentException("Translation already exists for content " + parentContentId + " in language: " + targetLanguage);
         }
         
-        // Generate unique slug using the existing utility method
+        // Generate base slug by appending language code to parent slug
         String baseSlugWithLanguage = parentContent.getSlug() + "-" + targetLanguage.name().toLowerCase();
+        
+        // Use the existing utility method to ensure uniqueness
         String uniqueSlug = generateUniqueSlug(baseSlugWithLanguage, parentContent.getTenantId(), targetLanguage);
         
+        // Additional validation to ensure slug is truly unique (double-check)
+        if (contentRepository.existsByTenantIdAndSlugAndLanguage(parentContent.getTenantId(), uniqueSlug, targetLanguage)) {
+            throw new IllegalArgumentException("Generated slug '" + uniqueSlug + "' already exists for tenant " + 
+                                             parentContent.getTenantId() + " in language " + targetLanguage);
+        }
+        
+        // Create translation content
         Content translation = new Content();
         translation.setTitle(parentContent.getTitle() + " (" + targetLanguage.name() + ")");
         translation.setSlug(uniqueSlug);
@@ -169,8 +181,13 @@ public class ContentServiceImpl implements ContentService {
         translation.setStatus(ContentStatus.DRAFT);
         translation.setCreatedBy(userId);
         
+        // Set default values
+        if (translation.getViewCount() == null) {
+            translation.setViewCount(0L);
+        }
+        
         Content savedTranslation = contentRepository.save(translation);
-        log.info("Translation created for content {} in language {} with unique slug: {}", 
+        log.info("Translation created successfully for content {} in language {} with unique slug: {}", 
                  parentContentId, targetLanguage, uniqueSlug);
         
         return savedTranslation;

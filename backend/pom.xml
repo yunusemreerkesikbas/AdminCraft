@@ -132,36 +132,6 @@
                     </excludes>
                 </configuration>
             </plugin>
-            
-            <!-- Flyway Plugin for Database Migrations -->
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.10.0</version>
-                <configuration>
-                    <url>jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Europe/Istanbul</url>
-                    <user>root</user>
-                    <password>1234</password>
-                    <driver>com.mysql.cj.jdbc.Driver</driver>
-                    <locations>
-                        <location>classpath:db/migration</location>
-                    </locations>
-                    <schemas>
-                        <schema>admincraft-db</schema>
-                    </schemas>
-                    <baselineOnMigrate>true</baselineOnMigrate>
-                    <validateOnMigrate>true</validateOnMigrate>
-                    <outOfOrder>false</outOfOrder>
-                    <cleanDisabled>false</cleanDisabled>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.mysql</groupId>
-                        <artifactId>mysql-connector-j</artifactId>
-                        <version>8.3.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
         </plugins>
     </build>
 
