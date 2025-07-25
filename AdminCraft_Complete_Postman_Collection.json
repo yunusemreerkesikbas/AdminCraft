@@ -8,6 +8,165 @@
 	},
 	"item": [
 		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login - Demo Company Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@democompany.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Login - TechStart Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@techstart.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Login - Editor User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"editor@democompany.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"        pm.environment.set('currentUserId', responseJson.data.userId);",
+									"        pm.environment.set('currentTenantId', responseJson.data.tenantId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{refreshToken}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "tr"
+							}
+						],
+						"url": "{{baseUrl}}/api/auth/refresh"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.accessToken) {",
+									"        pm.environment.set('authToken', responseJson.data.accessToken);",
+									"        pm.environment.set('refreshToken', responseJson.data.refreshToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "🏢 Tenant Management",
 			"item": [
 				{
@@ -81,6 +240,10 @@
 							{
 								"key": "Accept-Language",
 								"value": "tr"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
 							}
 						],
 						"url": "{{baseUrl}}/api/tenants"
@@ -975,6 +1138,26 @@
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "currentUserId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "currentTenantId",
+			"value": "1",
 			"type": "string"
 		},
 		{

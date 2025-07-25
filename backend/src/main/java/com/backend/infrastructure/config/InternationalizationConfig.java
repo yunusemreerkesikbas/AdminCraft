@@ -1,4 +1,4 @@
-package com.backend.presentation.config;
+package com.backend.infrastructure.config;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +12,7 @@ import java.util.Locale;
 
 @Configuration
 public class InternationalizationConfig {
-
+    
     @Bean
     public MessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -21,7 +21,7 @@ public class InternationalizationConfig {
         messageSource.setUseCodeAsDefaultMessage(true);
         return messageSource;
     }
-
+    
     @Bean
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
