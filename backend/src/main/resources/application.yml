@@ -3,6 +3,14 @@ server:
   servlet:
     context-path: /api
 
+# JWT Token configuration - FOR DEVELOPMENT ONLY
+# Production must use JWT_SECRET environment variable
+app:
+  jwt:
+    secret: ${JWT_SECRET:MyVerySecureJWTSecretKeyForAdminCraftApplication2024WithMoreThan32Characters!}
+    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+    refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
+
 spring:
   application:
     name: AdminCraft
@@ -92,7 +100,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: validate  # Production uses validate for safety
+      ddl-auto: update  # Production uses validate for safety
     show-sql: false
     
 logging:
@@ -106,18 +114,6 @@ admincraft:
   tenant:
     default-schema: public
     schema-prefix: tenant_
-  security:
-    jwt:
-      secret: ${JWT_SECRET:YourSecretKeyForJWTTokensShouldBeAtLeast256BitsLong}
-      expiration: 86400000 # 24 hours
-      refresh-expiration: 604800000 # 7 days
   i18n:
     default-language: TR
     supported-languages: TR,EN
-
-# JWT Token configuration
-app:
-  jwt:
-    secret: ${JWT_SECRET:AdminCraftSecretKeyForJWTTokenGeneration2024!@#$%^&*()}
-    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
-    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds

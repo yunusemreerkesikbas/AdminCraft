@@ -17,7 +17,17 @@
       "Bash(gh pr diff:*)",
       "Bash(touch:*)",
       "Bash(timeout:*)",
-      "Bash(java:*)"
+      "Bash(java:*)",
+      "Bash(SET \"JWT_SECRET=MyVerySecureJWTSecretKeyForAdminCraftApplication2024WithMoreThan32Characters!\")",
+      "Bash(export JWT_SECRET=\"MyVerySecureJWTSecretKeyForAdminCraftApplication2024WithMoreThan32Characters!\")",
+      "Bash(./run-dev.bat)",
+      "Bash(del JwtPropertiesDebugger.java)",
+      "Bash(export JWT_SECRET=\"MyCustomEnvironmentSecret12345678901234567890123456789012!\")",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(mysql:*)",
+      "Bash(ls:*)",
+      "Bash(docker restart:*)"
     ],
     "deny": []
   }

@@ -100,4 +100,34 @@ public class JwtTokenProvider {
     public long getRefreshTokenExpiration() {
         return refreshTokenExpiration;
     }
+    
+    public String getTokenType(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        
+        return claims.get("type", String.class);
+    }
+    
+    public boolean isAccessToken(String token) {
+        try {
+            String tokenType = getTokenType(token);
+            return "access".equals(tokenType);
+        } catch (Exception e) {
+            log.debug("Failed to determine token type: {}", e.getMessage());
+            return false;
+        }
+    }
+    
+    public boolean isRefreshToken(String token) {
+        try {
+            String tokenType = getTokenType(token);
+            return "refresh".equals(tokenType);
+        } catch (Exception e) {
+            log.debug("Failed to determine token type: {}", e.getMessage());
+            return false;
+        }
+    }
 }

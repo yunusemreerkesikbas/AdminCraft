@@ -51,21 +51,21 @@ INSERT IGNORE INTO users (
 ) VALUES 
 (
     'admin@democompany.com',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfP5fqnQq1dP0m6', -- password: admin123
+    '$2a$12$zw075tesorhqMJLRVt1RQuiKjBfrex9khteRLv5oMrD61XXlFzHjy', -- password: admin123
     'Ahmet Yilmaz', 'TENANT_ADMIN', 'TR', 1,
     TRUE, TRUE, 'Genel Mudur', '+90 532 123 4567',
     NOW(), NOW()
 ),
 (
     'editor@democompany.com',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfP5fqnQq1dP0m6', -- password: admin123
+    '$2a$12$zw075tesorhqMJLRVt1RQuiKjBfrex9khteRLv5oMrD61XXlFzHjy', -- password: admin123
     'Ayse Kaya', 'EDITOR', 'TR', 1,
     TRUE, TRUE, 'Icerik Editoru', '+90 532 234 5678',
     NOW(), NOW() - INTERVAL 2 HOUR
 ),
 (
     'viewer@democompany.com',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfP5fqnQq1dP0m6', -- password: admin123
+    '$2a$12$zw075tesorhqMJLRVt1RQuiKjBfrex9khteRLv5oMrD61XXlFzHjy', -- password: admin123
     'Mehmet Ozkan', 'VIEWER', 'TR', 1,
     TRUE, TRUE, 'Icerik Goruntuleyicisi', '+90 532 345 6789',
     NOW(), NOW() - INTERVAL 5 HOUR
@@ -79,14 +79,14 @@ INSERT IGNORE INTO users (
 ) VALUES 
 (
     'admin@techstart.com',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfP5fqnQq1dP0m6', -- password: admin123
+    '$2a$12$zw075tesorhqMJLRVt1RQuiKjBfrex9khteRLv5oMrD61XXlFzHjy', -- password: admin123
     'John Smith', 'TENANT_ADMIN', 'EN', 2,
     TRUE, TRUE, 'CEO & Founder',
     NOW(), NOW()
 ),
 (
     'content@techstart.com',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfP5fqnQq1dP0m6', -- password: admin123
+    '$2a$12$zw075tesorhqMJLRVt1RQuiKjBfrex9khteRLv5oMrD61XXlFzHjy', -- password: admin123
     'Sarah Johnson', 'EDITOR', 'EN', 2,
     TRUE, TRUE, 'Content Manager',
     NOW(), NOW() - INTERVAL 1 HOUR
