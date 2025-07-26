@@ -1,7 +1,10 @@
 export interface User {
-    id: string;
+    id: number;
     name: string;
     email: string;
     avatar?: string;
     status?: string;
+    role?: string;
+    tenantId?: number;
+    preferredLanguage?: string;
 }

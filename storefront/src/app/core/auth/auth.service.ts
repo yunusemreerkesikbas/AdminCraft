@@ -67,15 +67,24 @@ export class AuthService {
         return this._httpClient.post(`${this.apiUrl}/auth/login`, credentials, { headers }).pipe(
             switchMap((response: any) => {
                 // Check if the response has the expected structure
-                if (response.success && response.data) {
+                if (response.result === 'SUCCESS' && response.data) {
                     // Store the access token in the local storage
-                    this.accessToken = response.data.token;
+                    this.accessToken = response.data.accessToken;
 
                     // Set the authenticated flag to true
                     this._authenticated = true;
 
-                    // Store the user on the user service
-                    this._userService.user = response.data.user;
+                    // Store the user on the user service (create user object from response data)
+                    const user = {
+                        id: response.data.userId,
+                        email: response.data.email,
+                        name: response.data.fullName,
+                        role: response.data.role,
+                        tenantId: response.data.tenantId,
+                        preferredLanguage: response.data.preferredLanguage
+                    };
+                    
+                    this._userService.user = user;
 
                     // Return a new observable with the response
                     return of(response.data);
@@ -84,7 +93,7 @@ export class AuthService {
                 }
             }),
             catchError((error) => {
-                return throwError(error.error?.message || 'Authentication failed');
+                return throwError(error.error?.message || error.message || 'Authentication failed');
             })
         );
     }
@@ -93,38 +102,38 @@ export class AuthService {
      * Sign in using the access token
      */
     signInUsingToken(): Observable<any> {
-        // Sign in using the token
-        return this._httpClient
-            .post('api/auth/sign-in-with-token', {
-                accessToken: this.accessToken,
-            })
-            .pipe(
-                catchError(() =>
-                    // Return false
-                    of(false)
-                ),
-                switchMap((response: any) => {
-                    // Replace the access token with the new one if it's available on
-                    // the response object.
-                    //
-                    // This is an added optional step for better security. Once you sign
-                    // in using the token, you should generate a new one on the server
-                    // side and attach it to the response object. Then the following
-                    // piece of code can replace the token with the refreshed one.
-                    if (response.accessToken) {
-                        this.accessToken = response.accessToken;
-                    }
+        // Simply validate the existing token and set authenticated state
+        // No need to call backend since JWT is stateless
+        
+        try {
+            // Set the authenticated flag to true
+            this._authenticated = true;
 
-                    // Set the authenticated flag to true
-                    this._authenticated = true;
+            // Try to decode JWT payload to get user info (for basic validation)
+            const token = this.accessToken;
+            if (token) {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                // Create user object from JWT payload
+                const user = {
+                    id: 0, // We don't have user ID in JWT, will be loaded separately if needed
+                    email: payload.sub,
+                    name: payload.sub, // Use email as name temporarily
+                    role: payload.role,
+                    tenantId: 0,
+                    preferredLanguage: 'tr'
+                };
 
-                    // Store the user on the user service
-                    this._userService.user = response.user;
+                // Store the user on the user service
+                this._userService.user = user;
 
-                    // Return true
-                    return of(true);
-                })
-            );
+            }
+
+            // Return true
+            return of(true);
+        } catch (error) {
+            return of(false);
+        }
     }
 
     /**

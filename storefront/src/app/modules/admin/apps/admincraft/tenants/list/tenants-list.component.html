@@ -1,0 +1,439 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+>
+    <!-- Header -->
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
+        <!-- Loader -->
+        @if (isLoading) {
+            <div class="absolute inset-x-0 bottom-0">
+                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+            </div>
+        }
+        <!-- Title -->
+        <div class="text-4xl font-extrabold tracking-tight">Tenant Management</div>
+        <!-- Actions -->
+        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
+            <!-- Search -->
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-rounded min-w-64"
+                [subscriptSizing]="'dynamic'"
+            >
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                ></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'Search tenants'"
+                />
+            </mat-form-field>
+            <!-- Add tenant button -->
+            <button
+                class="ml-4"
+                mat-flat-button
+                [color]="'primary'"
+                (click)="createTenant()"
+            >
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Add Tenant</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="flex flex-auto overflow-hidden">
+        <!-- Tenants list -->
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            @if (tenants$ | async; as tenants) {
+                @if (tenants.length > 0) {
+                    <div class="grid">
+                        <!-- Header -->
+                        <div
+                            class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow dark:bg-black dark:bg-opacity-5 md:px-8"
+                            matSort
+                            matSortDisableClear
+                        >
+                            <div></div>
+                            <div
+                                class="hidden md:block"
+                                [mat-sort-header]="'subdomain'"
+                            >
+                                Subdomain
+                            </div>
+                            <div [mat-sort-header]="'companyName'">Company</div>
+                            <div
+                                class="hidden sm:block"
+                                [mat-sort-header]="'status'"
+                            >
+                                Status
+                            </div>
+                            <div
+                                class="hidden lg:block"
+                                [mat-sort-header]="'defaultLanguage'"
+                            >
+                                Language
+                            </div>
+                            <div
+                                class="hidden lg:block"
+                                [mat-sort-header]="'createdAt'"
+                            >
+                                Created
+                            </div>
+                            <div class="hidden sm:block">Details</div>
+                        </div>
+                        <!-- Rows -->
+                        @for (
+                            tenant of tenants;
+                            track trackByFn($index, tenant)
+                        ) {
+                            <div
+                                class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                            >
+                                <!-- Avatar -->
+                                <div class="flex items-center">
+                                    <div
+                                        class="relative mr-6 flex h-12 w-12 flex-0 items-center justify-center overflow-hidden rounded-full border bg-gray-100"
+                                    >
+                                        <div
+                                            class="flex h-full w-full items-center justify-center text-center text-xs font-semibold uppercase leading-none"
+                                        >
+                                            {{ tenant.companyName.substring(0, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Subdomain -->
+                                <div class="hidden truncate md:block">
+                                    {{ tenant.subdomain }}
+                                </div>
+
+                                <!-- Company Name -->
+                                <div class="truncate">
+                                    {{ tenant.companyName }}
+                                </div>
+
+                                <!-- Status -->
+                                <div class="hidden sm:block">
+                                    <div class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                        [ngClass]="{
+                                            'bg-green-100 text-green-800': tenant.status === 'ACTIVE',
+                                            'bg-yellow-100 text-yellow-800': tenant.status === 'PENDING',
+                                            'bg-red-100 text-red-800': tenant.status === 'SUSPENDED',
+                                            'bg-blue-100 text-blue-800': tenant.status === 'MAINTENANCE'
+                                        }">
+                                        {{ tenant.status }}
+                                    </div>
+                                </div>
+
+                                <!-- Language -->
+                                <div class="hidden items-center lg:flex">
+                                    <div class="min-w-4">
+                                        {{ tenant.defaultLanguage }}
+                                    </div>
+                                </div>
+
+                                <!-- Created Date -->
+                                <div class="hidden lg:block">
+                                    {{ tenant.createdAt | date:'shortDate' }}
+                                </div>
+
+                                <!-- Details button -->
+                                <div>
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
+                                        (click)="toggleDetails(tenant.id)"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                selectedTenant?.id ===
+                                                tenant.id
+                                                    ? 'heroicons_solid:chevron-up'
+                                                    : 'heroicons_solid:chevron-down'
+                                            "
+                                        ></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid">
+                                @if (selectedTenant?.id === tenant.id) {
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            rowDetailsTemplate;
+                                            context: { $implicit: tenant }
+                                        "
+                                    ></ng-container>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <mat-paginator
+                        class="z-10 border-b bg-gray-50 dark:bg-transparent sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t"
+                        [ngClass]="{ 'pointer-events-none': isLoading }"
+                        [length]="(pagination$ | async)?.length || 0"
+                        [pageIndex]="(pagination$ | async)?.page || 0"
+                        [pageSize]="(pagination$ | async)?.size || 10"
+                        [pageSizeOptions]="[5, 10, 25, 100]"
+                        [showFirstLastButtons]="true"
+                    ></mat-paginator>
+                } @else {
+                    <div
+                        class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+                    >
+                        There are no tenants!
+                    </div>
+                }
+            }
+
+            <ng-template #rowDetailsTemplate let-tenant>
+                <div class="overflow-hidden shadow-lg">
+                    <div class="flex border-b">
+                        <!-- Selected tenant form -->
+                        <form
+                            class="flex w-full flex-col"
+                            [formGroup]="selectedTenantForm"
+                        >
+                            <div class="flex flex-col p-8 sm:flex-row">
+                                <!-- Tenant info and status -->
+                                <div
+                                    class="mb-8 flex flex-col items-center sm:mb-0 sm:w-1/4 sm:items-start"
+                                >
+                                    <div class="flex flex-col items-center">
+                                        <div
+                                            class="h-32 w-32 overflow-hidden rounded-full border bg-gray-100 flex items-center justify-center"
+                                        >
+                                            <span class="text-2xl font-semibold text-gray-600">
+                                                {{ selectedTenant?.companyName?.substring(0, 2) || 'NA' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Status Actions -->
+                                    <div class="mt-8 flex flex-col space-y-2 w-full">
+                                        @if (selectedTenant && selectedTenant.status === 'PENDING') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                            >
+                                                Activate
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'ACTIVE') {
+                                            <button
+                                                class="w-full"
+                                                mat-stroked-button
+                                                [color]="'warn'"
+                                                (click)="suspendTenant()"
+                                            >
+                                                Suspend
+                                            </button>
+                                            <button
+                                                class="w-full"
+                                                mat-stroked-button
+                                                [color]="'accent'"
+                                                (click)="setMaintenanceMode()"
+                                            >
+                                                Maintenance
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'SUSPENDED') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                            >
+                                                Reactivate
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'MAINTENANCE') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                            >
+                                                End Maintenance
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-auto flex-wrap sm:w-3/4">
+                                    <!-- Basic Info -->
+                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                        <!-- Company Name -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Company Name</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'companyName'"
+                                            />
+                                        </mat-form-field>
+
+                                        <!-- Subdomain -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Subdomain</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'subdomain'"
+                                                (blur)="checkSubdomainAvailability()"
+                                            />
+                                            <span matSuffix>.admincraft.com</span>
+                                        </mat-form-field>
+
+                                        <!-- Admin Info -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Admin Name</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'adminName'"
+                                            />
+                                        </mat-form-field>
+
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Admin Email</mat-label>
+                                            <input
+                                                matInput
+                                                type="email"
+                                                [formControlName]="'adminEmail'"
+                                            />
+                                        </mat-form-field>
+
+                                        <!-- Phone -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Phone</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'phone'"
+                                            />
+                                        </mat-form-field>
+                                    </div>
+
+                                    <!-- Settings & Configuration -->
+                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                        <!-- Language Settings -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Default Language</mat-label>
+                                            <mat-select [formControlName]="'defaultLanguage'">
+                                                @for (language of languages; track language) {
+                                                    <mat-option [value]="language">
+                                                        {{ language === 'TR' ? 'Türkçe' : 'English' }}
+                                                    </mat-option>
+                                                }
+                                            </mat-select>
+                                        </mat-form-field>
+
+                                        <!-- Custom Domain -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Custom Domain</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'customDomain'"
+                                                placeholder="example.com"
+                                            />
+                                        </mat-form-field>
+
+                                        <!-- Settings -->
+                                        <div class="flex">
+                                            <mat-form-field class="w-1/2 pr-2">
+                                                <mat-label>Timezone</mat-label>
+                                                <input
+                                                    matInput
+                                                    [formControlName]="'timezone'"
+                                                />
+                                            </mat-form-field>
+                                            <mat-form-field class="w-1/2 pl-2">
+                                                <mat-label>Currency</mat-label>
+                                                <input
+                                                    matInput
+                                                    [formControlName]="'currency'"
+                                                />
+                                            </mat-form-field>
+                                        </div>
+
+                                        <!-- SSL Toggle -->
+                                        <div class="mt-4">
+                                            <mat-slide-toggle
+                                                [formControlName]="'sslEnabled'"
+                                                [color]="'primary'"
+                                            >
+                                                SSL Enabled
+                                            </mat-slide-toggle>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <mat-form-field class="w-full mt-4">
+                                            <mat-label>Notes</mat-label>
+                                            <textarea
+                                                matInput
+                                                [formControlName]="'notes'"
+                                                rows="3"
+                                            ></textarea>
+                                        </mat-form-field>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="flex w-full items-center justify-between border-t px-8 py-4"
+                            >
+                                <button
+                                    class="-ml-4"
+                                    mat-button
+                                    [color]="'warn'"
+                                    (click)="deleteSelectedTenant()"
+                                    [disabled]="!selectedTenant"
+                                >
+                                    Delete
+                                </button>
+                                <div class="flex items-center">
+                                    @if (flashMessage) {
+                                        <div class="mr-4 flex items-center">
+                                            @if (flashMessage === 'success') {
+                                                <mat-icon
+                                                    class="text-green-500"
+                                                    [svgIcon]="
+                                                        'heroicons_outline:check'
+                                                    "
+                                                ></mat-icon>
+                                                <span class="ml-2">Operation successful</span>
+                                            }
+                                            @if (flashMessage === 'error') {
+                                                <mat-icon
+                                                    class="text-red-500"
+                                                    [svgIcon]="
+                                                        'heroicons_outline:x-mark'
+                                                    "
+                                                ></mat-icon>
+                                                <span class="ml-2">An error occurred, try again!</span>
+                                            }
+                                        </div>
+                                    }
+                                    <button
+                                        mat-flat-button
+                                        [color]="'primary'"
+                                        (click)="updateSelectedTenant()"
+                                    >
+                                        {{ selectedTenant ? 'Update' : 'Create' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+</div>

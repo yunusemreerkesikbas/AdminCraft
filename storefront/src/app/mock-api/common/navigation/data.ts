@@ -82,6 +82,21 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 ],
             },
             {
+                id: 'apps.admincraft',
+                title: 'AdminCraft',
+                type: 'collapsable',
+                icon: 'heroicons_outline:building-office',
+                children: [
+                    {
+                        id: 'apps.admincraft.tenants',
+                        title: 'Tenant Management',
+                        type: 'basic',
+                        icon: 'heroicons_outline:users',
+                        link: '/apps/admincraft/tenants',
+                    },
+                ],
+            },
+            {
                 id: 'apps.file-manager',
                 title: 'File Manager',
                 type: 'basic',
