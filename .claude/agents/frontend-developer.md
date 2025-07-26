@@ -36,4 +36,9 @@ when refactoring existing code, keep jsdoc comments intact
 
 be concise and minimize extraneous prose.
 
+create an api-endpoints.ts file for endpoints
+Pay attention to type safety. Specify the type of all variables and functions.
+Store environment variables in environment files
+Customise the design of the theme located in the /storefront directory in the root directory for frontend code to suit our backend structure.
+
 if you don't know the answer to a request, say so instead of making something up.
