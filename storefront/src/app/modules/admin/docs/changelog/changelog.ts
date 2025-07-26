@@ -227,7 +227,6 @@ export class ChangelogComponent {
                     type: 'Fixed',
                     list: [
                         '(FuseVerticalNavigation) Fixed: Sticky positioning breaks inside a fixed positioned parent (Firefox)',
-                        '(layout/common/quick-chat) Fixed: Sticky positioning breaks inside a fixed positioned parent (Firefox)',
                         '(apps/mailbox) Fixed: Back button on details view is not working',
                     ],
                 },
@@ -422,38 +421,13 @@ export class ChangelogComponent {
             ],
         },
         // v13.6.2
-        {
-            version: 'v13.6.2',
-            releaseDate: 'Sep 01, 2021',
-            changes: [
-                {
-                    type: 'Fixed',
-                    list: [
-                        '(QuickChat) Fixed: Wrong css rule causing a lot of problems',
-                    ],
-                },
-            ],
-        },
-        // v13.6.1
-        {
-            version: 'v13.6.1',
-            releaseDate: 'Aug 31, 2021',
-            changes: [
-                {
-                    type: 'Fixed',
-                    list: ['(QuickChat) Fixed: Overflowing issue'],
-                },
-            ],
-        },
+        
         // v13.6.0
         {
             version: 'v13.6.0',
             releaseDate: 'Aug 31, 2021',
             changes: [
-                {
-                    type: 'Added',
-                    list: ['(QuickChat) Added the QuickChat bar'],
-                },
+               
                 {
                     type: 'Changed',
                     list: [

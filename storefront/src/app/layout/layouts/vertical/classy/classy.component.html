@@ -80,15 +80,7 @@
             <search [appearance]="'bar'"></search>
             <shortcuts></shortcuts>
             <messages></messages>
-            <button
-                class="lg:hidden"
-                mat-icon-button
-                (click)="quickChat.toggle()"
-            >
-                <mat-icon
-                    [svgIcon]="'heroicons_outline:chat-bubble-left-right'"
-                ></mat-icon>
-            </button>
+            
         </div>
     </div>
 
@@ -106,6 +98,3 @@
         <span class="font-medium text-secondary">Fuse &copy; {{currentYear}}</span>
     </div>-->
 </div>
-
-<!-- Quick chat -->
-<quick-chat #quickChat="quickChat"></quick-chat>

@@ -29,7 +29,9 @@
       "Bash(ls:*)",
       "Bash(docker restart:*)",
       "Bash(npm run build:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm start)",
+      "Bash(ng build:*)"
     ],
     "deny": []
   }

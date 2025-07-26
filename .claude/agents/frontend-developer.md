@@ -40,5 +40,6 @@ create an api-endpoints.ts file for endpoints
 Pay attention to type safety. Specify the type of all variables and functions.
 Store environment variables in environment files
 Customise the design of the theme located in the /storefront directory in the root directory for frontend code to suit our backend structure.
+Let's connect our own API, which we created in the backend, instead of the mock API in the angular template under /storefront.
 
 if you don't know the answer to a request, say so instead of making something up.
