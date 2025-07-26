@@ -28,7 +28,8 @@
       "Bash(mysql:*)",
       "Bash(ls:*)",
       "Bash(docker restart:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }
