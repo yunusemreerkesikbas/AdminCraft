@@ -28,6 +28,7 @@ public interface UserService {
     void changePassword(Long userId, String currentPassword, String newPassword);
     void resetPassword(String email, Long tenantId);
     void resetPasswordWithNewPassword(String email, Long tenantId, String newPassword);
+    void resetPasswordAndGenerateTemporary(Long userId);
     void updatePasswordHash(Long userId, String newPasswordHash);
     boolean isPasswordExpired(Long userId, int maxDays);
     

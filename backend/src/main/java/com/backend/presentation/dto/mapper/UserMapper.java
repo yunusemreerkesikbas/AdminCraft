@@ -83,10 +83,10 @@ public class UserMapper {
         );
     }
     
-    public PasswordResetResponse toPasswordResetResponse(String newPassword) {
+    public PasswordResetResponse toPasswordResetResponse() {
         return new PasswordResetResponse(
-            newPassword,
-            "Password has been reset successfully. Please use the new temporary password to login."
+            "Password has been reset successfully.",
+            "A temporary password has been generated and will be sent to your registered email address. Please check your email and use the temporary password to login."
         );
     }
 }

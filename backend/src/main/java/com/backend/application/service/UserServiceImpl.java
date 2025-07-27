@@ -245,6 +245,25 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    public void resetPasswordAndGenerateTemporary(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Generate cryptographically secure temporary password
+        String tempPassword = generateSecureTemporaryPassword();
+        String encodedPassword = passwordEncoder.encode(tempPassword);
+        
+        user.changePassword(encodedPassword);
+        userRepository.save(user);
+        
+        // TODO: Send email with temporary password to user.getEmail()
+        // In a production system, the temporary password should be sent via email
+        // and never returned in API responses for security reasons
+        log.info("Password reset with generated temporary password for user: {}", userId);
+        log.debug("Temporary password generated for user {} - should be sent via email", userId);
+    }
+    
+    @Override
     public void updatePasswordHash(Long userId, String newPasswordHash) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));

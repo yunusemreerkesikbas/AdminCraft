@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -41,8 +40,7 @@ public class UserController {
     @Autowired
     private MessageSource messageSource;
 
-    private static final String SECURE_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
 
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
@@ -263,10 +261,7 @@ public class UserController {
             @PathVariable Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Generate cryptographically secure temporary password
-            String tempPassword = generateSecureTemporaryPassword();
-            
-            // Get user to obtain email for proper reset method
+            // Check if user exists before attempting reset
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
                 String message = messageSource.getMessage("user.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
@@ -274,12 +269,11 @@ public class UserController {
                     .body(ApiResponse.error(message));
             }
             
-            User user = userOpt.get();
+            // Use secure password reset method that handles generation internally
+            userService.resetPasswordAndGenerateTemporary(id);
             
-            // Use proper password reset method that handles hashing
-            userService.resetPasswordWithNewPassword(user.getEmail(), user.getTenantId(), tempPassword);
-            
-            PasswordResetResponse response = userMapper.toPasswordResetResponse(tempPassword);
+            // Return secure response without exposing the temporary password
+            PasswordResetResponse response = userMapper.toPasswordResetResponse();
             
             String message = messageSource.getMessage("user.password.reset.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -290,18 +284,7 @@ public class UserController {
         }
     }
 
-    /**
-     * Generates a cryptographically secure temporary password
-     * @return A secure 16-character password
-     */
-    private String generateSecureTemporaryPassword() {
-        StringBuilder password = new StringBuilder(16);
-        for (int i = 0; i < 16; i++) {
-            int randomIndex = SECURE_RANDOM.nextInt(SECURE_PASSWORD_CHARS.length());
-            password.append(SECURE_PASSWORD_CHARS.charAt(randomIndex));
-        }
-        return password.toString();
-    }
+
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(
