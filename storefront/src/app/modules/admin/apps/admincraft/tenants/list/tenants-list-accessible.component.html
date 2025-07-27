@@ -1,0 +1,632 @@
+<!-- ACCESSIBLE VERSION OF TENANTS LIST COMPONENT -->
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+    role="main"
+    [attr.aria-busy]="isLoading"
+>
+    <!-- Header -->
+    <header
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
+        <!-- Loader with screen reader announcement -->
+        @if (isLoading) {
+            <div class="absolute inset-x-0 bottom-0" role="progressbar" aria-label="Loading tenants">
+                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+            </div>
+        }
+        
+        <!-- Title with proper heading structure -->
+        <h1 class="text-4xl font-extrabold tracking-tight">Tenant Management</h1>
+        
+        <!-- Actions -->
+        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0" role="toolbar" aria-label="Tenant actions">
+            <!-- Search with proper labeling -->
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-rounded min-w-64"
+                [subscriptSizing]="'dynamic'"
+            >
+                <mat-label>Search tenants</mat-label>
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                    aria-hidden="true"
+                ></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'Search by company name or subdomain'"
+                    role="searchbox"
+                    aria-label="Search tenants by company name or subdomain"
+                    [attr.aria-describedby]="'search-help'"
+                />
+            </mat-form-field>
+            <div id="search-help" class="sr-only">
+                Type to search tenants by company name or subdomain. Results will update automatically.
+            </div>
+            
+            <!-- Add tenant button with clear action -->
+            <button
+                class="ml-4"
+                mat-flat-button
+                [color]="'primary'"
+                (click)="createTenant()"
+                type="button"
+                aria-label="Create new tenant"
+            >
+                <mat-icon [svgIcon]="'heroicons_outline:plus'" aria-hidden="true"></mat-icon>
+                <span class="ml-2 mr-1">Add Tenant</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="flex flex-auto overflow-hidden">
+        <!-- Tenants list with proper table semantics -->
+        <section
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+            aria-label="Tenants list"
+        >
+            @if (tenants$ | async; as tenants) {
+                @if (tenants.length > 0) {
+                    <!-- Table structure for screen readers -->
+                    <div role="table" aria-label="Tenants" class="grid">
+                        <!-- Header row -->
+                        <div
+                            role="row"
+                            class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow dark:bg-black dark:bg-opacity-5 md:px-8"
+                            matSort
+                            matSortDisableClear
+                        >
+                            <div role="columnheader" class="sr-only">Avatar</div>
+                            <div
+                                role="columnheader"
+                                class="hidden md:block"
+                                [mat-sort-header]="'subdomain'"
+                                [attr.aria-sort]="getSortDirection('subdomain')"
+                            >
+                                Subdomain
+                            </div>
+                            <div 
+                                role="columnheader"
+                                [mat-sort-header]="'companyName'"
+                                [attr.aria-sort]="getSortDirection('companyName')"
+                            >
+                                Company
+                            </div>
+                            <div
+                                role="columnheader"
+                                class="hidden sm:block"
+                                [mat-sort-header]="'status'"
+                                [attr.aria-sort]="getSortDirection('status')"
+                            >
+                                Status
+                            </div>
+                            <div
+                                role="columnheader"
+                                class="hidden lg:block"
+                                [mat-sort-header]="'defaultLanguage'"
+                                [attr.aria-sort]="getSortDirection('defaultLanguage')"
+                            >
+                                Language
+                            </div>
+                            <div
+                                role="columnheader"
+                                class="hidden lg:block"
+                                [mat-sort-header]="'createdAt'"
+                                [attr.aria-sort]="getSortDirection('createdAt')"
+                            >
+                                Created
+                            </div>
+                            <div role="columnheader" class="hidden sm:block">Actions</div>
+                        </div>
+                        
+                        <!-- Data rows -->
+                        @for (
+                            tenant of tenants;
+                            track trackByFn($index, tenant);
+                            let i = $index
+                        ) {
+                            <div
+                                role="row"
+                                class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                                [attr.aria-rowindex]="i + 2"
+                                [attr.aria-expanded]="selectedTenant?.id === tenant.id"
+                                [attr.aria-describedby]="'tenant-' + tenant.id + '-description'"
+                            >
+                                <!-- Company Avatar with proper alt text -->
+                                <div role="gridcell" class="flex items-center">
+                                    <div
+                                        class="relative mr-6 flex h-12 w-12 flex-0 items-center justify-center overflow-hidden rounded-full border bg-gray-100"
+                                        [attr.aria-label]="'Avatar for ' + tenant.companyName"
+                                        role="img"
+                                    >
+                                        <div
+                                            class="flex h-full w-full items-center justify-center text-center text-xs font-semibold uppercase leading-none"
+                                            aria-hidden="true"
+                                        >
+                                            {{ tenant.companyName.substring(0, 2) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Subdomain -->
+                                <div role="gridcell" class="hidden truncate md:block">
+                                    <span [attr.aria-label]="'Subdomain: ' + tenant.subdomain">
+                                        {{ tenant.subdomain }}
+                                    </span>
+                                </div>
+
+                                <!-- Company Name -->
+                                <div role="gridcell" class="truncate">
+                                    <span [attr.aria-label]="'Company: ' + tenant.companyName">
+                                        {{ tenant.companyName }}
+                                    </span>
+                                </div>
+
+                                <!-- Status with proper accessibility -->
+                                <div role="gridcell" class="hidden sm:block">
+                                    <span 
+                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                        [ngClass]="{
+                                            'bg-green-100 text-green-800': tenant.status === 'ACTIVE',
+                                            'bg-yellow-100 text-yellow-800': tenant.status === 'PENDING',
+                                            'bg-red-100 text-red-800': tenant.status === 'SUSPENDED',
+                                            'bg-blue-100 text-blue-800': tenant.status === 'MAINTENANCE'
+                                        }"
+                                        [attr.aria-label]="'Status: ' + getStatusDescription(tenant.status)"
+                                        role="status"
+                                    >
+                                        <span class="sr-only">Status:</span>
+                                        {{ tenant.status }}
+                                    </span>
+                                </div>
+
+                                <!-- Language -->
+                                <div role="gridcell" class="hidden items-center lg:flex">
+                                    <span [attr.aria-label]="'Default language: ' + getLanguageDescription(tenant.defaultLanguage)">
+                                        {{ tenant.defaultLanguage }}
+                                    </span>
+                                </div>
+
+                                <!-- Created Date -->
+                                <div role="gridcell" class="hidden lg:block">
+                                    <time 
+                                        [dateTime]="tenant.createdAt"
+                                        [attr.aria-label]="'Created on ' + (tenant.createdAt | date:'fullDate')"
+                                    >
+                                        {{ tenant.createdAt | date:'shortDate' }}
+                                    </time>
+                                </div>
+
+                                <!-- Details button with proper accessibility -->
+                                <div role="gridcell">
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
+                                        (click)="toggleDetails(tenant.id)"
+                                        type="button"
+                                        [attr.aria-expanded]="selectedTenant?.id === tenant.id"
+                                        [attr.aria-label]="(selectedTenant?.id === tenant.id ? 'Collapse' : 'Expand') + ' details for ' + tenant.companyName"
+                                        [attr.aria-controls]="'tenant-details-' + tenant.id"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                selectedTenant?.id === tenant.id
+                                                    ? 'heroicons_solid:chevron-up'
+                                                    : 'heroicons_solid:chevron-down'
+                                            "
+                                            aria-hidden="true"
+                                        ></mat-icon>
+                                        <span class="sr-only">
+                                            {{ selectedTenant?.id === tenant.id ? 'Collapse' : 'Expand' }} details
+                                        </span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Hidden description for screen readers -->
+                                <div [id]="'tenant-' + tenant.id + '-description'" class="sr-only">
+                                    Tenant {{ tenant.companyName }}, subdomain {{ tenant.subdomain }}, 
+                                    status {{ getStatusDescription(tenant.status) }}, 
+                                    created {{ tenant.createdAt | date:'fullDate' }}
+                                </div>
+                            </div>
+                            
+                            <!-- Expandable details section -->
+                            @if (selectedTenant?.id === tenant.id) {
+                                <div 
+                                    [id]="'tenant-details-' + tenant.id"
+                                    class="grid"
+                                    role="region"
+                                    [attr.aria-labelledby]="'tenant-' + tenant.id + '-heading'"
+                                    tabindex="-1"
+                                >
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            rowDetailsTemplate;
+                                            context: { $implicit: tenant }
+                                        "
+                                    ></ng-container>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Pagination with proper labeling -->
+                    <nav aria-label="Tenants pagination">
+                        <mat-paginator
+                            class="z-10 border-b bg-gray-50 dark:bg-transparent sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t"
+                            [ngClass]="{ 'pointer-events-none': isLoading }"
+                            [length]="(pagination$ | async)?.length || 0"
+                            [pageIndex]="(pagination$ | async)?.page || 0"
+                            [pageSize]="(pagination$ | async)?.size || 10"
+                            [pageSizeOptions]="[5, 10, 25, 100]"
+                            [showFirstLastButtons]="true"
+                            [attr.aria-label]="'Navigate through ' + ((pagination$ | async)?.length || 0) + ' tenants'"
+                        ></mat-paginator>
+                    </nav>
+                } @else {
+                    <div
+                        class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <p>No tenants found</p>
+                        <p class="mt-4 text-lg font-normal text-gray-600">
+                            Get started by creating your first tenant.
+                        </p>
+                    </div>
+                }
+            }
+
+            <!-- Accessible details template -->
+            <ng-template #rowDetailsTemplate let-tenant>
+                <div class="overflow-hidden shadow-lg">
+                    <div class="flex border-b">
+                        <!-- Accessible form with proper structure -->
+                        <form
+                            class="flex w-full flex-col"
+                            [formGroup]="selectedTenantForm"
+                            [attr.aria-labelledby]="'tenant-form-heading'"
+                            novalidate
+                        >
+                            <div class="p-4">
+                                <h2 [id]="'tenant-form-heading'" class="sr-only">
+                                    {{ selectedTenant ? 'Edit tenant: ' + selectedTenant.companyName : 'Create new tenant' }}
+                                </h2>
+                            </div>
+                            
+                            <div class="flex flex-col p-8 sm:flex-row">
+                                <!-- Tenant info and status -->
+                                <div
+                                    class="mb-8 flex flex-col items-center sm:mb-0 sm:w-1/4 sm:items-start"
+                                    role="region"
+                                    aria-label="Tenant information and actions"
+                                >
+                                    <div class="flex flex-col items-center">
+                                        <div
+                                            class="h-32 w-32 overflow-hidden rounded-full border bg-gray-100 flex items-center justify-center"
+                                            role="img"
+                                            [attr.aria-label]="'Large avatar for ' + (selectedTenant?.companyName || 'new tenant')"
+                                        >
+                                            <span class="text-2xl font-semibold text-gray-600" aria-hidden="true">
+                                                {{ selectedTenant?.companyName?.substring(0, 2) || 'NA' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Status Actions with proper grouping -->
+                                    <fieldset class="mt-8 flex flex-col space-y-2 w-full">
+                                        <legend class="sr-only">Tenant status actions</legend>
+                                        @if (selectedTenant && selectedTenant.status === 'PENDING') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                                type="button"
+                                                aria-label="Activate this tenant"
+                                            >
+                                                Activate
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'ACTIVE') {
+                                            <button
+                                                class="w-full"
+                                                mat-stroked-button
+                                                [color]="'warn'"
+                                                (click)="suspendTenant()"
+                                                type="button"
+                                                aria-label="Suspend this tenant"
+                                            >
+                                                Suspend
+                                            </button>
+                                            <button
+                                                class="w-full"
+                                                mat-stroked-button
+                                                [color]="'accent'"
+                                                (click)="setMaintenanceMode()"
+                                                type="button"
+                                                aria-label="Set tenant to maintenance mode"
+                                            >
+                                                Maintenance
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'SUSPENDED') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                                type="button"
+                                                aria-label="Reactivate this tenant"
+                                            >
+                                                Reactivate
+                                            </button>
+                                        }
+                                        @if (selectedTenant && selectedTenant.status === 'MAINTENANCE') {
+                                            <button
+                                                class="w-full"
+                                                mat-flat-button
+                                                [color]="'primary'"
+                                                (click)="activateTenant()"
+                                                type="button"
+                                                aria-label="End maintenance mode for this tenant"
+                                            >
+                                                End Maintenance
+                                            </button>
+                                        }
+                                    </fieldset>
+                                </div>
+
+                                <div class="flex flex-auto flex-wrap sm:w-3/4">
+                                    <!-- Basic Info with proper field grouping -->
+                                    <fieldset class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                        <legend class="sr-only">Basic tenant information</legend>
+                                        
+                                        <!-- Company Name with error handling -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Company Name *</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'companyName'"
+                                                required
+                                                autocomplete="organization"
+                                                [attr.aria-describedby]="getFieldErrorId('companyName')"
+                                                [attr.aria-invalid]="selectedTenantForm.get('companyName')?.invalid && selectedTenantForm.get('companyName')?.touched"
+                                            />
+                                            <mat-error [id]="getFieldErrorId('companyName')">
+                                                Company name is required
+                                            </mat-error>
+                                        </mat-form-field>
+
+                                        <!-- Subdomain with validation -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Subdomain *</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'subdomain'"
+                                                (blur)="checkSubdomainAvailability()"
+                                                required
+                                                [attr.aria-describedby]="getFieldErrorId('subdomain')"
+                                                [attr.aria-invalid]="selectedTenantForm.get('subdomain')?.invalid && selectedTenantForm.get('subdomain')?.touched"
+                                            />
+                                            <span matSuffix>.admincraft.com</span>
+                                            <mat-error [id]="getFieldErrorId('subdomain')">
+                                                @if (selectedTenantForm.get('subdomain')?.hasError('required')) {
+                                                    Subdomain is required
+                                                }
+                                                @if (selectedTenantForm.get('subdomain')?.hasError('pattern')) {
+                                                    Only lowercase letters, numbers, and hyphens allowed
+                                                }
+                                                @if (selectedTenantForm.get('subdomain')?.hasError('unavailable')) {
+                                                    This subdomain is already taken
+                                                }
+                                            </mat-error>
+                                        </mat-form-field>
+
+                                        <!-- Admin Info -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Admin Name *</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'adminName'"
+                                                required
+                                                autocomplete="name"
+                                                [attr.aria-describedby]="getFieldErrorId('adminName')"
+                                                [attr.aria-invalid]="selectedTenantForm.get('adminName')?.invalid && selectedTenantForm.get('adminName')?.touched"
+                                            />
+                                            <mat-error [id]="getFieldErrorId('adminName')">
+                                                Admin name is required
+                                            </mat-error>
+                                        </mat-form-field>
+
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Admin Email *</mat-label>
+                                            <input
+                                                matInput
+                                                type="email"
+                                                [formControlName]="'adminEmail'"
+                                                required
+                                                autocomplete="email"
+                                                [attr.aria-describedby]="getFieldErrorId('adminEmail')"
+                                                [attr.aria-invalid]="selectedTenantForm.get('adminEmail')?.invalid && selectedTenantForm.get('adminEmail')?.touched"
+                                            />
+                                            <mat-error [id]="getFieldErrorId('adminEmail')">
+                                                @if (selectedTenantForm.get('adminEmail')?.hasError('required')) {
+                                                    Admin email is required
+                                                }
+                                                @if (selectedTenantForm.get('adminEmail')?.hasError('email')) {
+                                                    Please enter a valid email address
+                                                }
+                                            </mat-error>
+                                        </mat-form-field>
+
+                                        <!-- Phone -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Phone</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'phone'"
+                                                type="tel"
+                                                autocomplete="tel"
+                                            />
+                                        </mat-form-field>
+                                    </fieldset>
+
+                                    <!-- Settings & Configuration -->
+                                    <fieldset class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                        <legend class="sr-only">Tenant settings and configuration</legend>
+                                        
+                                        <!-- Language Settings -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Default Language *</mat-label>
+                                            <mat-select 
+                                                [formControlName]="'defaultLanguage'"
+                                                required
+                                                [attr.aria-describedby]="getFieldErrorId('defaultLanguage')"
+                                            >
+                                                @for (language of languages; track language) {
+                                                    <mat-option 
+                                                        [value]="language"
+                                                        [attr.aria-label]="getLanguageDescription(language)"
+                                                    >
+                                                        {{ language === 'TR' ? 'Türkçe' : 'English' }}
+                                                    </mat-option>
+                                                }
+                                            </mat-select>
+                                            <mat-error [id]="getFieldErrorId('defaultLanguage')">
+                                                Default language is required
+                                            </mat-error>
+                                        </mat-form-field>
+
+                                        <!-- Custom Domain -->
+                                        <mat-form-field class="w-full">
+                                            <mat-label>Custom Domain</mat-label>
+                                            <input
+                                                matInput
+                                                [formControlName]="'customDomain'"
+                                                placeholder="example.com"
+                                                aria-describedby="custom-domain-help"
+                                            />
+                                            <mat-hint id="custom-domain-help">
+                                                Optional: Enter your own domain name
+                                            </mat-hint>
+                                        </mat-form-field>
+
+                                        <!-- Settings in organized groups -->
+                                        <div class="flex" role="group" aria-label="Regional settings">
+                                            <mat-form-field class="w-1/2 pr-2">
+                                                <mat-label>Timezone</mat-label>
+                                                <input
+                                                    matInput
+                                                    [formControlName]="'timezone'"
+                                                />
+                                            </mat-form-field>
+                                            <mat-form-field class="w-1/2 pl-2">
+                                                <mat-label>Currency</mat-label>
+                                                <input
+                                                    matInput
+                                                    [formControlName]="'currency'"
+                                                />
+                                            </mat-form-field>
+                                        </div>
+
+                                        <!-- SSL Toggle with clear labeling -->
+                                        <div class="mt-4" role="group" aria-label="Security settings">
+                                            <mat-slide-toggle
+                                                [formControlName]="'sslEnabled'"
+                                                [color]="'primary'"
+                                                aria-describedby="ssl-help"
+                                            >
+                                                SSL Enabled
+                                            </mat-slide-toggle>
+                                            <div id="ssl-help" class="text-sm text-gray-600 mt-1">
+                                                Enable SSL/TLS encryption for secure connections
+                                            </div>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <mat-form-field class="w-full mt-4">
+                                            <mat-label>Notes</mat-label>
+                                            <textarea
+                                                matInput
+                                                [formControlName]="'notes'"
+                                                rows="3"
+                                                aria-describedby="notes-help"
+                                            ></textarea>
+                                            <mat-hint id="notes-help">
+                                                Internal notes about this tenant
+                                            </mat-hint>
+                                        </mat-form-field>
+                                    </fieldset>
+                                </div>
+                            </div>
+
+                            <!-- Form actions with proper focus management -->
+                            <div
+                                class="flex w-full items-center justify-between border-t px-8 py-4"
+                                role="group"
+                                aria-label="Form actions"
+                            >
+                                <button
+                                    class="-ml-4"
+                                    mat-button
+                                    [color]="'warn'"
+                                    (click)="deleteSelectedTenant()"
+                                    [disabled]="!selectedTenant"
+                                    type="button"
+                                    [attr.aria-label]="selectedTenant ? 'Delete tenant ' + selectedTenant.companyName : 'Delete tenant (no tenant selected)'"
+                                >
+                                    Delete
+                                </button>
+                                
+                                <div class="flex items-center">
+                                    <!-- Flash message with proper announcements -->
+                                    @if (flashMessage) {
+                                        <div 
+                                            class="mr-4 flex items-center"
+                                            role="status"
+                                            aria-live="polite"
+                                            [attr.aria-label]="getFlashMessageText(flashMessage)"
+                                        >
+                                            @if (flashMessage === 'success') {
+                                                <mat-icon
+                                                    class="text-green-500"
+                                                    [svgIcon]="'heroicons_outline:check'"
+                                                    aria-hidden="true"
+                                                ></mat-icon>
+                                                <span class="ml-2">Operation successful</span>
+                                            }
+                                            @if (flashMessage === 'error') {
+                                                <mat-icon
+                                                    class="text-red-500"
+                                                    [svgIcon]="'heroicons_outline:x-mark'"
+                                                    aria-hidden="true"
+                                                ></mat-icon>
+                                                <span class="ml-2">An error occurred, try again!</span>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    <button
+                                        mat-flat-button
+                                        [color]="'primary'"
+                                        (click)="updateSelectedTenant()"
+                                        type="submit"
+                                        [disabled]="selectedTenantForm.invalid"
+                                        [attr.aria-label]="(selectedTenant ? 'Update' : 'Create') + ' tenant'"
+                                    >
+                                        {{ selectedTenant ? 'Update' : 'Create' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </ng-template>
+        </section>
+    </main>
+</div>

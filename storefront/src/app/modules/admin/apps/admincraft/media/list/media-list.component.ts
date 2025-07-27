@@ -34,15 +34,14 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { TenantsService } from '../tenants.service';
+import { MediaService } from '../media.service';
 import {
-    Tenant,
-    TenantPagination,
-    TenantStatus,
-    Language,
-    CreateTenantRequest,
-    UpdateTenantRequest,
-} from '../tenants.types';
+    MediaFile,
+    MediaPagination,
+    MediaType,
+    UploadMediaRequest,
+    UpdateMediaRequest,
+} from '../media.types';
 import {
     Observable,
     Subject,
@@ -54,8 +53,8 @@ import {
 } from 'rxjs';
 
 @Component({
-    selector: 'tenants-list',
-    templateUrl: './tenants-list.component.html',
+    selector: 'media-list',
+    templateUrl: './media-list.component.html',
     styles: [
         /* language=SCSS */
         `
@@ -79,6 +78,7 @@ import {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
+    standalone: true,
     imports: [
         CommonModule,
         MatProgressBarModule,
@@ -98,22 +98,23 @@ import {
         DatePipe,
     ],
 })
-export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
-    tenants$: Observable<Tenant[]>;
-    pagination$: Observable<TenantPagination>;
+    mediaFiles$: Observable<MediaFile[]>;
+    pagination$: Observable<MediaPagination>;
 
     isLoading: boolean = false;
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedTenant: Tenant | null = null;
-    selectedTenantForm: UntypedFormGroup;
+    selectedMediaFile: MediaFile | null = null;
+    selectedMediaForm: UntypedFormGroup;
+    uploadForm: UntypedFormGroup;
     flashMessage: 'success' | 'error' | null = null;
     
-    // Language and status options
-    languages: Language[] = [Language.TR, Language.EN];
-    statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
+    // Media type options
+    mediaTypes: MediaType[] = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.DOCUMENT, MediaType.OTHER];
+    selectedFile: File | null = null;
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -124,7 +125,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _tenantsService: TenantsService
+        private _mediaService: MediaService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -135,24 +136,23 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Create the selected tenant form
-        this.selectedTenantForm = this._formBuilder.group({
-            companyName: ['', [Validators.required]],
-            subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-            adminName: ['', [Validators.required]],
-            adminEmail: ['', [Validators.required, Validators.email]],
-            phone: [''],
-            defaultLanguage: [Language.TR, [Validators.required]],
-            customDomain: [''],
-            timezone: ['Europe/Istanbul'],
-            currency: ['TRY'],
-            sslEnabled: [true],
-            notes: ['']
+        // Create the selected media form
+        this.selectedMediaForm = this._formBuilder.group({
+            originalName: ['', [Validators.required]],
+            altTextTr: [''],
+            altTextEn: ['']
         });
 
-        // Get the tenants
-        this.tenants$ = this._tenantsService.tenants$;
-        this.pagination$ = this._tenantsService.pagination$;
+        // Create the upload form
+        this.uploadForm = this._formBuilder.group({
+            file: [null, [Validators.required]],
+            altTextTr: [''],
+            altTextEn: ['']
+        });
+
+        // Get the media files
+        this.mediaFiles$ = this._mediaService.mediaFiles$;
+        this.pagination$ = this._mediaService.pagination$;
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
@@ -162,7 +162,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 switchMap((query) => {
                     this.closeDetails();
                     this.isLoading = true;
-                    return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
+                    return this._mediaService.getMediaFiles(0, 10, 'originalName', 'asc', query);
                 }),
                 map(() => {
                     this.isLoading = false;
@@ -171,7 +171,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             .subscribe();
 
         // Load initial data
-        this._tenantsService.getTenants().subscribe();
+        this._mediaService.getMediaFiles().subscribe();
     }
 
     /**
@@ -181,7 +181,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this._sort && this._paginator) {
             // Set the initial sort
             this._sort.sort({
-                id: 'companyName',
+                id: 'originalName',
                 start: 'asc',
                 disableClear: true,
             });
@@ -200,13 +200,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.closeDetails();
                 });
 
-            // Get tenants if sort or page changes
+            // Get media files if sort or page changes
             merge(this._sort.sortChange, this._paginator.page)
                 .pipe(
                     switchMap(() => {
                         this.closeDetails();
                         this.isLoading = true;
-                        return this._tenantsService.getTenants(
+                        return this._mediaService.getMediaFiles(
                             this._paginator.pageIndex,
                             this._paginator.pageSize,
                             this._sort.active,
@@ -236,26 +236,26 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Toggle tenant details
+     * Toggle media file details
      */
-    toggleDetails(tenantId: number): void {
-        // If the tenant is already selected...
-        if (this.selectedTenant && this.selectedTenant.id === tenantId) {
+    toggleDetails(mediaFileId: number): void {
+        // If the media file is already selected...
+        if (this.selectedMediaFile && this.selectedMediaFile.id === mediaFileId) {
             // Close the details
             this.closeDetails();
             return;
         }
 
-        // Get the tenant by id
-        this._tenantsService
-            .getTenantById(tenantId)
+        // Get the media file by id
+        this._mediaService
+            .getMediaFileById(mediaFileId)
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tenant) => {
-                // Set the selected tenant
-                this.selectedTenant = tenant;
+            .subscribe((mediaFile) => {
+                // Set the selected media file
+                this.selectedMediaFile = mediaFile;
 
                 // Fill the form
-                this.selectedTenantForm.patchValue(tenant);
+                this.selectedMediaForm.patchValue(mediaFile);
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -266,64 +266,54 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * Close the details
      */
     closeDetails(): void {
-        this.selectedTenant = null;
+        this.selectedMediaFile = null;
     }
 
     /**
-     * Create tenant
+     * Show upload form
      */
-    createTenant(): void {
-        // Create the tenant
-        this.selectedTenant = null;
-        this.selectedTenantForm.reset();
-        this.selectedTenantForm.patchValue({
-            defaultLanguage: Language.TR,
-            timezone: 'Europe/Istanbul',
-            currency: 'TRY',
-            sslEnabled: true
-        });
+    showUploadForm(): void {
+        // Reset upload form
+        this.uploadForm.reset();
+        this.selectedFile = null;
+        this.selectedMediaFile = null;
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
     }
 
     /**
-     * Update the selected tenant using the form data
+     * Handle file selection
      */
-    updateSelectedTenant(): void {
-        // Get the tenant object
-        const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
-
-        // Remove empty values
-        Object.keys(tenant).forEach(key => {
-            if (tenant[key] === '' || tenant[key] === null) {
-                delete tenant[key];
-            }
-        });
-
-        // If we have a tenant ID, update the existing tenant...
-        if (this.selectedTenant) {
-            this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: () => {
-                        // Show a success message
-                        this.showFlashMessage('success');
-                    },
-                    error: () => {
-                        // Show an error message
-                        this.showFlashMessage('error');
-                    }
-                });
+    onFileSelected(event: any): void {
+        const file = event.target.files[0];
+        if (file) {
+            this.selectedFile = file;
+            this.uploadForm.patchValue({ file: file });
         }
-        // Otherwise, create a new tenant...
-        else {
-            this._tenantsService.createTenant(tenant as CreateTenantRequest)
+    }
+
+    /**
+     * Upload media file
+     */
+    uploadMediaFile(): void {
+        if (this.selectedFile) {
+            const uploadRequest: UploadMediaRequest = {
+                file: this.selectedFile,
+                altTextTr: this.uploadForm.get('altTextTr')?.value || undefined,
+                altTextEn: this.uploadForm.get('altTextEn')?.value || undefined
+            };
+
+            this._mediaService.uploadMediaFile(uploadRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
                         // Show a success message
                         this.showFlashMessage('success');
+                        
+                        // Reset upload form
+                        this.uploadForm.reset();
+                        this.selectedFile = null;
                         
                         // Close details
                         this.closeDetails();
@@ -337,13 +327,43 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Delete the selected tenant
+     * Update the selected media file using the form data
      */
-    deleteSelectedTenant(): void {
+    updateSelectedMediaFile(): void {
+        if (this.selectedMediaFile) {
+            // Get the media file object
+            const media = this.selectedMediaForm.getRawValue() as UpdateMediaRequest;
+
+            // Remove empty values
+            Object.keys(media).forEach(key => {
+                if (media[key] === '' || media[key] === null) {
+                    delete media[key];
+                }
+            });
+
+            this._mediaService.updateMediaFile(this.selectedMediaFile.id, media)
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe({
+                    next: () => {
+                        // Show a success message
+                        this.showFlashMessage('success');
+                    },
+                    error: () => {
+                        // Show an error message
+                        this.showFlashMessage('error');
+                    }
+                });
+        }
+    }
+
+    /**
+     * Delete the selected media file
+     */
+    deleteSelectedMediaFile(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete tenant',
-            message: 'Are you sure you want to remove this tenant? This action cannot be undone!',
+            title: 'Delete media file',
+            message: 'Are you sure you want to remove this media file? This action cannot be undone!',
             actions: {
                 confirm: {
                     label: 'Delete',
@@ -355,11 +375,11 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         confirmation.afterClosed().subscribe((result) => {
             // If the confirm button pressed...
             if (result === 'confirmed') {
-                // Get the tenant object
-                const tenant = this.selectedTenant;
+                // Get the media file object
+                const mediaFile = this.selectedMediaFile;
 
-                // Delete the tenant on the server
-                this._tenantsService.deleteTenant(tenant.id)
+                // Delete the media file on the server
+                this._mediaService.deleteMediaFile(mediaFile.id)
                     .pipe(takeUntil(this._unsubscribeAll))
                     .subscribe(() => {
                         // Close the details
@@ -370,94 +390,17 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Activate tenant
+     * Get media type
      */
-    activateTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.activateTenant(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.showFlashMessage('success');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.showFlashMessage('error');
-                    }
-                });
-        }
+    getMediaType(mimeType: string): MediaType {
+        return this._mediaService.getMediaType(mimeType);
     }
 
     /**
-     * Suspend tenant
+     * Format file size
      */
-    suspendTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.suspendTenant(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.showFlashMessage('success');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.showFlashMessage('error');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Set maintenance mode
-     */
-    setMaintenanceMode(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.setMaintenanceMode(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.showFlashMessage('success');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.showFlashMessage('error');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Check subdomain availability
-     */
-    checkSubdomainAvailability(): void {
-        const subdomain = this.selectedTenantForm.get('subdomain')?.value;
-        if (subdomain && subdomain.length > 2) {
-            // If we're editing an existing tenant and the subdomain hasn't changed, don't check
-            if (this.selectedTenant && this.selectedTenant.subdomain === subdomain) {
-                // Clear any existing errors for the current tenant's subdomain
-                const control = this.selectedTenantForm.get('subdomain');
-                if (control?.hasError('unavailable')) {
-                    const errors = { ...control.errors };
-                    delete errors.unavailable;
-                    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
-                }
-                return;
-            }
-
-            this._tenantsService.checkSubdomainAvailability(subdomain)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe((available) => {
-                    if (!available) {
-                        this.selectedTenantForm.get('subdomain')?.setErrors({ unavailable: true });
-                    }
-                });
-        }
+    formatFileSize(bytes: number): string {
+        return this._mediaService.formatFileSize(bytes);
     }
 
     /**

@@ -1,0 +1,393 @@
+<div class="sm:absolute sm:inset-0 flex flex-col flex-auto min-w-0 sm:overflow-hidden bg-card dark:bg-transparent">
+
+    <!-- Header -->
+    <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-8 px-6 md:px-8 border-b">
+        <!-- Loader -->
+        <div class="absolute inset-x-0 bottom-0"
+             *ngIf="isLoading">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        <!-- Title -->
+        <div class="text-4xl font-extrabold tracking-tight">Site Management</div>
+        <!-- Actions -->
+        <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+            <!-- Search -->
+            <mat-form-field class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64">
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'Search sites'">
+            </mat-form-field>
+            <!-- Add site button -->
+            <button
+                class="ml-4"
+                mat-flat-button
+                [color]="'primary'"
+                (click)="createSite()">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Add</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="flex flex-auto overflow-hidden">
+
+        <!-- Sites list -->
+        <div class="flex flex-col flex-auto sm:mb-18 overflow-hidden sm:overflow-y-auto">
+            <!-- Header -->
+            <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
+                <div></div>
+                <div [mat-sort-header]="'siteName'" class="hidden sm:block">Site Name</div>
+                <div [mat-sort-header]="'domain'" class="hidden lg:block">Domain</div>
+                <div [mat-sort-header]="'isActive'" class="hidden lg:block">Status</div>
+                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">Created</div>
+                <div class="hidden sm:block">Details</div>
+            </div>
+            <!-- Rows -->
+            <ng-container *ngIf="sites$ | async as sites">
+                <ng-container *ngFor="let site of sites; trackBy: trackByFn">
+                    <div class="inventory-grid grid items-center gap-4 py-3 px-6 md:px-8 border-b">
+
+                        <!-- Logo/Icon -->
+                        <div class="flex items-center">
+                            <div class="relative flex flex-0 items-center justify-center w-10 h-10 mr-6 rounded overflow-hidden border">
+                                <img *ngIf="site.logoUrl" 
+                                     [src]="site.logoUrl" 
+                                     [alt]="site.siteName"
+                                     class="w-full h-full object-cover">
+                                <div *ngIf="!site.logoUrl" class="flex items-center justify-center w-full h-full text-xs font-semibold leading-none text-center uppercase"
+                                     [ngClass]="{
+                                        'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': site.isActive,
+                                        'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-50': !site.isActive
+                                     }">
+                                    {{site.siteName.charAt(0)}}{{site.siteName.split(' ')[1]?.charAt(0) || ''}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Site name & description -->
+                        <div class="truncate">
+                            <div class="font-medium">{{site.siteName}}</div>
+                            <div *ngIf="site.description" class="text-sm text-secondary">{{site.description}}</div>
+                            <div class="flex items-center mt-1">
+                                <mat-chip-set>
+                                    <mat-chip *ngFor="let lang of site.enabledLanguages"
+                                              [class]="lang === site.defaultLanguage ? 'mat-primary' : 'mat-standard'"
+                                              class="text-xs">
+                                        {{lang}}
+                                    </mat-chip>
+                                </mat-chip-set>
+                            </div>
+                        </div>
+
+                        <!-- Domain -->
+                        <div class="hidden lg:block">
+                            <div *ngIf="site.domain" class="text-sm">
+                                <a [href]="'https://' + site.domain" target="_blank" class="text-blue-600 hover:underline">
+                                    {{site.domain}}
+                                </a>
+                            </div>
+                            <div *ngIf="!site.domain" class="text-sm text-secondary">
+                                No domain set
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="hidden lg:block">
+                            <ng-container [ngSwitch]="site.isActive">
+                                <div *ngSwitchCase="true" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50">
+                                    <span class="w-2 h-2 mr-1 rounded-full bg-green-400"></span>
+                                    Active
+                                </div>
+                                <div *ngSwitchCase="false" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50">
+                                    <span class="w-2 h-2 mr-1 rounded-full bg-gray-400"></span>
+                                    Inactive
+                                </div>
+                            </ng-container>
+                        </div>
+
+                        <!-- Created -->
+                        <div class="hidden sm:block text-sm text-secondary">
+                            {{site.createdAt | date:'MMM dd, y'}}
+                            <div *ngIf="site.publishedAt" class="text-xs">
+                                Published: {{site.publishedAt | date:'MMM dd'}}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div>
+                            <button
+                                class="min-h-7 min-w-10 h-7 px-2 leading-6"
+                                mat-stroked-button
+                                (click)="toggleDetails(site.id)">
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="selectedSite?.id === site.id ? 'heroicons_solid:chevron-up' : 'heroicons_solid:chevron-down'"></mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Site details -->
+                    <div class="grid"
+                         *ngIf="selectedSite?.id === site.id">
+                        <ng-container *ngTemplateOutlet="rowDetailsTemplate"></ng-container>
+                    </div>
+                </ng-container>
+            </ng-container>
+        </div>
+
+    </div>
+
+    <!-- Pagination -->
+    <mat-paginator
+        class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
+        [ngClass]="{'pointer-events-none': isLoading}"
+        [length]="(pagination$ | async)?.length"
+        [pageIndex]="(pagination$ | async)?.page"
+        [pageSize]="(pagination$ | async)?.size"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+        [showFirstLastButtons]="true"></mat-paginator>
+
+</div>
+
+<!-- Site details template -->
+<ng-template #rowDetailsTemplate>
+    <div class="shadow-lg overflow-hidden">
+        <div class="flex border-b">
+
+            <!-- Selected site form -->
+            <form
+                class="flex flex-col w-full"
+                [formGroup]="selectedSiteForm">
+
+                <div class="flex flex-col sm:flex-row p-8">
+
+                    <!-- Site details -->
+                    <div class="flex flex-auto flex-wrap">
+                        <!-- Site Name -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Site Name</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'siteName'">
+                                <mat-error *ngIf="selectedSiteForm.get('siteName')?.hasError('required')">
+                                    Site name is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Description</mat-label>
+                                <textarea
+                                    matInput
+                                    [formControlName]="'description'"
+                                    [rows]="3">
+                                </textarea>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Domain -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Domain</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'domain'"
+                                    placeholder="example.com">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Tenant ID -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Tenant ID</mat-label>
+                                <input
+                                    matInput
+                                    type="number"
+                                    [formControlName]="'tenantId'">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Default Language -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Default Language</mat-label>
+                                <mat-select [formControlName]="'defaultLanguage'">
+                                    <mat-option *ngFor="let language of languages" [value]="language">
+                                        {{language}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="selectedSiteForm.get('defaultLanguage')?.hasError('required')">
+                                    Default language is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Enabled Languages -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Enabled Languages</mat-label>
+                                <mat-select [formControlName]="'enabledLanguages'" multiple>
+                                    <mat-option *ngFor="let language of languages" [value]="language">
+                                        {{language}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="selectedSiteForm.get('enabledLanguages')?.hasError('required')">
+                                    At least one language must be enabled
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Theme -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Theme</mat-label>
+                                <mat-select [formControlName]="'theme'">
+                                    <mat-option *ngFor="let theme of availableThemes" [value]="theme">
+                                        {{theme | titlecase}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Logo URL -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Logo URL</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'logoUrl'"
+                                    placeholder="https://...">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Favicon URL -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Favicon URL</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'faviconUrl'"
+                                    placeholder="https://...">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Active Status (only for existing sites) -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8" *ngIf="selectedSite">
+                            <mat-slide-toggle
+                                class="mt-6"
+                                [formControlName]="'isActive'">
+                                Active
+                            </mat-slide-toggle>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Menus Section (only for existing sites) -->
+                <div class="border-t p-8" *ngIf="selectedSite">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium">Site Menus</h3>
+                        <button
+                            type="button"
+                            mat-stroked-button
+                            [color]="'primary'">
+                            Manage Menus
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="menus$ | async as menus">
+                        <div *ngFor="let menu of menus" class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium">{{menu.name}}</h4>
+                                <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                     [ngClass]="{
+                                        'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50': menu.language === 'TR',
+                                        'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50': menu.language === 'EN'
+                                     }">
+                                    {{menu.language}}
+                                </div>
+                            </div>
+                            <div class="text-sm text-secondary">
+                                {{menu.items?.length || 0}} menu items
+                            </div>
+                        </div>
+                        <div *ngIf="menus.length === 0" class="col-span-full text-center text-secondary py-8">
+                            No menus found for this site
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between w-full border-t px-8 py-4">
+                    <div class="flex items-center">
+                        <div
+                            class="flex items-center mr-4"
+                            *ngIf="flashMessage">
+                            <ng-container *ngIf="flashMessage === 'success'">
+                                <mat-icon
+                                    class="text-green-500"
+                                    [svgIcon]="'heroicons_outline:check'"></mat-icon>
+                                <span class="ml-2">Site updated</span>
+                            </ng-container>
+                            <ng-container *ngIf="flashMessage === 'error'">
+                                <mat-icon
+                                    class="text-red-500"
+                                    [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                                <span class="ml-2">An error occurred, try again!</span>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="flex items-center mr-4" *ngIf="selectedSite">
+                            <button
+                                class="mr-2"
+                                mat-stroked-button
+                                [color]="'primary'"
+                                (click)="publishSite()">
+                                Publish
+                            </button>
+                            <button
+                                class="mr-2"
+                                *ngIf="!selectedSite.isActive"
+                                mat-stroked-button
+                                [color]="'primary'"
+                                (click)="activateSite()">
+                                Activate
+                            </button>
+                            <button
+                                class="mr-2"
+                                *ngIf="selectedSite.isActive"
+                                mat-stroked-button
+                                [color]="'warn'"
+                                (click)="deactivateSite()">
+                                Deactivate
+                            </button>
+                            <button
+                                class="mr-2"
+                                mat-stroked-button
+                                [color]="'warn'"
+                                (click)="deleteSelectedSite()">
+                                Delete
+                            </button>
+                        </div>
+                        <button
+                            mat-flat-button
+                            [color]="'primary'"
+                            (click)="updateSelectedSite()">
+                            {{selectedSite ? 'Update' : 'Add'}}
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</ng-template>

@@ -3,6 +3,8 @@ import {
     NgClass,
     NgTemplateOutlet,
     DatePipe,
+    NgIf,
+    NgFor,
     CommonModule,
 } from '@angular/common';
 import {
@@ -34,15 +36,16 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { TenantsService } from '../tenants.service';
+import { UsersService } from '../users.service';
 import {
-    Tenant,
-    TenantPagination,
-    TenantStatus,
+    User,
+    UserPagination,
+    UserRole,
     Language,
-    CreateTenantRequest,
-    UpdateTenantRequest,
-} from '../tenants.types';
+    CreateUserRequest,
+    UpdateUserRequest,
+    ChangePasswordRequest,
+} from '../users.types';
 import {
     Observable,
     Subject,
@@ -54,8 +57,9 @@ import {
 } from 'rxjs';
 
 @Component({
-    selector: 'tenants-list',
-    templateUrl: './tenants-list.component.html',
+    selector: 'users-list',
+    templateUrl: './users-list.component.html',
+    standalone: true,
     styles: [
         /* language=SCSS */
         `
@@ -96,24 +100,29 @@ import {
         MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
+        NgIf,
+        NgFor,
     ],
 })
-export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
-    tenants$: Observable<Tenant[]>;
-    pagination$: Observable<TenantPagination>;
+    users$: Observable<User[]>;
+    pagination$: Observable<UserPagination>;
 
     isLoading: boolean = false;
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedTenant: Tenant | null = null;
-    selectedTenantForm: UntypedFormGroup;
+    selectedUser: User | null = null;
+    selectedUserForm: UntypedFormGroup;
+    passwordForm: UntypedFormGroup;
     flashMessage: 'success' | 'error' | null = null;
+    showPasswordForm: boolean = false;
+    newPassword: string = '';
     
-    // Language and status options
+    // Role and language options
+    roles: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN, UserRole.EDITOR, UserRole.VIEWER];
     languages: Language[] = [Language.TR, Language.EN];
-    statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -124,7 +133,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _tenantsService: TenantsService
+        private _usersService: UsersService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -135,24 +144,27 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Create the selected tenant form
-        this.selectedTenantForm = this._formBuilder.group({
-            companyName: ['', [Validators.required]],
-            subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-            adminName: ['', [Validators.required]],
-            adminEmail: ['', [Validators.required, Validators.email]],
-            phone: [''],
-            defaultLanguage: [Language.TR, [Validators.required]],
-            customDomain: [''],
-            timezone: ['Europe/Istanbul'],
-            currency: ['TRY'],
-            sslEnabled: [true],
-            notes: ['']
+        // Create the selected user form
+        this.selectedUserForm = this._formBuilder.group({
+            email: ['', [Validators.required, Validators.email]],
+            fullName: ['', [Validators.required]],
+            password: [''],
+            role: [UserRole.VIEWER, [Validators.required]],
+            preferredLanguage: [Language.TR, [Validators.required]],
+            tenantId: [''],
+            isActive: [true]
         });
 
-        // Get the tenants
-        this.tenants$ = this._tenantsService.tenants$;
-        this.pagination$ = this._tenantsService.pagination$;
+        // Create the password form
+        this.passwordForm = this._formBuilder.group({
+            currentPassword: ['', [Validators.required]],
+            newPassword: ['', [Validators.required, Validators.minLength(6)]],
+            confirmPassword: ['', [Validators.required]]
+        });
+
+        // Get the users
+        this.users$ = this._usersService.users$;
+        this.pagination$ = this._usersService.pagination$;
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
@@ -162,7 +174,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 switchMap((query) => {
                     this.closeDetails();
                     this.isLoading = true;
-                    return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
+                    return this._usersService.getUsers(0, 10, 'fullName', 'asc', query);
                 }),
                 map(() => {
                     this.isLoading = false;
@@ -171,7 +183,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             .subscribe();
 
         // Load initial data
-        this._tenantsService.getTenants().subscribe();
+        this._usersService.getUsers().subscribe();
     }
 
     /**
@@ -181,7 +193,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this._sort && this._paginator) {
             // Set the initial sort
             this._sort.sort({
-                id: 'companyName',
+                id: 'fullName',
                 start: 'asc',
                 disableClear: true,
             });
@@ -200,13 +212,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.closeDetails();
                 });
 
-            // Get tenants if sort or page changes
+            // Get users if sort or page changes
             merge(this._sort.sortChange, this._paginator.page)
                 .pipe(
                     switchMap(() => {
                         this.closeDetails();
                         this.isLoading = true;
-                        return this._tenantsService.getTenants(
+                        return this._usersService.getUsers(
                             this._paginator.pageIndex,
                             this._paginator.pageSize,
                             this._sort.active,
@@ -236,26 +248,26 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Toggle tenant details
+     * Toggle user details
      */
-    toggleDetails(tenantId: number): void {
-        // If the tenant is already selected...
-        if (this.selectedTenant && this.selectedTenant.id === tenantId) {
+    toggleDetails(userId: number): void {
+        // If the user is already selected...
+        if (this.selectedUser && this.selectedUser.id === userId) {
             // Close the details
             this.closeDetails();
             return;
         }
 
-        // Get the tenant by id
-        this._tenantsService
-            .getTenantById(tenantId)
+        // Get the user by id
+        this._usersService
+            .getUserById(userId)
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tenant) => {
-                // Set the selected tenant
-                this.selectedTenant = tenant;
+            .subscribe((user) => {
+                // Set the selected user
+                this.selectedUser = user;
 
                 // Fill the form
-                this.selectedTenantForm.patchValue(tenant);
+                this.selectedUserForm.patchValue(user);
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -266,21 +278,22 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * Close the details
      */
     closeDetails(): void {
-        this.selectedTenant = null;
+        this.selectedUser = null;
+        this.showPasswordForm = false;
+        this.newPassword = '';
     }
 
     /**
-     * Create tenant
+     * Create user
      */
-    createTenant(): void {
-        // Create the tenant
-        this.selectedTenant = null;
-        this.selectedTenantForm.reset();
-        this.selectedTenantForm.patchValue({
-            defaultLanguage: Language.TR,
-            timezone: 'Europe/Istanbul',
-            currency: 'TRY',
-            sslEnabled: true
+    createUser(): void {
+        // Create the user
+        this.selectedUser = null;
+        this.selectedUserForm.reset();
+        this.selectedUserForm.patchValue({
+            role: UserRole.VIEWER,
+            preferredLanguage: Language.TR,
+            isActive: true
         });
 
         // Mark for check
@@ -288,22 +301,25 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Update the selected tenant using the form data
+     * Update the selected user using the form data
      */
-    updateSelectedTenant(): void {
-        // Get the tenant object
-        const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
+    updateSelectedUser(): void {
+        // Get the user object
+        const user = this.selectedUserForm.getRawValue() as CreateUserRequest | UpdateUserRequest;
 
         // Remove empty values
-        Object.keys(tenant).forEach(key => {
-            if (tenant[key] === '' || tenant[key] === null) {
-                delete tenant[key];
+        Object.keys(user).forEach(key => {
+            if (user[key] === '' || user[key] === null) {
+                delete user[key];
             }
         });
 
-        // If we have a tenant ID, update the existing tenant...
-        if (this.selectedTenant) {
-            this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
+        // If we have a user ID, update the existing user...
+        if (this.selectedUser) {
+            // Remove password from update request
+            delete (user as any).password;
+            
+            this._usersService.updateUser(this.selectedUser.id, user as UpdateUserRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
@@ -316,9 +332,15 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 });
         }
-        // Otherwise, create a new tenant...
+        // Otherwise, create a new user...
         else {
-            this._tenantsService.createTenant(tenant as CreateTenantRequest)
+            // Password is required for new users
+            if (!user.password) {
+                this.selectedUserForm.get('password')?.setErrors({ required: true });
+                return;
+            }
+
+            this._usersService.createUser(user as CreateUserRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
@@ -337,13 +359,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Delete the selected tenant
+     * Delete the selected user
      */
-    deleteSelectedTenant(): void {
+    deleteSelectedUser(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete tenant',
-            message: 'Are you sure you want to remove this tenant? This action cannot be undone!',
+            title: 'Delete user',
+            message: 'Are you sure you want to remove this user? This action cannot be undone!',
             actions: {
                 confirm: {
                     label: 'Delete',
@@ -355,11 +377,11 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         confirmation.afterClosed().subscribe((result) => {
             // If the confirm button pressed...
             if (result === 'confirmed') {
-                // Get the tenant object
-                const tenant = this.selectedTenant;
+                // Get the user object
+                const user = this.selectedUser;
 
-                // Delete the tenant on the server
-                this._tenantsService.deleteTenant(tenant.id)
+                // Delete the user on the server
+                this._usersService.deleteUser(user.id)
                     .pipe(takeUntil(this._unsubscribeAll))
                     .subscribe(() => {
                         // Close the details
@@ -370,16 +392,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Activate tenant
+     * Activate user
      */
-    activateTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.activateTenant(this.selectedTenant.id)
+    activateUser(): void {
+        if (this.selectedUser) {
+            this._usersService.activateUser(this.selectedUser.id)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
+                    next: (updatedUser) => {
+                        this.selectedUser = updatedUser;
+                        this.selectedUserForm.patchValue(updatedUser);
                         this.showFlashMessage('success');
                         this._changeDetectorRef.markForCheck();
                     },
@@ -391,16 +413,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Suspend tenant
+     * Deactivate user
      */
-    suspendTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.suspendTenant(this.selectedTenant.id)
+    deactivateUser(): void {
+        if (this.selectedUser) {
+            this._usersService.deactivateUser(this.selectedUser.id)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
+                    next: (updatedUser) => {
+                        this.selectedUser = updatedUser;
+                        this.selectedUserForm.patchValue(updatedUser);
                         this.showFlashMessage('success');
                         this._changeDetectorRef.markForCheck();
                     },
@@ -412,51 +434,75 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Set maintenance mode
+     * Show password form
      */
-    setMaintenanceMode(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.setMaintenanceMode(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.showFlashMessage('success');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.showFlashMessage('error');
-                    }
-                });
-        }
+    togglePasswordForm(): void {
+        this.showPasswordForm = !this.showPasswordForm;
+        this.passwordForm.reset();
+        this.newPassword = '';
     }
 
     /**
-     * Check subdomain availability
+     * Change password
      */
-    checkSubdomainAvailability(): void {
-        const subdomain = this.selectedTenantForm.get('subdomain')?.value;
-        if (subdomain && subdomain.length > 2) {
-            // If we're editing an existing tenant and the subdomain hasn't changed, don't check
-            if (this.selectedTenant && this.selectedTenant.subdomain === subdomain) {
-                // Clear any existing errors for the current tenant's subdomain
-                const control = this.selectedTenantForm.get('subdomain');
-                if (control?.hasError('unavailable')) {
-                    const errors = { ...control.errors };
-                    delete errors.unavailable;
-                    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
-                }
+    changePassword(): void {
+        if (this.selectedUser && this.passwordForm.valid) {
+            const passwordRequest = this.passwordForm.getRawValue() as ChangePasswordRequest;
+            
+            // Check if passwords match
+            if (passwordRequest.newPassword !== passwordRequest.confirmPassword) {
+                this.passwordForm.get('confirmPassword')?.setErrors({ mismatch: true });
                 return;
             }
 
-            this._tenantsService.checkSubdomainAvailability(subdomain)
+            this._usersService.changePassword(this.selectedUser.id, passwordRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe((available) => {
-                    if (!available) {
-                        this.selectedTenantForm.get('subdomain')?.setErrors({ unavailable: true });
+                .subscribe({
+                    next: () => {
+                        this.showFlashMessage('success');
+                        this.passwordForm.reset();
+                        this.showPasswordForm = false;
+                    },
+                    error: () => {
+                        this.showFlashMessage('error');
                     }
                 });
+        }
+    }
+
+    /**
+     * Reset password
+     */
+    resetPassword(): void {
+        if (this.selectedUser) {
+            // Open the confirmation dialog
+            const confirmation = this._fuseConfirmationService.open({
+                title: 'Reset password',
+                message: 'Are you sure you want to reset this user\'s password? A new password will be generated.',
+                actions: {
+                    confirm: {
+                        label: 'Reset',
+                    },
+                },
+            });
+
+            // Subscribe to the confirmation dialog closed action
+            confirmation.afterClosed().subscribe((result) => {
+                // If the confirm button pressed...
+                if (result === 'confirmed') {
+                    this._usersService.resetPassword(this.selectedUser.id)
+                        .pipe(takeUntil(this._unsubscribeAll))
+                        .subscribe({
+                            next: (newPassword) => {
+                                this.newPassword = newPassword;
+                                this.showFlashMessage('success');
+                            },
+                            error: () => {
+                                this.showFlashMessage('error');
+                            }
+                        });
+                }
+            });
         }
     }
 

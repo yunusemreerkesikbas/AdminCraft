@@ -31,7 +31,10 @@
       "Bash(npm run build:*)",
       "Bash(git reset:*)",
       "Bash(npm start)",
-      "Bash(ng build:*)"
+      "Bash(ng build:*)",
+      "Bash(./gradlew:*)",
+      "Bash(find:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

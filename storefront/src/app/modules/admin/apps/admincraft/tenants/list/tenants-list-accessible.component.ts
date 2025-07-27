@@ -14,6 +14,8 @@ import {
     OnInit,
     ViewChild,
     ViewEncapsulation,
+    ElementRef,
+    inject,
 } from '@angular/core';
 import {
     FormsModule,
@@ -31,7 +33,8 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule, SortDirection } from '@angular/material/sort';
+import { A11yModule, LiveAnnouncer } from '@angular/cdk/a11y';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { TenantsService } from '../tenants.service';
@@ -54,8 +57,8 @@ import {
 } from 'rxjs';
 
 @Component({
-    selector: 'tenants-list',
-    templateUrl: './tenants-list.component.html',
+    selector: 'tenants-list-accessible',
+    templateUrl: './tenants-list-accessible.component.html',
     styles: [
         /* language=SCSS */
         `
@@ -73,6 +76,40 @@ import {
                 @screen lg {
                     grid-template-columns: 48px 112px auto 112px 96px 96px 72px;
                 }
+            }
+
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            /* High contrast mode support */
+            @media (prefers-contrast: high) {
+                .border {
+                    border-width: 2px;
+                }
+            }
+
+            /* Reduced motion support */
+            @media (prefers-reduced-motion: reduce) {
+                .transition-all {
+                    transition: none;
+                }
+            }
+
+            /* Focus indicators */
+            button:focus-visible,
+            input:focus-visible,
+            select:focus-visible {
+                outline: 2px solid #2563eb;
+                outline-offset: 2px;
             }
         `,
     ],
@@ -96,9 +133,10 @@ import {
         MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
+        A11yModule,
     ],
 })
-export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class TenantsListAccessibleComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
@@ -116,6 +154,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    private _liveAnnouncer = inject(LiveAnnouncer);
 
     /**
      * Constructor
@@ -124,7 +163,8 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _tenantsService: TenantsService
+        private _tenantsService: TenantsService,
+        private _elementRef: ElementRef
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -162,6 +202,12 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 switchMap((query) => {
                     this.closeDetails();
                     this.isLoading = true;
+                    
+                    // Announce search to screen readers
+                    if (query && query.trim()) {
+                        this._liveAnnouncer.announce(`Searching for tenants matching "${query}"`);
+                    }
+                    
                     return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
                 }),
                 map(() => {
@@ -198,6 +244,10 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
                     // Close the details
                     this.closeDetails();
+                    
+                    // Announce sort change
+                    const direction = this._sort.direction === 'asc' ? 'ascending' : 'descending';
+                    this._liveAnnouncer.announce(`Sorted by ${this._sort.active} in ${direction} order`);
                 });
 
             // Get tenants if sort or page changes
@@ -232,17 +282,86 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // -----------------------------------------------------------------------------------------------------
+    // @ Accessibility Methods
+    // -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Get status description for screen readers
+     */
+    getStatusDescription(status: TenantStatus): string {
+        const statusDescriptions = {
+            [TenantStatus.ACTIVE]: 'Active and operational',
+            [TenantStatus.PENDING]: 'Pending activation',
+            [TenantStatus.SUSPENDED]: 'Suspended due to policy violation or non-payment',
+            [TenantStatus.MAINTENANCE]: 'Under maintenance, temporarily unavailable'
+        };
+        return statusDescriptions[status] || status;
+    }
+
+    /**
+     * Get language description for screen readers
+     */
+    getLanguageDescription(language: Language): string {
+        const languageDescriptions = {
+            [Language.TR]: 'Turkish',
+            [Language.EN]: 'English'
+        };
+        return languageDescriptions[language] || language;
+    }
+
+    /**
+     * Get sort direction for aria-sort attribute
+     */
+    getSortDirection(column: string): string {
+        if (this._sort?.active === column) {
+            return this._sort.direction === 'asc' ? 'ascending' : 'descending';
+        }
+        return 'none';
+    }
+
+    /**
+     * Get field error ID for aria-describedby
+     */
+    getFieldErrorId(fieldName: string): string {
+        return `${fieldName}-error`;
+    }
+
+    /**
+     * Get flash message text for screen readers
+     */
+    getFlashMessageText(type: 'success' | 'error'): string {
+        return type === 'success' 
+            ? 'Operation completed successfully' 
+            : 'An error occurred during the operation';
+    }
+
+    /**
+     * Focus management for details expansion
+     */
+    private focusDetailsSection(tenantId: number): void {
+        setTimeout(() => {
+            const detailsElement = this._elementRef.nativeElement
+                .querySelector(`#tenant-details-${tenantId}`);
+            if (detailsElement) {
+                detailsElement.focus();
+                this._liveAnnouncer.announce('Tenant details expanded');
+            }
+        }, 100);
+    }
+
+    // -----------------------------------------------------------------------------------------------------
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Toggle tenant details
+     * Toggle tenant details with accessibility support
      */
     toggleDetails(tenantId: number): void {
         // If the tenant is already selected...
         if (this.selectedTenant && this.selectedTenant.id === tenantId) {
             // Close the details
             this.closeDetails();
+            this._liveAnnouncer.announce('Tenant details collapsed');
             return;
         }
 
@@ -259,6 +378,9 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
+
+                // Focus the details section for accessibility
+                this.focusDetailsSection(tenantId);
             });
     }
 
@@ -270,7 +392,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Create tenant
+     * Create tenant with accessibility announcements
      */
     createTenant(): void {
         // Create the tenant
@@ -283,6 +405,9 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             sslEnabled: true
         });
 
+        // Announce action
+        this._liveAnnouncer.announce('Create new tenant form opened');
+
         // Mark for check
         this._changeDetectorRef.markForCheck();
     }
@@ -291,6 +416,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * Update the selected tenant using the form data
      */
     updateSelectedTenant(): void {
+        // Validate form before submission
+        if (this.selectedTenantForm.invalid) {
+            this.selectedTenantForm.markAllAsTouched();
+            this._liveAnnouncer.announce('Please correct the form errors before submitting');
+            return;
+        }
+
         // Get the tenant object
         const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
 
@@ -309,10 +441,12 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: () => {
                         // Show a success message
                         this.showFlashMessage('success');
+                        this._liveAnnouncer.announce('Tenant updated successfully');
                     },
                     error: () => {
                         // Show an error message
                         this.showFlashMessage('error');
+                        this._liveAnnouncer.announce('Failed to update tenant. Please try again.');
                     }
                 });
         }
@@ -324,6 +458,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: () => {
                         // Show a success message
                         this.showFlashMessage('success');
+                        this._liveAnnouncer.announce('Tenant created successfully');
                         
                         // Close details
                         this.closeDetails();
@@ -331,19 +466,25 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     error: () => {
                         // Show an error message
                         this.showFlashMessage('error');
+                        this._liveAnnouncer.announce('Failed to create tenant. Please try again.');
                     }
                 });
         }
     }
 
     /**
-     * Delete the selected tenant
+     * Delete the selected tenant with accessibility support
      */
     deleteSelectedTenant(): void {
+        if (!this.selectedTenant) {
+            this._liveAnnouncer.announce('No tenant selected for deletion');
+            return;
+        }
+
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
             title: 'Delete tenant',
-            message: 'Are you sure you want to remove this tenant? This action cannot be undone!',
+            message: `Are you sure you want to remove ${this.selectedTenant.companyName}? This action cannot be undone!`,
             actions: {
                 confirm: {
                     label: 'Delete',
@@ -361,16 +502,22 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 // Delete the tenant on the server
                 this._tenantsService.deleteTenant(tenant.id)
                     .pipe(takeUntil(this._unsubscribeAll))
-                    .subscribe(() => {
-                        // Close the details
-                        this.closeDetails();
+                    .subscribe({
+                        next: () => {
+                            // Close the details
+                            this.closeDetails();
+                            this._liveAnnouncer.announce(`Tenant ${tenant.companyName} deleted successfully`);
+                        },
+                        error: () => {
+                            this._liveAnnouncer.announce('Failed to delete tenant. Please try again.');
+                        }
                     });
             }
         });
     }
 
     /**
-     * Activate tenant
+     * Activate tenant with accessibility announcements
      */
     activateTenant(): void {
         if (this.selectedTenant) {
@@ -381,17 +528,19 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.selectedTenant = updatedTenant;
                         this.selectedTenantForm.patchValue(updatedTenant);
                         this.showFlashMessage('success');
+                        this._liveAnnouncer.announce(`Tenant ${updatedTenant.companyName} activated successfully`);
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
                         this.showFlashMessage('error');
+                        this._liveAnnouncer.announce('Failed to activate tenant');
                     }
                 });
         }
     }
 
     /**
-     * Suspend tenant
+     * Suspend tenant with accessibility announcements
      */
     suspendTenant(): void {
         if (this.selectedTenant) {
@@ -402,17 +551,19 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.selectedTenant = updatedTenant;
                         this.selectedTenantForm.patchValue(updatedTenant);
                         this.showFlashMessage('success');
+                        this._liveAnnouncer.announce(`Tenant ${updatedTenant.companyName} suspended`);
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
                         this.showFlashMessage('error');
+                        this._liveAnnouncer.announce('Failed to suspend tenant');
                     }
                 });
         }
     }
 
     /**
-     * Set maintenance mode
+     * Set maintenance mode with accessibility announcements
      */
     setMaintenanceMode(): void {
         if (this.selectedTenant) {
@@ -423,17 +574,19 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.selectedTenant = updatedTenant;
                         this.selectedTenantForm.patchValue(updatedTenant);
                         this.showFlashMessage('success');
+                        this._liveAnnouncer.announce(`Tenant ${updatedTenant.companyName} set to maintenance mode`);
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
                         this.showFlashMessage('error');
+                        this._liveAnnouncer.announce('Failed to set maintenance mode');
                     }
                 });
         }
     }
 
     /**
-     * Check subdomain availability
+     * Check subdomain availability with accessibility feedback
      */
     checkSubdomainAvailability(): void {
         const subdomain = this.selectedTenantForm.get('subdomain')?.value;
@@ -455,13 +608,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .subscribe((available) => {
                     if (!available) {
                         this.selectedTenantForm.get('subdomain')?.setErrors({ unavailable: true });
+                        this._liveAnnouncer.announce(`Subdomain ${subdomain} is not available`);
+                    } else {
+                        this._liveAnnouncer.announce(`Subdomain ${subdomain} is available`);
                     }
                 });
         }
     }
 
     /**
-     * Show flash message
+     * Show flash message with accessibility support
      */
     showFlashMessage(type: 'success' | 'error'): void {
         // Show the message
