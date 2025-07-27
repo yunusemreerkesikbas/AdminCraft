@@ -12,19 +12,22 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class UserServiceImpl implements UserService {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    
+    private static final String SECURE_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     /**
      * Checks if a string is a valid BCrypt hash by verifying the complete structure.
@@ -216,8 +219,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmailAndTenantId(email, tenantId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
-        // Generate temporary password
-        String tempPassword = UUID.randomUUID().toString().substring(0, 12);
+        // Generate cryptographically secure temporary password
+        String tempPassword = generateSecureTemporaryPassword();
         String encodedPassword = passwordEncoder.encode(tempPassword);
         
         user.changePassword(encodedPassword);
@@ -225,6 +228,20 @@ public class UserServiceImpl implements UserService {
         
         // TODO: Send email with temporary password
         log.info("Password reset for user: {}", email);
+    }
+    
+    @Override
+    public void resetPasswordWithNewPassword(String email, Long tenantId, String newPassword) {
+        User user = userRepository.findByEmailAndTenantId(email, tenantId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Encode the provided password before storing
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        
+        user.changePassword(encodedPassword);
+        userRepository.save(user);
+        
+        log.info("Password reset with new password for user: {}", email);
     }
     
     @Override
@@ -341,8 +358,8 @@ public class UserServiceImpl implements UserService {
         admin.setIsActive(true);
         admin.setEmailVerified(true);
         
-        // Generate temporary password
-        String tempPassword = UUID.randomUUID().toString().substring(0, 12);
+        // Generate cryptographically secure temporary password
+        String tempPassword = generateSecureTemporaryPassword();
         admin.setPasswordHash(passwordEncoder.encode(tempPassword));
         
         User createdAdmin = userRepository.save(admin);
@@ -602,5 +619,18 @@ public class UserServiceImpl implements UserService {
         
         // Regular users can only access their own tenant
         return user.getTenantId().equals(tenantId);
+    }
+    
+    /**
+     * Generates a cryptographically secure temporary password
+     * @return A secure 16-character password
+     */
+    private String generateSecureTemporaryPassword() {
+        StringBuilder password = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            int randomIndex = SECURE_RANDOM.nextInt(SECURE_PASSWORD_CHARS.length());
+            password.append(SECURE_PASSWORD_CHARS.charAt(randomIndex));
+        }
+        return password.toString();
     }
 }

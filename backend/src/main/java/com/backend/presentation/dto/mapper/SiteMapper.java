@@ -94,7 +94,7 @@ public class SiteMapper {
             site.getGoogleAnalyticsId(),
             site.getCustomCode(),
             site.getIsPublished(),
-            menus != null ? menus.stream().map(this::toMenuResponse).map(Object.class::cast).toList() : List.of(),
+            menus != null ? menus.stream().map(this::toMenuResponse).toList() : List.of(),
             site.getCreatedAt(),
             site.getUpdatedAt(),
             site.getPublishedAt()

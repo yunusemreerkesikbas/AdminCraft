@@ -16,7 +16,7 @@ public class UserMapper {
     public User toEntity(CreateUserRequest request) {
         User user = new User();
         user.setEmail(request.email());
-        user.setPasswordHash(request.password()); // Will be encoded in service
+        // Password will be encoded and set in the service layer
         user.setFullName(request.fullName());
         user.setRole(request.role());
         user.setPreferredLanguage(request.preferredLanguage());

@@ -28,7 +28,7 @@ public record SiteResponse(
     String googleAnalyticsId,
     String customCode,
     Boolean isPublished,
-    List<Object> menus,
+    List<MenuResponse> menus,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
     LocalDateTime publishedAt

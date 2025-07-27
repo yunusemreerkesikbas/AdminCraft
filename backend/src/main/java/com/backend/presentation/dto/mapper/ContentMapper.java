@@ -88,7 +88,7 @@ public class ContentMapper {
             content.getPublishedAt(),
             content.getScheduledAt(),
             content.getExpiresAt(),
-            content.getCreatedBy(),
+            content.getPublishedBy() != null ? content.getPublishedBy() : content.getCreatedBy(),
             authorName,
             content.getCreatedBy(),
             content.getUpdatedBy(),

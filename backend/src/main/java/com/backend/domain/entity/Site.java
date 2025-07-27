@@ -66,9 +66,6 @@ public class Site {
     @Column(name = "is_active", nullable = false)
     private Boolean active = true;
 
-    @Column(name = "theme_name")
-    private String themeName = "default";
-
     @Column(name = "theme")
     private String theme = "default";
 
