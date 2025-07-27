@@ -25,8 +25,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12); // Higher rounds for better security
     }
 
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, 
+                                         JwtAuthenticationFilter jwtAuthFilter
+                                         ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -47,15 +50,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Allow specific origins for development and production
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200",    // Angular dev server
-            "http://localhost:3000",    // React dev server
-            "http://localhost:8080"     // Backend server
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",       // Allow any localhost port for development
+            "https://*.yourdomain.com", // Production domain pattern
+            "http://127.0.0.1:*"       // Local IP access
         ));
         
         // Allow all HTTP methods
         configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
         ));
         
         // Allow all headers
@@ -65,7 +68,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         
         // Expose authorization header to frontend
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         
         // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);

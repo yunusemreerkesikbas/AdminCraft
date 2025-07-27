@@ -33,7 +33,15 @@ public class ApiResponse<T> {
         return new ApiResponse<>("ERROR", message, null, null);
     }
 
+    public static <T> ApiResponse<T> error(String message, T data) {
+        return new ApiResponse<>("ERROR", message, data, null);
+    }
+
     public static <T> ApiResponse<T> error(int code, String message) {
         return new ApiResponse<>("ERROR", message, null, code);
+    }
+
+    public static <T> ApiResponse<T> error(int code, String message, T data) {
+        return new ApiResponse<>("ERROR", message, data, code);
     }
 }
