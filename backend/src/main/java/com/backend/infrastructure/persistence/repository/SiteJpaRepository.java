@@ -18,13 +18,13 @@ public interface SiteJpaRepository extends JpaRepository<Site, Long> {
     List<Site> findByTenantIdOrderByCreatedAtDesc(Long tenantId);
     
     // Active status queries
-    List<Site> findByTenantIdAndActive(Long tenantId, Boolean active);
-    List<Site> findByTenantIdAndActiveTrue(Long tenantId);
-    Optional<Site> findFirstByTenantIdAndActiveTrue(Long tenantId);
-    List<Site> findByActive(Boolean active);
+    List<Site> findByTenantIdAndIsActive(Long tenantId, Boolean isActive);
+    List<Site> findByTenantIdAndIsActiveTrue(Long tenantId);
+    Optional<Site> findFirstByTenantIdAndIsActiveTrue(Long tenantId);
+    List<Site> findByIsActive(Boolean isActive);
     
     // Published status queries
-    List<Site> findByTenantIdAndPublishedTrue(Long tenantId);
+    List<Site> findByTenantIdAndIsPublishedTrue(Long tenantId);
     
     // Existence checks
     boolean existsByDomain(String domain);
@@ -34,7 +34,7 @@ public interface SiteJpaRepository extends JpaRepository<Site, Long> {
     
     // Count queries
     long countByTenantId(Long tenantId);
-    long countByTenantIdAndActive(Long tenantId, Boolean active);
-    long countByTenantIdAndActiveTrue(Long tenantId);
-    long countByTenantIdAndPublishedTrue(Long tenantId);
+    long countByTenantIdAndIsActive(Long tenantId, Boolean isActive);
+    long countByTenantIdAndIsActiveTrue(Long tenantId);
+    long countByTenantIdAndIsPublishedTrue(Long tenantId);
 } 

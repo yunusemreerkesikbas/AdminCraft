@@ -46,27 +46,27 @@ public class SiteRepositoryImpl implements SiteRepository {
     
     @Override
     public List<Site> findByTenantIdAndIsActive(Long tenantId, boolean isActive) {
-        return siteJpaRepository.findByTenantIdAndActive(tenantId, isActive);
+        return siteJpaRepository.findByTenantIdAndIsActive(tenantId, isActive);
     }
     
     @Override
     public List<Site> findByTenantIdAndIsActiveTrue(Long tenantId) {
-        return siteJpaRepository.findByTenantIdAndActiveTrue(tenantId);
+        return siteJpaRepository.findByTenantIdAndIsActiveTrue(tenantId);
     }
     
     @Override
     public Optional<Site> findFirstByTenantIdAndIsActiveTrue(Long tenantId) {
-        return siteJpaRepository.findFirstByTenantIdAndActiveTrue(tenantId);
+        return siteJpaRepository.findFirstByTenantIdAndIsActiveTrue(tenantId);
     }
     
     @Override
     public List<Site> findByTenantIdAndIsPublishedTrue(Long tenantId) {
-        return siteJpaRepository.findByTenantIdAndPublishedTrue(tenantId);
+        return siteJpaRepository.findByTenantIdAndIsPublishedTrue(tenantId);
     }
     
     @Override
     public List<Site> findByIsActive(boolean isActive) {
-        return siteJpaRepository.findByActive(isActive);
+        return siteJpaRepository.findByIsActive(isActive);
     }
     
     @Override
@@ -111,12 +111,12 @@ public class SiteRepositoryImpl implements SiteRepository {
     
     @Override
     public long countByTenantIdAndIsActive(Long tenantId, boolean isActive) {
-        return siteJpaRepository.countByTenantIdAndActive(tenantId, isActive);
+        return siteJpaRepository.countByTenantIdAndIsActive(tenantId, isActive);
     }
     
     @Override
     public long countByTenantIdAndIsActiveTrue(Long tenantId) {
-        return siteJpaRepository.countByTenantIdAndActiveTrue(tenantId);
+        return siteJpaRepository.countByTenantIdAndIsActiveTrue(tenantId);
     }
     
     @Override
