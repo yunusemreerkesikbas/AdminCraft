@@ -32,17 +32,18 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatChipsModule } from '@angular/material/chips';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { TenantsService } from '../tenants.service';
+import { SitesService } from '../sites.service';
 import {
-    Tenant,
-    TenantPagination,
-    TenantStatus,
+    Site,
+    SitePagination,
     Language,
-    CreateTenantRequest,
-    UpdateTenantRequest,
-} from '../tenants.types';
+    CreateSiteRequest,
+    UpdateSiteRequest,
+    Menu,
+} from '../sites.types';
 import {
     Observable,
     Subject,
@@ -54,8 +55,8 @@ import {
 } from 'rxjs';
 
 @Component({
-    selector: 'tenants-list',
-    templateUrl: './tenants-list.component.html',
+    selector: 'sites-list',
+    templateUrl: './sites-list.component.html',
     styles: [
         /* language=SCSS */
         `
@@ -79,6 +80,7 @@ import {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
+    standalone: true,
     imports: [
         CommonModule,
         MatProgressBarModule,
@@ -94,26 +96,28 @@ import {
         NgClass,
         MatSelectModule,
         MatSlideToggleModule,
+        MatChipsModule,
         AsyncPipe,
         DatePipe,
     ],
 })
-export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
-    tenants$: Observable<Tenant[]>;
-    pagination$: Observable<TenantPagination>;
+    sites$: Observable<Site[]>;
+    pagination$: Observable<SitePagination>;
+    menus$: Observable<Menu[]>;
 
     isLoading: boolean = false;
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedTenant: Tenant | null = null;
-    selectedTenantForm: UntypedFormGroup;
+    selectedSite: Site | null = null;
+    selectedSiteForm: UntypedFormGroup;
     flashMessage: 'success' | 'error' | null = null;
     
-    // Language and status options
+    // Language options
     languages: Language[] = [Language.TR, Language.EN];
-    statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
+    availableThemes: string[] = ['default', 'modern', 'classic', 'minimal'];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -124,7 +128,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _tenantsService: TenantsService
+        private _sitesService: SitesService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -135,24 +139,24 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Create the selected tenant form
-        this.selectedTenantForm = this._formBuilder.group({
-            companyName: ['', [Validators.required]],
-            subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-            adminName: ['', [Validators.required]],
-            adminEmail: ['', [Validators.required, Validators.email]],
-            phone: [''],
+        // Create the selected site form
+        this.selectedSiteForm = this._formBuilder.group({
+            siteName: ['', [Validators.required]],
+            description: [''],
+            enabledLanguages: [[], [Validators.required]],
             defaultLanguage: [Language.TR, [Validators.required]],
-            customDomain: [''],
-            timezone: ['Europe/Istanbul'],
-            currency: ['TRY'],
-            sslEnabled: [true],
-            notes: ['']
+            tenantId: [''],
+            domain: [''],
+            isActive: [true],
+            theme: ['default'],
+            logoUrl: [''],
+            faviconUrl: ['']
         });
 
-        // Get the tenants
-        this.tenants$ = this._tenantsService.tenants$;
-        this.pagination$ = this._tenantsService.pagination$;
+        // Get the sites
+        this.sites$ = this._sitesService.sites$;
+        this.pagination$ = this._sitesService.pagination$;
+        this.menus$ = this._sitesService.menus$;
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
@@ -162,7 +166,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 switchMap((query) => {
                     this.closeDetails();
                     this.isLoading = true;
-                    return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
+                    return this._sitesService.getSites(0, 10, 'siteName', 'asc', query);
                 }),
                 map(() => {
                     this.isLoading = false;
@@ -171,7 +175,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             .subscribe();
 
         // Load initial data
-        this._tenantsService.getTenants().subscribe();
+        this._sitesService.getSites().subscribe();
     }
 
     /**
@@ -181,7 +185,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this._sort && this._paginator) {
             // Set the initial sort
             this._sort.sort({
-                id: 'companyName',
+                id: 'siteName',
                 start: 'asc',
                 disableClear: true,
             });
@@ -200,13 +204,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.closeDetails();
                 });
 
-            // Get tenants if sort or page changes
+            // Get sites if sort or page changes
             merge(this._sort.sortChange, this._paginator.page)
                 .pipe(
                     switchMap(() => {
                         this.closeDetails();
                         this.isLoading = true;
-                        return this._tenantsService.getTenants(
+                        return this._sitesService.getSites(
                             this._paginator.pageIndex,
                             this._paginator.pageSize,
                             this._sort.active,
@@ -236,26 +240,29 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Toggle tenant details
+     * Toggle site details
      */
-    toggleDetails(tenantId: number): void {
-        // If the tenant is already selected...
-        if (this.selectedTenant && this.selectedTenant.id === tenantId) {
+    toggleDetails(siteId: number): void {
+        // If the site is already selected...
+        if (this.selectedSite && this.selectedSite.id === siteId) {
             // Close the details
             this.closeDetails();
             return;
         }
 
-        // Get the tenant by id
-        this._tenantsService
-            .getTenantById(tenantId)
+        // Get the site by id
+        this._sitesService
+            .getSiteById(siteId)
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tenant) => {
-                // Set the selected tenant
-                this.selectedTenant = tenant;
+            .subscribe((site) => {
+                // Set the selected site
+                this.selectedSite = site;
 
                 // Fill the form
-                this.selectedTenantForm.patchValue(tenant);
+                this.selectedSiteForm.patchValue(site);
+
+                // Load menus for this site
+                this._sitesService.getMenusBySite(siteId).subscribe();
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -266,21 +273,21 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * Close the details
      */
     closeDetails(): void {
-        this.selectedTenant = null;
+        this.selectedSite = null;
     }
 
     /**
-     * Create tenant
+     * Create site
      */
-    createTenant(): void {
-        // Create the tenant
-        this.selectedTenant = null;
-        this.selectedTenantForm.reset();
-        this.selectedTenantForm.patchValue({
+    createSite(): void {
+        // Create the site
+        this.selectedSite = null;
+        this.selectedSiteForm.reset();
+        this.selectedSiteForm.patchValue({
             defaultLanguage: Language.TR,
-            timezone: 'Europe/Istanbul',
-            currency: 'TRY',
-            sslEnabled: true
+            enabledLanguages: [Language.TR],
+            isActive: true,
+            theme: 'default'
         });
 
         // Mark for check
@@ -288,22 +295,22 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Update the selected tenant using the form data
+     * Update the selected site using the form data
      */
-    updateSelectedTenant(): void {
-        // Get the tenant object
-        const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
+    updateSelectedSite(): void {
+        // Get the site object
+        const site = this.selectedSiteForm.getRawValue() as CreateSiteRequest | UpdateSiteRequest;
 
         // Remove empty values
-        Object.keys(tenant).forEach(key => {
-            if (tenant[key] === '' || tenant[key] === null) {
-                delete tenant[key];
+        Object.keys(site).forEach(key => {
+            if (site[key] === '' || site[key] === null) {
+                delete site[key];
             }
         });
 
-        // If we have a tenant ID, update the existing tenant...
-        if (this.selectedTenant) {
-            this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
+        // If we have a site ID, update the existing site...
+        if (this.selectedSite) {
+            this._sitesService.updateSite(this.selectedSite.id, site as UpdateSiteRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
@@ -316,9 +323,9 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 });
         }
-        // Otherwise, create a new tenant...
+        // Otherwise, create a new site...
         else {
-            this._tenantsService.createTenant(tenant as CreateTenantRequest)
+            this._sitesService.createSite(site as CreateSiteRequest)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
@@ -337,13 +344,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Delete the selected tenant
+     * Delete the selected site
      */
-    deleteSelectedTenant(): void {
+    deleteSelectedSite(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete tenant',
-            message: 'Are you sure you want to remove this tenant? This action cannot be undone!',
+            title: 'Delete site',
+            message: 'Are you sure you want to remove this site? This action cannot be undone!',
             actions: {
                 confirm: {
                     label: 'Delete',
@@ -355,11 +362,11 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         confirmation.afterClosed().subscribe((result) => {
             // If the confirm button pressed...
             if (result === 'confirmed') {
-                // Get the tenant object
-                const tenant = this.selectedTenant;
+                // Get the site object
+                const site = this.selectedSite;
 
-                // Delete the tenant on the server
-                this._tenantsService.deleteTenant(tenant.id)
+                // Delete the site on the server
+                this._sitesService.deleteSite(site.id)
                     .pipe(takeUntil(this._unsubscribeAll))
                     .subscribe(() => {
                         // Close the details
@@ -370,16 +377,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Activate tenant
+     * Publish site
      */
-    activateTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.activateTenant(this.selectedTenant.id)
+    publishSite(): void {
+        if (this.selectedSite) {
+            this._sitesService.publishSite(this.selectedSite.id)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
+                    next: (updatedSite) => {
+                        this.selectedSite = updatedSite;
+                        this.selectedSiteForm.patchValue(updatedSite);
                         this.showFlashMessage('success');
                         this._changeDetectorRef.markForCheck();
                     },
@@ -391,16 +398,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Suspend tenant
+     * Activate site
      */
-    suspendTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.suspendTenant(this.selectedTenant.id)
+    activateSite(): void {
+        if (this.selectedSite) {
+            this._sitesService.activateSite(this.selectedSite.id)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
+                    next: (updatedSite) => {
+                        this.selectedSite = updatedSite;
+                        this.selectedSiteForm.patchValue(updatedSite);
                         this.showFlashMessage('success');
                         this._changeDetectorRef.markForCheck();
                     },
@@ -412,49 +419,21 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Set maintenance mode
+     * Deactivate site
      */
-    setMaintenanceMode(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.setMaintenanceMode(this.selectedTenant.id)
+    deactivateSite(): void {
+        if (this.selectedSite) {
+            this._sitesService.deactivateSite(this.selectedSite.id)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
+                    next: (updatedSite) => {
+                        this.selectedSite = updatedSite;
+                        this.selectedSiteForm.patchValue(updatedSite);
                         this.showFlashMessage('success');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
                         this.showFlashMessage('error');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Check subdomain availability
-     */
-    checkSubdomainAvailability(): void {
-        const subdomain = this.selectedTenantForm.get('subdomain')?.value;
-        if (subdomain && subdomain.length > 2) {
-            // If we're editing an existing tenant and the subdomain hasn't changed, don't check
-            if (this.selectedTenant && this.selectedTenant.subdomain === subdomain) {
-                // Clear any existing errors for the current tenant's subdomain
-                const control = this.selectedTenantForm.get('subdomain');
-                if (control?.hasError('unavailable')) {
-                    const errors = { ...control.errors };
-                    delete errors.unavailable;
-                    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
-                }
-                return;
-            }
-
-            this._tenantsService.checkSubdomainAvailability(subdomain)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe((available) => {
-                    if (!available) {
-                        this.selectedTenantForm.get('subdomain')?.setErrors({ unavailable: true });
                     }
                 });
         }

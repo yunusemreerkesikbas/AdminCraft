@@ -1,0 +1,334 @@
+<div class="sm:absolute sm:inset-0 flex flex-col flex-auto min-w-0 sm:overflow-hidden bg-card dark:bg-transparent">
+
+    <!-- Header -->
+    <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-8 px-6 md:px-8 border-b">
+        <!-- Loader -->
+        <div class="absolute inset-x-0 bottom-0"
+             *ngIf="isLoading">
+            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+        </div>
+        <!-- Title -->
+        <div class="text-4xl font-extrabold tracking-tight">Content Management</div>
+        <!-- Actions -->
+        <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+            <!-- Search -->
+            <mat-form-field class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64">
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'Search contents'">
+            </mat-form-field>
+            <!-- Add content button -->
+            <button
+                class="ml-4"
+                mat-flat-button
+                [color]="'primary'"
+                (click)="createContent()">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Add</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="flex flex-auto overflow-hidden">
+
+        <!-- Contents list -->
+        <div class="flex flex-col flex-auto sm:mb-18 overflow-hidden sm:overflow-y-auto">
+            <!-- Header -->
+            <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
+                <div></div>
+                <div [mat-sort-header]="'title'" class="hidden sm:block">Title</div>
+                <div [mat-sort-header]="'status'" class="hidden lg:block">Status</div>
+                <div [mat-sort-header]="'language'" class="hidden lg:block">Language</div>
+                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">Created</div>
+                <div class="hidden sm:block">Details</div>
+            </div>
+            <!-- Rows -->
+            <ng-container *ngIf="contents$ | async as contents">
+                <ng-container *ngFor="let content of contents; trackBy: trackByFn">
+                    <div class="inventory-grid grid items-center gap-4 py-3 px-6 md:px-8 border-b">
+
+                        <!-- Status -->
+                        <div class="flex items-center">
+                            <div class="relative flex flex-0 items-center justify-center w-6 h-6 mr-6 rounded overflow-hidden border">
+                                <div class="flex items-center justify-center w-full h-full text-xs font-semibold leading-none text-center uppercase"
+                                     [ngClass]="{
+                                        'bg-amber-200 text-amber-800 dark:bg-amber-600 dark:text-amber-50': content.status === 'DRAFT',
+                                        'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': content.status === 'PUBLISHED',
+                                        'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-50': content.status === 'ARCHIVED'
+                                     }">
+                                    {{content.status === 'DRAFT' ? 'D' : content.status === 'PUBLISHED' ? 'P' : 'A'}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Title & slug -->
+                        <div class="truncate">
+                            <div class="font-medium">{{content.title}}</div>
+                            <div class="text-sm text-secondary">{{content.slug}}</div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="hidden lg:block">
+                            <ng-container [ngSwitch]="content.status">
+                                <div *ngSwitchCase="'DRAFT'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-amber-50">
+                                    <span class="w-2 h-2 mr-1 rounded-full bg-amber-400"></span>
+                                    Draft
+                                </div>
+                                <div *ngSwitchCase="'PUBLISHED'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50">
+                                    <span class="w-2 h-2 mr-1 rounded-full bg-green-400"></span>
+                                    Published
+                                </div>
+                                <div *ngSwitchCase="'ARCHIVED'" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50">
+                                    <span class="w-2 h-2 mr-1 rounded-full bg-gray-400"></span>
+                                    Archived
+                                </div>
+                            </ng-container>
+                        </div>
+
+                        <!-- Language -->
+                        <div class="hidden lg:block">
+                            <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                 [ngClass]="{
+                                    'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50': content.language === 'TR',
+                                    'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50': content.language === 'EN'
+                                 }">
+                                {{content.language}}
+                            </div>
+                        </div>
+
+                        <!-- Created -->
+                        <div class="hidden sm:block text-sm text-secondary">
+                            {{content.createdAt | date:'MMM dd, y'}}
+                        </div>
+
+                        <!-- Actions -->
+                        <div>
+                            <button
+                                class="min-h-7 min-w-10 h-7 px-2 leading-6"
+                                mat-stroked-button
+                                (click)="toggleDetails(content.id)">
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="selectedContent?.id === content.id ? 'heroicons_solid:chevron-up' : 'heroicons_solid:chevron-down'"></mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Content details -->
+                    <div class="grid"
+                         *ngIf="selectedContent?.id === content.id">
+                        <ng-container *ngTemplateOutlet="rowDetailsTemplate"></ng-container>
+                    </div>
+                </ng-container>
+            </ng-container>
+        </div>
+
+    </div>
+
+    <!-- Pagination -->
+    <mat-paginator
+        class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
+        [ngClass]="{'pointer-events-none': isLoading}"
+        [length]="(pagination$ | async)?.length"
+        [pageIndex]="(pagination$ | async)?.page"
+        [pageSize]="(pagination$ | async)?.size"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+        [showFirstLastButtons]="true"></mat-paginator>
+
+</div>
+
+<!-- Content details template -->
+<ng-template #rowDetailsTemplate>
+    <div class="shadow-lg overflow-hidden">
+        <div class="flex border-b">
+
+            <!-- Selected content form -->
+            <form
+                class="flex flex-col w-full"
+                [formGroup]="selectedContentForm">
+
+                <div class="flex flex-col sm:flex-row p-8">
+
+                    <!-- Content details -->
+                    <div class="flex flex-auto flex-wrap">
+                        <!-- Title -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Title</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'title'"
+                                    (blur)="generateSlug()">
+                                <mat-error *ngIf="selectedContentForm.get('title')?.hasError('required')">
+                                    Title is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Slug -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Slug</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'slug'">
+                                <mat-error *ngIf="selectedContentForm.get('slug')?.hasError('required')">
+                                    Slug is required
+                                </mat-error>
+                                <mat-error *ngIf="selectedContentForm.get('slug')?.hasError('pattern')">
+                                    Slug must contain only lowercase letters, numbers, and hyphens
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Content Type -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Content Type</mat-label>
+                                <mat-select [formControlName]="'contentTypeId'">
+                                    <mat-option *ngFor="let contentType of contentTypes$ | async" [value]="contentType.id">
+                                        {{contentType.displayName}}
+                                    </mat-option>
+                                </mat-select>
+                                <mat-error *ngIf="selectedContentForm.get('contentTypeId')?.hasError('required')">
+                                    Content type is required
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Status</mat-label>
+                                <mat-select [formControlName]="'status'">
+                                    <mat-option *ngFor="let status of statuses" [value]="status">
+                                        {{status}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Language -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Language</mat-label>
+                                <mat-select [formControlName]="'language'">
+                                    <mat-option *ngFor="let language of languages" [value]="language">
+                                        {{language}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Parent Content (for translations) -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Parent Content ID (for translations)</mat-label>
+                                <input
+                                    matInput
+                                    type="number"
+                                    [formControlName]="'parentContentId'">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Meta Title -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Meta Title</mat-label>
+                                <input
+                                    matInput
+                                    [formControlName]="'metaTitle'">
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Meta Description -->
+                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Meta Description</mat-label>
+                                <textarea
+                                    matInput
+                                    [formControlName]="'metaDescription'"
+                                    [rows]="3">
+                                </textarea>
+                            </mat-form-field>
+                        </div>
+
+                        <!-- Data (JSON content) -->
+                        <div class="flex flex-col w-full sm:pl-8">
+                            <mat-form-field class="w-full">
+                                <mat-label>Content Data (JSON)</mat-label>
+                                <textarea
+                                    matInput
+                                    [formControlName]="'data'"
+                                    [rows]="6">
+                                </textarea>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between w-full border-t px-8 py-4">
+                    <div class="flex items-center">
+                        <div
+                            class="flex items-center mr-4"
+                            *ngIf="flashMessage">
+                            <ng-container *ngIf="flashMessage === 'success'">
+                                <mat-icon
+                                    class="text-green-500"
+                                    [svgIcon]="'heroicons_outline:check'"></mat-icon>
+                                <span class="ml-2">Content updated</span>
+                            </ng-container>
+                            <ng-container *ngIf="flashMessage === 'error'">
+                                <mat-icon
+                                    class="text-red-500"
+                                    [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                                <span class="ml-2">An error occurred, try again!</span>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="flex items-center mr-4" *ngIf="selectedContent">
+                            <button
+                                class="mr-2"
+                                *ngIf="selectedContent.status === 'DRAFT'"
+                                mat-stroked-button
+                                [color]="'primary'"
+                                (click)="publishContent()">
+                                Publish
+                            </button>
+                            <button
+                                class="mr-2"
+                                *ngIf="selectedContent.status === 'PUBLISHED'"
+                                mat-stroked-button
+                                [color]="'warn'"
+                                (click)="archiveContent()">
+                                Archive
+                            </button>
+                            <button
+                                class="mr-2"
+                                mat-stroked-button
+                                [color]="'warn'"
+                                (click)="deleteSelectedContent()">
+                                Delete
+                            </button>
+                        </div>
+                        <button
+                            mat-flat-button
+                            [color]="'primary'"
+                            (click)="updateSelectedContent()">
+                            {{selectedContent ? 'Update' : 'Add'}}
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</ng-template>
