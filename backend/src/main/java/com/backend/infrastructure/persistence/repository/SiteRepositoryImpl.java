@@ -121,6 +121,6 @@ public class SiteRepositoryImpl implements SiteRepository {
     
     @Override
     public long countByTenantIdAndIsPublishedTrue(Long tenantId) {
-        return siteJpaRepository.countByTenantIdAndPublishedTrue(tenantId);
+        return siteJpaRepository.countByTenantIdAndIsPublishedTrue(tenantId);
     }
 } 

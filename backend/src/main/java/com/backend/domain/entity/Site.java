@@ -61,10 +61,10 @@ public class Site {
     private Boolean sslEnabled = true;
 
     @Column(name = "is_published", nullable = false)
-    private Boolean published = false;
+    private Boolean isPublished = false;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean active = true;
+    @Column(name = "isActive", nullable = false)
+    private Boolean isActive = true;
 
     @Column(name = "theme")
     private String theme = "default";
@@ -187,12 +187,12 @@ public class Site {
         if (!canBePublished()) {
             throw new IllegalStateException("Site yayınlanmak için gerekli koşulları sağlamıyor");
         }
-        this.published = true;
+        this.isPublished = true;
         this.publishedAt = LocalDateTime.now();
     }
 
     public void unpublish() {
-        this.published = false;
+        this.isPublished = false;
         this.publishedAt = null;
     }
 
@@ -207,7 +207,7 @@ public class Site {
     }
 
     public boolean isAccessible() {
-        return published && !maintenanceMode && active;
+        return isPublished && !maintenanceMode && isActive;
     }
 
     public String getFullDomain() {
@@ -224,11 +224,11 @@ public class Site {
 
     // Convenience methods for mapper compatibility
     public Boolean getIsPublished() {
-        return published;
+        return isPublished;
     }
 
     public void setIsPublished(Boolean published) {
-        this.published = published;
+        this.isPublished = published;
         if (published && this.publishedAt == null) {
             this.publishedAt = LocalDateTime.now();
         } else if (!published) {
@@ -237,11 +237,11 @@ public class Site {
     }
 
     public Boolean getIsActive() {
-        return active;
+        return isActive;
     }
 
     public void setIsActive(Boolean active) {
-        this.active = active;
+        this.isActive = active;
     }
 
     // Constructor
