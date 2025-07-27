@@ -82,10 +82,10 @@ public class MediaMapper {
     }
     
     private String generateFileUrl(MediaFile media) {
-        return "/api/media/files/" + media.getId();
+        return "/media/files/" + media.getId();
     }
     
     private String generateThumbnailUrl(MediaFile media) {
-        return "/api/media/thumbnails/" + media.getId();
+        return "/media/thumbnails/" + media.getId();
     }
 }
