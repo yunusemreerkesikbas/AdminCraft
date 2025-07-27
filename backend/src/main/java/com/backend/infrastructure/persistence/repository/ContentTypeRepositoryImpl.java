@@ -82,6 +82,16 @@ public class ContentTypeRepositoryImpl implements ContentTypeRepository {
         return contentTypeJpaRepository.existsByTenantIdAndName(tenantId, name);
     }
     
+    @Override
+    public Optional<ContentType> findByNameAndTenantId(String name, Long tenantId) {
+        return contentTypeJpaRepository.findByTenantIdAndName(tenantId, name);
+    }
+    
+    @Override
+    public boolean existsByNameAndTenantId(String name, Long tenantId) {
+        return contentTypeJpaRepository.existsByTenantIdAndName(tenantId, name);
+    }
+    
     // System type queries
     @Override
     public List<ContentType> findByIsSystemTypeTrue() {
@@ -107,6 +117,11 @@ public class ContentTypeRepositoryImpl implements ContentTypeRepository {
     @Override
     public List<ContentType> findByTenantIdAndSupportsMultiLanguageTrue(Long tenantId) {
         return contentTypeJpaRepository.findByTenantIdAndSupportsMultiLanguage(tenantId, true);
+    }
+    
+    @Override
+    public List<ContentType> findByTenantIdAndSupportsMultiLanguageFalse(Long tenantId) {
+        return contentTypeJpaRepository.findByTenantIdAndSupportsMultiLanguage(tenantId, false);
     }
     
     @Override
@@ -160,6 +175,11 @@ public class ContentTypeRepositoryImpl implements ContentTypeRepository {
     @Override
     public List<ContentType> findByTenantIdAndNameContainingIgnoreCase(Long tenantId, String name) {
         return contentTypeJpaRepository.findByTenantIdAndNameContainingIgnoreCase(tenantId, name);
+    }
+    
+    @Override
+    public List<ContentType> findByTenantIdOrderByCreatedAtDesc(Long tenantId) {
+        return contentTypeJpaRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
     }
     
     // Date queries

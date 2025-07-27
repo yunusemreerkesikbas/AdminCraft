@@ -16,6 +16,7 @@ public interface ContentTypeJpaRepository extends JpaRepository<ContentType, Lon
     // Basic tenant queries
     List<ContentType> findByTenantId(Long tenantId);
     List<ContentType> findByTenantIdOrderBySortOrderAsc(Long tenantId);
+    List<ContentType> findByTenantIdOrderByCreatedAtDesc(Long tenantId);
     long countByTenantId(Long tenantId);
     
     // Name queries

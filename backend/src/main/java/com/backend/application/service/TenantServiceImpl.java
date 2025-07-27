@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TenantServiceImpl implements TenantService {
@@ -47,6 +48,11 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = tenantRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
         return TenantResponse.from(tenant, displayLanguage);
+    }
+
+    @Override
+    public Optional<Tenant> getTenantEntityById(Long id) {
+        return tenantRepository.findById(id);
     }
 
     @Override
