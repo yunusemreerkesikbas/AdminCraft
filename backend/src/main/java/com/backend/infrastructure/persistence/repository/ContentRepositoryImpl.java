@@ -83,8 +83,23 @@ public class ContentRepositoryImpl implements ContentRepository {
     }
     
     @Override
+    public long countByContentTypeId(Long contentTypeId) {
+        return contentJpaRepository.countByContentTypeId(contentTypeId);
+    }
+    
+    @Override
+    public boolean existsByContentTypeId(Long contentTypeId) {
+        return contentJpaRepository.existsByContentTypeId(contentTypeId);
+    }
+
+    @Override
     public List<Content> findByStatus(ContentStatus status) {
         return contentJpaRepository.findByStatus(status);
+    }
+    
+    @Override
+    public long countByContentTypeIdAndStatus(Long contentTypeId, ContentStatus status) {
+        return contentJpaRepository.countByContentTypeIdAndStatus(contentTypeId, status);
     }
     
     @Override

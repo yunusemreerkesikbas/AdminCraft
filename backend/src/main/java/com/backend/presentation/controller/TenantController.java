@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 @RestController
-@RequestMapping("/api/tenants")
+@RequestMapping("/tenants")
 public class TenantController {
 
     @Autowired
