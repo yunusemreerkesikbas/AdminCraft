@@ -112,41 +112,6 @@ public class TenantController {
         }
     }
 
-    // Simple endpoint to test TENANT_ADMIN access
-    @GetMapping("/my-tenant")
-    public ResponseEntity<ApiResponse<TenantResponse>> getMyTenant(
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
-            Authentication authentication) {
-        try {
-            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            // Get tenantId from the authentication details
-            if (authentication.getDetails() instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
-                Long userTenantId = (Long) details.get("tenantId");
-                
-                if (userTenantId != null) {
-                    TenantResponse response = tenantService.getTenantById(userTenantId, displayLanguage);
-                    return ResponseEntity.ok(ApiResponse.success(response));
-                } else {
-                    String message = "User does not belong to any tenant";
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error(message));
-                }
-            } else {
-                String message = "Authentication details not available";
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error(message));
-            }
-        } catch (Exception ex) {
-            log.error("Error getting user's tenant: {}", ex.getMessage());
-            String message = messageSource.getMessage("tenant.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
-        }
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TenantResponse>> updateTenant(
             @PathVariable @Valid @NotNull @Min(1) Long id,
