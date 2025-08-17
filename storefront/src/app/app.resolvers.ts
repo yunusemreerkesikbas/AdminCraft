@@ -4,6 +4,9 @@ import { MessagesService } from 'app/layout/common/messages/messages.service';
 import { NotificationsService } from 'app/layout/common/notifications/notifications.service';
 import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service';
 import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { ActivatedRouteSnapshot } from '@angular/router';
 
 export const initialDataResolver = () => {
     const messagesService = inject(MessagesService);
@@ -17,5 +20,21 @@ export const initialDataResolver = () => {
         messagesService.getAll(),
         notificationsService.getAll(),
         shortcutsService.getAll(),
-    ]);
+    ]).pipe(
+        map((data) => {
+            // ensure placeholder links are replaced based on current tenant
+            // note: replacement is also done in mock API; this is a noop here
+            // kept for completeness if backend supplies links in future
+            return data;
+        })
+    );
+};
+
+export const tenantParamResolver = (route: ActivatedRouteSnapshot) => {
+    const tenantContext = inject(TenantContextService);
+    const t = route.paramMap.get('tenant');
+    if (t) {
+        tenantContext.setSubdomain(t);
+    }
+    return true;
 };

@@ -73,6 +73,24 @@ export class NavigationMockApi {
                 });
             });
 
+            // Replace __TENANT__ placeholder in links with current tenant
+            const sub = localStorage.getItem('currentTenantSubdomain') || 'default';
+            const replaceLinks = (items: any[]) => {
+                items?.forEach((item) => {
+                    if (item.link && typeof item.link === 'string') {
+                        item.link = item.link.replace('__TENANT__', sub);
+                    }
+                    if (item.children?.length) {
+                        replaceLinks(item.children);
+                    }
+                });
+            };
+
+            replaceLinks(this._defaultNavigation);
+            replaceLinks(this._compactNavigation);
+            replaceLinks(this._futuristicNavigation);
+            replaceLinks(this._horizontalNavigation);
+
             // Return the response
             return [
                 200,

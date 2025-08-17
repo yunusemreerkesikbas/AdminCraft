@@ -2,11 +2,13 @@ package com.backend.application.service.impl;
 
 import com.backend.application.service.AuthenticationService;
 import com.backend.domain.entity.User;
+import com.backend.domain.entity.Tenant;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
 import com.backend.domain.exception.UserAccountDisabledException;
 import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.repository.UserRepository;
+import com.backend.domain.repository.TenantRepository;
 import com.backend.infrastructure.security.JwtTokenProvider;
 import com.backend.presentation.dto.request.LoginRequest;
 import com.backend.presentation.dto.response.LoginResponse;
@@ -21,13 +23,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final TenantRepository tenantRepository;
     
-    public AuthenticationServiceImpl(UserRepository userRepository, 
-                                   JwtTokenProvider jwtTokenProvider,
-                                   PasswordEncoder passwordEncoder) {
+    public AuthenticationServiceImpl(
+            UserRepository userRepository,
+            JwtTokenProvider jwtTokenProvider,
+            PasswordEncoder passwordEncoder,
+            TenantRepository tenantRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
+        this.tenantRepository = tenantRepository;
     }
 
     @Override
@@ -87,7 +93,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFullName(),
                 user.getRole().name(),
                 user.getTenantId(),
-                user.getPreferredLanguage().name()
+                user.getPreferredLanguage().name(),
+                // subdomain resolution (optional if user has tenant)
+                resolveTenantSubdomain(user.getTenantId())
         );
     }
 
@@ -131,7 +139,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFullName(),
                 user.getRole().name(),
                 user.getTenantId(),
-                user.getPreferredLanguage().name()
+                user.getPreferredLanguage().name(),
+                resolveTenantSubdomain(user.getTenantId())
         );
     }
 
@@ -158,6 +167,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } catch (Exception ex) {
             log.error("Error during logout: {}", ex.getMessage());
             throw new InvalidTokenException("Logout failed");
+        }
+    }
+
+    private String resolveTenantSubdomain(Long tenantId) {
+        try {
+            if (tenantId == null) {
+                return null;
+            }
+            return tenantRepository
+                    .findById(tenantId)
+                    .map(Tenant::getSubdomain)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not resolve tenant subdomain for id {}: {}", tenantId, e.getMessage());
+            return null;
         }
     }
 }

@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { UserService } from 'app/core/user/user.service';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +10,7 @@ export class AuthService {
     private _authenticated: boolean = false;
     private _httpClient = inject(HttpClient);
     private _userService = inject(UserService);
+    private _tenantContext = inject(TenantContextService);
     private readonly apiUrl = 'http://localhost:8080/api';
 
     // -----------------------------------------------------------------------------------------------------
@@ -86,7 +88,13 @@ export class AuthService {
                     
                     this._userService.user = user;
 
-                    // Return a new observable with the response
+                    // Use subdomain from login response (backend should provide)
+                    const subFromLogin: string | undefined =
+                        response.data.subdomain ||
+                        response.data.tenantSubdomain;
+                    if (subFromLogin) {
+                        this._tenantContext.setSubdomain(subFromLogin);
+                    }
                     return of(response.data);
                 } else {
                     return throwError(response.message || 'Authentication failed');

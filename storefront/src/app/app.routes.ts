@@ -1,5 +1,5 @@
 import { Route } from '@angular/router';
-import { initialDataResolver } from 'app/app.resolvers';
+import { initialDataResolver, tenantParamResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
@@ -9,14 +9,16 @@ import { LayoutComponent } from 'app/layout/layout.component';
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 export const appRoutes: Route[] = [
 
-    // Redirect empty path to '/dashboards/project'
-    {path: '', pathMatch : 'full', redirectTo: 'dashboards/project'},
+    // Redirect empty path to 'sign-in'
+    {path: '', pathMatch : 'full', redirectTo: 'sign-in'},
 
     // Redirect signed-in user to the '/dashboards/project'
     //
     // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
     // path. Below is another redirection for that path to redirect the user to the desired
     // location. This is a small convenience to keep all main routes together here on this file.
+    // Note: We no longer use this for dynamic tenant redirect.
+    // Kept as a fallback to dashboards.
     {
         path: 'signed-in-redirect',
         pathMatch : 'full',
@@ -92,7 +94,6 @@ export const appRoutes: Route[] = [
                 {path: 'academy', loadChildren: () => import('app/modules/admin/apps/academy/academy.routes')},
                 {path: 'chat', loadChildren: () => import('app/modules/admin/apps/chat/chat.routes')},
                 {path: 'contacts', loadChildren: () => import('app/modules/admin/apps/contacts/contacts.routes')},
-                {path: 'admincraft', loadChildren: () => import('app/modules/admin/apps/admincraft/admincraft.routes')},
                 {path: 'ecommerce', loadChildren: () => import('app/modules/admin/apps/ecommerce/ecommerce.routes')},
                 {path: 'file-manager', loadChildren: () => import('app/modules/admin/apps/file-manager/file-manager.routes')},
                 {path: 'help-center', loadChildren: () => import('app/modules/admin/apps/help-center/help-center.routes')},
@@ -101,6 +102,29 @@ export const appRoutes: Route[] = [
                 {path: 'scrumboard', loadChildren: () => import('app/modules/admin/apps/scrumboard/scrumboard.routes')},
                 {path: 'tasks', loadChildren: () => import('app/modules/admin/apps/tasks/tasks.routes')},
             ]},
+
+            // Tenant-prefixed routes
+            {
+                path: ':tenant',
+                resolve: { tenant: tenantParamResolver },
+                children: [
+                    // Dashboards under tenant
+                    {path: 'project', loadChildren: () => import('app/modules/admin/dashboards/project/project.routes')},
+                    {path: 'analytics', loadChildren: () => import('app/modules/admin/dashboards/analytics/analytics.routes')},
+                    {path: 'finance', loadChildren: () => import('app/modules/admin/dashboards/finance/finance.routes')},
+                    {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
+
+                    // AdminCraft features under tenant root
+                    {path: 'tenants', loadChildren: () => import('app/modules/admin/apps/admincraft/tenants/tenants.routes')},
+                    {path: 'content', loadChildren: () => import('app/modules/admin/apps/admincraft/content/content.routes')},
+                    {path: 'media', loadChildren: () => import('app/modules/admin/apps/admincraft/media/media.routes')},
+                    {path: 'users', loadChildren: () => import('app/modules/admin/apps/admincraft/users/users.routes')},
+                    {path: 'sites', loadChildren: () => import('app/modules/admin/apps/admincraft/sites/sites.routes')},
+
+                    // Default under tenant
+                    {path: '', pathMatch: 'full', redirectTo: 'project'}
+                ]
+            },
 
             // Pages
             {path: 'pages', children: [
