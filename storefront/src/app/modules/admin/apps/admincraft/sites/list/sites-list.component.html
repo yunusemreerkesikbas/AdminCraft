@@ -30,7 +30,7 @@
                 [color]="'primary'"
                 (click)="createSite()">
                 <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">{{ 'admin.sites.add' | transloco }}</span>
+                <span class="ml-2 mr-1">{{ 'admin.sites.create' | transloco }}</span>
             </button>
         </div>
     </div>
@@ -43,7 +43,7 @@
             <!-- Header -->
             <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
                 <div></div>
-                <div [mat-sort-header]="'siteName'" class="hidden sm:block">{{ 'admin.sites.grid.siteName' | transloco }}</div>
+                <div [mat-sort-header]="'siteName'" class="hidden sm:block">{{ 'admin.sites.fields.name' | transloco }}</div>
                 <div [mat-sort-header]="'domain'" class="hidden lg:block">{{ 'admin.common.grid.domain' | transloco }}</div>
                 <div [mat-sort-header]="'isActive'" class="hidden lg:block">{{ 'admin.common.grid.status' | transloco }}</div>
                 <div [mat-sort-header]="'createdAt'" class="hidden sm:block">{{ 'admin.common.grid.created' | transloco }}</div>

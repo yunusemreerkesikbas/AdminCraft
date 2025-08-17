@@ -41,7 +41,8 @@
       "Bash(./mvnw:*)",
       "Bash(./backend/mvnw:*)",
       "Bash(rg:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ng serve:*)"
     ],
     "deny": []
   }

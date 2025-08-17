@@ -1,25 +1,34 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { TranslationService } from '../i18n/translation.service';
+import { SupportedLanguage } from '../i18n/translation.types';
 
 export interface LanguageDefinition {
-    id: string;
+    id: SupportedLanguage;
     title: string;
     flag: string;
 }
 
+/**
+ * Language Service - Simplified facade for UI components
+ * Delegates complex translation logic to TranslationService
+ * Following Clean Architecture: This is the Interface Adapter layer
+ */
 @Injectable({
     providedIn: 'root'
 })
 export class LanguageService {
-    private _currentLanguage: BehaviorSubject<string> = new BehaviorSubject('tr');
+    private readonly _translationService = inject(TranslationService);
+    
+    private _currentLanguage: BehaviorSubject<SupportedLanguage> = new BehaviorSubject(SupportedLanguage.TR);
     private _availableLanguages: LanguageDefinition[] = [
         {
-            id: 'tr',
+            id: SupportedLanguage.TR,
             title: 'Türkçe',
             flag: 'TR'
         },
         {
-            id: 'en',
+            id: SupportedLanguage.EN,
             title: 'English',
             flag: 'US'
         }
@@ -29,9 +38,10 @@ export class LanguageService {
      * Constructor
      */
     constructor() {
-        // Set the initial language from local storage or default to Turkish
-        const savedLanguage = localStorage.getItem('admincraft-language') || 'tr';
-        this._currentLanguage.next(savedLanguage);
+        // Subscribe to effective language from TranslationService
+        this._translationService.effectiveLanguage$.subscribe(language => {
+            this._currentLanguage.next(language);
+        });
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -41,14 +51,14 @@ export class LanguageService {
     /**
      * Getter for current language
      */
-    get currentLanguage$(): Observable<string> {
+    get currentLanguage$(): Observable<SupportedLanguage> {
         return this._currentLanguage.asObservable();
     }
 
     /**
      * Getter for current language value
      */
-    get currentLanguage(): string {
+    get currentLanguage(): SupportedLanguage {
         return this._currentLanguage.value;
     }
 
@@ -65,18 +75,18 @@ export class LanguageService {
 
     /**
      * Set the current language
+     * Delegates to TranslationService for proper tenant-aware handling
      *
      * @param language
      */
-    setCurrentLanguage(language: string): void {
-        // Store the language in local storage
-        localStorage.setItem('admincraft-language', language);
-
-        // Update the current language
-        this._currentLanguage.next(language);
-
-        // Update the document language attribute
-        document.documentElement.lang = language;
+    async setCurrentLanguage(language: SupportedLanguage): Promise<void> {
+        try {
+            await this._translationService.setUserLanguage(language, true);
+            // The current language will be updated automatically via subscription
+        } catch (error) {
+            console.error('Failed to set language:', error);
+            // Could emit error to user or show notification
+        }
     }
 
     /**
@@ -84,130 +94,38 @@ export class LanguageService {
      *
      * @param id
      */
-    getLanguageById(id: string): LanguageDefinition | undefined {
+    getLanguageById(id: SupportedLanguage): LanguageDefinition | undefined {
         return this._availableLanguages.find(language => language.id === id);
     }
 
     /**
      * Get localized text based on current language
-     * This is a simple implementation - you might want to use a proper i18n library
+     * Delegates to TranslationService for proper i18n handling
      *
      * @param key
      * @param params
      */
     getLocalizedText(key: string, params?: any): string {
-        const translations: { [key: string]: { [lang: string]: string } } = {
-            'tenant.management': {
-                'tr': 'Kiracı Yönetimi',
-                'en': 'Tenant Management'
-            },
-            'tenant.create': {
-                'tr': 'Kiracı Oluştur',
-                'en': 'Create Tenant'
-            },
-            'tenant.edit': {
-                'tr': 'Kiracı Düzenle',
-                'en': 'Edit Tenant'
-            },
-            'tenant.delete': {
-                'tr': 'Kiracı Sil',
-                'en': 'Delete Tenant'
-            },
-            'tenant.activate': {
-                'tr': 'Kiracı Aktifleştir',
-                'en': 'Activate Tenant'
-            },
-            'tenant.suspend': {
-                'tr': 'Kiracı Askıya Al',
-                'en': 'Suspend Tenant'
-            },
-            'tenant.maintenance': {
-                'tr': 'Bakım Modu',
-                'en': 'Maintenance Mode'
-            },
-            'fields.subdomain': {
-                'tr': 'Alt Alan',
-                'en': 'Subdomain'
-            },
-            'fields.companyName': {
-                'tr': 'Şirket Adı',
-                'en': 'Company Name'
-            },
-            'fields.adminEmail': {
-                'tr': 'Admin E-posta',
-                'en': 'Admin Email'
-            },
-            'fields.adminName': {
-                'tr': 'Admin Adı',
-                'en': 'Admin Name'
-            },
-            'fields.status': {
-                'tr': 'Durum',
-                'en': 'Status'
-            },
-            'fields.language': {
-                'tr': 'Dil',
-                'en': 'Language'
-            },
-            'actions.save': {
-                'tr': 'Kaydet',
-                'en': 'Save'
-            },
-            'actions.cancel': {
-                'tr': 'İptal',
-                'en': 'Cancel'
-            },
-            'actions.delete': {
-                'tr': 'Sil',
-                'en': 'Delete'
-            },
-            'actions.edit': {
-                'tr': 'Düzenle',
-                'en': 'Edit'
-            },
-            'status.PENDING': {
-                'tr': 'Beklemede',
-                'en': 'Pending'
-            },
-            'status.ACTIVE': {
-                'tr': 'Aktif',
-                'en': 'Active'
-            },
-            'status.SUSPENDED': {
-                'tr': 'Askıya Alınmış',
-                'en': 'Suspended'
-            },
-            'status.MAINTENANCE': {
-                'tr': 'Bakım',
-                'en': 'Maintenance'
-            },
-            'messages.success': {
-                'tr': 'İşlem başarıyla tamamlandı',
-                'en': 'Operation completed successfully'
-            },
-            'messages.error': {
-                'tr': 'İşlem sırasında hata oluştu',
-                'en': 'An error occurred during operation'
-            }
-        };
+        return this._translationService.getInstantTranslation(key, params);
+    }
 
-        const currentLang = this.currentLanguage;
-        const translation = translations[key];
-        
-        if (translation && translation[currentLang]) {
-            let text = translation[currentLang];
-            
-            // Simple parameter replacement
-            if (params) {
-                Object.keys(params).forEach(param => {
-                    text = text.replace(`{{${param}}}`, params[param]);
-                });
-            }
-            
-            return text;
-        }
+    /**
+     * Get localized text as observable
+     * Useful for reactive templates
+     *
+     * @param key
+     * @param params
+     */
+    getLocalizedText$(key: string, params?: any): Observable<string> {
+        return this._translationService.getTranslation(key, params);
+    }
 
-        // Return the key if translation is not found
-        return key;
+    /**
+     * Check if a translation key exists
+     *
+     * @param key
+     */
+    hasTranslation(key: string): boolean {
+        return this._translationService.hasTranslation(key);
     }
 }

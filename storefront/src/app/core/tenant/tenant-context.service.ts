@@ -16,6 +16,10 @@ export class TenantContextService {
         return this._subdomain$.asObservable();
     }
 
+    get currentTenant(): Tenant | null {
+        return this._tenant$.getValue();
+    }
+
     setCurrentTenant(tenant: Tenant): void {
         this._tenant$.next(tenant);
         if (tenant?.subdomain) {
