@@ -1,4 +1,4 @@
-import { Route } from '@angular/router';
+import { Route, UrlMatcher, UrlSegment } from '@angular/router';
 import { initialDataResolver, tenantParamResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
@@ -7,6 +7,17 @@ import { LayoutComponent } from 'app/layout/layout.component';
 // prettier-ignore
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+const tenantMatcher: UrlMatcher = (segments: UrlSegment[]) => {
+    if (!segments.length) { return null; }
+    const seg = segments[0].path;
+    const valid = /^[a-z0-9-]{1,50}$/.test(seg);
+    if (!valid) { return null; }
+    return {
+        consumed: [segments[0]],
+        posParams: { tenant: segments[0] }
+    };
+};
+
 export const appRoutes: Route[] = [
 
     // Redirect empty path to 'sign-in'
@@ -96,7 +107,7 @@ export const appRoutes: Route[] = [
 
             // Tenant-prefixed routes
             {
-                path: ':tenant',
+                matcher: tenantMatcher,
                 runGuardsAndResolvers: 'paramsChange',
                 resolve: { tenant: tenantParamResolver },
                 children: [

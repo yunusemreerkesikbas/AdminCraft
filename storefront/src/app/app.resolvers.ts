@@ -32,14 +32,8 @@ export const initialDataResolver = () => {
 
 export const tenantParamResolver = (route: ActivatedRouteSnapshot) => {
     const tenantContext = inject(TenantContextService);
-    const router = inject(Router);
     const t = route.paramMap.get('tenant');
     if (!t) { return true; }
-    const isValid = /^[a-z0-9-]{1,50}$/.test(t);
-    if (!isValid) {
-        router.navigate(['404-not-found']);
-        return false;
-    }
     tenantContext.setSubdomain(t);
     return true;
 };
