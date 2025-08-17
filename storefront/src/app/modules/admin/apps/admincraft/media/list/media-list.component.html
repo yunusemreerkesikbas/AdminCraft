@@ -8,7 +8,7 @@
             <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
         </div>
         <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">Media Management</div>
+        <div class="text-4xl font-extrabold tracking-tight">{{ 'admin.media.title' | transloco }}</div>
         <!-- Actions -->
         <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
             <!-- Search -->
@@ -21,7 +21,7 @@
                     matInput
                     [formControl]="searchInputControl"
                     [autocomplete]="'off'"
-                    [placeholder]="'Search media files'">
+                    [placeholder]="('admin.media.searchPlaceholder' | transloco)">
             </mat-form-field>
             <!-- Upload media button -->
             <button
@@ -30,7 +30,7 @@
                 [color]="'primary'"
                 (click)="showUploadForm()">
                 <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">Upload</span>
+                <span class="ml-2 mr-1">{{ 'admin.media.upload' | transloco }}</span>
             </button>
         </div>
     </div>
@@ -43,11 +43,11 @@
             <!-- Header -->
             <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
                 <div></div>
-                <div [mat-sort-header]="'originalName'" class="hidden sm:block">File Name</div>
-                <div [mat-sort-header]="'mimeType'" class="hidden lg:block">Type</div>
-                <div [mat-sort-header]="'fileSize'" class="hidden lg:block">Size</div>
-                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">Uploaded</div>
-                <div class="hidden sm:block">Details</div>
+                <div [mat-sort-header]="'originalName'" class="hidden sm:block">{{ 'admin.media.fields.name' | transloco }}</div>
+                <div [mat-sort-header]="'mimeType'" class="hidden lg:block">{{ 'admin.common.grid.type' | transloco }}</div>
+                <div [mat-sort-header]="'fileSize'" class="hidden lg:block">{{ 'admin.common.grid.size' | transloco }}</div>
+                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">{{ 'admin.common.grid.uploaded' | transloco }}</div>
+                <div class="hidden sm:block">{{ 'admin.common.grid.details' | transloco }}</div>
             </div>
             <!-- Rows -->
             <ng-container *ngIf="mediaFiles$ | async as mediaFiles">
@@ -245,13 +245,13 @@
                                 <mat-icon
                                     class="text-green-500"
                                     [svgIcon]="'heroicons_outline:check'"></mat-icon>
-                                <span class="ml-2">Media file updated</span>
+                                <span class="ml-2">{{ 'admin.common.messages.operationSuccess' | transloco }}</span>
                             </ng-container>
                             <ng-container *ngIf="flashMessage === 'error'">
                                 <mat-icon
                                     class="text-red-500"
                                     [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                                <span class="ml-2">An error occurred, try again!</span>
+                                <span class="ml-2">{{ 'admin.common.messages.operationError' | transloco }}</span>
                             </ng-container>
                         </div>
                     </div>
@@ -262,14 +262,14 @@
                                 mat-stroked-button
                                 [color]="'warn'"
                                 (click)="deleteSelectedMediaFile()">
-                                Delete
+                                {{ 'admin.media.actions.delete' | transloco }}
                             </button>
                         </div>
                         <button
                             mat-flat-button
                             [color]="'primary'"
                             (click)="updateSelectedMediaFile()">
-                            Update
+                            {{ 'admin.media.actions.update' | transloco }}
                         </button>
                     </div>
                 </div>
@@ -342,13 +342,13 @@
                                 <mat-icon
                                     class="text-green-500"
                                     [svgIcon]="'heroicons_outline:check'"></mat-icon>
-                                <span class="ml-2">Media file uploaded</span>
+                                <span class="ml-2">{{ 'admin.media.messages.uploaded' | transloco }}</span>
                             </ng-container>
                             <ng-container *ngIf="flashMessage === 'error'">
                                 <mat-icon
                                     class="text-red-500"
                                     [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                                <span class="ml-2">An error occurred, try again!</span>
+                                <span class="ml-2">{{ 'admin.common.messages.operationError' | transloco }}</span>
                             </ng-container>
                         </div>
                     </div>
@@ -358,7 +358,7 @@
                             [color]="'primary'"
                             [disabled]="!selectedFile"
                             (click)="uploadMediaFile()">
-                            Upload
+                            {{ 'admin.media.actions.upload' | transloco }}
                         </button>
                     </div>
                 </div>

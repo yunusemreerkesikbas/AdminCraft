@@ -53,6 +53,7 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
     selector: 'sites-list',
@@ -99,6 +100,7 @@ import {
         MatChipsModule,
         AsyncPipe,
         DatePipe,
+        TranslocoPipe,
     ],
 })
 export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -128,7 +130,8 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _sitesService: SitesService
+        private _sitesService: SitesService,
+        private _transloco: TranslocoService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -349,11 +352,11 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
     deleteSelectedSite(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete site',
-            message: 'Are you sure you want to remove this site? This action cannot be undone!',
+            title: this._transloco.translate('admin.sites.confirm.deleteTitle'),
+            message: this._transloco.translate('admin.sites.confirm.deleteMsg'),
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: this._transloco.translate('admin.sites.confirm.deleteLabel'),
                 },
             },
         });

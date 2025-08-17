@@ -55,6 +55,7 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
     selector: 'users-list',
@@ -102,6 +103,7 @@ import {
         DatePipe,
         NgIf,
         NgFor,
+        TranslocoPipe,
     ],
 })
 export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -133,7 +135,8 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _usersService: UsersService
+        private _usersService: UsersService,
+        private _transloco: TranslocoService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -364,11 +367,11 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     deleteSelectedUser(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete user',
-            message: 'Are you sure you want to remove this user? This action cannot be undone!',
+            title: this._transloco.translate('admin.users.confirm.deleteTitle'),
+            message: this._transloco.translate('admin.users.confirm.deleteMsg'),
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: this._transloco.translate('admin.users.confirm.deleteLabel'),
                 },
             },
         });
@@ -477,11 +480,11 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.selectedUser) {
             // Open the confirmation dialog
             const confirmation = this._fuseConfirmationService.open({
-                title: 'Reset password',
-                message: 'Are you sure you want to reset this user\'s password? A new password will be generated.',
+                title: this._transloco.translate('admin.users.confirm.resetTitle'),
+                message: this._transloco.translate('admin.users.confirm.resetMsg'),
                 actions: {
                     confirm: {
-                        label: 'Reset',
+                        label: this._transloco.translate('admin.users.confirm.resetLabel'),
                     },
                 },
             });

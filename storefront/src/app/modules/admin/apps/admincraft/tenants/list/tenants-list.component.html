@@ -12,7 +12,7 @@
             </div>
         }
         <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">Tenant Management</div>
+        <div class="text-4xl font-extrabold tracking-tight">{{ 'admin.tenants.title' | transloco }}</div>
         <!-- Actions -->
         <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
             <!-- Search -->
@@ -29,7 +29,7 @@
                     matInput
                     [formControl]="searchInputControl"
                     [autocomplete]="'off'"
-                    [placeholder]="'Search tenants'"
+                    [placeholder]="('admin.tenants.searchPlaceholder' | transloco)"
                 />
             </mat-form-field>
             <!-- Add tenant button -->
@@ -40,7 +40,7 @@
                 (click)="createTenant()"
             >
                 <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">Add Tenant</span>
+                <span class="ml-2 mr-1">{{ 'admin.tenants.create' | transloco }}</span>
             </button>
         </div>
     </div>
@@ -65,28 +65,28 @@
                                 class="hidden md:block"
                                 [mat-sort-header]="'subdomain'"
                             >
-                                Subdomain
+                                {{ 'admin.tenants.fields.subdomain' | transloco }}
                             </div>
-                            <div [mat-sort-header]="'companyName'">Company</div>
+                            <div [mat-sort-header]="'companyName'">{{ 'admin.tenants.fields.companyName' | transloco }}</div>
                             <div
                                 class="hidden sm:block"
                                 [mat-sort-header]="'status'"
                             >
-                                Status
+                                {{ 'admin.common.fields.status' | transloco }}
                             </div>
                             <div
                                 class="hidden lg:block"
                                 [mat-sort-header]="'defaultLanguage'"
                             >
-                                Language
+                                {{ 'admin.tenants.fields.defaultLanguage' | transloco }}
                             </div>
                             <div
                                 class="hidden lg:block"
                                 [mat-sort-header]="'createdAt'"
                             >
-                                Created
+                                {{ 'admin.common.fields.createdAt' | transloco }}
                             </div>
-                            <div class="hidden sm:block">Details</div>
+                            <div class="hidden sm:block">{{ 'admin.common.grid.details' | transloco }}</div>
                         </div>
                         <!-- Rows -->
                         @for (
@@ -128,7 +128,7 @@
                                             'bg-red-100 text-red-800': tenant.status === 'SUSPENDED',
                                             'bg-blue-100 text-blue-800': tenant.status === 'MAINTENANCE'
                                         }">
-                                        {{ tenant.status }}
+                                        {{ ('admin.tenants.status.' + tenant.status) | transloco }}
                                     </div>
                                 </div>
 
@@ -189,7 +189,7 @@
                     <div
                         class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
                     >
-                        There are no tenants!
+                        {{ 'admin.common.messages.noData' | transloco }}
                     </div>
                 }
             }
@@ -226,7 +226,7 @@
                                                 [color]="'primary'"
                                                 (click)="activateTenant()"
                                             >
-                                                Activate
+                                                {{ 'admin.tenants.activate' | transloco }}
                                             </button>
                                         }
                                         @if (selectedTenant && selectedTenant.status === 'ACTIVE') {
@@ -236,7 +236,7 @@
                                                 [color]="'warn'"
                                                 (click)="suspendTenant()"
                                             >
-                                                Suspend
+                                                {{ 'admin.tenants.suspend' | transloco }}
                                             </button>
                                             <button
                                                 class="w-full"
@@ -244,7 +244,7 @@
                                                 [color]="'accent'"
                                                 (click)="setMaintenanceMode()"
                                             >
-                                                Maintenance
+                                                {{ 'admin.tenants.maintenance' | transloco }}
                                             </button>
                                         }
                                         @if (selectedTenant && selectedTenant.status === 'SUSPENDED') {
@@ -254,7 +254,7 @@
                                                 [color]="'primary'"
                                                 (click)="activateTenant()"
                                             >
-                                                Reactivate
+                                                {{ 'admin.tenants.reactivate' | transloco }}
                                             </button>
                                         }
                                         @if (selectedTenant && selectedTenant.status === 'MAINTENANCE') {
@@ -264,7 +264,7 @@
                                                 [color]="'primary'"
                                                 (click)="activateTenant()"
                                             >
-                                                End Maintenance
+                                                {{ 'admin.tenants.endMaintenance' | transloco }}
                                             </button>
                                         }
                                     </div>
@@ -275,7 +275,7 @@
                                     <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
                                         <!-- Company Name -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Company Name</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.companyName' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 [formControlName]="'companyName'"
@@ -284,18 +284,18 @@
 
                                         <!-- Subdomain -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Subdomain</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.subdomain' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 [formControlName]="'subdomain'"
                                                 (blur)="checkSubdomainAvailability()"
                                             />
-                                            <span matSuffix>.admincraft.com</span>
+                                            <span matSuffix>{{ 'admin.tenants.fields.domainSuffix' | transloco }}</span>
                                         </mat-form-field>
 
                                         <!-- Admin Info -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Admin Name</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.adminName' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 [formControlName]="'adminName'"
@@ -303,7 +303,7 @@
                                         </mat-form-field>
 
                                         <mat-form-field class="w-full">
-                                            <mat-label>Admin Email</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.adminEmail' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 type="email"
@@ -313,7 +313,7 @@
 
                                         <!-- Phone -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Phone</mat-label>
+                                            <mat-label>{{ 'admin.common.fields.phone' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 [formControlName]="'phone'"
@@ -325,7 +325,7 @@
                                     <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
                                         <!-- Language Settings -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Default Language</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.defaultLanguage' | transloco }}</mat-label>
                                             <mat-select [formControlName]="'defaultLanguage'">
                                                 @for (language of languages; track language) {
                                                     <mat-option [value]="language">
@@ -337,7 +337,7 @@
 
                                         <!-- Custom Domain -->
                                         <mat-form-field class="w-full">
-                                            <mat-label>Custom Domain</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.customDomain' | transloco }}</mat-label>
                                             <input
                                                 matInput
                                                 [formControlName]="'customDomain'"
@@ -348,14 +348,14 @@
                                         <!-- Settings -->
                                         <div class="flex">
                                             <mat-form-field class="w-1/2 pr-2">
-                                                <mat-label>Timezone</mat-label>
+                                                <mat-label>{{ 'admin.tenants.fields.timezone' | transloco }}</mat-label>
                                                 <input
                                                     matInput
                                                     [formControlName]="'timezone'"
                                                 />
                                             </mat-form-field>
                                             <mat-form-field class="w-1/2 pl-2">
-                                                <mat-label>Currency</mat-label>
+                                                <mat-label>{{ 'admin.tenants.fields.currency' | transloco }}</mat-label>
                                                 <input
                                                     matInput
                                                     [formControlName]="'currency'"
@@ -369,13 +369,13 @@
                                                 [formControlName]="'sslEnabled'"
                                                 [color]="'primary'"
                                             >
-                                                SSL Enabled
+                                                {{ 'admin.tenants.fields.sslEnabled' | transloco }}
                                             </mat-slide-toggle>
                                         </div>
 
                                         <!-- Notes -->
                                         <mat-form-field class="w-full mt-4">
-                                            <mat-label>Notes</mat-label>
+                                            <mat-label>{{ 'admin.tenants.fields.notes' | transloco }}</mat-label>
                                             <textarea
                                                 matInput
                                                 [formControlName]="'notes'"
@@ -396,7 +396,7 @@
                                     (click)="deleteSelectedTenant()"
                                     [disabled]="!selectedTenant"
                                 >
-                                    Delete
+                                    {{ 'admin.tenants.delete' | transloco }}
                                 </button>
                                 <div class="flex items-center">
                                     @if (flashMessage) {
@@ -408,7 +408,7 @@
                                                         'heroicons_outline:check'
                                                     "
                                                 ></mat-icon>
-                                                <span class="ml-2">Operation successful</span>
+                                                <span class="ml-2">{{ 'admin.common.messages.operationSuccess' | transloco }}</span>
                                             }
                                             @if (flashMessage === 'error') {
                                                 <mat-icon
@@ -417,7 +417,7 @@
                                                         'heroicons_outline:x-mark'
                                                     "
                                                 ></mat-icon>
-                                                <span class="ml-2">An error occurred, try again!</span>
+                                                <span class="ml-2">{{ 'admin.common.messages.operationError' | transloco }}</span>
                                             }
                                         </div>
                                     }
@@ -426,7 +426,7 @@
                                         [color]="'primary'"
                                         (click)="updateSelectedTenant()"
                                     >
-                                        {{ selectedTenant ? 'Update' : 'Create' }}
+                                        {{ selectedTenant ? ('admin.tenants.update' | transloco) : ('admin.tenants.create' | transloco) }}
                                     </button>
                                 </div>
                             </div>

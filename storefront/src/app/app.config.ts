@@ -16,9 +16,10 @@ import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
-import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
+import { TranslationService } from 'app/core/i18n/translation.service';
+import { SupportedLanguage } from 'app/core/i18n/translation.types';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -49,32 +50,93 @@ export const appConfig: ApplicationConfig = {
             },
         },
 
-        // Transloco Config
+        // Transloco Config - Enhanced with fallback support and error handling
         provideTransloco({
             config: {
                 availableLangs: [
                     {
-                        id: 'en',
-                        label: 'English',
+                        id: SupportedLanguage.TR,
+                        label: 'Türkçe',
                     },
                     {
-                        id: 'tr',
-                        label: 'Turkish',
+                        id: SupportedLanguage.EN,
+                        label: 'English',
                     },
                 ],
-                defaultLang: 'en',
-                fallbackLang: 'en',
+                defaultLang: SupportedLanguage.TR,
+                fallbackLang: SupportedLanguage.EN, // Always fallback to English
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
+                missingHandler: {
+                    useFallbackTranslation: true, // Enable fallback to prevent blank UI
+                    allowEmpty: false, // Don't allow empty translations
+                    logMissingKey: !isDevMode(), // Log only in development
+                },
+                interpolation: ['{{', '}}'], // Consistent with backend i18n
             },
-            loader: TranslocoHttpLoader,
         }),
+        // Translation Initialization with Static Imports (Vite-compatible)
         provideAppInitializer(() => {
             const translocoService = inject(TranslocoService);
-            const defaultLang = translocoService.getDefaultLang();
-            translocoService.setActiveLang(defaultLang);
 
-            return firstValueFrom(translocoService.load(defaultLang));
+            return (async () => {
+                try {
+                    // Static imports to avoid Vite dynamic import issues
+                    const [adminTR, adminEN] = await Promise.all([
+                        import('@modules/admin/i18n/langTR'),
+                        import('@modules/admin/i18n/langEN')
+                    ]);
+
+                    // Load Turkish translations
+                    if (adminTR?.langTR) {
+                        translocoService.setTranslation(
+                            adminTR.langTR,
+                            SupportedLanguage.TR,
+                            { merge: true }
+                        );
+                    }
+
+                    // Load English translations
+                    if (adminEN?.langEN) {
+                        translocoService.setTranslation(
+                            adminEN.langEN,
+                            SupportedLanguage.EN,
+                            { merge: true }
+                        );
+                    }
+
+                    // Set default language (will be enhanced by TranslationService later)
+                    translocoService.setActiveLang(SupportedLanguage.TR);
+                    
+                } catch (error) {
+                    console.error('Failed to initialize translations:', error);
+                    
+                    // Fallback strategy: minimal translations
+                    try {
+                        const fallbackTranslations = {
+                            'admin.common.messages.error': 'An error occurred',
+                            'admin.common.messages.loading': 'Loading...',
+                            'admin.tenants.title': 'Tenant Management',
+                            'admin.users.title': 'User Management',
+                            'admin.content.title': 'Content Management',
+                            'admin.media.title': 'Media Management',
+                            'admin.sites.title': 'Site Management'
+                        };
+                        
+                        translocoService.setTranslation(
+                            fallbackTranslations,
+                            SupportedLanguage.EN,
+                            { merge: true }
+                        );
+                        
+                        translocoService.setActiveLang(SupportedLanguage.EN);
+                        
+                        console.warn('Using fallback translations due to initialization failure');
+                    } catch (fallbackError) {
+                        console.error('Critical: Fallback translation loading also failed:', fallbackError);
+                    }
+                }
+            })();
         }),
 
         // Fuse
