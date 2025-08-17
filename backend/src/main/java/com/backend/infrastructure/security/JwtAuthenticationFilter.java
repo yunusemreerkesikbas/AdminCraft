@@ -14,7 +14,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -40,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
                 String role = jwtTokenProvider.getRoleFromToken(jwt);
+                Long tenantId = jwtTokenProvider.getTenantIdFromToken(jwt);
 
                 // Create authentication object with user details
                 UsernamePasswordAuthenticationToken authentication = 
@@ -49,8 +52,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
+                // Store additional user information in details
+                Map<String, Object> details = new HashMap<>();
+                details.put("email", email);
+                details.put("role", role);
+                details.put("tenantId", tenantId);
+                authentication.setDetails(details);
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Successfully authenticated user: {} with role: {}", email, role);
+                log.debug("Successfully authenticated user: {} with role: {} and tenantId: {}", email, role, tenantId);
             } else if (StringUtils.hasText(jwt)) {
                 log.warn("Invalid token or wrong token type provided for authentication");
             }

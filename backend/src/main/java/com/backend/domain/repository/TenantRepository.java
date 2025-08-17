@@ -8,9 +8,15 @@ import java.util.Optional;
 
 public interface TenantRepository {
     
+    // Basic CRUD operations
     Tenant save(Tenant tenant);
-    
+    List<Tenant> saveAll(Iterable<Tenant> tenants);
     Optional<Tenant> findById(Long id);
+    List<Tenant> findAll();
+    void deleteById(Long id);
+    boolean existsById(Long id);
+    long count();
+    void deleteAllById(Iterable<Long> ids);
     
     Optional<Tenant> findBySubdomain(String subdomain);
     
@@ -22,10 +28,6 @@ public interface TenantRepository {
     
     List<Tenant> findByAdminEmail(String adminEmail);
     
-    List<Tenant> findAll();
-    
-    void deleteById(Long id);
-    
     boolean existsBySubdomain(String subdomain);
     
     boolean existsByDatabaseName(String databaseName);
@@ -35,4 +37,10 @@ public interface TenantRepository {
     boolean existsByCustomDomainAndIdNot(String customDomain, Long id);
     
     long countByStatus(TenantStatus status);
+    
+    List<Tenant> findByStatusOrderByCreatedAtDesc(TenantStatus status);
+
+    List<Tenant> findTenantsExceedingStorageThreshold(Long threshold);
+
+    long countTenantsActivatedToday();
 }

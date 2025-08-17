@@ -23,6 +23,7 @@ public interface UserService {
     boolean validateUser(String email, String password, Long tenantId);
     User authenticate(String email, String password, Long tenantId);
     void recordLoginAttempt(String email, String ipAddress, boolean success, Long tenantId);
+    User getCurrentUser();
     
     // Password management
     void changePassword(Long userId, String currentPassword, String newPassword);
@@ -31,8 +32,8 @@ public interface UserService {
     boolean isPasswordExpired(Long userId, int maxDays);
     
     // Account management
-    void activateUser(Long userId);
-    void deactivateUser(Long userId);
+    User activateUser(Long userId);
+    User deactivateUser(Long userId);
     void lockUser(Long userId, LocalDateTime until);
     void unlockUser(Long userId);
     void verifyEmail(Long userId);
@@ -53,6 +54,7 @@ public interface UserService {
     // Profile management
     User updateProfile(Long userId, String fullName, String phone, String jobTitle, String department);
     User updatePreferences(Long userId, Language preferredLanguage, String timezone);
+    User updateUserLanguage(Long userId, Language language);
     void updateAvatar(Long userId, String avatarUrl);
     
     // Search and filtering
@@ -84,4 +86,8 @@ public interface UserService {
     boolean existsByEmail(String email);
     boolean existsByEmailAndTenantId(String email, Long tenantId);
     boolean canUserAccessTenant(Long userId, Long tenantId);
+    
+    // Access control methods for security
+    boolean hasAccessToUser(String currentUserEmail, Long userId);
+    boolean hasAccessToUserByEmail(String currentUserEmail, String targetEmail);
 }

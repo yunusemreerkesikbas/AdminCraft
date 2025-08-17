@@ -37,7 +37,11 @@
       "Bash(git push:*)",
       "Bash(bash_4)",
       "Bash(cat:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(./mvnw:*)",
+      "Bash(./backend/mvnw:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

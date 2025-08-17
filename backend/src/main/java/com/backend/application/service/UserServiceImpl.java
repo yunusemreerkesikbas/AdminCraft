@@ -6,11 +6,10 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -194,6 +193,18 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User getCurrentUser() {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Current user not found"));
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unable to get current user", ex);
+        }
+    }
     
     @Override
     public void changePassword(Long userId, String currentPassword, String newPassword) {
@@ -250,7 +261,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public void activateUser(Long userId) {
+    public User activateUser(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
@@ -258,18 +269,20 @@ public class UserServiceImpl implements UserService {
         user.setLockedUntil(null);
         user.setFailedLoginAttempts(0);
         
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
         log.info("User activated: {}", userId);
+        return savedUser;
     }
     
     @Override
-    public void deactivateUser(Long userId) {
+    public User deactivateUser(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         
         user.setIsActive(false);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
         log.info("User deactivated: {}", userId);
+        return savedUser;
     }
     
     @Override
@@ -406,6 +419,17 @@ public class UserServiceImpl implements UserService {
         // TODO: Add timezone field to User entity if needed
         
         return userRepository.save(user);
+    }
+
+    @Override
+    public User updateUserLanguage(Long userId, Language language) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        user.setPreferredLanguage(language);
+        User savedUser = userRepository.save(user);
+        log.info("Updated language for user {}: {}", userId, language);
+        return savedUser;
     }
     
     @Override
@@ -602,5 +626,85 @@ public class UserServiceImpl implements UserService {
         
         // Regular users can only access their own tenant
         return user.getTenantId().equals(tenantId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasAccessToUser(String currentUserEmail, Long userId) {
+        log.debug("Checking user access for {} to user {}", currentUserEmail, userId);
+        
+        try {
+            // Find the current user
+            Optional<User> currentUser = userRepository.findByEmail(currentUserEmail);
+            if (currentUser.isEmpty()) {
+                log.warn("Current user not found: {}", currentUserEmail);
+                return false;
+            }
+
+            User user = currentUser.get();
+            
+            // SUPER_ADMIN users have access to all users
+            if (user.getRole().name().equals("SUPER_ADMIN")) {
+                log.debug("User {} has SUPER_ADMIN role, granting access to user {}", currentUserEmail, userId);
+                return true;
+            }
+
+            // Find the target user
+            Optional<User> targetUser = userRepository.findById(userId);
+            if (targetUser.isEmpty()) {
+                log.warn("Target user not found: {}", userId);
+                return false;
+            }
+
+            // For other roles, check if they belong to the same tenant
+            boolean hasAccess = user.getTenantId().equals(targetUser.get().getTenantId());
+            log.debug("User {} access to user {}: {}", currentUserEmail, userId, hasAccess);
+            return hasAccess;
+
+        } catch (Exception ex) {
+            log.error("Error checking user access for {} to user {}: {}", 
+                     currentUserEmail, userId, ex.getMessage());
+            return false; // Deny access on error for security
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasAccessToUserByEmail(String currentUserEmail, String targetEmail) {
+        log.debug("Checking user access for {} to user with email {}", currentUserEmail, targetEmail);
+        
+        try {
+            // Find the current user
+            Optional<User> currentUser = userRepository.findByEmail(currentUserEmail);
+            if (currentUser.isEmpty()) {
+                log.warn("Current user not found: {}", currentUserEmail);
+                return false;
+            }
+
+            User user = currentUser.get();
+            
+            // SUPER_ADMIN users have access to all users
+            if (user.getRole().name().equals("SUPER_ADMIN")) {
+                log.debug("User {} has SUPER_ADMIN role, granting access to user {}", currentUserEmail, targetEmail);
+                return true;
+            }
+
+            // Find the target user
+            Optional<User> targetUser = userRepository.findByEmail(targetEmail);
+            if (targetUser.isEmpty()) {
+                log.warn("Target user not found: {}", targetEmail);
+                return false;
+            }
+
+            // For other roles, check if they belong to the same tenant
+            boolean hasAccess = user.getTenantId().equals(targetUser.get().getTenantId());
+            log.debug("User {} access to user {}: {}", currentUserEmail, targetEmail, hasAccess);
+            return hasAccess;
+
+        } catch (Exception ex) {
+            log.error("Error checking user access for {} to user {}: {}", 
+                     currentUserEmail, targetEmail, ex.getMessage());
+            return false; // Deny access on error for security
+        }
     }
 }

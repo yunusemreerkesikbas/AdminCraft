@@ -35,4 +35,7 @@ public interface TenantService {
     boolean isCustomDomainAvailable(String customDomain);
     
     long getTenantCountByStatus(TenantStatus status);
+    
+    // Security access control method
+    boolean hasAccessToTenant(String currentUserEmail, Long tenantId);
 }
