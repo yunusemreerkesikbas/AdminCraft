@@ -24,6 +24,7 @@
             "@services/*": ["app/core/services/*"],
             "@layouts/*": ["app/layout/*"],
             "@modules/*": ["app/modules/*"],
+            "@admin/*": ["app/modules/admin/*"],
             "@auth/*": ["app/core/auth/*"],
             "@guards/*": ["app/core/auth/guards/*"],
             "@interceptors/*": ["app/core/interceptors/*"],

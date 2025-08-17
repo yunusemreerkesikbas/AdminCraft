@@ -1,17 +1,16 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { UserService } from 'app/core/user/user.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { ApiClientService } from '@core/api/api-client.service';
 import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private _authenticated: boolean = false;
-    private _httpClient = inject(HttpClient);
+    private readonly _apiClient = inject(ApiClientService);
     private _userService = inject(UserService);
     private _tenantContext = inject(TenantContextService);
-    private readonly apiUrl = 'http://localhost:8080/api';
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors
@@ -38,7 +37,11 @@ export class AuthService {
      * @param email
      */
     forgotPassword(email: string): Observable<any> {
-        return this._httpClient.post('api/auth/forgot-password', email);
+        // TODO: Add endpoint to api-endpoints.ts when backend implements this
+        return this._apiClient.custom('POST', 'login', {
+            body: { email },
+            includeAuth: false
+        });
     }
 
     /**
@@ -47,7 +50,11 @@ export class AuthService {
      * @param password
      */
     resetPassword(password: string): Observable<any> {
-        return this._httpClient.post('api/auth/reset-password', password);
+        // TODO: Add endpoint to api-endpoints.ts when backend implements this
+        return this._apiClient.custom('POST', 'login', {
+            body: { password },
+            includeAuth: false
+        });
     }
 
     /**
@@ -61,12 +68,10 @@ export class AuthService {
             return throwError('User is already logged in.');
         }
 
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr'
-        });
-
-        return this._httpClient.post(`${this.apiUrl}/auth/login`, credentials, { headers }).pipe(
+        return this._apiClient.custom('POST', 'login', {
+            body: credentials,
+            includeAuth: false
+        }).pipe(
             switchMap((response: any) => {
                 // Check if the response has the expected structure
                 if (response.result === 'SUCCESS' && response.data) {
@@ -75,6 +80,9 @@ export class AuthService {
 
                     // Set the authenticated flag to true
                     this._authenticated = true;
+
+                    // Store user and tenant information for headers
+                    this.storeUserAndTenantInfo(response.data);
 
                     // Store the user on the user service (create user object from response data)
                     const user = {
@@ -155,6 +163,9 @@ export class AuthService {
         // Remove the access token from the local storage
         localStorage.removeItem('accessToken');
 
+        // Clear user and tenant information
+        this.clearUserAndTenantInfo();
+
         // Set the authenticated flag to false
         this._authenticated = false;
 
@@ -173,7 +184,11 @@ export class AuthService {
         password: string;
         company: string;
     }): Observable<any> {
-        return this._httpClient.post('api/auth/sign-up', user);
+        // TODO: Add endpoint to api-endpoints.ts when backend implements this
+        return this._apiClient.custom('POST', 'login', {
+            body: user,
+            includeAuth: false
+        });
     }
 
     /**
@@ -185,7 +200,11 @@ export class AuthService {
         email: string;
         password: string;
     }): Observable<any> {
-        return this._httpClient.post('api/auth/unlock-session', credentials);
+        // TODO: Add endpoint to api-endpoints.ts when backend implements this
+        return this._apiClient.custom('POST', 'login', {
+            body: credentials,
+            includeAuth: false
+        });
     }
 
     /**
@@ -209,5 +228,44 @@ export class AuthService {
 
         // If the access token exists, and it didn't expire, sign in using it
         return this.signInUsingToken();
+    }
+
+    /**
+     * Store user and tenant information for HTTP headers
+     * Based on SecurityConfig allowed headers: X-Tenant-ID, X-Tenant-Subdomain, X-User-ID
+     */
+    private storeUserAndTenantInfo(data: any): void {
+        try {
+            // Store user ID for X-User-ID header
+            if (data.userId) {
+                localStorage.setItem('userId', data.userId.toString());
+            }
+
+            // Store tenant ID for X-Tenant-ID header
+            if (data.tenantId) {
+                localStorage.setItem('tenantId', data.tenantId.toString());
+            }
+
+            // Store tenant subdomain for X-Tenant-Subdomain header
+            if (data.subdomain || data.tenantSubdomain) {
+                const subdomain = data.subdomain || data.tenantSubdomain;
+                localStorage.setItem('tenantSubdomain', subdomain);
+            }
+        } catch (error) {
+            console.warn('Failed to store user/tenant info for headers:', error);
+        }
+    }
+
+    /**
+     * Clear stored user and tenant information on logout
+     */
+    private clearUserAndTenantInfo(): void {
+        try {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('tenantId');
+            localStorage.removeItem('tenantSubdomain');
+        } catch (error) {
+            console.warn('Failed to clear user/tenant info:', error);
+        }
     }
 }

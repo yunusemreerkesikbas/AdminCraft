@@ -1,12 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Content, ContentPagination, CreateContentRequest, UpdateContentRequest, ContentStatus, ContentType } from './content.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { ApiClientService } from '@core/api/api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
-    private _httpClient = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly _apiClient = inject(ApiClientService);
 
     private _contents: BehaviorSubject<Content[]> = new BehaviorSubject<Content[]>([]);
     private _pagination: BehaviorSubject<ContentPagination | null> = new BehaviorSubject<ContentPagination | null>(null);
@@ -45,13 +44,7 @@ export class ContentService {
      * Get contents
      */
     getContents(page: number = 0, size: number = 10, sort: string = 'title', order: 'asc' | 'desc' = 'asc', search: string = ''): Observable<{ pagination: ContentPagination; contents: Content[] }> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.get<any>(`${this.apiUrl}/contents`, { headers }).pipe(
+        return this._apiClient.get<any>('contents').pipe(
             map((response) => {
                 let contents: Content[] = [];
                 
@@ -122,13 +115,7 @@ export class ContentService {
      * Get content by id
      */
     getContentById(id: number): Observable<Content> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.get<any>(`${this.apiUrl}/contents/${id}`, { headers }).pipe(
+        return this._apiClient.get<any>('contentById', { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -161,13 +148,7 @@ export class ContentService {
      * Create content
      */
     createContent(content: CreateContentRequest): Observable<Content> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.post<any>(`${this.apiUrl}/contents`, content, { headers }).pipe(
+        return this._apiClient.post<any>('contents', content).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -185,13 +166,7 @@ export class ContentService {
      * Update content
      */
     updateContent(id: number, content: UpdateContentRequest): Observable<Content> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.put<any>(`${this.apiUrl}/contents/${id}`, content, { headers }).pipe(
+        return this._apiClient.put<any>('contentById', content, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -204,13 +179,7 @@ export class ContentService {
      * Delete content
      */
     deleteContent(id: number): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.delete<any>(`${this.apiUrl}/contents/${id}`, { headers }).pipe(
+        return this._apiClient.delete<any>('contentById', { id }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the contents list
@@ -223,13 +192,7 @@ export class ContentService {
      * Publish content
      */
     publishContent(id: number): Observable<Content> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.post<any>(`${this.apiUrl}/contents/${id}/publish`, {}, { headers }).pipe(
+        return this._apiClient.post<any>('contentPublish', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -242,13 +205,7 @@ export class ContentService {
      * Archive content
      */
     archiveContent(id: number): Observable<Content> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.post<any>(`${this.apiUrl}/contents/${id}/archive`, {}, { headers }).pipe(
+        return this._apiClient.post<any>('contentArchive', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -261,13 +218,7 @@ export class ContentService {
      * Get content types
      */
     getContentTypes(): Observable<ContentType[]> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        return this._httpClient.get<any>(`${this.apiUrl}/content-types`, { headers }).pipe(
+        return this._apiClient.get<any>('contentTypes').pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const contentTypes = response.data.map((item: any) => ({

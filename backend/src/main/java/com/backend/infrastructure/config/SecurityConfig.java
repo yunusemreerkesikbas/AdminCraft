@@ -59,11 +59,13 @@ public class SecurityConfig {
         
         // Allow specific origins for development and production
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200",     // Angular dev server
+            "http://localhost:4200",     // Angular dev server (default)
+            "http://localhost:4201",     // Angular dev server (current project)
             "http://localhost:3000",     // React dev server
             "http://localhost:8080",     // Backend server
             "http://localhost:8081",     // Alternative backend server
-            "https://localhost:4200",    // HTTPS Angular dev server
+            "https://localhost:4200",    // HTTPS Angular dev server (default)
+            "https://localhost:4201",    // HTTPS Angular dev server (current project)
             "https://localhost:3000",    // HTTPS React dev server
             "https://localhost:8080",    // HTTPS Backend server
             "https://localhost:8081"     // HTTPS Alternative backend server
