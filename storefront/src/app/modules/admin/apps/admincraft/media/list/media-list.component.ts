@@ -51,6 +51,7 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
     selector: 'media-list',
@@ -96,6 +97,7 @@ import {
         MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
+        TranslocoPipe,
     ],
 })
 export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -125,7 +127,8 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _mediaService: MediaService
+        private _mediaService: MediaService,
+        private _transloco: TranslocoService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -362,11 +365,11 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
     deleteSelectedMediaFile(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete media file',
-            message: 'Are you sure you want to remove this media file? This action cannot be undone!',
+            title: this._transloco.translate('admin.media.confirm.deleteTitle'),
+            message: this._transloco.translate('admin.media.confirm.deleteMsg'),
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: this._transloco.translate('admin.media.confirm.deleteLabel'),
                 },
             },
         });

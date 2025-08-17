@@ -14,6 +14,7 @@ import {
     OnInit,
     ViewChild,
     ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import {
     FormsModule,
@@ -52,6 +53,7 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
     selector: 'tenants-list',
@@ -96,9 +98,11 @@ import {
         MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
+        TranslocoPipe,
     ],
 })
 export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
+    private _transloco = inject(TranslocoService);
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
@@ -342,11 +346,17 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     deleteSelectedTenant(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete tenant',
-            message: 'Are you sure you want to remove this tenant? This action cannot be undone!',
+            title: this._transloco.translate(
+                'admin.tenants.messages.confirmDeleteTitle'
+            ),
+            message: this._transloco.translate(
+                'admin.tenants.messages.confirmDeleteMsg'
+            ),
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: this._transloco.translate(
+                        'admin.tenants.actions.delete'
+                    ),
                 },
             },
         });

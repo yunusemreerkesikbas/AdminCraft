@@ -53,6 +53,7 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
     selector: 'content-list',
@@ -98,6 +99,7 @@ import {
         MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
+        TranslocoPipe,
     ],
 })
 export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -127,7 +129,8 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _contentService: ContentService
+        private _contentService: ContentService,
+        private _transloco: TranslocoService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -343,11 +346,11 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
     deleteSelectedContent(): void {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title: 'Delete content',
-            message: 'Are you sure you want to remove this content? This action cannot be undone!',
+            title: this._transloco.translate('admin.content.confirm.deleteTitle'),
+            message: this._transloco.translate('admin.content.confirm.deleteMsg'),
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: this._transloco.translate('admin.content.confirm.deleteLabel'),
                 },
             },
         });

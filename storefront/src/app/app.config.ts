@@ -16,7 +16,6 @@ import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { MockApiService } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
-import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
 
@@ -54,27 +53,53 @@ export const appConfig: ApplicationConfig = {
             config: {
                 availableLangs: [
                     {
+                        id: 'tr',
+                        label: 'Türkçe',
+                    },
+                    {
                         id: 'en',
                         label: 'English',
                     },
-                    {
-                        id: 'tr',
-                        label: 'Turkish',
-                    },
                 ],
-                defaultLang: 'en',
-                fallbackLang: 'en',
+                defaultLang: 'tr',
+                // Avoid loading fallback language file on each switch
+                // We disable fallback to prevent extra HTTP requests
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
+                missingHandler: {
+                    useFallbackTranslation: false,
+                    logMissingKey: true,
+                },
             },
-            loader: TranslocoHttpLoader,
         }),
         provideAppInitializer(() => {
             const translocoService = inject(TranslocoService);
-            const defaultLang = translocoService.getDefaultLang();
-            translocoService.setActiveLang(defaultLang);
+            const defaultLang = 'tr';
 
-            return firstValueFrom(translocoService.load(defaultLang));
+            return (async () => {
+                const [adminTR, adminEN] = await Promise.all([
+                    import('@modules/admin/i18n/langTR'),
+                    import('@modules/admin/i18n/langEN'),
+                ]);
+
+                if (adminTR?.langTR) {
+                    translocoService.setTranslation(
+                        adminTR.langTR,
+                        'tr',
+                        { merge: true }
+                    );
+                }
+
+                if (adminEN?.langEN) {
+                    translocoService.setTranslation(
+                        adminEN.langEN,
+                        'en',
+                        { merge: true }
+                    );
+                }
+
+                translocoService.setActiveLang(defaultLang);
+            })();
         }),
 
         // Fuse

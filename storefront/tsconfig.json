@@ -38,6 +38,7 @@
             "@assets/*": ["assets/*"],
             "@fuse": ["@fuse/index"],
             "@fuse/*": ["@fuse/*"],
+            "@i18n/*": ["app/i18n/*"],
             "@admincraft/*": ["app/modules/admin/apps/admincraft/*"],
             "@tenants/*": ["app/modules/admin/apps/admincraft/tenants/*"],
             "@content/*": ["app/modules/admin/apps/admincraft/content/*"],
