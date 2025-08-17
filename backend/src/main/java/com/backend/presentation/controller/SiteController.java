@@ -1,19 +1,16 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.SiteService;
-import com.backend.application.service.TenantService;
-import com.backend.domain.entity.Site;
-import com.backend.domain.entity.Tenant;
-import com.backend.domain.entity.Menu;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.mapper.SiteMapper;
 import com.backend.presentation.dto.request.CreateSiteRequest;
 import com.backend.presentation.dto.request.UpdateSiteRequest;
 import com.backend.presentation.dto.response.SiteResponse;
-import com.backend.presentation.dto.response.MenuResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,19 +22,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/sites")
+@RequiredArgsConstructor
+@Slf4j
 public class SiteController {
 
-    @Autowired
-    private SiteService siteService;
-
-    @Autowired
-    private TenantService tenantService;
-
-    @Autowired
-    private SiteMapper siteMapper;
-
-    @Autowired
-    private MessageSource messageSource;
+    private final SiteService siteService;
+    private final MessageSource messageSource;
 
     @PostMapping
     public ResponseEntity<ApiResponse<SiteResponse>> createSite(
@@ -45,25 +35,12 @@ public class SiteController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            // Convert DTO to Entity
-            Site site = siteMapper.toEntity(request);
-            
-            // Set tenant ID from context (would normally come from JWT token)
-            site.setTenantId(1L); // TODO: Get from security context
-            
-            // Create site
-            Site savedSite = siteService.createSite(site);
-            
-            // Get tenant for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(savedSite.getTenantId());
-            
-            SiteResponse response = siteMapper.toResponse(savedSite, tenant.orElse(null), null);
-            
+            SiteResponse response = siteService.createSite(request, displayLanguage);
             String message = messageSource.getMessage("site.created.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(message, response));
         } catch (Exception ex) {
+            log.error("Error creating site: {}", ex.getMessage());
             String message = messageSource.getMessage("site.create.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -72,29 +49,37 @@ public class SiteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SiteResponse>> getSiteById(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Optional<Site> siteOpt = siteService.getSiteById(id);
-            if (siteOpt.isEmpty()) {
+            Optional<SiteResponse> response = siteService.getSiteById(id, displayLanguage);
+            if (response.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success(response.get()));
+            } else {
                 String message = messageSource.getMessage("site.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(message));
             }
-            
-            Site site = siteOpt.get();
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(site.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(site.getId());
-            
-            SiteResponse response = siteMapper.toResponse(site, tenant.orElse(null), menus);
-            
-            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
+            log.error("Error getting site by id {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("site.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(message));
+        }
+    }
+
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<ApiResponse<List<SiteResponse>>> getSitesByTenant(
+            @PathVariable @Valid @NotNull @Min(1) Long tenantId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+            List<SiteResponse> sites = siteService.getSitesByTenantId(tenantId, displayLanguage);
+            return ResponseEntity.ok(ApiResponse.success(sites));
+        } catch (Exception ex) {
+            log.error("Error getting sites by tenant {}: {}", tenantId, ex.getMessage());
+            String message = messageSource.getMessage("site.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
@@ -102,34 +87,13 @@ public class SiteController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<SiteResponse>>> getAllSites(
-            @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) Boolean published,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            Long tenantId = 1L; // TODO: Get from security context
-            
-            List<Site> sites;
-            if (active != null && active) {
-                sites = siteService.getActiveSites(tenantId);
-            } else if (published != null && published) {
-                sites = siteService.getPublishedSites(tenantId);
-            } else {
-                sites = siteService.getSitesByTenantId(tenantId);
-            }
-            
-            // Get tenant for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(tenantId);
-            
-            List<SiteResponse> responses = sites.stream()
-                .map(site -> {
-                    List<Menu> menus = siteService.getMenusBySiteId(site.getId());
-                    return siteMapper.toResponse(site, tenant.orElse(null), menus);
-                })
-                .toList();
-            
-            return ResponseEntity.ok(ApiResponse.success(responses));
+            List<SiteResponse> sites = siteService.getAllSites(displayLanguage);
+            return ResponseEntity.ok(ApiResponse.success(sites));
         } catch (Exception ex) {
+            log.error("Error getting all sites: {}", ex.getMessage());
             String message = messageSource.getMessage("site.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
@@ -138,33 +102,16 @@ public class SiteController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<SiteResponse>> updateSite(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @Valid @RequestBody UpdateSiteRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Optional<Site> existingSiteOpt = siteService.getSiteById(id);
-            if (existingSiteOpt.isEmpty()) {
-                String message = messageSource.getMessage("site.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(message));
-            }
-            
-            Site existingSite = existingSiteOpt.get();
-            Site updatedSite = siteMapper.toEntity(request, existingSite);
-            
-            Site savedSite = siteService.updateSite(updatedSite);
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(savedSite.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(savedSite.getId());
-            
-            SiteResponse response = siteMapper.toResponse(savedSite, tenant.orElse(null), menus);
-            
+            SiteResponse response = siteService.updateSite(id, request, displayLanguage);
             String message = messageSource.getMessage("site.updated.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
+            log.error("Error updating site {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("site.update.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -173,13 +120,14 @@ public class SiteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteSite(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             siteService.deleteSite(id);
-            String message = messageSource.getMessage("site.deleted.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("site.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
+            log.error("Error deleting site {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("site.delete.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -188,22 +136,15 @@ public class SiteController {
 
     @PostMapping("/{id}/publish")
     public ResponseEntity<ApiResponse<SiteResponse>> publishSite(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Site publishedSite = siteService.publishSite(id);
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(publishedSite.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(publishedSite.getId());
-            
-            SiteResponse response = siteMapper.toResponse(publishedSite, tenant.orElse(null), menus);
-            
+            SiteResponse response = siteService.publishSite(id, displayLanguage);
             String message = messageSource.getMessage("site.published.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
+            log.error("Error publishing site {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("site.publish.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -212,135 +153,79 @@ public class SiteController {
 
     @PostMapping("/{id}/unpublish")
     public ResponseEntity<ApiResponse<SiteResponse>> unpublishSite(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Site unpublishedSite = siteService.unpublishSite(id);
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(unpublishedSite.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(unpublishedSite.getId());
-            
-            SiteResponse response = siteMapper.toResponse(unpublishedSite, tenant.orElse(null), menus);
-            
+            SiteResponse response = siteService.unpublishSite(id, displayLanguage);
             String message = messageSource.getMessage("site.unpublished.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
+            log.error("Error unpublishing site {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("site.unpublish.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @PostMapping("/{id}/activate")
-    public ResponseEntity<ApiResponse<SiteResponse>> activateSite(
-            @PathVariable Long id,
+    @PostMapping("/{id}/maintenance")
+    public ResponseEntity<ApiResponse<SiteResponse>> enableMaintenanceMode(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
+            @RequestParam(required = false) String message,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Site activatedSite = siteService.activateSite(id);
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(activatedSite.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(activatedSite.getId());
-            
-            SiteResponse response = siteMapper.toResponse(activatedSite, tenant.orElse(null), menus);
-            
-            String message = messageSource.getMessage("site.activated.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
+            SiteResponse response = siteService.enableMaintenanceMode(id, message, displayLanguage);
+            String successMessage = messageSource.getMessage("site.maintenance.enabled.success", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("site.activate.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            log.error("Error enabling maintenance mode for site {}: {}", id, ex.getMessage());
+            String errorMessage = messageSource.getMessage("site.maintenance.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+                .body(ApiResponse.error(errorMessage));
         }
     }
 
-    @PostMapping("/{id}/deactivate")
-    public ResponseEntity<ApiResponse<SiteResponse>> deactivateSite(
-            @PathVariable Long id,
+    @DeleteMapping("/{id}/maintenance")
+    public ResponseEntity<ApiResponse<SiteResponse>> disableMaintenanceMode(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            Site deactivatedSite = siteService.deactivateSite(id);
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(deactivatedSite.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(deactivatedSite.getId());
-            
-            SiteResponse response = siteMapper.toResponse(deactivatedSite, tenant.orElse(null), menus);
-            
-            String message = messageSource.getMessage("site.deactivated.success", null, Locale.forLanguageTag(languageCode));
+            SiteResponse response = siteService.disableMaintenanceMode(id, displayLanguage);
+            String message = messageSource.getMessage("site.maintenance.disabled.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("site.deactivate.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            log.error("Error disabling maintenance mode for site {}: {}", id, ex.getMessage());
+            String errorMessage = messageSource.getMessage("site.maintenance.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
-        }
-    }
-
-    @GetMapping("/{id}/menus")
-    public ResponseEntity<ApiResponse<List<MenuResponse>>> getMenusBySite(
-            @PathVariable Long id,
-            @RequestParam(required = false) Language language,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            List<Menu> menus;
-            if (language != null) {
-                menus = siteService.getMenusBySiteIdAndLanguage(id, language);
-            } else {
-                menus = siteService.getMenusBySiteId(id);
-            }
-            
-            List<MenuResponse> responses = menus.stream()
-                .map(menu -> new MenuResponse(
-                    menu.getId(),
-                    menu.getName(),
-                    menu.getLanguage(),
-                    menu.getTenantId(),
-                    menu.getSiteId(),
-                    List.of(), // Menu items would be populated separately
-                    menu.getCreatedAt(),
-                    menu.getUpdatedAt()
-                ))
-                .toList();
-            
-            return ResponseEntity.ok(ApiResponse.success(responses));
-        } catch (Exception ex) {
-            String message = messageSource.getMessage("site.menus.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                .body(ApiResponse.error(errorMessage));
         }
     }
 
     @GetMapping("/domain/{domain}")
     public ResponseEntity<ApiResponse<SiteResponse>> getSiteByDomain(
-            @PathVariable String domain,
+            @PathVariable @Valid String domain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+            // Sanitize domain input
+            String sanitizedDomain = sanitizeInput(domain);
+            if (sanitizedDomain == null || sanitizedDomain.trim().isEmpty()) {
+                throw new IllegalArgumentException("Invalid domain");
+            }
             
-            Optional<Site> siteOpt = siteService.getSiteByDomain(domain);
-            if (siteOpt.isEmpty()) {
+            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+            Optional<SiteResponse> response = siteService.getSiteByDomain(sanitizedDomain, displayLanguage);
+            if (response.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success(response.get()));
+            } else {
                 String message = messageSource.getMessage("site.domain.not.found", new Object[]{domain}, Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(message));
             }
-            
-            Site site = siteOpt.get();
-            
-            // Get additional data for response
-            Optional<Tenant> tenant = tenantService.getTenantEntityById(site.getTenantId());
-            List<Menu> menus = siteService.getMenusBySiteId(site.getId());
-            
-            SiteResponse response = siteMapper.toResponse(site, tenant.orElse(null), menus);
-            
-            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("site.domain.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            log.error("Error getting site by domain {}: {}", domain, ex.getMessage());
+            String message = messageSource.getMessage("site.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
@@ -348,17 +233,38 @@ public class SiteController {
 
     @GetMapping("/check/domain/{domain}")
     public ResponseEntity<ApiResponse<Boolean>> checkDomainAvailability(
-            @PathVariable String domain,
+            @PathVariable @Valid String domain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            boolean available = siteService.isDomainAvailable(domain);
+            // Sanitize domain input
+            String sanitizedDomain = sanitizeInput(domain);
+            if (sanitizedDomain == null || sanitizedDomain.trim().isEmpty()) {
+                throw new IllegalArgumentException("Invalid domain");
+            }
+            
+            boolean available = siteService.isDomainAvailable(sanitizedDomain);
             String messageKey = available ? "site.domain.available" : "site.domain.taken";
             String message = messageSource.getMessage(messageKey, new Object[]{domain}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, available));
         } catch (Exception ex) {
+            log.error("Error checking domain availability for {}: {}", domain, ex.getMessage());
             String message = messageSource.getMessage("site.domain.check.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
+    }
+
+    /**
+     * Sanitizes input to prevent XSS and other injection attacks
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return null;
+        }
+        
+        // Basic input sanitization
+        return input.trim()
+                .replaceAll("[<>\"'&]", "")
+                .toLowerCase();
     }
 }

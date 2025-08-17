@@ -1,82 +1,62 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.MediaService;
-import com.backend.application.service.UserService;
 import com.backend.domain.entity.MediaFile;
-import com.backend.domain.entity.User;
-import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.mapper.MediaMapper;
-import com.backend.presentation.dto.request.CreateMediaRequest;
-import com.backend.presentation.dto.request.UpdateMediaRequest;
-import com.backend.presentation.dto.response.MediaResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/media")
+@RequiredArgsConstructor
+@Slf4j
+@Validated
 public class MediaController {
 
-    @Autowired
-    private MediaService mediaService;
+    private final MediaService mediaService;
+    private final MessageSource messageSource;
 
-    @Autowired
-    private UserService userService;
+    // Security constants
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
+        "image/jpeg", "image/png", "image/gif", "image/webp",
+        "application/pdf", "text/plain",
+        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "video/mp4", "audio/mpeg", "audio/mp3"
+    );
 
-    @Autowired
-    private MediaMapper mediaMapper;
-
-    @Autowired
-    private MessageSource messageSource;
-
-    @PostMapping("/upload")
-    public ResponseEntity<ApiResponse<MediaResponse>> uploadMediaFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "altTextTr", required = false) String altTextTr,
-            @RequestParam(value = "altTextEn", required = false) String altTextEn,
-            @RequestParam(value = "descriptionTr", required = false) String descriptionTr,
-            @RequestParam(value = "descriptionEn", required = false) String descriptionEn,
-            @RequestParam(value = "titleTr", required = false) String titleTr,
-            @RequestParam(value = "titleEn", required = false) String titleEn,
-            @RequestParam(value = "folder", required = false) String folder,
-            @RequestParam(value = "category", required = false) String category,
-            @RequestParam(value = "tags", required = false) String tags,
-            @RequestParam(value = "isPublic", required = false) Boolean isPublic,
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<MediaFile>> uploadFile(
+            @RequestParam("file") @Valid MultipartFile file,
+            @RequestParam("tenantId") @NotNull @Min(1) Long tenantId,
+            @RequestParam("uploadedBy") @NotNull @Min(1) Long uploadedBy,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long tenantId = 1L; // TODO: Get from security context
-            Long uploadedBy = 1L; // TODO: Get from security context
+            // Security validations
+            validateFileUpload(file);
+            validateTenantAccess(tenantId);
             
-            // Upload file
-            MediaFile uploadedFile = mediaService.uploadFile(file, tenantId, uploadedBy);
-            
-            // Update metadata if provided
-            CreateMediaRequest metadataRequest = new CreateMediaRequest(
-                altTextTr, altTextEn, descriptionTr, descriptionEn, 
-                titleTr, titleEn, folder, category, tags, isPublic
-            );
-            
-            MediaFile updatedFile = mediaMapper.toEntity(metadataRequest, uploadedFile);
-            MediaFile savedFile = mediaService.updateMediaFile(updatedFile);
-            
-            // Get uploader for response
-            Optional<User> uploader = userService.getUserById(savedFile.getUploadedBy());
-            
-            MediaResponse response = mediaMapper.toResponse(savedFile, uploader.orElse(null));
-            
-            String message = messageSource.getMessage("media.uploaded.success", null, Locale.forLanguageTag(languageCode));
+            MediaFile mediaFile = mediaService.uploadFile(file, tenantId, uploadedBy);
+            String message = messageSource.getMessage("media.upload.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(message, response));
+                .body(ApiResponse.success(message, mediaFile));
         } catch (Exception ex) {
+            log.error("Error uploading file for tenant {} by user {}: {}", tenantId, uploadedBy, ex.getMessage());
             String message = messageSource.getMessage("media.upload.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -84,210 +64,181 @@ public class MediaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MediaResponse>> getMediaFileById(
-            @PathVariable Long id,
+    public ResponseEntity<ApiResponse<MediaFile>> getMediaFile(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Optional<MediaFile> mediaFileOpt = mediaService.getMediaFileById(id);
-            if (mediaFileOpt.isEmpty()) {
+            Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
+            if (mediaFile.isPresent()) {
+                // Additional tenant-based access control
+                validateTenantAccess(mediaFile.get().getTenantId());
+                return ResponseEntity.ok(ApiResponse.success(mediaFile.get()));
+            } else {
                 String message = messageSource.getMessage("media.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(message));
             }
-            
-            MediaFile mediaFile = mediaFileOpt.get();
-            
-            // Get uploader for response
-            Optional<User> uploader = userService.getUserById(mediaFile.getUploadedBy());
-            
-            MediaResponse response = mediaMapper.toResponse(mediaFile, uploader.orElse(null));
-            
-            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
+            log.error("Error getting media file {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("media.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<MediaResponse>>> getAllMediaFiles(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String folder,
-            @RequestParam(required = false) String category,
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<ApiResponse<List<MediaFile>>> getMediaFilesByTenant(
+            @PathVariable @Valid @NotNull @Min(1) Long tenantId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long tenantId = 1L; // TODO: Get from security context
-            
-            List<MediaFile> mediaFiles;
-            if ("image".equals(type)) {
-                mediaFiles = mediaService.getImageFiles(tenantId);
-            } else if ("video".equals(type)) {
-                mediaFiles = mediaService.getVideoFiles(tenantId);
-            } else if ("document".equals(type)) {
-                mediaFiles = mediaService.getDocumentFiles(tenantId);
-            } else if (folder != null) {
-                mediaFiles = mediaService.getFilesByFolder(tenantId, folder);
-            } else if (category != null) {
-                mediaFiles = mediaService.getFilesByCategory(tenantId, category);
-            } else {
-                mediaFiles = mediaService.getMediaFilesByTenantId(tenantId);
-            }
-            
-            List<MediaResponse> responses = mediaFiles.stream()
-                .map(mediaFile -> {
-                    Optional<User> uploader = userService.getUserById(mediaFile.getUploadedBy());
-                    return mediaMapper.toResponse(mediaFile, uploader.orElse(null));
-                })
-                .toList();
-            
-            return ResponseEntity.ok(ApiResponse.success(responses));
+            validateTenantAccess(tenantId);
+            List<MediaFile> mediaFiles = mediaService.getMediaFilesByTenantId(tenantId);
+            return ResponseEntity.ok(ApiResponse.success(mediaFiles));
         } catch (Exception ex) {
+            log.error("Error getting media files for tenant {}: {}", tenantId, ex.getMessage());
             String message = messageSource.getMessage("media.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<MediaResponse>> updateMediaFile(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateMediaRequest request,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            Optional<MediaFile> existingFileOpt = mediaService.getMediaFileById(id);
-            if (existingFileOpt.isEmpty()) {
-                String message = messageSource.getMessage("media.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(message));
-            }
-            
-            MediaFile existingFile = existingFileOpt.get();
-            MediaFile updatedFile = mediaMapper.toEntity(request, existingFile);
-            
-            MediaFile savedFile = mediaService.updateMediaFile(updatedFile);
-            
-            // Get uploader for response
-            Optional<User> uploader = userService.getUserById(savedFile.getUploadedBy());
-            
-            MediaResponse response = mediaMapper.toResponse(savedFile, uploader.orElse(null));
-            
-            String message = messageSource.getMessage("media.updated.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
-        } catch (Exception ex) {
-            String message = messageSource.getMessage("media.update.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMediaFile(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
+            // Additional security check - ensure user has access to the media file's tenant
+            Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
+            if (mediaFile.isPresent()) {
+                validateTenantAccess(mediaFile.get().getTenantId());
+            }
+            
             mediaService.deleteMediaFile(id);
-            String message = messageSource.getMessage("media.deleted.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("media.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
+            log.error("Error deleting media file {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("media.delete.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<MediaResponse>>> searchMediaFiles(
-            @RequestParam String query,
-            @RequestParam(required = false) Language language,
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MediaFile>>> getAllMediaFiles(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long tenantId = 1L; // TODO: Get from security context
-            
-            List<MediaFile> mediaFiles;
-            if (language != null) {
-                mediaFiles = mediaService.searchByAltText(tenantId, query, language);
-            } else {
-                mediaFiles = mediaService.searchByName(tenantId, query);
-            }
-            
-            List<MediaResponse> responses = mediaFiles.stream()
-                .map(mediaFile -> {
-                    Optional<User> uploader = userService.getUserById(mediaFile.getUploadedBy());
-                    return mediaMapper.toResponse(mediaFile, uploader.orElse(null));
-                })
-                .toList();
-            
-            return ResponseEntity.ok(ApiResponse.success(responses));
+            List<MediaFile> mediaFiles = mediaService.getAllMediaFiles();
+            return ResponseEntity.ok(ApiResponse.success(mediaFiles));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("media.search.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            log.error("Error getting all media files: {}", ex.getMessage());
+            String message = messageSource.getMessage("media.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @GetMapping("/files/{id}")
-    public ResponseEntity<byte[]> getFileContent(
-            @PathVariable Long id,
+    @PutMapping("/{id}/alt-text")
+    public ResponseEntity<ApiResponse<MediaFile>> updateAltText(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
+            @RequestParam @Valid String altText,
+            @RequestParam(defaultValue = "tr") String language,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Optional<MediaFile> mediaFileOpt = mediaService.getMediaFileById(id);
-            if (mediaFileOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
+            // Validate alt text input
+            if (altText != null && altText.length() > 255) {
+                throw new IllegalArgumentException("Alt text cannot exceed 255 characters");
             }
             
-            MediaFile mediaFile = mediaFileOpt.get();
-            byte[] content = mediaService.getFileContent(mediaFile.getFileName());
-            
-            return ResponseEntity.ok()
-                .header("Content-Type", mediaFile.getMimeType())
-                .header("Content-Disposition", "inline; filename=\"" + mediaFile.getOriginalName() + "\"")
-                .body(content);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/thumbnails/{id}")
-    public ResponseEntity<byte[]> getThumbnailContent(
-            @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            Optional<MediaFile> mediaFileOpt = mediaService.getMediaFileById(id);
-            if (mediaFileOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
+            // Security check for tenant access
+            Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
+            if (mediaFile.isPresent()) {
+                validateTenantAccess(mediaFile.get().getTenantId());
             }
             
-            MediaFile mediaFile = mediaFileOpt.get();
-            byte[] content = mediaService.getThumbnailContent(mediaFile.getFileName());
+            // Sanitize alt text
+            String sanitizedAltText = sanitizeInput(altText);
             
-            return ResponseEntity.ok()
-                .header("Content-Type", "image/jpeg")
-                .body(content);
+            MediaFile updatedFile = mediaService.updateAltText(id, 
+                com.backend.domain.enums.Language.fromCodeOrDefault(language), sanitizedAltText);
+            String message = messageSource.getMessage("media.alt.text.updated", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, updatedFile));
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/stats/storage")
-    public ResponseEntity<ApiResponse<Object>> getStorageStats(
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            Long tenantId = 1L; // TODO: Get from security context
-            
-            var stats = new Object() {
-                public final long totalFiles = mediaService.countMediaFilesByTenantId(tenantId);
-                public final long totalStorageUsed = mediaService.getTotalStorageUsed(tenantId);
-                public final long imageFiles = mediaService.getImageFilesCount(tenantId);
-                public final long videoFiles = mediaService.getVideoFilesCount(tenantId);
-                public final long documentFiles = mediaService.getDocumentFilesCount(tenantId);
-            };
-            
-            return ResponseEntity.ok(ApiResponse.success(stats));
-        } catch (Exception ex) {
-            String message = messageSource.getMessage("media.stats.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            log.error("Error updating alt text for media file {}: {}", id, ex.getMessage());
+            String message = messageSource.getMessage("media.update.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
         }
+    }
+
+    /**
+     * Validates file upload security requirements
+     */
+    private void validateFileUpload(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be null or empty");
+        }
+        
+        // File size validation
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed size of " + (MAX_FILE_SIZE / 1024 / 1024) + "MB");
+        }
+        
+        // Content type validation
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("File type not allowed: " + contentType);
+        }
+        
+        // File name validation
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
+            throw new IllegalArgumentException("File must have a valid filename");
+        }
+        
+        // Check for potentially dangerous file extensions
+        String filename = originalFilename.toLowerCase();
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\") ||
+            filename.endsWith(".exe") || filename.endsWith(".bat") || filename.endsWith(".cmd") ||
+            filename.endsWith(".scr") || filename.endsWith(".js") || filename.endsWith(".vbs")) {
+            throw new IllegalArgumentException("Filename contains invalid characters or dangerous extension");
+        }
+    }
+
+    /**
+     * Validates tenant access based on current user context
+     * This should be implemented based on your security requirements
+     */
+    private void validateTenantAccess(Long tenantId) {
+        // TODO: Implement actual tenant access validation based on current user's tenant
+        // For now, just validate that tenantId is not null and positive
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Invalid tenant ID");
+        }
+        
+        // In a real implementation, you would check if the current user has access to this tenant
+        // Example:
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        // if (!tenantService.userHasAccessToTenant(userDetails.getUsername(), tenantId)) {
+        //     throw new AccessDeniedException("Access denied to tenant: " + tenantId);
+        // }
+    }
+
+    /**
+     * Sanitizes input to prevent XSS and other injection attacks
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return null;
+        }
+        
+        // Basic XSS prevention - remove potentially dangerous characters
+        return input.trim()
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#x27;")
+                .replaceAll("/", "&#x2F;");
     }
 }

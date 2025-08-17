@@ -41,8 +41,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     return new InvalidCredentialsException();
                 });
 
-        log.debug("Found user: id={}, email={}, isActive={}, emailVerified={}", 
-                 user.getId(), user.getEmail(), user.getIsActive(), user.getEmailVerified());
+        log.debug("Found user: id={}, email={}, isActive={}, emailVerified={}, tenantId={}", 
+                 user.getId(), user.getEmail(), user.getIsActive(), user.getEmailVerified(), user.getTenantId());
         log.debug("Password hash from DB: {}", user.getPasswordHash());
         log.debug("Password hash length: {}", user.getPasswordHash() != null ? user.getPasswordHash().length() : "null");
 
@@ -71,11 +71,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
 
-        // Generate tokens
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
+        // Generate tokens with tenantId included
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(), user.getTenantId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        log.info("Authentication successful for user: {}", user.getEmail());
+        log.info("Authentication successful for user: {}, tenantId: {}", user.getEmail(), user.getTenantId());
         
         return new LoginResponse(
                 accessToken,
@@ -115,11 +115,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new UserAccountDisabledException();
         }
 
-        // Generate new tokens
-        String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
+        // Generate new tokens with tenantId included
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(), user.getTenantId());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        log.info("Token refresh successful for user: {}", user.getEmail());
+        log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), user.getTenantId());
         
         return new LoginResponse(
                 newAccessToken,
@@ -133,5 +133,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getTenantId(),
                 user.getPreferredLanguage().name()
         );
+    }
+
+    @Override
+    public void logout(String token) {
+        log.info("Logging out user");
+        
+        try {
+            // Validate token
+            if (!jwtTokenProvider.validateToken(token)) {
+                throw new InvalidTokenException("Invalid token");
+            }
+
+            // Extract email from token for logging
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            
+            // TODO: Add token to blacklist/invalidate token
+            // This could be implemented by:
+            // 1. Adding token to a blacklist in Redis/database
+            // 2. Reducing token expiration time
+            // 3. Using a token versioning system
+            
+            log.info("Logout successful for user: {}", email);
+        } catch (Exception ex) {
+            log.error("Error during logout: {}", ex.getMessage());
+            throw new InvalidTokenException("Logout failed");
+        }
     }
 }

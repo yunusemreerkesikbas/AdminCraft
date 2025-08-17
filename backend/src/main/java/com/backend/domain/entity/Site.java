@@ -61,32 +61,10 @@ public class Site {
     private Boolean sslEnabled = true;
 
     @Column(name = "is_published", nullable = false)
-    private Boolean isPublished = false;
+    private Boolean published = false;
 
-    @Column(name = "isActive", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(name = "theme")
-    private String theme = "default";
-
-    @Column(name = "logo_url")
-    private String logoUrl;
-
-    @Column(name = "favicon_url")
-    private String faviconUrl;
-
-    @Column(name = "primary_color", length = 7)
-    private String primaryColor = "#1976d2";
-
-    @Column(name = "secondary_color", length = 7)
-    private String secondaryColor = "#dc004e";
-
-    // Theme customization fields
-    @Column(name = "color_scheme")
-    private String colorScheme = "default";
-
-    @Column(name = "font_family")
-    private String fontFamily = "Inter";
+    @Column(name = "theme_name")
+    private String themeName = "default";
 
     // SEO Configuration
     @Size(max = 60, message = "Site başlığı 60 karakterden uzun olamaz")
@@ -100,19 +78,6 @@ public class Site {
     @Size(max = 200, message = "Anahtar kelimeler 200 karakterden uzun olamaz")
     @Column(name = "site_keywords", length = 200)
     private String siteKeywords;
-
-    // Additional SEO fields for mapper compatibility
-    @Size(max = 60, message = "Meta başlık 60 karakterden uzun olamaz")
-    @Column(name = "meta_title", length = 60)
-    private String metaTitle;
-
-    @Size(max = 160, message = "Meta açıklama 160 karakterden uzun olamaz")
-    @Column(name = "meta_description", length = 160)
-    private String metaDescription;
-
-    @Size(max = 200, message = "Meta anahtar kelimeler 200 karakterden uzun olamaz")
-    @Column(name = "meta_keywords", length = 200)
-    private String metaKeywords;
 
     // Social Media Configuration
     @Column(name = "og_image_url")
@@ -130,10 +95,6 @@ public class Site {
 
     @Column(name = "google_tag_manager_id", length = 50)
     private String googleTagManagerId;
-
-    // Custom code injection
-    @Column(name = "custom_code", columnDefinition = "TEXT")
-    private String customCode;
 
     // Site Status
     @Column(name = "maintenance_mode", nullable = false)
@@ -187,12 +148,12 @@ public class Site {
         if (!canBePublished()) {
             throw new IllegalStateException("Site yayınlanmak için gerekli koşulları sağlamıyor");
         }
-        this.isPublished = true;
+        this.published = true;
         this.publishedAt = LocalDateTime.now();
     }
 
     public void unpublish() {
-        this.isPublished = false;
+        this.published = false;
         this.publishedAt = null;
     }
 
@@ -207,7 +168,7 @@ public class Site {
     }
 
     public boolean isAccessible() {
-        return isPublished && !maintenanceMode && isActive;
+        return published && !maintenanceMode;
     }
 
     public String getFullDomain() {
@@ -220,28 +181,6 @@ public class Site {
     public String getSiteUrl() {
         String protocol = sslEnabled ? "https://" : "http://";
         return protocol + getFullDomain();
-    }
-
-    // Convenience methods for mapper compatibility
-    public Boolean getIsPublished() {
-        return isPublished;
-    }
-
-    public void setIsPublished(Boolean published) {
-        this.isPublished = published;
-        if (published && this.publishedAt == null) {
-            this.publishedAt = LocalDateTime.now();
-        } else if (!published) {
-            this.publishedAt = null;
-        }
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean active) {
-        this.isActive = active;
     }
 
     // Constructor

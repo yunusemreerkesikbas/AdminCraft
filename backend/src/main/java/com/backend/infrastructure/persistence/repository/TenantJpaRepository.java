@@ -12,27 +12,27 @@ import java.util.Optional;
 
 @Repository
 public interface TenantJpaRepository extends JpaRepository<Tenant, Long> {
-
+    
     Optional<Tenant> findBySubdomain(String subdomain);
-
+    
     Optional<Tenant> findByDatabaseName(String databaseName);
-
+    
     Optional<Tenant> findByCustomDomain(String customDomain);
-
+    
     List<Tenant> findByStatus(TenantStatus status);
-
+    
     List<Tenant> findByAdminEmail(String adminEmail);
-
+    
     boolean existsBySubdomain(String subdomain);
-
+    
     boolean existsByDatabaseName(String databaseName);
-
+    
     boolean existsByCustomDomain(String customDomain);
-
+    
     boolean existsByCustomDomainAndIdNot(String customDomain, Long id);
-
+    
     long countByStatus(TenantStatus status);
-
+    
     @Query("SELECT t FROM Tenant t WHERE t.status = :status ORDER BY t.createdAt DESC")
     List<Tenant> findByStatusOrderByCreatedAtDesc(@Param("status") TenantStatus status);
 

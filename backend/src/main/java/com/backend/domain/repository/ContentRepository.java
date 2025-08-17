@@ -28,8 +28,6 @@ public interface ContentRepository {
     List<Content> findByContentTypeId(Long contentTypeId);
     List<Content> findByTenantIdAndContentTypeId(Long tenantId, Long contentTypeId);
     long countByTenantIdAndContentTypeId(Long tenantId, Long contentTypeId);
-    long countByContentTypeId(Long contentTypeId);
-    boolean existsByContentTypeId(Long contentTypeId);
     
     // Status queries
     List<Content> findByStatus(ContentStatus status);
@@ -37,7 +35,6 @@ public interface ContentRepository {
     List<Content> findByStatusIn(List<ContentStatus> statuses);
     List<Content> findByTenantIdAndStatusIn(Long tenantId, List<ContentStatus> statuses);
     long countByTenantIdAndStatus(Long tenantId, ContentStatus status);
-    long countByContentTypeIdAndStatus(Long contentTypeId, ContentStatus status);
     
     // Language queries
     List<Content> findByLanguage(Language language);

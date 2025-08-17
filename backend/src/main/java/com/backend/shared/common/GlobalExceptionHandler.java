@@ -1,20 +1,19 @@
 package com.backend.shared.common;
 
-import com.backend.domain.exception.InvalidCredentialsException;
-import com.backend.domain.exception.InvalidTokenException;
-import com.backend.domain.exception.UserAccountDisabledException;
-import com.backend.domain.exception.UserNotFoundException;
+import com.backend.domain.exception.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +35,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.warn("Illegal argument exception: {}", ex.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<?>> handleIllegalStateException(IllegalStateException ex) {
+        log.warn("Illegal state exception: {}", ex.getMessage());
         return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
@@ -71,6 +77,55 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Bad credentials exception: {}", ex.getMessage());
+        String message = getMessage("auth.invalid.credentials");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex) {
+        log.warn("Authentication exception: {}", ex.getMessage());
+        String message = getMessage("auth.authentication.failed");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+    
+    // Business Logic Exceptions
+    @ExceptionHandler(TenantNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleTenantNotFound(TenantNotFoundException ex) {
+        log.warn("Tenant not found exception: {}", ex.getMessage());
+        String message = getMessage("tenant.not.found");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(SiteNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleSiteNotFound(SiteNotFoundException ex) {
+        log.warn("Site not found exception: {}", ex.getMessage());
+        String message = getMessage("site.not.found");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(TenantCannotBeActivatedException.class)
+    public ResponseEntity<ApiResponse<?>> handleTenantCannotBeActivated(TenantCannotBeActivatedException ex) {
+        log.warn("Tenant cannot be activated exception: {}", ex.getMessage());
+        String message = getMessage("tenant.cannot.be.activated");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ContentCannotBePublishedException.class)
+    public ResponseEntity<ApiResponse<?>> handleContentCannotBePublished(ContentCannotBePublishedException ex) {
+        log.warn("Content cannot be published exception: {}", ex.getMessage());
+        String message = getMessage("content.cannot.be.published");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
     
     // Security Exceptions
     @ExceptionHandler(AccessDeniedException.class)
@@ -79,6 +134,15 @@ public class GlobalExceptionHandler {
         String message = getMessage("security.forbidden");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    // File Upload Exceptions
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        log.warn("Max upload size exceeded: {}", ex.getMessage());
+        String message = getMessage("file.upload.size.exceeded");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     
     // Validation Exceptions
@@ -98,7 +162,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception: ", ex);
-        ApiResponse<?> response = new ApiResponse<>("ERROR", ex.getMessage(), null);
+        String message = getMessage("error.runtime");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

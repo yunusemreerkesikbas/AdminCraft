@@ -3,6 +3,7 @@ import {
     NgClass,
     NgTemplateOutlet,
     DatePipe,
+    CommonModule,
 } from '@angular/common';
 import {
     AfterViewInit,
@@ -79,6 +80,7 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
     imports: [
+        CommonModule,
         MatProgressBarModule,
         MatFormFieldModule,
         MatIconModule,
@@ -436,6 +438,18 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     checkSubdomainAvailability(): void {
         const subdomain = this.selectedTenantForm.get('subdomain')?.value;
         if (subdomain && subdomain.length > 2) {
+            // If we're editing an existing tenant and the subdomain hasn't changed, don't check
+            if (this.selectedTenant && this.selectedTenant.subdomain === subdomain) {
+                // Clear any existing errors for the current tenant's subdomain
+                const control = this.selectedTenantForm.get('subdomain');
+                if (control?.hasError('unavailable')) {
+                    const errors = { ...control.errors };
+                    delete errors.unavailable;
+                    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
+                }
+                return;
+            }
+
             this._tenantsService.checkSubdomainAvailability(subdomain)
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((available) => {

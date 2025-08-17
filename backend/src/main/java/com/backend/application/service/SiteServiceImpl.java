@@ -1,20 +1,24 @@
 package com.backend.application.service;
 
 import com.backend.domain.entity.Site;
-import com.backend.domain.entity.Menu;
 import com.backend.domain.enums.Language;
+import com.backend.domain.exception.SiteNotFoundException;
+import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.repository.SiteRepository;
-import com.backend.domain.repository.MenuRepository;
+import com.backend.domain.repository.TenantRepository;
+import com.backend.presentation.dto.mapper.SiteMapper;
+import com.backend.presentation.dto.request.CreateSiteRequest;
+import com.backend.presentation.dto.request.UpdateSiteRequest;
+import com.backend.presentation.dto.response.SiteResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,47 +27,89 @@ import java.util.Set;
 public class SiteServiceImpl implements SiteService {
     
     private final SiteRepository siteRepository;
-    private final MenuRepository menuRepository;
+    private final TenantRepository tenantRepository;
+    private final SiteMapper siteMapper;
     
     @Override
-    public Site createSite(Site site) {
-        log.debug("Creating new site with name: {}", site.getSiteName());
+    public SiteResponse createSite(CreateSiteRequest request, Language displayLanguage) {
+        log.debug("Creating new site for tenant: {}", request.tenantId());
         
-        // Set defaults
-        if (site.getIsActive() == null) {
-            site.setIsActive(true);
-        }
-        if (site.getIsPublished() == null) {
-            site.setIsPublished(false);
-        }
-        if (site.getTheme() == null) {
-            site.setTheme("default");
+        // Extract tenantId to avoid annotation issues
+        Long tenantId = request.tenantId();
+        
+        // Validate tenant exists
+        if (!tenantRepository.existsById(tenantId)) {
+            throw new TenantNotFoundException("Tenant not found with ID: " + tenantId);
         }
         
+        // Validate domain availability
+        if (request.domain() != null && !isDomainAvailable(request.domain())) {
+            throw new IllegalArgumentException("Domain is already taken: " + request.domain());
+        }
+        
+        // Validate site name availability
+        if (!isSiteNameAvailable(request.siteName(), tenantId)) {
+            throw new IllegalArgumentException("Site name is already taken: " + request.siteName());
+        }
+        
+        // Create new site entity
+        Site site = siteMapper.toEntity(request);
+        site.setCreatedAt(LocalDateTime.now());
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        // Save site
         Site savedSite = siteRepository.save(site);
-        log.info("Site created successfully with ID: {}", savedSite.getId());
         
-        return savedSite;
+        log.info("Site created successfully with ID: {} for tenant: {}", savedSite.getId(), tenantId);
+        
+        return siteMapper.toResponse(savedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Site> getSiteById(Long id) {
-        return siteRepository.findById(id);
+    public Optional<SiteResponse> getSiteById(Long id, Language displayLanguage) {
+        log.debug("Getting site by ID: {}", id);
+        
+        return siteRepository.findById(id)
+            .map(site -> siteMapper.toResponse(site, displayLanguage));
     }
     
     @Override
-    public Site updateSite(Site site) {
-        log.debug("Updating site with ID: {}", site.getId());
+    public List<SiteResponse> getSitesByTenantId(Long tenantId, Language displayLanguage) {
+        log.debug("Getting sites for tenant: {}", tenantId);
         
-        if (!siteRepository.existsById(site.getId())) {
-            throw new IllegalArgumentException("Site not found with ID: " + site.getId());
-        }
+        return siteRepository.findByTenantIdOrderByCreatedAtDesc(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getAllSites(Language displayLanguage) {
+        log.debug("Getting all sites");
         
+        return siteRepository.findAllByOrderByCreatedAtDesc()
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public SiteResponse updateSite(Long id, UpdateSiteRequest request, Language displayLanguage) {
+        log.debug("Updating site with ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        // Update site entity
+        siteMapper.updateEntity(site, request);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        // Save updated site
         Site updatedSite = siteRepository.save(site);
-        log.info("Site updated successfully with ID: {}", updatedSite.getId());
         
-        return updatedSite;
+        log.info("Site updated successfully with ID: {}", id);
+        
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
@@ -71,245 +117,599 @@ public class SiteServiceImpl implements SiteService {
         log.debug("Deleting site with ID: {}", id);
         
         if (!siteRepository.existsById(id)) {
-            throw new IllegalArgumentException("Site not found with ID: " + id);
+            throw new SiteNotFoundException("Site not found with ID: " + id);
         }
         
         siteRepository.deleteById(id);
+        
         log.info("Site deleted successfully with ID: {}", id);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<Site> getAllSites() {
-        return siteRepository.findAll();
+    public SiteResponse publishSite(Long id, Language displayLanguage) {
+        log.debug("Publishing site with ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setPublished(true);
+        site.setPublishedAt(LocalDateTime.now());
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site publishedSite = siteRepository.save(site);
+        
+        log.info("Site published successfully with ID: {}", id);
+        
+        return siteMapper.toResponse(publishedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<Site> getSitesByTenantId(Long tenantId) {
-        return siteRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+    public SiteResponse unpublishSite(Long id, Language displayLanguage) {
+        log.debug("Unpublishing site with ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setPublished(false);
+        site.setPublishedAt(null);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site unpublishedSite = siteRepository.save(site);
+        
+        log.info("Site unpublished successfully with ID: {}", id);
+        
+        return siteMapper.toResponse(unpublishedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Site> getDefaultSiteByTenantId(Long tenantId) {
-        return siteRepository.findFirstByTenantIdAndIsActiveTrue(tenantId);
+    public SiteResponse enableMaintenanceMode(Long id, String message, Language displayLanguage) {
+        log.debug("Enabling maintenance mode for site with ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setMaintenanceMode(true);
+        site.setMaintenanceMessage(message);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        
+        log.info("Maintenance mode enabled for site with ID: {}", id);
+        
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
+    public SiteResponse disableMaintenanceMode(Long id, Language displayLanguage) {
+        log.debug("Disabling maintenance mode for site with ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setMaintenanceMode(false);
+        site.setMaintenanceMessage(null);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        
+        log.info("Maintenance mode disabled for site with ID: {}", id);
+        
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public Optional<SiteResponse> getSiteByDomain(String domain, Language displayLanguage) {
+        log.debug("Getting site by domain: {}", domain);
+        
+        return siteRepository.findByDomainIgnoreCase(domain)
+            .map(site -> siteMapper.toResponse(site, displayLanguage));
+    }
+    
+    @Override
+    public boolean isDomainAvailable(String domain) {
+        log.debug("Checking domain availability: {}", domain);
+        
+        return !siteRepository.existsByDomainIgnoreCase(domain) && 
+               !siteRepository.existsByCustomDomainIgnoreCase(domain);
+    }
+    
+    @Override
+    public boolean isSiteNameAvailable(String siteName, Long tenantId) {
+        log.debug("Checking site name availability: {} for tenant: {}", siteName, tenantId);
+        
+        return !siteRepository.existsBySiteNameIgnoreCaseAndTenantId(siteName, tenantId);
+    }
+    
+    @Override
+    public List<String> getAllSiteUrls(Long tenantId) {
+        log.debug("Getting all site URLs for tenant: {}", tenantId);
+        
+        return siteRepository.findByTenantIdOrderByCreatedAtDesc(tenantId)
+            .stream()
+            .map(site -> {
+                if (site.getCustomDomain() != null && !site.getCustomDomain().isEmpty()) {
+                    return (site.getSslEnabled() ? "https://" : "http://") + site.getCustomDomain();
+                } else if (site.getDomain() != null && !site.getDomain().isEmpty()) {
+                    return (site.getSslEnabled() ? "https://" : "http://") + site.getDomain();
+                } else {
+                    // Fallback to subdomain pattern if no domain is set
+                    return (site.getSslEnabled() ? "https://" : "http://") + site.getSiteName().toLowerCase() + ".yourdomain.com";
+                }
+            })
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public String getSiteUrl(Long id) {
+        log.debug("Getting site URL for site ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        if (site.getCustomDomain() != null && !site.getCustomDomain().isEmpty()) {
+            return (site.getSslEnabled() ? "https://" : "http://") + site.getCustomDomain();
+        } else if (site.getDomain() != null && !site.getDomain().isEmpty()) {
+            return (site.getSslEnabled() ? "https://" : "http://") + site.getDomain();
+        } else {
+            // Fallback to subdomain pattern
+            return (site.getSslEnabled() ? "https://" : "http://") + site.getSiteName().toLowerCase() + ".yourdomain.com";
+        }
+    }
+    
+    @Override
+    public String getFullDomainUrl(Long id) {
+        log.debug("Getting full domain URL for site ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        if (site.getCustomDomain() != null && !site.getCustomDomain().isEmpty()) {
+            return site.getCustomDomain();
+        } else if (site.getDomain() != null && !site.getDomain().isEmpty()) {
+            return site.getDomain();
+        } else {
+            // Fallback to subdomain pattern
+            return site.getSiteName().toLowerCase() + ".yourdomain.com";
+        }
+    }
+    
+    @Override
+    public SiteResponse getSiteConfiguration(Long id, Language displayLanguage) {
+        log.debug("Getting site configuration for site ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        return siteMapper.toResponse(site, displayLanguage);
+    }
+    
+    @Override
+    public SiteResponse updateSiteConfiguration(Long id, UpdateSiteRequest request, Language displayLanguage) {
+        log.debug("Updating site configuration for site ID: {}", id);
+        
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        // Update site configuration using the mapper
+        siteMapper.updateEntity(site, request);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        // Save updated site
+        Site updatedSite = siteRepository.save(site);
+        
+        log.info("Site configuration updated successfully for site ID: {}", id);
+        
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public void deleteSitesByTenantId(Long tenantId) {
+        log.debug("Deleting all sites for tenant ID: {}", tenantId);
+        
+        siteRepository.deleteByTenantId(tenantId);
+        
+        log.info("All sites deleted successfully for tenant ID: {}", tenantId);
+    }
+    
+    // Implementation of remaining abstract methods from SiteService interface
+    // Most of these would normally be implemented gradually as features are needed
+    // For now, providing basic implementations to resolve compilation errors
+    
+    @Override
     public long countSitesByTenantId(Long tenantId) {
         return siteRepository.countByTenantId(tenantId);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Site> getSiteByDomain(String domain) {
-        return siteRepository.findByDomain(domain);
+    public List<SiteResponse> getActiveSitesByTenantId(Long tenantId, Language displayLanguage) {
+        return siteRepository.findActiveSitesByTenantId(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public boolean isDomainAvailable(String domain) {
-        return !siteRepository.existsByDomain(domain);
+    public Optional<SiteResponse> getSiteByCustomDomain(String customDomain, Language displayLanguage) {
+        return siteRepository.findByCustomDomain(customDomain)
+            .map(site -> siteMapper.toResponse(site, displayLanguage));
     }
     
     @Override
-    public Site updateDomain(Long siteId, String domain) {
-        Site site = siteRepository.findById(siteId)
-            .orElseThrow(() -> new IllegalArgumentException("Site not found"));
-        
-        if (domain != null && !domain.trim().isEmpty() && siteRepository.existsByDomainAndIdNot(domain, siteId)) {
-            throw new IllegalArgumentException("Domain already taken: " + domain);
-        }
+    public boolean isCustomDomainAvailable(String customDomain) {
+        return !siteRepository.existsByCustomDomainIgnoreCase(customDomain);
+    }
+    
+    @Override
+    public SiteResponse updateDomain(Long id, String domain, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
         site.setDomain(domain);
-        return siteRepository.save(site);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    public Site publishSite(Long siteId) {
-        Site site = siteRepository.findById(siteId)
-            .orElseThrow(() -> new IllegalArgumentException("Site not found"));
+    public SiteResponse updateCustomDomain(Long id, String customDomain, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        if (!canPublish(siteId)) {
-            throw new IllegalStateException("Site cannot be published in current state");
+        site.setCustomDomain(customDomain);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public List<SiteResponse> getPublishedSites(Language displayLanguage) {
+        return siteRepository.findByPublishedTrue()
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getUnpublishedSitesByTenantId(Long tenantId, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndPublishedFalse(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getSitesInMaintenanceMode(Language displayLanguage) {
+        return siteRepository.findByMaintenanceModeTrue()
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getSitesInMaintenanceModeByTenantId(Long tenantId, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndMaintenanceModeTrue(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public SiteResponse addEnabledLanguage(Long id, Language language, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.getEnabledLanguages().add(language);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public SiteResponse removeEnabledLanguage(Long id, Language language, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.getEnabledLanguages().remove(language);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public SiteResponse setDefaultLanguage(Long id, Language defaultLanguage, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setDefaultLanguage(defaultLanguage);
+        if (!site.getEnabledLanguages().contains(defaultLanguage)) {
+            site.getEnabledLanguages().add(defaultLanguage);
         }
+        site.setUpdatedAt(LocalDateTime.now());
         
-        site.setIsPublished(true);
-        site.setPublishedAt(LocalDateTime.now());
-        
-        Site publishedSite = siteRepository.save(site);
-        log.info("Site published: {}", siteId);
-        
-        return publishedSite;
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    public Site unpublishSite(Long siteId) {
-        Site site = siteRepository.findById(siteId)
-            .orElseThrow(() -> new IllegalArgumentException("Site not found"));
+    public List<SiteResponse> getSitesByLanguage(Language language, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndEnabledLanguagesContaining(null, language)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getSitesByDefaultLanguage(Language defaultLanguage, Language displayLanguage) {
+        return siteRepository.findByDefaultLanguage(defaultLanguage)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public SiteResponse updateTheme(Long id, String themeName, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        site.setIsPublished(false);
-        site.setPublishedAt(null);
+        site.setThemeName(themeName);
+        site.setUpdatedAt(LocalDateTime.now());
         
-        Site unpublishedSite = siteRepository.save(site);
-        log.info("Site unpublished: {}", siteId);
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public List<SiteResponse> getSitesByTheme(String themeName, Language displayLanguage) {
+        return siteRepository.findByThemeName(themeName)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<String> getAvailableThemes() {
+        // Return a basic list of available themes
+        return List.of("default", "modern", "classic", "minimal", "corporate");
+    }
+    
+    @Override
+    public SiteResponse enableSSL(Long id, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        return unpublishedSite;
-    }
-    
-    @Override
-    public Site activateSite(Long siteId) {
-        Site site = siteRepository.findById(siteId)
-            .orElseThrow(() -> new IllegalArgumentException("Site not found"));
+        site.setSslEnabled(true);
+        site.setUpdatedAt(LocalDateTime.now());
         
-        site.setIsActive(true);
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public SiteResponse disableSSL(Long id, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        Site activatedSite = siteRepository.save(site);
-        log.info("Site activated: {}", siteId);
+        site.setSslEnabled(false);
+        site.setUpdatedAt(LocalDateTime.now());
         
-        return activatedSite;
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    public Site deactivateSite(Long siteId) {
-        Site site = siteRepository.findById(siteId)
-            .orElseThrow(() -> new IllegalArgumentException("Site not found"));
+    public List<SiteResponse> getSSLEnabledSites(Language displayLanguage) {
+        return siteRepository.findBySslEnabledTrue()
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getSSLDisabledSitesByTenantId(Long tenantId, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndSslEnabledFalse(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public SiteResponse updateSEOSettings(Long id, String siteTitle, String siteDescription, 
+                                         String siteKeywords, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        site.setIsActive(false);
+        site.setSiteTitle(siteTitle);
+        site.setSiteDescription(siteDescription);
+        site.setSiteKeywords(siteKeywords);
+        site.setUpdatedAt(LocalDateTime.now());
         
-        Site deactivatedSite = siteRepository.save(site);
-        log.info("Site deactivated: {}", siteId);
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
+    }
+    
+    @Override
+    public SiteResponse updateOGSettings(Long id, String ogImageUrl, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
         
-        return deactivatedSite;
+        site.setOgImageUrl(ogImageUrl);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<Site> getPublishedSites(Long tenantId) {
-        return siteRepository.findByTenantIdAndIsPublishedTrue(tenantId);
+    public SiteResponse updateSocialSettings(Long id, String twitterHandle, String facebookPageUrl, 
+                                           Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setTwitterHandle(twitterHandle);
+        site.setFacebookPageUrl(facebookPageUrl);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<Site> getActiveSites(Long tenantId) {
-        return siteRepository.findByTenantIdAndIsActiveTrue(tenantId);
+    public SiteResponse updateAnalyticsSettings(Long id, String googleAnalyticsId, 
+                                              String googleTagManagerId, Language displayLanguage) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        site.setGoogleAnalyticsId(googleAnalyticsId);
+        site.setGoogleTagManagerId(googleTagManagerId);
+        site.setUpdatedAt(LocalDateTime.now());
+        
+        Site updatedSite = siteRepository.save(site);
+        return siteMapper.toResponse(updatedSite, displayLanguage);
     }
     
     @Override
-    public List<Menu> getMenusBySiteId(Long siteId) {
-        return menuRepository.findBySiteIdOrderByLanguageAsc(siteId);
+    public List<SiteResponse> getSitesWithAnalytics(Language displayLanguage) {
+        return siteRepository.findAll()
+            .stream()
+            .filter(site -> site.getGoogleAnalyticsId() != null || site.getGoogleTagManagerId() != null)
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    public List<Menu> getMenusBySiteIdAndLanguage(Long siteId, Language language) {
-        return menuRepository.findBySiteIdAndLanguage(siteId, language);
+    public List<SiteResponse> getSitesWithAnalyticsByTenantId(Long tenantId, Language displayLanguage) {
+        return siteRepository.findByTenantIdWithAnalytics(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    public Menu createMenu(Menu menu) {
-        return menuRepository.save(menu);
+    public List<SiteResponse> searchSitesByName(Long tenantId, String searchTerm, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndSiteNameContainingIgnoreCase(tenantId, searchTerm)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    public Menu updateMenu(Menu menu) {
-        if (!menuRepository.existsById(menu.getId())) {
-            throw new IllegalArgumentException("Menu not found with ID: " + menu.getId());
-        }
-        return menuRepository.save(menu);
+    public List<SiteResponse> searchSitesByDescription(Long tenantId, String searchTerm, Language displayLanguage) {
+        return siteRepository.findByTenantIdAndDescriptionContainingIgnoreCase(tenantId, searchTerm)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    public void deleteMenu(Long menuId) {
-        if (!menuRepository.existsById(menuId)) {
-            throw new IllegalArgumentException("Menu not found with ID: " + menuId);
-        }
-        menuRepository.deleteById(menuId);
+    public List<SiteResponse> getSitesCreatedBetween(LocalDateTime startDate, LocalDateTime endDate, 
+                                                   Language displayLanguage) {
+        return siteRepository.findByCreatedAtBetween(startDate, endDate)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
     }
     
     @Override
-    @Transactional(readOnly = true)
+    public List<SiteResponse> getSitesPublishedBetween(LocalDateTime startDate, LocalDateTime endDate, 
+                                                     Language displayLanguage) {
+        return siteRepository.findByPublishedAtBetween(startDate, endDate)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<SiteResponse> getRecentlyPublishedSites(Long tenantId, Language displayLanguage) {
+        return siteRepository.findRecentlyPublishedSitesByTenantId(tenantId)
+            .stream()
+            .map(site -> siteMapper.toResponse(site, displayLanguage))
+            .collect(Collectors.toList());
+    }
+    
+    @Override
+    public boolean canSiteBePublished(Long id) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        return site.canBePublished();
+    }
+    
+    @Override
+    public boolean isSiteAccessible(Long id) {
+        Site site = siteRepository.findById(id)
+            .orElseThrow(() -> new SiteNotFoundException("Site not found with ID: " + id));
+        
+        return site.isAccessible();
+    }
+    
+    @Override
     public long getTotalSitesCount() {
         return siteRepository.count();
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public long getActiveSitesCount(Long tenantId) {
-        return siteRepository.countByTenantIdAndIsActiveTrue(tenantId);
+    public long getPublishedSitesCount() {
+        return siteRepository.findByPublishedTrue().size();
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public long getPublishedSitesCount(Long tenantId) {
-        return siteRepository.countByTenantIdAndIsPublishedTrue(tenantId);
+    public long getMaintenanceSitesCount() {
+        return siteRepository.findByMaintenanceModeTrue().size();
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<Site> getRecentSites(Long tenantId, int limit) {
-        return siteRepository.findByTenantIdOrderByCreatedAtDesc(tenantId)
-                           .stream()
-                           .limit(limit)
-                           .toList();
+    public long getSSLEnabledSitesCount() {
+        return siteRepository.findBySslEnabledTrue().size();
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public List<String> validateSite(Site site) {
-        List<String> errors = new ArrayList<>();
-        
-        if (site.getSiteName() == null || site.getSiteName().trim().isEmpty()) {
-            errors.add("Site name is required");
+    public void bulkPublish(List<Long> siteIds) {
+        List<Site> sites = siteRepository.findByIdIn(siteIds);
+        for (Site site : sites) {
+            site.setPublished(true);
+            site.setPublishedAt(LocalDateTime.now());
+            site.setUpdatedAt(LocalDateTime.now());
         }
-        
-        if (site.getDefaultLanguage() == null) {
-            errors.add("Default language is required");
-        }
-        
-        if (site.getTenantId() == null) {
-            errors.add("Tenant ID is required");
-        }
-        
-        return errors;
+        siteRepository.saveAll(sites);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public boolean canPublish(Long siteId) {
-        Optional<Site> siteOpt = siteRepository.findById(siteId);
-        if (siteOpt.isEmpty()) {
-            return false;
+    public void bulkUnpublish(List<Long> siteIds) {
+        List<Site> sites = siteRepository.findByIdIn(siteIds);
+        for (Site site : sites) {
+            site.setPublished(false);
+            site.setPublishedAt(null);
+            site.setUpdatedAt(LocalDateTime.now());
         }
-        
-        Site site = siteOpt.get();
-        return site.getSiteName() != null && !site.getSiteName().trim().isEmpty();
+        siteRepository.saveAll(sites);
     }
     
     @Override
-    @Transactional(readOnly = true)
-    public boolean canActivate(Long siteId) {
-        return canPublish(siteId);
+    public void bulkEnableSSL(List<Long> siteIds) {
+        List<Site> sites = siteRepository.findByIdIn(siteIds);
+        for (Site site : sites) {
+            site.setSslEnabled(true);
+            site.setUpdatedAt(LocalDateTime.now());
+        }
+        siteRepository.saveAll(sites);
     }
     
-    // Placeholder implementations for interface compliance
-    @Override public Site addLanguage(Long siteId, Language language) { return null; }
-    @Override public Site removeLanguage(Long siteId, Language language) { return null; }
-    @Override public Site setDefaultLanguage(Long siteId, Language language) { return null; }
-    @Override public Set<Language> getSupportedLanguages(Long siteId) { return Set.of(); }
-    @Override public boolean isLanguageSupported(Long siteId, Language language) { return false; }
-    @Override public Site updateTheme(Long siteId, String theme) { return null; }
-    @Override public Site updateLogo(Long siteId, String logoUrl) { return null; }
-    @Override public Site updateFavicon(Long siteId, String faviconUrl) { return null; }
-    @Override public Site updateBranding(Long siteId, String primaryColor, String secondaryColor, String fontFamily) { return null; }
-    @Override public List<String> getAvailableThemes() { return List.of("default", "modern", "classic"); }
-    @Override public List<Site> getSitesWithCustomDomain(Long tenantId) { return List.of(); }
-    @Override public Site updateSeoSettings(Long siteId, String metaTitle, String metaDescription, String metaKeywords) { return null; }
-    @Override public Site updateAnalyticsCode(Long siteId, String googleAnalyticsId, String customCode) { return null; }
-    @Override public void bulkPublish(List<Long> siteIds) { }
-    @Override public void bulkUnpublish(List<Long> siteIds) { }
-    @Override public void bulkActivate(List<Long> siteIds) { }
-    @Override public void bulkDeactivate(List<Long> siteIds) { }
-    @Override public void deleteSitesByTenantId(Long tenantId) { }
+    @Override
+    public void bulkDisableSSL(List<Long> siteIds) {
+        List<Site> sites = siteRepository.findByIdIn(siteIds);
+        for (Site site : sites) {
+            site.setSslEnabled(false);
+            site.setUpdatedAt(LocalDateTime.now());
+        }
+        siteRepository.saveAll(sites);
+    }
+    
+    @Override
+    public void bulkDelete(List<Long> siteIds) {
+        siteRepository.deleteAllById(siteIds);
+    }
 }

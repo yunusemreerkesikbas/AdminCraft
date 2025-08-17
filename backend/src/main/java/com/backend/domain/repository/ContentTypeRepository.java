@@ -20,15 +20,12 @@ public interface ContentTypeRepository {
     List<ContentType> findByTenantId(Long tenantId);
     List<ContentType> findByTenantIdAndIsActiveTrue(Long tenantId);
     List<ContentType> findByTenantIdOrderBySortOrderAsc(Long tenantId);
-    List<ContentType> findByTenantIdOrderByCreatedAtDesc(Long tenantId);
     long countByTenantId(Long tenantId);
     
     // Name and identification queries
     Optional<ContentType> findByName(String name);
     Optional<ContentType> findByTenantIdAndName(Long tenantId, String name);
-    Optional<ContentType> findByNameAndTenantId(String name, Long tenantId);
     boolean existsByTenantIdAndName(Long tenantId, String name);
-    boolean existsByNameAndTenantId(String name, Long tenantId);
     
     // System type queries
     List<ContentType> findByIsSystemTypeTrue();
@@ -38,7 +35,6 @@ public interface ContentTypeRepository {
     // Feature-based queries
     List<ContentType> findBySupportsMultiLanguageTrue();
     List<ContentType> findByTenantIdAndSupportsMultiLanguageTrue(Long tenantId);
-    List<ContentType> findByTenantIdAndSupportsMultiLanguageFalse(Long tenantId);
     List<ContentType> findByTenantIdAndSupportsSeoTrue(Long tenantId);
     List<ContentType> findByTenantIdAndSupportsSchedulingTrue(Long tenantId);
     List<ContentType> findByTenantIdAndSupportsCommentsTrue(Long tenantId);

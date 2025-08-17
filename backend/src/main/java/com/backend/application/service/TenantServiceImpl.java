@@ -1,24 +1,32 @@
 package com.backend.application.service;
 
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.TenantRepository;
+import com.backend.domain.repository.UserRepository;
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
 import com.backend.presentation.dto.response.TenantResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class TenantServiceImpl implements TenantService {
 
-    @Autowired
-    private TenantRepository tenantRepository;
+    private final TenantRepository tenantRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -48,11 +56,6 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = tenantRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
         return TenantResponse.from(tenant, displayLanguage);
-    }
-
-    @Override
-    public Optional<Tenant> getTenantEntityById(Long id) {
-        return tenantRepository.findById(id);
     }
 
     @Override
@@ -179,5 +182,68 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public long getTenantCountByStatus(TenantStatus status) {
         return tenantRepository.countByStatus(status);
+    }
+
+    @Override
+    public boolean hasAccessToTenant(String currentUserEmail, Long tenantId) {
+        log.debug("Checking tenant access for user {} to tenant {}", currentUserEmail, tenantId);
+        
+        try {
+            // Get the current authentication context
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            // First, try to get tenantId from the authentication details (JWT token)
+            if (authentication != null && authentication.getDetails() instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
+                String role = (String) details.get("role");
+                Long userTenantId = (Long) details.get("tenantId");
+                
+                log.debug("User {} has role {} and tenantId {} from token", currentUserEmail, role, userTenantId);
+                
+                // SUPER_ADMIN users have access to all tenants
+                if ("SUPER_ADMIN".equals(role)) {
+                    log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
+                    return true;
+                }
+                
+                // For other roles, check if user's tenant matches the requested tenant
+                if (userTenantId != null && userTenantId.equals(tenantId)) {
+                    log.debug("User {} has access to their own tenant {}", currentUserEmail, tenantId);
+                    return true;
+                }
+                
+                log.debug("User {} denied access to tenant {} (user tenant: {})", currentUserEmail, tenantId, userTenantId);
+                return false;
+            }
+            
+            // Fallback: if authentication details are not available, query the database
+            log.debug("Authentication details not available, falling back to database query");
+            
+            // Find the current user
+            Optional<User> currentUser = userRepository.findByEmail(currentUserEmail);
+            if (currentUser.isEmpty()) {
+                log.warn("User not found: {}", currentUserEmail);
+                return false;
+            }
+
+            User user = currentUser.get();
+            
+            // SUPER_ADMIN users have access to all tenants
+            if (user.getRole().name().equals("SUPER_ADMIN")) {
+                log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
+                return true;
+            }
+
+            // For other roles, check if user belongs to the tenant
+            boolean hasAccess = user.getTenantId().equals(tenantId);
+            log.debug("User {} access to tenant {}: {} (user tenant: {})", currentUserEmail, tenantId, hasAccess, user.getTenantId());
+            return hasAccess;
+
+        } catch (Exception ex) {
+            log.error("Error checking tenant access for user {} to tenant {}: {}", 
+                     currentUserEmail, tenantId, ex.getMessage());
+            return false; // Deny access on error for security
+        }
     }
 }

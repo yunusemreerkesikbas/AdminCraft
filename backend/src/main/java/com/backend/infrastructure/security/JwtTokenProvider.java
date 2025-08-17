@@ -25,18 +25,28 @@ public class JwtTokenProvider {
         this.refreshTokenExpiration = jwtProperties.getRefreshExpiration();
     }
 
-    public String createAccessToken(String email, String role) {
+    public String createAccessToken(String email, String role, Long tenantId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .claim("role", role)
                 .claim("type", "access")
                 .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
+                .expiration(expiryDate);
+        
+        // Only add tenantId if it's not null (SUPER_ADMIN users might not have a tenantId)
+        if (tenantId != null) {
+            builder.claim("tenantId", tenantId);
+        }
+
+        return builder.signWith(secretKey).compact();
+    }
+
+    // Backward compatibility - keep the old method for refresh tokens
+    public String createAccessToken(String email, String role) {
+        return createAccessToken(email, role, null);
     }
 
     public String createRefreshToken(String email) {
@@ -70,6 +80,30 @@ public class JwtTokenProvider {
                 .getPayload();
         
         return claims.get("role", String.class);
+    }
+
+    public Long getTenantIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        
+        Object tenantIdObj = claims.get("tenantId");
+        if (tenantIdObj == null) {
+            return null;
+        }
+        
+        if (tenantIdObj instanceof Number) {
+            return ((Number) tenantIdObj).longValue();
+        }
+        
+        try {
+            return Long.parseLong(tenantIdObj.toString());
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid tenantId format in token: {}", tenantIdObj);
+            return null;
+        }
     }
 
     public boolean validateToken(String token) {

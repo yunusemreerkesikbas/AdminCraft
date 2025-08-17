@@ -1,116 +1,176 @@
 package com.backend.presentation.dto.mapper;
 
 import com.backend.domain.entity.Site;
-import com.backend.domain.entity.Tenant;
-import com.backend.domain.entity.Menu;
+import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.CreateSiteRequest;
 import com.backend.presentation.dto.request.UpdateSiteRequest;
 import com.backend.presentation.dto.response.SiteResponse;
-import com.backend.presentation.dto.response.MenuResponse;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 
 @Component
 public class SiteMapper {
     
-    public Site toEntity(CreateSiteRequest request) {
-        Site site = new Site();
-        site.setSiteName(request.siteName());
-        site.setDescription(request.description());
-        site.setDefaultLanguage(request.defaultLanguage());
-        site.setEnabledLanguages(request.enabledLanguages() != null ? request.enabledLanguages() : Set.of(request.defaultLanguage()));
-        site.setDomain(request.domain());
-        site.setTheme(request.theme() != null ? request.theme() : "default");
-        site.setLogoUrl(request.logoUrl());
-        site.setFaviconUrl(request.faviconUrl());
-        site.setPrimaryColor(request.primaryColor());
-        site.setSecondaryColor(request.secondaryColor());
-        site.setFontFamily(request.fontFamily());
-        site.setMetaTitle(request.metaTitle());
-        site.setMetaDescription(request.metaDescription());
-        site.setMetaKeywords(request.metaKeywords());
-        site.setGoogleAnalyticsId(request.googleAnalyticsId());
-        site.setCustomCode(request.customCode());
-        site.setIsActive(request.isActive() != null ? request.isActive() : true);
+    public SiteResponse toResponse(Site site, Language displayLanguage) {
+        if (site == null) {
+            return null;
+        }
         
-        // Set defaults
-        site.setIsPublished(false);
-        site.setCreatedAt(LocalDateTime.now());
-        site.setUpdatedAt(LocalDateTime.now());
-        
-        return site;
-    }
-    
-    public Site toEntity(UpdateSiteRequest request, Site existingSite) {
-        existingSite.setSiteName(request.siteName());
-        existingSite.setDescription(request.description());
-        existingSite.setDefaultLanguage(request.defaultLanguage());
-        existingSite.setEnabledLanguages(request.enabledLanguages() != null ? request.enabledLanguages() : Set.of(request.defaultLanguage()));
-        existingSite.setDomain(request.domain());
-        existingSite.setTheme(request.theme() != null ? request.theme() : "default");
-        existingSite.setLogoUrl(request.logoUrl());
-        existingSite.setFaviconUrl(request.faviconUrl());
-        existingSite.setPrimaryColor(request.primaryColor());
-        existingSite.setSecondaryColor(request.secondaryColor());
-        existingSite.setFontFamily(request.fontFamily());
-        existingSite.setMetaTitle(request.metaTitle());
-        existingSite.setMetaDescription(request.metaDescription());
-        existingSite.setMetaKeywords(request.metaKeywords());
-        existingSite.setGoogleAnalyticsId(request.googleAnalyticsId());
-        existingSite.setCustomCode(request.customCode());
-        existingSite.setIsActive(request.isActive() != null ? request.isActive() : true);
-        existingSite.setUpdatedAt(LocalDateTime.now());
-        
-        return existingSite;
-    }
-    
-    public SiteResponse toResponse(Site site) {
-        return toResponse(site, null, null);
-    }
-    
-    public SiteResponse toResponse(Site site, Tenant tenant, List<Menu> menus) {
         return new SiteResponse(
             site.getId(),
             site.getSiteName(),
             site.getDescription(),
+            site.getTenantId(),
+            null, // tenantName will be populated separately if needed
+            site.getDomain(),
+            site.getCustomDomain(),
             site.getEnabledLanguages(),
             site.getDefaultLanguage(),
-            site.getTenantId(),
-            tenant != null ? tenant.getCompanyName() : null,
-            site.getDomain(),
-            site.getIsActive(),
-            site.getTheme(),
-            site.getLogoUrl(),
-            site.getFaviconUrl(),
-            site.getPrimaryColor(),
-            site.getSecondaryColor(),
-            site.getFontFamily(),
-            site.getMetaTitle(),
-            site.getMetaDescription(),
-            site.getMetaKeywords(),
+            site.getSslEnabled(),
+            site.getPublished(),
+            site.getThemeName(),
+            site.getMaintenanceMode(),
+            site.getMaintenanceMessage(),
+            site.getSiteTitle(),
+            site.getSiteDescription(),
+            site.getSiteKeywords(),
+            site.getOgImageUrl(),
+            site.getTwitterHandle(),
+            site.getFacebookPageUrl(),
             site.getGoogleAnalyticsId(),
-            site.getCustomCode(),
-            site.getIsPublished(),
-            menus != null ? menus.stream().map(this::toMenuResponse).toList() : List.of(),
+            site.getGoogleTagManagerId(),
+            site.getSiteUrl(),
+            site.getFullDomain(),
+            site.isAccessible(),
+            site.canBePublished(),
             site.getCreatedAt(),
             site.getUpdatedAt(),
             site.getPublishedAt()
         );
     }
     
-    private MenuResponse toMenuResponse(Menu menu) {
-        return new MenuResponse(
-            menu.getId(),
-            menu.getName(),
-            menu.getLanguage(),
-            menu.getTenantId(),
-            menu.getSiteId(),
-            List.of(), // Menu items would be populated separately
-            menu.getCreatedAt(),
-            menu.getUpdatedAt()
-        );
+    public Site toEntity(SiteResponse response) {
+        if (response == null) {
+            return null;
+        }
+        
+        Site site = new Site();
+        site.setId(response.id());
+        site.setSiteName(response.siteName());
+        site.setDescription(response.description());
+        site.setTenantId(response.tenantId());
+        site.setDomain(response.domain());
+        site.setCustomDomain(response.customDomain());
+        site.setEnabledLanguages(response.enabledLanguages());
+        site.setDefaultLanguage(response.defaultLanguage());
+        site.setSslEnabled(response.sslEnabled());
+        site.setPublished(response.published());
+        site.setThemeName(response.themeName());
+        site.setMaintenanceMode(response.maintenanceMode());
+        site.setMaintenanceMessage(response.maintenanceMessage());
+        site.setSiteTitle(response.siteTitle());
+        site.setSiteDescription(response.siteDescription());
+        site.setSiteKeywords(response.siteKeywords());
+        site.setOgImageUrl(response.ogImageUrl());
+        site.setTwitterHandle(response.twitterHandle());
+        site.setFacebookPageUrl(response.facebookPageUrl());
+        site.setGoogleAnalyticsId(response.googleAnalyticsId());
+        site.setGoogleTagManagerId(response.googleTagManagerId());
+        
+        return site;
+    }
+    
+    public Site toEntity(CreateSiteRequest request) {
+        if (request == null) {
+            return null;
+        }
+        
+        Site site = new Site();
+        site.setSiteName(request.siteName());
+        site.setDescription(request.description());
+        site.setTenantId(request.tenantId());
+        site.setDomain(request.domain());
+        site.setCustomDomain(request.customDomain());
+        site.setEnabledLanguages(request.enabledLanguages());
+        site.setDefaultLanguage(request.defaultLanguage());
+        site.setSslEnabled(request.sslEnabled() != null ? request.sslEnabled() : true);
+        site.setPublished(false); // New sites start unpublished
+        site.setThemeName(request.themeName() != null ? request.themeName() : "default");
+        site.setMaintenanceMode(false);
+        site.setMaintenanceMessage(null);
+        site.setSiteTitle(request.siteTitle());
+        site.setSiteDescription(request.siteDescription());
+        site.setSiteKeywords(request.siteKeywords());
+        site.setOgImageUrl(request.ogImageUrl());
+        site.setTwitterHandle(request.twitterHandle());
+        site.setFacebookPageUrl(request.facebookPageUrl());
+        site.setGoogleAnalyticsId(request.googleAnalyticsId());
+        site.setGoogleTagManagerId(request.googleTagManagerId());
+        
+        return site;
+    }
+    
+    public void updateEntity(Site site, UpdateSiteRequest request) {
+        if (site == null || request == null) {
+            return;
+        }
+        
+        // Only update non-null fields
+        if (request.siteName() != null) {
+            site.setSiteName(request.siteName());
+        }
+        if (request.description() != null) {
+            site.setDescription(request.description());
+        }
+        if (request.domain() != null) {
+            site.setDomain(request.domain());
+        }
+        if (request.customDomain() != null) {
+            site.setCustomDomain(request.customDomain());
+        }
+        if (request.defaultLanguage() != null) {
+            site.setDefaultLanguage(request.defaultLanguage());
+        }
+        if (request.enabledLanguages() != null) {
+            site.setEnabledLanguages(request.enabledLanguages());
+        }
+        if (request.themeName() != null) {
+            site.setThemeName(request.themeName());
+        }
+        if (request.sslEnabled() != null) {
+            site.setSslEnabled(request.sslEnabled());
+        }
+        if (request.published() != null) {
+            site.setPublished(request.published());
+        }
+        if (request.maintenanceMode() != null) {
+            site.setMaintenanceMode(request.maintenanceMode());
+        }
+        if (request.maintenanceMessage() != null) {
+            site.setMaintenanceMessage(request.maintenanceMessage());
+        }
+        if (request.siteTitle() != null) {
+            site.setSiteTitle(request.siteTitle());
+        }
+        if (request.siteDescription() != null) {
+            site.setSiteDescription(request.siteDescription());
+        }
+        if (request.siteKeywords() != null) {
+            site.setSiteKeywords(request.siteKeywords());
+        }
+        if (request.ogImageUrl() != null) {
+            site.setOgImageUrl(request.ogImageUrl());
+        }
+        if (request.twitterHandle() != null) {
+            site.setTwitterHandle(request.twitterHandle());
+        }
+        if (request.facebookPageUrl() != null) {
+            site.setFacebookPageUrl(request.facebookPageUrl());
+        }
+        if (request.googleAnalyticsId() != null) {
+            site.setGoogleAnalyticsId(request.googleAnalyticsId());
+        }
+        if (request.googleTagManagerId() != null) {
+            site.setGoogleTagManagerId(request.googleTagManagerId());
+        }
     }
 }

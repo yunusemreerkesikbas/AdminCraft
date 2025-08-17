@@ -3,6 +3,7 @@ package com.backend.infrastructure.config;
 import com.backend.infrastructure.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // Enable @PreAuthorize and @PostAuthorize annotations
 public class SecurityConfig {
     
     @Bean
@@ -25,20 +27,26 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12); // Higher rounds for better security
     }
 
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, 
-                                         JwtAuthenticationFilter jwtAuthFilter
-                                         ) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()  // Allow authentication endpoints
-                .requestMatchers("/health/**").permitAll()  // Allow health check
-                .requestMatchers("/actuator/**").permitAll()  // Allow actuator endpoints
-                .anyRequest().authenticated()  // All other requests require authentication
+                // Public endpoints - Spring Security works on servlet path (after context-path)
+                // Context path is /api, controller @RequestMapping("/auth") = servlet path "/auth"
+                .requestMatchers("/auth/**").permitAll()       // Authentication endpoints
+                .requestMatchers("/health/**").permitAll()     // Health check endpoints
+                .requestMatchers("/actuator/**").permitAll()   // Actuator endpoints for monitoring
+                .requestMatchers("/public/**").permitAll()     // Public API endpoints
+                .requestMatchers("/swagger-ui/**").permitAll() // Swagger documentation
+                .requestMatchers("/v3/api-docs/**").permitAll() // OpenAPI documentation
+                .requestMatchers("/favicon.ico").permitAll()   // Favicon
+                .requestMatchers("/error").permitAll()         // Error pages
+                
+                // All other endpoints require authentication
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -50,10 +58,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Allow specific origins for development and production
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:*",       // Allow any localhost port for development
-            "https://*.yourdomain.com", // Production domain pattern
-            "http://127.0.0.1:*"       // Local IP access
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:4200",     // Angular dev server
+            "http://localhost:3000",     // React dev server
+            "http://localhost:8080",     // Backend server
+            "http://localhost:8081",     // Alternative backend server
+            "https://localhost:4200",    // HTTPS Angular dev server
+            "https://localhost:3000",    // HTTPS React dev server
+            "https://localhost:8080",    // HTTPS Backend server
+            "https://localhost:8081"     // HTTPS Alternative backend server
         ));
         
         // Allow all HTTP methods
@@ -61,14 +74,28 @@ public class SecurityConfig {
             "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
         ));
         
-        // Allow all headers
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // Allow specific headers commonly used in REST APIs
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type", 
+            "Accept",
+            "Accept-Language",
+            "X-Requested-With",
+            "Cache-Control",
+            "X-Tenant-ID",
+            "X-User-ID"
+        ));
         
         // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
         
         // Expose authorization header to frontend
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "X-Total-Count",
+            "X-Page-Number",
+            "X-Page-Size"
+        ));
         
         // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);

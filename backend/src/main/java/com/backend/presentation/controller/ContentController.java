@@ -1,23 +1,21 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.ContentService;
-import com.backend.application.service.ContentTypeService;
-import com.backend.application.service.UserService;
 import com.backend.domain.entity.Content;
-import com.backend.domain.entity.ContentType;
-import com.backend.domain.entity.User;
-import com.backend.domain.enums.ContentStatus;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.mapper.ContentMapper;
-import com.backend.presentation.dto.request.CreateContentRequest;
-import com.backend.presentation.dto.request.UpdateContentRequest;
-import com.backend.presentation.dto.response.ContentResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,181 +23,99 @@ import java.util.Locale;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/contents")
+@RequestMapping("/content")
+@RequiredArgsConstructor
+@Slf4j
+@Validated
 public class ContentController {
 
-    @Autowired
-    private ContentService contentService;
-
-    @Autowired
-    private ContentTypeService contentTypeService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private ContentMapper contentMapper;
-
-    @Autowired
-    private MessageSource messageSource;
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<ContentResponse>> createContent(
-            @Valid @RequestBody CreateContentRequest request,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            
-            // Convert DTO to Entity
-            Content content = contentMapper.toEntity(request);
-            
-            // Set tenant ID from context (would normally come from JWT token)
-            content.setTenantId(1L); // TODO: Get from security context
-            content.setCreatedBy(1L); // TODO: Get from security context
-            
-            // Create content
-            Content savedContent = contentService.createContent(content);
-            
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(savedContent.getContentTypeId());
-            Optional<User> author = userService.getUserById(savedContent.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                savedContent, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            String message = messageSource.getMessage("content.created.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(message, response));
-        } catch (Exception ex) {
-            String message = messageSource.getMessage("content.create.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
-        }
-    }
+    private final ContentService contentService;
+    private final MessageSource messageSource;
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ContentResponse>> getContentById(
-            @PathVariable Long id,
+    public ResponseEntity<ApiResponse<Content>> getContentById(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Optional<Content> contentOpt = contentService.getContentById(id);
-            if (contentOpt.isEmpty()) {
+            Optional<Content> content = contentService.getContentById(id);
+            if (content.isPresent()) {
+                return ResponseEntity.ok(ApiResponse.success(content.get()));
+            } else {
                 String message = messageSource.getMessage("content.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(message));
             }
-            
-            Content content = contentOpt.get();
-            
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(content.getContentTypeId());
-            Optional<User> author = userService.getUserById(content.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                content, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
+            log.error("Error getting content by id {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("content.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents(
-            @RequestParam(required = false) ContentStatus status,
-            @RequestParam(required = false) Language language,
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ApiResponse<Content>> getContentBySlug(
+            @PathVariable @Valid @NotBlank String slug,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long tenantId = 1L; // TODO: Get from security context
-            
-            List<Content> contents;
-            if (status != null) {
-                contents = contentService.getContentByTenantIdAndStatus(tenantId, status);
-            } else if (language != null) {
-                contents = contentService.getContentByTenantIdAndLanguage(tenantId, language);
-            } else {
-                contents = contentService.getContentByTenantId(tenantId);
+            // Sanitize slug input
+            String sanitizedSlug = sanitizeInput(slug);
+            if (sanitizedSlug == null || sanitizedSlug.trim().isEmpty()) {
+                throw new IllegalArgumentException("Invalid slug");
             }
             
-            List<ContentResponse> responses = contents.stream()
-                .map(content -> {
-                    Optional<ContentType> contentType = contentTypeService.getContentTypeById(content.getContentTypeId());
-                    Optional<User> author = userService.getUserById(content.getCreatedBy());
-                    return contentMapper.toResponse(
-                        content, 
-                        contentType.orElse(null), 
-                        author.map(User::getFullName).orElse(null), 
-                        null
-                    );
-                })
-                .toList();
-            
-            return ResponseEntity.ok(ApiResponse.success(responses));
+            // TODO: Implement getContentBySlug in ContentService when ready
+            String message = messageSource.getMessage("content.slug.not.implemented", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(ApiResponse.error(message));
         } catch (Exception ex) {
+            log.error("Error getting content by slug {}: {}", slug, ex.getMessage());
+            String message = messageSource.getMessage("content.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(message));
+        }
+    }
+
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<ApiResponse<List<Content>>> getContentByTenant(
+            @PathVariable @Valid @NotNull @Min(1) Long tenantId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            List<Content> content = contentService.getContentByTenantId(tenantId);
+            return ResponseEntity.ok(ApiResponse.success(content));
+        } catch (Exception ex) {
+            log.error("Error getting content by tenant {}: {}", tenantId, ex.getMessage());
             String message = messageSource.getMessage("content.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ContentResponse>> updateContent(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateContentRequest request,
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Content>>> getAllContent(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Optional<Content> existingContentOpt = contentService.getContentById(id);
-            if (existingContentOpt.isEmpty()) {
-                String message = messageSource.getMessage("content.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(message));
-            }
-            
-            Content existingContent = existingContentOpt.get();
-            Content updatedContent = contentMapper.toEntity(request, existingContent);
-            updatedContent.setUpdatedBy(1L); // TODO: Get from security context
-            
-            Content savedContent = contentService.updateContent(updatedContent);
-            
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(savedContent.getContentTypeId());
-            Optional<User> author = userService.getUserById(savedContent.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                savedContent, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            String message = messageSource.getMessage("content.updated.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
+            List<Content> content = contentService.getAllContent();
+            return ResponseEntity.ok(ApiResponse.success(content));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("content.update.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            log.error("Error getting all content: {}", ex.getMessage());
+            String message = messageSource.getMessage("content.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(message));
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteContent(
-            @PathVariable Long id,
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
+            
             contentService.deleteContent(id);
-            String message = messageSource.getMessage("content.deleted.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("content.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
+            log.error("Error deleting content {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("content.delete.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
@@ -207,86 +123,90 @@ public class ContentController {
     }
 
     @PostMapping("/{id}/publish")
-    public ResponseEntity<ApiResponse<ContentResponse>> publishContent(
-            @PathVariable Long id,
+    public ResponseEntity<ApiResponse<Content>> publishContent(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long userId = 1L; // TODO: Get from security context
-            Content publishedContent = contentService.publishContent(id, userId);
             
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(publishedContent.getContentTypeId());
-            Optional<User> author = userService.getUserById(publishedContent.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                publishedContent, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            String message = messageSource.getMessage("content.published.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
+            // Get current user ID for publishing
+            Long currentUserId = getCurrentUserId();
+            Content publishedContent = contentService.publishContent(id, currentUserId);
+            String message = messageSource.getMessage("content.publish.success", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, publishedContent));
         } catch (Exception ex) {
+            log.error("Error publishing content {}: {}", id, ex.getMessage());
             String message = messageSource.getMessage("content.publish.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @PostMapping("/{id}/archive")
-    public ResponseEntity<ApiResponse<ContentResponse>> archiveContent(
-            @PathVariable Long id,
+    @PostMapping("/{id}/unpublish")
+    public ResponseEntity<ApiResponse<Content>> unpublishContent(
+            @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            Long userId = 1L; // TODO: Get from security context
-            Content archivedContent = contentService.archiveContent(id, userId);
             
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(archivedContent.getContentTypeId());
-            Optional<User> author = userService.getUserById(archivedContent.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                archivedContent, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            String message = messageSource.getMessage("content.archived.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
+            // Get current user ID for unpublishing
+            Long currentUserId = getCurrentUserId();
+            Content unpublishedContent = contentService.unpublishContent(id, currentUserId);
+            String message = messageSource.getMessage("content.unpublish.success", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, unpublishedContent));
         } catch (Exception ex) {
-            String message = messageSource.getMessage("content.archive.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            log.error("Error unpublishing content {}: {}", id, ex.getMessage());
+            String message = messageSource.getMessage("content.unpublish.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(message));
         }
     }
 
-    @PostMapping("/{id}/unpublish")
-    public ResponseEntity<ApiResponse<ContentResponse>> unpublishContent(
-            @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+    /**
+     * Gets the current user ID from the security context
+     */
+    private Long getCurrentUserId() {
         try {
-            Long userId = 1L; // TODO: Get from security context
-            Content unpublishedContent = contentService.unpublishContent(id, userId);
-            
-            // Get additional data for response
-            Optional<ContentType> contentType = contentTypeService.getContentTypeById(unpublishedContent.getContentTypeId());
-            Optional<User> author = userService.getUserById(unpublishedContent.getCreatedBy());
-            
-            ContentResponse response = contentMapper.toResponse(
-                unpublishedContent, 
-                contentType.orElse(null), 
-                author.map(User::getFullName).orElse(null), 
-                null
-            );
-            
-            String message = messageSource.getMessage("content.unpublished.success", null, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.ok(ApiResponse.success(message, response));
+            // This is a simplified version - in a real implementation you would
+            // get the user ID from the JWT token or security context
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            // TODO: Implement a service method to get user ID by email
+            return 1L; // Placeholder - replace with actual implementation
         } catch (Exception ex) {
-            String message = messageSource.getMessage("content.unpublish.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+            throw new IllegalStateException("Unable to get current user ID", ex);
         }
+    }
+
+    /**
+     * Validates tenant access based on current user context
+     */
+    private void validateTenantAccess(Long tenantId) {
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("Invalid tenant ID");
+        }
+        
+        // TODO: Implement actual tenant access validation based on current user's tenant
+        // In a real implementation, you would check if the current user has access to this tenant
+        // Example:
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        // if (!tenantService.userHasAccessToTenant(userDetails.getUsername(), tenantId)) {
+        //     throw new AccessDeniedException("Access denied to tenant: " + tenantId);
+        // }
+    }
+
+    /**
+     * Sanitizes input to prevent XSS and other injection attacks
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return null;
+        }
+        
+        // Basic XSS prevention - remove potentially dangerous characters
+        return input.trim()
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#x27;")
+                .replaceAll("/", "&#x2F;");
     }
 }

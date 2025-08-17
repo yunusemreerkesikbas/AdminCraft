@@ -31,7 +31,17 @@
       "Bash(npm run build:*)",
       "Bash(git reset:*)",
       "Bash(npm start)",
-      "Bash(ng build:*)"
+      "Bash(ng build:*)",
+      "Bash(./gradlew:*)",
+      "Bash(find:*)",
+      "Bash(git push:*)",
+      "Bash(bash_4)",
+      "Bash(cat:*)",
+      "Bash(taskkill:*)",
+      "Bash(./mvnw:*)",
+      "Bash(./backend/mvnw:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

@@ -6,4 +6,5 @@ import com.backend.presentation.dto.response.LoginResponse;
 public interface AuthenticationService {
     LoginResponse authenticate(LoginRequest loginRequest);
     LoginResponse refreshToken(String refreshToken);
+    void logout(String token);
 }

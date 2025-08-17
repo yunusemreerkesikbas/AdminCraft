@@ -67,10 +67,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_language", nullable = false)
     private Language preferredLanguage = Language.TR;
-
-    @Size(max = 50, message = "validation.timezone.size")
-    @Column(name = "timezone")
-    private String timezone = "Europe/Istanbul";
     
     @Column(name = "tenant_id", nullable = false)
     private Long tenantId;
