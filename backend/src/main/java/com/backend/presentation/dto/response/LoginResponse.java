@@ -10,7 +10,8 @@ public record LoginResponse(
     String fullName,
     String role,
     Long tenantId,
-    String preferredLanguage
+    String preferredLanguage,
+    String subdomain
 ) {
     // Compact canonical constructor for validation
     public LoginResponse {

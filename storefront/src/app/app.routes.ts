@@ -1,5 +1,5 @@
-import { Route } from '@angular/router';
-import { initialDataResolver } from 'app/app.resolvers';
+import { Route, UrlMatcher, UrlSegment } from '@angular/router';
+import { initialDataResolver, tenantParamResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
@@ -7,16 +7,29 @@ import { LayoutComponent } from 'app/layout/layout.component';
 // prettier-ignore
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
+const tenantMatcher: UrlMatcher = (segments: UrlSegment[]) => {
+    if (!segments.length) { return null; }
+    const seg = segments[0].path;
+    const valid = /^[a-z0-9-]{1,50}$/.test(seg);
+    if (!valid) { return null; }
+    return {
+        consumed: [segments[0]],
+        posParams: { tenant: segments[0] }
+    };
+};
+
 export const appRoutes: Route[] = [
 
-    // Redirect empty path to '/dashboards/project'
-    {path: '', pathMatch : 'full', redirectTo: 'dashboards/project'},
+    // Redirect empty path to 'sign-in'
+    {path: '', pathMatch : 'full', redirectTo: 'sign-in'},
 
     // Redirect signed-in user to the '/dashboards/project'
     //
     // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
     // path. Below is another redirection for that path to redirect the user to the desired
     // location. This is a small convenience to keep all main routes together here on this file.
+    // Note: We no longer use this for dynamic tenant redirect.
+    // Kept as a fallback to dashboards.
     {
         path: 'signed-in-redirect',
         pathMatch : 'full',
@@ -87,20 +100,34 @@ export const appRoutes: Route[] = [
                 {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
             ]},
 
-            // Apps
+            // Legacy apps paths redirect to dashboards
             {path: 'apps', children: [
-                {path: 'academy', loadChildren: () => import('app/modules/admin/apps/academy/academy.routes')},
-                {path: 'chat', loadChildren: () => import('app/modules/admin/apps/chat/chat.routes')},
-                {path: 'contacts', loadChildren: () => import('app/modules/admin/apps/contacts/contacts.routes')},
-                {path: 'admincraft', loadChildren: () => import('app/modules/admin/apps/admincraft/admincraft.routes')},
-                {path: 'ecommerce', loadChildren: () => import('app/modules/admin/apps/ecommerce/ecommerce.routes')},
-                {path: 'file-manager', loadChildren: () => import('app/modules/admin/apps/file-manager/file-manager.routes')},
-                {path: 'help-center', loadChildren: () => import('app/modules/admin/apps/help-center/help-center.routes')},
-                {path: 'mailbox', loadChildren: () => import('app/modules/admin/apps/mailbox/mailbox.routes')},
-                {path: 'notes', loadChildren: () => import('app/modules/admin/apps/notes/notes.routes')},
-                {path: 'scrumboard', loadChildren: () => import('app/modules/admin/apps/scrumboard/scrumboard.routes')},
-                {path: 'tasks', loadChildren: () => import('app/modules/admin/apps/tasks/tasks.routes')},
+                {path: '**', redirectTo: 'dashboards/project'}
             ]},
+
+            // Tenant-prefixed routes
+            {
+                matcher: tenantMatcher,
+                runGuardsAndResolvers: 'paramsChange',
+                resolve: { tenant: tenantParamResolver },
+                children: [
+                    // Dashboards under tenant
+                    {path: 'project', loadChildren: () => import('app/modules/admin/dashboards/project/project.routes')},
+                    {path: 'analytics', loadChildren: () => import('app/modules/admin/dashboards/analytics/analytics.routes')},
+                    {path: 'finance', loadChildren: () => import('app/modules/admin/dashboards/finance/finance.routes')},
+                    {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
+
+                    // AdminCraft features under tenant root
+                    {path: 'tenants', loadChildren: () => import('app/modules/admin/apps/admincraft/tenants/tenants.routes')},
+                    {path: 'content', loadChildren: () => import('app/modules/admin/apps/admincraft/content/content.routes')},
+                    {path: 'media', loadChildren: () => import('app/modules/admin/apps/admincraft/media/media.routes')},
+                    {path: 'users', loadChildren: () => import('app/modules/admin/apps/admincraft/users/users.routes')},
+                    {path: 'sites', loadChildren: () => import('app/modules/admin/apps/admincraft/sites/sites.routes')},
+
+                    // Default under tenant
+                    {path: '', pathMatch: 'full', redirectTo: 'project'}
+                ]
+            },
 
             // Pages
             {path: 'pages', children: [
@@ -204,7 +231,7 @@ export const appRoutes: Route[] = [
 
             // 404 & Catch all
             {path: '404-not-found', pathMatch: 'full', loadChildren: () => import('app/modules/admin/pages/error/error-404/error-404.routes')},
-            {path: '**', redirectTo: '404-not-found'}
+            {path: '**', loadChildren: () => import('app/modules/admin/pages/error/error-404/error-404.routes')}
         ]
     }
 ];

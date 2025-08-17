@@ -83,6 +83,7 @@ public class SecurityConfig {
             "X-Requested-With",
             "Cache-Control",
             "X-Tenant-ID",
+            "X-Tenant-Subdomain",
             "X-User-ID"
         ));
         
