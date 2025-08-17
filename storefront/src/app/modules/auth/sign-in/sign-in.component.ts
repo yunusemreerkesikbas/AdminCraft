@@ -101,11 +101,21 @@ export class AuthSignInComponent implements OnInit {
             () => {
                 const subdomain =
                     this._tenantContext.getCurrentSubdomain() || 'default';
-                const redirectURL =
-                    this._activatedRoute.snapshot.queryParamMap.get(
-                        'redirectURL'
-                    ) || `/${subdomain}/project`;
-                this._router.navigateByUrl(redirectURL);
+                const returnUrl = this._activatedRoute.snapshot
+                    .queryParamMap.get('redirectURL');
+                const safe = (url: string | null) => {
+                    if (!url) { return null; }
+                    try {
+                        const u = new URL(url, window.location.origin);
+                        if (u.origin !== window.location.origin) {
+                            return null;
+                        }
+                        return u.pathname + u.search + u.hash;
+                    } catch { return null; }
+                };
+                const safeUrl = safe(returnUrl);
+                const fallback = `/${subdomain}/project`;
+                this._router.navigateByUrl(safeUrl || fallback);
             },
             (response) => {
                 // Re-enable the form

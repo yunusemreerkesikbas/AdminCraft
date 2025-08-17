@@ -6,7 +6,7 @@ import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service'
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
-import { ActivatedRouteSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 
 export const initialDataResolver = () => {
     const messagesService = inject(MessagesService);
@@ -32,9 +32,14 @@ export const initialDataResolver = () => {
 
 export const tenantParamResolver = (route: ActivatedRouteSnapshot) => {
     const tenantContext = inject(TenantContextService);
+    const router = inject(Router);
     const t = route.paramMap.get('tenant');
-    if (t) {
-        tenantContext.setSubdomain(t);
+    if (!t) { return true; }
+    const isValid = /^[a-z0-9-]{1,50}$/.test(t);
+    if (!isValid) {
+        router.navigate(['404-not-found']);
+        return false;
     }
+    tenantContext.setSubdomain(t);
     return true;
 };

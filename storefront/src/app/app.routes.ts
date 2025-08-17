@@ -89,23 +89,15 @@ export const appRoutes: Route[] = [
                 {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
             ]},
 
-            // Apps
+            // Legacy apps paths redirect to dashboards
             {path: 'apps', children: [
-                {path: 'academy', loadChildren: () => import('app/modules/admin/apps/academy/academy.routes')},
-                {path: 'chat', loadChildren: () => import('app/modules/admin/apps/chat/chat.routes')},
-                {path: 'contacts', loadChildren: () => import('app/modules/admin/apps/contacts/contacts.routes')},
-                {path: 'ecommerce', loadChildren: () => import('app/modules/admin/apps/ecommerce/ecommerce.routes')},
-                {path: 'file-manager', loadChildren: () => import('app/modules/admin/apps/file-manager/file-manager.routes')},
-                {path: 'help-center', loadChildren: () => import('app/modules/admin/apps/help-center/help-center.routes')},
-                {path: 'mailbox', loadChildren: () => import('app/modules/admin/apps/mailbox/mailbox.routes')},
-                {path: 'notes', loadChildren: () => import('app/modules/admin/apps/notes/notes.routes')},
-                {path: 'scrumboard', loadChildren: () => import('app/modules/admin/apps/scrumboard/scrumboard.routes')},
-                {path: 'tasks', loadChildren: () => import('app/modules/admin/apps/tasks/tasks.routes')},
+                {path: '**', redirectTo: 'dashboards/project'}
             ]},
 
             // Tenant-prefixed routes
             {
                 path: ':tenant',
+                runGuardsAndResolvers: 'paramsChange',
                 resolve: { tenant: tenantParamResolver },
                 children: [
                     // Dashboards under tenant
@@ -228,7 +220,7 @@ export const appRoutes: Route[] = [
 
             // 404 & Catch all
             {path: '404-not-found', pathMatch: 'full', loadChildren: () => import('app/modules/admin/pages/error/error-404/error-404.routes')},
-            {path: '**', redirectTo: '404-not-found'}
+            {path: '**', loadChildren: () => import('app/modules/admin/pages/error/error-404/error-404.routes')}
         ]
     }
 ];

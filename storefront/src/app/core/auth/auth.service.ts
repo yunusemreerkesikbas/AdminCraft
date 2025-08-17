@@ -101,7 +101,11 @@ export class AuthService {
                 }
             }),
             catchError((error) => {
-                return throwError(error.error?.message || error.message || 'Authentication failed');
+                return throwError(
+                    error?.error?.message ||
+                    error?.message ||
+                    'Authentication failed'
+                );
             })
         );
     }
