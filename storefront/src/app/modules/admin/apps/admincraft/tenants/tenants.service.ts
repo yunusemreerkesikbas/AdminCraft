@@ -2,11 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Tenant, TenantPagination, CreateTenantRequest, UpdateTenantRequest, TenantStatus } from './tenants.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class TenantsService {
     private _httpClient = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     private _tenants: BehaviorSubject<Tenant[]> = new BehaviorSubject<Tenant[]>([]);
     private _pagination: BehaviorSubject<TenantPagination | null> = new BehaviorSubject<TenantPagination | null>(null);
@@ -43,7 +45,8 @@ export class TenantsService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/tenants`, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 let tenants: Tenant[] = [];
                 
@@ -123,7 +126,8 @@ export class TenantsService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/tenants/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -164,7 +168,8 @@ export class TenantsService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/tenants`, tenant, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
+        return this._httpClient.post<any>(url, tenant, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -208,7 +213,8 @@ export class TenantsService {
             'Accept-Language': 'tr'
         });
 
-        return this._httpClient.put<any>(`${this.apiUrl}/tenants/${id}`, tenant, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
+        return this._httpClient.put<any>(url, tenant, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -227,7 +233,8 @@ export class TenantsService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.delete<any>(`${this.apiUrl}/tenants/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
+        return this._httpClient.delete<any>(url, { headers }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the tenants list
@@ -245,7 +252,8 @@ export class TenantsService {
             'Accept-Language': 'tr'
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/tenants/${id}/activate`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantActivate, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -263,7 +271,8 @@ export class TenantsService {
             'Accept-Language': 'tr'
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/tenants/${id}/suspend`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantSuspend, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -281,7 +290,8 @@ export class TenantsService {
             'Accept-Language': 'tr'
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/tenants/${id}/maintenance`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantMaintenance, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -300,7 +310,8 @@ export class TenantsService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/tenants/check/subdomain/${subdomain}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantCheckSubdomain, { subdomain })}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => response.result === 'SUCCESS' && response.data === true)
         );
     }

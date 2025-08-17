@@ -2,11 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { User, UserPagination, CreateUserRequest, UpdateUserRequest, UserRole, ChangePasswordRequest } from './users.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
     private _httpClient = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     private _users: BehaviorSubject<User[]> = new BehaviorSubject<User[]>([]);
     private _pagination: BehaviorSubject<UserPagination | null> = new BehaviorSubject<UserPagination | null>(null);
@@ -43,7 +45,7 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        let url = `${this.apiUrl}/users`;
+        let url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.users}`;
         const params = new URLSearchParams();
         if (role) {
             params.append('role', role);
@@ -124,7 +126,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/users/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -157,7 +160,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/users`, user, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.users}`;
+        return this._httpClient.post<any>(url, user, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -181,7 +185,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.put<any>(`${this.apiUrl}/users/${id}`, user, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
+        return this._httpClient.put<any>(url, user, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -200,7 +205,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.delete<any>(`${this.apiUrl}/users/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
+        return this._httpClient.delete<any>(url, { headers }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the users list
@@ -219,7 +225,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/users/${id}/activate`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userActivate, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -238,7 +245,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/users/${id}/deactivate`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userDeactivate, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -257,7 +265,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/users/${id}/change-password`, passwordRequest, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userChangePassword, { id })}`;
+        return this._httpClient.post<any>(url, passwordRequest, { headers }).pipe(
             map((response) => response.result === 'SUCCESS')
         );
     }
@@ -272,7 +281,8 @@ export class UsersService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/users/${id}/reset-password`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userResetPassword, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data.newPassword;

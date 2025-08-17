@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { UserService } from 'app/core/user/user.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { SPA_ENDPOINTS_CONFIG } from '@modules/admin/api-endpoints';
+import { environment } from '@environments/environment';
 import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -11,7 +13,7 @@ export class AuthService {
     private _httpClient = inject(HttpClient);
     private _userService = inject(UserService);
     private _tenantContext = inject(TenantContextService);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors
@@ -66,7 +68,8 @@ export class AuthService {
             'Accept-Language': 'tr'
         });
 
-        return this._httpClient.post(`${this.apiUrl}/auth/login`, credentials, { headers }).pipe(
+        const loginUrl = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.login}`;
+        return this._httpClient.post(loginUrl, credentials, { headers }).pipe(
             switchMap((response: any) => {
                 // Check if the response has the expected structure
                 if (response.result === 'SUCCESS' && response.data) {

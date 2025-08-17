@@ -2,11 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MediaFile, MediaPagination, UploadMediaRequest, UpdateMediaRequest, MediaType } from './media.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MediaService {
     private _httpClient = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     private _mediaFiles: BehaviorSubject<MediaFile[]> = new BehaviorSubject<MediaFile[]>([]);
     private _pagination: BehaviorSubject<MediaPagination | null> = new BehaviorSubject<MediaPagination | null>(null);
@@ -43,7 +45,7 @@ export class MediaService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        let url = `${this.apiUrl}/media`;
+        let url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.media}`;
         const params = new URLSearchParams();
         if (type) {
             params.append('type', type);
@@ -128,7 +130,8 @@ export class MediaService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/media/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -173,7 +176,8 @@ export class MediaService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/media/upload`, formData, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.mediaUpload}`;
+        return this._httpClient.post<any>(url, formData, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -197,7 +201,8 @@ export class MediaService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.put<any>(`${this.apiUrl}/media/${id}`, media, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
+        return this._httpClient.put<any>(url, media, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the media files list
@@ -216,7 +221,8 @@ export class MediaService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.delete<any>(`${this.apiUrl}/media/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
+        return this._httpClient.delete<any>(url, { headers }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the media files list

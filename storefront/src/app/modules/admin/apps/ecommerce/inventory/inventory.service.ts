@@ -29,6 +29,8 @@ import {
     tap,
     throwError,
 } from 'rxjs';
+import { environment } from '@environments/environment';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -55,7 +57,7 @@ export class InventoryService {
     private _tenantPagination: BehaviorSubject<TenantPagination | null> = new BehaviorSubject(null);
 
     // Base API URL
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     /**
      * Constructor
@@ -515,8 +517,9 @@ export class InventoryService {
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse[]>> {
         const params = status ? { status } : {};
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
         return this._httpClient
-            .get<ApiResponse<TenantResponse[]>>(`${this.apiUrl}/tenants`, {
+            .get<ApiResponse<TenantResponse[]>>(url, {
                 headers: this.getHttpHeaders(language),
                 params
             })
@@ -536,8 +539,9 @@ export class InventoryService {
         id: number,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
         return this._httpClient
-            .get<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/${id}`, {
+            .get<ApiResponse<TenantResponse>>(url, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -556,8 +560,9 @@ export class InventoryService {
         subdomain: string,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantBySubdomain, { subdomain })}`;
         return this._httpClient
-            .get<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/subdomain/${subdomain}`, {
+            .get<ApiResponse<TenantResponse>>(url, {
                 headers: this.getHttpHeaders(language)
             });
     }
@@ -569,8 +574,9 @@ export class InventoryService {
         request: CreateTenantRequest,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
         return this._httpClient
-            .post<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants`, request, {
+            .post<ApiResponse<TenantResponse>>(url, request, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -595,8 +601,9 @@ export class InventoryService {
         request: UpdateTenantRequest,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
         return this._httpClient
-            .put<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/${id}`, request, {
+            .put<ApiResponse<TenantResponse>>(url, request, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -630,8 +637,9 @@ export class InventoryService {
         id: number,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantActivate, { id })}`;
         return this._httpClient
-            .post<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/${id}/activate`, {}, {
+            .post<ApiResponse<TenantResponse>>(url, {}, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -650,8 +658,9 @@ export class InventoryService {
         id: number,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantSuspend, { id })}`;
         return this._httpClient
-            .post<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/${id}/suspend`, {}, {
+            .post<ApiResponse<TenantResponse>>(url, {}, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -670,8 +679,9 @@ export class InventoryService {
         id: number,
         language: string = 'tr'
     ): Observable<ApiResponse<TenantResponse>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantMaintenance, { id })}`;
         return this._httpClient
-            .post<ApiResponse<TenantResponse>>(`${this.apiUrl}/tenants/${id}/maintenance`, {}, {
+            .post<ApiResponse<TenantResponse>>(url, {}, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -690,8 +700,9 @@ export class InventoryService {
         id: number,
         language: string = 'tr'
     ): Observable<ApiResponse<void>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
         return this._httpClient
-            .delete<ApiResponse<void>>(`${this.apiUrl}/tenants/${id}`, {
+            .delete<ApiResponse<void>>(url, {
                 headers: this.getHttpHeaders(language)
             })
             .pipe(
@@ -722,8 +733,9 @@ export class InventoryService {
         subdomain: string,
         language: string = 'tr'
     ): Observable<ApiResponse<boolean>> {
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantCheckSubdomain, { subdomain })}`;
         return this._httpClient
-            .get<ApiResponse<boolean>>(`${this.apiUrl}/tenants/check/subdomain/${subdomain}`, {
+            .get<ApiResponse<boolean>>(url, {
                 headers: this.getHttpHeaders(language)
             });
     }
@@ -735,8 +747,9 @@ export class InventoryService {
         status: TenantStatus,
         language: string = 'tr'
     ): Observable<ApiResponse<number>> {
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenantStatsCount}`;
         return this._httpClient
-            .get<ApiResponse<number>>(`${this.apiUrl}/tenants/stats/count`, {
+            .get<ApiResponse<number>>(url, {
                 headers: this.getHttpHeaders(language),
                 params: { status }
             });

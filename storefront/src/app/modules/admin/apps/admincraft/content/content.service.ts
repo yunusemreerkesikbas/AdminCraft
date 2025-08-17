@@ -2,11 +2,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Content, ContentPagination, CreateContentRequest, UpdateContentRequest, ContentStatus, ContentType } from './content.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ContentService {
     private _httpClient = inject(HttpClient);
-    private readonly apiUrl = 'http://localhost:8080/api';
+    private readonly apiUrl = environment.apiBaseUrl;
 
     private _contents: BehaviorSubject<Content[]> = new BehaviorSubject<Content[]>([]);
     private _pagination: BehaviorSubject<ContentPagination | null> = new BehaviorSubject<ContentPagination | null>(null);
@@ -51,7 +53,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/contents`, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.contents}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 let contents: Content[] = [];
                 
@@ -128,7 +131,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/contents/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.contentById, { id })}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -167,7 +171,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/contents`, content, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.contents}`;
+        return this._httpClient.post<any>(url, content, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -191,7 +196,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.put<any>(`${this.apiUrl}/contents/${id}`, content, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.contentById, { id })}`;
+        return this._httpClient.put<any>(url, content, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -210,7 +216,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.delete<any>(`${this.apiUrl}/contents/${id}`, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.contentById, { id })}`;
+        return this._httpClient.delete<any>(url, { headers }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the contents list
@@ -229,7 +236,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/contents/${id}/publish`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.contentPublish, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -248,7 +256,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.post<any>(`${this.apiUrl}/contents/${id}/archive`, {}, { headers }).pipe(
+        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.contentArchive, { id })}`;
+        return this._httpClient.post<any>(url, {}, { headers }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the contents list
@@ -267,7 +276,8 @@ export class ContentService {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         });
 
-        return this._httpClient.get<any>(`${this.apiUrl}/content-types`, { headers }).pipe(
+        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.contentTypes}`;
+        return this._httpClient.get<any>(url, { headers }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const contentTypes = response.data.map((item: any) => ({
