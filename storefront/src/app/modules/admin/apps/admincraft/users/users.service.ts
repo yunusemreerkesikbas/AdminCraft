@@ -1,14 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { User, UserPagination, CreateUserRequest, UpdateUserRequest, UserRole, ChangePasswordRequest } from './users.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
-import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
-import { environment } from '@environments/environment';
+import { ApiClientService } from '@core/api/api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-    private _httpClient = inject(HttpClient);
-    private readonly apiUrl = environment.apiBaseUrl;
+    private readonly _apiClient = inject(ApiClientService);
 
     private _users: BehaviorSubject<User[]> = new BehaviorSubject<User[]>([]);
     private _pagination: BehaviorSubject<UserPagination | null> = new BehaviorSubject<UserPagination | null>(null);
@@ -39,22 +36,12 @@ export class UsersService {
      * Get users
      */
     getUsers(page: number = 0, size: number = 10, sort: string = 'fullName', order: 'asc' | 'desc' = 'asc', search: string = '', role?: UserRole): Observable<{ pagination: UserPagination; users: User[] }> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        let url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.users}`;
-        const params = new URLSearchParams();
+        const queryParams: Record<string, any> = {};
         if (role) {
-            params.append('role', role);
-        }
-        if (params.toString()) {
-            url += `?${params.toString()}`;
+            queryParams.role = role;
         }
 
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('users', undefined, queryParams).pipe(
             map((response) => {
                 let users: User[] = [];
                 
@@ -120,14 +107,7 @@ export class UsersService {
      * Get user by id
      */
     getUserById(id: number): Observable<User> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('userById', { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -154,14 +134,7 @@ export class UsersService {
      * Create user
      */
     createUser(user: CreateUserRequest): Observable<User> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.users}`;
-        return this._httpClient.post<any>(url, user, { headers }).pipe(
+        return this._apiClient.post<any>('users', user).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -179,14 +152,7 @@ export class UsersService {
      * Update user
      */
     updateUser(id: number, user: UpdateUserRequest): Observable<User> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
-        return this._httpClient.put<any>(url, user, { headers }).pipe(
+        return this._apiClient.put<any>('userById', user, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -199,14 +165,7 @@ export class UsersService {
      * Delete user
      */
     deleteUser(id: number): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userById, { id })}`;
-        return this._httpClient.delete<any>(url, { headers }).pipe(
+        return this._apiClient.delete<any>('userById', { id }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the users list
@@ -219,14 +178,7 @@ export class UsersService {
      * Activate user
      */
     activateUser(id: number): Observable<User> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userActivate, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('userActivate', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -239,14 +191,7 @@ export class UsersService {
      * Deactivate user
      */
     deactivateUser(id: number): Observable<User> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userDeactivate, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('userDeactivate', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the users list
@@ -259,14 +204,7 @@ export class UsersService {
      * Change user password
      */
     changePassword(id: number, passwordRequest: ChangePasswordRequest): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userChangePassword, { id })}`;
-        return this._httpClient.post<any>(url, passwordRequest, { headers }).pipe(
+        return this._apiClient.post<any>('userChangePassword', passwordRequest, { id }).pipe(
             map((response) => response.result === 'SUCCESS')
         );
     }
@@ -275,14 +213,7 @@ export class UsersService {
      * Reset user password
      */
     resetPassword(id: number): Observable<string> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.userResetPassword, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('userResetPassword', {}, { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data.newPassword;

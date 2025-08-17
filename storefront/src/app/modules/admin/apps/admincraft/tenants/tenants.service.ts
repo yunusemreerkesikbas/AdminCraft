@@ -1,14 +1,12 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Tenant, TenantPagination, CreateTenantRequest, UpdateTenantRequest, TenantStatus } from './tenants.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
-import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
-import { environment } from '@environments/environment';
+import { ApiClientService } from '@core/api/api-client.service';
+import { EndpointKey } from '@modules/admin/api-endpoints';
 
 @Injectable({ providedIn: 'root' })
 export class TenantsService {
-    private _httpClient = inject(HttpClient);
-    private readonly apiUrl = environment.apiBaseUrl;
+    private readonly _apiClient = inject(ApiClientService);
 
     private _tenants: BehaviorSubject<Tenant[]> = new BehaviorSubject<Tenant[]>([]);
     private _pagination: BehaviorSubject<TenantPagination | null> = new BehaviorSubject<TenantPagination | null>(null);
@@ -39,14 +37,7 @@ export class TenantsService {
      * Get tenants (no pagination from backend yet, we'll simulate it client-side)
      */
     getTenants(page: number = 0, size: number = 10, sort: string = 'companyName', order: 'asc' | 'desc' = 'asc', search: string = ''): Observable<{ pagination: TenantPagination; tenants: Tenant[] }> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('tenants').pipe(
             map((response) => {
                 let tenants: Tenant[] = [];
                 
@@ -120,14 +111,7 @@ export class TenantsService {
      * Get tenant by id
      */
     getTenantById(id: number): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('tenantById', { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -162,14 +146,7 @@ export class TenantsService {
      * Create tenant
      */
     createTenant(tenant: CreateTenantRequest): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenants}`;
-        return this._httpClient.post<any>(url, tenant, { headers }).pipe(
+        return this._apiClient.post<any>('tenants', tenant).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -208,13 +185,7 @@ export class TenantsService {
      * Update tenant
      */
     updateTenant(id: number, tenant: UpdateTenantRequest): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr'
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
-        return this._httpClient.put<any>(url, tenant, { headers }).pipe(
+        return this._apiClient.put<any>('tenantById', tenant, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -227,14 +198,7 @@ export class TenantsService {
      * Delete tenant
      */
     deleteTenant(id: number): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantById, { id })}`;
-        return this._httpClient.delete<any>(url, { headers }).pipe(
+        return this._apiClient.delete<any>('tenantById', { id }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the tenants list
@@ -247,13 +211,7 @@ export class TenantsService {
      * Activate tenant
      */
     activateTenant(id: number): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr'
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantActivate, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('tenantActivate', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -266,13 +224,7 @@ export class TenantsService {
      * Suspend tenant
      */
     suspendTenant(id: number): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr'
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantSuspend, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('tenantSuspend', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -285,13 +237,7 @@ export class TenantsService {
      * Set maintenance mode for tenant
      */
     setMaintenanceMode(id: number): Observable<Tenant> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr'
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantMaintenance, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('tenantMaintenance', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the tenants list
@@ -304,14 +250,7 @@ export class TenantsService {
      * Check subdomain availability
      */
     checkSubdomainAvailability(subdomain: string): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantCheckSubdomain, { subdomain })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('tenantCheckSubdomain', { subdomain }).pipe(
             map((response) => response.result === 'SUCCESS' && response.data === true)
         );
     }

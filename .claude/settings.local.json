@@ -42,7 +42,11 @@
       "Bash(./backend/mvnw:*)",
       "Bash(rg:*)",
       "Bash(grep:*)",
-      "Bash(ng serve:*)"
+      "Bash(ng serve:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run:*)",
+      "Bash(Y)"
     ],
     "deny": []
   }

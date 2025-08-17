@@ -1,14 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Site, SitePagination, CreateSiteRequest, UpdateSiteRequest, Menu, Language } from './sites.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
-import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
-import { environment } from '@environments/environment';
+import { ApiClientService } from '@core/api/api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class SitesService {
-    private _httpClient = inject(HttpClient);
-    private readonly apiUrl = environment.apiBaseUrl;
+    private readonly _apiClient = inject(ApiClientService);
 
     private _sites: BehaviorSubject<Site[]> = new BehaviorSubject<Site[]>([]);
     private _pagination: BehaviorSubject<SitePagination | null> = new BehaviorSubject<SitePagination | null>(null);
@@ -47,14 +44,7 @@ export class SitesService {
      * Get sites
      */
     getSites(page: number = 0, size: number = 10, sort: string = 'siteName', order: 'asc' | 'desc' = 'asc', search: string = ''): Observable<{ pagination: SitePagination; sites: Site[] }> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.sites}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('sites').pipe(
             map((response) => {
                 let sites: Site[] = [];
                 
@@ -124,14 +114,7 @@ export class SitesService {
      * Get site by id
      */
     getSiteById(id: number): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteById, { id })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('siteById', { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -162,14 +145,7 @@ export class SitesService {
      * Create site
      */
     createSite(site: CreateSiteRequest): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.sites}`;
-        return this._httpClient.post<any>(url, site, { headers }).pipe(
+        return this._apiClient.post<any>('sites', site).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -187,14 +163,7 @@ export class SitesService {
      * Update site
      */
     updateSite(id: number, site: UpdateSiteRequest): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteById, { id })}`;
-        return this._httpClient.put<any>(url, site, { headers }).pipe(
+        return this._apiClient.put<any>('siteById', site, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the sites list
@@ -207,14 +176,7 @@ export class SitesService {
      * Delete site
      */
     deleteSite(id: number): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteById, { id })}`;
-        return this._httpClient.delete<any>(url, { headers }).pipe(
+        return this._apiClient.delete<any>('siteById', { id }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the sites list
@@ -227,14 +189,7 @@ export class SitesService {
      * Publish site
      */
     publishSite(id: number): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.sitePublish, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('sitePublish', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the sites list
@@ -247,14 +202,7 @@ export class SitesService {
      * Activate site
      */
     activateSite(id: number): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteActivate, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('siteActivate', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the sites list
@@ -267,14 +215,7 @@ export class SitesService {
      * Deactivate site
      */
     deactivateSite(id: number): Observable<Site> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteDeactivate, { id })}`;
-        return this._httpClient.post<any>(url, {}, { headers }).pipe(
+        return this._apiClient.post<any>('siteDeactivate', {}, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the sites list
@@ -287,14 +228,7 @@ export class SitesService {
      * Get menus for site
      */
     getMenusBySite(siteId: number): Observable<Menu[]> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.siteMenus, { siteId })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('siteMenus', { siteId }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const menus = response.data.map((item: any) => ({

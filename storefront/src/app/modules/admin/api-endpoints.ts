@@ -1,3 +1,7 @@
+/**
+ * API endpoint configuration
+ * Simple structure with string templates
+ */
 export const SPA_ENDPOINTS_CONFIG = {
     // ----- AUTH -----
     login: 'auth/login',
@@ -41,13 +45,31 @@ export const SPA_ENDPOINTS_CONFIG = {
     siteMenus: 'sites/${siteId}/menus'
 } as const;
 
+export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;
+
+/**
+ * Simple endpoint resolver with parameter substitution
+ * @param endpointKey - Key from SPA_ENDPOINTS_CONFIG
+ * @param params - Parameters to substitute in the template
+ * @returns Resolved endpoint URL
+ */
 export function resolveEndpoint(
-    template: string,
-    params: Record<string, string | number>
+    endpointKey: EndpointKey,
+    params: Record<string, string | number> = {}
 ): string {
-    return template.replace(/\$\{(\w+)\}/g, (_match, key) =>
-        encodeURIComponent(String(params[key] ?? ''))
-    );
+    const template = SPA_ENDPOINTS_CONFIG[endpointKey];
+    if (!template) {
+        throw new Error(`Unknown endpoint key: ${endpointKey}`);
+    }
+
+    // Replace parameters in template
+    return template.replace(/\$\{(\w+)\}/g, (match, key) => {
+        const value = params[key];
+        if (value === undefined || value === null) {
+            throw new Error(`Parameter '${key}' is required but not provided`);
+        }
+        return encodeURIComponent(String(value));
+    });
 }
 
 

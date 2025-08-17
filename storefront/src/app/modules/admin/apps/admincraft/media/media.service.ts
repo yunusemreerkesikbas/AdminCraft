@@ -1,14 +1,11 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MediaFile, MediaPagination, UploadMediaRequest, UpdateMediaRequest, MediaType } from './media.types';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
-import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
-import { environment } from '@environments/environment';
+import { ApiClientService } from '@core/api/api-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class MediaService {
-    private _httpClient = inject(HttpClient);
-    private readonly apiUrl = environment.apiBaseUrl;
+    private readonly _apiClient = inject(ApiClientService);
 
     private _mediaFiles: BehaviorSubject<MediaFile[]> = new BehaviorSubject<MediaFile[]>([]);
     private _pagination: BehaviorSubject<MediaPagination | null> = new BehaviorSubject<MediaPagination | null>(null);
@@ -39,22 +36,12 @@ export class MediaService {
      * Get media files
      */
     getMediaFiles(page: number = 0, size: number = 10, sort: string = 'originalName', order: 'asc' | 'desc' = 'asc', search: string = '', type?: MediaType): Observable<{ pagination: MediaPagination; mediaFiles: MediaFile[] }> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        let url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.media}`;
-        const params = new URLSearchParams();
+        const queryParams: Record<string, any> = {};
         if (type) {
-            params.append('type', type);
-        }
-        if (params.toString()) {
-            url += `?${params.toString()}`;
+            queryParams.type = type;
         }
 
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('media', undefined, queryParams).pipe(
             map((response) => {
                 let mediaFiles: MediaFile[] = [];
                 
@@ -124,14 +111,7 @@ export class MediaService {
      * Get media file by id
      */
     getMediaFileById(id: number): Observable<MediaFile> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
-        return this._httpClient.get<any>(url, { headers }).pipe(
+        return this._apiClient.get<any>('mediaById', { id }).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     const item = response.data;
@@ -171,13 +151,7 @@ export class MediaService {
             formData.append('altTextEn', uploadRequest.altTextEn);
         }
 
-        const headers = new HttpHeaders({
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.mediaUpload}`;
-        return this._httpClient.post<any>(url, formData, { headers }).pipe(
+        return this._apiClient.upload<any>('mediaUpload', formData).pipe(
             map((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     return response.data;
@@ -195,14 +169,7 @@ export class MediaService {
      * Update media file
      */
     updateMediaFile(id: number, media: UpdateMediaRequest): Observable<MediaFile> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
-        return this._httpClient.put<any>(url, media, { headers }).pipe(
+        return this._apiClient.put<any>('mediaById', media, { id }).pipe(
             map((response) => response.data),
             tap(() => {
                 // Refresh the media files list
@@ -215,14 +182,7 @@ export class MediaService {
      * Delete media file
      */
     deleteMediaFile(id: number): Observable<boolean> {
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept-Language': 'tr',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        });
-
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.mediaById, { id })}`;
-        return this._httpClient.delete<any>(url, { headers }).pipe(
+        return this._apiClient.delete<any>('mediaById', { id }).pipe(
             map((response) => response.result === 'SUCCESS'),
             tap(() => {
                 // Refresh the media files list
