@@ -10,7 +10,7 @@ import {
     TenantLanguageSettings,
     UserLanguagePreference
 } from './translation.types';
-import { Language } from 'app/modules/admin/apps/admincraft/tenants/tenants.types';
+import { Language } from 'app/modules/admin/custom/tenants/tenants.types';
 
 /**
  * Translation Service implementing Clean Architecture principles

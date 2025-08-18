@@ -118,11 +118,11 @@ export const appRoutes: Route[] = [
                     {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
 
                     // AdminCraft features under tenant root
-                    {path: 'tenants', loadChildren: () => import('app/modules/admin/apps/admincraft/tenants/tenants.routes')},
-                    {path: 'content', loadChildren: () => import('app/modules/admin/apps/admincraft/content/content.routes')},
-                    {path: 'media', loadChildren: () => import('app/modules/admin/apps/admincraft/media/media.routes')},
-                    {path: 'users', loadChildren: () => import('app/modules/admin/apps/admincraft/users/users.routes')},
-                    {path: 'sites', loadChildren: () => import('app/modules/admin/apps/admincraft/sites/sites.routes')},
+                    {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')},
+                    {path: 'content', loadChildren: () => import('app/modules/admin/custom/content/content.routes')},
+                    {path: 'media', loadChildren: () => import('app/modules/admin/custom/media/media.routes')},
+                    {path: 'users', loadChildren: () => import('app/modules/admin/custom/users/users.routes')},
+                    {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
 
                     // Default under tenant
                     {path: '', pathMatch: 'full', redirectTo: 'project'}

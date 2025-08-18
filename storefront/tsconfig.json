@@ -40,12 +40,12 @@
             "@fuse": ["@fuse/index"],
             "@fuse/*": ["@fuse/*"],
             "@i18n/*": ["app/i18n/*"],
-            "@admincraft/*": ["app/modules/admin/apps/admincraft/*"],
-            "@tenants/*": ["app/modules/admin/apps/admincraft/tenants/*"],
-            "@content/*": ["app/modules/admin/apps/admincraft/content/*"],
-            "@media/*": ["app/modules/admin/apps/admincraft/media/*"],
-            "@users/*": ["app/modules/admin/apps/admincraft/users/*"],
-            "@sites/*": ["app/modules/admin/apps/admincraft/sites/*"]
+            "@admincraft/*": ["app/modules/admin/custom/*"],
+            "@tenants/*": ["app/modules/admin/custom/tenants/*"],
+            "@content/*": ["app/modules/admin/custom/content/*"],
+            "@media/*": ["app/modules/admin/custom/media/*"],
+            "@users/*": ["app/modules/admin/custom/users/*"],
+            "@sites/*": ["app/modules/admin/custom/sites/*"]
         }
     },
     "angularCompilerOptions": {
