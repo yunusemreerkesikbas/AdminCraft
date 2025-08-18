@@ -16,8 +16,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
+import { TranslocoModule } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 
 @Component({
     selector: 'auth-sign-in',
@@ -35,6 +37,8 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
         MatIconModule,
         MatCheckboxModule,
         MatProgressSpinnerModule,
+        TranslocoModule,
+        SpaInputComponent,
     ],
 })
 export class AuthSignInComponent implements OnInit {
@@ -46,6 +50,7 @@ export class AuthSignInComponent implements OnInit {
     };
     signInForm: UntypedFormGroup;
     showAlert: boolean = false;
+    formSubmitted: boolean = false;
 
     /**
      * Constructor
@@ -85,6 +90,10 @@ export class AuthSignInComponent implements OnInit {
      * Sign in
      */
     signIn(): void {
+        // Mark as submitted and touch controls to trigger validation UI
+        this.formSubmitted = true;
+        this.signInForm.markAllAsTouched();
+
         // Return if the form is invalid
         if (this.signInForm.invalid) {
             return;

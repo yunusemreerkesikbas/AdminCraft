@@ -278,4 +278,24 @@ export const langEN = {
             suspendSuccess: 'Tenant successfully suspended',
         },
     },
+    auth: {
+        signIn: {
+            title: 'Sign in',
+            noAccount: "Don't have an account?",
+            signUp: 'Sign up',
+            demoInfo:
+                'You are browsing Fuse Demo. Click on the "Sign in" button to access the Demo and Documentation.',
+            emailLabel: 'Email address',
+            passwordLabel: 'Password',
+            rememberMe: 'Remember me',
+            forgotPassword: 'Forgot password?',
+            submit: 'Sign in',
+            right: {
+                title1: 'Welcome to',
+                title2: 'our community',
+                description:
+                    'Fuse helps developers build organized dashboards full of rich modules. Join us and start building your application today.',
+            },
+        },
+    },
 };

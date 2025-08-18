@@ -278,4 +278,24 @@ export const langTR = {
             suspendSuccess: 'Tenant başarıyla askıya alındı',
         },
     },
+    auth: {
+        signIn: {
+            title: 'Giriş yap',
+            noAccount: 'Hesabın yok mu?',
+            signUp: 'Kayıt ol',
+            demoInfo:
+                'Fuse Demo\'yu görüntülüyorsunuz. Demo ve Dokümantasyona erişmek için "Giriş yap" düğmesine tıklayın.',
+            emailLabel: 'E-posta adresi',
+            passwordLabel: 'Şifre',
+            rememberMe: 'Beni hatırla',
+            forgotPassword: 'Şifreni mi unuttun?',
+            submit: 'Giriş yap',
+            right: {
+                title1: 'Aramıza',
+                title2: 'hoş geldiniz',
+                description:
+                    'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
+            },
+        },
+    },
 };

@@ -14,14 +14,14 @@
             <div
                 class="mt-8 text-4xl font-extrabold leading-tight tracking-tight"
             >
-                Sign in
+                {{ 'auth.signIn.title' | transloco }}
             </div>
             <div class="mt-0.5 flex items-baseline font-medium">
-                <div>Don't have an account?</div>
+                <div>{{ 'auth.signIn.noAccount' | transloco }}</div>
                 <a
                     class="ml-1 text-primary-500 hover:underline"
                     [routerLink]="['/sign-up']"
-                    >Sign up
+                    >{{ 'auth.signIn.signUp' | transloco }}
                 </a>
             </div>
 
@@ -32,8 +32,7 @@
                 [showIcon]="false"
                 [type]="'info'"
             >
-                You are browsing <strong>Fuse Demo</strong>. Click on the "Sign
-                in" button to access the Demo and Documentation.
+                {{ 'auth.signIn.demoInfo' | transloco }}
             </fuse-alert>
 
             <!-- Alert -->
@@ -52,54 +51,88 @@
             <!-- Sign in form -->
             <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
                 <!-- Email field -->
-                <mat-form-field class="w-full">
-                    <mat-label>Email address</mat-label>
-                    <input id="email" matInput [formControlName]="'email'" />
-                    @if (signInForm.get('email').hasError('required')) {
-                        <mat-error> Email address is required </mat-error>
-                    }
-                    @if (signInForm.get('email').hasError('email')) {
-                        <mat-error>
-                            Please enter a valid email address
-                        </mat-error>
-                    }
-                </mat-form-field>
+                <spa-input
+                    [label]="'auth.signIn.emailLabel' | transloco"
+                    type="email"
+                    [styleClasses]="'w-full'"
+                    [fullWidth]="true"
+                    formControlName="email"
+                ></spa-input>
+                @if (
+                    (signInForm.get('email')?.touched || formSubmitted) &&
+                    signInForm.get('email')?.hasError('required')
+                ) {
+                    <div class="mt-1 text-sm text-rose-600">
+                        {{
+                            'admin.common.validation.required'
+                                | transloco
+                                    : {
+                                          field:
+                                              ('auth.signIn.emailLabel'
+                                              | transloco),
+                                      }
+                        }}
+                    </div>
+                }
+                @if (
+                    (signInForm.get('email')?.touched || formSubmitted) &&
+                    signInForm.get('email')?.hasError('email')
+                ) {
+                    <div class="mt-1 text-sm text-rose-600">
+                        {{ 'admin.common.validation.email' | transloco }}
+                    </div>
+                }
 
                 <!-- Password field -->
-                <mat-form-field class="w-full">
-                    <mat-label>Password</mat-label>
-                    <input
-                        id="password"
-                        matInput
-                        type="password"
-                        [formControlName]="'password'"
-                        #passwordField
-                    />
+                <spa-input
+                    #passwordCmp
+                    [label]="'auth.signIn.passwordLabel' | transloco"
+                    [type]="'password'"
+                    [styleClasses]="'w-full'"
+                    [fullWidth]="true"
+                    formControlName="password"
+                >
                     <button
                         mat-icon-button
                         type="button"
                         (click)="
-                            passwordField.type === 'password'
-                                ? (passwordField.type = 'text')
-                                : (passwordField.type = 'password')
+                            passwordCmp.type =
+                                passwordCmp.type === 'password'
+                                    ? 'text'
+                                    : 'password'
                         "
                         matSuffix
                     >
-                        @if (passwordField.type === 'password') {
+                        @if (passwordCmp.type === 'password') {
                             <mat-icon
                                 class="icon-size-5"
                                 [svgIcon]="'heroicons_solid:eye'"
                             ></mat-icon>
                         }
-                        @if (passwordField.type === 'text') {
+                        @if (passwordCmp.type === 'text') {
                             <mat-icon
                                 class="icon-size-5"
                                 [svgIcon]="'heroicons_solid:eye-slash'"
                             ></mat-icon>
                         }
                     </button>
-                    <mat-error> Password is required </mat-error>
-                </mat-form-field>
+                </spa-input>
+                @if (
+                    (signInForm.get('password')?.touched || formSubmitted) &&
+                    signInForm.get('password')?.hasError('required')
+                ) {
+                    <div class="mt-1 text-sm text-rose-600">
+                        {{
+                            'admin.common.validation.required'
+                                | transloco
+                                    : {
+                                          field:
+                                              ('auth.signIn.passwordLabel'
+                                              | transloco),
+                                      }
+                        }}
+                    </div>
+                }
 
                 <!-- Actions -->
                 <div
@@ -110,12 +143,12 @@
                         [color]="'primary'"
                         [formControlName]="'rememberMe'"
                     >
-                        Remember me
+                        {{ 'auth.signIn.rememberMe' | transloco }}
                     </mat-checkbox>
                     <a
                         class="text-md font-medium text-primary-500 hover:underline"
                         [routerLink]="['/forgot-password']"
-                        >Forgot password?
+                        >{{ 'auth.signIn.forgotPassword' | transloco }}
                     </a>
                 </div>
 
@@ -128,7 +161,9 @@
                     (click)="signIn()"
                 >
                     @if (!signInForm.disabled) {
-                        <span> Sign in </span>
+                        <span>
+                            {{ 'auth.signIn.submit' | transloco }}
+                        </span>
                     }
                     @if (signInForm.disabled) {
                         <mat-progress-spinner
@@ -167,13 +202,11 @@
         <!-- Content -->
         <div class="relative z-10 w-full max-w-2xl">
             <div class="text-7xl font-bold leading-none text-gray-100">
-                <div>Welcome to</div>
-                <div>our community</div>
+                <div>{{ 'auth.signIn.right.title1' | transloco }}</div>
+                <div>{{ 'auth.signIn.right.title2' | transloco }}</div>
             </div>
             <div class="mt-6 text-lg leading-6 tracking-tight text-gray-400">
-                Fuse helps developers to build organized and well coded
-                dashboards full of beautiful and rich modules. Join us and start
-                building your application today.
+                {{ 'auth.signIn.right.description' | transloco }}
             </div>
         </div>
     </div>
