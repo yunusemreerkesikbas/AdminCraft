@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Tenant } from 'app/modules/admin/apps/admincraft/tenants/tenants.types';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {

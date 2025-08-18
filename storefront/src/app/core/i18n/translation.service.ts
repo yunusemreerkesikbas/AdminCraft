@@ -1,16 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
+import { Language } from 'app/modules/admin/custom/tenants/tenants.types';
 import { BehaviorSubject, Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { TenantContextService } from '../tenant/tenant-context.service';
-import { 
-    SupportedLanguage, 
-    TranslationConfig, 
-    TranslationLoadError,
+import {
+    SupportedLanguage,
     TenantLanguageSettings,
+    TranslationConfig,
+    TranslationLoadError,
     UserLanguagePreference
 } from './translation.types';
-import { Language } from 'app/modules/admin/apps/admincraft/tenants/tenants.types';
 
 /**
  * Translation Service implementing Clean Architecture principles
