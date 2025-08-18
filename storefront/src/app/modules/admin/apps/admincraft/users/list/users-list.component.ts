@@ -56,6 +56,11 @@ import {
     takeUntil,
 } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
 
 @Component({
     selector: 'users-list',
@@ -104,6 +109,10 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
         NgIf,
         NgFor,
         TranslocoPipe,
+        SpaSearchInputComponent,
+        SpaInputComponent,
+        SpaSelectComponent,
+        SpaToggleComponent,
     ],
 })
 export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -125,6 +134,8 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Role and language options
     roles: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN, UserRole.EDITOR, UserRole.VIEWER];
     languages: Language[] = [Language.TR, Language.EN];
+    roleOptions: SpaSelectOption<UserRole>[] = [];
+    languageOptions: SpaSelectOption<Language>[] = [];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -187,6 +198,16 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Load initial data
         this._usersService.getUsers().subscribe();
+
+        // Build select options
+        this.roleOptions = this.roles.map((r) => ({
+            value: r,
+            label: r.replace('_', ' '),
+        }));
+        this.languageOptions = this.languages.map((l) => ({
+            value: l,
+            label: l,
+        }));
     }
 
     /**

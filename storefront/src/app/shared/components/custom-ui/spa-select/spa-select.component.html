@@ -1,0 +1,26 @@
+<mat-form-field class="w-full" [class]="styleClasses" [subscriptSizing]="'dynamic'">
+    @if (label) {
+        <mat-label>{{ label }}</mat-label>
+    }
+    <mat-select
+        [disabled]="disabled"
+        [value]="value"
+        [multiple]="multiple"
+        (selectionChange)="onSelectionChange($event.value)"
+        (closed)="touched()"
+    >
+        @if (placeholder) {
+            <mat-option [value]="null">{{ placeholder }}</mat-option>
+        }
+        @for (o of options; track o) {
+            <mat-option [value]="o.value" [disabled]="o.disabled">
+                {{ o.label }}
+            </mat-option>
+        }
+    </mat-select>
+    @if (hint) {
+        <mat-hint>{{ hint }}</mat-hint>
+    }
+</mat-form-field>
+
+

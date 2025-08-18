@@ -1,0 +1,11 @@
+<mat-slide-toggle
+    [disabled]="disabled"
+    [checked]="value"
+    [class]="styleClasses"
+    (change)="onToggle($event.checked)"
+    color="primary"
+>
+    {{ label }}
+</mat-slide-toggle>
+
+

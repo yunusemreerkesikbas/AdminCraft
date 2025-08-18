@@ -30,13 +30,6 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:banknotes',
                 link: '/__TENANT__/finance',
             },
-            {
-                id: 'dashboards.crypto',
-                title: 'Crypto',
-                type: 'basic',
-                icon: 'heroicons_outline:currency-dollar',
-                link: '/__TENANT__/crypto',
-            },
         ],
     },
     {
@@ -116,40 +109,6 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:cloud',
                 link: '/__TENANT__/file-manager',
-            },
-            {
-                id: 'apps.help-center',
-                title: 'Help Center',
-                type: 'collapsable',
-                icon: 'heroicons_outline:information-circle',
-                link: '/__TENANT__/help-center',
-                children: [
-                    {
-                        id: 'apps.help-center.home',
-                        title: 'Home',
-                        type: 'basic',
-                        link: '/__TENANT__/help-center',
-                        exactMatch: true,
-                    },
-                    {
-                        id: 'apps.help-center.faqs',
-                        title: 'FAQs',
-                        type: 'basic',
-                        link: '/__TENANT__/help-center/faqs',
-                    },
-                    {
-                        id: 'apps.help-center.guides',
-                        title: 'Guides',
-                        type: 'basic',
-                        link: '/__TENANT__/help-center/guides',
-                    },
-                    {
-                        id: 'apps.help-center.support',
-                        title: 'Support',
-                        type: 'basic',
-                        link: '/__TENANT__/help-center/support',
-                    },
-                ],
             },
             {
                 id: 'apps.mailbox',

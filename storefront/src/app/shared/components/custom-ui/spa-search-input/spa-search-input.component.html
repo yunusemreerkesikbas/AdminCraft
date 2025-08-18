@@ -1,0 +1,15 @@
+<spa-input
+    [placeholder]="placeholder"
+    [type]="'text'"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [styleClasses]="'fuse-mat-dense fuse-mat-rounded min-w-64 ' + (styleClasses || '')"
+>
+    <mat-icon
+        class="icon-size-5"
+        matPrefix
+        [svgIcon]="'heroicons_solid:magnifying-glass'"
+    ></mat-icon>
+</spa-input>
+
+

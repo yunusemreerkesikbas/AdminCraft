@@ -12,17 +12,12 @@
         <!-- Actions -->
         <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
             <!-- Search -->
-            <mat-form-field class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64">
-                <mat-icon
-                    class="icon-size-5"
-                    matPrefix
-                    [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-                <input
-                    matInput
-                    [formControl]="searchInputControl"
-                    [autocomplete]="'off'"
-                    [placeholder]="('admin.users.searchPlaceholder' | transloco)">
-            </mat-form-field>
+            <spa-search-input
+                [placeholder]="('admin.users.searchPlaceholder' | transloco)"
+                [ngModel]="searchInputControl.value"
+                (ngModelChange)="searchInputControl.setValue($event)"
+                [styleClasses]="'fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64'"
+            ></spa-search-input>
             <!-- Add user button -->
             <button
                 class="ml-4"
@@ -160,89 +155,78 @@
                     <div class="flex flex-auto flex-wrap">
                         <!-- Full Name -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Full Name</mat-label>
-                                <input
-                                    matInput
-                                    [formControlName]="'fullName'">
-                                <mat-error *ngIf="selectedUserForm.get('fullName')?.hasError('required')">
-                                    Full name is required
-                                </mat-error>
-                            </mat-form-field>
+                            <spa-input
+                                [label]="'Full Name'"
+                                [type]="'text'"
+                                [ngModel]="selectedUserForm.get('fullName')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('fullName')?.setValue($event)"
+                            ></spa-input>
                         </div>
 
                         <!-- Email -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Email</mat-label>
-                                <input
-                                    matInput
-                                    [formControlName]="'email'">
-                                <mat-error *ngIf="selectedUserForm.get('email')?.hasError('required')">
-                                    Email is required
-                                </mat-error>
-                                <mat-error *ngIf="selectedUserForm.get('email')?.hasError('email')">
-                                    Email must be valid
-                                </mat-error>
-                            </mat-form-field>
+                            <spa-input
+                                [label]="'Email'"
+                                [type]="'email'"
+                                [ngModel]="selectedUserForm.get('email')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('email')?.setValue($event)"
+                            ></spa-input>
                         </div>
 
                         <!-- Password (only for new users) -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8" *ngIf="!selectedUser">
-                            <mat-form-field class="w-full">
-                                <mat-label>Password</mat-label>
-                                <input
-                                    matInput
-                                    type="password"
-                                    [formControlName]="'password'">
-                                <mat-error *ngIf="selectedUserForm.get('password')?.hasError('required')">
-                                    Password is required
-                                </mat-error>
-                            </mat-form-field>
+                            <spa-input
+                                [label]="'Password'"
+                                [type]="'password'"
+                                [ngModel]="selectedUserForm.get('password')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('password')?.setValue($event)"
+                            ></spa-input>
                         </div>
 
                         <!-- Role -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Role</mat-label>
-                                <mat-select [formControlName]="'role'">
-                                    <mat-option *ngFor="let role of roles" [value]="role">
-                                        {{role.replace('_', ' ')}}
-                                    </mat-option>
-                                </mat-select>
-                            </mat-form-field>
+                            <spa-select
+                                [label]="'Role'"
+                                [options]="roleOptions"
+                                [ngModel]="selectedUserForm.get('role')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('role')?.setValue($event)"
+                            ></spa-select>
                         </div>
 
                         <!-- Preferred Language -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Preferred Language</mat-label>
-                                <mat-select [formControlName]="'preferredLanguage'">
-                                    <mat-option *ngFor="let language of languages" [value]="language">
-                                        {{language}}
-                                    </mat-option>
-                                </mat-select>
-                            </mat-form-field>
+                            <spa-select
+                                [label]="'Preferred Language'"
+                                [options]="languageOptions"
+                                [ngModel]="selectedUserForm.get('preferredLanguage')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('preferredLanguage')?.setValue($event)"
+                            ></spa-select>
                         </div>
 
                         <!-- Tenant ID -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Tenant ID</mat-label>
-                                <input
-                                    matInput
-                                    type="number"
-                                    [formControlName]="'tenantId'">
-                            </mat-form-field>
+                            <spa-input
+                                [label]="'Tenant ID'"
+                                [type]="'text'"
+                                [ngModel]="selectedUserForm.get('tenantId')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('tenantId')?.setValue($event)"
+                            ></spa-input>
                         </div>
 
                         <!-- Active Status (only for existing users) -->
                         <div class="flex flex-col w-full lg:w-2/4 sm:pl-8" *ngIf="selectedUser">
-                            <mat-slide-toggle
-                                class="mt-6"
-                                [formControlName]="'isActive'">
-                                Active
-                            </mat-slide-toggle>
+                            <spa-toggle
+                                [label]="'Active'"
+                                [ngModel]="selectedUserForm.get('isActive')?.value"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="selectedUserForm.get('isActive')?.setValue($event)"
+                            ></spa-toggle>
                         </div>
                     </div>
                 </div>
