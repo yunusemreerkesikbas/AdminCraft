@@ -16,22 +16,11 @@
         <!-- Actions -->
         <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
             <!-- Search -->
-            <mat-form-field
-                class="fuse-mat-dense fuse-mat-rounded min-w-64"
-                [subscriptSizing]="'dynamic'"
-            >
-                <mat-icon
-                    class="icon-size-5"
-                    matPrefix
-                    [svgIcon]="'heroicons_solid:magnifying-glass'"
-                ></mat-icon>
-                <input
-                    matInput
-                    [formControl]="searchInputControl"
-                    [autocomplete]="'off'"
-                    [placeholder]="('admin.tenants.searchPlaceholder' | transloco)"
-                />
-            </mat-form-field>
+            <spa-search-input
+                [placeholder]="('admin.tenants.searchPlaceholder' | transloco)"
+                [ngModel]="searchInputControl.value"
+                (ngModelChange)="searchInputControl.setValue($event)"
+            ></spa-search-input>
             <!-- Add tenant button -->
             <button
                 class="ml-4"
@@ -272,116 +261,122 @@
 
                                 <div class="flex flex-auto flex-wrap sm:w-3/4">
                                     <!-- Basic Info -->
-                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2 mt-4">
                                         <!-- Company Name -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.companyName' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                [formControlName]="'companyName'"
-                                            />
-                                        </mat-form-field>
+                                        <spa-input
+                                            [label]="'admin.tenants.fields.companyName' | transloco"
+                                            [type]="'text'"
+                                            [placeholder]="''"
+                                            [ngModel]="selectedTenantForm.get('companyName')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('companyName')?.setValue($event)"
+                                        ></spa-input>
 
                                         <!-- Subdomain -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.subdomain' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                [formControlName]="'subdomain'"
-                                                (blur)="checkSubdomainAvailability()"
-                                            />
+                                        <spa-input
+                                            [label]="'admin.tenants.fields.subdomain' | transloco"
+                                            [placeholder]="''"
+                                            [ngModel]="selectedTenantForm.get('subdomain')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('subdomain')?.setValue($event)"
+                                            (blur)="checkSubdomainAvailability()"
+                                        >
                                             <span matSuffix>{{ 'admin.tenants.fields.domainSuffix' | transloco }}</span>
-                                        </mat-form-field>
+                                        </spa-input>
 
                                         <!-- Admin Info -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.adminName' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                [formControlName]="'adminName'"
-                                            />
-                                        </mat-form-field>
+                                        <spa-input
+                                            [label]="'admin.tenants.fields.adminName' | transloco"
+                                            [type]="'text'"
+                                            [ngModel]="selectedTenantForm.get('adminName')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('adminName')?.setValue($event)"
+                                        ></spa-input>
 
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.adminEmail' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                type="email"
-                                                [formControlName]="'adminEmail'"
-                                            />
-                                        </mat-form-field>
+                                        <spa-input
+                                            [label]="'admin.tenants.fields.adminEmail' | transloco"
+                                            [type]="'email'"
+                                            [ngModel]="selectedTenantForm.get('adminEmail')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('adminEmail')?.setValue($event)"
+                                        ></spa-input>
 
                                         <!-- Phone -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.common.fields.phone' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                [formControlName]="'phone'"
-                                            />
-                                        </mat-form-field>
+                                        <spa-input
+                                            [label]="'admin.common.fields.phone' | transloco"
+                                            [type]="'tel'"
+                                            [ngModel]="selectedTenantForm.get('phone')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('phone')?.setValue($event)"
+                                        ></spa-input>
                                     </div>
 
                                     <!-- Settings & Configuration -->
-                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2">
+                                    <div class="flex w-full flex-col sm:pl-8 lg:w-1/2 mt-4">
                                         <!-- Language Settings -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.defaultLanguage' | transloco }}</mat-label>
-                                            <mat-select [formControlName]="'defaultLanguage'">
-                                                @for (language of languages; track language) {
-                                                    <mat-option [value]="language">
-                                                        {{ language === 'TR' ? 'Türkçe' : 'English' }}
-                                                    </mat-option>
-                                                }
-                                            </mat-select>
-                                        </mat-form-field>
+                                        <spa-select
+                                            [label]="'admin.tenants.fields.defaultLanguage' | transloco"
+                                            [options]="languageOptions"
+                                            [ngModel]="selectedTenantForm.get('defaultLanguage')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('defaultLanguage')?.setValue($event)"
+                                            [styleClasses]="'mt-4'"
+                                        ></spa-select>
 
                                         <!-- Custom Domain -->
-                                        <mat-form-field class="w-full">
-                                            <mat-label>{{ 'admin.tenants.fields.customDomain' | transloco }}</mat-label>
-                                            <input
-                                                matInput
-                                                [formControlName]="'customDomain'"
-                                                placeholder="example.com"
-                                            />
-                                        </mat-form-field>
+                                        <spa-input
+                                            [label]="'admin.tenants.fields.customDomain' | transloco"
+                                            [placeholder]="'example.com'"
+                                            [ngModel]="selectedTenantForm.get('customDomain')?.value"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (ngModelChange)="selectedTenantForm.get('customDomain')?.setValue($event)"
+                                            [styleClasses]="'mt-4'"
+                                        ></spa-input>
 
                                         <!-- Settings -->
                                         <div class="flex">
-                                            <mat-form-field class="w-1/2 pr-2">
-                                                <mat-label>{{ 'admin.tenants.fields.timezone' | transloco }}</mat-label>
-                                                <input
-                                                    matInput
-                                                    [formControlName]="'timezone'"
-                                                />
-                                            </mat-form-field>
-                                            <mat-form-field class="w-1/2 pl-2">
-                                                <mat-label>{{ 'admin.tenants.fields.currency' | transloco }}</mat-label>
-                                                <input
-                                                    matInput
-                                                    [formControlName]="'currency'"
-                                                />
-                                            </mat-form-field>
+                                            <div class="w-1/2 pr-2 mt-4">
+                                                <spa-input
+                                                    [label]="'admin.tenants.fields.timezone' | transloco"
+                                                    [ngModel]="selectedTenantForm.get('timezone')?.value"
+                                                    [ngModelOptions]="{ standalone: true }"
+                                                    (ngModelChange)="selectedTenantForm.get('timezone')?.setValue($event)"
+                                                    [styleClasses]="'mt-4'"
+                                                ></spa-input>
+                                            </div>
+                                            <div class="w-1/2 pl-2 mt-4">
+                                                <spa-input
+                                                    [label]="'admin.tenants.fields.currency' | transloco"
+                                                    [ngModel]="selectedTenantForm.get('currency')?.value"
+                                                    [ngModelOptions]="{ standalone: true }"
+                                                    (ngModelChange)="selectedTenantForm.get('currency')?.setValue($event)"
+                                                    [styleClasses]="'mt-4'"
+                                                ></spa-input>
+                                            </div>
                                         </div>
 
                                         <!-- SSL Toggle -->
                                         <div class="mt-4">
-                                            <mat-slide-toggle
-                                                [formControlName]="'sslEnabled'"
-                                                [color]="'primary'"
-                                            >
-                                                {{ 'admin.tenants.fields.sslEnabled' | transloco }}
-                                            </mat-slide-toggle>
+                                            <spa-toggle
+                                                [label]="'admin.tenants.fields.sslEnabled' | transloco"
+                                                [ngModel]="selectedTenantForm.get('sslEnabled')?.value"
+                                                [ngModelOptions]="{ standalone: true }"
+                                                (ngModelChange)="selectedTenantForm.get('sslEnabled')?.setValue($event)"
+                                                [styleClasses]="'mt-4'"
+                                            ></spa-toggle>
                                         </div>
 
                                         <!-- Notes -->
-                                        <mat-form-field class="w-full mt-4">
-                                            <mat-label>{{ 'admin.tenants.fields.notes' | transloco }}</mat-label>
-                                            <textarea
-                                                matInput
-                                                [formControlName]="'notes'"
-                                                rows="3"
-                                            ></textarea>
-                                        </mat-form-field>
+                                        <div class="w-full mt-4 ">
+                                            <spa-textarea
+                                                [label]="'admin.tenants.fields.notes' | transloco"
+                                                [rows]="3"
+                                                [ngModel]="selectedTenantForm.get('notes')?.value"
+                                                [ngModelOptions]="{ standalone: true }"
+                                                (ngModelChange)="selectedTenantForm.get('notes')?.setValue($event)"
+                                                [styleClasses]="'mt-4'"
+                                            ></spa-textarea>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -54,6 +54,11 @@ import {
     takeUntil,
 } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
+import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
+import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 
 @Component({
     selector: 'tenants-list',
@@ -99,6 +104,11 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
         AsyncPipe,
         DatePipe,
         TranslocoPipe,
+        SpaInputComponent,
+        SpaSelectComponent,
+        SpaTextareaComponent,
+        SpaToggleComponent,
+        SpaSearchInputComponent,
     ],
 })
 export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -118,6 +128,10 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Language and status options
     languages: Language[] = [Language.TR, Language.EN];
     statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
+    languageOptions: SpaSelectOption<Language>[] = [
+        { value: Language.TR, label: 'Türkçe' },
+        { value: Language.EN, label: 'English' },
+    ];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 

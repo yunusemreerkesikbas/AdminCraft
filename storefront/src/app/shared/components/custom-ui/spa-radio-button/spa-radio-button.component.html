@@ -1,0 +1,18 @@
+<mat-radio-group
+    [disabled]="disabled"
+    [value]="value"
+    [class]="styleClasses"
+    (change)="onSelection($event.value)"
+>
+    @for (o of options; track o) {
+        <mat-radio-button
+            [value]="o.value"
+            [disabled]="o.disabled"
+            class="mr-4"
+        >
+            {{ o.label }}
+        </mat-radio-button>
+    }
+</mat-radio-group>
+
+

@@ -1,0 +1,18 @@
+<mat-form-field class="w-full" [class]="styleClasses" [subscriptSizing]="'dynamic'">
+    @if (label) {
+        <mat-label>{{ label }}</mat-label>
+    }
+    <textarea
+        matInput
+        [rows]="rows"
+        [placeholder]="placeholder || ''"
+        [disabled]="disabled"
+        (input)="onInput($event)"
+        (blur)="onBlur()"
+    >{{ value ?? '' }}</textarea>
+    @if (hint) {
+        <mat-hint>{{ hint }}</mat-hint>
+    }
+</mat-form-field>
+
+

@@ -43,3 +43,5 @@ Customise the design of the theme located in the /storefront directory in the ro
 Let's connect our own API, which we created in the backend, instead of the mock API in the angular template under /storefront.
 
 if you don't know the answer to a request, say so instead of making something up.
+angular kodu yazarken access modifier'a dikkat et. private metodlar için private yerine # kullan. 
+angular kodu yazarken tip tanımlamalarına dikkat et. her değişken fonksiyon için tip tanımlamaları yap.
