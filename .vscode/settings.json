@@ -1,16 +1,17 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    // Prettier uses single quotes.
-    "prettier.singleQuote": true,
-    // Prettify on save
-    "editor.formatOnSave": true,
-    // prettier uses 2 spaces instead of 4
-    "editor.tabSize": 2,
-    // organize imports on save
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-      "source.fixAll": "explicit"
-    },
-    // Uses the project specific typescript version.
-    "typescript.tsdk": "node_modules/typescript/lib"
+  "java.compile.nullAnalysis.mode": "automatic",
+  // Prettier uses single quotes.
+  "prettier.singleQuote": true,
+  // Prettify on save
+  "editor.formatOnSave": true,
+  // prettier uses 2 spaces instead of 4
+  "editor.tabSize": 2,
+  // organize imports on save
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+  // Uses the project specific typescript version.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "angular.enable-strict-mode-prompt": false
 }
