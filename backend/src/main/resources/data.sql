@@ -186,3 +186,35 @@ INSERT IGNORE INTO contents (
 );
 
 -- Default password for all users: admin123
+
+-- =====================================================
+-- 5. INSERT DUMMY PAGE BUILDER PAGES
+-- =====================================================
+
+-- Sample pages for Tenant 1 (Demo Company) for Page Builder
+INSERT IGNORE INTO pages (
+  tenant_id, title, slug, status, language, category_id,
+  meta_title, meta_description, canonical_url,
+  published_at, created_at, updated_at, created_by
+) VALUES
+(
+  1, 'Ana Sayfa (PB)', 'ana-sayfa', 'PUBLISHED', 'TR', NULL,
+  'Demo Şirketi - Ana Sayfa (PB)',
+  'Page Builder ile oluşturulmuş ana sayfa',
+  NULL,
+  NOW(), NOW(), NOW(), 1
+),
+(
+  1, 'Hakkımızda (PB)', 'hakkimizda', 'DRAFT', 'TR', NULL,
+  'Demo Şirketi - Hakkımızda (PB)',
+  'Page Builder ile oluşturulmuş hakkımızda sayfası',
+  NULL,
+  NULL, NOW(), NOW(), 1
+),
+(
+  1, 'Home (PB)', 'home', 'PUBLISHED', 'EN', NULL,
+  'Demo Company - Home (PB)',
+  'Homepage created with Page Builder',
+  NULL,
+  NOW(), NOW(), NOW(), 1
+);

@@ -72,6 +72,13 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- HTML Sanitize -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.17.2</version>
+        </dependency>
+
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
