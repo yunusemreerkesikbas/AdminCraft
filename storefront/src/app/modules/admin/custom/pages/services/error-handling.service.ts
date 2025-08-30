@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +10,6 @@ export class ErrorHandlingService {
    * Handles HTTP errors and returns user-friendly messages
    */
   handleError(error: any): string {
-    console.error('Page Builder Error:', error);
 
     if (error instanceof HttpErrorResponse) {
       switch (error.status) {
@@ -81,9 +80,9 @@ export class ErrorHandlingService {
         stack: error?.stack
       }
     };
-    
-    console.error('PageBuilder Error Log:', logData);
-    
+    // Optionally send to remote logging service here
+    // e.g., this._logger.capture(logData)
+
     // TODO: Send to logging service in production
     // this.loggingService.logError(logData);
   }

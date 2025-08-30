@@ -133,7 +133,9 @@ export class PageListComponent implements OnInit, OnDestroy {
 
   load(): void {
     if (!this.tenantId) {
-      console.error('No tenant ID available for loading pages');
+      this.#notify.warning(
+        'admin.pageBuilder.errors.noTenant'
+      );
       return;
     }
 
@@ -153,6 +155,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         error: (error) => {
           const errorMessage = this._errorHandler.handleError(error);
           this._errorHandler.logError(error, 'Loading pages');
+          this.#notify.alert(errorMessage);
           this.flashMessage = 'error';
           this.isLoading = false;
           this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
@@ -286,7 +289,8 @@ export class PageListComponent implements OnInit, OnDestroy {
           this.#cdr.markForCheck();
         },
         error: (error) => {
-          console.error('Error updating page:', error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.flashMessage = 'error';
           this.#cdr.markForCheck();
         },
@@ -305,7 +309,9 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#notify.success('admin.common.messages.operationSuccess');
         this.#cdr.markForCheck();
       },
-      error: () => {
+      error: (error) => {
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
         this.flashMessage = 'error';
         this.#cdr.markForCheck();
       },
@@ -324,7 +330,9 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#notify.success('admin.common.messages.operationSuccess');
         this.#cdr.markForCheck();
       },
-      error: () => {
+      error: (error) => {
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
         this.flashMessage = 'error';
         this.#cdr.markForCheck();
       },
@@ -350,7 +358,8 @@ export class PageListComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error deleting page:', error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.flashMessage = 'error';
           this.#cdr.markForCheck();
         },
@@ -378,7 +387,11 @@ export class PageListComponent implements OnInit, OnDestroy {
         this._router.navigate([`/${sub}/pages/${p.id}`]);
         this.#cdr.markForCheck();
       },
-      error: () => (this.isLoading = false),
+      error: (error) => {
+        this.isLoading = false;
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
+      },
     });
   }
 

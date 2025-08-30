@@ -1,9 +1,9 @@
 import {
     AsyncPipe,
+    CommonModule,
+    DatePipe,
     NgClass,
     NgTemplateOutlet,
-    DatePipe,
-    CommonModule,
 } from '@angular/common';
 import {
     AfterViewInit,
@@ -14,6 +14,7 @@ import {
     OnInit,
     ViewChild,
     ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import {
     FormsModule,
@@ -34,16 +35,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { ContentService } from '../content.service';
-import {
-    Content,
-    ContentPagination,
-    ContentStatus,
-    Language,
-    CreateContentRequest,
-    UpdateContentRequest,
-    ContentType,
-} from '../content.types';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { NotificationService } from '@shared/notifications/notification.service';
 import {
     Observable,
     Subject,
@@ -53,7 +46,16 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ContentService } from '../content.service';
+import {
+    Content,
+    ContentPagination,
+    ContentStatus,
+    ContentType,
+    CreateContentRequest,
+    Language,
+    UpdateContentRequest,
+} from '../content.types';
 
 @Component({
     selector: 'content-list',
@@ -114,7 +116,7 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedContent: Content | null = null;
     selectedContentForm: UntypedFormGroup;
-    flashMessage: 'success' | 'error' | null = null;
+    #notify = inject(NotificationService);
     
     // Language and status options
     languages: Language[] = [Language.TR, Language.EN];
@@ -311,12 +313,10 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
-                        // Show a success message
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                     },
                     error: () => {
-                        // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -326,15 +326,12 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
-                        // Show a success message
-                        this.showFlashMessage('success');
-                        
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         // Close details
                         this.closeDetails();
                     },
                     error: () => {
-                        // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -365,9 +362,15 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
                 // Delete the content on the server
                 this._contentService.deleteContent(content.id)
                     .pipe(takeUntil(this._unsubscribeAll))
-                    .subscribe(() => {
-                        // Close the details
-                        this.closeDetails();
+                    .subscribe({
+                        next: () => {
+                            // Close the details
+                            this.closeDetails();
+                            this.#notify.success('admin.common.messages.operationSuccess');
+                        },
+                        error: () => {
+                            this.#notify.alert('admin.common.errors.unexpected');
+                        }
                     });
             }
         });
@@ -384,11 +387,11 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedContent) => {
                         this.selectedContent = updatedContent;
                         this.selectedContentForm.patchValue(updatedContent);
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -405,11 +408,11 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedContent) => {
                         this.selectedContent = updatedContent;
                         this.selectedContentForm.patchValue(updatedContent);
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -431,24 +434,7 @@ export class ContentListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
-    /**
-     * Show flash message
-     */
-    showFlashMessage(type: 'success' | 'error'): void {
-        // Show the message
-        this.flashMessage = type;
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-
-        // Hide it after 3 seconds
-        setTimeout(() => {
-            this.flashMessage = null;
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        }, 3000);
-    }
+    
 
     /**
      * Track by function for ngFor loops

@@ -1,11 +1,11 @@
 import {
     AsyncPipe,
-    NgClass,
-    NgTemplateOutlet,
-    DatePipe,
-    NgIf,
-    NgFor,
     CommonModule,
+    DatePipe,
+    NgClass,
+    NgFor,
+    NgIf,
+    NgTemplateOutlet,
 } from '@angular/common';
 import {
     AfterViewInit,
@@ -16,6 +16,7 @@ import {
     OnInit,
     ViewChild,
     ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import {
     FormsModule,
@@ -36,16 +37,12 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { UsersService } from '../users.service';
-import {
-    User,
-    UserPagination,
-    UserRole,
-    Language,
-    CreateUserRequest,
-    UpdateUserRequest,
-    ChangePasswordRequest,
-} from '../users.types';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
+import { NotificationService } from '@shared/notifications/notification.service';
 import {
     Observable,
     Subject,
@@ -55,12 +52,16 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
+import { UsersService } from '../users.service';
+import {
+    ChangePasswordRequest,
+    CreateUserRequest,
+    Language,
+    UpdateUserRequest,
+    User,
+    UserPagination,
+    UserRole,
+} from '../users.types';
 
 @Component({
     selector: 'users-list',
@@ -127,9 +128,10 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     selectedUser: User | null = null;
     selectedUserForm: UntypedFormGroup;
     passwordForm: UntypedFormGroup;
-    flashMessage: 'success' | 'error' | null = null;
+    
     showPasswordForm: boolean = false;
     newPassword: string = '';
+    #notify = inject(NotificationService);
     
     // Role and language options
     roles: UserRole[] = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN, UserRole.EDITOR, UserRole.VIEWER];
@@ -347,12 +349,10 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
-                        // Show a success message
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                     },
                     error: () => {
-                        // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -368,15 +368,12 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
-                        // Show a success message
-                        this.showFlashMessage('success');
-                        
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         // Close details
                         this.closeDetails();
                     },
                     error: () => {
-                        // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -407,9 +404,15 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                 // Delete the user on the server
                 this._usersService.deleteUser(user.id)
                     .pipe(takeUntil(this._unsubscribeAll))
-                    .subscribe(() => {
-                        // Close the details
-                        this.closeDetails();
+                    .subscribe({
+                        next: () => {
+                            // Close the details
+                            this.closeDetails();
+                            this.#notify.success('admin.common.messages.operationSuccess');
+                        },
+                        error: () => {
+                            this.#notify.alert('admin.common.errors.unexpected');
+                        }
                     });
             }
         });
@@ -426,11 +429,13 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedUser) => {
                         this.selectedUser = updatedUser;
                         this.selectedUserForm.patchValue(updatedUser);
-                        this.showFlashMessage('success');
+                        
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -447,11 +452,13 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedUser) => {
                         this.selectedUser = updatedUser;
                         this.selectedUserForm.patchValue(updatedUser);
-                        this.showFlashMessage('success');
+                        
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -483,12 +490,14 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
-                        this.showFlashMessage('success');
+                        
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this.passwordForm.reset();
                         this.showPasswordForm = false;
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -519,10 +528,12 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
                         .subscribe({
                             next: (newPassword) => {
                                 this.newPassword = newPassword;
-                                this.showFlashMessage('success');
+                                
+                                this.#notify.success('admin.common.messages.operationSuccess');
                             },
                             error: () => {
-                                this.showFlashMessage('error');
+                                
+                                this.#notify.alert('admin.common.errors.unexpected');
                             }
                         });
                 }
@@ -530,24 +541,7 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
-    /**
-     * Show flash message
-     */
-    showFlashMessage(type: 'success' | 'error'): void {
-        // Show the message
-        this.flashMessage = type;
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-
-        // Hide it after 3 seconds
-        setTimeout(() => {
-            this.flashMessage = null;
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        }, 3000);
-    }
+    
 
     /**
      * Track by function for ngFor loops

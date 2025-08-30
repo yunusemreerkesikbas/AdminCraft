@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, Router } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivate, Router } from '@angular/router';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
-import { Observable, map, of } from 'rxjs';
+import { NotificationService } from 'app/shared/notifications/notification.service';
+import { Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -14,10 +15,11 @@ export class PageBuilderGuard implements CanActivate {
   ) {}
 
   canActivate(route: ActivatedRouteSnapshot): Observable<boolean> {
+    const notify = inject(NotificationService);
     const tenantId = this._tenantCtx.getCurrentTenantId();
     
     if (!tenantId) {
-      console.warn('PageBuilderGuard: No tenant context available');
+      notify.warning('admin.pageBuilder.errors.noTenant');
       this._router.navigate(['/admin']);
       return of(false);
     }
@@ -27,7 +29,7 @@ export class PageBuilderGuard implements CanActivate {
     // TODO: Add role-based permission checking
     const pageId = route.params['id'];
     if (pageId && !this.isValidPageId(pageId)) {
-      console.warn('PageBuilderGuard: Invalid page ID format:', pageId);
+      notify.warning('admin.pageBuilder.errors.invalidPageId');
       this._router.navigate(['/admin/pages']);
       return of(false);
     }

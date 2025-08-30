@@ -95,6 +95,11 @@ export const langEN = {
                 activateSuccess: '{{item}} successfully activated',
                 suspendSuccess: '{{item}} successfully suspended',
             },
+            errors: {
+                forbidden: 'You do not have permission for this action',
+                server: 'A server error occurred. Please try again.',
+                unexpected: 'An unexpected error occurred',
+            },
             fields: {
                 name: 'Name',
                 email: 'Email',
@@ -198,6 +203,10 @@ export const langEN = {
                 sectionAdded: 'Section added',
                 blockAdded: 'Block added',
                 orderSaved: 'Order saved',
+            },
+            errors: {
+                noTenant: 'Tenant not found',
+                invalidPageId: 'Invalid page ID',
             },
         },
         media: {

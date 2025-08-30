@@ -105,7 +105,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const storedId = this._tenantCtx.getCurrentTenantId();
     if (!storedId) {
-      console.error('No tenant ID available for loading categories');
+      this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
     this.tenantId = storedId;
@@ -123,7 +123,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
 
   loadTree(): void {
     if (!this.tenantId) {
-      console.error('Cannot load tree: tenant ID not available');
+      this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
     this.isLoading = true;
@@ -142,8 +142,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.#cdr.markForCheck();
         },
         error: (error) => {
-          console.error('Error loading category tree:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.tree = [];
           this.dataSource.data = [];
           this.flat = [];
@@ -170,7 +170,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
 
   createChild(parent?: PageCategoryTreeNode | { id: number }): void {
     if (!this.tenantId) {
-      console.error('Cannot create category: tenant ID not available');
+      this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
     const payload: CreateCategoryRequest = {
@@ -188,8 +188,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         },
         error: (error) => {
-          console.error('Error creating category:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         },
       });
@@ -218,8 +218,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         },
         error: (error) => {
-          console.error('Error updating category:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         },
       });
@@ -235,8 +235,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         },
         error: (error) => {
-          console.error('Error deleting category:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         },
       });
@@ -252,8 +252,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         }, 
         error: (error) => {
-          console.error('Error moving category to root:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         }
       });
@@ -274,8 +274,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         }, 
         error: (error) => {
-          console.error('Error reordering category up:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         }
       });
@@ -296,8 +296,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadTree();
         }, 
         error: (error) => {
-          console.error('Error reordering category down:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         }
       });
@@ -385,8 +385,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .subscribe({ 
         next: () => this.loadTree(), 
         error: (error) => {
-          console.error('Error updating selected category:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         }
       });
@@ -409,8 +409,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error deleting selected category:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         },
       });
@@ -424,8 +424,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .subscribe({ 
         next: () => this.loadTree(), 
         error: (error) => {
-          console.error('Error updating category from form:', error);
-          this._errorHandler.handleError(error);
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
           this.#cdr.markForCheck();
         }
       });
