@@ -76,6 +76,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:globe-alt',
                 link: '/__TENANT__/sites',
             },
+            {
+                id: 'apps.custom.pagebuilder',
+                title: 'Page Builder',
+                type: 'basic',
+                icon: 'heroicons_outline:rectangle-stack',
+                link: '/__TENANT__/pages',
+            },
         ],
     },
 ];

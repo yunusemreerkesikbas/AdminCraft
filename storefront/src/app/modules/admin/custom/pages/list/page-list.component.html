@@ -1,0 +1,337 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
+    <!-- Header -->
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
+        <!-- Loader -->
+        @if (isLoading) {
+            <div class="absolute inset-x-0 bottom-0">
+                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+            </div>
+        }
+    </div>
+
+    <!-- Main -->
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            @if (filtered.length > 0) {
+                <div class="grid">
+                    <!-- Grid header -->
+                    <div
+                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                    >
+                        <div>{{ 'admin.common.grid.title' | transloco }}</div>
+                        <div class="hidden md:block">Slug</div>
+                        <div class="hidden sm:block">
+                            {{ 'admin.common.grid.language' | transloco }}
+                        </div>
+                        <div class="hidden text-right sm:block">
+                            {{ 'admin.common.grid.details' | transloco }}
+                        </div>
+                    </div>
+                    <!-- Rows -->
+                    @for (p of filtered; track p.id) {
+                        <div
+                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                        >
+                            <div class="truncate font-medium">
+                                {{ p.title }}
+                            </div>
+                            <div class="hidden truncate md:block">
+                                /{{ p.slug }}
+                            </div>
+                            <div class="hidden sm:block">{{ p.language }}</div>
+                            <div class="hidden text-right sm:block">
+                                <button
+                                    class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                    mat-stroked-button
+                                    (click)="toggleDetails(p.id)"
+                                >
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        [svgIcon]="
+                                            selectedPageId === p.id
+                                                ? 'heroicons_solid:chevron-up'
+                                                : 'heroicons_solid:chevron-down'
+                                        "
+                                    ></mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid">
+                            @if (selectedPageId === p.id) {
+                                <div class="overflow-hidden shadow-lg">
+                                    <div class="flex border-b">
+                                        <div class="flex w-full flex-col">
+                                            <div
+                                                class="flex flex-col p-8 sm:flex-row"
+                                            >
+                                                <!-- Left column -->
+                                                <div
+                                                    class="mb-8 flex flex-col sm:mb-0 sm:w-1/4 sm:items-start"
+                                                >
+                                                    <div
+                                                        class="text-2xl font-extrabold tracking-tight"
+                                                    >
+                                                        {{ p.title }}
+                                                    </div>
+                                                    <div
+                                                        class="text-secondary mt-2 text-sm"
+                                                    >
+                                                        /{{ p.slug }} •
+                                                        {{ p.language }}
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium"
+                                                    >
+                                                        {{ p.status }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Right column (form) -->
+                                                <form
+                                                    class="flex flex-auto flex-wrap sm:w-3/4"
+                                                    [formGroup]="
+                                                        selectedPageForm
+                                                    "
+                                                >
+                                                    <div
+                                                        class="flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.pageTitle'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="title"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:mt-0 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.slug'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="slug"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <!-- Language (read-only) -->
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.language'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            [ngModel]="
+                                                                selectedPage?.language
+                                                            "
+                                                            [ngModelOptions]="{
+                                                                standalone: true,
+                                                            }"
+                                                            [disabled]="true"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <!-- Category -->
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-select
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.category'
+                                                                    | transloco
+                                                            "
+                                                            [options]="
+                                                                categories
+                                                            "
+                                                            formControlName="categoryId"
+                                                        ></spa-select>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.metaTitle'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="metaTitle"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.metaDescription'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="metaDescription"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.canonicalUrl'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="canonicalUrl"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <!-- Content fields -->
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.common.fields.title'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="subtitle"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'CSS Classes'
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="styleClasses"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-full"
+                                                    >
+                                                        <quill-editor
+                                                            formControlName="descriptionHtml"
+                                                        ></quill-editor>
+                                                    </div>
+                                                </form>
+                                            </div>
+
+                                            <!-- Footer actions -->
+                                            <div
+                                                class="flex w-full items-center justify-between border-t px-8 py-4"
+                                            >
+                                                <div
+                                                    class="text-secondary text-xs"
+                                                >
+                                                    Oluşturma:
+                                                    {{
+                                                        p.createdAt
+                                                            | date: 'short'
+                                                    }}
+                                                    <span class="mx-2">•</span>
+                                                    Güncelleme:
+                                                    {{
+                                                        p.updatedAt
+                                                            | date: 'short'
+                                                    }}
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <a
+                                                        mat-stroked-button
+                                                        [routerLink]="[
+                                                            '/',
+                                                            subdomain ||
+                                                                'default',
+                                                            'pages',
+                                                            p.id,
+                                                        ]"
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.edit'
+                                                                | transloco
+                                                        }}
+                                                    </a>
+                                                    <button
+                                                        mat-stroked-button
+                                                        (click)="
+                                                            updateSelectedPage()
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.update'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
+                                                        mat-stroked-button
+                                                        (click)="
+                                                            publishSelected()
+                                                        "
+                                                        *ngIf="
+                                                            selectedPage?.status !==
+                                                            'PUBLISHED'
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.publish'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
+                                                        mat-stroked-button
+                                                        (click)="
+                                                            unpublishSelected()
+                                                        "
+                                                        *ngIf="
+                                                            selectedPage?.status ===
+                                                            'PUBLISHED'
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.content.unpublish'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
+                                                        mat-button
+                                                        (click)="
+                                                            toggleDetails(0)
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.close'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            } @else {
+                <div
+                    class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+                >
+                    Kayıt bulunamadı
+                </div>
+            }
+        </div>
+    </div>
+</div>

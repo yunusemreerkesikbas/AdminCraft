@@ -1,0 +1,83 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:inset-0 dark:bg-transparent"
+>
+    <!-- Header (local to categories) -->
+    <div class="flex items-center justify-between border-b px-6 py-4 md:px-8">
+        <div class="text-xl font-semibold">Kategoriler</div>
+        <div class="flex items-center gap-3">
+            <spa-search-input
+                [placeholder]="'Kategori ara'"
+                [ngModel]="search"
+                (ngModelChange)="onSearchChange($event)"
+            ></spa-search-input>
+            <button mat-flat-button [color]="'primary'">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Yeni Kategori</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6">
+        <!-- Simple list -->
+        <div class="category-tree rounded border p-4">
+            @if (filtered.length > 0) {
+                <div class="grid gap-2">
+                    @for (c of filtered; track c.id) {
+                        <div
+                            class="flex items-center justify-between rounded border px-3 py-2"
+                        >
+                            <div>
+                                <div class="font-medium">{{ c.name }}</div>
+                                <div class="text-secondary text-xs">
+                                    /{{ c.slug }}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button mat-stroked-button (click)="edit(c)">
+                                    Düzenle
+                                </button>
+                                <button
+                                    mat-stroked-button
+                                    color="warn"
+                                    (click)="remove(c)"
+                                >
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <div class="text-secondary text-sm">Kategori bulunamadı</div>
+            }
+        </div>
+
+        <!-- Inline create/edit fields (custom UI) -->
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <spa-input
+                [label]="'Kategori Adı'"
+                [type]="'text'"
+                [(ngModel)]="name"
+            ></spa-input>
+            <spa-input
+                [label]="'Slug'"
+                [type]="'text'"
+                [(ngModel)]="slug"
+            ></spa-input>
+        </div>
+        <div class="mt-4">
+            <button mat-flat-button [color]="'primary'" (click)="save()">
+                {{ editingId ? 'Güncelle' : 'Kaydet' }}
+            </button>
+            <button
+                class="ml-2"
+                mat-stroked-button
+                (click)="resetForm()"
+                *ngIf="editingId"
+            >
+                İptal
+            </button>
+        </div>
+    </div>
+</div>
