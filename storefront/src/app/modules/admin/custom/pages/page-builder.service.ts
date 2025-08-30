@@ -5,10 +5,13 @@ import {
   ApiResponse,
   CreateCategoryRequest,
   CreatePageRequest,
+  MoveCategoryRequest,
   PageBlockDto,
   PageCategoryDto,
+  PageCategoryTreeNode,
   PageDto,
   PageSectionDto,
+  ReorderCategoryRequest,
   UpdateCategoryRequest,
   UpdatePageRequest,
 } from './page-builder.types';
@@ -85,6 +88,45 @@ export class PageBuilderService {
 
   deleteCategory(id: number): Observable<boolean> {
     return this.#api.delete<any>('pageCategoryById', { id }).pipe(map((r) => r.result === 'SUCCESS'));
+  }
+
+  getCategoryTree(
+    tenantId: number,
+    language?: 'TR' | 'EN',
+    rootId?: number | null,
+    depth?: number
+  ): Observable<PageCategoryTreeNode[]> {
+    const qp: Record<string, any> = {
+      tenantId,
+      ...(language && { language }),
+      ...(rootId !== undefined && { rootId }),
+      ...(depth !== undefined && { depth }),
+    };
+    // Use custom GET without retry to avoid 4x calls on 5xx responses
+    return this.#api
+      .custom<any>('GET', 'pageCategoryTree', { queryParams: qp, includeAuth: true })
+      .pipe(map((r) => r.data || []));
+  }
+
+  getCategoryChildren(
+    tenantId: number,
+    parentId: number | null,
+    language?: 'TR' | 'EN'
+  ): Observable<PageCategoryDto[]> {
+    const qp: Record<string, any> = { tenantId, parentId, ...(language && { language }) };
+    return this.#api.get<any>('pageCategoryChildren', undefined, qp).pipe(map((r) => r.data || []));
+  }
+
+  moveCategory(req: MoveCategoryRequest): Observable<boolean> {
+    return this.#api
+      .put<any>('pageCategoryMove', { newParentId: req.newParentId }, { id: req.id })
+      .pipe(map((r) => r.result === 'SUCCESS'));
+  }
+
+  reorderCategories(req: ReorderCategoryRequest): Observable<boolean> {
+    return this.#api
+      .put<any>('pageCategoryReorder', { parentId: req.parentId, orderedIds: req.orderedIds })
+      .pipe(map((r) => r.result === 'SUCCESS'));
   }
 
   // Sections

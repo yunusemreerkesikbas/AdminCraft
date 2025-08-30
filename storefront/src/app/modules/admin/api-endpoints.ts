@@ -55,6 +55,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PAGE BUILDER: CATEGORIES -----
     pageCategories: 'page-categories',
     pageCategoryById: 'page-categories/${id}',
+    pageCategoryTree: 'page-categories/tree',
+    pageCategoryChildren: 'page-categories/children',
+    pageCategoryMove: 'page-categories/${id}/move',
+    pageCategoryReorder: 'page-categories/reorder',
 
     // ----- PAGE BUILDER: SECTIONS & BLOCKS -----
     pageBuilderSections: 'page-builder/sections',

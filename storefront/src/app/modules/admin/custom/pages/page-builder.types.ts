@@ -47,6 +47,18 @@ export interface PageCategoryDto {
   parentId?: number | null;
 }
 
+export interface PageCategoryTreeNode {
+  id: number;
+  tenantId: number;
+  name: string;
+  slug: string;
+  parentId?: number | null;
+  level: number;
+  path: string;
+  sortOrder: number;
+  children?: PageCategoryTreeNode[];
+}
+
 export interface CreateCategoryRequest {
   tenantId: number;
   name: string;
@@ -56,6 +68,16 @@ export interface CreateCategoryRequest {
 
 export interface UpdateCategoryRequest extends CreateCategoryRequest {
   id: number;
+}
+
+export interface MoveCategoryRequest {
+  id: number;
+  newParentId: number | null;
+}
+
+export interface ReorderCategoryRequest {
+  parentId: number | null;
+  orderedIds: number[];
 }
 
 export interface PageSectionDto {

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,10 +10,11 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { QuillEditorComponent } from 'ngx-quill';
+import { Subject, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, PageDto } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
-import { LoadingStateService, LOADING_OPERATIONS } from '../services/loading-state.service';
+import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
 import { PageValidationService } from '../services/page-validation.service';
 
 @Component({
@@ -228,7 +228,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         p?.canonicalUrl || '', 
         [PageValidationService.canonicalUrlValidator()]
       ],
-      categoryId: [p?.categoryId || null],
+      categoryId: [p?.categoryId ?? null],
       subtitle: [p?.subtitle || ''],
       styleClasses: [p?.styleClasses || ''],
       description: [p?.description || ''],

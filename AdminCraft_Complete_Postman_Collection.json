@@ -1108,7 +1108,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": null,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
+							"raw": "{\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": 1,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
 						},
 						"url": "{{baseUrl}}/api/pages"
 					}
@@ -1123,7 +1123,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": 1,\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal - Güncellendi\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": null,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
+							"raw": "{\n  \"id\": 1,\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal - Güncellendi\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": 1,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
 						},
 						"url": "{{baseUrl}}/api/pages"
 					}
@@ -1267,6 +1267,69 @@
 						"method": "DELETE",
 						"header": [ { "key": "Accept-Language", "value": "tr" } ],
 						"url": "{{baseUrl}}/api/page-categories/1"
+					}
+				},
+				{
+					"name": "Categories - Tree",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Accept-Language", "value": "tr" } ],
+						"url": {
+							"raw": "{{baseUrl}}/api/page-categories/tree?tenantId=1&lang=tr",
+							"host": ["{{baseUrl}}"],
+							"path": ["api","page-categories","tree"],
+							"query": [
+								{ "key": "tenantId", "value": "1" },
+								{ "key": "lang", "value": "tr" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Categories - Children (localized)",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Accept-Language", "value": "tr" } ],
+						"url": {
+							"raw": "{{baseUrl}}/api/page-categories/children?tenantId=1&parentId=1&lang=tr",
+							"host": ["{{baseUrl}}"],
+							"path": ["api","page-categories","children"],
+							"query": [
+								{ "key": "tenantId", "value": "1" },
+								{ "key": "parentId", "value": "1" },
+								{ "key": "lang", "value": "tr" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Categories - Move",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tenantId\": 1,\n  \"categoryId\": 2,\n  \"newParentId\": 1\n}"
+						},
+						"url": "{{baseUrl}}/api/page-categories/2/move"
+					}
+				},
+				{
+					"name": "Categories - Reorder",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tenantId\": 1,\n  \"parentId\": 1,\n  \"orderedIds\": [2,3,4]\n}"
+						},
+						"url": "{{baseUrl}}/api/page-categories/reorder"
 					}
 				},
 				{

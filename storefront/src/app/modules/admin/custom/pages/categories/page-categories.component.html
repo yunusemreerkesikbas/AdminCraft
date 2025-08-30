@@ -1,83 +1,172 @@
 <div
-    class="bg-card flex min-w-0 flex-auto flex-col sm:inset-0 dark:bg-transparent"
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    <!-- Header (local to categories) -->
-    <div class="flex items-center justify-between border-b px-6 py-4 md:px-8">
-        <div class="text-xl font-semibold">Kategoriler</div>
-        <div class="flex items-center gap-3">
-            <spa-search-input
-                [placeholder]="'Kategori ara'"
-                [ngModel]="search"
-                (ngModelChange)="onSearchChange($event)"
-            ></spa-search-input>
-            <button mat-flat-button [color]="'primary'">
-                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">Yeni Kategori</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Body -->
-    <div class="p-6">
-        <!-- Simple list -->
-        <div class="category-tree rounded border p-4">
+    <!-- Main -->
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
             @if (filtered.length > 0) {
-                <div class="grid gap-2">
+                <div class="grid">
+                    <!-- Grid header -->
+                    <div
+                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                    >
+                        <div>{{ 'admin.common.grid.name' | transloco }}</div>
+                        <div class="hidden md:block">
+                            {{ 'admin.common.grid.slug' | transloco }}
+                        </div>
+                        <div class="hidden sm:block">
+                            {{ 'admin.common.grid.level' | transloco }}
+                        </div>
+                        <div class="hidden text-right sm:block">
+                            {{ 'admin.common.grid.details' | transloco }}
+                        </div>
+                    </div>
+                    <!-- Rows -->
                     @for (c of filtered; track c.id) {
                         <div
-                            class="flex items-center justify-between rounded border px-3 py-2"
+                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                         >
-                            <div>
-                                <div class="font-medium">{{ c.name }}</div>
-                                <div class="text-secondary text-xs">
-                                    /{{ c.slug }}
-                                </div>
+                            <div class="truncate font-medium">{{ c.name }}</div>
+                            <div class="hidden truncate md:block">
+                                /{{ c.slug }}
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button mat-stroked-button (click)="edit(c)">
-                                    Düzenle
-                                </button>
+                            <div class="hidden sm:block">{{ c.level }}</div>
+                            <div class="hidden text-right sm:block">
                                 <button
+                                    class="h-7 min-h-7 min-w-10 px-2 leading-6"
                                     mat-stroked-button
-                                    color="warn"
-                                    (click)="remove(c)"
+                                    (click)="toggleDetails(c.id)"
                                 >
-                                    Sil
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        [svgIcon]="
+                                            selectedCategoryId === c.id
+                                                ? 'heroicons_solid:chevron-up'
+                                                : 'heroicons_solid:chevron-down'
+                                        "
+                                    ></mat-icon>
                                 </button>
                             </div>
+                        </div>
+                        <div class="grid">
+                            @if (selectedCategoryId === c.id) {
+                                <div class="overflow-hidden shadow-lg">
+                                    <div class="flex border-b">
+                                        <div class="flex w-full flex-col">
+                                            <div
+                                                class="flex flex-col p-8 sm:flex-row"
+                                            >
+                                                <!-- Left column -->
+                                                <div
+                                                    class="mb-8 flex flex-col sm:mb-0 sm:w-1/4 sm:items-start"
+                                                >
+                                                    <div
+                                                        class="text-2xl font-extrabold tracking-tight"
+                                                    >
+                                                        {{ c.name }}
+                                                    </div>
+                                                    <div
+                                                        class="text-secondary mt-2 text-sm"
+                                                    >
+                                                        /{{ c.slug }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Right column (form) -->
+                                                <form
+                                                    class="flex flex-auto flex-wrap sm:w-3/4"
+                                                    [formGroup]="form"
+                                                >
+                                                    <div
+                                                        class="flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.name'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="name"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:mt-0 lg:w-1/2"
+                                                    >
+                                                        <spa-input
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.slug'
+                                                                    | transloco
+                                                            "
+                                                            [type]="'text'"
+                                                            formControlName="slug"
+                                                        ></spa-input>
+                                                    </div>
+                                                    <div
+                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
+                                                    >
+                                                        <spa-select
+                                                            [label]="
+                                                                'admin.pageBuilder.fields.parentCategory'
+                                                                    | transloco
+                                                            "
+                                                            [placeholder]="'—'"
+                                                            [options]="
+                                                                parentOptions
+                                                            "
+                                                            formControlName="parentId"
+                                                        ></spa-select>
+                                                    </div>
+                                                </form>
+                                            </div>
+
+                                            <!-- Footer actions -->
+                                            <div
+                                                class="flex w-full items-center justify-between border-t px-8 py-4"
+                                            >
+                                                <div></div>
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <button
+                                                        mat-stroked-button
+                                                        (click)="
+                                                            updateSelectedCategory()
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.update'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
+                                                        mat-button
+                                                        (click)="
+                                                            toggleDetails(0)
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.close'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
             } @else {
-                <div class="text-secondary text-sm">Kategori bulunamadı</div>
+                <div
+                    class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+                >
+                    {{ 'admin.common.noRecords' | transloco }}
+                </div>
             }
-        </div>
-
-        <!-- Inline create/edit fields (custom UI) -->
-        <div class="mt-6 grid gap-4 md:grid-cols-2">
-            <spa-input
-                [label]="'Kategori Adı'"
-                [type]="'text'"
-                [(ngModel)]="name"
-            ></spa-input>
-            <spa-input
-                [label]="'Slug'"
-                [type]="'text'"
-                [(ngModel)]="slug"
-            ></spa-input>
-        </div>
-        <div class="mt-4">
-            <button mat-flat-button [color]="'primary'" (click)="save()">
-                {{ editingId ? 'Güncelle' : 'Kaydet' }}
-            </button>
-            <button
-                class="ml-2"
-                mat-stroked-button
-                (click)="resetForm()"
-                *ngIf="editingId"
-            >
-                İptal
-            </button>
         </div>
     </div>
 </div>
