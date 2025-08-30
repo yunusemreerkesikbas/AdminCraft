@@ -6,17 +6,16 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { NotificationService } from 'app/shared/notifications/notification.service';
+import { DeduplicationService } from 'app/shared/notifications/deduplication.service';
+import { NotificationOptions } from 'app/shared/notifications/notification.types';
 import { Observable, catchError, throwError } from 'rxjs';
-
-// Basit gürültü azaltma: 2 sn içinde aynı mesajı tekrar gösterme
-let lastToastKey = '';
-let lastToastAt = 0;
 
 export const errorToastInterceptor = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
   const notify = inject(NotificationService);
+  const deduplication = inject(DeduplicationService);
 
   // İstek bazında bastırma mekanizması kaldırıldı (HttpContextToken)
 
@@ -43,6 +42,7 @@ export const errorToastInterceptor = (
       if (status === 403) {
         emitDedup(
           notify,
+          deduplication,
           'admin.common.errors.forbidden',
           'alert',
           url
@@ -54,6 +54,7 @@ export const errorToastInterceptor = (
       if (status >= 500 || status === 0) {
         emitDedup(
           notify,
+          deduplication,
           'admin.common.errors.server',
           'alert',
           url
@@ -64,6 +65,7 @@ export const errorToastInterceptor = (
       // Diğer durumlar: bilgi/uyarı
       emitDedup(
         notify,
+        deduplication,
         'admin.common.errors.unexpected',
         'warning',
         url
@@ -79,25 +81,42 @@ function hasValidationBody(error: HttpErrorResponse): boolean {
   return Boolean(body.errors || body.fieldErrors || body.validationErrors);
 }
 
+function sanitizeUrl(url: string): string {
+  try {
+    const urlObj = new URL(url, window.location.origin);
+    return urlObj.pathname; // Remove query params and sensitive data
+  } catch {
+    return '[invalid-url]';
+  }
+}
+
 function emitDedup(
   notify: NotificationService,
+  deduplication: DeduplicationService,
   messageKey: string,
   type: 'alert' | 'warning',
   source: string
 ): void {
-  const now = Date.now();
   const key = `${type}-${messageKey}`;
-  if (key === lastToastKey && now - lastToastAt < 2000) {
-    return;
+  
+  if (!deduplication.canEmit(key)) {
+    return; // Deduplicated within 2 seconds
   }
-  lastToastKey = key;
-  lastToastAt = now;
 
-  const opts = { params: undefined, preventDuplicates: true } as const;
+  // Sanitize source for security (remove sensitive URL params)
+  const sanitizedSource = sanitizeUrl(source);
+  
+  const opts: NotificationOptions = { 
+    params: undefined, 
+    preventDuplicates: true,
+    // Source is only for internal logging, not exposed to user
+    ...(sanitizedSource !== '[invalid-url]' && { source: sanitizedSource })
+  };
+  
   if (type === 'alert') {
-    notify.alert(messageKey, opts as any);
+    notify.alert(messageKey, opts);
   } else {
-    notify.warning(messageKey, opts as any);
+    notify.warning(messageKey, opts);
   }
 }
 

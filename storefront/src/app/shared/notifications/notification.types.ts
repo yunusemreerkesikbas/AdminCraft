@@ -29,6 +29,7 @@ export interface NotificationOptions {
   tapToDismiss?: boolean;
   progressBar?: boolean;
   preventDuplicates?: boolean;
+  source?: string; // For internal logging/debugging
 }
 
 export interface NotificationConfig {
