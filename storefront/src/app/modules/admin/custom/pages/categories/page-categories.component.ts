@@ -1,14 +1,30 @@
+import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
-import { FormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
+import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { Subject, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
-import { PageCategoryDto } from '../page-builder.types';
+import {
+  CreateCategoryRequest,
+  PageCategoryDto,
+  PageCategoryTreeNode,
+  UpdateCategoryRequest,
+} from '../page-builder.types';
+import { ErrorHandlingService } from '../services/error-handling.service';
 
 @Component({
   selector: 'spa-page-categories',
@@ -18,146 +34,404 @@ import { PageCategoryDto } from '../page-builder.types';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
+    MatTreeModule,
+    MatProgressBarModule,
+    TranslocoModule,
     SpaInputComponent,
-    SpaSearchInputComponent,
-    FormsModule,
+    SpaSelectComponent,
   ],
+  styles: [
+    /* language=SCSS */
+    `
+        .inventory-grid {
+            grid-template-columns: auto 180px 80px 96px;
+
+            @screen md {
+                grid-template-columns: auto 220px 100px 120px;
+            }
+
+            @screen lg {
+                grid-template-columns: auto 260px 120px 140px;
+            }
+        }
+    `,
+],
 })
 export class PageCategoriesComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
-  
-  isLoading: boolean = false;
-  categories: PageCategoryDto[] = [];
-  filtered: PageCategoryDto[] = [];
+  #cdr: ChangeDetectorRef;
+  #fb: FormBuilder;
+  #destroy$ = new Subject<void>();
 
-  // form state
-  tenantId: number = 0;
-  name: string = '';
-  slug: string = '';
-  parentId: number | null = null;
-  editingId: number | null = null;
+  tenantId?: number;
+  language: 'TR' | 'EN' | '' = '';
+  tree: PageCategoryTreeNode[] = [];
+  treeControl = new NestedTreeControl<PageCategoryTreeNode>((n) => n.children || []);
+  dataSource = new MatTreeNestedDataSource<PageCategoryTreeNode>();
+  flat: Array<{
+    id: number;
+    tenantId: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    level: number;
+  }> = [];
+  isLoading: boolean = false;
+  filtered: Array<{ id: number; name: string; slug: string; level: number; parentId: number | null }> = [];
   search: string = '';
+  selectedCategoryId: number | null = null;
+  parentOptions: SpaSelectOption<number>[] = [];
+
+  form!: FormGroup;
+  selected: PageCategoryDto | null = null;
 
   constructor(
     private _svc: PageBuilderService,
     private _tenantCtx: TenantContextService,
-    private _cdr: ChangeDetectorRef
-  ) {}
+    private _errorHandler: ErrorHandlingService,
+    cdr: ChangeDetectorRef,
+    fb: FormBuilder
+  ) {
+    this.#cdr = cdr;
+    this.#fb = fb;
+  }
 
   ngOnInit(): void {
-    // Initialize from context
     const storedId = this._tenantCtx.getCurrentTenantId();
-    if (storedId) {
-      this.tenantId = storedId;
+    if (!storedId) {
+      console.error('No tenant ID available for loading categories');
+      return;
     }
-    this.load();
+    this.tenantId = storedId;
+    this.#buildForm();
+    this.loadTree();
 
-    // Listen for tenant changes
-    this._tenantCtx.tenant$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((t) => {
-        if (!t) return;
-        const nextId = t.id;
-        const changed = nextId !== this.tenantId;
-        this.tenantId = nextId;
-        if (changed) {
-          this.load();
+    this._tenantCtx.tenant$.pipe(takeUntil(this.#destroy$)).subscribe((t) => {
+      if (!t) return;
+      if (t.id !== this.tenantId) {
+        this.tenantId = t.id;
+        this.loadTree();
+      }
+    });
+  }
+
+  loadTree(): void {
+    if (!this.tenantId) {
+      console.error('Cannot load tree: tenant ID not available');
+      return;
+    }
+    this.isLoading = true;
+    this._svc
+      .getCategoryTree(this.tenantId, this.language || undefined, null)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: (nodes) => {
+          this.tree = Array.isArray(nodes) ? nodes : [];
+          this.dataSource.data = this.tree;
+          this.flat = [];
+          this.#flatten(this.tree, 1);
+          this.#applyFilter();
+          this.#buildParentOptions(this.selected?.id ?? null);
+          this.isLoading = false;
+          this.#cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Error loading category tree:', error);
+          this._errorHandler.handleError(error);
+          this.tree = [];
+          this.dataSource.data = [];
+          this.flat = [];
+          this.#applyFilter();
+          this.#buildParentOptions(this.selected?.id ?? null);
+          this.isLoading = false;
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
+  select(node: PageCategoryTreeNode | { id: number; tenantId: number; name: string; slug: string; parentId: number | null }): void {
+    this.selected = {
+      id: node.id,
+      tenantId: node.tenantId,
+      name: node.name,
+      slug: node.slug,
+      parentId: node.parentId,
+    };
+    this.#buildForm(this.selected);
+    this.#buildParentOptions(this.selected.id);
+    this.#cdr.markForCheck();
+  }
+
+  createChild(parent?: PageCategoryTreeNode | { id: number }): void {
+    if (!this.tenantId) {
+      console.error('Cannot create category: tenant ID not available');
+      return;
+    }
+    const payload: CreateCategoryRequest = {
+      tenantId: this.tenantId,
+      name: 'Yeni Kategori',
+      slug: `kategori-${Date.now()}`,
+      parentId: parent?.id ?? null,
+    };
+    this._svc
+      .createCategory(payload)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => this.loadTree(),
+        error: (error) => {
+          console.error('Error creating category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
+  createRoot(): void {
+    this.createChild(undefined);
+  }
+
+  save(): void {
+    if (!this.form?.valid || !this.selected || !this.tenantId) return;
+    const v = this.form.value;
+    const payload: UpdateCategoryRequest = {
+      id: this.selected.id,
+      tenantId: this.tenantId,
+      name: String(v.name || '').trim(),
+      slug: String(v.slug || '').trim(),
+      parentId: v.parentId ?? null,
+    };
+    this._svc
+      .updateCategory(payload)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => this.loadTree(),
+        error: (error) => {
+          console.error('Error updating category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
+  remove(node: PageCategoryTreeNode): void {
+    this._svc
+      .deleteCategory(node.id)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => this.loadTree(),
+        error: (error) => {
+          console.error('Error deleting category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
+  moveToRoot(nodeId: number): void {
+    this._svc
+      .moveCategory({ id: nodeId, newParentId: null })
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error moving category to root:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
         }
       });
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  load(): void {
-    if (!this.tenantId) {
-      console.error('No tenant ID available for loading categories');
-      return;
-    }
-    
-    this.isLoading = true;
-    this._svc.listCategories(this.tenantId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (list) => {
-          this.categories = list;
-          this.applyFilter();
-          this.isLoading = false;
-          this._cdr.markForCheck();
-        },
+  reorderUp(nodeId: number, parentId: number | null): void {
+    const siblings = this.#getSiblings(parentId);
+    const idx = siblings.findIndex((n) => n.id === nodeId);
+    if (idx <= 0) return;
+    const orderedIds = siblings.map((n) => n.id);
+    [orderedIds[idx - 1], orderedIds[idx]] = [orderedIds[idx], orderedIds[idx - 1]];
+    this._svc
+      .reorderCategories({ parentId, orderedIds })
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
         error: (error) => {
-          console.error('Error loading categories:', error);
-          this.isLoading = false;
-          this._cdr.markForCheck();
-        },
+          console.error('Error reordering category up:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
       });
   }
 
-  applyFilter(): void {
-    const q = (this.search || '').toLowerCase();
-    this.filtered = !q
-      ? this.categories
-      : this.categories.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.slug.toLowerCase().includes(q)
-        );
+  reorderDown(nodeId: number, parentId: number | null): void {
+    const siblings = this.#getSiblings(parentId);
+    const idx = siblings.findIndex((n) => n.id === nodeId);
+    if (idx < 0 || idx >= siblings.length - 1) return;
+    const orderedIds = siblings.map((n) => n.id);
+    [orderedIds[idx + 1], orderedIds[idx]] = [orderedIds[idx], orderedIds[idx + 1]];
+    this._svc
+      .reorderCategories({ parentId, orderedIds })
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error reordering category down:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
   }
 
-  edit(cat: PageCategoryDto): void {
-    this.editingId = cat.id;
-    this.name = cat.name;
-    this.slug = cat.slug;
-    this.parentId = cat.parentId ?? null;
-  }
-
-  resetForm(): void {
-    this.editingId = null;
-    this.name = '';
-    this.slug = '';
-    this.parentId = null;
-  }
-
-  save(): void {
-    if (!this.name?.trim() || !this.slug?.trim()) return;
-    const payload = {
-      tenantId: this.tenantId,
-      name: this.name.trim(),
-      slug: this.slug.trim(),
-      parentId: this.parentId ?? null,
-    };
-
-    this.isLoading = true;
-    const req$ = this.editingId
-      ? this._svc.updateCategory({ id: this.editingId, ...payload })
-      : this._svc.createCategory(payload);
-
-    req$.subscribe({
-      next: () => {
-        this.resetForm();
-        this.load();
-      },
-      error: () => {
-        this.isLoading = false;
-      },
+  #flatten(nodes: PageCategoryTreeNode[], level: number): void {
+    nodes.forEach((n) => {
+      this.flat.push({
+        id: n.id,
+        tenantId: n.tenantId,
+        name: n.name,
+        slug: n.slug,
+        parentId: n.parentId ?? null,
+        level,
+      });
+      if (n.children && n.children.length > 0) {
+        this.#flatten(n.children, level + 1);
+      }
     });
   }
 
-  remove(cat: PageCategoryDto): void {
-    this.isLoading = true;
-    this._svc.deleteCategory(cat.id).subscribe({
-      next: () => this.load(),
-      error: () => (this.isLoading = false),
-    });
+  #getSiblings(parentId: number | null): Array<{ id: number }> {
+    if (parentId == null) {
+      return this.tree.map((n) => ({ id: n.id }));
+    }
+    const parent = this.#findNode(this.tree, parentId);
+    if (!parent) return [];
+    return (parent.children || []).map((n) => ({ id: n.id }));
   }
+
+  #findNode(list: PageCategoryTreeNode[], id: number): PageCategoryTreeNode | null {
+    for (const n of list) {
+      if (n.id === id) return n;
+      if (n.children && n.children.length > 0) {
+        const found = this.#findNode(n.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  hasChild = (_: number, node: PageCategoryTreeNode): boolean =>
+    Array.isArray(node.children) && node.children.length > 0;
 
   onSearchChange(q: string): void {
-    this.search = q || '';
-    this.applyFilter();
+    this.search = (q || '').trim().toLowerCase();
+    this.#applyFilter();
+  }
+
+  toggleDetails(id: number): void {
+    if (this.selectedCategoryId === id) {
+      this.selectedCategoryId = null;
+      this.selected = null;
+      this.form.reset({ name: '', slug: '', parentId: null });
+      this.#cdr.markForCheck();
+      return;
+    }
+    this.selectedCategoryId = id;
+    const cat = this.flat.find((x) => x.id === id);
+    if (cat) {
+      this.select({
+        id: cat.id,
+        tenantId: this.tenantId!,
+        name: cat.name,
+        slug: cat.slug,
+        parentId: cat.parentId,
+      } as any);
+    }
+    this.#cdr.markForCheck();
+  }
+
+  updateSelectedCategory(): void {
+    if (!this.selected || !this.form?.valid || !this.tenantId) return;
+    const v = this.form.value;
+    const payload: UpdateCategoryRequest = {
+      id: this.selected.id,
+      tenantId: this.tenantId,
+      name: String(v.name || '').trim(),
+      slug: String(v.slug || '').trim(),
+      parentId: v.parentId ?? null,
+    };
+    this._svc
+      .updateCategory(payload)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error updating selected category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
+  }
+
+  // Event handlers for child components
+  onCategoryUpdate(payload: UpdateCategoryRequest): void {
+    this._svc
+      .updateCategory(payload)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error updating category from form:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
+  }
+
+  onFormClose(): void {
+    this.toggleDetails(0); // Close the details
+  }
+
+  #applyFilter(): void {
+    const q = this.search;
+    const base = this.flat.map((f) => ({
+      id: f.id,
+      name: f.name,
+      slug: f.slug,
+      level: f.level,
+      parentId: f.parentId,
+    }));
+    this.filtered = !q
+      ? base
+      : base.filter((c) => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q));
+  }
+
+  #buildForm(cat?: PageCategoryDto): void {
+    this.form = this.#fb.group({
+      name: [cat?.name || '', [Validators.required]],
+      slug: [cat?.slug || '', [Validators.required]],
+      parentId: [cat?.parentId ?? null],
+    });
+  }
+
+  #buildParentOptions(skipId: number | null): void {
+    const opts: SpaSelectOption<number>[] = [];
+    const build = (list: typeof this.tree, prefix: string = ''): void => {
+      list.forEach((n) => {
+        if (n.id !== skipId) {
+          const label = prefix ? `${prefix} / ${n.name}` : n.name;
+          opts.push({ value: n.id, label });
+          if (n.children && n.children.length > 0) {
+            build(n.children, label);
+          }
+        }
+      });
+    };
+    build(this.tree);
+    this.parentOptions = opts;
+  }
+
+  ngOnDestroy(): void {
+    this.#destroy$.next();
+    this.#destroy$.complete();
   }
 }
 

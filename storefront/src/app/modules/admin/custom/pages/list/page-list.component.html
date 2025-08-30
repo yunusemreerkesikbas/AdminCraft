@@ -142,7 +142,7 @@
                                                             [disabled]="true"
                                                         ></spa-input>
                                                     </div>
-                                                    <!-- Category -->
+                                                    <!-- Category selector -->
                                                     <div
                                                         class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
                                                     >
@@ -151,6 +151,7 @@
                                                                 'admin.pageBuilder.fields.category'
                                                                     | transloco
                                                             "
+                                                            [placeholder]="'—'"
                                                             [options]="
                                                                 categories
                                                             "

@@ -83,6 +83,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:rectangle-stack',
                 link: '/__TENANT__/pages',
             },
+            {
+                id: 'apps.custom.pagebuilder.categories',
+                title: 'Page Categories',
+                type: 'basic',
+                icon: 'heroicons_outline:folder',
+                link: '/__TENANT__/pages/categories',
+            },
         ],
     },
 ];

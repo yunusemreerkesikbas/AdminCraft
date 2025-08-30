@@ -382,7 +382,75 @@ hierarchical categories, and publish with SEO.
 - Week 2: Angular builder UI (sections/blocks, preview, categories).
 - Half week: SEO/i18n polish, tests, docs, sample pages.
 
-#### **Sprint 5: Media Management + File Localization (1.5 weeks)**
+#### **Sprint 5: Page Categories + Builder Integration (Unlimited Depth, 1.5 weeks)**
+
+**Goal:** Support unlimited-depth Page Category hierarchy (Materialized
+Path) and integrate category selection into the Page Builder form.
+Navbar/menu is out of scope.
+
+**Decisions:**
+
+- Child category optional
+- Page must have a category (required)
+- Page stores a single `categoryId`; the selected node is the category
+- On reads, if translation is missing, fallback to tenant default
+
+**Scope:**
+
+- **Domain Layer:**
+  - Entities: `PageCategory` (self-ref `parentId`, `path` VARCHAR,
+    `level` INT, `sortOrder`, `status`), `PageCategoryTranslation`
+    (language, name, slug, description)
+  - Relation: `Page` → `PageCategory` (ManyToOne LAZY)
+  - Constraints: unique `(tenantId,parentId,language,slug)`, prevent cycles
+
+- **Application Layer:**
+  - Service: `CategoryService`
+  - Use cases: CRUD, reorder, getTree(lang, rootId?, depth?),
+    listChildren(parentId, lang), move(id, newParentId), slug uniqueness,
+    compute path/level, i18n fallback in reads
+
+- **Infrastructure Layer:**
+  - Repositories: `PageCategoryRepository`,
+    `PageCategoryTranslationRepository` (JPQL + `@EntityGraph`)
+  - Migrations: add columns `page_categories.path`, `page_categories.level`;
+    create `page_category_translations`; add `pages.category_id` FK
+  - Indices: tenant, parent, language, slug, sortOrder, path (prefix)
+
+- **Presentation Layer (REST):**
+  - `PageCategoryController`:
+    - `GET /api/page-categories/tree?lang=tr&rootId=&depth=`
+    - `GET /api/page-categories/children?parentId=&lang=tr`
+    - `POST /api/page-categories`
+    - `PUT /api/page-categories/{id}`
+    - `PUT /api/page-categories/{id}/move` (re-parent + path update)
+    - `DELETE /api/page-categories/{id}`
+    - `PUT /api/page-categories/reorder`
+  - `PageController`: `categoryId` required on create/update
+  - Responses: `ApiResponse`; errors via `GlobalExceptionHandler`
+
+- **Admin Frontend (Angular 19):**
+  - Components: `<spa-page-categories>` (lazy tree CRUD, reorder, move),
+    `<spa-page-category-select>` (cascading pickers or tree selector)
+  - Integration: inside `<spa-page-builder-form>`; send `categoryId`
+  - Conventions: `take(1)`, `forNext`, `#` for private methods
+
+- **Migration Plan:**
+  1) Add `path` and `level` columns
+  2) Backfill existing categories: root `path='/' + slug`, `level=1`
+  3) DFS compute `path/level` for all descendants
+  4) Refactor service flows (create/update/move) to recalc path/level
+
+**Acceptance Criteria:**
+
+- Unlimited-depth category tree CRUD, reorder, and move work
+- `tree`/`children` endpoints return requested language or fallback
+- Page create/update requires `categoryId`
+- All endpoints return `ApiResponse`; errors localized
+
+**Out of Scope:** Navbar/menu generation and rendering
+
+#### **Sprint 6: Media Management + File Localization (1.5 weeks)**
 
 **Goal:** File upload and media management with language support
 
