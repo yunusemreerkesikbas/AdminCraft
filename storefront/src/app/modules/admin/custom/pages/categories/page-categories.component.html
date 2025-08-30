@@ -28,9 +28,12 @@
                         <div
                             class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                         >
-                            <div class="truncate font-medium">{{ c.name }}</div>
+                            <div
+                                class="truncate font-medium"
+                                [textContent]="c.name"
+                            ></div>
                             <div class="hidden truncate md:block">
-                                /{{ c.slug }}
+                                /<span [textContent]="c.slug"></span>
                             </div>
                             <div class="hidden sm:block">{{ c.level }}</div>
                             <div class="hidden text-right sm:block">
@@ -65,12 +68,20 @@
                                                     <div
                                                         class="text-2xl font-extrabold tracking-tight"
                                                     >
-                                                        {{ c.name }}
+                                                        <span
+                                                            [textContent]="
+                                                                c.name
+                                                            "
+                                                        ></span>
                                                     </div>
                                                     <div
                                                         class="text-secondary mt-2 text-sm"
                                                     >
-                                                        /{{ c.slug }}
+                                                        /<span
+                                                            [textContent]="
+                                                                c.slug
+                                                            "
+                                                        ></span>
                                                     </div>
                                                 </div>
 
