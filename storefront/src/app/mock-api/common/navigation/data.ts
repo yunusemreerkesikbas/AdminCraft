@@ -47,13 +47,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:users',
                 link: '/__TENANT__/tenants',
             },
-            {
-                id: 'apps.custom.content',
-                title: 'İçerik Yönetimi',
-                type: 'basic',
-                icon: 'heroicons_outline:document-text',
-                link: '/__TENANT__/content',
-            },
+            // Content management removed; use Page Builder instead
             {
                 id: 'apps.custom.media',
                 title: 'Medya Yönetimi',

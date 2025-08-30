@@ -24,12 +24,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     tenantStatsCount: 'tenants/stats/count',
     tenantBySubdomain: 'tenants/subdomain/${subdomain}',
 
-    // ----- CONTENT -----
-    contents: 'contents',
-    contentById: 'contents/${id}',
-    contentPublish: 'contents/${id}/publish',
-    contentArchive: 'contents/${id}/archive',
-    contentTypes: 'content-types',
+    // ----- CONTENT (removed, replaced by Page Builder) -----
 
     // ----- MEDIA -----
     media: 'media',
