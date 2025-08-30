@@ -8,6 +8,8 @@ export const langTR = {
             grid: {
                 title: 'Başlık',
                 name: 'Ad',
+                slug: 'Slug',
+                level: 'Seviye',
                 role: 'Rol',
                 status: 'Durum',
                 language: 'Dil',
@@ -18,6 +20,7 @@ export const langTR = {
                 created: 'Oluşturulma',
                 details: 'Detaylar',
             },
+            noRecords: 'Kayıt bulunamadı',
             status: {
                 active: 'Aktif',
                 inactive: 'Pasif',
@@ -171,10 +174,12 @@ export const langTR = {
             sections: 'Bölümler',
             blocks: 'Bloklar',
             fields: {
+                name: 'Ad',
                 pageTitle: 'Sayfa Başlığı',
                 slug: 'Slug',
                 language: 'Dil',
                 category: 'Kategori',
+                parentCategory: 'Üst Kategori',
                 metaTitle: 'Meta Başlık',
                 metaDescription: 'Meta Açıklama',
                 canonicalUrl: 'Kanonik URL',

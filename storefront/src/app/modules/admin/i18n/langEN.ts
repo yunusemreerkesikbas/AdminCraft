@@ -8,6 +8,8 @@ export const langEN = {
             grid: {
                 title: 'Title',
                 name: 'Name',
+                slug: 'Slug',
+                level: 'Level',
                 role: 'Role',
                 status: 'Status',
                 language: 'Language',
@@ -18,6 +20,7 @@ export const langEN = {
                 created: 'Created',
                 details: 'Details',
             },
+            noRecords: 'No records',
             status: {
                 active: 'Active',
                 inactive: 'Inactive',
@@ -171,10 +174,12 @@ export const langEN = {
             sections: 'Sections',
             blocks: 'Blocks',
             fields: {
+                name: 'Name',
                 pageTitle: 'Page Title',
                 slug: 'Slug',
                 language: 'Language',
                 category: 'Category',
+                parentCategory: 'Parent Category',
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
                 canonicalUrl: 'Canonical URL',
