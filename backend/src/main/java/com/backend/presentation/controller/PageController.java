@@ -7,6 +7,10 @@ import com.backend.presentation.dto.request.CreatePageRequest;
 import com.backend.presentation.dto.request.UpdatePageRequest;
 import com.backend.presentation.dto.response.PageResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityUtil;
+import com.backend.domain.exception.PageNotFoundException;
+import com.backend.domain.exception.PageCannotBePublishedException;
+import com.backend.domain.exception.UnauthorizedOperationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -50,7 +54,7 @@ public class PageController {
       page.setMetaTitle(req.metaTitle());
       page.setMetaDescription(req.metaDescription());
       page.setCanonicalUrl(req.canonicalUrl());
-      page.setCreatedBy(1L);
+      page.setCreatedBy(SecurityUtil.getCurrentUserIdOrThrow());
 
       Page saved = pageService.create(page);
       return ResponseEntity.ok(ApiResponse.success(toResponse(saved)));
@@ -124,7 +128,7 @@ public class PageController {
       existing.setDescriptionHtml(safeHtml);
       // descriptionFormat kaldırıldı (sade HTML/TEXT modeli)
       existing.setFeaturedImage(req.featuredImage());
-      existing.setUpdatedBy(1L);
+      existing.setUpdatedBy(SecurityUtil.getCurrentUserIdOrThrow());
 
       Page updated = pageService.update(existing);
       return ResponseEntity.ok(ApiResponse.success(toResponse(updated)));
@@ -186,7 +190,7 @@ public class PageController {
       @PathVariable @NotNull @Min(1) Long id,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      Page published = pageService.publish(id, 1L);
+      Page published = pageService.publish(id, SecurityUtil.getCurrentUserIdOrThrow());
       return ResponseEntity.ok(ApiResponse.success(toResponse(published)));
     } catch (Exception ex) {
       String msg = messageSource.getMessage("page.publish.error",
@@ -201,7 +205,7 @@ public class PageController {
       @PathVariable @NotNull @Min(1) Long id,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      Page p = pageService.unpublish(id, 1L);
+      Page p = pageService.unpublish(id, SecurityUtil.getCurrentUserIdOrThrow());
       return ResponseEntity.ok(ApiResponse.success(toResponse(p)));
     } catch (Exception ex) {
       String msg = messageSource.getMessage("page.unpublish.error",
@@ -217,7 +221,7 @@ public class PageController {
       @RequestParam @NotNull LocalDateTime when,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      Page p = pageService.schedule(id, when, 1L);
+      Page p = pageService.schedule(id, when, SecurityUtil.getCurrentUserIdOrThrow());
       return ResponseEntity.ok(ApiResponse.success(toResponse(p)));
     } catch (Exception ex) {
       String msg = messageSource.getMessage("page.schedule.error",

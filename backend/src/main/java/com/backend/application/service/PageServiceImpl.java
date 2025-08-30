@@ -3,6 +3,7 @@ package com.backend.application.service;
 import com.backend.domain.entity.Page;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class PageServiceImpl implements PageService {
   @Override
   public Page update(Page page) {
     Page existing = pageRepository.findById(page.getId())
-        .orElseThrow(() -> new IllegalArgumentException("Page not found"));
+        .orElseThrow(() -> new PageNotFoundException(page.getId()));
 
     // Enforce unique slug rule when slug changes
     if (!existing.getSlug().equals(page.getSlug()) &&
@@ -57,7 +58,7 @@ public class PageServiceImpl implements PageService {
   @Override
   public void delete(Long id) {
     if (!pageRepository.existsById(id)) {
-      throw new IllegalArgumentException("Page not found");
+      throw new PageNotFoundException(id);
     }
     pageRepository.deleteById(id);
   }
@@ -95,33 +96,24 @@ public class PageServiceImpl implements PageService {
   @Override
   public Page publish(Long pageId, Long userId) {
     Page page = pageRepository.findById(pageId)
-        .orElseThrow(() -> new IllegalArgumentException("Page not found"));
-    page.setStatus(PageStatus.PUBLISHED);
-    page.setPublishedAt(LocalDateTime.now());
-    page.setUpdatedBy(userId);
+        .orElseThrow(() -> new PageNotFoundException(pageId));
+    page.publish(userId);  // Use domain logic
     return pageRepository.save(page);
   }
 
   @Override
   public Page unpublish(Long pageId, Long userId) {
     Page page = pageRepository.findById(pageId)
-        .orElseThrow(() -> new IllegalArgumentException("Page not found"));
-    page.setStatus(PageStatus.DRAFT);
-    page.setPublishedAt(null);
-    page.setUpdatedBy(userId);
+        .orElseThrow(() -> new PageNotFoundException(pageId));
+    page.unpublish(userId);  // Use domain logic
     return pageRepository.save(page);
   }
 
   @Override
   public Page schedule(Long pageId, LocalDateTime when, Long userId) {
-    if (when.isBefore(LocalDateTime.now())) {
-      throw new IllegalArgumentException("Schedule time cannot be in the past");
-    }
     Page page = pageRepository.findById(pageId)
-        .orElseThrow(() -> new IllegalArgumentException("Page not found"));
-    page.setStatus(PageStatus.SCHEDULED);
-    page.setScheduledAt(when);
-    page.setUpdatedBy(userId);
+        .orElseThrow(() -> new PageNotFoundException(pageId));
+    page.schedule(when, userId);  // Use domain logic
     return pageRepository.save(page);
   }
 

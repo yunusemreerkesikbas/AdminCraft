@@ -2,6 +2,8 @@ package com.backend.domain.entity;
 
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.exception.PageCannotBePublishedException;
+import com.backend.domain.exception.UnauthorizedOperationException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -124,5 +126,109 @@ public class Page {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = LocalDateTime.now();
+  }
+
+  // Business methods
+  
+  /**
+   * Checks if the page can be published
+   * @return true if page can be published
+   */
+  public boolean canBePublished() {
+    return status == PageStatus.DRAFT && 
+           title != null && !title.trim().isEmpty() &&
+           slug != null && !slug.trim().isEmpty();
+  }
+  
+  /**
+   * Publishes the page
+   * @param userId the user performing the operation
+   * @throws PageCannotBePublishedException if page cannot be published
+   */
+  public void publish(Long userId) {
+    if (!canBePublished()) {
+      throw new PageCannotBePublishedException("Page with id " + id + " cannot be published. Status: " + status);
+    }
+    this.status = PageStatus.PUBLISHED;
+    this.publishedAt = LocalDateTime.now();
+    this.updatedBy = userId;
+    this.scheduledAt = null; // Clear any scheduled publication
+  }
+  
+  /**
+   * Unpublishes the page
+   * @param userId the user performing the operation
+   */
+  public void unpublish(Long userId) {
+    if (this.status == PageStatus.PUBLISHED) {
+      this.status = PageStatus.DRAFT;
+      this.publishedAt = null;
+      this.updatedBy = userId;
+      this.scheduledAt = null; // Clear any scheduled publication
+    }
+  }
+  
+  /**
+   * Schedules the page for publication
+   * @param scheduledAt the time to publish
+   * @param userId the user performing the operation
+   * @throws IllegalArgumentException if scheduled time is in the past
+   */
+  public void schedule(LocalDateTime scheduledAt, Long userId) {
+    if (scheduledAt.isBefore(LocalDateTime.now())) {
+      throw new IllegalArgumentException("Cannot schedule publication in the past");
+    }
+    
+    if (!canBePublished()) {
+      throw new PageCannotBePublishedException("Page with id " + id + " cannot be scheduled for publication. Status: " + status);
+    }
+    
+    this.scheduledAt = scheduledAt;
+    this.status = PageStatus.SCHEDULED;
+    this.updatedBy = userId;
+  }
+  
+  /**
+   * Checks if user can edit this page
+   * @param userId the user ID
+   * @param userTenantId the user's tenant ID
+   * @return true if user can edit
+   */
+  public boolean canBeEditedBy(Long userId, Long userTenantId) {
+    return tenantId.equals(userTenantId);
+  }
+  
+  /**
+   * Updates page content with authorization check
+   * @param title new title
+   * @param content new content
+   * @param userId user performing the update
+   * @param userTenantId user's tenant ID
+   * @throws UnauthorizedOperationException if user cannot edit
+   */
+  public void updateContent(String title, String content, Long userId, Long userTenantId) {
+    if (!canBeEditedBy(userId, userTenantId)) {
+      throw new UnauthorizedOperationException("User cannot edit page from different tenant");
+    }
+    
+    this.title = title;
+    this.description = content;
+    this.updatedBy = userId;
+  }
+  
+  /**
+   * Checks if the page is published
+   * @return true if page is published
+   */
+  public boolean isPublished() {
+    return status == PageStatus.PUBLISHED;
+  }
+  
+  /**
+   * Checks if the page is scheduled for publication
+   * @return true if page is scheduled
+   */
+  public boolean isScheduled() {
+    return status == PageStatus.SCHEDULED;
   }
 }

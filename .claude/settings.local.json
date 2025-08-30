@@ -46,8 +46,12 @@
       "Bash(npm test:*)",
       "Bash(npm run lint)",
       "Bash(npm run:*)",
-      "Bash(Y)"
+      "Bash(Y)",
+      "Bash(gh pr checkout:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\c\\Users\\emreerkesikbas\\Documents\\AdminCraft"
+    ]
   }
 }
