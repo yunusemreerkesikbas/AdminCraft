@@ -27,9 +27,6 @@ public class PageServiceImpl implements PageService {
     if (pageRepository.existsByTenantIdAndSlugAndLanguage(page.getTenantId(), page.getSlug(), page.getLanguage())) {
       throw new IllegalArgumentException("Page slug already exists for tenant and language");
     }
-    if (page.getCategoryId() == null) {
-      throw new IllegalArgumentException("Page category is required");
-    }
     return pageRepository.save(page);
   }
 
