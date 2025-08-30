@@ -11,6 +11,8 @@ public interface PageCategoryRepository {
   List<PageCategory> saveAll(Iterable<PageCategory> categories);
 
   Optional<PageCategory> findById(Long id);
+  
+  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
 
   void deleteById(Long id);
 

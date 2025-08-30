@@ -30,6 +30,11 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   }
 
   @Override
+  public Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId) {
+    return jpa.findByIdAndTenantId(id, tenantId);
+  }
+
+  @Override
   public void deleteById(Long id) {
     jpa.deleteById(id);
   }

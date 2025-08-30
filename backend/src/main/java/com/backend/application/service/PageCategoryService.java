@@ -13,6 +13,11 @@ public interface PageCategoryService {
   void delete(Long id);
 
   Optional<PageCategory> findById(Long id);
+  
+  // Güvenlik: Tenant-aware method'lar
+  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
+  
+  void validateParentBelongsToTenant(Long parentId, Long tenantId);
 
   List<PageCategory> listByTenant(Long tenantId);
 
