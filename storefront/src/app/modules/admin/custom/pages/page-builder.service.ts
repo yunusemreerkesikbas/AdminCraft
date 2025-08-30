@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
 import { map, Observable, Subject } from 'rxjs';
 import {
+  ApiResponse,
   CreateCategoryRequest,
   CreatePageRequest,
   PageBlockDto,
@@ -22,10 +23,10 @@ export class PageBuilderService {
   // Pages
   listPages(tenantId: number, language?: 'TR' | 'EN'): Observable<PageDto[]> {
     const qp: Record<string, any> = { tenantId, ...(language && { language }) };
-    return this.#api.get<any>('pages', undefined, qp).pipe(
+    return this.#api.get<ApiResponse<PageDto[]>>('pages', undefined, qp).pipe(
       map((r) => {
         const data = r?.data ?? [];
-        return Array.isArray(data) ? (data as PageDto[]) : [];
+        return Array.isArray(data) ? data : [];
       })
     );
   }

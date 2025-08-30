@@ -7,7 +7,6 @@ export const environment = {
     
     // API Configuration - Use environment variables for deployment flexibility
     apiBaseUrl: (globalThis as any)?.['ENV']?.['API_BASE_URL'] || 
-                process.env?.['API_BASE_URL'] || 
                 '/api', // Fallback for same-domain deployment
     
     apiTimeout: 30000, // 30 seconds timeout

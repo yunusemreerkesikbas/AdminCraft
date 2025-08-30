@@ -74,3 +74,25 @@ export interface PageBlockDto {
   data?: string | null;
 }
 
+// API Response types
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+// Validation schemas
+export interface PageValidationErrors {
+  title?: string;
+  slug?: string;
+  language?: string;
+  tenantId?: string;
+}
+

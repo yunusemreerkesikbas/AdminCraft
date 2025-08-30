@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,11 +9,13 @@ import { Router } from '@angular/router';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { QuillEditorComponent } from 'ngx-quill';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, PageDto } from '../page-builder.types';
+import { ErrorHandlingService } from '../services/error-handling.service';
+import { LoadingStateService, LOADING_OPERATIONS } from '../services/loading-state.service';
+import { PageValidationService } from '../services/page-validation.service';
 
 @Component({
   selector: 'spa-page-list',
@@ -28,7 +31,6 @@ import { CreatePageRequest, PageDto } from '../page-builder.types';
     MatIconModule,
     MatProgressBarModule,
     SpaInputComponent,
-    SpaSearchInputComponent,
     SpaSelectComponent,
     QuillEditorComponent,
     TranslocoModule,
@@ -51,6 +53,8 @@ import { CreatePageRequest, PageDto } from '../page-builder.types';
 ],
 })
 export class PageListComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+  
   isLoading: boolean = false;
   tenantId: number = 1;
   language: 'TR' | 'EN' | '' = '';
@@ -81,6 +85,9 @@ export class PageListComponent implements OnInit, OnDestroy {
     private _svc: PageBuilderService,
     private _tenantCtx: TenantContextService,
     private _router: Router,
+    private _errorHandler: ErrorHandlingService,
+    private _loadingState: LoadingStateService,
+    private _validation: PageValidationService,
     cdr: ChangeDetectorRef,
     fb: FormBuilder
   ) {
@@ -100,35 +107,56 @@ export class PageListComponent implements OnInit, OnDestroy {
     }
     this.load();
 
-    this._tenantCtx.tenant$.subscribe((t) => {
-      if (!t) return;
-      const nextId = t.id;
-      const nextSub = t.subdomain;
-      const changed = nextId !== this.tenantId || nextSub !== this.subdomain;
-      this.tenantId = nextId;
-      this.subdomain = nextSub;
-      if (changed) {
-        this.load();
-      }
-    });
+    this._tenantCtx.tenant$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((t) => {
+        if (!t) return;
+        const nextId = t.id;
+        const nextSub = t.subdomain;
+        const changed = nextId !== this.tenantId || nextSub !== this.subdomain;
+        this.tenantId = nextId;
+        this.subdomain = nextSub;
+        if (changed) {
+          this.load();
+        }
+      });
 
     // Listen header create requests
-    this._svc.createRequested$.subscribe(() => {
-      this.createAndOpen();
-    });
+    this._svc.createRequested$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.createAndOpen();
+      });
   }
 
   load(): void {
+    if (!this.tenantId) {
+      console.error('No tenant ID available for loading pages');
+      return;
+    }
+
+    this._loadingState.startLoading(LOADING_OPERATIONS.LOAD_PAGES);
     this.isLoading = true;
-    this._svc.listPages(this.tenantId, this.language || undefined).subscribe({
-      next: (list) => {
-        this.pages = list;
-        this.applyFilter();
-        this.isLoading = false;
-        this.#cdr.markForCheck();
-      },
-      error: () => (this.isLoading = false),
-    });
+    
+    this._svc.listPages(this.tenantId, this.language || undefined)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => {
+          this.pages = list;
+          this.applyFilter();
+          this.isLoading = false;
+          this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
+          this.#cdr.markForCheck();
+        },
+        error: (error) => {
+          const errorMessage = this._errorHandler.handleError(error);
+          this._errorHandler.logError(error, 'Loading pages');
+          this.flashMessage = 'error';
+          this.isLoading = false;
+          this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
+          this.#cdr.markForCheck();
+        },
+      });
   }
 
   applyFilter(): void {
@@ -169,19 +197,54 @@ export class PageListComponent implements OnInit, OnDestroy {
   buildForm(): void {
     const p = this.selectedPage!;
     this.selectedPageForm = this.#fb.group({
-      title: [p?.title || '', [Validators.required, Validators.maxLength(200)]],
-      slug: [p?.slug || '', [Validators.required, Validators.maxLength(200)]],
+      title: [
+        p?.title || '', 
+        [
+          Validators.required, 
+          PageValidationService.titleValidator()
+        ]
+      ],
+      slug: [
+        p?.slug || '', 
+        [
+          Validators.required, 
+          PageValidationService.slugValidator()
+        ]
+      ],
       // language is read-only in UI
-      language: [{ value: p?.language || 'TR', disabled: true }, [Validators.required]],
-      metaTitle: [p?.metaTitle || ''],
-      metaDescription: [p?.metaDescription || ''],
-      canonicalUrl: [p?.canonicalUrl || ''],
+      language: [
+        { value: p?.language || 'TR', disabled: true }, 
+        [Validators.required]
+      ],
+      metaTitle: [
+        p?.metaTitle || '', 
+        [PageValidationService.metaTitleValidator()]
+      ],
+      metaDescription: [
+        p?.metaDescription || '', 
+        [PageValidationService.metaDescriptionValidator()]
+      ],
+      canonicalUrl: [
+        p?.canonicalUrl || '', 
+        [PageValidationService.canonicalUrlValidator()]
+      ],
       categoryId: [p?.categoryId || null],
-      subtitle: [''],
-      styleClasses: [''],
+      subtitle: [p?.subtitle || ''],
+      styleClasses: [p?.styleClasses || ''],
       description: [p?.description || ''],
       descriptionHtml: [p?.descriptionHtml || null],
     });
+    
+    // Auto-generate slug when title changes
+    this.selectedPageForm.get('title')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(title => {
+        if (title && !this.selectedPageForm.get('slug')?.dirty) {
+          const slug = this._validation.generateSlugFromTitle(title);
+          this.selectedPageForm.get('slug')?.setValue(slug);
+        }
+      });
+    
     // Load categories once when opening
     this.loadCategories();
   }
@@ -206,22 +269,25 @@ export class PageListComponent implements OnInit, OnDestroy {
       featuredImage: this.selectedPage.featuredImage || null,
     } as any;
 
-    this._svc.updatePage(req).subscribe({
-      next: (res) => {
-        // Update local list
-        const idx = this.pages.findIndex((x) => x.id === res.id);
-        if (idx > -1) this.pages[idx] = res;
-        this.applyFilter();
-        this.selectedPage = res;
-        this.buildForm();
-        this.flashMessage = 'success';
-        this.#cdr.markForCheck();
-      },
-      error: () => {
-        this.flashMessage = 'error';
-        this.#cdr.markForCheck();
-      },
-    });
+    this._svc.updatePage(req)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          // Update local list
+          const idx = this.pages.findIndex((x) => x.id === res.id);
+          if (idx > -1) this.pages[idx] = res;
+          this.applyFilter();
+          this.selectedPage = res;
+          this.buildForm();
+          this.flashMessage = 'success';
+          this.#cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Error updating page:', error);
+          this.flashMessage = 'error';
+          this.#cdr.markForCheck();
+        },
+      });
   }
 
   publishSelected(): void {
@@ -284,7 +350,10 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   private createAndOpen(): void {
     const payload: CreatePageRequest = {
