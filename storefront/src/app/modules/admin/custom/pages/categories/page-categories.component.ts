@@ -6,6 +6,7 @@ import {
   Component,
   OnDestroy,
   OnInit,
+  inject,
 } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +17,7 @@ import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { Subject, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
 import {
@@ -65,6 +67,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   #cdr: ChangeDetectorRef;
   #fb: FormBuilder;
   #destroy$ = new Subject<void>();
+  #notify = inject(NotificationService);
 
   tenantId?: number;
   language: 'TR' | 'EN' | '' = '';
@@ -180,7 +183,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .createCategory(payload)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
-        next: () => this.loadTree(),
+        next: () => {
+          this.#notify.success('admin.pageBuilder.messages.categoryCreated');
+          this.loadTree();
+        },
         error: (error) => {
           console.error('Error creating category:', error);
           this._errorHandler.handleError(error);
@@ -207,7 +213,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .updateCategory(payload)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
-        next: () => this.loadTree(),
+        next: () => {
+          this.#notify.success('admin.pageBuilder.messages.categoryUpdated');
+          this.loadTree();
+        },
         error: (error) => {
           console.error('Error updating category:', error);
           this._errorHandler.handleError(error);
@@ -221,7 +230,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .deleteCategory(node.id)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
-        next: () => this.loadTree(),
+        next: () => {
+          this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
+          this.loadTree();
+        },
         error: (error) => {
           console.error('Error deleting category:', error);
           this._errorHandler.handleError(error);
@@ -235,7 +247,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .moveCategory({ id: nodeId, newParentId: null })
       .pipe(takeUntil(this.#destroy$))
       .subscribe({ 
-        next: () => this.loadTree(), 
+        next: () => { 
+          this.#notify.success('admin.common.messages.operationSuccess');
+          this.loadTree();
+        }, 
         error: (error) => {
           console.error('Error moving category to root:', error);
           this._errorHandler.handleError(error);
@@ -254,7 +269,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .reorderCategories({ parentId, orderedIds })
       .pipe(takeUntil(this.#destroy$))
       .subscribe({ 
-        next: () => this.loadTree(), 
+        next: () => { 
+          this.#notify.success('admin.common.messages.operationSuccess');
+          this.loadTree();
+        }, 
         error: (error) => {
           console.error('Error reordering category up:', error);
           this._errorHandler.handleError(error);
@@ -273,7 +291,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .reorderCategories({ parentId, orderedIds })
       .pipe(takeUntil(this.#destroy$))
       .subscribe({ 
-        next: () => this.loadTree(), 
+        next: () => { 
+          this.#notify.success('admin.common.messages.operationSuccess');
+          this.loadTree();
+        }, 
         error: (error) => {
           console.error('Error reordering category down:', error);
           this._errorHandler.handleError(error);

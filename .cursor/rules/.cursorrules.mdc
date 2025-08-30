@@ -435,7 +435,75 @@ Path) and integrate category selection into the Page Builder form.
 
 **Out of Scope:** Navbar/menu generation and rendering
 
-#### **Sprint 6: Media Management + File Localization (1.5 weeks)**
+#### **Sprint 6: Admin Toast Notifications (1 week)**
+
+**Goal:** Implement a dynamic, reusable toast notification system for the
+Admin UI using ngx-toastr with i18n, accessibility, and error handling.
+
+**Decisions:**
+
+- Library: ngx-toastr
+- Config: via `provideToastr` global config
+  (position=top-right, duration=4000ms, maxOpened=3, autoDismiss, newestOnTop)
+- No custom DI tokens for defaults
+- No custom notifications container component
+- Icons: optional (Angular Material `mat-icon` when needed)
+- Error interceptor: Global, rule-based filtering with lightweight dedupe
+- Telemetry: optional; Dev enabled, Prod off by default
+
+**Scope (Admin Frontend - Angular 19):**
+
+- `NotificationService`: typed facade over ngx-toastr using Transloco for i18n
+- `errorToastInterceptor`: global interceptor with rule-based filtering
+  and 2s deduplication per key
+- No per-request suppress mechanism (no headers, no HttpContextToken);
+  suppression is handled by rules (e.g., 401 and validation errors)
+- i18n: accepts raw text or Transloco keys with params
+- Accessibility: ARIA live region, focusable actions, high contrast
+- Conventions: use `forNext`, `take(1)`, private methods with `#`,
+  selectors prefixed with `<spa-*>`
+
+**Features:**
+
+- Positions: top/bottom-left/right/center
+- Variants: success, warning, alert/error, info
+- Per-toast overrides: duration, position, icon, action
+- Max-opened with oldest auto-dismiss; duplicate prevention
+- Optional: close button, tap-to-dismiss, progress bar, sticky
+
+**Error Interceptor Rules:**
+
+- 5xx, network: alert toast; dedupe 2s
+- 401: no toast; trigger auth flow
+- 403: warning/alert toast (permission)
+- 400/422: if validation body present → no toast (UI shows inline);
+  else warning/info toast
+- No header or context based opt-outs (kept simple and local to rules)
+
+**Telemetry:**
+
+- Dev: 100% sampling; Stage: 20%; Prod: 0% (configurable)
+- Structured events: type, position, duration, source, action result
+- In-memory ring buffer (<=100) + `NotificationService.events$`
+- Optional message masking for PII safety
+
+**Deliverables:**
+
+- Installed ngx-toastr and themed styles
+- `NotificationService` and global interceptor wired with filters
+- i18n integration and sample usages (Settings, Builder, Category CRUD)
+- Unit tests for service API and interceptor rules
+- Developer docs: usage, config, a11y, migration notes
+
+**Acceptance Criteria:**
+
+- Toasts render with correct variant, position, and duration
+- i18n keys resolve with parameters; AA contrast respected
+- Max-opened and duplicate-prevent work as configured
+- Interceptor surfaces errors per rules without noise
+- No memory leaks (`take(1)`, async pipe); tests green
+
+#### **Sprint 7: Media Management + File Localization (1.5 weeks)**
 
 **Goal:** File upload and media management with language support
 

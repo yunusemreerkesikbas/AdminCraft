@@ -314,6 +314,12 @@ export const langTR = {
             activateSuccess: 'Tenant başarıyla aktifleştirildi',
             suspendSuccess: 'Tenant başarıyla askıya alındı',
         },
+        
+        errors: {
+            forbidden: 'Bu işlem için yetkiniz yok',
+            server: 'Sunucuda bir hata oluştu. Lütfen tekrar deneyin.',
+            unexpected: 'Beklenmeyen bir hata oluştu',
+        },
     },
     auth: {
         signIn: {
