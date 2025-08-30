@@ -68,6 +68,12 @@ export class PageBuilderService {
     return this.#api.put<any>('pageSchedule', {}, { id }, { when }).pipe(map((r) => r.data));
   }
 
+  deletePage(id: number): Observable<boolean> {
+    return this.#api
+      .delete<any>('pageById', { id })
+      .pipe(map((r) => r.result === 'SUCCESS'));
+  }
+
   // Categories
   listCategories(tenantId: number, parentId?: number): Observable<PageCategoryDto[]> {
     const qp: Record<string, any> = { tenantId, ...(parentId !== undefined && { parentId }) };

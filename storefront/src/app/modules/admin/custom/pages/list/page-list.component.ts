@@ -326,6 +326,31 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
+  deleteSelected(): void {
+    if (!this.selectedPage) return;
+    const id = this.selectedPage.id;
+    this._svc
+      .deletePage(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (ok) => {
+          if (ok) {
+            this.pages = this.pages.filter((x) => x.id !== id);
+            this.applyFilter();
+            this.selectedPageId = null;
+            this.selectedPage = null;
+            this.flashMessage = 'success';
+            this.#cdr.markForCheck();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting page:', error);
+          this.flashMessage = 'error';
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
   create(): void {
     if (!this.title?.trim() || !this.slug?.trim()) return;
     const payload: CreatePageRequest = {

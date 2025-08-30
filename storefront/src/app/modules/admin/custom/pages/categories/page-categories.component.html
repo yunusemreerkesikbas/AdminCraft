@@ -152,6 +152,18 @@
                                                         }}
                                                     </button>
                                                     <button
+                                                        mat-stroked-button
+                                                        color="warn"
+                                                        (click)="
+                                                            deleteSelectedCategory()
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.delete'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
                                                         mat-button
                                                         (click)="
                                                             toggleDetails(0)

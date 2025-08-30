@@ -231,6 +231,28 @@ public class PageController {
     }
   }
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<ApiResponse<Void>> delete(
+      @PathVariable @NotNull @Min(1) Long id,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      pageService.delete(id);
+      String msg = messageSource.getMessage("page.delete.success",
+          null, Locale.forLanguageTag(lang));
+      return ResponseEntity.ok(ApiResponse.success(msg, null));
+    } catch (PageNotFoundException ex) {
+      String msg = messageSource.getMessage("page.not.found",
+          new Object[] { id }, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(ApiResponse.error(msg));
+    } catch (Exception ex) {
+      String msg = messageSource.getMessage("page.delete.error",
+          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(msg));
+    }
+  }
+
   private PageResponse toResponse(Page p) {
     return new PageResponse(
         p.getId(),
