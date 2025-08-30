@@ -183,6 +183,7 @@ export const langTR = {
                 metaTitle: 'Meta Başlık',
                 metaDescription: 'Meta Açıklama',
                 canonicalUrl: 'Kanonik URL',
+                styleClasses: 'CSS Sınıfları',
                 sectionType: 'Bölüm Türü',
                 sectionData: 'Bölüm Verisi',
                 blockType: 'Blok Türü',
