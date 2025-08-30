@@ -1,231 +1,335 @@
-<div class="sm:absolute sm:inset-0 flex flex-col flex-auto min-w-0 sm:overflow-hidden bg-card dark:bg-transparent">
-
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
     <!-- Header -->
-    <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-8 px-6 md:px-8 border-b">
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
         <!-- Loader -->
-        <div class="absolute inset-x-0 bottom-0"
-             *ngIf="isLoading">
+        <div class="absolute inset-x-0 bottom-0" *ngIf="isLoading">
             <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
         </div>
         <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">{{ 'admin.users.title' | transloco }}</div>
+        <div class="text-4xl font-extrabold tracking-tight">
+            {{ 'admin.users.title' | transloco }}
+        </div>
         <!-- Actions -->
-        <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
             <!-- Search -->
             <spa-search-input
-                [placeholder]="('admin.users.searchPlaceholder' | transloco)"
+                [placeholder]="'admin.users.searchPlaceholder' | transloco"
                 [ngModel]="searchInputControl.value"
                 (ngModelChange)="searchInputControl.setValue($event)"
-                [styleClasses]="'fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64'"
+                [styleClasses]="
+                    'fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64'
+                "
             ></spa-search-input>
             <!-- Add user button -->
             <button
                 class="ml-4"
                 mat-flat-button
                 [color]="'primary'"
-                (click)="createUser()">
+                (click)="createUser()"
+            >
                 <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">{{ 'admin.users.create' | transloco }}</span>
+                <span class="ml-2 mr-1">{{
+                    'admin.users.create' | transloco
+                }}</span>
             </button>
         </div>
     </div>
 
     <!-- Main -->
     <div class="flex flex-auto overflow-hidden">
-
         <!-- Users list -->
-        <div class="flex flex-col flex-auto sm:mb-18 overflow-hidden sm:overflow-y-auto">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
             <!-- Header -->
-            <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
+            <div
+                class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                matSort
+            >
                 <div></div>
-                <div [mat-sort-header]="'fullName'" class="hidden sm:block">{{ 'admin.common.grid.name' | transloco }}</div>
-                <div [mat-sort-header]="'role'" class="hidden lg:block">{{ 'admin.common.grid.role' | transloco }}</div>
-                <div [mat-sort-header]="'isActive'" class="hidden lg:block">{{ 'admin.common.grid.status' | transloco }}</div>
-                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">{{ 'admin.common.grid.created' | transloco }}</div>
-                <div class="hidden sm:block">{{ 'admin.common.grid.details' | transloco }}</div>
+                <div [mat-sort-header]="'fullName'" class="hidden sm:block">
+                    {{ 'admin.common.grid.name' | transloco }}
+                </div>
+                <div [mat-sort-header]="'role'" class="hidden lg:block">
+                    {{ 'admin.common.grid.role' | transloco }}
+                </div>
+                <div [mat-sort-header]="'isActive'" class="hidden lg:block">
+                    {{ 'admin.common.grid.status' | transloco }}
+                </div>
+                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">
+                    {{ 'admin.common.grid.created' | transloco }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ 'admin.common.grid.details' | transloco }}
+                </div>
             </div>
             <!-- Rows -->
             <ng-container *ngIf="users$ | async as users">
                 <ng-container *ngFor="let user of users; trackBy: trackByFn">
-                    <div class="inventory-grid grid items-center gap-4 py-3 px-6 md:px-8 border-b">
-
+                    <div
+                        class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                    >
                         <!-- Avatar -->
                         <div class="flex items-center">
-                            <div class="relative flex flex-0 items-center justify-center w-10 h-10 mr-6 rounded-full overflow-hidden border">
-                                <div class="flex items-center justify-center w-full h-full text-xs font-semibold leading-none text-center uppercase"
-                                     [ngClass]="{
-                                        'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': user.isActive,
-                                        'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-50': !user.isActive
-                                     }">
-                                    {{user.fullName.charAt(0)}}{{user.fullName.split(' ')[1]?.charAt(0) || ''}}
+                            <div
+                                class="relative mr-6 flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full border"
+                            >
+                                <div
+                                    class="flex h-full w-full items-center justify-center text-center text-xs font-semibold uppercase leading-none"
+                                    [ngClass]="{
+                                        'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50':
+                                            user.isActive,
+                                        'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-50':
+                                            !user.isActive,
+                                    }"
+                                >
+                                    {{ user.fullName.charAt(0)
+                                    }}{{
+                                        user.fullName
+                                            .split(' ')[1]
+                                            ?.charAt(0) || ''
+                                    }}
                                 </div>
                             </div>
                         </div>
 
                         <!-- Name & email -->
                         <div class="truncate">
-                            <div class="font-medium">{{user.fullName}}</div>
-                            <div class="text-sm text-secondary">{{user.email}}</div>
-                            <div *ngIf="user.tenantName" class="text-xs text-secondary">{{user.tenantName}}</div>
+                            <div class="font-medium">{{ user.fullName }}</div>
+                            <div class="text-secondary text-sm">
+                                {{ user.email }}
+                            </div>
+                            <div
+                                *ngIf="user.tenantName"
+                                class="text-secondary text-xs"
+                            >
+                                {{ user.tenantName }}
+                            </div>
                         </div>
 
                         <!-- Role -->
                         <div class="hidden lg:block">
-                            <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                 [ngClass]="{
-                                    'bg-red-100 text-red-800 dark:bg-red-600 dark:text-red-50': user.role === 'SUPER_ADMIN',
-                                    'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50': user.role === 'TENANT_ADMIN',
-                                    'bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50': user.role === 'EDITOR',
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50': user.role === 'VIEWER'
-                                 }">
-                                {{user.role.replace('_', ' ')}}
+                            <div
+                                class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                [ngClass]="{
+                                    'bg-red-100 text-red-800 dark:bg-red-600 dark:text-red-50':
+                                        user.role === 'SUPER_ADMIN',
+                                    'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50':
+                                        user.role === 'TENANT_ADMIN',
+                                    'bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50':
+                                        user.role === 'EDITOR',
+                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50':
+                                        user.role === 'VIEWER',
+                                }"
+                            >
+                                {{ user.role.replace('_', ' ') }}
                             </div>
                         </div>
 
                         <!-- Status -->
                         <div class="hidden lg:block">
                             <ng-container [ngSwitch]="user.isActive">
-                                <div *ngSwitchCase="true" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50">
-                                    <span class="w-2 h-2 mr-1 rounded-full bg-green-400"></span>
+                                <div
+                                    *ngSwitchCase="true"
+                                    class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-600 dark:text-green-50"
+                                >
+                                    <span
+                                        class="mr-1 h-2 w-2 rounded-full bg-green-400"
+                                    ></span>
                                     Active
                                 </div>
-                                <div *ngSwitchCase="false" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50">
-                                    <span class="w-2 h-2 mr-1 rounded-full bg-gray-400"></span>
+                                <div
+                                    *ngSwitchCase="false"
+                                    class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-600 dark:text-gray-50"
+                                >
+                                    <span
+                                        class="mr-1 h-2 w-2 rounded-full bg-gray-400"
+                                    ></span>
                                     Inactive
                                 </div>
                             </ng-container>
                         </div>
 
                         <!-- Created -->
-                        <div class="hidden sm:block text-sm text-secondary">
-                            {{user.createdAt | date:'MMM dd, y'}}
+                        <div class="text-secondary hidden text-sm sm:block">
+                            {{ user.createdAt | date: 'MMM dd, y' }}
                             <div *ngIf="user.lastLoginAt" class="text-xs">
-                                Last: {{user.lastLoginAt | date:'MMM dd'}}
+                                Last: {{ user.lastLoginAt | date: 'MMM dd' }}
                             </div>
                         </div>
 
                         <!-- Actions -->
                         <div>
                             <button
-                                class="min-h-7 min-w-10 h-7 px-2 leading-6"
+                                class="h-7 min-h-7 min-w-10 px-2 leading-6"
                                 mat-stroked-button
-                                (click)="toggleDetails(user.id)">
+                                (click)="toggleDetails(user.id)"
+                            >
                                 <mat-icon
                                     class="icon-size-5"
-                                    [svgIcon]="selectedUser?.id === user.id ? 'heroicons_solid:chevron-up' : 'heroicons_solid:chevron-down'"></mat-icon>
+                                    [svgIcon]="
+                                        selectedUser?.id === user.id
+                                            ? 'heroicons_solid:chevron-up'
+                                            : 'heroicons_solid:chevron-down'
+                                    "
+                                ></mat-icon>
                             </button>
                         </div>
                     </div>
                     <!-- User details -->
-                    <div class="grid"
-                         *ngIf="selectedUser?.id === user.id">
-                        <ng-container *ngTemplateOutlet="rowDetailsTemplate"></ng-container>
+                    <div class="grid" *ngIf="selectedUser?.id === user.id">
+                        <ng-container
+                            *ngTemplateOutlet="rowDetailsTemplate"
+                        ></ng-container>
                     </div>
                 </ng-container>
             </ng-container>
         </div>
-
     </div>
 
     <!-- Pagination -->
     <mat-paginator
-        class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
-        [ngClass]="{'pointer-events-none': isLoading}"
+        class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
+        [ngClass]="{ 'pointer-events-none': isLoading }"
         [length]="(pagination$ | async)?.length"
         [pageIndex]="(pagination$ | async)?.page"
         [pageSize]="(pagination$ | async)?.size"
         [pageSizeOptions]="[5, 10, 25, 100]"
-        [showFirstLastButtons]="true"></mat-paginator>
-
+        [showFirstLastButtons]="true"
+    ></mat-paginator>
 </div>
 
 <!-- User details template -->
 <ng-template #rowDetailsTemplate>
-    <div class="shadow-lg overflow-hidden">
+    <div class="overflow-hidden shadow-lg">
         <div class="flex border-b">
-
             <!-- Selected user form -->
-            <form
-                class="flex flex-col w-full"
-                [formGroup]="selectedUserForm">
-
-                <div class="flex flex-col sm:flex-row p-8">
-
+            <form class="flex w-full flex-col" [formGroup]="selectedUserForm">
+                <div class="flex flex-col p-8 sm:flex-row">
                     <!-- User details -->
                     <div class="flex flex-auto flex-wrap">
                         <!-- Full Name -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                        <div class="flex w-full flex-col sm:pl-8 lg:w-2/4">
                             <spa-input
                                 [label]="'Full Name'"
                                 [type]="'text'"
-                                [ngModel]="selectedUserForm.get('fullName')?.value"
+                                [ngModel]="
+                                    selectedUserForm.get('fullName')?.value
+                                "
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('fullName')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('fullName')
+                                        ?.setValue($event)
+                                "
                             ></spa-input>
                         </div>
 
                         <!-- Email -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                        <div class="flex w-full flex-col sm:pl-8 lg:w-2/4">
                             <spa-input
                                 [label]="'Email'"
                                 [type]="'email'"
                                 [ngModel]="selectedUserForm.get('email')?.value"
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('email')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('email')
+                                        ?.setValue($event)
+                                "
                             ></spa-input>
                         </div>
 
                         <!-- Password (only for new users) -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8" *ngIf="!selectedUser">
+                        <div
+                            class="flex w-full flex-col sm:pl-8 lg:w-2/4"
+                            *ngIf="!selectedUser"
+                        >
                             <spa-input
                                 [label]="'Password'"
                                 [type]="'password'"
-                                [ngModel]="selectedUserForm.get('password')?.value"
+                                [ngModel]="
+                                    selectedUserForm.get('password')?.value
+                                "
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('password')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('password')
+                                        ?.setValue($event)
+                                "
                             ></spa-input>
                         </div>
 
                         <!-- Role -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                        <div class="flex w-full flex-col sm:pl-8 lg:w-2/4">
                             <spa-select
                                 [label]="'Role'"
                                 [options]="roleOptions"
                                 [ngModel]="selectedUserForm.get('role')?.value"
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('role')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('role')
+                                        ?.setValue($event)
+                                "
                             ></spa-select>
                         </div>
 
                         <!-- Preferred Language -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                        <div class="flex w-full flex-col sm:pl-8 lg:w-2/4">
                             <spa-select
                                 [label]="'Preferred Language'"
                                 [options]="languageOptions"
-                                [ngModel]="selectedUserForm.get('preferredLanguage')?.value"
+                                [ngModel]="
+                                    selectedUserForm.get('preferredLanguage')
+                                        ?.value
+                                "
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('preferredLanguage')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('preferredLanguage')
+                                        ?.setValue($event)
+                                "
                             ></spa-select>
                         </div>
 
                         <!-- Tenant ID -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
+                        <div class="flex w-full flex-col sm:pl-8 lg:w-2/4">
                             <spa-input
                                 [label]="'Tenant ID'"
                                 [type]="'text'"
-                                [ngModel]="selectedUserForm.get('tenantId')?.value"
+                                [ngModel]="
+                                    selectedUserForm.get('tenantId')?.value
+                                "
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('tenantId')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('tenantId')
+                                        ?.setValue($event)
+                                "
                             ></spa-input>
                         </div>
 
                         <!-- Active Status (only for existing users) -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8" *ngIf="selectedUser">
+                        <div
+                            class="flex w-full flex-col sm:pl-8 lg:w-2/4"
+                            *ngIf="selectedUser"
+                        >
                             <spa-toggle
                                 [label]="'Active'"
-                                [ngModel]="selectedUserForm.get('isActive')?.value"
+                                [ngModel]="
+                                    selectedUserForm.get('isActive')?.value
+                                "
                                 [ngModelOptions]="{ standalone: true }"
-                                (ngModelChange)="selectedUserForm.get('isActive')?.setValue($event)"
+                                (ngModelChange)="
+                                    selectedUserForm
+                                        .get('isActive')
+                                        ?.setValue($event)
+                                "
                             ></spa-toggle>
                         </div>
                     </div>
@@ -233,123 +337,166 @@
 
                 <!-- Password Management (only for existing users) -->
                 <div class="border-t p-8" *ngIf="selectedUser">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="mb-4 flex items-center justify-between">
                         <h3 class="text-lg font-medium">Password Management</h3>
                         <div class="flex items-center space-x-2">
                             <button
                                 type="button"
                                 mat-stroked-button
-                                (click)="togglePasswordForm()">
-                                {{showPasswordForm ? 'Cancel' : 'Change Password'}}
+                                (click)="togglePasswordForm()"
+                            >
+                                {{
+                                    showPasswordForm
+                                        ? 'Cancel'
+                                        : 'Change Password'
+                                }}
                             </button>
                             <button
                                 type="button"
                                 mat-stroked-button
                                 [color]="'warn'"
-                                (click)="resetPassword()">
+                                (click)="resetPassword()"
+                            >
                                 Reset Password
                             </button>
                         </div>
                     </div>
 
                     <!-- Change Password Form -->
-                    <form *ngIf="showPasswordForm" [formGroup]="passwordForm" class="flex flex-wrap">
-                        <div class="flex flex-col w-full lg:w-1/3 lg:pr-4">
+                    <form
+                        *ngIf="showPasswordForm"
+                        [formGroup]="passwordForm"
+                        class="flex flex-wrap"
+                    >
+                        <div class="flex w-full flex-col lg:w-1/3 lg:pr-4">
                             <mat-form-field class="w-full">
                                 <mat-label>Current Password</mat-label>
                                 <input
                                     matInput
                                     type="password"
-                                    [formControlName]="'currentPassword'">
-                                <mat-error *ngIf="passwordForm.get('currentPassword')?.hasError('required')">
+                                    [formControlName]="'currentPassword'"
+                                />
+                                <mat-error
+                                    *ngIf="
+                                        passwordForm
+                                            .get('currentPassword')
+                                            ?.hasError('required')
+                                    "
+                                >
                                     Current password is required
                                 </mat-error>
                             </mat-form-field>
                         </div>
-                        <div class="flex flex-col w-full lg:w-1/3 lg:pr-4">
+                        <div class="flex w-full flex-col lg:w-1/3 lg:pr-4">
                             <mat-form-field class="w-full">
                                 <mat-label>New Password</mat-label>
                                 <input
                                     matInput
                                     type="password"
-                                    [formControlName]="'newPassword'">
-                                <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('required')">
+                                    [formControlName]="'newPassword'"
+                                />
+                                <mat-error
+                                    *ngIf="
+                                        passwordForm
+                                            .get('newPassword')
+                                            ?.hasError('required')
+                                    "
+                                >
                                     New password is required
                                 </mat-error>
-                                <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('minlength')">
+                                <mat-error
+                                    *ngIf="
+                                        passwordForm
+                                            .get('newPassword')
+                                            ?.hasError('minlength')
+                                    "
+                                >
                                     Password must be at least 6 characters
                                 </mat-error>
                             </mat-form-field>
                         </div>
-                        <div class="flex flex-col w-full lg:w-1/3">
+                        <div class="flex w-full flex-col lg:w-1/3">
                             <mat-form-field class="w-full">
                                 <mat-label>Confirm Password</mat-label>
                                 <input
                                     matInput
                                     type="password"
-                                    [formControlName]="'confirmPassword'">
-                                <mat-error *ngIf="passwordForm.get('confirmPassword')?.hasError('required')">
+                                    [formControlName]="'confirmPassword'"
+                                />
+                                <mat-error
+                                    *ngIf="
+                                        passwordForm
+                                            .get('confirmPassword')
+                                            ?.hasError('required')
+                                    "
+                                >
                                     Confirm password is required
                                 </mat-error>
-                                <mat-error *ngIf="passwordForm.get('confirmPassword')?.hasError('mismatch')">
+                                <mat-error
+                                    *ngIf="
+                                        passwordForm
+                                            .get('confirmPassword')
+                                            ?.hasError('mismatch')
+                                    "
+                                >
                                     Passwords do not match
                                 </mat-error>
                             </mat-form-field>
                         </div>
-                        <div class="flex justify-end w-full mt-4">
+                        <div class="mt-4 flex w-full justify-end">
                             <button
                                 type="button"
                                 mat-flat-button
                                 [color]="'primary'"
                                 [disabled]="passwordForm.invalid"
-                                (click)="changePassword()">
+                                (click)="changePassword()"
+                            >
                                 Change Password
                             </button>
                         </div>
                     </form>
 
                     <!-- New Password Display -->
-                    <div *ngIf="newPassword" class="mt-4 p-4 bg-green-50 dark:bg-green-900 rounded-lg">
+                    <div
+                        *ngIf="newPassword"
+                        class="mt-4 rounded-lg bg-green-50 p-4 dark:bg-green-900"
+                    >
                         <div class="flex items-center">
-                            <mat-icon class="text-green-500 mr-2">check_circle</mat-icon>
-                            <span class="font-medium">New password generated:</span>
+                            <mat-icon class="mr-2 text-green-500"
+                                >check_circle</mat-icon
+                            >
+                            <span class="font-medium"
+                                >New password generated:</span
+                            >
                         </div>
-                        <div class="mt-2 font-mono text-lg bg-white dark:bg-gray-800 p-2 rounded border">
-                            {{newPassword}}
+                        <div
+                            class="mt-2 rounded border bg-white p-2 font-mono text-lg dark:bg-gray-800"
+                        >
+                            {{ newPassword }}
                         </div>
-                        <div class="mt-2 text-sm text-secondary">
-                            Please save this password securely. It will not be shown again.
+                        <div class="text-secondary mt-2 text-sm">
+                            Please save this password securely. It will not be
+                            shown again.
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between w-full border-t px-8 py-4">
+                <div
+                    class="flex w-full items-center justify-between border-t px-8 py-4"
+                >
+                    <div class="flex items-center"></div>
                     <div class="flex items-center">
                         <div
-                            class="flex items-center mr-4"
-                            *ngIf="flashMessage">
-                            <ng-container *ngIf="flashMessage === 'success'">
-                                <mat-icon
-                                    class="text-green-500"
-                                    [svgIcon]="'heroicons_outline:check'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.users.messages.updated' | transloco }}</span>
-                            </ng-container>
-                            <ng-container *ngIf="flashMessage === 'error'">
-                                <mat-icon
-                                    class="text-red-500"
-                                    [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.users.messages.error' | transloco }}</span>
-                            </ng-container>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="flex items-center mr-4" *ngIf="selectedUser">
+                            class="mr-4 flex items-center"
+                            *ngIf="selectedUser"
+                        >
                             <button
                                 class="mr-2"
                                 *ngIf="!selectedUser.isActive"
                                 mat-stroked-button
                                 [color]="'primary'"
-                                (click)="activateUser()">
+                                (click)="activateUser()"
+                            >
                                 {{ 'admin.users.actions.activate' | transloco }}
                             </button>
                             <button
@@ -357,28 +504,35 @@
                                 *ngIf="selectedUser.isActive"
                                 mat-stroked-button
                                 [color]="'warn'"
-                                (click)="deactivateUser()">
-                                {{ 'admin.users.actions.deactivate' | transloco }}
+                                (click)="deactivateUser()"
+                            >
+                                {{
+                                    'admin.users.actions.deactivate' | transloco
+                                }}
                             </button>
                             <button
                                 class="mr-2"
                                 mat-stroked-button
                                 [color]="'warn'"
-                                (click)="deleteSelectedUser()">
+                                (click)="deleteSelectedUser()"
+                            >
                                 {{ 'admin.users.actions.delete' | transloco }}
                             </button>
                         </div>
                         <button
                             mat-flat-button
                             [color]="'primary'"
-                            (click)="updateSelectedUser()">
-                            {{selectedUser ? ('admin.users.actions.update' | transloco) : ('admin.users.actions.add' | transloco)}}
+                            (click)="updateSelectedUser()"
+                        >
+                            {{
+                                selectedUser
+                                    ? ('admin.users.actions.update' | transloco)
+                                    : ('admin.users.actions.add' | transloco)
+                            }}
                         </button>
                     </div>
                 </div>
-
             </form>
-
         </div>
     </div>
 </ng-template>

@@ -95,6 +95,11 @@ export const langTR = {
                 activateSuccess: '{{item}} başarıyla aktifleştirildi',
                 suspendSuccess: '{{item}} başarıyla askıya alındı',
             },
+            errors: {
+                forbidden: 'Bu işlem için yetkiniz yok',
+                server: 'Sunucuda bir hata oluştu. Lütfen tekrar deneyin.',
+                unexpected: 'Beklenmeyen bir hata oluştu',
+            },
             fields: {
                 name: 'Ad',
                 email: 'E-posta',
@@ -198,6 +203,10 @@ export const langTR = {
                 sectionAdded: 'Bölüm eklendi',
                 blockAdded: 'Blok eklendi',
                 orderSaved: 'Sıralama kaydedildi',
+            },
+            errors: {
+                noTenant: 'Tenant bulunamadı',
+                invalidPageId: 'Geçersiz sayfa ID',
             },
         },
         media: {

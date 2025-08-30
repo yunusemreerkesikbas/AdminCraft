@@ -1,9 +1,9 @@
 import {
     AsyncPipe,
+    CommonModule,
+    DatePipe,
     NgClass,
     NgTemplateOutlet,
-    DatePipe,
-    CommonModule,
 } from '@angular/common';
 import {
     AfterViewInit,
@@ -14,6 +14,7 @@ import {
     OnInit,
     ViewChild,
     ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import {
     FormsModule,
@@ -24,6 +25,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -32,18 +34,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatChipsModule } from '@angular/material/chips';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { SitesService } from '../sites.service';
-import {
-    Site,
-    SitePagination,
-    Language,
-    CreateSiteRequest,
-    UpdateSiteRequest,
-    Menu,
-} from '../sites.types';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { NotificationService } from '@shared/notifications/notification.service';
 import {
     Observable,
     Subject,
@@ -53,7 +47,15 @@ import {
     switchMap,
     takeUntil,
 } from 'rxjs';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { SitesService } from '../sites.service';
+import {
+    CreateSiteRequest,
+    Language,
+    Menu,
+    Site,
+    SitePagination,
+    UpdateSiteRequest,
+} from '../sites.types';
 
 @Component({
     selector: 'sites-list',
@@ -115,7 +117,8 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedSite: Site | null = null;
     selectedSiteForm: UntypedFormGroup;
-    flashMessage: 'success' | 'error' | null = null;
+    
+    #notify = inject(NotificationService);
     
     // Language options
     languages: Language[] = [Language.TR, Language.EN];
@@ -318,11 +321,11 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .subscribe({
                     next: () => {
                         // Show a success message
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                     },
                     error: () => {
                         // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -333,14 +336,14 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                 .subscribe({
                     next: () => {
                         // Show a success message
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         
                         // Close details
                         this.closeDetails();
                     },
                     error: () => {
                         // Show an error message
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -371,9 +374,15 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                 // Delete the site on the server
                 this._sitesService.deleteSite(site.id)
                     .pipe(takeUntil(this._unsubscribeAll))
-                    .subscribe(() => {
-                        // Close the details
-                        this.closeDetails();
+                    .subscribe({
+                        next: () => {
+                            // Close the details
+                            this.closeDetails();
+                            this.#notify.success('admin.common.messages.operationSuccess');
+                        },
+                        error: () => {
+                            this.#notify.alert('admin.common.errors.unexpected');
+                        }
                     });
             }
         });
@@ -390,11 +399,11 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedSite) => {
                         this.selectedSite = updatedSite;
                         this.selectedSiteForm.patchValue(updatedSite);
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -411,11 +420,11 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedSite) => {
                         this.selectedSite = updatedSite;
                         this.selectedSiteForm.patchValue(updatedSite);
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
@@ -432,34 +441,16 @@ export class SitesListComponent implements OnInit, AfterViewInit, OnDestroy {
                     next: (updatedSite) => {
                         this.selectedSite = updatedSite;
                         this.selectedSiteForm.patchValue(updatedSite);
-                        this.showFlashMessage('success');
+                        this.#notify.success('admin.common.messages.operationSuccess');
                         this._changeDetectorRef.markForCheck();
                     },
                     error: () => {
-                        this.showFlashMessage('error');
+                        this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
         }
     }
 
-    /**
-     * Show flash message
-     */
-    showFlashMessage(type: 'success' | 'error'): void {
-        // Show the message
-        this.flashMessage = type;
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-
-        // Hide it after 3 seconds
-        setTimeout(() => {
-            this.flashMessage = null;
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        }, 3000);
-    }
 
     /**
      * Track by function for ngFor loops
