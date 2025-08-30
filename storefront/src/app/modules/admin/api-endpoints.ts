@@ -42,7 +42,25 @@ export const SPA_ENDPOINTS_CONFIG = {
     sitePublish: 'sites/${id}/publish',
     siteActivate: 'sites/${id}/activate',
     siteDeactivate: 'sites/${id}/deactivate',
-    siteMenus: 'sites/${siteId}/menus'
+    siteMenus: 'sites/${siteId}/menus',
+
+    // ----- PAGE BUILDER: PAGES -----
+    pages: 'pages',
+    pageById: 'pages/${id}',
+    pageBySlug: 'pages/slug/${language}/${slug}',
+    pagePublish: 'pages/${id}/publish',
+    pageUnpublish: 'pages/${id}/unpublish',
+    pageSchedule: 'pages/${id}/schedule',
+
+    // ----- PAGE BUILDER: CATEGORIES -----
+    pageCategories: 'page-categories',
+    pageCategoryById: 'page-categories/${id}',
+
+    // ----- PAGE BUILDER: SECTIONS & BLOCKS -----
+    pageBuilderSections: 'page-builder/sections',
+    pageBuilderSectionById: 'page-builder/sections/${id}',
+    pageBuilderBlocks: 'page-builder/blocks',
+    pageBuilderBlockById: 'page-builder/blocks/${id}'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

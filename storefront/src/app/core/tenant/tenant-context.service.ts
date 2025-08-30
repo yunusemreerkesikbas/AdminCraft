@@ -5,6 +5,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
     private readonly storageKey = 'currentTenantSubdomain';
+    private readonly storageKeyId = 'tenantId';
+    private readonly storageKeySub = 'tenantSubdomain';
     private _tenant$ = new BehaviorSubject<Tenant | null>(null);
     private _subdomain$ = new BehaviorSubject<string | null>(null);
 
@@ -24,13 +26,20 @@ export class TenantContextService {
         this._tenant$.next(tenant);
         if (tenant?.subdomain) {
             localStorage.setItem(this.storageKey, tenant.subdomain);
+            // Keep backward and header compatibility
+            localStorage.setItem(this.storageKeySub, tenant.subdomain);
             this._subdomain$.next(tenant.subdomain);
+        }
+        if (tenant?.id) {
+            localStorage.setItem(this.storageKeyId, String(tenant.id));
         }
     }
 
     clear(): void {
         this._tenant$.next(null);
         localStorage.removeItem(this.storageKey);
+        localStorage.removeItem(this.storageKeySub);
+        localStorage.removeItem(this.storageKeyId);
         this._subdomain$.next(null);
     }
 
@@ -40,6 +49,19 @@ export class TenantContextService {
             return current.subdomain;
         }
         return localStorage.getItem(this.storageKey);
+    }
+
+    getCurrentTenantId(): number | null {
+        const current = this._tenant$.getValue();
+        if (current?.id) {
+            return current.id;
+        }
+        const fromStorage = localStorage.getItem(this.storageKeyId);
+        if (fromStorage) {
+            const parsed = Number(fromStorage);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+        return null;
     }
 
     setSubdomain(subdomain: string): void {
