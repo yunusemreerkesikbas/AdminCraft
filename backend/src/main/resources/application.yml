@@ -14,16 +14,16 @@ app:
 spring:
   application:
     name: AdminCraft
-  
+
   profiles:
     active: dev
-  
+
   datasource:
     url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -39,12 +39,13 @@ spring:
     init:
       mode: always
       data-locations: classpath:data.sql
+      schema-locations: classpath:schema-page-builder.sql
 
   messages:
     basename: i18n/messages
     encoding: UTF-8
     cache-duration: 3600
-  
+
   web:
     locale: tr
     locale-resolver: accept-header
@@ -55,54 +56,52 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate: DEBUG
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
 
 ---
 spring:
   config:
     activate:
       on-profile: dev
-  
+
   datasource:
     url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: root
     password: 1234
-    
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-
 ---
 spring:
   config:
     activate:
       on-profile: docker
-  
+
   datasource:
     url: jdbc:mysql://${DB_HOST:mysql-db}:${DB_PORT:3306}/${DB_NAME:admincraft-db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
-  
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-
 ---
 spring:
   config:
     activate:
       on-profile: prod
-  
+
   datasource:
     url: jdbc:mysql://localhost:3306/admincraft_prod?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
-  
+
   jpa:
     hibernate:
-      ddl-auto: update  # Production uses validate for safety
+      ddl-auto: update # Production uses validate for safety
     show-sql: false
-    
+
 logging:
   level:
     com.backend: INFO

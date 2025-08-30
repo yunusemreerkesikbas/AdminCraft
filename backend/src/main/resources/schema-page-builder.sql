@@ -1,0 +1,68 @@
+-- Page Builder Schema (idempotent)
+
+-- pages
+CREATE TABLE IF NOT EXISTS pages (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  tenant_id BIGINT NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  slug VARCHAR(200) NOT NULL,
+  status ENUM('DRAFT','PUBLISHED','ARCHIVED','SCHEDULED') NOT NULL DEFAULT 'DRAFT',
+  language ENUM('TR','EN') NOT NULL,
+  category_id BIGINT NULL,
+  meta_title VARCHAR(60) NULL,
+  meta_description VARCHAR(160) NULL,
+  canonical_url VARCHAR(255) NULL,
+  subtitle VARCHAR(200) NULL,
+  style_classes VARCHAR(255) NULL,
+  description LONGTEXT NULL,
+  description_html LONGTEXT NULL,
+  featured_image VARCHAR(500) NULL,
+  published_at TIMESTAMP NULL,
+  scheduled_at TIMESTAMP NULL,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by BIGINT NOT NULL,
+  updated_by BIGINT NULL,
+  CONSTRAINT uk_page_slug_tenant_lang UNIQUE (tenant_id, slug, language),
+  INDEX idx_page_tenant (tenant_id),
+  INDEX idx_page_slug (slug),
+  INDEX idx_page_status (status),
+  INDEX idx_page_language (language),
+  INDEX idx_page_published_at (published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- page_categories
+CREATE TABLE IF NOT EXISTS page_categories (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  tenant_id BIGINT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(150) NOT NULL,
+  parent_id BIGINT NULL,
+  CONSTRAINT uk_page_category_slug_tenant UNIQUE (tenant_id, slug),
+  INDEX idx_page_category_tenant (tenant_id),
+  INDEX idx_page_category_parent (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- page_sections
+CREATE TABLE IF NOT EXISTS page_sections (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  page_id BIGINT NOT NULL,
+  type VARCHAR(50) NULL,
+  display_order INT DEFAULT 0,
+  data TEXT NULL,
+  INDEX idx_page_section_page (page_id),
+  INDEX idx_page_section_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- page_blocks
+CREATE TABLE IF NOT EXISTS page_blocks (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  section_id BIGINT NOT NULL,
+  type VARCHAR(50) NULL,
+  display_order INT DEFAULT 0,
+  data TEXT NULL,
+  INDEX idx_page_block_section (section_id),
+  INDEX idx_page_block_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
