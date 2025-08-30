@@ -29,6 +29,23 @@ public class PageCategoryController {
   private final PageCategoryService categoryService;
   private final MessageSource messageSource;
 
+  @GetMapping("/tree")
+  public ResponseEntity<ApiResponse<List<com.backend.presentation.dto.response.PageCategoryDto>>> tree(
+      @RequestParam @NotNull Long tenantId,
+      @RequestParam(required = false) Long rootId,
+      @RequestParam(required = false) Integer depth,
+      @RequestParam(required = false, defaultValue = "tr") String lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String headerLang) {
+    try {
+      var list = categoryService.getTree(tenantId, lang, rootId, depth);
+      return ResponseEntity.ok(ApiResponse.success(list));
+    } catch (Exception ex) {
+      String msg = messageSource.getMessage("page.category.tree.error",
+          new Object[] { ex.getMessage() }, Locale.forLanguageTag(headerLang));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
+    }
+  }
+
   @PostMapping
   public ResponseEntity<ApiResponse<PageCategory>> create(
       @Valid @RequestBody com.backend.presentation.dto.request.CreatePageCategoryRequest req,
@@ -39,6 +56,7 @@ public class PageCategoryController {
       category.setName(req.name());
       category.setSlug(req.slug());
       category.setParentId(req.parentId());
+      category.setSortOrder(req.sortOrder());
       PageCategory saved = categoryService.create(category);
       return ResponseEntity.ok(ApiResponse.success(saved));
     } catch (Exception ex) {
@@ -59,6 +77,7 @@ public class PageCategoryController {
       category.setName(req.name());
       category.setSlug(req.slug());
       category.setParentId(req.parentId());
+      category.setSortOrder(req.sortOrder());
       PageCategory updated = categoryService.update(category);
       return ResponseEntity.ok(ApiResponse.success(updated));
     } catch (Exception ex) {
@@ -101,6 +120,55 @@ public class PageCategoryController {
       String msg = messageSource.getMessage("page.category.list.error",
           new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
+    }
+  }
+
+  @GetMapping("/children")
+  public ResponseEntity<ApiResponse<List<com.backend.presentation.dto.response.PageCategoryDto>>> listChildren(
+      @RequestParam @NotNull Long tenantId,
+      @RequestParam(required = false) Long parentId,
+      @RequestParam(required = false, defaultValue = "tr") String lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String headerLang) {
+    try {
+      var list = categoryService.listChildrenLocalized(tenantId, parentId, lang);
+      return ResponseEntity.ok(ApiResponse.success(list));
+    } catch (Exception ex) {
+      String msg = messageSource.getMessage("page.category.children.error",
+          new Object[] { ex.getMessage() }, Locale.forLanguageTag(headerLang));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
+    }
+  }
+
+  @PutMapping("/{id}/move")
+  public ResponseEntity<ApiResponse<Void>> move(
+      @PathVariable @NotNull @Min(1) Long id,
+      @Valid @RequestBody com.backend.presentation.dto.request.MovePageCategoryRequest req,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      categoryService.move(req.tenantId(), id, req.newParentId());
+      String msg = messageSource.getMessage("page.category.move.success",
+          null, Locale.forLanguageTag(lang));
+      return ResponseEntity.ok(ApiResponse.success(msg, null));
+    } catch (Exception ex) {
+      String msg = messageSource.getMessage("page.category.move.error",
+          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
+    }
+  }
+
+  @PutMapping("/reorder")
+  public ResponseEntity<ApiResponse<Void>> reorder(
+      @Valid @RequestBody com.backend.presentation.dto.request.ReorderPageCategoriesRequest req,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      categoryService.reorder(req.tenantId(), req.parentId(), req.orderedIds());
+      String msg = messageSource.getMessage("page.category.reorder.success",
+          null, Locale.forLanguageTag(lang));
+      return ResponseEntity.ok(ApiResponse.success(msg, null));
+    } catch (Exception ex) {
+      String msg = messageSource.getMessage("page.category.reorder.error",
+          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
     }
   }
 

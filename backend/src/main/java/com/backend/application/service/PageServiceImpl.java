@@ -27,6 +27,9 @@ public class PageServiceImpl implements PageService {
     if (pageRepository.existsByTenantIdAndSlugAndLanguage(page.getTenantId(), page.getSlug(), page.getLanguage())) {
       throw new IllegalArgumentException("Page slug already exists for tenant and language");
     }
+    if (page.getCategoryId() == null) {
+      throw new IllegalArgumentException("Page category is required");
+    }
     return pageRepository.save(page);
   }
 
@@ -97,7 +100,7 @@ public class PageServiceImpl implements PageService {
   public Page publish(Long pageId, Long userId) {
     Page page = pageRepository.findById(pageId)
         .orElseThrow(() -> new PageNotFoundException(pageId));
-    page.publish(userId);  // Use domain logic
+    page.publish(userId); // Use domain logic
     return pageRepository.save(page);
   }
 
@@ -105,7 +108,7 @@ public class PageServiceImpl implements PageService {
   public Page unpublish(Long pageId, Long userId) {
     Page page = pageRepository.findById(pageId)
         .orElseThrow(() -> new PageNotFoundException(pageId));
-    page.unpublish(userId);  // Use domain logic
+    page.unpublish(userId); // Use domain logic
     return pageRepository.save(page);
   }
 
@@ -113,7 +116,7 @@ public class PageServiceImpl implements PageService {
   public Page schedule(Long pageId, LocalDateTime when, Long userId) {
     Page page = pageRepository.findById(pageId)
         .orElseThrow(() -> new PageNotFoundException(pageId));
-    page.schedule(when, userId);  // Use domain logic
+    page.schedule(when, userId); // Use domain logic
     return pageRepository.save(page);
   }
 

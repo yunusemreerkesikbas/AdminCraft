@@ -16,4 +16,10 @@ public interface PageCategoryJpaRepository extends JpaRepository<PageCategory, L
   List<PageCategory> findByTenantId(Long tenantId);
 
   List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId);
+
+  List<PageCategory> findByTenantIdAndParentIdOrderBySortOrderAsc(Long tenantId, Long parentId);
+
+  List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId);
+
+  List<PageCategory> findByTenantIdAndPathStartingWith(Long tenantId, String path);
 }

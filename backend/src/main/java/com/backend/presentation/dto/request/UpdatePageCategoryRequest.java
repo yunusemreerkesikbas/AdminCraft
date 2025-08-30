@@ -10,7 +10,8 @@ public record UpdatePageCategoryRequest(
         @NotNull Long tenantId,
         @NotBlank @Size(max = 100) String name,
         @NotBlank @Size(max = 150) @Pattern(regexp = "[a-z0-9-]+", message = "validation.slug.pattern") String slug,
-        Long parentId) {
+        Long parentId,
+        Integer sortOrder) {
     public UpdatePageCategoryRequest {
         if (name != null)
             name = name.trim();

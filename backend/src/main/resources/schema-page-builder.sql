@@ -31,6 +31,21 @@ CREATE TABLE IF NOT EXISTS pages (
   INDEX idx_page_published_at (published_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- FK from pages to page_categories (idempotent)
+SET @fk_exists = (
+  SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'pages'
+    AND CONSTRAINT_NAME = 'fk_pages_category'
+);
+SET @sql_stmt = IF(@fk_exists = 0,
+  'ALTER TABLE pages ADD CONSTRAINT fk_pages_category FOREIGN KEY (category_id) REFERENCES page_categories(id)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql_stmt;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- page_categories
 CREATE TABLE IF NOT EXISTS page_categories (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -38,9 +53,15 @@ CREATE TABLE IF NOT EXISTS page_categories (
   name VARCHAR(100) NOT NULL,
   slug VARCHAR(150) NOT NULL,
   parent_id BIGINT NULL,
+  path VARCHAR(500) NULL,
+  level INT NULL,
+  sort_order INT DEFAULT 0,
+  status ENUM('ACTIVE','INACTIVE') DEFAULT 'ACTIVE',
   CONSTRAINT uk_page_category_slug_tenant UNIQUE (tenant_id, slug),
   INDEX idx_page_category_tenant (tenant_id),
-  INDEX idx_page_category_parent (parent_id)
+  INDEX idx_page_category_parent (parent_id),
+  INDEX idx_page_category_path (path),
+  INDEX idx_page_category_sort (sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- page_sections
@@ -52,6 +73,21 @@ CREATE TABLE IF NOT EXISTS page_sections (
   data TEXT NULL,
   INDEX idx_page_section_page (page_id),
   INDEX idx_page_section_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- page_category_translations
+CREATE TABLE IF NOT EXISTS page_category_translations (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  tenant_id BIGINT NOT NULL,
+  category_id BIGINT NOT NULL,
+  language ENUM('TR','EN') NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(150) NOT NULL,
+  description TEXT NULL,
+  CONSTRAINT uk_page_category_i18n_slug UNIQUE (tenant_id, category_id, language, slug),
+  INDEX idx_cat_tr_tenant (tenant_id),
+  INDEX idx_cat_tr_category (category_id),
+  INDEX idx_cat_tr_lang (language)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- page_blocks

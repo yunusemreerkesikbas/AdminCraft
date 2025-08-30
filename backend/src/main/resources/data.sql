@@ -218,3 +218,30 @@ INSERT IGNORE INTO pages (
   NULL,
   NOW(), NOW(), NOW(), 1
 );
+
+-- =====================================================
+-- 6. INSERT DUMMY PAGE CATEGORIES (Sprint 5)
+-- =====================================================
+
+-- Root categories for tenant 1 (TR default)
+INSERT IGNORE INTO page_categories (tenant_id, name, slug, parent_id, path, level, sort_order, status)
+VALUES
+  (1, 'Kurumsal', 'kurumsal', NULL, '/kurumsal', 1, 0, 'ACTIVE'),
+  (1, 'Hizmetler', 'hizmetler', NULL, '/hizmetler', 1, 1, 'ACTIVE');
+
+-- Children under Kurumsal
+INSERT IGNORE INTO page_categories (tenant_id, name, slug, parent_id, path, level, sort_order, status)
+VALUES
+  (1, 'Hakkimizda', 'hakkimizda', 1, '/kurumsal/hakkimizda', 2, 0, 'ACTIVE'),
+  (1, 'Vizyon-Misyon', 'vizyon-misyon', 1, '/kurumsal/vizyon-misyon', 2, 1, 'ACTIVE');
+
+-- Translations for categories (EN)
+INSERT IGNORE INTO page_category_translations (tenant_id, category_id, language, name, slug, description)
+VALUES
+  (1, 1, 'EN', 'Corporate', 'corporate', 'Corporate root category'),
+  (1, 2, 'EN', 'Services', 'services', 'Services root category'),
+  (1, 3, 'EN', 'About Us', 'about-us', 'About company'),
+  (1, 4, 'EN', 'Vision & Mission', 'vision-mission', 'Vision and Mission');
+
+-- Attach existing sample pages to a valid category (if NULL)
+UPDATE pages SET category_id = 1 WHERE tenant_id = 1 AND category_id IS NULL;

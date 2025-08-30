@@ -58,4 +58,19 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   public List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId) {
     return jpa.findByTenantIdAndParentId(tenantId, parentId);
   }
+
+  @Override
+  public List<PageCategory> findByTenantIdAndParentIdOrderBySortOrderAsc(Long tenantId, Long parentId) {
+    return jpa.findByTenantIdAndParentIdOrderBySortOrderAsc(tenantId, parentId);
+  }
+
+  @Override
+  public List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId) {
+    return jpa.findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(tenantId);
+  }
+
+  @Override
+  public List<PageCategory> findByTenantIdAndPathStartingWith(Long tenantId, String path) {
+    return jpa.findByTenantIdAndPathStartingWith(tenantId, path);
+  }
 }
