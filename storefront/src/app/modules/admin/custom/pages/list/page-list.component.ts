@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,7 @@ import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { QuillEditorComponent } from 'ngx-quill';
 import { Subject, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
@@ -54,6 +55,7 @@ import { PageValidationService } from '../services/page-validation.service';
 })
 export class PageListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
+  #notify = inject(NotificationService);
   
   isLoading: boolean = false;
   tenantId: number = 1;
@@ -280,6 +282,7 @@ export class PageListComponent implements OnInit, OnDestroy {
           this.selectedPage = res;
           this.buildForm();
           this.flashMessage = 'success';
+          this.#notify.success('admin.pageBuilder.messages.pageUpdated');
           this.#cdr.markForCheck();
         },
         error: (error) => {
@@ -299,6 +302,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.selectedPage = res;
         this.applyFilter();
         this.flashMessage = 'success';
+        this.#notify.success('admin.common.messages.operationSuccess');
         this.#cdr.markForCheck();
       },
       error: () => {
@@ -317,6 +321,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.selectedPage = res;
         this.applyFilter();
         this.flashMessage = 'success';
+        this.#notify.success('admin.common.messages.operationSuccess');
         this.#cdr.markForCheck();
       },
       error: () => {
@@ -340,6 +345,7 @@ export class PageListComponent implements OnInit, OnDestroy {
             this.selectedPageId = null;
             this.selectedPage = null;
             this.flashMessage = 'success';
+            this.#notify.success('admin.common.messages.operationSuccess');
             this.#cdr.markForCheck();
           }
         },
@@ -366,6 +372,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.slug = '';
         this.createLanguage = 'TR';
         this.isLoading = false;
+        this.#notify.success('admin.pageBuilder.messages.pageCreated');
         // navigate to sections editor
         const sub = this._tenantCtx.getCurrentSubdomain() || 'default';
         this._router.navigate([`/${sub}/pages/${p.id}`]);

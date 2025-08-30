@@ -314,6 +314,12 @@ export const langEN = {
             activateSuccess: 'Tenant successfully activated',
             suspendSuccess: 'Tenant successfully suspended',
         },
+        
+        errors: {
+            forbidden: 'You do not have permission for this action',
+            server: 'A server error occurred. Please try again.',
+            unexpected: 'An unexpected error occurred',
+        },
     },
     auth: {
         signIn: {

@@ -12,19 +12,33 @@ import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
-import { provideAuth } from 'app/core/auth/auth.provider';
-import { provideIcons } from 'app/core/icons/icons.provider';
-import { MockApiService } from 'app/mock-api';
-import { firstValueFrom } from 'rxjs';
-import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
-import { TranslationService } from 'app/core/i18n/translation.service';
+import { provideAuth } from 'app/core/auth/auth.provider';
+import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
 import { SupportedLanguage } from 'app/core/i18n/translation.types';
+import { provideIcons } from 'app/core/icons/icons.provider';
+import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
+import { MockApiService } from 'app/mock-api';
+import { provideToastr } from 'ngx-toastr';
 
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
-        provideHttpClient(withInterceptors([authInterceptor, tenantInterceptor])),
+        provideToastr({
+            positionClass: 'toast-top-right',
+            timeOut: 4000,
+            closeButton: true,
+            progressBar: true,
+            maxOpened: 3,
+            autoDismiss: true,
+            newestOnTop: true,
+            tapToDismiss: true,
+        }),
+        provideHttpClient(withInterceptors([
+            authInterceptor,
+            tenantInterceptor,
+            errorToastInterceptor
+        ])),
         provideRouter(
             appRoutes,
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
