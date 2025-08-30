@@ -371,6 +371,30 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       });
   }
 
+  deleteSelectedCategory(): void {
+    if (!this.selected) return;
+    const id = this.selected.id;
+    this._svc
+      .deleteCategory(id)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: (ok) => {
+          if (ok) {
+            this.loadTree();
+            this.selectedCategoryId = null;
+            this.selected = null;
+            this.form.reset({ name: '', slug: '', parentId: null });
+            this.#cdr.markForCheck();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting selected category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
   // Event handlers for child components
   onCategoryUpdate(payload: UpdateCategoryRequest): void {
     this._svc

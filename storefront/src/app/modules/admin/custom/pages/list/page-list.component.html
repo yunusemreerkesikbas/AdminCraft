@@ -267,6 +267,18 @@
                                                     </a>
                                                     <button
                                                         mat-stroked-button
+                                                        color="warn"
+                                                        (click)="
+                                                            deleteSelected()
+                                                        "
+                                                    >
+                                                        {{
+                                                            'admin.common.actions.delete'
+                                                                | transloco
+                                                        }}
+                                                    </button>
+                                                    <button
+                                                        mat-stroked-button
                                                         (click)="
                                                             updateSelectedPage()
                                                         "
