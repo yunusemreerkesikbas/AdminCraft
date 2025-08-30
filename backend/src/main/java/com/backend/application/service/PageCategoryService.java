@@ -13,8 +13,24 @@ public interface PageCategoryService {
   void delete(Long id);
 
   Optional<PageCategory> findById(Long id);
+  
+  // Güvenlik: Tenant-aware method'lar
+  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
+  
+  void validateParentBelongsToTenant(Long parentId, Long tenantId);
 
   List<PageCategory> listByTenant(Long tenantId);
 
   List<PageCategory> listChildren(Long tenantId, Long parentId);
+
+  // New Sprint 5 operations (localized)
+  List<com.backend.presentation.dto.response.PageCategoryDto> getTree(Long tenantId, String languageCode, Long rootId,
+      Integer depth);
+
+  void move(Long tenantId, Long categoryId, Long newParentId);
+
+  void reorder(Long tenantId, Long parentId, List<Long> orderedIds);
+
+  List<com.backend.presentation.dto.response.PageCategoryDto> listChildrenLocalized(Long tenantId, Long parentId,
+      String languageCode);
 }

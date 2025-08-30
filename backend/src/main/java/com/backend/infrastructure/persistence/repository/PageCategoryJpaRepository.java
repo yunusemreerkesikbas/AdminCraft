@@ -12,8 +12,16 @@ public interface PageCategoryJpaRepository extends JpaRepository<PageCategory, L
   boolean existsByTenantIdAndSlug(Long tenantId, String slug);
 
   Optional<PageCategory> findByTenantIdAndSlug(Long tenantId, String slug);
+  
+  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
 
   List<PageCategory> findByTenantId(Long tenantId);
 
   List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId);
+
+  List<PageCategory> findByTenantIdAndParentIdOrderBySortOrderAsc(Long tenantId, Long parentId);
+
+  List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId);
+
+  List<PageCategory> findByTenantIdAndPathStartingWith(Long tenantId, String path);
 }

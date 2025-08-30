@@ -28,12 +28,14 @@
 ## 🌐 Multi-Language Architecture
 
 ### **Language Support Strategy:**
+
 - **Backend:** Spring Boot i18n (MessageSource)
 - **Frontend Admin:** Angular i18n (@angular/localize)
 - **Site Content:** Database-level multi-language support
 - **Default Languages:** Turkish (tr), English (en)
 
 ### **Implementation Levels:**
+
 1. **System Messages:** Error messages, validation messages, UI labels
 2. **Content Management:** Multi-language content creation
 3. **Site Publishing:** Language-specific site rendering
@@ -99,9 +101,11 @@ src/main/java/com/sitecms/
 ### 🏁 **PHASE 1: MVP FOUNDATION (8-10 weeks)**
 
 #### **Sprint 1: Architecture Foundation + i18n Setup (2 weeks)**
+
 **Goal:** Clean Architecture foundation with multi-language infrastructure
 
 **Infrastructure Layer:**
+
 - [ ] Spring Boot 3.5.3 project setup with Clean Architecture structure
 - [ ] Multi-tenant database configuration (database per tenant)
 - [ ] JPA entities with multi-language support
@@ -109,18 +113,21 @@ src/main/java/com/sitecms/
 - [ ] Database migration scripts
 
 **Domain Layer:**
+
 - [ ] Core domain entities (Tenant, Content, User, MediaFile)
 - [ ] Domain enums (TenantStatus, ContentStatus, UserRole, Language)
 - [ ] Business exceptions
 - [ ] Repository interfaces
 
 **i18n Foundation:**
+
 - [ ] Backend message bundles (messages_tr.properties, messages_en.properties)
 - [ ] Language detection middleware
 - [ ] Multi-language validation messages
 - [ ] Date/time localization
 
 **Development Environment:**
+
 - [ ] Docker setup with multi-language support
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] Environment configuration
@@ -128,9 +135,11 @@ src/main/java/com/sitecms/
 **Output:** Clean Architecture foundation with i18n ready
 
 #### **Sprint 2: Tenant Management + Multi-Language Admin (2 weeks)**
+
 **Goal:** Complete tenant lifecycle with localized admin interface
 
 **Domain Layer:**
+
 ```java
 @Entity
 @Table(name = "tenants")
@@ -166,23 +175,27 @@ public class Tenant {
 ```
 
 **Application Layer:**
+
 - [ ] TenantService with use cases
 - [ ] CreateTenantUseCase, ActivateTenantUseCase
 - [ ] Tenant DTOs with i18n support
 - [ ] Tenant validation with localized messages
 
 **Infrastructure Layer:**
+
 - [ ] TenantRepository implementation
 - [ ] Database tenant creation service
 - [ ] Tenant configuration persistence
 
 **Presentation Layer:**
+
 - [ ] TenantController with localized responses
 - [ ] Angular admin setup with i18n (@angular/localize)
 - [ ] Localized tenant management UI
 - [ ] Language switcher component
 
 **i18n Features:**
+
 - [ ] Tenant-specific language settings
 - [ ] Localized error messages
 - [ ] Admin panel language switching
@@ -191,9 +204,11 @@ public class Tenant {
 **Output:** Complete tenant management with multi-language admin
 
 #### **Sprint 3: User Management + Authentication (1.5 weeks)**
+
 **Goal:** User authentication and role management with i18n
 
 **Domain Layer:**
+
 ```java
 @Entity
 @Table(name = "users")
@@ -223,23 +238,27 @@ public class User {
 ```
 
 **Application Layer:**
+
 - [ ] UserService, AuthenticationService
 - [ ] LoginUseCase, CreateUserUseCase
 - [ ] JWT token service with language preference
 - [ ] Role-based authorization
 
 **Infrastructure Layer:**
+
 - [ ] UserRepository implementation
 - [ ] Spring Security configuration
 - [ ] JWT token handling
 
 **Presentation Layer:**
+
 - [ ] AuthController with localized responses
 - [ ] Login/logout endpoints with i18n
 - [ ] User management UI with language preference
 - [ ] Role management interface
 
 **i18n Features:**
+
 - [ ] User-specific language preference
 - [ ] Localized authentication messages
 - [ ] Role-based UI language
@@ -247,10 +266,12 @@ public class User {
 
 **Output:** Complete authentication system with language preferences
 
-#### **Sprint 4: Content Management Core + Multi-Language Content (2.5 weeks)**
+#### **Sprint 4: Page Builder**
+
 **Goal:** Content creation and management with multi-language support
 
 **Domain Layer:**
+
 ```java
 @Entity
 @Table(name = "content_types")
@@ -313,28 +334,33 @@ public class Content {
 ```
 
 **Application Layer:**
+
 - [ ] ContentService, ContentTypeService
 - [ ] CreateContentUseCase, PublishContentUseCase
 - [ ] Multi-language content creation workflow
 - [ ] Content translation management
 
 **Infrastructure Layer:**
+
 - [ ] ContentRepository, ContentTypeRepository
 - [ ] Multi-language content queries
 - [ ] Content search with language filtering
 
 **Presentation Layer:**
+
 - [ ] ContentController with language-aware APIs
 - [ ] Multi-language content editor UI
 - [ ] Language switcher for content
 - [ ] Translation management interface
 
 **Default Content Types (Multi-Language):**
+
 - [ ] Page (supports translations)
 - [ ] Blog Post (supports translations)
 - [ ] Menu (language-specific)
 
 **i18n Features:**
+
 - [ ] Content creation in multiple languages
 - [ ] Translation linking between content versions
 - [ ] Language-specific content listing
@@ -342,10 +368,79 @@ public class Content {
 
 **Output:** Multi-language content management system
 
-#### **Sprint 5: Media Management + File Localization (1.5 weeks)**
+#### **Sprint 5: Page Categories + Builder Integration (Unlimited Depth, 1.5 weeks)**
+
+**Goal:** Support unlimited-depth Page Category hierarchy (Materialized
+Path) and integrate category selection into the Page Builder form.
+
+**Decisions:**
+
+- Child category optional
+- Page must have a category (required)
+- Page stores a single `categoryId`; the selected node is the category
+- On reads, if translation is missing, fallback to tenant default
+
+**Scope:**
+
+- **Domain Layer:**
+  - `PageCategory` (self-ref `parentId`, `path` VARCHAR, `level` INT,
+    `sortOrder`, `status`)
+  - `PageCategoryTranslation` (language, name, slug, description)
+  - `Page` → `PageCategory` (ManyToOne LAZY)
+  - Constraints: unique `(tenantId,parentId,language,slug)`, prevent cycles
+
+- **Application Layer:**
+  - `CategoryService` (interface + ServiceImpl)
+  - Use cases: create/update/delete, reorder, getTree(lang, rootId?,
+    depth?), listChildren(parentId, lang), move(id, newParentId),
+    slug uniqueness, compute path/level, i18n fallback
+
+- **Infrastructure Layer:**
+  - Repositories: `PageCategoryRepository`,
+    `PageCategoryTranslationRepository` (JPQL + `@EntityGraph`)
+  - Migrations: add `path`, `level` to `page_categories`; create
+    `page_category_translations`; add `pages.category_id` FK
+  - Indices: tenant, parent, language, slug, sortOrder, path (prefix)
+
+- **Presentation Layer (REST):**
+  - `PageCategoryController` (ApiResponse + try/catch):
+    - `GET /api/page-categories/tree?lang=tr&rootId=&depth=`
+    - `GET /api/page-categories/children?parentId=&lang=tr`
+    - `POST /api/page-categories`
+    - `PUT /api/page-categories/{id}`
+    - `PUT /api/page-categories/{id}/move`
+    - `DELETE /api/page-categories/{id}`
+    - `PUT /api/page-categories/reorder`
+  - `PageController`: `categoryId` required on create/update
+
+- **Admin Frontend (Angular 19):**
+  - Components:
+    - `<spa-page-categories>`: lazy tree CRUD + reorder + move
+    - `<spa-page-category-select>`: cascading pickers or tree selector
+  - Integrate into `spa-page-builder-form`; send `categoryId`
+  - Conventions: `take(1)`, `forNext`, `#` for private methods
+
+- **Migration Plan:**
+  1) Add `path` and `level` columns
+  2) Set roots to `path='/' + slug`, `level=1`
+  3) DFS compute `path/level` for all descendants
+  4) Refactor service flows (create/update/move) to recalc path/level
+
+**Acceptance Criteria:**
+
+- Unlimited-depth category CRUD/reorder/move works
+- `tree`/`children` endpoints return requested language or fallback
+- Page create/update requires `categoryId`
+- All endpoints return `ApiResponse`; errors localized
+
+**Out of Scope:** Navbar/menu generation and rendering
+
+#### **Sprint 6: Media Management + File Localization (1.5 weeks)**
+
 **Goal:** File upload and media management with language support
 
 **Domain Layer:**
+
 ```java
 @Entity
 @Table(name = "media_files")
@@ -382,23 +477,27 @@ public class MediaFile {
 ```
 
 **Application Layer:**
+
 - [ ] MediaService with language-aware operations
 - [ ] UploadMediaUseCase with localized metadata
 - [ ] Image processing with multi-language alt text
 - [ ] Media organization and search
 
 **Infrastructure Layer:**
+
 - [ ] MediaRepository implementation
 - [ ] Local file storage service
 - [ ] Image resizing service
 
 **Presentation Layer:**
+
 - [ ] MediaController with localized responses
 - [ ] File upload UI with language-specific metadata
 - [ ] Media library with language filtering
 - [ ] Drag & drop interface
 
 **i18n Features:**
+
 - [ ] Multi-language alt text for images
 - [ ] Localized file upload messages
 - [ ] Language-specific media organization
@@ -407,9 +506,11 @@ public class MediaFile {
 **Output:** Complete media management with language support
 
 #### **Sprint 6: Site Publishing + Multi-Language Sites (1.5 weeks)**
+
 **Goal:** Site rendering and publishing with language switching
 
 **Domain Layer:**
+
 ```java
 @Entity
 @Table(name = "sites")
@@ -449,23 +550,27 @@ public class Menu {
 ```
 
 **Application Layer:**
+
 - [ ] SiteService, MenuService
 - [ ] PublishSiteUseCase with language-specific rendering
 - [ ] Multi-language navigation management
 - [ ] Site configuration with language settings
 
 **Infrastructure Layer:**
+
 - [ ] SiteRepository, MenuRepository
 - [ ] Thymeleaf rendering with i18n
 - [ ] Language-aware URL routing
 
 **Presentation Layer:**
+
 - [ ] SiteController with language-specific endpoints
 - [ ] Site settings UI with language configuration
 - [ ] Menu management with multi-language support
 - [ ] Site preview with language switching
 
 **Site Features:**
+
 - [ ] Language-specific home pages
 - [ ] Automatic language detection
 - [ ] Language switcher widget
@@ -473,49 +578,499 @@ public class Menu {
 
 **Output:** Multi-language site publishing with Thymeleaf
 
-### 🔄 **PHASE 2: ADVANCED FEATURES (6 weeks)**
+### 🔄 **PHASE 2: PAGE BUILDER UI & ADVANCED FEATURES (13 weeks)**
 
-#### **Sprint 7: Multi-Framework Support + i18n (2 weeks)**
-**Goal:** React, Vue, Angular SSR with multi-language support
+#### **Sprint 7: Visual Page Builder Core (3 weeks)**
 
-**Framework Integration:**
-- [ ] React SSR with React i18next
-- [ ] Vue SSR with Vue I18n
-- [ ] Angular SSR with Angular i18n
-- [ ] Framework-specific language routing
+*Supersedes: Multi-Framework Support sprint*
 
-**Features:**
-- [ ] Language-aware component rendering
-- [ ] Client-side language switching
-- [ ] SEO-friendly language URLs (/tr/, /en/)
-- [ ] Hydration with correct language
+**Goal:** WordPress Gutenberg benzeri visual page builder interface
 
-#### **Sprint 8: Advanced Content Features + Translation Workflow (2 weeks)**
-**Goal:** Content versioning, scheduling, and translation management
+**Priority:** 🔴 Critical - Core missing functionality
 
-**Features:**
-- [ ] Content versioning with language variants
-- [ ] Content scheduling per language
-- [ ] Translation workflow (draft → review → publish)
-- [ ] Translation status tracking
-- [ ] Auto-translation integration (Google Translate API)
+**Week 1: Builder Infrastructure**
 
-#### **Sprint 9: SEO + Analytics + Localization (2 weeks)**
-**Goal:** Advanced SEO and analytics with language support
+**Frontend Architecture:**
 
-**Features:**
-- [ ] Language-specific sitemaps (/sitemap-tr.xml, /sitemap-en.xml)
-- [ ] Hreflang tags for SEO
-- [ ] Language-specific analytics tracking
-- [ ] Localized meta tags and Open Graph
-- [ ] Language-aware search optimization
+- [ ] `PageBuilderComponent` ana container
+- [ ] Section/Block state management (NgRx veya service-based)
+- [ ] Builder canvas component
+- [ ] Section container components
+- [ ] Block registry system
+
+**Technical Implementation:**
+
+```typescript
+// Core builder service
+@Injectable()
+export class PageBuilderStateService {
+  private _builderState$ = new BehaviorSubject<BuilderState>({
+    page: null,
+    sections: [],
+    selectedBlock: null,
+    isPreviewMode: false
+  });
+  
+  // CRUD operations for sections/blocks
+  addSection(type: SectionType, position?: number): void
+  removeSection(sectionId: string): void
+  addBlock(sectionId: string, type: BlockType): void
+  updateBlock(blockId: string, data: any): void
+  reorderSections(fromIndex: number, toIndex: number): void
+  reorderBlocks(sectionId: string, fromIndex: number, toIndex: number): void
+}
+```
+
+**Deliverables:**
+
+- [ ] Builder routing (`/pages/:id/builder`)
+- [ ] State management architecture
+- [ ] Basic section container rendering
+- [ ] Block placeholder system
+
+**Week 2: Block Editor System**
+
+**Block Components:**
+
+- [ ] `HeadingBlockComponent` (H1-H6 with styling)
+- [ ] `ParagraphBlockComponent` (Rich text editor)
+- [ ] `ImageBlockComponent` (Upload + alignment)
+- [ ] `ButtonBlockComponent` (CTA with styling)
+- [ ] `SpacerBlockComponent` (Height adjustment)
+- [ ] `DividerBlockComponent` (HR with styles)
+
+**Block Editor Modal:**
+
+```typescript
+@Component({
+  selector: 'spa-block-editor-modal',
+  template: `
+    <div class="block-editor-modal">
+      <div class="block-type-selector">
+        <button *ngFor="let type of blockTypes" 
+                (click)="selectBlockType(type)">
+          <mat-icon>{{type.icon}}</mat-icon>
+          {{type.label}}
+        </button>
+      </div>
+      
+      <div class="block-content-editor">
+        <ng-container [ngSwitch]="selectedBlockType">
+          <spa-heading-editor *ngSwitchCase="'HEADING'" 
+                              [data]="blockData"
+                              (dataChanged)="updateBlockData($event)">
+          </spa-heading-editor>
+          <!-- Other block editors -->
+        </ng-container>
+      </div>
+    </div>
+  `
+})
+export class BlockEditorModalComponent {}
+```
+
+**Deliverables:**
+
+- [ ] 6 temel block component'i
+- [ ] Block editor modal system
+- [ ] Block data validation
+- [ ] Block preview rendering
+
+**Week 3: Section Management**
+
+**Section Types:**
+
+- [ ] `HeroSectionComponent` (Full-width hero)
+- [ ] `ContentSectionComponent` (Text content)
+- [ ] `FeaturesGridSectionComponent` (2/3/4 column grid)
+- [ ] `ImageGallerySectionComponent` (Photo grid)
+- [ ] `ContactSectionComponent` (Contact forms)
+
+**Section Management:**
+
+- [ ] Section type selector
+- [ ] Section settings panel (background, spacing, etc.)
+- [ ] Section reordering
+- [ ] Section duplication
+
+**Deliverables:**
+
+- [ ] 5 temel section component'i
+- [ ] Section configuration system
+- [ ] Section layout options
+- [ ] Responsive section rendering
+
+**Acceptance Criteria:**
+
+- [ ] Kullanıcı yeni sayfa oluşturup builder'a girebilir
+- [ ] Section ekleyip silebilir
+- [ ] Block ekleyip düzenleyebilir
+- [ ] Changes otomatik kaydedilir
+- [ ] Preview mode çalışır
+
+#### **Sprint 8: Drag & Drop + Advanced UX (2.5 weeks)**
+
+**Goal:** Professional drag & drop interface ve gelişmiş UX
+
+**Week 1: Angular CDK Integration**
+
+**Drag & Drop Features:**
+
+- [ ] Section sürükleme (reorder)
+- [ ] Block sürükleme (within section)
+- [ ] Cross-section block moving
+- [ ] Visual drop indicators
+- [ ] Smooth animations
+
+```typescript
+// CDK Drag Drop implementation
+export class PageBuilderCanvasComponent {
+  drop(event: CdkDragDrop<any[]>) {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, 
+                     event.previousIndex, 
+                     event.currentIndex);
+    } else {
+      transferArrayItem(event.previousContainer.data,
+                       event.container.data,
+                       event.previousIndex,
+                       event.currentIndex);
+    }
+    this.updatePageStructure();
+  }
+}
+```
+
+**Deliverables:**
+
+- [ ] Full drag & drop functionality
+- [ ] Visual feedback during drag
+- [ ] Touch device support
+- [ ] Undo/Redo system
+
+**Week 2: Advanced Builder Features**
+
+**Advanced UX:**
+
+- [ ] Live preview panel (side-by-side editing)
+- [ ] Block toolbar (quick actions)
+- [ ] Section toolbar (settings, duplicate, delete)
+- [ ] Keyboard shortcuts
+- [ ] Auto-save with conflict resolution
+
+**Block Library:**
+
+- [ ] Block templates (pre-configured blocks)
+- [ ] Block categories (Text, Media, Layout, Advanced)
+- [ ] Block search/filter
+- [ ] Recently used blocks
+
+**Deliverables:**
+
+- [ ] Split-screen live preview
+- [ ] Block/Section toolbars
+- [ ] Enhanced block library
+- [ ] Keyboard navigation
+
+**Half Week: Polish & Performance**
+
+**Performance Optimizations:**
+
+- [ ] Virtual scrolling for large pages
+- [ ] Lazy loading of block components
+- [ ] Change detection optimization
+- [ ] Bundle size optimization
+
+**Acceptance Criteria:**
+
+- [ ] Drag & drop smooth çalışır (60fps)
+- [ ] Live preview real-time update
+- [ ] Auto-save 2 saniyede çalışır
+- [ ] Large pages (50+ blocks) performant
+
+#### **Sprint 9: Advanced Block Types + Templates (2 weeks)**
+
+**Goal:** Zengin block library ve sayfa template'leri
+
+**Week 1: Advanced Block Components**
+
+**Rich Media Blocks:**
+
+- [ ] `VideoBlockComponent` (YouTube, Vimeo embed)
+- [ ] `ImageGalleryBlockComponent` (Carousel/Grid)
+- [ ] `IconBlockComponent` (Icon library)
+- [ ] `MapBlockComponent` (Google Maps integration)
+
+**Interactive Blocks:**
+
+- [ ] `FormBlockComponent` (Contact, Newsletter forms)
+- [ ] `AccordionBlockComponent` (FAQ style)
+- [ ] `TabsBlockComponent` (Content tabs)
+- [ ] `CounterBlockComponent` (Animated numbers)
+
+**Layout Blocks:**
+
+- [ ] `ColumnsBlockComponent` (2/3/4 column layouts)
+- [ ] `CardBlockComponent` (Feature cards)
+- [ ] `TestimonialBlockComponent` (Customer reviews)
+- [ ] `PricingBlockComponent` (Pricing tables)
+
+**Deliverables:**
+
+- [ ] 12 advanced block component
+- [ ] Rich media handling
+- [ ] Form integration
+- [ ] Animation support
+
+**Week 2: Page Templates + Export/Import**
+
+**Template System:**
+
+- [ ] Pre-built page templates
+- [ ] Template categories (Corporate, Landing, Portfolio)
+- [ ] Template preview
+- [ ] Template customization
+
+**Templates:**
+
+```typescript
+interface PageTemplate {
+  id: string;
+  name: string;
+  category: 'corporate' | 'landing' | 'portfolio' | 'blog';
+  preview: string;
+  sections: SectionTemplate[];
+}
+
+// Pre-built templates
+const CORPORATE_HOMEPAGE: PageTemplate = {
+  id: 'corporate-home',
+  name: 'Corporate Homepage',
+  category: 'corporate',
+  sections: [
+    { type: 'HERO', blocks: [/* hero content */] },
+    { type: 'FEATURES', blocks: [/* features */] },
+    { type: 'CONTACT', blocks: [/* contact form */] }
+  ]
+};
+```
+
+**Export/Import:**
+
+- [ ] Sayfa export (JSON format)
+- [ ] Sayfa import
+- [ ] Template export/import
+- [ ] Bulk operations
+
+**Deliverables:**
+
+- [ ] 10+ hazır template
+- [ ] Template marketplace UI
+- [ ] Export/Import functionality
+- [ ] Template versioning
+
+**Acceptance Criteria:**
+
+- [ ] Template'ten sayfa oluşturulabilir
+- [ ] Advanced block'lar çalışır
+- [ ] Export/Import data kaybı yok
+- [ ] Templates responsive
+
+#### **Sprint 10: Performance + Caching + SEO (2 weeks)**
+
+**Goal:** Production-ready performance ve gelişmiş SEO
+
+**Week 1: Performance Optimization**
+
+**Caching Strategy:**
+
+```typescript
+@Injectable()
+export class PageCacheService {
+  // Redis-based caching
+  private cache = new Map<string, CachedPage>();
+  
+  getCachedPage(tenantId: number, slug: string, language: string): Observable<PageDto> {
+    const key = `${tenantId}:${slug}:${language}`;
+    // Implementation with Redis
+  }
+  
+  invalidateCache(pageId: number): void {
+    // Clear related cache entries
+  }
+}
+```
+
+**Backend Performance:**
+
+- [ ] Redis page caching
+- [ ] Database query optimization
+- [ ] CDN integration for media
+- [ ] API response compression
+
+**Frontend Performance:**
+
+- [ ] Component lazy loading
+- [ ] Image optimization
+- [ ] Bundle splitting
+- [ ] Service Worker caching
+
+**Deliverables:**
+
+- [ ] Redis caching layer
+- [ ] Database indices optimization
+- [ ] Frontend bundle optimization
+- [ ] Performance monitoring
+
+**Week 2: Advanced SEO + Analytics**
+
+**SEO Enhancements:**
+
+- [ ] Auto-generated meta tags
+- [ ] Open Graph tags
+- [ ] Twitter Card tags
+- [ ] JSON-LD structured data
+- [ ] Sitemap generation
+- [ ] Hreflang tags for multi-language
+
+**SEO Tools:**
+
+```typescript
+@Injectable()
+export class SEOService {
+  generateStructuredData(page: PageDto): string {
+    // Generate JSON-LD for page
+  }
+  
+  generateSitemap(tenantId: number): string {
+    // Generate XML sitemap
+  }
+  
+  validateSEO(page: PageDto): SEOValidationResult {
+    // Check title length, meta description, etc.
+  }
+}
+```
+
+**Analytics Integration:**
+
+- [ ] Google Analytics 4 integration
+- [ ] Page view tracking
+- [ ] User interaction tracking
+- [ ] A/B testing framework
+
+**Deliverables:**
+
+- [ ] Complete SEO optimization
+- [ ] Analytics tracking
+- [ ] Performance benchmarks
+- [ ] SEO validation tools
+
+**Acceptance Criteria:**
+
+- [ ] Page load time < 2 saniye
+- [ ] SEO score > 95/100
+- [ ] Cache hit rate > 80%
+- [ ] Analytics data akışı çalışır
+
+#### **Sprint 11: Mobile Optimization + Accessibility (1.5 weeks)**
+
+**Goal:** Mobile-first responsive design ve WCAG compliance
+
+**Week 1: Mobile Optimization**
+
+**Responsive Builder:**
+
+- [ ] Mobile preview in builder
+- [ ] Device-specific editing
+- [ ] Touch-optimized controls
+- [ ] Mobile drag & drop
+
+**Mobile-Specific Features:**
+
+- [ ] Swipe gestures
+- [ ] Mobile navigation
+- [ ] Touch-friendly block editor
+- [ ] Mobile template variants
+
+**Deliverables:**
+
+- [ ] Mobile builder interface
+- [ ] Responsive block components
+- [ ] Mobile performance optimization
+- [ ] Touch interaction support
+
+**Half Week: Accessibility (WCAG 2.1)**
+
+**Accessibility Features:**
+
+- [ ] Keyboard navigation
+- [ ] Screen reader support
+- [ ] High contrast mode
+- [ ] Focus indicators
+- [ ] Alt text validation
+- [ ] Semantic HTML structure
+
+**Accessibility Tools:**
+
+- [ ] A11y validation
+- [ ] Color contrast checker
+- [ ] Keyboard navigation tester
+- [ ] Screen reader preview
+
+**Deliverables:**
+
+- [ ] WCAG 2.1 AA compliance
+- [ ] Accessibility testing tools
+- [ ] A11y documentation
+- [ ] Accessibility audit reports
+
+### **Phase 2 Summary**
+
+**Timeline: 13 weeks total**
+
+- **Sprint 7:** Visual Page Builder (3 weeks)
+- **Sprint 8:** Drag & Drop + UX (2.5 weeks)
+- **Sprint 9:** Advanced Blocks + Templates (2 weeks)
+- **Sprint 10:** Performance + SEO (2 weeks)
+- **Sprint 11:** Mobile + A11y (1.5 weeks)
+- **Buffer:** Testing + Polish (2 weeks)
+
+**Resource Requirements:**
+
+- **Frontend Developer:** 13 weeks full-time
+- **UI/UX Designer:** 6 weeks (Sprint 7-8)
+- **QA Engineer:** 4 weeks (final sprints)
+
+**Success Metrics:**
+
+- [ ] Complete page builder functionality
+- [ ] 20+ block types implemented
+- [ ] 10+ page templates available
+- [ ] Page load time < 2 seconds
+- [ ] SEO score > 95/100
+- [ ] Mobile responsive (100% screens)
+- [ ] WCAG 2.1 AA compliance
+
+**MVP Definition:**
+After Phase 2, sistem **production-ready** olacak ve aşağıdaki özelliklere sahip olacak:
+
+1. **Visual Page Builder** (WordPress Gutenberg level)
+2. **Rich Block Library** (20+ block types)
+3. **Template System** (10+ templates)
+4. **Performance Optimizations** (caching, CDN)
+5. **Mobile-First Design**
+6. **SEO Optimization**
+7. **Accessibility Compliance**
 
 ### 🤖 **PHASE 3: AI INTEGRATION + ADVANCED i18n (8 weeks)**
 
 #### **Sprint 10-11: AI Content Generation (4 weeks)**
+
 **Goal:** AI-powered content creation with multi-language support
 
 **Features:**
+
 - [ ] GPT/Claude integration for content generation
 - [ ] Multi-language content generation
 - [ ] Auto-translation suggestions
@@ -523,9 +1078,11 @@ public class Menu {
 - [ ] AI-powered localization
 
 #### **Sprint 12-13: Advanced Language Features (4 weeks)**
+
 **Goal:** Enterprise-level language features
 
 **Features:**
+
 - [ ] RTL language support (Arabic, Hebrew)
 - [ ] Language-specific themes
 - [ ] Professional translation workflow
@@ -620,6 +1177,7 @@ export class LanguageService {
 ## 📊 Success Metrics
 
 ### **MVP Success Criteria:**
+
 - [ ] 5-10 pilot customers with multi-language sites
 - [ ] Both Turkish and English admin interfaces working
 - [ ] Content creation in both languages
@@ -627,12 +1185,14 @@ export class LanguageService {
 - [ ] Language switching without data loss
 
 ### **Technical KPIs:**
+
 - [ ] Language switching response time < 200ms
 - [ ] Multi-language content search < 300ms
 - [ ] Translation workflow completion rate > 95%
 - [ ] Language-specific SEO scores > 90/100
 
 ### **Business KPIs:**
+
 - [ ] International customer acquisition > 20%
 - [ ] Multi-language site engagement +40%
 - [ ] Translation workflow efficiency +60%
@@ -640,11 +1200,13 @@ export class LanguageService {
 ## 🚧 Implementation Risks & Mitigation
 
 ### **Technical Risks:**
+
 - **Complex language routing:** Use proven i18n libraries
 - **Database performance:** Optimize language-specific queries
 - **Translation consistency:** Implement validation rules
 
 ### **Business Risks:**
+
 - **Translation costs:** Start with machine translation + human review
 - **Cultural adaptation:** Partner with local content experts
 - **Market complexity:** Focus on TR/EN first, expand later
