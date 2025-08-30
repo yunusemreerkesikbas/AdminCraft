@@ -183,6 +183,7 @@ export const langEN = {
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
                 canonicalUrl: 'Canonical URL',
+                styleClasses: 'CSS Classes',
                 sectionType: 'Section Type',
                 sectionData: 'Section Data',
                 blockType: 'Block Type',

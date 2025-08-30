@@ -25,7 +25,9 @@
                         class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
                     >
                         <div>{{ 'admin.common.grid.title' | transloco }}</div>
-                        <div class="hidden md:block">Slug</div>
+                        <div class="hidden md:block">
+                            {{ 'admin.common.grid.slug' | transloco }}
+                        </div>
                         <div class="hidden sm:block">
                             {{ 'admin.common.grid.language' | transloco }}
                         </div>
@@ -212,7 +214,8 @@
                                                     >
                                                         <spa-input
                                                             [label]="
-                                                                'CSS Classes'
+                                                                'admin.pageBuilder.fields.styleClasses'
+                                                                    | transloco
                                                             "
                                                             [type]="'text'"
                                                             formControlName="styleClasses"
@@ -235,13 +238,19 @@
                                                 <div
                                                     class="text-secondary text-xs"
                                                 >
-                                                    Oluşturma:
+                                                    {{
+                                                        'admin.common.fields.createdAt'
+                                                            | transloco
+                                                    }}:
                                                     {{
                                                         p.createdAt
                                                             | date: 'short'
                                                     }}
                                                     <span class="mx-2">•</span>
-                                                    Güncelleme:
+                                                    {{
+                                                        'admin.common.fields.updatedAt'
+                                                            | transloco
+                                                    }}:
                                                     {{
                                                         p.updatedAt
                                                             | date: 'short'
@@ -342,7 +351,7 @@
                 <div
                     class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
                 >
-                    Kayıt bulunamadı
+                    {{ 'admin.common.noRecords' | transloco }}
                 </div>
             }
         </div>
