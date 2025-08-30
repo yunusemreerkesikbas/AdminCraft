@@ -24,6 +24,7 @@ import {
   PageCategoryTreeNode,
   UpdateCategoryRequest,
 } from '../page-builder.types';
+import { ErrorHandlingService } from '../services/error-handling.service';
 
 @Component({
   selector: 'spa-page-categories',
@@ -65,7 +66,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   #fb: FormBuilder;
   #destroy$ = new Subject<void>();
 
-  tenantId: number = 1;
+  tenantId?: number;
   language: 'TR' | 'EN' | '' = '';
   tree: PageCategoryTreeNode[] = [];
   treeControl = new NestedTreeControl<PageCategoryTreeNode>((n) => n.children || []);
@@ -90,6 +91,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   constructor(
     private _svc: PageBuilderService,
     private _tenantCtx: TenantContextService,
+    private _errorHandler: ErrorHandlingService,
     cdr: ChangeDetectorRef,
     fb: FormBuilder
   ) {
@@ -99,7 +101,11 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const storedId = this._tenantCtx.getCurrentTenantId();
-    if (storedId) this.tenantId = storedId;
+    if (!storedId) {
+      console.error('No tenant ID available for loading categories');
+      return;
+    }
+    this.tenantId = storedId;
     this.#buildForm();
     this.loadTree();
 
@@ -113,6 +119,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   }
 
   loadTree(): void {
+    if (!this.tenantId) {
+      console.error('Cannot load tree: tenant ID not available');
+      return;
+    }
     this.isLoading = true;
     this._svc
       .getCategoryTree(this.tenantId, this.language || undefined, null)
@@ -128,9 +138,11 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.#cdr.markForCheck();
         },
-        error: () => {
+        error: (error) => {
+          console.error('Error loading category tree:', error);
+          this._errorHandler.handleError(error);
           this.tree = [];
-          this.dataSource.data = [] as any;
+          this.dataSource.data = [];
           this.flat = [];
           this.#applyFilter();
           this.#buildParentOptions(this.selected?.id ?? null);
@@ -146,14 +158,18 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       tenantId: node.tenantId,
       name: node.name,
       slug: node.slug,
-      parentId: (node as any).parentId ?? null,
-    } as PageCategoryDto;
+      parentId: node.parentId,
+    };
     this.#buildForm(this.selected);
     this.#buildParentOptions(this.selected.id);
     this.#cdr.markForCheck();
   }
 
   createChild(parent?: PageCategoryTreeNode | { id: number }): void {
+    if (!this.tenantId) {
+      console.error('Cannot create category: tenant ID not available');
+      return;
+    }
     const payload: CreateCategoryRequest = {
       tenantId: this.tenantId,
       name: 'Yeni Kategori',
@@ -165,7 +181,11 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: () => this.loadTree(),
-        error: () => {},
+        error: (error) => {
+          console.error('Error creating category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
       });
   }
 
@@ -174,7 +194,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
-    if (!this.form?.valid || !this.selected) return;
+    if (!this.form?.valid || !this.selected || !this.tenantId) return;
     const v = this.form.value;
     const payload: UpdateCategoryRequest = {
       id: this.selected.id,
@@ -188,7 +208,11 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: () => this.loadTree(),
-        error: () => {},
+        error: (error) => {
+          console.error('Error updating category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
       });
   }
 
@@ -198,7 +222,11 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: () => this.loadTree(),
-        error: () => {},
+        error: (error) => {
+          console.error('Error deleting category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        },
       });
   }
 
@@ -206,7 +234,14 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     this._svc
       .moveCategory({ id: nodeId, newParentId: null })
       .pipe(takeUntil(this.#destroy$))
-      .subscribe({ next: () => this.loadTree(), error: () => {} });
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error moving category to root:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
   }
 
   reorderUp(nodeId: number, parentId: number | null): void {
@@ -218,7 +253,14 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     this._svc
       .reorderCategories({ parentId, orderedIds })
       .pipe(takeUntil(this.#destroy$))
-      .subscribe({ next: () => this.loadTree(), error: () => {} });
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error reordering category up:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
   }
 
   reorderDown(nodeId: number, parentId: number | null): void {
@@ -230,7 +272,14 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     this._svc
       .reorderCategories({ parentId, orderedIds })
       .pipe(takeUntil(this.#destroy$))
-      .subscribe({ next: () => this.loadTree(), error: () => {} });
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error reordering category down:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
   }
 
   #flatten(nodes: PageCategoryTreeNode[], level: number): void {
@@ -290,7 +339,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     if (cat) {
       this.select({
         id: cat.id,
-        tenantId: this.tenantId,
+        tenantId: this.tenantId!,
         name: cat.name,
         slug: cat.slug,
         parentId: cat.parentId,
@@ -300,7 +349,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   }
 
   updateSelectedCategory(): void {
-    if (!this.selected || !this.form?.valid) return;
+    if (!this.selected || !this.form?.valid || !this.tenantId) return;
     const v = this.form.value;
     const payload: UpdateCategoryRequest = {
       id: this.selected.id,
@@ -312,7 +361,33 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     this._svc
       .updateCategory(payload)
       .pipe(takeUntil(this.#destroy$))
-      .subscribe({ next: () => this.loadTree(), error: () => {} });
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error updating selected category:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
+  }
+
+  // Event handlers for child components
+  onCategoryUpdate(payload: UpdateCategoryRequest): void {
+    this._svc
+      .updateCategory(payload)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({ 
+        next: () => this.loadTree(), 
+        error: (error) => {
+          console.error('Error updating category from form:', error);
+          this._errorHandler.handleError(error);
+          this.#cdr.markForCheck();
+        }
+      });
+  }
+
+  onFormClose(): void {
+    this.toggleDetails(0); // Close the details
   }
 
   #applyFilter(): void {
