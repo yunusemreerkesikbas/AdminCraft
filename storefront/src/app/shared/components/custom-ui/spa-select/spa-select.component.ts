@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
     Output,
     ViewEncapsulation,
     forwardRef,
+    inject,
 } from '@angular/core';
 import {
     ControlValueAccessor,
@@ -39,6 +41,7 @@ export interface SpaSelectOption<T = any> {
     ],
 })
 export class SpaSelectComponent<T = any> implements ControlValueAccessor {
+    #cdr = inject(ChangeDetectorRef);
     @Input() label?: string;
     @Input() hint?: string;
     @Input() placeholder?: string;
@@ -56,6 +59,7 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor {
 
     writeValue(value: T | null): void {
         this.value = value;
+        this.#cdr.markForCheck();
     }
     registerOnChange(fn: any): void {
         this.onChange = fn;
@@ -65,6 +69,7 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor {
     }
     setDisabledState(isDisabled: boolean): void {
         this.disabled = isDisabled;
+        this.#cdr.markForCheck();
     }
 
     onSelectionChange(value: T | null): void {

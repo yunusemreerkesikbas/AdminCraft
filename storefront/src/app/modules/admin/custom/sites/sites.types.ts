@@ -75,3 +75,90 @@ export interface UpdateSiteRequest {
     logoUrl?: string;
     faviconUrl?: string;
 }
+
+// ----- Site Settings (Sprint 9)
+
+export interface SiteSettingsGlobalDto {
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+    whatsappPhone?: string | null;
+    address?: AddressDto | null;
+    businessHours?: BusinessHoursDto | null;
+    social?: SocialLinksDto | null;
+    canonicalBaseUrl?: string | null;
+    robots?: string | null;
+}
+
+export interface SiteSettingsI18nDto {
+    siteName?: string | null;
+    tagline?: string | null;
+    seo?: SeoDefaultsDto | null;
+    footerText?: string | null;
+    headerTopbarText?: string | null;
+    addressLocalized?: AddressLocalizedDto | null;
+}
+
+export interface SiteSettingsResponseDto {
+    global: SiteSettingsGlobalDto;
+    languages: Record<string, SiteSettingsI18nDto>;
+}
+
+export interface AddressDto {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    state?: string | null;
+    postalCode: string;
+    country: string;
+    geo?: { lat: number; lng: number } | null;
+    mapEmbedUrl?: string | null;
+}
+
+export interface AddressLocalizedDto {
+    line1?: string | null;
+    line2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+}
+
+export interface BusinessHoursDto {
+    monday?: DayHoursDto | null;
+    tuesday?: DayHoursDto | null;
+    wednesday?: DayHoursDto | null;
+    thursday?: DayHoursDto | null;
+    friday?: DayHoursDto | null;
+    saturday?: DayHoursDto | null;
+    sunday?: DayHoursDto | null;
+}
+
+export interface DayHoursDto {
+    open: string; // HH:mm
+    close: string; // HH:mm
+    closed?: boolean;
+}
+
+export interface SocialLinksDto {
+    facebook?: string | null;
+    instagram?: string | null;
+    x?: string | null;
+    linkedin?: string | null;
+    youtube?: string | null;
+    tiktok?: string | null;
+}
+
+export interface SeoDefaultsDto {
+    title?: string | null;
+    description?: string | null;
+    keywords?: string[] | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    ogImageMediaId?: number | null;
+    twitterCard?: string | null;
+}
+
+export interface SiteSettingsPatchRequest {
+    global?: Partial<SiteSettingsGlobalDto>;
+    languages?: Record<string, Partial<SiteSettingsI18nDto>>;
+}

@@ -124,6 +124,7 @@ export const appRoutes: Route[] = [
                     {path: 'users', loadChildren: () => import('app/modules/admin/custom/users/users.routes')},
                     {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
                     {path: 'pages', loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')},
+                    {path: 'settings', loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')},
 
                     // Default under tenant
                     {path: '', pathMatch: 'full', redirectTo: 'project'}
