@@ -188,3 +188,26 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
+-- site_settings (Sprint 9)
+CREATE TABLE IF NOT EXISTS site_settings (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  setting_key VARCHAR(100) NOT NULL,
+  setting_value TEXT NULL,
+  language ENUM('TR','EN') NULL COMMENT 'NULL for global',
+  setting_type ENUM('TEXT','NUMBER','BOOLEAN','JSON','URL','I18N_TEXT') DEFAULT 'TEXT',
+  category VARCHAR(50) DEFAULT 'general',
+  display_name VARCHAR(100) NULL,
+  description TEXT NULL,
+  is_public BOOLEAN DEFAULT FALSE,
+  sort_order INT DEFAULT 0,
+  updated_by BIGINT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uk_site_setting_key_language (setting_key, language),
+  INDEX idx_site_setting_language (language),
+  INDEX idx_site_setting_category (category),
+  INDEX idx_site_setting_public (is_public),
+  INDEX idx_site_setting_type (setting_type),
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
