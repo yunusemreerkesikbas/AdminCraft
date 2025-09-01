@@ -26,27 +26,47 @@ public class SiteSettingRepositoryImpl implements SiteSettingRepository {
   }
 
   @Override
-  public Optional<SiteSetting> findBySettingKeyAndLanguage(String key, Language language) {
-    return jpa.findByKeyAndLanguage(key, language);
+  public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguage(Long tenantId, String key, Language language) {
+    return jpa.findByTenantIdAndSettingKeyAndLanguage(tenantId, key, language);
   }
 
   @Override
-  public Optional<SiteSetting> findBySettingKeyAndLanguageIsNull(String key) {
-    return jpa.findGlobalByKey(key);
+  public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguageIsNull(Long tenantId, String key) {
+    return jpa.findByTenantIdAndSettingKeyAndLanguageIsNull(tenantId, key);
   }
 
   @Override
-  public List<SiteSetting> findByLanguage(Language language) {
-    return jpa.findByLanguage(language);
+  public List<SiteSetting> findByTenantIdAndLanguage(Long tenantId, Language language) {
+    return jpa.findByTenantIdAndLanguage(tenantId, language);
   }
 
   @Override
-  public List<SiteSetting> findByLanguageIsNull() {
-    return jpa.findByLanguageIsNull();
+  public List<SiteSetting> findByTenantIdAndLanguageIsNull(Long tenantId) {
+    return jpa.findByTenantIdAndLanguageIsNull(tenantId);
   }
 
   @Override
-  public List<SiteSetting> findAll() {
-    return jpa.findAll();
+  public List<SiteSetting> findByTenantId(Long tenantId) {
+    return jpa.findByTenantId(tenantId);
+  }
+
+  @Override
+  public List<SiteSetting> findByTenantIdAndSettingKeyIn(Long tenantId, List<String> keys) {
+    return jpa.findByTenantIdAndSettingKeyIn(tenantId, keys);
+  }
+
+  @Override
+  public List<SiteSetting> findByTenantIdAndLanguageIn(Long tenantId, List<Language> languages) {
+    return jpa.findByTenantIdAndLanguageIn(tenantId, languages);
+  }
+
+  @Override
+  public List<SiteSetting> findByTenantIdAndIsPublicTrue(Long tenantId) {
+    return jpa.findByTenantIdAndIsPublicTrue(tenantId);
+  }
+
+  @Override
+  public List<SiteSetting> findByTenantIdAndLanguageAndIsPublicTrue(Long tenantId, Language language) {
+    return jpa.findByTenantIdAndLanguageAndIsPublicTrue(tenantId, language);
   }
 }

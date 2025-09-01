@@ -1,24 +1,25 @@
 package com.backend.presentation.dto.request;
 
+import com.backend.presentation.validation.SecureUrl;
+import com.backend.presentation.validation.SecureUrlType;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record SiteSettingsGlobalDto(
-    @Email(message = "validation.email") String contactEmail,
+    @Email(message = "validation.email") 
+    String contactEmail,
 
-    @Size(max = 30, message = "validation.phone.length") String contactPhone,
+    @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "validation.phone.e164")
+    String contactPhone,
 
-    @Size(max = 30, message = "validation.phone.length") String whatsappPhone,
+    @Pattern(regexp = "^\\+[1-9]\\d{1,14}$", message = "validation.phone.e164") 
+    String whatsappPhone,
 
-    String address, // JSON string (validated in service)
+    @SecureUrl(type = SecureUrlType.CANONICAL, message = "validation.url.canonical")
+    String canonicalBaseUrl,
 
-    String businessHours, // JSON string
-
-    String social, // JSON string
-
-    @Pattern(regexp = "^(https?://).*$", message = "validation.url") String canonicalBaseUrl,
-
-    @Size(max = 50, message = "validation.length") String robots) {
+    @Pattern(regexp = "^(index|noindex),(follow|nofollow)$", message = "validation.robots")
+    @Size(max = 50, message = "validation.length") 
+    String robots) {
 }

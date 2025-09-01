@@ -1,12 +1,15 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.SiteSettingsService;
-import com.backend.domain.enums.Language;
+import com.backend.application.dto.SiteSettingsCommand;
+import com.backend.application.dto.SiteSettingsQuery;
 import com.backend.presentation.dto.request.SiteSettingsGlobalDto;
 import com.backend.presentation.dto.request.SiteSettingsI18nDto;
 import com.backend.presentation.dto.response.SiteSettingsResponseDto;
+import com.backend.presentation.mapper.SiteSettingsMapper;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,40 +23,41 @@ import org.springframework.web.bind.annotation.*;
 public class SiteSettingsController {
 
   private final SiteSettingsService service;
+  private final SiteSettingsMapper mapper;
   private final SecurityHelper securityHelper;
 
+  /**
+   * Get site settings for admin interface
+   * Returns global settings and all supported language versions
+   */
   @GetMapping
   @PreAuthorize("hasRole('TENANT_ADMIN')")
-  public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get(
-      @RequestParam(name = "lang", defaultValue = "TR") String lang) {
-    try {
-      Language language = Language.valueOf(lang.toUpperCase());
-      SiteSettingsResponseDto dto = service.get(language);
-      return ResponseEntity.ok(ApiResponse.success(dto));
-    } catch (Exception ex) {
-      log.error("Site settings get error", ex);
-      return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage()));
-    }
+  public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get() {
+    Long tenantId = securityHelper.getCurrentUserTenantId();
+    SiteSettingsQuery query = service.getAdminSettings(tenantId);
+    SiteSettingsResponseDto dto = mapper.toResponse(query);
+    return ResponseEntity.ok(ApiResponse.success(dto));
   }
 
+  /**
+   * Partially update site settings
+   * Supports updating global settings and/or language-specific settings
+   */
   @PatchMapping
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> patch(
-      @RequestParam(name = "lang", defaultValue = "TR") String lang,
       @RequestBody SiteSettingsPatchRequest req) {
-    try {
-      Long userId = securityHelper.getCurrentUserId();
-      Language language = Language.valueOf(lang.toUpperCase());
-      SiteSettingsResponseDto dto = service.patch(language, req.global(), req.i18n(), userId);
-      return ResponseEntity.ok(ApiResponse.success(dto));
-    } catch (Exception ex) {
-      log.error("Site settings patch error", ex);
-      return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage()));
-    }
+    Long tenantId = securityHelper.getCurrentUserTenantId();
+    Long userId = securityHelper.getCurrentUserId();
+
+    SiteSettingsCommand command = mapper.toCommand(tenantId, req.global(), req.languages(), userId);
+    SiteSettingsQuery query = service.patchSettings(command);
+    SiteSettingsResponseDto dto = mapper.toResponse(query);
+    return ResponseEntity.ok(ApiResponse.success(dto));
   }
 
   public record SiteSettingsPatchRequest(
       SiteSettingsGlobalDto global,
-      SiteSettingsI18nDto i18n) {
+      Map<String, SiteSettingsI18nDto> languages) {
   }
 }

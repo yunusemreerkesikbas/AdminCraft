@@ -12,13 +12,24 @@ public interface SiteSettingRepository {
 
   List<SiteSetting> saveAll(Iterable<SiteSetting> settings);
 
-  Optional<SiteSetting> findBySettingKeyAndLanguage(String key, Language language);
+  // Tenant-isolated queries
+  Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguage(Long tenantId, String key, Language language);
 
-  Optional<SiteSetting> findBySettingKeyAndLanguageIsNull(String key);
+  Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguageIsNull(Long tenantId, String key);
 
-  List<SiteSetting> findByLanguage(Language language);
+  List<SiteSetting> findByTenantIdAndLanguage(Long tenantId, Language language);
 
-  List<SiteSetting> findByLanguageIsNull();
+  List<SiteSetting> findByTenantIdAndLanguageIsNull(Long tenantId);
 
-  List<SiteSetting> findAll();
+  List<SiteSetting> findByTenantId(Long tenantId);
+
+  // Batch operations for performance
+  List<SiteSetting> findByTenantIdAndSettingKeyIn(Long tenantId, List<String> keys);
+
+  List<SiteSetting> findByTenantIdAndLanguageIn(Long tenantId, List<Language> languages);
+
+  // For public settings (used by site frontend)
+  List<SiteSetting> findByTenantIdAndIsPublicTrue(Long tenantId);
+
+  List<SiteSetting> findByTenantIdAndLanguageAndIsPublicTrue(Long tenantId, Language language);
 }
