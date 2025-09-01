@@ -9,7 +9,7 @@
 
 ## 🏗️ Clean Architecture Layers
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                 🖥️  PRESENTATION LAYER                      │
 │     Controllers, DTOs, Mappers, Validators, i18n           │
@@ -43,7 +43,7 @@
 
 ## 📁 Project Structure (Clean Architecture)
 
-```
+```text
 src/main/java/com/backend/
 ├── 🖥️ presentation/
 │   ├── controller/
@@ -661,9 +661,197 @@ public class Menu {
 
 **Output:** Multi-language site publishing with Thymeleaf
 
+#### **Sprint 9: Site Settings Module (1 week)**
+
+**Goal:** Build the Site Settings module (backend service + Admin UI
+forms) with language-aware fields and a simple API contract.
+
+**Scope:**
+
+- **Domain Layer:**
+  - Entity: `SiteSetting` (key/value JSON, optional `language`)
+  - Aggregate: `SiteSettingsAggregate` (typed view over keys)
+  - Enum: `SettingType {TEXT, NUMBER, BOOLEAN, JSON, URL, I18N_TEXT}`
+
+- **Application Layer:**
+  - Service: `SiteSettingsService`
+  - Use cases:
+    - `getAdminSettings()` returns saved values only (no fallback)
+    - `updateGlobalSettings(dto)`
+    - `upsertI18nSettings(language, dto)`
+  - DTOs (records with compact validation):
+    - `SiteSettingsGlobalDto`
+    - `SiteSettingsI18nDto`
+    - `SiteSettingsResponseDto` (merged/global + i18n)
+
+- **Infrastructure Layer:**
+  - Table: `site_settings` (already designed in schema)
+    - Columns: id, setting_key, setting_value JSON, language NULLable,
+      setting_type, category, is_public, sort_order, updated_by, updated_at
+  - Repository: `SiteSettingRepository extends JpaRepository`
+    - `findByLanguage(language)`
+    - `findBySettingKeyAndLanguage(key, lang)`
+    - `findByLanguageIsNull()` (global)
+  
+- **Presentation Layer (REST):**
+  - `@RestController` `SiteSettingsController` → `/api/site-settings`
+  - Endpoints:
+    - `GET /api/site-settings` → returns `global` + `languages` map
+    - `PATCH /api/site-settings` → partial updates (global and/or languages)
+  - Responses: `ApiResponse`
+  - Validation: URL/email, length limits, enum checks
+  - Errors: `GlobalExceptionHandler` (i18n)
+
+- **Admin Frontend (Angular 19):**
+  - Module: `@admin` (components will live under `@admin/`)
+  - Pages: follow `@settings/` page structure (routing/layout/tabs)
+  - Components (selectors `<spa-*>`):
+    - `<spa-site-settings-form>` (tabs: General, Contact, Social, SEO)
+    - `<spa-site-social-links>`
+    - `<spa-site-seo-settings>`
+    - `<spa-site-address-form>`
+  - State: service/store with `GET /api/site-settings` (global + languages)
+  - Conventions: `forNext`, `take(1)`, `#` private methods, strong typings
+  - Notifications: `NotificationService` + error interceptor
+
+**Settings Fields (revised):**
+
+- Global (language-agnostic, single address):
+  - `contactEmail`, `contactPhone`, `whatsappPhone`
+  - `address` { line1, line2?, city, state?, postalCode, country,
+    geo { lat, lng }, mapEmbedUrl? }
+  - `businessHours` (day/time ranges)
+  - `social` { facebook?, instagram?, x?, linkedin?, youtube?, tiktok? }
+  - `canonicalBaseUrl`
+  - `robots` (default `index,follow`)
+  - Note: Logo/Favicon fields are deferred; will be handled by Media module.
+
+- Language-specific (per `lang`):
+  - `siteName` (display title)
+  - `tagline`
+  - `seo` { title, description, keywords[], ogTitle?, ogDescription?,
+    ogImageMediaId?, twitterCard? }
+  - `footerText`, `headerTopbarText`
+  - `addressLocalized` (optional)
+
+**DTOs (records):**
+
+```java
+public record SiteSettingsGlobalDto(
+    String contactEmail,
+    String contactPhone,
+    String whatsappPhone,
+    AddressDto address,
+    BusinessHoursDto businessHours,
+    SocialLinksDto social,
+    String canonicalBaseUrl,
+    String robots
+) {}
+
+public record SiteSettingsI18nDto(
+    String siteName,
+    String tagline,
+    SeoDefaultsDto seo,
+    String footerText,
+    String headerTopbarText,
+    AddressLocalizedDto addressLocalized
+) {}
+
+public record SiteSettingsResponseDto(
+    SiteSettingsGlobalDto global,
+    SiteSettingsI18nDto i18n,
+    String language
+) {}
+```
+
+**API Examples:**
+
+- `GET /api/site-settings` →
+
+```json
+{
+  "global": {
+    "contactEmail": "info@site.com",
+    "contactPhone": "+90 555 000 00 00",
+    "address": { "line1": "Büyükdere Cd.", "city": "İstanbul", "country": "TR" },
+    "social": { "facebook": "https://facebook.com/brand" },
+    "canonicalBaseUrl": "https://www.site.com",
+    "robots": "index,follow"
+  },
+  "languages": {
+    "tr": {
+      "siteName": "Site Adı",
+      "tagline": "Slogan",
+      "seo": { "title": "Başlık TR", "description": "Açıklama TR", "keywords": ["k1","k2"] },
+      "footerText": "Alt bilgi TR"
+    },
+    "en": {
+      "siteName": "Site Name",
+      "tagline": "Tagline",
+      "seo": { "title": "Title EN", "description": "Description EN", "keywords": ["k1","k2"] },
+      "footerText": "Footer EN"
+    }
+  }
+}
+```
+
+- `PATCH /api/site-settings` (kısmi güncelleme örneği) →
+
+```json
+{
+  "global": {
+    "contactEmail": "hello@site.com"
+  },
+  "languages": {
+    "en": {
+      "seo": { "title": "Updated Title EN" }
+    }
+  }
+}
+```
+
+**Performance Notes:**
+
+- Add DB indices on `(setting_key, language)` and `(language)`.
+
+**Security:**
+
+- Admin endpoints require `admin` role
+- Public endpoint returns only `is_public=true` keys
+- Input validation with whitelists for allowed hosts in URLs (OWASP)
+
+**Deliverables:**
+
+- Backend: entity, repository, service, controller, migrations, i18n messages
+- Admin Angular: settings module ve formlar (toasts ile)
+
+**Acceptance Criteria:**
+
+- Admin can update global and language-specific settings; validations
+  enforced; toasts show success/failure
+- Admin tarafında dil seçimleri ile i18n alanları yönetilebilir
+- Dil alanları eksikse tenant default’a fallback (admin GET’te)
+- All responses wrapped in `ApiResponse`; errors localized
+
+**Timeline:** 1 week (Admin Only)
+
+- Days 1-2: Backend schema, service, controller
+- Days 3-4: Admin UI forms and API wiring
+- Day 5: Testler, dokümantasyon
+
+**Open Questions:**
+
+1) Do we need multi-location addresses (array) instead of a single one?
+2) Should `siteName` always be per-language (move from global)?
+3) Any additional integrations (reCAPTCHA, Hotjar, Intercom) to include?
+4) Should settings changes support draft/preview before publish?
+5) Privacy policy / terms URLs per language to include in settings?
+6) Do we require per-environment integration IDs (Dev/Stage/Prod)?
+7) Any other social platforms to add by default?
+
 ### 🔄 **PHASE 2: ADVANCED FEATURES (6 weeks)**
 
-#### **Sprint 7: Multi-Framework Support + i18n (2 weeks)**
+#### **Multi-Framework Support + i18n (2 weeks)**
 
 **Goal:** React, Vue, Angular SSR with multi-language support
 
@@ -681,7 +869,7 @@ public class Menu {
 - [ ] SEO-friendly language URLs (/tr/, /en/)
 - [ ] Hydration with correct language
 
-#### **Sprint 8: Advanced Content Features + Translation Workflow (2 weeks)**
+#### **Advanced Content Features + Translation Workflow (2 weeks)**
 
 **Goal:** Content versioning, scheduling, and translation management
 
@@ -693,7 +881,7 @@ public class Menu {
 - [ ] Translation status tracking
 - [ ] Auto-translation integration (Google Translate API)
 
-#### **Sprint 9: SEO + Analytics + Localization (2 weeks)**
+#### **SEO + Analytics + Localization (2 weeks)**
 
 **Goal:** Advanced SEO and analytics with language support
 

@@ -188,3 +188,35 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
+-- site_settings (Sprint 9)
+CREATE TABLE IF NOT EXISTS site_settings (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  tenant_id BIGINT NOT NULL,
+  setting_key VARCHAR(100) NOT NULL,
+  setting_value TEXT NULL,
+  language ENUM('TR','EN') NULL COMMENT 'NULL for global',
+  setting_type ENUM('TEXT','NUMBER','BOOLEAN','JSON','URL','I18N_TEXT') DEFAULT 'TEXT',
+  category VARCHAR(50) DEFAULT 'general',
+  display_name VARCHAR(100) NULL,
+  description TEXT NULL,
+  is_public BOOLEAN DEFAULT FALSE,
+  sort_order INT DEFAULT 0,
+  updated_by BIGINT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  -- TENANT ISOLATION CONSTRAINT
+  CONSTRAINT uk_site_setting_key_lang_tenant UNIQUE (tenant_id, setting_key, language),
+  CONSTRAINT chk_site_setting_key_format CHECK (setting_key REGEXP '^[a-z0-9._-]+$'),
+  
+  -- PERFORMANCE INDICES
+  INDEX idx_site_setting_tenant (tenant_id),
+  INDEX idx_site_setting_tenant_lang (tenant_id, language),
+  INDEX idx_site_setting_tenant_category (tenant_id, category),
+  INDEX idx_site_setting_tenant_public (tenant_id, is_public),
+  INDEX idx_site_setting_type (setting_type),
+  
+  -- FOREIGN KEYS
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
