@@ -1,0 +1,693 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+
+# 🐛 BUGBOT - SaaS CMS Platform Debugging & Quality Assurance Guide
+
+## 📋 Project Overview
+
+**Project:** SaaS CMS Platform with Clean Architecture + Multi-Language Support  
+**Backend:** Java Spring Boot 3, Maven, Java 21, MySQL  
+**Frontend:** Angular 19, TypeScript  
+**Architecture:** Clean Architecture (Presentation → Application → Domain → Infrastructure)  
+**Languages:** Turkish (tr), English (en)  
+**Deployment:** Multi-tenant SaaS platform  
+
+## 🏗️ Architecture-Specific Debugging
+
+### **Clean Architecture Layer Debugging**
+
+```
+🖥️  PRESENTATION LAYER → Controllers, DTOs, Validation, i18n
+📋 APPLICATION LAYER  → Services, Use Cases, Commands, Queries  
+🎯 DOMAIN LAYER       → Entities, Business Rules, Domain Logic
+🔧 INFRASTRUCTURE     → Repositories, External APIs, Database
+```
+
+#### **🖥️ Presentation Layer Debugging**
+
+```bash
+# Common Issues & Solutions
+1. Controller Validation Errors
+2. DTO Mapping Issues  
+3. i18n Message Resolution
+4. Request/Response Serialization
+5. API versioning conflicts
+```
+
+**Debug Checklist:**
+
+- [ ] `@RestController` annotation present
+- [ ] `@RequestMapping("/api/...")` at class level
+- [ ] Method mappings use `@GetMapping`, `@PostMapping`, etc.
+- [ ] All methods return `ResponseEntity<ApiResponse<T>>`
+- [ ] Try-catch blocks implemented in all methods
+- [ ] DTO validation annotations present (`@Valid`)
+- [ ] i18n message keys exist in both `messages_tr.properties` and `messages_en.properties`
+
+#### **📋 Application Layer Debugging**
+
+```bash
+# Common Issues & Solutions
+1. Service Transaction Boundaries
+2. Use Case Orchestration  
+3. Domain Event Publishing
+4. Cross-cutting Concerns
+5. Multi-tenant Context
+```
+
+**Debug Checklist:**
+
+- [ ] `@Service` annotation on ServiceImpl classes
+- [ ] `@Transactional` on methods with multiple DB operations
+- [ ] No direct database queries in services
+- [ ] DTOs used for data transfer
+- [ ] Exception handling with domain-specific exceptions
+- [ ] Multi-language context preserved
+
+#### **🎯 Domain Layer Debugging**
+
+```bash
+# Common Issues & Solutions
+1. Business Rule Violations
+2. Entity State Inconsistencies
+3. Domain Event Integrity
+4. Value Object Validation
+5. Aggregate Boundary Issues
+```
+
+**Debug Checklist:**
+
+- [ ] `@Entity` annotation on domain entities
+- [ ] `@Data` from Lombok (unless specified otherwise)
+- [ ] `@Id` and `@GeneratedValue(strategy=GenerationType.IDENTITY)` on IDs
+- [ ] `FetchType.LAZY` for relationships
+- [ ] Validation annotations (`@Size`, `@NotEmpty`, `@Email`)
+- [ ] Business methods implemented in entities
+
+#### **🔧 Infrastructure Layer Debugging**
+
+```bash
+# Common Issues & Solutions
+1. Repository Query Performance
+2. Database Connection Issues
+3. External API Integration
+4. File Storage Problems
+5. Multi-tenant Database Access
+```
+
+**Debug Checklist:**
+
+- [ ] `@Repository` annotation on repository interfaces
+- [ ] Extends `JpaRepository<Entity, ID>`
+- [ ] JPQL queries for `@Query` methods
+- [ ] `@EntityGraph` for relationship queries (N+1 prevention)
+- [ ] DTO projections for complex joins
+- [ ] Database per tenant configured correctly
+
+## 🌐 Multi-Language Debugging
+
+### **Backend i18n Issues**
+
+**Common Problems:**
+
+1. **Missing Translation Keys**
+
+   ```bash
+   # Check logs for missing keys
+   grep "No message found under code" logs/application.log
+   ```
+
+2. **Locale Resolution Problems**
+
+   ```java
+   // Debug locale resolution
+   @GetMapping("/debug/locale")
+   public String getCurrentLocale(HttpServletRequest request) {
+       return localeResolver.resolveLocale(request).toString();
+   }
+   ```
+
+3. **Character Encoding Issues**
+
+   ```properties
+   # Ensure UTF-8 encoding in application.yml
+   spring:
+     messages:
+       encoding: UTF-8
+   ```
+
+**Debug Commands:**
+
+```bash
+# Check message bundle loading
+curl -H "Accept-Language: tr" http://localhost:8080/api/debug/messages
+curl -H "Accept-Language: en" http://localhost:8080/api/debug/messages
+
+# Validate message files
+find src/main/resources/i18n -name "*.properties" -exec echo "Checking {}" \; -exec native2ascii -check {} \;
+```
+
+### **Frontend Angular i18n Issues**
+
+**Common Problems:**
+
+1. **Missing Translation Files**
+
+   ```bash
+   ng extract-i18n
+   ng build --configuration=production --localize
+   ```
+
+2. **Locale Loading Issues**
+
+   ```typescript
+   // Debug locale service
+   console.log('Current Language:', this.languageService.getLanguage());
+   console.log('Available Languages:', this.supportedLanguages);
+   ```
+
+## 🗄️ Database Debugging
+
+### **Multi-Tenant Database Issues**
+
+**1. Tenant Database Creation**
+
+```sql
+-- Check tenant databases
+SHOW DATABASES LIKE 'tenant_%';
+
+-- Verify tenant configuration
+SELECT id, subdomain, database_name, status, supported_languages 
+FROM platform_management.tenants;
+```
+
+**2. Cross-Tenant Data Leakage**
+
+```sql
+-- Audit query to check data isolation
+SELECT 
+    TABLE_NAME,
+    COUNT(*) as record_count,
+    COUNT(DISTINCT tenant_id) as tenant_count
+FROM INFORMATION_SCHEMA.TABLES t
+JOIN tenant_1_db.contents c ON 1=1
+WHERE TABLE_SCHEMA = 'tenant_1_db'
+GROUP BY TABLE_NAME;
+```
+
+**3. Performance Monitoring**
+
+```sql
+-- Check slow queries
+SELECT 
+    query_time,
+    lock_time,
+    rows_sent,
+    rows_examined,
+    sql_text
+FROM mysql.slow_log 
+WHERE start_time >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+ORDER BY query_time DESC LIMIT 10;
+```
+
+## 🧪 Testing Strategy
+
+### **Unit Testing Guidelines**
+
+**Backend (JUnit 5 + Mockito):**
+
+```java
+// Service Layer Testing Example
+@ExtendWith(MockitoExtension.class)
+class TenantServiceImplTest {
+    
+    @Mock
+    private TenantRepository tenantRepository;
+    
+    @InjectMocks
+    private TenantServiceImpl tenantService;
+    
+    @Test
+    void shouldCreateTenant_WhenValidData() {
+        // Given
+        CreateTenantRequest request = new CreateTenantRequest(
+            "test-company", "test@example.com", "Test User", "tr"
+        );
+        
+        // When & Then
+        assertDoesNotThrow(() -> tenantService.createTenant(request));
+    }
+    
+    @Test
+    void shouldThrowException_WhenSubdomainExists() {
+        // Test exception scenarios
+    }
+}
+```
+
+**Frontend (Jasmine + Karma):**
+
+```typescript
+describe('LanguageService', () => {
+  let service: LanguageService;
+  
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(LanguageService);
+  });
+  
+  it('should switch language correctly', () => {
+    service.setLanguage('en');
+    expect(service.getLanguage()).toBe('en');
+  });
+});
+```
+
+### **Integration Testing**
+
+**API Testing with TestContainers:**
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
+class TenantControllerIntegrationTest {
+    
+    @Container
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+    
+    @Test
+    void shouldCreateTenantSuccessfully() {
+        // Integration test implementation
+    }
+}
+```
+
+**Multi-Language Content Testing:**
+
+```java
+@Test
+void shouldCreateContentInMultipleLanguages() {
+    // Test content creation in TR
+    ContentRequest trRequest = new ContentRequest("Başlık", "içerik", "tr");
+    ContentResponse trResponse = contentService.createContent(trRequest);
+    
+    // Test content creation in EN
+    ContentRequest enRequest = new ContentRequest("Title", "content", "en");
+    ContentResponse enResponse = contentService.createContent(enRequest);
+    
+    // Verify translations are linked
+    assertThat(trResponse.translationGroupId()).isEqualTo(enResponse.translationGroupId());
+}
+```
+
+## 🔍 Performance Monitoring
+
+### **Database Performance**
+
+**Query Performance Monitoring:**
+
+```sql
+-- Enable slow query log
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;
+
+-- Monitor N+1 queries
+SELECT 
+    sql_text,
+    COUNT(*) as execution_count,
+    AVG(query_time) as avg_query_time
+FROM mysql.slow_log 
+WHERE sql_text LIKE '%SELECT%JOIN%'
+GROUP BY sql_text
+ORDER BY execution_count DESC;
+```
+
+**Index Usage Analysis:**
+
+```sql
+-- Check index usage
+SELECT 
+    object_schema,
+    object_name,
+    index_name,
+    count_read,
+    count_write,
+    sum_timer_read,
+    sum_timer_write
+FROM performance_schema.table_io_waits_summary_by_index_usage
+WHERE object_schema IN ('platform_management', 'tenant_1_db')
+ORDER BY sum_timer_read DESC;
+```
+
+### **Application Performance**
+
+**JVM Monitoring:**
+
+```bash
+# Memory usage
+jstat -gc [PID] 5s
+
+# Thread dump analysis  
+jstack [PID] > thread_dump.txt
+
+# Heap dump for memory issues
+jmap -dump:live,format=b,file=heap_dump.hprof [PID]
+```
+
+**Angular Performance:**
+
+```typescript
+// Performance monitoring service
+@Injectable()
+export class PerformanceService {
+  measureComponentLoad(componentName: string) {
+    const start = performance.now();
+    return () => {
+      const end = performance.now();
+      console.log(`${componentName} loaded in ${end - start}ms`);
+    };
+  }
+}
+```
+
+## 🚨 Common Error Patterns
+
+### **1. Multi-Tenant Context Issues**
+
+**Problem:** Cross-tenant data access
+
+```java
+// ❌ BAD: No tenant context
+@GetMapping("/contents")
+public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents() {
+    return contentService.getAllContents(); // Gets all tenants' content!
+}
+
+// ✅ GOOD: Tenant-aware query
+@GetMapping("/contents")
+public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents(
+        @RequestHeader("X-Tenant-ID") Long tenantId) {
+    return contentService.getContentsByTenant(tenantId);
+}
+```
+
+### **2. Language Context Loss**
+
+**Problem:** Language context not preserved across requests
+
+```java
+// ❌ BAD: Language lost in async processing
+@Async
+public void processContent(Long contentId) {
+    // Current language context is lost here
+    contentService.generateSeoMetadata(contentId);
+}
+
+// ✅ GOOD: Language context preserved
+@Async
+public void processContent(Long contentId, String language) {
+    LocaleContextHolder.setLocale(Locale.forLanguageTag(language));
+    contentService.generateSeoMetadata(contentId);
+}
+```
+
+### **3. N+1 Query Problems**
+
+**Problem:** Not using @EntityGraph
+
+```java
+// ❌ BAD: Causes N+1 queries
+@Query("SELECT c FROM Content c WHERE c.tenantId = :tenantId")
+List<Content> findByTenantId(@Param("tenantId") Long tenantId);
+
+// ✅ GOOD: Uses EntityGraph
+@EntityGraph(attributePaths = {"contentType", "mediaFiles"})
+@Query("SELECT c FROM Content c WHERE c.tenantId = :tenantId")
+List<Content> findByTenantId(@Param("tenantId") Long tenantId);
+```
+
+### **4. Transaction Boundary Issues**
+
+**Problem:** Missing @Transactional on multi-step operations
+
+```java
+// ❌ BAD: No transaction boundary
+public void publishContent(Long contentId) {
+    Content content = contentRepository.findById(contentId).orElseThrow();
+    content.publish();
+    contentRepository.save(content);
+    seoService.generateMetadata(contentId); // Separate transaction!
+}
+
+// ✅ GOOD: Proper transaction boundary
+@Transactional
+public void publishContent(Long contentId) {
+    Content content = contentRepository.findById(contentId).orElseThrow();
+    content.publish();
+    contentRepository.save(content);
+    seoService.generateMetadata(contentId);
+}
+```
+
+## 🛠️ Debugging Tools & Commands
+
+### **Backend Debugging**
+
+**1. Application Logs:**
+
+```bash
+# Tail application logs
+tail -f logs/application.log
+
+# Filter by log level
+grep "ERROR" logs/application.log | tail -20
+
+# Search for specific errors
+grep -i "tenant" logs/application.log | grep "error"
+```
+
+**2. Database Connection Testing:**
+
+```bash
+# Test database connectivity
+mysql -h localhost -u root -p -e "SELECT 1"
+
+# Check active connections
+mysql -e "SHOW PROCESSLIST"
+
+# Verify tenant databases
+mysql -e "SHOW DATABASES LIKE 'tenant_%'"
+```
+
+**3. Spring Boot Actuator Endpoints:**
+
+```bash
+# Health check
+curl http://localhost:8080/actuator/health
+
+# Metrics
+curl http://localhost:8080/actuator/metrics
+
+# Environment variables
+curl http://localhost:8080/actuator/env
+```
+
+### **Frontend Debugging**
+
+**1. Angular Development Tools:**
+
+```bash
+# Build with source maps
+ng build --source-map
+
+# Run with verbose logging
+ng serve --verbose
+
+# Analyze bundle size
+ng build --stats-json
+npx webpack-bundle-analyzer dist/stats.json
+```
+
+**2. Browser Development:**
+
+```javascript
+// Debug language service
+console.log('Current Language:', angular.getTestability().get('LanguageService').getLanguage());
+
+// Debug HTTP requests
+// Open Network tab in DevTools
+// Filter by XHR/Fetch to see API calls
+```
+
+## 📋 Code Quality Checklist
+
+### **Backend Quality Gates**
+
+- [ ] **SOLID Principles Applied**
+  - Single Responsibility: Each class has one reason to change
+  - Open/Closed: Open for extension, closed for modification  
+  - Liskov Substitution: Subtypes must be substitutable
+  - Interface Segregation: Clients depend only on used methods
+  - Dependency Inversion: Depend on abstractions, not concretions
+
+- [ ] **Clean Architecture Compliance**
+  - No dependency violations between layers
+  - Domain layer has no external dependencies
+  - Infrastructure depends on domain, not vice versa
+  - Application layer orchestrates, doesn't contain business logic
+
+- [ ] **Multi-Language Support**
+  - All user-facing messages externalized
+  - Language context preserved across requests
+  - Fallback language implemented
+  - Character encoding handled correctly (UTF-8)
+
+- [ ] **Security (OWASP)**
+  - Input validation on all endpoints
+  - SQL injection prevention (parameterized queries)
+  - XSS protection in responses
+  - Authentication & authorization implemented
+  - Tenant isolation enforced
+
+### **Frontend Quality Gates**
+
+- [ ] **Angular Best Practices**
+  - OnPush change detection where applicable
+  - Reactive forms for complex forms
+  - Lazy loading for feature modules
+  - Error boundaries implemented
+  - Memory leaks prevented (unsubscribe)
+
+- [ ] **TypeScript Standards**
+  - Strict mode enabled
+  - No `any` types used
+  - Interfaces defined for all data structures
+  - Proper error handling with typed exceptions
+
+## 🚀 Performance Optimization
+
+### **Database Optimization**
+
+```sql
+-- Create proper indexes for multi-language queries
+CREATE INDEX idx_content_language_tenant ON contents(language, tenant_id, status);
+CREATE INDEX idx_content_translation_group ON contents(translation_group_id);
+
+-- Partition large tables by tenant
+ALTER TABLE contents PARTITION BY HASH(tenant_id) PARTITIONS 10;
+```
+
+### **Caching Strategy**
+
+```java
+// Cache frequently accessed translations
+@Cacheable(value = "translations", key = "#language + '_' + #key")
+public String getTranslation(String key, String language) {
+    return messageSource.getMessage(key, null, Locale.forLanguageTag(language));
+}
+
+// Cache tenant configuration
+@Cacheable(value = "tenants", key = "#subdomain")
+public TenantResponse getTenantBySubdomain(String subdomain) {
+    return tenantRepository.findBySubdomain(subdomain)
+        .map(tenantMapper::toResponse)
+        .orElseThrow(() -> new TenantNotFoundException(subdomain));
+}
+```
+
+## 📞 Emergency Debugging Contacts
+
+### **Critical Issue Response**
+
+**1. Database Issues:**
+
+- Check connection pool: `spring.datasource.hikari.*`
+- Monitor slow queries: Enable MySQL slow query log
+- Verify tenant isolation: Run cross-tenant data audit
+
+**2. Memory Issues:**
+
+- Generate heap dump: `jmap -dump:live,format=b,file=heap.hprof [PID]`
+- Analyze with Eclipse MAT or VisualVM
+- Check for memory leaks in caching layers
+
+**3. Performance Degradation:**
+
+- Enable Spring Boot Actuator metrics
+- Monitor database query execution plans
+- Check Angular change detection performance
+
+### **Rollback Procedures**
+
+**1. Database Rollback:**
+
+```bash
+# Backup before rollback
+mysqldump --all-databases > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Rollback tenant database
+mysql tenant_1_db < previous_version_backup.sql
+```
+
+**2. Application Rollback:**
+
+```bash
+# Docker deployment rollback
+docker service update --rollback admincraft-backend
+docker service update --rollback admincraft-frontend
+
+# Kubernetes rollback
+kubectl rollout undo deployment/admincraft-backend
+kubectl rollout undo deployment/admincraft-frontend
+```
+
+---
+
+## 🔧 Quick Reference
+
+### **Useful Debugging Queries**
+
+```sql
+-- Check tenant status and languages
+SELECT subdomain, status, default_language, supported_languages 
+FROM platform_management.tenants;
+
+-- Find content without translations
+SELECT c1.id, c1.title, c1.language 
+FROM contents c1 
+LEFT JOIN contents c2 ON c1.translation_group_id = c2.translation_group_id 
+    AND c1.language != c2.language
+WHERE c2.id IS NULL AND c1.translation_group_id IS NOT NULL;
+
+-- Monitor active sessions per language
+SELECT preferred_language, COUNT(*) as active_sessions
+FROM user_sessions 
+WHERE is_active = true 
+GROUP BY preferred_language;
+```
+
+### **Common Log Patterns**
+
+```bash
+# Search for i18n issues
+grep -E "(No message found|Missing translation)" logs/application.log
+
+# Find slow database queries  
+grep -E "took [0-9]{3,}" logs/application.log
+
+# Check tenant context issues
+grep -E "(tenant.*not found|cross-tenant)" logs/application.log
+```
+
+---
+
+**Last Updated:** $(date +%Y-%m-%d)  
+**Version:** 1.0  
+**Maintainer:** Development Team

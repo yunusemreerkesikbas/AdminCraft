@@ -1,0 +1,15 @@
+<div [formGroup]="group" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <spa-input
+        [label]="'admin.settings.seo.title' | transloco"
+        formControlName="title"
+    ></spa-input>
+    <spa-textarea
+        [label]="'admin.settings.seo.description' | transloco"
+        formControlName="description"
+    ></spa-textarea>
+    <spa-input
+        class="md:col-span-2"
+        [label]="'admin.settings.seo.keywords' | transloco"
+        formControlName="keywords"
+    ></spa-input>
+</div>

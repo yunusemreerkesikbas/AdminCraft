@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     EventEmitter,
     forwardRef,
+    inject,
     Input,
     Output,
     ViewEncapsulation,
-    ChangeDetectionStrategy,
 } from '@angular/core';
 import {
     ControlValueAccessor,
@@ -40,6 +42,7 @@ import { MatInputModule } from '@angular/material/input';
     ],
 })
 export class SpaInputComponent implements ControlValueAccessor {
+    #cdr = inject(ChangeDetectorRef);
     @Input() label?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
@@ -57,6 +60,7 @@ export class SpaInputComponent implements ControlValueAccessor {
 
     writeValue(value: any): void {
         this.value = value;
+        this.#cdr.markForCheck();
     }
 
     registerOnChange(fn: any): void {
@@ -69,6 +73,7 @@ export class SpaInputComponent implements ControlValueAccessor {
 
     setDisabledState(isDisabled: boolean): void {
         this.disabled = isDisabled;
+        this.#cdr.markForCheck();
     }
 
     onInput(event: Event): void {

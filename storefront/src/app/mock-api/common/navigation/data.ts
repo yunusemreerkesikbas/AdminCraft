@@ -84,6 +84,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:folder',
                 link: '/__TENANT__/pages/categories',
             },
+            {
+                id: 'apps.custom.settings',
+                title: 'Site Ayarları',
+                type: 'basic',
+                icon: 'heroicons_outline:cog-6-tooth',
+                link: '/__TENANT__/settings',
+            },
         ],
     },
 ];

@@ -1,0 +1,37 @@
+<div [formGroup]="group" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <spa-input
+        [label]="'admin.settings.address.line1' | transloco"
+        formControlName="line1"
+    ></spa-input>
+
+    <spa-input
+        [label]="'admin.settings.address.line2' | transloco"
+        formControlName="line2"
+    ></spa-input>
+
+    <spa-input
+        [label]="'admin.settings.address.city' | transloco"
+        formControlName="city"
+    ></spa-input>
+
+    <spa-input
+        [label]="'admin.settings.address.state' | transloco"
+        formControlName="state"
+    ></spa-input>
+
+    <spa-input
+        [label]="'admin.settings.address.postalCode' | transloco"
+        formControlName="postalCode"
+    ></spa-input>
+
+    <spa-input
+        [label]="'admin.settings.address.country' | transloco"
+        formControlName="country"
+    ></spa-input>
+
+    <spa-input
+        class="md:col-span-2"
+        [label]="'admin.settings.address.mapEmbedUrl' | transloco"
+        formControlName="mapEmbedUrl"
+    ></spa-input>
+</div>

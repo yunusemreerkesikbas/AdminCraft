@@ -1,0 +1,115 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+    @if (panel === 'general') {
+        <div class="grid grid-cols-1 gap-6">
+            <div
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                formGroupName="global"
+            >
+                <spa-input
+                    [label]="'admin.settings.fields.contactEmail' | transloco"
+                    formControlName="contactEmail"
+                    type="email"
+                ></spa-input>
+                <spa-input
+                    [label]="'admin.settings.fields.contactPhone' | transloco"
+                    formControlName="contactPhone"
+                ></spa-input>
+                <spa-input
+                    [label]="'admin.settings.fields.whatsappPhone' | transloco"
+                    formControlName="whatsappPhone"
+                ></spa-input>
+                <spa-input
+                    [label]="
+                        'admin.settings.fields.canonicalBaseUrl' | transloco
+                    "
+                    formControlName="canonicalBaseUrl"
+                ></spa-input>
+                <spa-input
+                    class="md:col-span-2"
+                    [label]="'admin.settings.fields.robots' | transloco"
+                    formControlName="robots"
+                ></spa-input>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6" formGroupName="languages">
+                <div
+                    class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                    formGroupName="tr"
+                >
+                    <h3 class="mb-2 text-lg font-medium">Genel (TR)</h3>
+                    <spa-input
+                        [label]="'admin.settings.fields.siteName' | transloco"
+                        formControlName="siteName"
+                    ></spa-input>
+                    <spa-input
+                        [label]="'admin.settings.fields.tagline' | transloco"
+                        formControlName="tagline"
+                    ></spa-input>
+                </div>
+                <div
+                    class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                    formGroupName="en"
+                >
+                    <h3 class="mb-2 text-lg font-medium">General (EN)</h3>
+                    <spa-input
+                        [label]="'admin.settings.fields.siteName' | transloco"
+                        formControlName="siteName"
+                    ></spa-input>
+                    <spa-input
+                        [label]="'admin.settings.fields.tagline' | transloco"
+                        formControlName="tagline"
+                    ></spa-input>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (panel === 'address') {
+        <div class="md:col-span-2" formGroupName="global">
+            <h3 class="mb-2 text-lg font-medium">
+                {{ 'admin.settings.address.title' | transloco }}
+            </h3>
+            <spa-site-address-form
+                [group]="addressGroup"
+            ></spa-site-address-form>
+        </div>
+    }
+
+    @if (panel === 'social') {
+        <div class="md:col-span-2" formGroupName="global">
+            <h3 class="mb-2 text-lg font-medium">
+                {{ 'admin.settings.social.title' | transloco }}
+            </h3>
+            <spa-site-social-links
+                [group]="socialGroup"
+            ></spa-site-social-links>
+        </div>
+    }
+
+    @if (panel === 'seo') {
+        <div class="grid grid-cols-1 gap-6" formGroupName="languages">
+            <div class="grid grid-cols-1 gap-4" formGroupName="tr">
+                <h3 class="mb-2 text-lg font-medium">
+                    {{ 'admin.settings.seo.headingTR' | transloco }}
+                </h3>
+                <spa-site-seo-settings
+                    [group]="trSeoGroup"
+                ></spa-site-seo-settings>
+            </div>
+            <div class="grid grid-cols-1 gap-4" formGroupName="en">
+                <h3 class="mb-2 text-lg font-medium">
+                    {{ 'admin.settings.seo.headingEN' | transloco }}
+                </h3>
+                <spa-site-seo-settings
+                    [group]="enSeoGroup"
+                ></spa-site-seo-settings>
+            </div>
+        </div>
+    }
+
+    <div class="flex justify-end">
+        <button mat-flat-button color="primary" type="submit">
+            {{ 'common.actions.save' | transloco }}
+        </button>
+    </div>
+</form>

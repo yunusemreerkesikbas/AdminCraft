@@ -1,7 +1,16 @@
-import { inject, Injectable } from '@angular/core';
-import { Site, SitePagination, CreateSiteRequest, UpdateSiteRequest, Menu, Language } from './sites.types';
-import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
+import { ApiResponse } from '@modules/admin/custom/pages/page-builder.types';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import {
+    CreateSiteRequest,
+    Menu,
+    Site,
+    SitePagination,
+    SiteSettingsPatchRequest,
+    SiteSettingsResponseDto,
+    UpdateSiteRequest,
+} from './sites.types';
 
 @Injectable({ providedIn: 'root' })
 export class SitesService {
@@ -248,5 +257,24 @@ export class SitesService {
                 return [];
             })
         );
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Site Settings (Admin)
+    // -----------------------------------------------------------------------------------------------------
+
+    getSiteSettings(): Observable<SiteSettingsResponseDto> {
+        return this._apiClient
+            .get<ApiResponse<SiteSettingsResponseDto>>('siteSettings')
+            .pipe(map((r) => r.data));
+    }
+
+    patchSiteSettings(payload: SiteSettingsPatchRequest): Observable<SiteSettingsResponseDto> {
+        // Use custom PATCH without retry to avoid multiple attempts on 5xx
+        return this._apiClient
+            .custom<ApiResponse<SiteSettingsResponseDto>>('PATCH', 'siteSettings', {
+                body: payload,
+            })
+            .pipe(map((r) => r.data));
     }
 }

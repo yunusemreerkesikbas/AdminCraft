@@ -39,6 +39,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     siteDeactivate: 'sites/${id}/deactivate',
     siteMenus: 'sites/${siteId}/menus',
 
+    // ----- SITE SETTINGS -----
+    siteSettings: 'site-settings',
+
     // ----- PAGE BUILDER: PAGES -----
     pages: 'pages',
     pageById: 'pages/${id}',
