@@ -518,9 +518,26 @@ Admin UI using ngx-toastr with i18n, accessibility, and error handling.
 - Interceptor surfaces errors per rules without noise
 - No memory leaks (`take(1)`, async pipe); tests green
 
-#### **Sprint 7: Media Management + File Localization (1.5 weeks)**
+#### **Sprint 7: Media Management (1.5 weeks)**
 
-**Goal:** File upload and media management with language support
+**Goal:** Build a generic, page‑embedded media management experience.
+Support localized metadata (title, subtitle, altText, SEO), desktop/mobile
+variants with fallback (mobile uses desktop when absent), multiple images,
+drag & drop uploads, usage purpose enum, and a single cover image per owner.
+
+**Key Decisions:**
+
+- In‑form usage with `<spa-media-field>` (ControlValueAccessor). The central
+  Media Library remains and is opened from within forms as a dialog.
+- Drag & drop library: `ngx-dropzone` (Angular 16+, lightweight, previews,
+  AoT compatible). Alternative considered: `ngx-file-drop`.
+- Image purpose is tracked at usage level (not file level):
+  `media_usages.purpose ENUM('BREADCRUMB','THUMBNAIL','SLIDER',...)`.
+- Single cover per owner: chosen via toggle in UI, enforced in service with
+  transactional updates.
+- Tenant isolation: all storage paths are tenant‑namespaced, all queries are
+  filtered by `tenantId`, all controllers/services enforce tenant context and
+  role checks (no cross‑tenant access).
 
 **Domain Layer:**
 
@@ -531,64 +548,138 @@ public class MediaFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     private String originalName;
-    private String fileName;
-    private String filePath;
+    private String fileName; // UUID
+    private String filePath; // base/original path
     private String mimeType;
     private Long fileSize;
-    
-    // Image properties
+
     private Integer width;
     private Integer height;
-    
-    // Multi-language alt text
-    private String altTextTr;
-    private String altTextEn;
-    
+
+    // Localized metadata aligned with Sprint 8 structure
+    // JSON: { "tr": { title, subtitle, altText, seo{...} }, "en": { ... } }
+    @Column(columnDefinition = "json")
+    private String i18n;
+
+    // Generated variants (desktop/mobile urls, sizes)
+    // JSON: { desktop:{url,w,h}, mobile:{url,w,h} }
+    @Column(columnDefinition = "json")
+    private String variants;
+
     private Long tenantId;
     private Long uploadedBy;
-    
-    public String getAltText(Language language) {
-        return switch (language) {
-            case TR -> altTextTr;
-            case EN -> altTextEn;
-            default -> altTextTr; // fallback
-        };
-    }
+}
+```
+
+```java
+@Entity
+@Table(name = "media_usages")
+public class MediaUsage {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long mediaId;
+    private String ownerType; // PAGE, BLOCK, FORM_FIELD
+    private Long ownerId;
+
+    @Enumerated(EnumType.STRING)
+    private MediaPurpose purpose; // BREADCRUMB, THUMBNAIL, SLIDER, ...
+
+    private Boolean isCover; // single per (ownerType, ownerId)
+    private Integer sortOrder; // drag-based ordering
 }
 ```
 
 **Application Layer:**
 
-- [ ] MediaService with language-aware operations
-- [ ] UploadMediaUseCase with localized metadata
-- [ ] Image processing with multi-language alt text
-- [ ] Media organization and search
+- [ ] `MediaService`: upload, desktop/mobile variant generation, localized
+  metadata read/write, search/filter, attach/detach to owners (`MediaUsage`),
+  and single‑cover enforcement.
+- [ ] `UploadMediaUseCase`: mime/size/aspect validation, de‑duplication via
+  content hash, variant generation, i18n metadata scaffolding.
+- [ ] `AttachMediaUseCase`: bind to owner, choose purpose, enforce single
+  cover, update ordering.
 
 **Infrastructure Layer:**
 
-- [ ] MediaRepository implementation
-- [ ] Local file storage service
-- [ ] Image resizing service
+- [ ] `MediaRepository` (JPA) with tenant‑scoped queries and indices.
+- [ ] Storage service (local/S3 pluggable), variant generation service.
+- [ ] `media_usages` table; single‑cover enforced transactionally at service
+  layer. Storage path convention: `/tenants/{tenantId}/media/...`.
 
-**Presentation Layer:**
+**Presentation Layer (REST):**
 
-- [ ] MediaController with localized responses
-- [ ] File upload UI with language-specific metadata
-- [ ] Media library with language filtering
-- [ ] Drag & drop interface
+- [ ] `MediaController`: `POST /upload`, `GET /search`, `PUT /{id}/i18n`,
+  `DELETE /{id}` (tenant‑scoped).
+- [ ] `MediaAttachmentController`: `POST /attach`, `PATCH /reorder`,
+  `PATCH /cover`, `DELETE /detach`.
+- [ ] All responses use `ApiResponse`; errors localized; strict tenant and
+  role checks.
 
-**i18n Features:**
+**Angular (Admin) – `<spa-media-field>`:**
 
-- [ ] Multi-language alt text for images
-- [ ] Localized file upload messages
-- [ ] Language-specific media organization
-- [ ] Translated file categories
+- Inputs: `multiple`, `language`, `accept`, `aspectRatio`,
+  `variants={desktop:true,mobile:true}`, `purposes`, `coverSelectable=true`.
+- Features: drag & drop (ngx-dropzone), multi‑select and ordering, separate
+  desktop/mobile inputs with automatic mobile fallback, localized altText,
+  title/subtitle/SEO editor, single‑cover toggle (auto‑unsets others).
+- Dialog: shared Media Library (search/filter/upload/select).
 
-**Output:** Complete media management with language support
+**Validations & Rules:**
 
-#### **Sprint 8: Site Publishing + Multi-Language Sites (1.5 weeks)**
+- AltText per language (fallback to tenant default language if missing).
+- OWASP‑aligned limits for title/subtitle/SEO; accept/mime, maxSizeMB,
+  aspectRatio checks.
+- Drag‑drop reordering persists `sortOrder`.
+- Purpose enum chosen at attach/upload time (independent of file).
+
+**DB Notes:**
+
+- Add `media_files.i18n` JSON and `media_files.variants` JSON columns.
+- Add `media_usages(media_id, owner_type, owner_id, purpose, sort_order, is_cover)`.
+- All queries and unique constraints must respect `tenantId` scope.
+
+**Technical Choices (final):**
+
+- Image processing: Java‑only using Thumbnailator (+ TwelveMonkeys ImageIO
+  plugins) for portability. Handle EXIF orientation, center‑crop to aspect,
+  and encode JPEG quality at ~0.82. Variant generation is synchronous for
+  small files; can be offloaded to async executor if needed.
+- Storage: S3‑compatible (MinIO) in prod; local filesystem in dev. Paths are
+  tenant‑namespaced: `/tenants/{tenantId}/media/{yyyy}/{MM}/{uuid}.{ext}`.
+  Access via presigned URLs (TTL 15m), server‑side encryption enabled.
+- Limits & presets: default max size 10 MB; allowed mimes `image/jpeg`,
+  `image/png` (extendable to WebP when plugin available). Purpose aspects:
+  THUMBNAIL 1:1, SLIDER 16:9, BREADCRUMB 21:9. Desktop widths: 1920 (SLIDER),
+  1200 (BREADCRUMB), 600 (THUMBNAIL); Mobile widths: 768/480 as applicable.
+- De‑duplication: SHA‑256 content hash per tenant. If hash exists, return
+  existing `MediaFile` and attach usage instead of storing duplicates.
+- Staged uploads: `MediaFile.status` = STAGED → ACTIVE upon first attach or
+  explicit finalize. Daily cleanup job removes STAGED files older than 24h
+  with zero usages.
+- Security: Strict tenant scoping in repositories/services, role checks in
+  controllers, and audit logging for upload/attach/delete operations.
+
+**Deliverables:**
+
+- Backend: entities, repositories, services, controllers, variant pipeline,
+  i18n metadata, tenant isolation.
+- Frontend: `<spa-media-field>`, Media Library dialog, ngx-dropzone.
+- Integration: Page Builder and form fields consume the component directly.
+
+**Acceptance Criteria:**
+
+- Upload image(s) with drag & drop; variants generated; metadata saved per
+  language; tenant cannot access other tenants’ media.
+- Attach media to a page/section; set purpose and a single cover (enforced).
+- Mobile image optional; when missing, desktop variant is used.
+- Reordering persists; all APIs return `ApiResponse` with localized errors.
+
+#### **Sprint 8: Site Settings Module (1 week)**
+
+#### **Sprint 9: Site Publishing + Multi-Language Sites (1.5 weeks)**
 
 **Goal:** Site rendering and publishing with language switching
 
@@ -660,8 +751,6 @@ public class Menu {
 - [ ] Fallback language handling
 
 **Output:** Multi-language site publishing with Thymeleaf
-
-#### **Sprint 9: Site Settings Module (1 week)**
 
 **Goal:** Build the Site Settings module (backend service + Admin UI
 forms) with language-aware fields and a simple API contract.
