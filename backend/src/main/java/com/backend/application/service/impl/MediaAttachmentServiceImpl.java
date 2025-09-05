@@ -2,6 +2,8 @@ package com.backend.application.service.impl;
 
 import com.backend.application.dto.media.MediaUsageDto;
 import com.backend.application.service.MediaAttachmentService;
+import com.backend.application.service.MediaService;
+import com.backend.domain.entity.MediaFile;
 import com.backend.domain.entity.MediaUsage;
 import com.backend.domain.enums.MediaPurpose;
 import com.backend.domain.repository.MediaUsageRepository;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MediaAttachmentServiceImpl implements MediaAttachmentService {
 
   private final MediaUsageRepository usageRepository;
+  private final MediaService mediaService;
 
   @Override
   public List<MediaUsageDto> attach(Long tenantId, String ownerType, Long ownerId,
@@ -33,6 +36,15 @@ public class MediaAttachmentServiceImpl implements MediaAttachmentService {
       u.setMediaId(mid);
       u.setPurpose(purpose);
       u.setSortOrder(orderCounter.incrementAndGet());
+      
+      // Sprint 7: Activate staged media files when first attached
+      mediaService.getMediaFileById(mid).ifPresent(mediaFile -> {
+        if (mediaFile.isStaged()) {
+          mediaFile.activate();
+          mediaService.updateMediaFile(mediaFile);
+        }
+      });
+      
       return usageRepository.save(u);
     }).toList();
     return saved.stream().map(this::toDto).toList();

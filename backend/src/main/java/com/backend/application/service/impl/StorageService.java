@@ -26,9 +26,16 @@ public class StorageService {
   @Value("${admincraft.media.upload-path:uploads}")
   private String uploadPath;
 
+  // Sprint 7: Tenant namespaced storage path
+  // Format: /tenants/{tenantId}/media/{yyyy}/{MM}/{uuid}.{ext}
   public Path saveToTenantFolder(byte[] content, Long tenantId, String fileName)
       throws IOException {
-    Path tenantDir = Paths.get(uploadPath, "tenant_" + tenantId);
+    java.time.LocalDate now = java.time.LocalDate.now();
+    String year = String.valueOf(now.getYear());
+    String month = String.format("%02d", now.getMonthValue());
+    
+    // Sprint 7 path structure
+    Path tenantDir = Paths.get(uploadPath, "tenants", tenantId.toString(), "media", year, month);
     Files.createDirectories(tenantDir);
     Path filePath = tenantDir.resolve(fileName);
     Files.write(filePath, content);
@@ -56,8 +63,13 @@ public class StorageService {
     g.dispose();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     ImageIO.write(dst, mediaFile.getFileExtension(), out);
-    Path thumbPath = Paths.get(uploadPath, "tenant_" + mediaFile.getTenantId(),
-        "thumb_" + mediaFile.getFileName());
+    // Sprint 7: Thumbnail path structure  
+    java.time.LocalDate now = java.time.LocalDate.now();
+    String year = String.valueOf(now.getYear());
+    String month = String.format("%02d", now.getMonthValue());
+    
+    Path thumbPath = Paths.get(uploadPath, "tenants", mediaFile.getTenantId().toString(), 
+        "media", year, month, "thumbnails", "thumb_" + mediaFile.getFileName());
     Files.write(thumbPath, out.toByteArray());
     mediaFile.setHasThumbnails(true);
     mediaFile.setThumbnailPath(thumbPath.toString());

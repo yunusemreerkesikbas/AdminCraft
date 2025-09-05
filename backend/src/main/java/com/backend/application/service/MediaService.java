@@ -15,7 +15,8 @@ public interface MediaService {
     Optional<MediaFile> getMediaFileById(Long id);
     MediaFile updateMediaFile(MediaFile mediaFile);
     void deleteMediaFile(Long id);
-    List<MediaFile> getAllMediaFiles();
+    // REMOVED: getAllMediaFiles() - SECURITY RISK: Must be tenant-scoped
+    // Use getMediaFilesByTenantId(Long tenantId) instead
     
     // File retrieval operations
     Optional<MediaFile> getMediaFileByFileName(String fileName);
@@ -114,8 +115,8 @@ public interface MediaService {
     Optional<MediaFile> findDuplicateByHash(String fileHash, Long tenantId);
     MediaFile checkForDuplicate(MultipartFile file, Long tenantId);
     
-    // Statistics operations
-    long getTotalFilesCount();
+    // Statistics operations - ALL TENANT SCOPED
+    long getTotalFilesCount(Long tenantId); // Sprint 7: Tenant scoped
     long getImageFilesCount(Long tenantId);
     long getVideoFilesCount(Long tenantId);
     long getDocumentFilesCount(Long tenantId);

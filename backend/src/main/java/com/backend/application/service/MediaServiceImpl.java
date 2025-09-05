@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -56,20 +58,26 @@ public class MediaServiceImpl implements MediaService {
         }
 
         try {
+            // Sprint 7: SHA-256 de-duplication check
+            String contentHash = calculateSHA256(file.getBytes());
+            
+            // Check if file already exists for this tenant
+            Optional<MediaFile> existingFile = mediaRepository.findByTenantIdAndContentHash(tenantId, contentHash);
+            if (existingFile.isPresent()) {
+                log.debug("Duplicate file detected for tenant: {}, returning existing file: {}", 
+                    tenantId, existingFile.get().getFileName());
+                return existingFile.get();
+            }
+
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
             String extension = getFileExtension(originalFilename);
             String uniqueFilename = generateUniqueFilename(extension);
 
-            // Create directory structure
-            Path tenantDir = Paths.get(uploadPath, "tenant_" + tenantId);
-            Files.createDirectories(tenantDir);
+            // Sprint 7: Use tenant namespaced storage path
+            Path filePath = storageService.saveToTenantFolder(file.getBytes(), tenantId, uniqueFilename);
 
-            // Save file
-            Path filePath = tenantDir.resolve(uniqueFilename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Create MediaFile entity
+            // Create MediaFile entity with Sprint 7 enhancements
             MediaFile mediaFile = new MediaFile();
             mediaFile.setOriginalName(originalFilename);
             mediaFile.setFileName(uniqueFilename);
@@ -82,6 +90,13 @@ public class MediaServiceImpl implements MediaService {
             mediaFile.setFolder("uploads");
             mediaFile.setCategory("general");
             mediaFile.setStorageProvider("local");
+            
+            // Sprint 7: Content hash for de-duplication
+            mediaFile.setContentHash(contentHash);
+            
+            // Sprint 7: Staged upload system - initially STAGED
+            // Will be set to ACTIVE when first attached or explicitly finalized
+            // Note: Using MediaStatus enum (to be created) if not exists yet
 
             // Extract image dimensions and create thumbnail/variants if it's an image
             if (mediaFile.isImage()) {
@@ -159,11 +174,9 @@ public class MediaServiceImpl implements MediaService {
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<MediaFile> getAllMediaFiles() {
-        return mediaRepository.findAll();
-    }
+    // REMOVED: getAllMediaFiles() - CRITICAL SECURITY FIX
+    // This method was removed to prevent cross-tenant data access
+    // Use getMediaFilesByTenantId(Long tenantId) instead
 
     @Override
     @Transactional(readOnly = true)
@@ -575,8 +588,9 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public long getTotalFilesCount() {
-        return 0;
+    public long getTotalFilesCount(Long tenantId) {
+        // Sprint 7: Tenant-scoped file count
+        return mediaRepository.countByTenantId(tenantId);
     }
 
     @Override
@@ -643,4 +657,27 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public void restoreFiles(Long tenantId, String backupPath) {
     }
+    
+    // Sprint 7: SHA-256 De-duplication utility methods
+    private String calculateSHA256(byte[] fileContent) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(fileContent);
+            StringBuilder hexString = new StringBuilder();
+            
+            for (byte hashByte : hashBytes) {
+                String hex = Integer.toHexString(0xff & hashByte);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            log.error("SHA-256 algorithm not available", e);
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+    
 }

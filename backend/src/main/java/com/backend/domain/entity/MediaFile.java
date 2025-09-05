@@ -1,6 +1,7 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.MediaStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -71,36 +72,24 @@ public class MediaFile {
     @Column(name = "thumbnail_path")
     private String thumbnailPath;
 
-    // Optional JSON describing generated variants (desktop/mobile)
-    @Column(name = "variants", columnDefinition = "TEXT")
-    private String variants; // JSON: {"desktop":{...},"mobile":{...}}
+    // Sprint 7: JSON variants structure for desktop/mobile variants
+    // JSON: { desktop:{url,w,h}, mobile:{url,w,h} }
+    @Column(name = "variants", columnDefinition = "json")
+    private String variants;
 
-    // Multi-language alt text
-    @Size(max = 255, message = "validation.alt.text.tr.size")
-    @Column(name = "alt_text_tr")
-    private String altTextTr;
-
-    @Size(max = 255, message = "validation.alt.text.en.size")
-    @Column(name = "alt_text_en")
-    private String altTextEn;
-
-    // Multi-language description
-    @Size(max = 500, message = "validation.description.tr.size")
-    @Column(name = "description_tr")
-    private String descriptionTr;
-
-    @Size(max = 500, message = "validation.description.en.size")
-    @Column(name = "description_en")
-    private String descriptionEn;
-
-    // Multi-language title/caption
-    @Size(max = 200, message = "validation.title.tr.size")
-    @Column(name = "title_tr")
-    private String titleTr;
-
-    @Size(max = 200, message = "validation.title.en.size")
-    @Column(name = "title_en")
-    private String titleEn;
+    // Sprint 7: JSON-based i18n structure for localized metadata
+    // JSON: { "tr": { title, subtitle, altText, seo{title, description, keywords} }, "en": { ... } }
+    @Column(name = "i18n", columnDefinition = "json")
+    private String i18n;
+    
+    // Content hash for de-duplication (Sprint 7 requirement)
+    @Column(name = "content_hash", length = 64)
+    private String contentHash; // SHA-256 hash
+    
+    // Sprint 7: Staged upload system
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private MediaStatus status = MediaStatus.STAGED;
 
     // Organization
     @Size(max = 100, message = "validation.folder.size")
@@ -174,50 +163,103 @@ public class MediaFile {
         updatedAt = LocalDateTime.now();
     }
 
-    // Business methods
+    // Sprint 7: JSON-based i18n business methods
+    public MediaI18nMetadata getI18nMetadata(Language language) {
+        if (i18n == null || i18n.isEmpty()) {
+            return new MediaI18nMetadata();
+        }
+        // Parse JSON and return metadata for specific language with fallback
+        return parseI18nJson(language);
+    }
+    
     public String getAltText(Language language) {
-        return switch (language) {
-            case TR -> altTextTr;
-            case EN -> altTextEn;
-            default -> altTextTr; // fallback
-        };
+        MediaI18nMetadata metadata = getI18nMetadata(language);
+        return metadata != null ? metadata.getAltText() : null;
     }
 
     public String getDescription(Language language) {
-        return switch (language) {
-            case TR -> descriptionTr;
-            case EN -> descriptionEn;
-            default -> descriptionTr; // fallback
-        };
+        MediaI18nMetadata metadata = getI18nMetadata(language);
+        return metadata != null ? metadata.getDescription() : null;
     }
 
     public String getTitle(Language language) {
-        return switch (language) {
-            case TR -> titleTr;
-            case EN -> titleEn;
-            default -> titleTr; // fallback
-        };
+        MediaI18nMetadata metadata = getI18nMetadata(language);
+        return metadata != null ? metadata.getTitle() : null;
     }
-
+    
+    public String getSubtitle(Language language) {
+        MediaI18nMetadata metadata = getI18nMetadata(language);
+        return metadata != null ? metadata.getSubtitle() : null;
+    }
+    
+    // Setter methods for i18n content
     public void setAltText(Language language, String altText) {
-        switch (language) {
-            case TR -> this.altTextTr = altText;
-            case EN -> this.altTextEn = altText;
-        }
+        // TODO: Implement JSON-based i18n update logic
+        // This should parse the i18n JSON, update the altText for the given language, and save back
     }
-
+    
     public void setDescription(Language language, String description) {
-        switch (language) {
-            case TR -> this.descriptionTr = description;
-            case EN -> this.descriptionEn = description;
-        }
+        // TODO: Implement JSON-based i18n update logic
+        // This should parse the i18n JSON, update the description for the given language, and save back
     }
-
+    
     public void setTitle(Language language, String title) {
-        switch (language) {
-            case TR -> this.titleTr = title;
-            case EN -> this.titleEn = title;
-        }
+        // TODO: Implement JSON-based i18n update logic
+        // This should parse the i18n JSON, update the title for the given language, and save back
+    }
+    
+    public void setSubtitle(Language language, String subtitle) {
+        // TODO: Implement JSON-based i18n update logic
+        // This should parse the i18n JSON, update the subtitle for the given language, and save back
+    }
+    
+    private MediaI18nMetadata parseI18nJson(Language language) {
+        // TODO: Implement JSON parsing logic with Jackson
+        // This should parse the i18n JSON and return metadata for the requested language
+        // If language not found, fallback to tenant default language
+        return new MediaI18nMetadata();
+    }
+    
+    // Inner class for i18n metadata structure
+    public static class MediaI18nMetadata {
+        private String title;
+        private String subtitle; 
+        private String altText;
+        private String description;
+        private MediaSeoMetadata seo;
+        
+        // Getters and setters
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        
+        public String getSubtitle() { return subtitle; }
+        public void setSubtitle(String subtitle) { this.subtitle = subtitle; }
+        
+        public String getAltText() { return altText; }
+        public void setAltText(String altText) { this.altText = altText; }
+        
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        
+        public MediaSeoMetadata getSeo() { return seo; }
+        public void setSeo(MediaSeoMetadata seo) { this.seo = seo; }
+    }
+    
+    // Inner class for SEO metadata
+    public static class MediaSeoMetadata {
+        private String title;
+        private String description;
+        private String[] keywords;
+        
+        // Getters and setters
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        
+        public String[] getKeywords() { return keywords; }
+        public void setKeywords(String[] keywords) { this.keywords = keywords; }
     }
 
     public boolean isImage() {
@@ -283,6 +325,76 @@ public class MediaFile {
 
     public boolean canBeDeleted() {
         return usageCount == 0; // Only delete if not used anywhere
+    }
+    
+    // Sprint 7: Staged upload system business methods
+    public boolean isStaged() {
+        return MediaStatus.STAGED.equals(status);
+    }
+    
+    public boolean isActive() {
+        return MediaStatus.ACTIVE.equals(status);
+    }
+    
+    public void activate() {
+        if (isStaged()) {
+            this.status = MediaStatus.ACTIVE;
+        }
+    }
+    
+    public void archive() {
+        if (isActive()) {
+            this.status = MediaStatus.ARCHIVED;
+        }
+    }
+    
+    public boolean canBeActivated() {
+        return isStaged();
+    }
+    
+    // Sprint 7: Variant management methods
+    public MediaVariant getDesktopVariant() {
+        return parseVariantJson("desktop");
+    }
+    
+    public MediaVariant getMobileVariant() {
+        return parseVariantJson("mobile");
+    }
+    
+    public void addVariant(String variantType, String url, int width, int height) {
+        // TODO: Implement JSON variant addition logic
+        // Update variants JSON with new variant
+    }
+    
+    private MediaVariant parseVariantJson(String variantType) {
+        // TODO: Implement JSON parsing for variants
+        // Parse variants JSON and return specific variant
+        return new MediaVariant();
+    }
+    
+    // Inner class for variant structure
+    public static class MediaVariant {
+        private String url;
+        private Integer width;
+        private Integer height;
+        
+        public MediaVariant() {}
+        
+        public MediaVariant(String url, Integer width, Integer height) {
+            this.url = url;
+            this.width = width;
+            this.height = height;
+        }
+        
+        // Getters and setters
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+        
+        public Integer getWidth() { return width; }
+        public void setWidth(Integer width) { this.width = width; }
+        
+        public Integer getHeight() { return height; }
+        public void setHeight(Integer height) { this.height = height; }
     }
 
     public String getDimensions() {

@@ -11,10 +11,10 @@ public interface MediaRepository {
     // Basic CRUD operations
     MediaFile save(MediaFile mediaFile);
     Optional<MediaFile> findById(Long id);
-    List<MediaFile> findAll();
+    // REMOVED: findAll() - SECURITY RISK: Must be tenant-scoped
+    // REMOVED: count() - SECURITY RISK: Must be tenant-scoped
     void deleteById(Long id);
     boolean existsById(Long id);
-    long count();
     
     // File identification queries
     Optional<MediaFile> findByFileName(String fileName);
@@ -107,6 +107,9 @@ public interface MediaRepository {
     List<MediaFile> findUnusedFiles(Long tenantId); // Files with usage count 0
     List<MediaFile> findOrphanedFiles(Long tenantId, LocalDateTime olderThan);
     List<MediaFile> findLargestFiles(Long tenantId, int limit);
+    // Sprint 7: SHA-256 De-duplication
+    Optional<MediaFile> findByTenantIdAndContentHash(Long tenantId, String contentHash);
+    boolean existsByTenantIdAndContentHash(Long tenantId, String contentHash);
     List<MediaFile> findDuplicateFiles(Long tenantId); // Files with same name/size
     
     // Statistics
