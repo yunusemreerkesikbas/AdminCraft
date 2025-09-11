@@ -49,7 +49,11 @@
       "Bash(Y)",
       "Bash(gh pr checkout:*)",
       "Bash(gh api:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm install:*)",
+      "Bash(npm info:*)",
+      "Bash(npx ng build:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "additionalDirectories": [

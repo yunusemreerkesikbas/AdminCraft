@@ -27,6 +27,8 @@ alwaysApply: true
 🔧 INFRASTRUCTURE     → Repositories, External APIs, Database
 ```
 
+hem frontend hem de backend kodlarında tenant izolasyonu konusuna çok dikkat edelim ! güvenlik açığı oluşturmayalım
+
 #### **🖥️ Presentation Layer Debugging**
 
 ```bash
@@ -672,22 +674,3 @@ FROM user_sessions
 WHERE is_active = true 
 GROUP BY preferred_language;
 ```
-
-### **Common Log Patterns**
-
-```bash
-# Search for i18n issues
-grep -E "(No message found|Missing translation)" logs/application.log
-
-# Find slow database queries  
-grep -E "took [0-9]{3,}" logs/application.log
-
-# Check tenant context issues
-grep -E "(tenant.*not found|cross-tenant)" logs/application.log
-```
-
----
-
-**Last Updated:** $(date +%Y-%m-%d)  
-**Version:** 1.0  
-**Maintainer:** Development Team

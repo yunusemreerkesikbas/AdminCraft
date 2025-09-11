@@ -88,3 +88,4 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }
+kodda sadece gerekli yerlerde comment line kullanalım
