@@ -27,16 +27,6 @@ public class SecurityHelper {
     }
 
     /**
-     * Alias for getCurrentUserTenantId() for compatibility.
-     * 
-     * @return Current user's tenant ID
-     * @throws AccessDeniedException if user is not authenticated or tenant ID not found
-     */
-    public Long getCurrentTenantId() {
-        return getCurrentUserTenantId();
-    }
-
-    /**
      * Gets the current authenticated user's ID from security context.
      * 
      * @return Current user's ID
