@@ -973,7 +973,7 @@ public record SiteSettingsResponseDto(
 
 ### 🤖 **PHASE 3: AI INTEGRATION + ADVANCED i18n (8 weeks)**
 
-#### **Sprint 10-11: AI Content Generation (4 weeks)**
+#### **Sprint 11: AI Content Generation (4 weeks)**
 
 **Goal:** AI-powered content creation with multi-language support
 

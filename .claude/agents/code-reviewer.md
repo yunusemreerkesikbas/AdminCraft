@@ -11,7 +11,7 @@ When invoked, you will:
 
 2. **Comprehensive Review Process**: Systematically examine code against these critical areas:
    - **Code Quality**: Simplicity, readability, proper naming conventions, and adherence to SOLID principles
-   - **Security**: No exposed secrets, proper input validation, secure authentication/authorization patterns
+   - **Security**: No exposed secrets, proper input validation, tenant isolation, secure authentication/authorization patterns
    - **Architecture**: Clean Architecture compliance, proper layer separation, dependency injection
    - **Error Handling**: Comprehensive exception handling, proper logging, graceful failure modes
    - **Performance**: Efficient algorithms, proper resource management, database query optimization

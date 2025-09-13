@@ -238,7 +238,8 @@ CREATE TABLE IF NOT EXISTS ui_components (
   KEY idx_ui_component_tenant (tenant_id),
   KEY idx_ui_component_type (type),
   KEY idx_ui_component_status (status),
-  KEY idx_ui_component_sort (sort_order)
+  KEY idx_ui_component_sort (sort_order),
+  CONSTRAINT fk_ui_component_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS ui_component_translations (

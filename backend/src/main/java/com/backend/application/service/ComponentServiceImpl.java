@@ -26,38 +26,29 @@ public class ComponentServiceImpl implements ComponentService {
   private final ComponentTranslationRepository translationRepository;
 
   // Constructor injection following Clean Architecture principles
-  public ComponentServiceImpl(ComponentRepository componentRepository, 
-                             ComponentTranslationRepository translationRepository) {
+  public ComponentServiceImpl(ComponentRepository componentRepository,
+      ComponentTranslationRepository translationRepository) {
     this.componentRepository = componentRepository;
     this.translationRepository = translationRepository;
   }
 
   @Override
   @Transactional
-  public ComponentResponse create(CreateComponentRequest request, Long createdBy) {
-    // Validate tenant and key uniqueness
-    componentRepository.findByTenantAndTypeAndKey(request.tenantId(), request.type(), request.key())
+  public ComponentResponse create(Long tenantId, CreateComponentRequest request) {
+    componentRepository.findByTenantAndTypeAndKey(tenantId, request.type(), request.key())
         .ifPresent(c -> {
           throw new ComponentConflictException("ui.component.key.conflict");
         });
 
     // Create component using domain logic for defaults
     Component component = new Component();
-    component.setTenantId(request.tenantId());
+    component.setTenantId(tenantId);
     component.setType(request.type());
     component.setKey(request.key());
-    
-    // Set optional fields or let domain defaults apply
-    if (request.status() != null) {
-      component.setStatus(request.status());
-    }
-    if (request.visible() != null) {
-      component.setVisible(request.visible());
-    }
-    if (request.sortOrder() != null) {
-      component.updateSortOrder(request.sortOrder());
-    }
-    component.setCreatedBy(createdBy);
+    component.setStatus(request.status() != null ? request.status() : component.getStatus());
+    component.setVisible(Boolean.TRUE.equals(request.visible()));
+    component.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
+    component.setCreatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
     var saved = componentRepository.save(component);
 
@@ -84,7 +75,7 @@ public class ComponentServiceImpl implements ComponentService {
 
   @Override
   @Transactional
-  public ComponentResponse update(Long id, Long tenantId, UpdateComponentRequest request, Long updatedBy) {
+  public ComponentResponse update(Long id, Long tenantId, UpdateComponentRequest request) {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
 
@@ -97,13 +88,11 @@ public class ComponentServiceImpl implements ComponentService {
     if (request.status() != null) {
       component.setStatus(request.status());
     }
-    if (request.visible() != null) {
-      component.setVisibility(request.visible());
-    }
-    if (request.sortOrder() != null) {
-      component.updateSortOrder(request.sortOrder());
-    }
-    component.setUpdatedBy(updatedBy);
+    if (request.visible() != null)
+      component.setVisible(request.visible());
+    if (request.sortOrder() != null)
+      component.setSortOrder(request.sortOrder());
+    component.setUpdatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
     var saved = componentRepository.save(component);
 
@@ -149,12 +138,12 @@ public class ComponentServiceImpl implements ComponentService {
   public void delete(Long id, Long tenantId) {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
-    
+
     // Validate tenant access using domain method
     if (!component.isValidForTenant(tenantId)) {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
-    
+
     // Delete translations first, then component
     translationRepository.deleteByComponentId(component.getId());
     componentRepository.delete(component);
@@ -164,12 +153,12 @@ public class ComponentServiceImpl implements ComponentService {
   public ComponentResponse get(Long id, Long tenantId) {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
-    
+
     // Validate tenant access using domain method
     if (!component.isValidForTenant(tenantId)) {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
-    
+
     var tr = translationRepository.findByComponentIdAndLanguage(id, Language.TR).orElse(null);
     var en = translationRepository.findByComponentIdAndLanguage(id, Language.EN).orElse(null);
     return ComponentMapper.toResponse(component, tr, en);
@@ -177,33 +166,22 @@ public class ComponentServiceImpl implements ComponentService {
 
   @Override
   public List<ComponentResponse> list(Long tenantId) {
-    // Fetch all components for tenant
     List<Component> components = componentRepository.findAllByTenantId(tenantId);
-    
     if (components.isEmpty()) {
       return List.of();
     }
-    
-    // Extract component IDs for batch loading - FIXES N+1 QUERY ISSUE
-    List<Long> componentIds = components.stream()
-        .map(Component::getId)
-        .collect(Collectors.toList());
-    
-    // Batch load all translations in one query
-    Map<Long, Map<Language, ComponentTranslation>> translationMap = 
-        translationRepository.findTranslationMapByComponentIds(componentIds);
-    
-    // Map components to responses with efficient lookup
+
+    List<Long> ids = components.stream().map(Component::getId).collect(Collectors.toList());
+    List<ComponentTranslation> trList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.TR);
+    List<ComponentTranslation> enList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.EN);
+
+    var trByComp = trList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+
     return components.stream()
-        .map(component -> {
-          Map<Language, ComponentTranslation> componentTranslations = 
-              translationMap.getOrDefault(component.getId(), Map.of());
-          
-          ComponentTranslation tr = componentTranslations.get(Language.TR);
-          ComponentTranslation en = componentTranslations.get(Language.EN);
-          
-          return ComponentMapper.toResponse(component, tr, en);
-        })
+        .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
         .collect(Collectors.toList());
   }
 }

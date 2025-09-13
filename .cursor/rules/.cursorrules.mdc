@@ -944,7 +944,7 @@ const CORPORATE_HOMEPAGE: PageTemplate = {
 - [ ] Export/Import data kaybı yok
 - [ ] Templates responsive
 
-#### **Sprint 10: Performance + Caching + SEO (2 weeks)**
+#### **Performance + Caching + SEO (2 weeks)**
 
 **Goal:** Production-ready performance ve gelişmiş SEO
 
@@ -1100,7 +1100,6 @@ export class SEOService {
 - **Sprint 7:** Visual Page Builder (3 weeks)
 - **Sprint 8:** Drag & Drop + UX (2.5 weeks)
 - **Sprint 9:** Advanced Blocks + Templates (2 weeks)
-- **Sprint 10:** Performance + SEO (2 weeks)
 - **Sprint 11:** Mobile + A11y (1.5 weeks)
 - **Buffer:** Testing + Polish (2 weeks)
 

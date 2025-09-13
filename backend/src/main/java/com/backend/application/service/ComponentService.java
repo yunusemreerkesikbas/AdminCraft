@@ -7,9 +7,9 @@ import com.backend.presentation.dto.response.ComponentResponse;
 import java.util.List;
 
 public interface ComponentService {
-  ComponentResponse create(CreateComponentRequest request, Long createdBy);
+  ComponentResponse create(Long tenantId, CreateComponentRequest request);
 
-  ComponentResponse update(Long id, Long tenantId, UpdateComponentRequest request, Long updatedBy);
+  ComponentResponse update(Long id, Long tenantId, UpdateComponentRequest request);
 
   void delete(Long id, Long tenantId);
 
