@@ -69,10 +69,52 @@ public class Component {
   protected void onCreate() {
     createdAt = LocalDateTime.now();
     updatedAt = LocalDateTime.now();
+    
+    // Set business defaults if not already set
+    if (status == null) {
+      status = ComponentStatus.ACTIVE;
+    }
+    if (sortOrder == null) {
+      sortOrder = 0;
+    }
+    // visible defaults to true via field initialization
   }
 
   @PreUpdate
   protected void onUpdate() {
     updatedAt = LocalDateTime.now();
+  }
+
+  // Business methods following Clean Architecture principles
+  
+  public void activate() {
+    this.status = ComponentStatus.ACTIVE;
+  }
+  
+  public void deactivate() {
+    this.status = ComponentStatus.INACTIVE;
+  }
+  
+  public boolean isActive() {
+    return ComponentStatus.ACTIVE.equals(this.status);
+  }
+  
+  public boolean isVisible() {
+    return this.visible;
+  }
+  
+  public void setVisibility(boolean visible) {
+    this.visible = visible;
+  }
+  
+  public void updateSortOrder(Integer sortOrder) {
+    if (sortOrder != null && sortOrder >= 0) {
+      this.sortOrder = sortOrder;
+    }
+  }
+
+  // Validation methods
+  public boolean isValidForTenant(Long tenantId) {
+    return this.tenantId != null && this.tenantId.equals(tenantId);
   }
 }
