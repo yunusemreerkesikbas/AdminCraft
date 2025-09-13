@@ -382,6 +382,84 @@ hierarchical categories, and publish with SEO.
 - Week 2: Angular builder UI (sections/blocks, preview, categories).
 - Half week: SEO/i18n polish, tests, docs, sample pages.
 
+#### **Sprint 10: UI Components Management**
+
+**Goal:** Deliver minimal CRUD for UI components used on the site front-end
+(navbar, logo, CTA, brands, FAQ, breadcrumb) with generic TR/EN translations
+and a simple Admin UI. No media management, no search/sort/pagination, and no
+RBAC in this sprint.
+
+**Decisions:**
+
+- Component types: `NAVBAR`, `LOGO`, `CTA`, `BRANDS`, `FAQ`, `BREADCRUMB`.
+- Status: `ACTIVE` / `INACTIVE` plus `visible` flag.
+- `sortOrder`: optional, default `0`.
+- Translations: TR/EN for now, modeled generically to enable future languages.
+- Unique constraint: `(tenantId, type, key)` must be unique.
+- Admin UI always shows both language tabs (TR/EN). Site front-end reads
+  language-specific data at runtime.
+- Routes: `/:tenant/component` (list), `/:tenant/component/:type` (create/edit).
+- Out of scope: media management, list search/sort/pagination, RBAC.
+
+**Scope:**
+
+- **Domain Layer:**
+  - Enums: `ComponentType { NAVBAR, LOGO, CTA, BRANDS, FAQ, BREADCRUMB }`,
+    `ComponentStatus { ACTIVE, INACTIVE }`.
+  - Entities:
+    - `Component`: id, tenantId, type, key, status, visible, sortOrder(0),
+      createdAt, updatedAt. Unique (tenantId, type, key).
+    - `ComponentTranslation`: id, componentId, language, title?, subtitle?,
+      `data` JSON (free-form per type for this sprint).
+
+- **Application Layer:**
+  - Service: `ComponentService` (+ `ServiceImpl`) with CRUD and unique key
+    check. `@Transactional` for multi-step operations.
+
+- **Infrastructure Layer:**
+  - Repositories: `ComponentRepository`, `ComponentTranslationRepository`
+    (JPQL, `@EntityGraph` where necessary), basic CRUD only.
+
+- **Presentation Layer (REST):**
+  - Controller: `ComponentController` returning `ResponseEntity<ApiResponse<?>>`.
+  - Endpoints (tenant-aware):
+    - `GET /api/components` → list all for tenant (no filters)
+    - `GET /api/components/{id}`
+    - `POST /api/components`
+    - `PUT /api/components/{id}`
+    - `DELETE /api/components/{id}`
+  - Errors via `GlobalExceptionHandler` with i18n messages.
+
+- **Admin Frontend (Angular 19):**
+  - Module: `@custom/components`.
+  - Routes: `/:tenant/component` (list), `/:tenant/component/:type` (form).
+  - List page: Simple table (no search/sort/pagination), actions to edit/delete.
+  - Form page: `fullwidth-2` layout with tabs: General | Türkçe | English.
+    - General: type, key, status, visible, sortOrder.
+    - Türkçe/English: title, subtitle, free-form `data` (this sprint untyped).
+  - Toasts: use existing `NotificationService` for CRUD success/error.
+
+**i18n:**
+
+- Backend: add CRUD success/error keys to `messages_tr.properties` and
+  `messages_en.properties`.
+- Frontend: Transloco keys for labels and toasts.
+
+**Acceptance Criteria:**
+
+- Create, read, update, delete UI Components per tenant.
+- Unique `(tenantId, type, key)` enforced; returns localized errors on conflict.
+- Admin list renders items; form saves both TR/EN payloads in one request.
+- Toast notifications shown on success/error; controller returns `ApiResponse`.
+- `sortOrder` defaults to `0` when not provided.
+
+**Timeline:** 1.5 weeks
+
+- Days 1-2: Enums, entities, repositories
+- Days 3-4: Service, controller, i18n messages
+- Days 5-7: Angular module, list, form (tabs) with toasts
+- Days 8-9: Minimal tests and refinements
+
 #### **Sprint 5: Page Categories + Builder Integration (Unlimited Depth, 1.5 weeks)**
 
 **Goal:** Support unlimited-depth Page Category hierarchy (Materialized
