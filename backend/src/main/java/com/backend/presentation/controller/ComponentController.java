@@ -3,8 +3,8 @@ package com.backend.presentation.controller;
 import com.backend.application.service.ComponentService;
 import com.backend.domain.exception.ComponentConflictException;
 import com.backend.domain.exception.ComponentNotFoundException;
-import com.backend.presentation.dto.request.CreateComponentRequest;
-import com.backend.presentation.dto.request.UpdateComponentRequest;
+import com.backend.presentation.dto.request.ComponentListFilter;
+import com.backend.presentation.dto.request.ComponentRequest;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -28,7 +28,8 @@ public class ComponentController {
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<ComponentResponse>>> list(
-      @RequestHeader("X-Tenant-ID") Long tenantId) {
+      @RequestHeader("X-Tenant-ID") Long tenantId,
+      @RequestParam(value = "type", required = false) String type) {
     try {
       // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
@@ -36,7 +37,10 @@ public class ComponentController {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
 
-      List<ComponentResponse> data = service.list(tenantId);
+      List<ComponentResponse> data = (type == null)
+          ? service.list(tenantId)
+          : service.list(tenantId, new ComponentListFilter(tenantId,
+              com.backend.domain.enums.ComponentType.fromCode(type), null));
       return ResponseEntity.ok(ApiResponse.success("ui.component.list.success", data));
     } catch (Exception ex) {
       // Let GlobalExceptionHandler handle specific exceptions
@@ -68,7 +72,7 @@ public class ComponentController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<ComponentResponse>> create(
-      @Valid @RequestBody CreateComponentRequest request,
+      @Valid @RequestBody ComponentRequest request,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
     try {
       // Validate tenant access
@@ -97,7 +101,7 @@ public class ComponentController {
   public ResponseEntity<ApiResponse<ComponentResponse>> update(
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId,
-      @Valid @RequestBody UpdateComponentRequest request) {
+      @Valid @RequestBody ComponentRequest request) {
     try {
       // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();

@@ -14,18 +14,22 @@ import java.util.Optional;
 @Repository
 public interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
-  @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.id = :id")
-  Optional<Component> findByIdAndTenantId(@Param("id") Long id, @Param("tenantId") Long tenantId);
+    @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.id = :id")
+    Optional<Component> findByIdAndTenantId(@Param("id") Long id, @Param("tenantId") Long tenantId);
 
-  @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId ORDER BY c.sortOrder ASC, c.id ASC")
-  List<Component> findAllByTenantId(@Param("tenantId") Long tenantId);
+    @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId ORDER BY c.sortOrder ASC, c.id ASC")
+    List<Component> findAllByTenantId(@Param("tenantId") Long tenantId);
 
-  @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.type = :type AND c.key = :key")
-  Optional<Component> findByTenantAndTypeAndKey(@Param("tenantId") Long tenantId,
-      @Param("type") ComponentType type,
-      @Param("key") String key);
+    @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.type = :type ORDER BY c.sortOrder ASC, c.id ASC")
+    List<Component> findAllByTenantIdAndType(@Param("tenantId") Long tenantId,
+            @Param("type") ComponentType type);
 
-  @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.status = :status")
-  List<Component> findByTenantAndStatus(@Param("tenantId") Long tenantId,
-      @Param("status") ComponentStatus status);
+    @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.type = :type AND c.key = :key")
+    Optional<Component> findByTenantAndTypeAndKey(@Param("tenantId") Long tenantId,
+            @Param("type") ComponentType type,
+            @Param("key") String key);
+
+    @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.status = :status")
+    List<Component> findByTenantAndStatus(@Param("tenantId") Long tenantId,
+            @Param("status") ComponentStatus status);
 }

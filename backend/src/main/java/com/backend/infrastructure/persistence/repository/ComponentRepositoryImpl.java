@@ -27,6 +27,11 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   }
 
   @Override
+  public List<Component> findAllByTenantIdAndType(Long tenantId, ComponentType type) {
+    return jpaRepository.findAllByTenantIdAndType(tenantId, type);
+  }
+
+  @Override
   public Optional<Component> findByTenantAndTypeAndKey(Long tenantId, ComponentType type, String key) {
     return jpaRepository.findByTenantAndTypeAndKey(tenantId, type, key);
   }
