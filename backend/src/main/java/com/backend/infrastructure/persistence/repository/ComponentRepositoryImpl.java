@@ -42,6 +42,11 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   }
 
   @Override
+  public List<Component> findActiveVisibleByTenantIdAndType(Long tenantId, ComponentType type) {
+    return jpaRepository.findActiveVisibleByTenantIdAndType(tenantId, type);
+  }
+
+  @Override
   public Component save(Component component) {
     return jpaRepository.save(component);
   }
