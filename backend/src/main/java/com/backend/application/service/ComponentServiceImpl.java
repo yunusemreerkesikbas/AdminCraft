@@ -8,8 +8,8 @@ import com.backend.domain.exception.ComponentConflictException;
 import com.backend.domain.exception.ComponentNotFoundException;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTranslationRepository;
-import com.backend.presentation.dto.request.CreateComponentRequest;
-import com.backend.presentation.dto.request.UpdateComponentRequest;
+import com.backend.presentation.dto.request.ComponentListFilter;
+import com.backend.presentation.dto.request.ComponentRequest;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.presentation.mapper.ComponentMapper;
 import jakarta.transaction.Transactional;
@@ -34,60 +34,58 @@ public class ComponentServiceImpl implements ComponentService {
 
   @Override
   @Transactional
-  public ComponentResponse create(Long tenantId, CreateComponentRequest request) {
+  public ComponentResponse create(Long tenantId, ComponentRequest request) {
     componentRepository.findByTenantAndTypeAndKey(tenantId, request.type(), request.key())
         .ifPresent(c -> {
           throw new ComponentConflictException("ui.component.key.conflict");
         });
 
-    // Create component using domain logic for defaults
     Component component = new Component();
     component.setTenantId(tenantId);
     component.setType(request.type());
     component.setKey(request.key());
-    component.setStatus(request.status() != null ? request.status() : component.getStatus());
-    component.setVisible(Boolean.TRUE.equals(request.visible()));
-    component.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
+    if (request.status() != null)
+      component.setStatus(request.status());
+    if (request.visible() != null)
+      component.setVisible(request.visible());
+    if (request.sortOrder() != null)
+      component.setSortOrder(request.sortOrder());
     component.setCreatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
     var saved = componentRepository.save(component);
 
-    // TR translation
-    ComponentTranslation tr = new ComponentTranslation();
-    tr.setComponentId(saved.getId());
-    tr.setLanguage(Language.TR);
-    tr.setTitle(request.titleTr());
-    tr.setSubtitle(request.subtitleTr());
-    tr.setData(request.dataTr());
-    translationRepository.save(tr);
+    // Save provided translations map as-is (no fallback)
+    for (var entry : request.translations().entrySet()) {
+      var langCode = entry.getKey();
+      var payload = entry.getValue();
+      var lang = com.backend.domain.enums.Language.fromCode(langCode)
+          .orElseThrow(() -> new IllegalArgumentException("Invalid language code: " + langCode));
+      ComponentTranslation t = new ComponentTranslation();
+      t.setComponentId(saved.getId());
+      t.setLanguage(lang);
+      t.setTitle(payload != null ? payload.title() : null);
+      t.setSubtitle(payload != null ? payload.subtitle() : null);
+      t.setData(payload != null ? payload.data() : null);
+      translationRepository.save(t);
+    }
 
-    // EN translation
-    ComponentTranslation en = new ComponentTranslation();
-    en.setComponentId(saved.getId());
-    en.setLanguage(Language.EN);
-    en.setTitle(request.titleEn());
-    en.setSubtitle(request.subtitleEn());
-    en.setData(request.dataEn());
-    translationRepository.save(en);
-
+    var tr = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.TR).orElse(null);
+    var en = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.EN).orElse(null);
     return ComponentMapper.toResponse(saved, tr, en);
   }
 
   @Override
   @Transactional
-  public ComponentResponse update(Long id, Long tenantId, UpdateComponentRequest request) {
+  public ComponentResponse update(Long id, Long tenantId, ComponentRequest request) {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
 
-    // Validate tenant access using domain method
     if (!component.isValidForTenant(tenantId)) {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
 
-    // Use domain methods for updates
-    if (request.status() != null) {
+    if (request.status() != null)
       component.setStatus(request.status());
-    }
     if (request.visible() != null)
       component.setVisible(request.visible());
     if (request.sortOrder() != null)
@@ -96,40 +94,28 @@ public class ComponentServiceImpl implements ComponentService {
 
     var saved = componentRepository.save(component);
 
-    // Update TR translation
-    ComponentTranslation tr = translationRepository
-        .findByComponentIdAndLanguage(id, Language.TR)
-        .orElseGet(() -> {
-          ComponentTranslation t = new ComponentTranslation();
-          t.setComponentId(id);
-          t.setLanguage(Language.TR);
-          return t;
-        });
-    if (request.titleTr() != null)
-      tr.setTitle(request.titleTr());
-    if (request.subtitleTr() != null)
-      tr.setSubtitle(request.subtitleTr());
-    if (request.dataTr() != null)
-      tr.setData(request.dataTr());
-    translationRepository.save(tr);
+    for (var entry : request.translations().entrySet()) {
+      var lang = Language.fromCode(entry.getKey())
+          .orElseThrow(() -> new IllegalArgumentException("Invalid language code: " + entry.getKey()));
+      var payload = entry.getValue();
+      ComponentTranslation t = translationRepository
+          .findByComponentIdAndLanguage(id, lang)
+          .orElseGet(() -> {
+            ComponentTranslation nt = new ComponentTranslation();
+            nt.setComponentId(id);
+            nt.setLanguage(lang);
+            return nt;
+          });
+      if (payload != null) {
+        t.setTitle(payload.title());
+        t.setSubtitle(payload.subtitle());
+        t.setData(payload.data());
+      }
+      translationRepository.save(t);
+    }
 
-    // Update EN translation
-    ComponentTranslation en = translationRepository
-        .findByComponentIdAndLanguage(id, Language.EN)
-        .orElseGet(() -> {
-          ComponentTranslation t = new ComponentTranslation();
-          t.setComponentId(id);
-          t.setLanguage(Language.EN);
-          return t;
-        });
-    if (request.titleEn() != null)
-      en.setTitle(request.titleEn());
-    if (request.subtitleEn() != null)
-      en.setSubtitle(request.subtitleEn());
-    if (request.dataEn() != null)
-      en.setData(request.dataEn());
-    translationRepository.save(en);
-
+    var tr = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.TR).orElse(null);
+    var en = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.EN).orElse(null);
     return ComponentMapper.toResponse(saved, tr, en);
   }
 
@@ -184,4 +170,28 @@ public class ComponentServiceImpl implements ComponentService {
         .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
         .collect(Collectors.toList());
   }
+
+  @Override
+  public List<ComponentResponse> list(Long tenantId, ComponentListFilter filter) {
+    List<Component> components = (filter != null && filter.type() != null)
+        ? componentRepository.findAllByTenantIdAndType(tenantId, filter.type())
+        : componentRepository.findAllByTenantId(tenantId);
+
+    if (components.isEmpty())
+      return List.of();
+
+    List<Long> ids = components.stream().map(Component::getId).collect(Collectors.toList());
+    List<ComponentTranslation> trList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.TR);
+    List<ComponentTranslation> enList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.EN);
+
+    var trByComp = trList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+
+    return components.stream()
+        .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
+        .collect(Collectors.toList());
+  }
+
 }

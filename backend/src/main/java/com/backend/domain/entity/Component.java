@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "ui_components", uniqueConstraints = {
@@ -64,6 +65,9 @@ public class Component {
 
   @Column(name = "updated_by")
   private Long updatedBy;
+
+  @OneToMany(mappedBy = "componentId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ComponentTranslation> translations;
 
   @PrePersist
   protected void onCreate() {

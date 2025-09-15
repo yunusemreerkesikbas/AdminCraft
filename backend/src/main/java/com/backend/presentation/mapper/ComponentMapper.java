@@ -10,13 +10,15 @@ public class ComponentMapper {
       Component component,
       ComponentTranslation tr,
       ComponentTranslation en) {
-    ComponentResponse.ComponentTranslationDto trDto = tr == null ? null
+    ComponentResponse.ComponentTranslationDto trDto = (tr == null)
+        ? new ComponentResponse.ComponentTranslationDto("", "", "")
         : new ComponentResponse.ComponentTranslationDto(
-            tr.getTitle(), tr.getSubtitle(), tr.getData());
+            safe(tr.getTitle()), safe(tr.getSubtitle()), safe(tr.getData()));
 
-    ComponentResponse.ComponentTranslationDto enDto = en == null ? null
+    ComponentResponse.ComponentTranslationDto enDto = (en == null)
+        ? new ComponentResponse.ComponentTranslationDto("", "", "")
         : new ComponentResponse.ComponentTranslationDto(
-            en.getTitle(), en.getSubtitle(), en.getData());
+            safe(en.getTitle()), safe(en.getSubtitle()), safe(en.getData()));
 
     return new ComponentResponse(
         component.getId(),
@@ -28,5 +30,9 @@ public class ComponentMapper {
         component.getSortOrder(),
         trDto,
         enDto);
+  }
+
+  private static String safe(String value) {
+    return value == null ? "" : value;
   }
 }
