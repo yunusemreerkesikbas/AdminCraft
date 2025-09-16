@@ -1448,7 +1448,7 @@
 							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
 							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
 						],
-						"url": "{{baseUrl}}/api/components"
+						"url": "{{baseUrl}}/api/components/{{componentType}}"
 					}
 				},
 				{
@@ -1460,7 +1460,7 @@
 							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
 							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
 						],
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
+						"url": "{{baseUrl}}/api/components/{{componentType}}/{{componentId}}"
 					}
 				},
 				{
@@ -1478,7 +1478,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"tenantId\": {{currentTenantId}},\n  \"type\": \"NAVBAR\",\n  \"key\": \"primary-navbar\",\n  \"status\": \"ACTIVE\",\n  \"visible\": true,\n  \"sortOrder\": 0,\n  \"translations\": {\n    \"tr\": { \"title\": \"Birincil Navigasyon\", \"subtitle\": \"Üst menü\", \"data\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Ana Sayfa\\\",\\\"url\\\":\\\"/\\\"}]}\" },\n    \"en\": { \"title\": \"Primary Navigation\", \"subtitle\": \"Top menu\", \"data\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Home\\\",\\\"url\\\":\\\"/en\\\"}]}\" }\n  }\n}"
 						},
-						"url": "{{baseUrl}}/api/components"
+						"url": "{{baseUrl}}/api/components/{{componentType}}"
 					}
 				},
 				{
@@ -1496,7 +1496,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"status\": \"ACTIVE\",\n  \"visible\": true,\n  \"sortOrder\": 1,\n  \"translations\": {\n    \"tr\": { \"title\": \"Birincil Navigasyon - Güncellendi\", \"data\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Kurumsal\\\",\\\"url\\\":\\\"/kurumsal\\\"}]}\" },\n    \"en\": { \"title\": \"Primary Navigation - Updated\", \"data\": \"{\\\"items\\\":[{\\\"label\\\":\\\"About\\\",\\\"url\\\":\\\"/en/about\\\"}]}\" }\n  }\n}"
 						},
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
+						"url": "{{baseUrl}}/api/components/{{componentType}}/{{componentId}}"
 					}
 				},
 				{
@@ -1508,7 +1508,7 @@
 							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
 							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
 						],
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
+						"url": "{{baseUrl}}/api/components/{{componentType}}/{{componentId}}"
 					}
 				}
 			]
@@ -1606,6 +1606,16 @@
 		{
 			"key": "componentId",
 			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "componentType",
+			"value": "navbar",
+			"type": "string"
+		},
+		{
+			"key": "lang",
+			"value": "tr",
 			"type": "string"
 		}
 	]

@@ -13,8 +13,11 @@ import java.util.Optional;
 @Repository
 public class ComponentRepositoryImpl implements ComponentRepository {
 
-  @Autowired
-  private ComponentJpaRepository jpaRepository;
+  private final ComponentJpaRepository jpaRepository;
+
+  public ComponentRepositoryImpl(ComponentJpaRepository jpaRepository) {
+    this.jpaRepository = jpaRepository;
+  }
 
   @Override
   public Optional<Component> findByIdAndTenantId(Long id, Long tenantId) {
@@ -32,6 +35,11 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   }
 
   @Override
+  public List<Component> findAllByTenantIdAndTypeAndStatus(Long tenantId, ComponentType type, ComponentStatus status) {
+    return jpaRepository.findAllByTenantIdAndTypeAndStatus(tenantId, type, status);
+  }
+
+  @Override
   public Optional<Component> findByTenantAndTypeAndKey(Long tenantId, ComponentType type, String key) {
     return jpaRepository.findByTenantAndTypeAndKey(tenantId, type, key);
   }
@@ -39,6 +47,11 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   @Override
   public List<Component> findByTenantAndStatus(Long tenantId, ComponentStatus status) {
     return jpaRepository.findByTenantAndStatus(tenantId, status);
+  }
+
+  @Override
+  public List<Component> findActiveVisibleByTenantIdAndType(Long tenantId, ComponentType type) {
+    return jpaRepository.findActiveVisibleByTenantIdAndType(tenantId, type);
   }
 
   @Override

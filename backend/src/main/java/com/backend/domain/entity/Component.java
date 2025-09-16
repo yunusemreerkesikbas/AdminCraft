@@ -18,6 +18,9 @@ import java.util.List;
     @UniqueConstraint(columnNames = { "tenant_id", "type", "component_key" }, name = "uk_ui_component_tenant_type_key")
 }, indexes = {
     @Index(columnList = "tenant_id", name = "idx_ui_component_tenant"),
+    @Index(columnList = "tenant_id,type", name = "idx_ui_component_tenant_type"),
+    @Index(columnList = "tenant_id,type,status", name = "idx_ui_component_tenant_type_status"),
+    @Index(columnList = "tenant_id,type,sort_order,status", name = "idx_ui_component_tenant_type_sort_status"),
     @Index(columnList = "type", name = "idx_ui_component_type"),
     @Index(columnList = "status", name = "idx_ui_component_status"),
     @Index(columnList = "sort_order", name = "idx_ui_component_sort")
@@ -66,22 +69,19 @@ public class Component {
   @Column(name = "updated_by")
   private Long updatedBy;
 
-  @OneToMany(mappedBy = "componentId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "component", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ComponentTranslation> translations;
 
   @PrePersist
   protected void onCreate() {
     createdAt = LocalDateTime.now();
     updatedAt = LocalDateTime.now();
-    
-    // Set business defaults if not already set
     if (status == null) {
       status = ComponentStatus.ACTIVE;
     }
     if (sortOrder == null) {
       sortOrder = 0;
     }
-    // visible defaults to true via field initialization
   }
 
   @PreUpdate
@@ -89,35 +89,32 @@ public class Component {
     updatedAt = LocalDateTime.now();
   }
 
-  // Business methods following Clean Architecture principles
-  
   public void activate() {
     this.status = ComponentStatus.ACTIVE;
   }
-  
+
   public void deactivate() {
     this.status = ComponentStatus.INACTIVE;
   }
-  
+
   public boolean isActive() {
     return ComponentStatus.ACTIVE.equals(this.status);
   }
-  
+
   public boolean isVisible() {
     return this.visible;
   }
-  
+
   public void setVisibility(boolean visible) {
     this.visible = visible;
   }
-  
+
   public void updateSortOrder(Integer sortOrder) {
     if (sortOrder != null && sortOrder >= 0) {
       this.sortOrder = sortOrder;
     }
   }
 
-  // Validation methods
   public boolean isValidForTenant(Long tenantId) {
     return this.tenantId != null && this.tenantId.equals(tenantId);
   }
