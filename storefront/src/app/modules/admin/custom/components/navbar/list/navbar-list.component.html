@@ -1,0 +1,105 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent">
+    <spa-list-header
+        [titleKey]="'admin.components.navbar.title'"
+        [filterLabelKey]="'admin.common.grid.status'"
+        [createLabelKey]="'admin.common.actions.add'"
+        [filterValue]="statusFilter"
+        [filterOptions]="[
+            {
+                value: 'ALL',
+                label: ('admin.common.actions.filter' | transloco),
+            },
+            {
+                value: 'ACTIVE',
+                label: ('admin.common.status.active' | transloco),
+            },
+            {
+                value: 'INACTIVE',
+                label: ('admin.common.status.inactive' | transloco),
+            },
+        ]"
+        (filterValueChange)="statusFilter = $event; load()"
+        (create)="create()"
+    ></spa-list-header>
+
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            @if (items$ | async; as items) {
+                @if (items.length > 0) {
+                    <div class="grid">
+                        <div
+                            class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                        >
+                            <div class="hidden md:block">Key</div>
+                            <div>Visible</div>
+                            <div class="hidden sm:block">Status</div>
+                            <div class="hidden lg:block">Sort</div>
+                            <div class="hidden lg:block">TR Title</div>
+                            <div class="hidden lg:block">EN Title</div>
+                            <div>Actions</div>
+                        </div>
+                        @for (row of items; track row.id) {
+                            <div
+                                class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                            >
+                                <div class="hidden truncate md:block">
+                                    {{ row.key }}
+                                </div>
+                                <div>
+                                    <mat-slide-toggle
+                                        [checked]="row.visible"
+                                        disabled
+                                    ></mat-slide-toggle>
+                                </div>
+                                <div class="hidden sm:block">
+                                    <div
+                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                        [ngClass]="{
+                                            'bg-green-100 text-green-800':
+                                                row.status === 'ACTIVE',
+                                            'bg-yellow-100 text-yellow-800':
+                                                row.status === 'INACTIVE',
+                                        }"
+                                    >
+                                        {{ row.status }}
+                                    </div>
+                                </div>
+                                <div class="hidden lg:block">
+                                    {{ row.sortOrder }}
+                                </div>
+                                <div class="hidden lg:block">
+                                    {{ row.tr?.title || '-' }}
+                                </div>
+                                <div class="hidden lg:block">
+                                    {{ row.en?.title || '-' }}
+                                </div>
+                                <div>
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
+                                        (click)="edit(row.id)"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                'heroicons_solid:pencil-square'
+                                            "
+                                        ></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <div
+                        class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+                    >
+                        No components found!
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

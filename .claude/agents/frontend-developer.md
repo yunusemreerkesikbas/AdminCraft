@@ -48,3 +48,4 @@ angular kodu yazarken tip tanımlamalarına dikkat et. her değişken fonksiyon 
 yeni bir component oluşturulduğunda mvc mimarisine uygun oluşturalım. html css ve ts kodları ayrı dosyalarda olsun . component selectorunun ismi <spa-component-name> formatında olacak . component name başına spa alacak.
 rxjs işlemlerinde gerekli yerlerde take(1) operatorü kullanalım. memory leak olmamasına dikkat edelim. subscription-unsubscription durumlarını kontrol edelim
 componentlerde access modifier kullanımına dikkat edelim. değişken tanımlarında ve metod kullanımlarında gerekli olmadıkça public kullanmayalım.
+Subscribe olduğumuz her yerde take(1), subscrition.add() (destroyda unsubsribe) yada takeUntil (destroyda next(), complete()) ile subsciptionı temizlemeliyiz.

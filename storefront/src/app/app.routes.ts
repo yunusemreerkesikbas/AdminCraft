@@ -125,6 +125,7 @@ export const appRoutes: Route[] = [
                     {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
                     {path: 'pages', loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')},
                     {path: 'settings', loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')},
+                    {path: 'components', loadChildren: () => import('app/modules/admin/custom/components/components.routes')},
 
                     // Default under tenant
                     {path: '', pathMatch: 'full', redirectTo: 'project'}
