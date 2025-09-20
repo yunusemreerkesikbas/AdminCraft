@@ -5,7 +5,10 @@ import java.util.Optional;
 
 public enum Language {
     TR("tr", "Türkçe", "Turkish"),
-    EN("en", "İngilizce", "English");
+    EN("en", "İngilizce", "English"),
+    ES("es", "İspanyolca", "Spanish"),
+    AR("ar", "Arapça", "Arabic"),
+    RU("ru", "Rusça", "Russian");
 
     private final String code;
     private final String displayNameTr;
@@ -29,6 +32,9 @@ public enum Language {
         return switch (language) {
             case TR -> displayNameTr;
             case EN -> displayNameEn;
+            case ES -> "İspanyolca";
+            case AR -> "Arapça";
+            case RU -> "Rusça";
             default -> displayNameTr;
         };
     }
@@ -49,11 +55,11 @@ public enum Language {
                 .filter(language -> language.code.equalsIgnoreCase(code.trim()))
                 .findFirst();
     }
-    
+
     public static Language fromCodeOrDefault(String code, Language defaultLanguage) {
         return fromCode(code).orElse(defaultLanguage);
     }
-    
+
     public static Language fromCodeOrDefault(String code) {
         return fromCodeOrDefault(code, TR); // Default to Turkish
     }

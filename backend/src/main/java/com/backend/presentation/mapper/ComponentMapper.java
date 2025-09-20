@@ -2,24 +2,29 @@ package com.backend.presentation.mapper;
 
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentTranslation;
+import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.presentation.dto.response.SiteComponentResponse;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ComponentMapper {
 
   public static ComponentResponse toResponse(
       Component component,
-      ComponentTranslation tr,
-      ComponentTranslation en) {
-    ComponentResponse.ComponentTranslationDto trDto = (tr == null)
-        ? new ComponentResponse.ComponentTranslationDto("", "", "")
-        : new ComponentResponse.ComponentTranslationDto(
-            safe(tr.getTitle()), safe(tr.getSubtitle()), safe(tr.getData()));
-
-    ComponentResponse.ComponentTranslationDto enDto = (en == null)
-        ? new ComponentResponse.ComponentTranslationDto("", "", "")
-        : new ComponentResponse.ComponentTranslationDto(
-            safe(en.getTitle()), safe(en.getSubtitle()), safe(en.getData()));
+      Map<Language, ComponentTranslation> translationsByLang) {
+    Map<String, ComponentResponse.ComponentTranslationDto> map = new HashMap<>();
+    if (translationsByLang != null) {
+      for (Map.Entry<Language, ComponentTranslation> e : translationsByLang.entrySet()) {
+        ComponentTranslation t = e.getValue();
+        if (t == null)
+          continue;
+        String code = e.getKey().name().toLowerCase();
+        map.put(code, new ComponentResponse.ComponentTranslationDto(
+            safe(t.getTitle()), safe(t.getSubtitle()), safe(t.getData())));
+      }
+    }
 
     return new ComponentResponse(
         component.getId(),
@@ -29,22 +34,19 @@ public class ComponentMapper {
         component.getStatus(),
         component.isVisible(),
         component.getSortOrder(),
-        trDto,
-        enDto);
+        map);
   }
 
   public static SiteComponentResponse toSiteResponse(
       Component component,
       ComponentTranslation translation) {
 
-    if (translation == null) {
-      return null;
-    }
-
-    SiteComponentResponse.SiteComponentTranslationDto translationDto = new SiteComponentResponse.SiteComponentTranslationDto(
-        safe(translation.getTitle()),
-        safe(translation.getSubtitle()),
-        safe(translation.getData()));
+    SiteComponentResponse.SiteComponentTranslationDto translationDto = translation == null
+        ? null
+        : new SiteComponentResponse.SiteComponentTranslationDto(
+            safe(translation.getTitle()),
+            safe(translation.getSubtitle()),
+            safe(translation.getData()));
 
     return new SiteComponentResponse(
         component.getId(),
