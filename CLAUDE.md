@@ -442,6 +442,128 @@ isolation and Clean Architecture compliance.
 - ✅ Clean Architecture compliance maintained
 - ✅ No breaking changes to existing translations structure
 
+#### **Sprint 11: Tenant Supported Languages**
+
+**Goal:** Manage site languages inline on Tenant screen; centralize language
+and translation orchestration; wire component translations to tenant languages.
+
+**Decisions (final):**
+
+- Supported language enum (platform catalog): `tr` (default at tenant
+  creation), `en`, `es`, `ar`, `ru`.
+- Admin UI is language-agnostic; public site uses PATH strategy (`/{lang}/…`).
+- Tenant languages are managed via inline multi-select on
+  `tenants-list` (no separate page):
+  - TR shown in multi-select only if it is not the `defaultLanguage`.
+  - Changing `defaultLanguage` auto-adds that language to `supported` if
+    missing.
+- Separate endpoint for tenant languages: `PATCH /api/languages/tenant`.
+- RTL impact: only public site for now; Admin UI remains LTR.
+- Component translations: default language translation NOT mandatory on create.
+  Reads may fallback to default. No delete translation endpoint; data retained
+  (hidden if language unsupported).
+
+**Backend Scope (Staged Plan):**
+
+- Stage 1 (Non-breaking):
+  - Keep `ComponentResponse` with `tr`/`en` fields.
+  - Introduce `TranslationService` to orchestrate all translation CRUD,
+    batch reads, and fallback. `ComponentServiceImpl` delegates to it.
+  - Expand `LanguageService`:
+    - `getSupportedLanguages(tenantId)` with short TTL cache
+    - `validateTranslationKeys(tenantId, translations)`
+    - `resolveEffectiveLanguage(tenantId, requested)`
+  - Component create/update validates `translations.keys ⊆ supported` via
+    `LanguageService`; translations persisted via `TranslationService`.
+  - Site read uses `resolveEffectiveLanguage`+fallback via `TranslationService`.
+
+- Stage 2 (Breaking - implemented):
+  - `ComponentResponse` artık `translations: Map<string, TranslationDto>`
+    döner (TR/EN alanları kaldırıldı).
+  - Admin UI dinamik dil sekmelerini `translations` map’inden üretmelidir.
+
+**API (Presentation):**
+
+- `GET /languages` → platform catalog.
+- `GET /languages/tenant` → `{ defaultLanguage, supported[] }`.
+- `PATCH /languages/tenant` (admin-only) with rules:
+  - `supported` not empty; contains `defaultLanguage`.
+  - `supported ⊆ {tr,en,es,ar,ru}`; ISO 639-1 check.
+  - Tenant isolation; cache invalidation after update.
+
+**API (Response) – Component (Stage 2):**
+
+```typescript
+interface ComponentResponse {
+  id: number;
+  tenantId: number;
+  type: ComponentType;
+  key: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  visible: boolean;
+  sortOrder: number;
+  translations: Record<string, {
+    title?: string;
+    subtitle?: string;
+    data?: string; // type-specific JSON
+  }>;
+}
+```
+
+**Application:**
+
+- `LanguageService`: resolve + validation + caching (short TTL).
+- `TranslationService`: centralized translation CRUD, batch read, fallback
+  (metotlar: upsertTranslations, findByComponentIdsAndLanguage,
+  findByComponentIdAndLanguages, getForLanguageWithFallback, deleteByComponentId).
+- `ComponentService`: yalnızca orkestrasyon yapar; dil-özel (TR/EN) kod yok.
+
+**Infrastructure:**
+
+- Use repository batch queries to avoid N+1.
+- Indexes already present on component tables (tenant,type,status,…).
+
+**Frontend (Admin) Scope:**
+
+- `tenants-list.component` inline form:
+  - Multi-select for `supportedLanguages` (EN/ES/AR/RU). TR is implicit if
+    it is the default; otherwise selectable.
+  - Separate select for `defaultLanguage`; on change, auto-add to
+    `supported`.
+  - On create: default `tr`, supported `["tr"]`.
+  - On save: call `PATCH /languages/tenant`; then refresh language
+    facade/state so other forms (components) update tabs dynamically.
+- HTTP interceptor continues to set `Accept-Language` from active language.
+- Component forms render language tabs from tenant `supportedLanguages`.
+
+**Validation Rules:**
+
+- Tenant: `default ∈ supported`, `supported ⊆ {tr,en,es,ar,ru}`, ≥1 language.
+- Components: `translations.keys ⊆ supported`; default translation not
+  required; unknown language → 400.
+
+**API Examples:**
+
+- `GET /languages/tenant` →
+  `{ "defaultLanguage": "tr", "supported": ["tr","en"] }`
+- `PATCH /languages/tenant` →
+  `{ "defaultLanguage": "en", "supported": ["tr","en","ar"] }`
+
+**Acceptance Criteria:**
+
+- Admin can pick multiple supported languages inline on tenant form; TR is
+  auto-included when default; default change auto-adds to supported.
+- Backend enforces validation and tenant isolation; caches invalidated on
+  update.
+- Component create/update rejects translations outside supported set; reads
+  fallback to default when requested translation does not exist.
+- Stage 2: `ComponentResponse.translations` map’i yayında; Admin UI bu map’e
+  göre dinamik sekmelerle çalışır.
+- Public site only exposes paths for supported languages.
+
+**Notes:** No translation deletion endpoint in this sprint; data retained and
+not shown if language is unsupported. RTL applies only to public site.
+
 #### **Sprint 6: Admin Toast Notifications (1 week)**
 
 **Goal:** Implement a dynamic, reusable toast notification system for the

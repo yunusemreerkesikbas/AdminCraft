@@ -362,20 +362,4 @@ public class PageCategoryServiceImpl implements PageCategoryService {
         c.getPath(), c.getLevel(), c.getSortOrder(), c.getStatus());
   }
 
-  /**
-   * Fallback method for single category conversion - DEPRECATED.
-   * Bu method N+1 query yaratır, sadece geriye dönük uyumluluk için.
-   */
-  @Deprecated
-  private PageCategoryDto toDtoLocalized(PageCategory c, Language lang) {
-    log.warn("PERFORMANCE_WARNING: Using deprecated single translation lookup - potential N+1 query for category {}",
-        c.getId());
-    var tr = translationRepository.findByTenantIdAndCategoryIdAndLanguage(
-        c.getTenantId(), c.getId(), lang).orElse(null);
-    String name = tr != null ? tr.getName() : c.getName();
-    String slug = tr != null ? tr.getSlug() : c.getSlug();
-    return new PageCategoryDto(
-        c.getId(), c.getTenantId(), c.getParentId(), name, slug,
-        c.getPath(), c.getLevel(), c.getSortOrder(), c.getStatus());
-  }
 }
