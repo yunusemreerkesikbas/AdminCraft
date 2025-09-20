@@ -284,6 +284,23 @@ export const langTR = {
             deleteSuccess: 'Site başarıyla silindi',
             publishSuccess: 'Site başarıyla yayınlandı',
         },
+        components: {
+            common: {
+                panels: {
+                    general: 'Genel',
+                    tr: 'Türkçe',
+                    en: 'İngilizce',
+                },
+                fields: {
+                    key: 'Anahtar',
+                    visible: 'Görünür',
+                    sortOrder: 'Sıra',
+                },
+            },
+            navbar: {
+                title: 'Navbar Bileşenleri'
+            }
+        },
         settings: {
             title: 'Site Ayarları',
             panels: {

@@ -62,7 +62,12 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageBuilderSections: 'page-builder/sections',
     pageBuilderSectionById: 'page-builder/sections/${id}',
     pageBuilderBlocks: 'page-builder/blocks',
-    pageBuilderBlockById: 'page-builder/blocks/${id}'
+    pageBuilderBlockById: 'page-builder/blocks/${id}',
+
+    // ----- UI COMPONENTS (type-based) -----
+    componentsByType: 'components/${type}',
+    componentByTypeAndId: 'components/${type}/${id}',
+    componentsSiteList: 'components/${type}/site'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

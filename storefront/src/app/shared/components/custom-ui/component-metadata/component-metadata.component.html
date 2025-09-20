@@ -1,0 +1,24 @@
+<mat-form-field class="w-full">
+    <mat-label>{{ keyLabelKey | transloco }}</mat-label>
+    <input matInput [formControl]="form.controls['key']" />
+</mat-form-field>
+<div class="flex items-center justify-between">
+    <mat-slide-toggle [formControl]="form.controls['visible']">
+        {{ visibleLabelKey | transloco }}
+    </mat-slide-toggle>
+    <mat-form-field class="w-40">
+        <mat-label>{{ statusLabelKey | transloco }}</mat-label>
+        <mat-select [formControl]="form.controls['status']">
+            <mat-option value="ACTIVE">
+                {{ 'admin.common.status.active' | transloco }}
+            </mat-option>
+            <mat-option value="INACTIVE">
+                {{ 'admin.common.status.inactive' | transloco }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+<mat-form-field class="w-40">
+    <mat-label>{{ sortOrderLabelKey | transloco }}</mat-label>
+    <input matInput type="number" [formControl]="form.controls['sortOrder']" />
+</mat-form-field>
