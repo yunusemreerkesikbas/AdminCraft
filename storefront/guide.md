@@ -153,3 +153,43 @@ Headerlar: `X-Tenant-ID` (zorunlu), `Authorization` (gerekirse)
 - Eski `tr`/`en` alanları kaldırıldı. Tüm diller `translations` map’inde.
 - UI tarafta TR/EN’e özel kodları kaldırın; sekmeleri `supportedLanguages` ve
   `ComponentResponse.translations` üzerinden dinamik üretin.
+
+## Sprint 11 – Phase 2: Navbar i18n Menu Management (Frontend)
+
+### Yeni/Revize Backend Uç Noktaları
+
+- Navbar kök (root) güncellemesi (mevcut contract):
+  - `PUT` `/api/components/navbar/{id}`
+  - Body: `ComponentRequest` (Stage 2) — `styleClasses` ve `translations` map’i içerir
+
+- Navbar item yönetimi (yeni):
+  - Ağaç liste: `GET` `/api/components/navbar/{id}/items/tree`
+  - Ekle: `POST` `/api/components/navbar/{id}/items`
+  - Güncelle: `PUT` `/api/components/navbar/{id}/items/{itemId}`
+  - Sil: `DELETE` `/api/components/navbar/{id}/items/{itemId}`
+  - Sıralama/ebeveyn güncelle: `PATCH` `/api/components/navbar/{id}/items/reorder`
+
+Header’lar: `X-Tenant-ID` (zorunlu), `Authorization` (gerekirse)
+
+### Frontend’te Kullanım Yerleri
+
+- Navbar Listesi (Admin → UI Component Yönetimi → Navbar):
+  - Listeleme: `GET /api/components/navbar?status=ACTIVE|INACTIVE`
+  - Oluşturma: `POST /api/components/navbar` (URL `type` = body `type`)
+
+- Navbar Form (create/edit):
+  - General tab: `PUT /api/components/navbar/{id}` (body’de `styleClasses` dahil)
+  - Dil sekmeleri (TR/EN vb.): `translations` map’ini gönderin/alın
+
+- Navbar Items (Form içinde ayrı bölüm/sekme):
+  - Ağacı getir: `GET /api/components/navbar/{id}/items/tree`
+  - Item oluştur: `POST /api/components/navbar/{id}/items`
+  - Item düzenle: `PUT /api/components/navbar/{id}/items/{itemId}`
+  - Item sil: `DELETE /api/components/navbar/{id}/items/{itemId}`
+  - Toplu sıralama/ebeveyn değişikliği: `PATCH /api/components/navbar/{id}/items/reorder`
+
+Notlar:
+
+- Dil sekmeleri, `GET /languages/tenant` → `supported` listesinden üretilmeli.
+- `translations` anahtarları, tenant destekli dillerin alt kümesi olmalı.
+- Hiyerarşi derinliği en fazla 3 seviyedir; parent seçiminde UI bu kurala göre filtrelemeli.
