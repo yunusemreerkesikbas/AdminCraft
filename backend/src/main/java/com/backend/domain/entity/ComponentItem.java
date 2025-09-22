@@ -87,6 +87,9 @@ public class ComponentItem {
   protected void onCreate() {
     createdAt = LocalDateTime.now();
     updatedAt = LocalDateTime.now();
+    if (uuid == null || uuid.isBlank()) {
+      uuid = java.util.UUID.randomUUID().toString();
+    }
     if (level == null)
       level = 1;
     if (sortOrder == null)

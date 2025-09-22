@@ -37,6 +37,11 @@ public class ComponentItemRepositoryImpl implements ComponentItemRepository {
   }
 
   @Override
+  public List<ComponentItem> findByParentId(Long parentId) {
+    return jpaRepository.findByParentId(parentId);
+  }
+
+  @Override
   public ComponentItem save(ComponentItem item) {
     return jpaRepository.save(item);
   }

@@ -281,3 +281,90 @@ CREATE TABLE IF NOT EXISTS ui_component_translations (
   CONSTRAINT fk_ui_comp_tr_component FOREIGN KEY (component_id)
     REFERENCES ui_components(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add styleClasses column to existing ui_components table (Sprint 11 Phase 2)
+SET @column_exists = (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'ui_components'
+    AND COLUMN_NAME = 'style_classes'
+);
+SET @sql_add_column = IF(@column_exists = 0,
+  'ALTER TABLE ui_components ADD COLUMN style_classes VARCHAR(255) NULL AFTER sort_order',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql_add_column;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- UI Component Items (Sprint 11 Phase 2) - Navbar Menu Management
+CREATE TABLE IF NOT EXISTS ui_component_items (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  component_id BIGINT NOT NULL,
+  uid VARCHAR(100) NOT NULL,
+  uuid CHAR(36) NOT NULL,
+  parent_id BIGINT NULL,
+  level TINYINT NOT NULL DEFAULT 1,
+  visible BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by BIGINT NULL,
+  updated_by BIGINT NULL,
+
+  -- CONSTRAINTS
+  CONSTRAINT uk_ui_component_item_component_uid UNIQUE (component_id, uid),
+  CONSTRAINT chk_ui_component_item_level CHECK (level BETWEEN 1 AND 3),
+  CONSTRAINT chk_ui_component_item_uid_format CHECK (uid REGEXP '^[a-z0-9._-]+$'),
+  CONSTRAINT chk_ui_component_item_uuid_length CHECK (CHAR_LENGTH(uuid) = 36),
+  CONSTRAINT chk_ui_component_item_sort_order CHECK (sort_order >= 0),
+
+  -- PERFORMANCE INDEXES
+  KEY idx_ui_component_item_component (component_id),
+  KEY idx_ui_component_item_parent (parent_id),
+  KEY idx_ui_component_item_level (level),
+  KEY idx_ui_component_item_sort (sort_order),
+  KEY idx_ui_component_item_visible (visible),
+  KEY idx_ui_component_item_component_parent (component_id, parent_id),
+  KEY idx_ui_component_item_component_level (component_id, level),
+  KEY idx_ui_component_item_parent_sort (parent_id, sort_order),
+  KEY idx_ui_component_item_tree_nav (component_id, parent_id, level, sort_order),
+
+  -- FOREIGN KEYS
+  CONSTRAINT fk_ui_component_item_component FOREIGN KEY (component_id)
+    REFERENCES ui_components(id) ON DELETE CASCADE,
+  CONSTRAINT fk_ui_component_item_parent FOREIGN KEY (parent_id)
+    REFERENCES ui_component_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- UI Component Item Translations (Sprint 11 Phase 2)
+CREATE TABLE IF NOT EXISTS ui_component_item_translations (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  item_id BIGINT NOT NULL,
+  language VARCHAR(5) NOT NULL,
+  title VARCHAR(200) NULL,
+  subtitle TEXT NULL,
+  url VARCHAR(255) NULL,
+  seo_title VARCHAR(60) NULL,
+  seo_description VARCHAR(160) NULL,
+  seo_keywords VARCHAR(255) NULL,
+
+  -- CONSTRAINTS
+  CONSTRAINT uk_ui_component_item_translation_item_language UNIQUE (item_id, language),
+  CONSTRAINT chk_ui_comp_item_tr_language CHECK (language IN ('tr', 'en', 'es', 'ar', 'ru')),
+  CONSTRAINT chk_ui_comp_item_tr_title_length CHECK (title IS NULL OR CHAR_LENGTH(TRIM(title)) > 0),
+  CONSTRAINT chk_ui_comp_item_tr_subtitle_length CHECK (subtitle IS NULL OR CHAR_LENGTH(TRIM(subtitle)) > 0),
+  CONSTRAINT chk_ui_comp_item_tr_url_length CHECK (url IS NULL OR CHAR_LENGTH(TRIM(url)) > 0),
+  CONSTRAINT chk_ui_comp_item_tr_seo_title_length CHECK (seo_title IS NULL OR CHAR_LENGTH(TRIM(seo_title)) BETWEEN 1 AND 60),
+  CONSTRAINT chk_ui_comp_item_tr_seo_desc_length CHECK (seo_description IS NULL OR CHAR_LENGTH(TRIM(seo_description)) BETWEEN 1 AND 160),
+
+  -- PERFORMANCE INDEXES
+  KEY idx_ui_component_item_tr_item (item_id),
+  KEY idx_ui_component_item_tr_language (language),
+  KEY idx_ui_component_item_tr_item_language (item_id, language),
+  KEY idx_ui_component_item_tr_batch_load (item_id, language, title),
+
+  -- FOREIGN KEYS
+  CONSTRAINT fk_ui_comp_item_tr_item FOREIGN KEY (item_id)
+    REFERENCES ui_component_items(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
