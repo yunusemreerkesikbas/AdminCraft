@@ -61,6 +61,8 @@ public class ComponentServiceImpl implements ComponentService {
       component.setVisible(request.visible());
     if (request.sortOrder() != null)
       component.setSortOrder(request.sortOrder());
+    if (request.styleClasses() != null)
+      component.setStyleClasses(request.styleClasses());
     component.setCreatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
     languageService.validateTranslationKeys(tenantId, request.translations());
@@ -98,6 +100,8 @@ public class ComponentServiceImpl implements ComponentService {
       component.setVisible(request.visible());
     if (request.sortOrder() != null)
       component.setSortOrder(request.sortOrder());
+    if (request.styleClasses() != null)
+      component.setStyleClasses(request.styleClasses());
     component.setUpdatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
     languageService.validateTranslationKeys(tenantId, request.translations());
@@ -162,8 +166,8 @@ public class ComponentServiceImpl implements ComponentService {
     var supportedLanguages = languageService.getSupportedLanguages(tenantId);
 
     // SECURITY: Use secure batch query with tenant validation
-    Map<Long, Map<Language, ComponentTranslation>> translationsMap =
-        translationService.findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
+    Map<Long, Map<Language, ComponentTranslation>> translationsMap = translationService
+        .findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
 
     return components.stream()
         .map(c -> ComponentMapper.toResponse(c, translationsMap.get(c.getId())))
@@ -192,8 +196,8 @@ public class ComponentServiceImpl implements ComponentService {
     var supportedLanguages = languageService.getSupportedLanguages(tenantId);
 
     // SECURITY: Use secure batch query with tenant validation
-    Map<Long, Map<Language, ComponentTranslation>> translationsMap =
-        translationService.findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
+    Map<Long, Map<Language, ComponentTranslation>> translationsMap = translationService
+        .findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
 
     return components.stream()
         .map(c -> ComponentMapper.toResponse(c, translationsMap.get(c.getId())))

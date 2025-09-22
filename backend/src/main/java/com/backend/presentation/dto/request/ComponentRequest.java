@@ -17,6 +17,7 @@ public record ComponentRequest(
     ComponentStatus status,
     Boolean visible,
     Integer sortOrder,
+    @Size(max = 255) String styleClasses,
     @NotNull Map<String, I18nPayload> translations) {
 
   public ComponentRequest {

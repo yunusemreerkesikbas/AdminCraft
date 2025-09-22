@@ -13,6 +13,7 @@ public record ComponentResponse(
     ComponentStatus status,
     boolean visible,
     Integer sortOrder,
+    String styleClasses,
     Map<String, ComponentTranslationDto> translations) {
   public static record ComponentTranslationDto(
       String title,

@@ -57,6 +57,10 @@ public class Component {
   @Column(name = "sort_order", nullable = false)
   private Integer sortOrder = 0;
 
+  @Size(max = 255)
+  @Column(name = "style_classes", length = 255)
+  private String styleClasses;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
