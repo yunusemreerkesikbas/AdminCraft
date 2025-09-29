@@ -17,7 +17,7 @@ public interface ComponentItemJpaRepository extends JpaRepository<ComponentItem,
   @Query("SELECT i FROM ComponentItem i WHERE i.component.id = :componentId AND i.parent IS NULL ORDER BY i.sortOrder, i.id")
   List<ComponentItem> findRootsByComponentId(@Param("componentId") Long componentId);
 
-  @Query("SELECT i FROM ComponentItem i WHERE i.component.id = :componentId ORDER BY i.parent.id NULLS FIRST, i.sortOrder, i.id")
+  @Query("SELECT i FROM ComponentItem i WHERE i.component.id = :componentId ORDER BY i.parent.id NULLS FIRST, i.level ASC, i.sortOrder ASC, i.id ASC")
   List<ComponentItem> findAllByComponentId(@Param("componentId") Long componentId);
 
   @Query("SELECT COUNT(i) > 0 FROM ComponentItem i WHERE i.component.id = :componentId AND i.uid = :uid")
