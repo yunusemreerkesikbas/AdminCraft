@@ -68,7 +68,12 @@ public class ComponentController {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
 
-      ComponentResponse data = service.get(id, tenantId);
+      ComponentResponse data;
+      if (ComponentType.NAVBAR.equals(type)) {
+        data = service.getNavbarDetail(id, tenantId);
+      } else {
+        data = service.get(id, tenantId);
+      }
       return ResponseEntity.ok(ApiResponse.success("ui.component.get.success", data));
     } catch (Exception e) {
       String errorMessage = "ui.component.get.error";

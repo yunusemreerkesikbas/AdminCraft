@@ -28,29 +28,7 @@ public class NavbarItemController {
     this.service = service;
   }
 
-  @GetMapping("/{id}/items/tree")
-  public ResponseEntity<ApiResponse<List<NavbarItemResponse>>> listTree(
-      @RequestHeader("X-Tenant-ID") Long tenantId,
-      @PathVariable("id") Long componentId) {
-    try {
-      Long userTenantId = SecurityUtil.getCurrentUserTenantId();
-      if (userTenantId != null && !userTenantId.equals(tenantId)) {
-        return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
-      }
-      var data = service.listTree(tenantId, componentId);
-      return ResponseEntity.ok(ApiResponse.success("ui.navbar.items.tree.success", data));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Invalid argument for listing navbar tree: {}", ex.getMessage());
-      return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
-    } catch (EntityNotFoundException ex) {
-      log.warn("Component not found for navbar tree: {}", ex.getMessage());
-      return new ResponseEntity<>(ApiResponse.error(404, "ui.component.not.found"), HttpStatus.NOT_FOUND);
-    } catch (Exception e) {
-      log.error("Unexpected error listing navbar tree for componentId: {}, tenantId: {}", componentId, tenantId, e);
-      return new ResponseEntity<>(ApiResponse.error(500, "ui.navbar.item.list.error"),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
+  // Removed tree endpoint per Phase 3
 
   @PostMapping("/{id}/items")
   public ResponseEntity<ApiResponse<NavbarItemResponse>> create(
@@ -103,7 +81,8 @@ public class NavbarItemController {
       log.warn("Data integrity violation updating navbar item: {}", ex.getMessage());
       return new ResponseEntity<>(ApiResponse.error(409, "ui.navbar.uid.conflict"), HttpStatus.CONFLICT);
     } catch (Exception e) {
-      log.error("Unexpected error updating navbar item {} for componentId: {}, tenantId: {}", itemId, componentId, tenantId, e);
+      log.error("Unexpected error updating navbar item {} for componentId: {}, tenantId: {}", itemId, componentId,
+          tenantId, e);
       return new ResponseEntity<>(ApiResponse.error(500, "ui.navbar.item.update.error"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -128,7 +107,8 @@ public class NavbarItemController {
       log.warn("Entity not found for navbar item deletion: {}", ex.getMessage());
       return new ResponseEntity<>(ApiResponse.error(404, "ui.navbar.item.not.found"), HttpStatus.NOT_FOUND);
     } catch (Exception e) {
-      log.error("Unexpected error deleting navbar item {} for componentId: {}, tenantId: {}", itemId, componentId, tenantId, e);
+      log.error("Unexpected error deleting navbar item {} for componentId: {}, tenantId: {}", itemId, componentId,
+          tenantId, e);
       return new ResponseEntity<>(ApiResponse.error(500, "ui.navbar.item.delete.error"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -159,4 +139,3 @@ public class NavbarItemController {
     }
   }
 }
-

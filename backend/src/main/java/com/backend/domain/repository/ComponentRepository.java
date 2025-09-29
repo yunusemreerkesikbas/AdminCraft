@@ -27,7 +27,8 @@ public interface ComponentRepository {
   void delete(Component component);
 
   // =======================================================================================
-  // SECURITY: Tenant Validation Methods - Critical for preventing cross-tenant data access
+  // SECURITY: Tenant Validation Methods - Critical for preventing cross-tenant
+  // data access
   // =======================================================================================
 
   /**
@@ -35,9 +36,11 @@ public interface ComponentRepository {
    * This is critical for preventing cross-tenant data access vulnerabilities.
    *
    * @param componentIds List of component IDs to validate
-   * @param tenantId Expected tenant ID
+   * @param tenantId     Expected tenant ID
    * @return List of components that belong to the tenant
-   * @throws com.backend.domain.exception.TenantSecurityException if any component doesn't belong to tenant
+   * @throws com.backend.domain.exception.TenantSecurityException if any component
+   *                                                              doesn't belong
+   *                                                              to tenant
    */
   List<Component> findAllByIdInAndTenantId(List<Long> componentIds, Long tenantId);
 
@@ -46,7 +49,7 @@ public interface ComponentRepository {
    * Used for single component validation.
    *
    * @param componentId Component ID to check
-   * @param tenantId Expected tenant ID
+   * @param tenantId    Expected tenant ID
    * @return true if component exists and belongs to tenant
    */
   boolean existsByIdAndTenantId(Long componentId, Long tenantId);
@@ -56,18 +59,24 @@ public interface ComponentRepository {
    * Throws exception if component doesn't exist or belongs to different tenant.
    *
    * @param componentId Component ID to validate
-   * @param tenantId Expected tenant ID
-   * @throws com.backend.domain.exception.TenantSecurityException if validation fails
+   * @param tenantId    Expected tenant ID
+   * @throws com.backend.domain.exception.TenantSecurityException if validation
+   *                                                              fails
    */
   void validateComponentBelongsToTenant(Long componentId, Long tenantId);
 
   /**
    * Validates that all component IDs in the list belong to the specified tenant.
-   * Throws exception if any component doesn't exist or belongs to different tenant.
+   * Throws exception if any component doesn't exist or belongs to different
+   * tenant.
    *
    * @param componentIds List of component IDs to validate
-   * @param tenantId Expected tenant ID
-   * @throws com.backend.domain.exception.TenantSecurityException if validation fails
+   * @param tenantId     Expected tenant ID
+   * @throws com.backend.domain.exception.TenantSecurityException if validation
+   *                                                              fails
    */
   void validateComponentsBelongToTenant(List<Long> componentIds, Long tenantId);
+
+  // NAVBAR helper: flat items by component
+  java.util.List<com.backend.domain.entity.ComponentItem> findItemsByComponentId(Long componentId);
 }

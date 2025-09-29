@@ -31,11 +31,14 @@ public class ComponentMapper {
         component.getTenantId(),
         component.getType(),
         component.getKey(),
+        component.getUid(),
+        component.getUuid(),
         component.getStatus(),
         component.isVisible(),
         component.getSortOrder(),
         component.getStyleClasses(),
-        map);
+        map,
+        java.util.List.of());
   }
 
   public static SiteComponentResponse toSiteResponse(

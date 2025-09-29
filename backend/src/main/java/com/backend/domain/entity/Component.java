@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,6 +48,15 @@ public class Component {
   @Column(name = "component_key", nullable = false, length = 100)
   private String key;
 
+  @Size(max = 100)
+  @Pattern(regexp = "^[a-z0-9._-]+$")
+  @Column(name = "uid", length = 100)
+  private String uid;
+
+  @Size(min = 36, max = 36)
+  @Column(name = "uuid", length = 36)
+  private String uuid;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false, length = 20)
   private ComponentStatus status = ComponentStatus.ACTIVE;
@@ -85,6 +95,13 @@ public class Component {
     }
     if (sortOrder == null) {
       sortOrder = 0;
+    }
+    if (uuid == null || uuid.isBlank()) {
+      uuid = java.util.UUID.randomUUID().toString();
+    }
+    if (uid == null || uid.isBlank()) {
+      // Default uid to key for backward compatibility
+      uid = key;
     }
   }
 
