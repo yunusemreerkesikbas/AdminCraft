@@ -7,8 +7,9 @@ import com.backend.presentation.dto.response.NavbarItemResponse;
 import java.util.List;
 
 public interface ComponentItemService {
-
-  List<NavbarItemResponse> listTree(Long tenantId, Long componentId);
+  // İç kullanım: create/update sonrası tek item'i zengin döndürmek için ağaç
+  // yapıdan faydalanıyoruz. Controller'da /items/tree kaldırıldı.
+  java.util.List<com.backend.presentation.dto.response.NavbarItemResponse> listTree(Long tenantId, Long componentId);
 
   NavbarItemResponse create(Long tenantId, Long componentId, NavbarItemRequest request);
 
@@ -18,4 +19,3 @@ public interface ComponentItemService {
 
   void reorder(Long tenantId, Long componentId, NavbarItemsReorderRequest request);
 }
-

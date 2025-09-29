@@ -68,7 +68,20 @@ public class ComponentController {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
 
-      ComponentResponse data = service.get(id, tenantId);
+      // Validate that the requested component matches the URL type
+      ComponentResponse existing = service.get(id, tenantId);
+      if (!existing.type().equals(type)) {
+        return new ResponseEntity<>(
+            ApiResponse.error(400, "ui.component.type.mismatch"),
+            HttpStatus.BAD_REQUEST);
+      }
+
+      ComponentResponse data;
+      if (ComponentType.NAVBAR.equals(type)) {
+        data = service.getNavbarDetail(id, tenantId);
+      } else {
+        data = existing;
+      }
       return ResponseEntity.ok(ApiResponse.success("ui.component.get.success", data));
     } catch (Exception e) {
       String errorMessage = "ui.component.get.error";

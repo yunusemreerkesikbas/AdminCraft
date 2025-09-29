@@ -11,31 +11,15 @@ import java.util.Map;
 
 public class ComponentMapper {
 
-  public static ComponentResponse toResponse(
-      Component component,
-      Map<Language, ComponentTranslation> translationsByLang) {
-    Map<String, ComponentResponse.ComponentTranslationDto> map = new HashMap<>();
-    if (translationsByLang != null) {
-      for (Map.Entry<Language, ComponentTranslation> e : translationsByLang.entrySet()) {
-        ComponentTranslation t = e.getValue();
-        if (t == null)
-          continue;
-        String code = e.getKey().name().toLowerCase();
-        map.put(code, new ComponentResponse.ComponentTranslationDto(
-            safe(t.getTitle()), safe(t.getSubtitle()), safe(t.getData())));
-      }
-    }
-
+  public static ComponentResponse toResponse(Component component) {
     return new ComponentResponse(
         component.getId(),
         component.getTenantId(),
         component.getType(),
         component.getKey(),
-        component.getStatus(),
-        component.isVisible(),
-        component.getSortOrder(),
-        component.getStyleClasses(),
-        map);
+        component.getUid(),
+        component.getUuid(),
+        java.util.List.of());
   }
 
   public static SiteComponentResponse toSiteResponse(

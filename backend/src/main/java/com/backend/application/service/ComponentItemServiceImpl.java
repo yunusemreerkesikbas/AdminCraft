@@ -1,6 +1,7 @@
 package com.backend.application.service;
 
 import com.backend.domain.entity.*;
+import com.backend.domain.enums.ComponentType;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.*;
 import com.backend.presentation.dto.request.NavbarItemRequest;
@@ -35,13 +36,19 @@ public class ComponentItemServiceImpl implements ComponentItemService {
   }
 
   @Override
+  @Transactional
   public List<NavbarItemResponse> listTree(Long tenantId, Long componentId) {
     Component component = componentRepository.findByIdAndTenantId(componentId, tenantId)
         .orElseThrow(() -> new IllegalArgumentException("ui.component.not.found"));
 
     List<ComponentItem> all = itemRepository.findAllByComponentId(componentId);
-    if (all.isEmpty())
-      return List.of();
+    if (all.isEmpty() && ComponentType.NAVBAR.equals(component.getType())) {
+      seedDummyNavbarItems(tenantId, component);
+      all = itemRepository.findAllByComponentId(componentId);
+      if (all.isEmpty()) {
+        return List.of();
+      }
+    }
 
     Set<Language> langs = languageService.getSupportedLanguages(tenantId);
     List<Long> itemIds = all.stream().map(ComponentItem::getId).toList();
@@ -292,6 +299,88 @@ public class ComponentItemServiceImpl implements ComponentItemService {
       tr.setSeoDescription(payload.seoDescription());
       tr.setSeoKeywords(payload.seoKeywords());
 
+      itemTranslationRepository.save(tr);
+    }
+  }
+
+  private void seedDummyNavbarItems(Long tenantId, Component component) {
+    Set<Language> supported = languageService.getSupportedLanguages(tenantId);
+
+    ComponentItem home = createItem(component, null, 1, true, "home", 1);
+    addTranslations(home, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Ana Sayfa", "Home" },
+        new String[] { "/", "/" });
+
+    ComponentItem products = createItem(component, null, 1, true, "products", 2);
+    addTranslations(products, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Ürünler", "Products" },
+        new String[] { "/products", "/products" });
+
+    ComponentItem categories = createItem(component, products, 2, true, "categories", 1);
+    addTranslations(categories, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Kategoriler", "Categories" },
+        new String[] { "/products/categories", "/products/categories" });
+
+    ComponentItem electronics = createItem(component, categories, 3, true, "electronics", 1);
+    addTranslations(electronics, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Elektronik", "Electronics" },
+        new String[] { "/products/categories/electronics", "/products/categories/electronics" });
+
+    ComponentItem fashion = createItem(component, categories, 3, true, "fashion", 2);
+    addTranslations(fashion, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Moda", "Fashion" },
+        new String[] { "/products/categories/fashion", "/products/categories/fashion" });
+
+    ComponentItem newArrivals = createItem(component, products, 2, true, "new-arrivals", 2);
+    addTranslations(newArrivals, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Yeni Gelenler", "New Arrivals" },
+        new String[] { "/products/new", "/products/new" });
+
+    ComponentItem about = createItem(component, null, 1, true, "about", 3);
+    addTranslations(about, supported,
+        new String[] { "TR", "EN" },
+        new String[] { "Hakkımızda", "About" },
+        new String[] { "/about", "/about" });
+  }
+
+  private ComponentItem createItem(
+      Component component,
+      ComponentItem parent,
+      int level,
+      boolean visible,
+      String uid,
+      int sortOrder) {
+    ComponentItem item = new ComponentItem();
+    item.setComponent(component);
+    item.setParent(parent);
+    item.setLevel(level);
+    item.setVisible(visible);
+    item.setUid(uid);
+    item.setSortOrder(sortOrder);
+    return itemRepository.save(item);
+  }
+
+  private void addTranslations(
+      ComponentItem item,
+      Set<Language> supported,
+      String[] langs,
+      String[] titles,
+      String[] urls) {
+    for (int i = 0; i < langs.length; i++) {
+      Language lang = Language.valueOf(langs[i]);
+      if (!supported.contains(lang))
+        continue;
+      ComponentItemTranslation tr = new ComponentItemTranslation();
+      tr.setItem(item);
+      tr.setLanguage(lang);
+      tr.setTitle(titles[i]);
+      tr.setUrl(urls[i]);
       itemTranslationRepository.save(tr);
     }
   }
