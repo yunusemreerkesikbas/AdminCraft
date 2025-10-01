@@ -34,7 +34,6 @@ public class ComponentMapper {
         component.getStatus(),
         component.isVisible(),
         component.getSortOrder(),
-        component.getStyleClasses(),
         map);
   }
 
