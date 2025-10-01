@@ -1,14 +1,13 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.ComponentService;
-import com.backend.domain.exception.ComponentConflictException;
-import com.backend.domain.exception.ComponentNotFoundException;
 import com.backend.presentation.dto.request.CreateComponentRequest;
 import com.backend.presentation.dto.request.UpdateComponentRequest;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
 import com.backend.shared.common.SecurityUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,28 +18,21 @@ import java.util.List;
 @RequestMapping("/api/components")
 public class ComponentController {
 
-  private final ComponentService service;
-
-  // Constructor injection following Clean Architecture principles
-  public ComponentController(ComponentService service) {
-    this.service = service;
-  }
+  @Autowired
+  private ComponentService service;
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<ComponentResponse>>> list(
       @RequestHeader("X-Tenant-ID") Long tenantId) {
     try {
-      // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
       List<ComponentResponse> data = service.list(tenantId);
       return ResponseEntity.ok(ApiResponse.success("ui.component.list.success", data));
     } catch (Exception ex) {
-      // Let GlobalExceptionHandler handle specific exceptions
-      throw new RuntimeException("Failed to list components", ex);
+      return new ResponseEntity<>(ApiResponse.error(500, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -49,20 +41,16 @@ public class ComponentController {
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
     try {
-      // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
       ComponentResponse data = service.get(id, tenantId);
       return ResponseEntity.ok(ApiResponse.success("ui.component.get.success", data));
-    } catch (ComponentNotFoundException ex) {
-      // Let GlobalExceptionHandler handle this specific exception
-      throw ex;
+    } catch (IllegalArgumentException ex) {
+      return new ResponseEntity<>(ApiResponse.error(404, ex.getMessage()), HttpStatus.NOT_FOUND);
     } catch (Exception ex) {
-      // Let GlobalExceptionHandler handle generic exceptions
-      throw new RuntimeException("Failed to get component", ex);
+      return new ResponseEntity<>(ApiResponse.error(500, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -72,25 +60,19 @@ public class ComponentController {
       @RequestHeader("X-Tenant-ID") Long tenantId,
       @RequestHeader("X-User-ID") Long userId) {
     try {
-      // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
-      // Validate request tenant ID matches header
       if (!request.tenantId().equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
       ComponentResponse data = service.create(request, userId);
       return new ResponseEntity<>(ApiResponse.success("ui.component.create.success", data), HttpStatus.CREATED);
-    } catch (ComponentConflictException ex) {
-      // Let GlobalExceptionHandler handle this specific exception
-      throw ex;
+    } catch (IllegalArgumentException ex) {
+      return new ResponseEntity<>(ApiResponse.error(409, ex.getMessage()), HttpStatus.CONFLICT);
     } catch (Exception ex) {
-      // Let GlobalExceptionHandler handle generic exceptions
-      throw new RuntimeException("Failed to create component", ex);
+      return new ResponseEntity<>(ApiResponse.error(500, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -101,20 +83,16 @@ public class ComponentController {
       @Valid @RequestBody UpdateComponentRequest request,
       @RequestHeader("X-User-ID") Long userId) {
     try {
-      // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
       ComponentResponse data = service.update(id, tenantId, request, userId);
       return ResponseEntity.ok(ApiResponse.success("ui.component.update.success", data));
-    } catch (ComponentNotFoundException ex) {
-      // Let GlobalExceptionHandler handle this specific exception
-      throw ex;
+    } catch (IllegalArgumentException ex) {
+      return new ResponseEntity<>(ApiResponse.error(404, ex.getMessage()), HttpStatus.NOT_FOUND);
     } catch (Exception ex) {
-      // Let GlobalExceptionHandler handle generic exceptions
-      throw new RuntimeException("Failed to update component", ex);
+      return new ResponseEntity<>(ApiResponse.error(500, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -123,20 +101,16 @@ public class ComponentController {
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
     try {
-      // Validate tenant access
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      
       service.delete(id, tenantId);
       return ResponseEntity.ok(ApiResponse.success("ui.component.delete.success", null));
-    } catch (ComponentNotFoundException ex) {
-      // Let GlobalExceptionHandler handle this specific exception
-      throw ex;
+    } catch (IllegalArgumentException ex) {
+      return new ResponseEntity<>(ApiResponse.error(404, ex.getMessage()), HttpStatus.NOT_FOUND);
     } catch (Exception ex) {
-      // Let GlobalExceptionHandler handle generic exceptions
-      throw new RuntimeException("Failed to delete component", ex);
+      return new ResponseEntity<>(ApiResponse.error(500, ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

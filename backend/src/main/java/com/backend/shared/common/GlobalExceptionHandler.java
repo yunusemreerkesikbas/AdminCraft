@@ -45,18 +45,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-    // UI Component Exceptions - FIXED: Removed duplicates
-    @ExceptionHandler(ComponentConflictException.class)
-    public ResponseEntity<ApiResponse<?>> handleComponentConflict(ComponentConflictException ex) {
-        log.warn("Component conflict exception: {}", ex.getMessage());
+    // UI Component Exceptions
+    @ExceptionHandler({ ComponentConflictException.class, ComponentConflictException.class })
+    public ResponseEntity<ApiResponse<?>> handleComponentConflict(RuntimeException ex) {
         String message = getMessage("ui.component.key.conflict");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(ComponentNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleComponentNotFound(ComponentNotFoundException ex) {
-        log.warn("Component not found exception: {}", ex.getMessage());
+    @ExceptionHandler({ ComponentNotFoundException.class, ComponentNotFoundException.class })
+    public ResponseEntity<ApiResponse<?>> handleComponentNotFound(RuntimeException ex) {
         String message = getMessage("ui.component.not.found");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
@@ -172,7 +170,7 @@ public class GlobalExceptionHandler {
             String errorMessage = getMessage(error.getDefaultMessage());
             validationErrors.put(fieldName, errorMessage);
         });
-        ApiResponse<?> response = new ApiResponse<>("ERROR", getMessage("validation.failed"), validationErrors);
+        ApiResponse<?> response = new ApiResponse<>("ERROR", "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
