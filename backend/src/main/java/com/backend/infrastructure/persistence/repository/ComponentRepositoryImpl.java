@@ -1,7 +1,6 @@
 package com.backend.infrastructure.persistence.repository;
 
 import com.backend.domain.entity.Component;
-import com.backend.domain.entity.ComponentItem;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.ComponentType;
 import com.backend.domain.exception.TenantSecurityException;
@@ -21,12 +20,9 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   private static final Logger logger = LoggerFactory.getLogger(ComponentRepositoryImpl.class);
 
   private final ComponentJpaRepository jpaRepository;
-  private final ComponentItemJpaRepository itemJpaRepository;
 
-  public ComponentRepositoryImpl(ComponentJpaRepository jpaRepository,
-      ComponentItemJpaRepository itemJpaRepository) {
+  public ComponentRepositoryImpl(ComponentJpaRepository jpaRepository) {
     this.jpaRepository = jpaRepository;
-    this.itemJpaRepository = itemJpaRepository;
   }
 
   @Override
@@ -74,6 +70,10 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     jpaRepository.delete(component);
   }
 
+  // =======================================================================================
+  // SECURITY: Tenant Validation Methods - Critical for preventing cross-tenant data access
+  // =======================================================================================
+
   @Override
   public List<Component> findAllByIdInAndTenantId(List<Long> componentIds, Long tenantId) {
     if (componentIds == null || componentIds.isEmpty()) {
@@ -82,6 +82,7 @@ public class ComponentRepositoryImpl implements ComponentRepository {
 
     List<Component> components = jpaRepository.findAllByIdInAndTenantId(componentIds, tenantId);
 
+    // Verify all requested components were found
     if (components.size() != componentIds.size()) {
       Set<Long> foundIds = components.stream().map(Component::getId).collect(Collectors.toSet());
       List<Long> missingIds = componentIds.stream()
@@ -89,8 +90,8 @@ public class ComponentRepositoryImpl implements ComponentRepository {
           .collect(Collectors.toList());
 
       logger.error("SECURITY VIOLATION: Some components not found or don't belong to tenant {}. " +
-          "Requested: {}, Found: {}, Missing: {}",
-          tenantId, componentIds, foundIds, missingIds);
+                   "Requested: {}, Found: {}, Missing: {}",
+                   tenantId, componentIds, foundIds, missingIds);
 
       throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
     }
@@ -114,13 +115,13 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   public void validateComponentBelongsToTenant(Long componentId, Long tenantId) {
     if (componentId == null || tenantId == null) {
       logger.error("SECURITY VIOLATION: Null component ID {} or tenant ID {} in validation",
-          componentId, tenantId);
+                   componentId, tenantId);
       throw TenantSecurityException.invalidComponentAccess(componentId, tenantId);
     }
 
     if (!existsByIdAndTenantId(componentId, tenantId)) {
       logger.error("SECURITY VIOLATION: Component {} does not belong to tenant {} or doesn't exist",
-          componentId, tenantId);
+                   componentId, tenantId);
       throw TenantSecurityException.invalidComponentAccess(componentId, tenantId);
     }
 
@@ -135,25 +136,22 @@ public class ComponentRepositoryImpl implements ComponentRepository {
 
     if (tenantId == null) {
       logger.error("SECURITY VIOLATION: Null tenant ID in batch validation for components: {}",
-          componentIds);
+                   componentIds);
       throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
     }
 
     try {
+      // This method will throw exception if any component is missing or belongs to wrong tenant
       findAllByIdInAndTenantId(componentIds, tenantId);
       logger.debug("Batch validation successful for {} components in tenant {}",
-          componentIds.size(), tenantId);
+                   componentIds.size(), tenantId);
     } catch (TenantSecurityException e) {
+      // Re-throw the security exception
       throw e;
     } catch (Exception e) {
       logger.error("SECURITY VIOLATION: Unexpected error during batch validation for tenant {}. " +
-          "Component IDs: {}, Error: {}", tenantId, componentIds, e.getMessage());
+                   "Component IDs: {}, Error: {}", tenantId, componentIds, e.getMessage());
       throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
     }
-  }
-
-  // NAVBAR detail: flat item entries
-  public List<ComponentItem> findItemsByComponentId(Long componentId) {
-    return itemJpaRepository.findAllByComponentId(componentId);
   }
 }

@@ -7,7 +7,6 @@ tools: Bash, Read, Write
 Technology stack：
 Framework: Java Spring Boot 3 Maven with Java 21 Dependencies: Spring Web, Spring Data JPA, Thymeleaf, Lombok, MySQL
 Application Logic Design：
-
 1. All request and response handling must be done only in RestController.
 2. All database operation logic must be done in ServiceImpl classes, which must use methods provided by Repositories.
 3. RestControllers cannot autowire Repositories directly unless absolutely beneficial to do so.
@@ -26,7 +25,7 @@ Repository (DAO):
 2. Repository classes must be of type interface.
 3. Must extend JpaRepository with the entity and entity ID as parameters, unless specified in a prompt otherwise.
 4. Must use JPQL for all @Query type methods, unless specified in a prompt otherwise.
-5. SHOULD use when appropriate @EntityGraph(attributePaths={"relatedEntity"}) in relationship queries to avoid the N+1 problem.
+5. Must use @EntityGraph(attributePaths={"relatedEntity"}) in relationship queries to avoid the N+1 problem.
 6. Must use a DTO as The data container for multi-join queries with @Query.
 Service：
 1. Service classes must be of type interface.

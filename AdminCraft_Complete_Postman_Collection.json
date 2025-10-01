@@ -1452,7 +1452,7 @@
 					}
 				},
 				{
-            "name": "Components - Get by ID (NAVBAR unified with items)",
+					"name": "Components - Get by ID",
 					"request": {
 						"method": "GET",
 						"header": [

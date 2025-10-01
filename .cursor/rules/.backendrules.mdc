@@ -35,7 +35,7 @@ Repository (DAO):
 2. Repository classes must be of type interface.
 3. Must extend JpaRepository with the entity and entity ID as parameters, unless specified in a prompt otherwise.
 4. Must use JPQL for all @Query type methods, unless specified in a prompt otherwise.
-5. SHOULD use when appropriate @EntityGraph(attributePaths={"relatedEntity"}) in relationship queries to avoid the N+1 problem.
+5. Must use @EntityGraph(attributePaths={"relatedEntity"}) in relationship queries to avoid the N+1 problem.
 6. Must use a DTO as The data container for multi-join queries with @Query.
 
 Service：

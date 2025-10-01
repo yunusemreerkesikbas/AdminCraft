@@ -18,11 +18,6 @@ public interface ComponentService {
 
   ComponentResponse get(Long id, Long tenantId);
 
-  /**
-   * NAVBAR için birleşik detay: root + flat items[].
-   */
-  ComponentResponse getNavbarDetail(Long id, Long tenantId);
-
   List<ComponentResponse> list(Long tenantId);
 
   List<ComponentResponse> list(Long tenantId, ComponentListFilter filter);
