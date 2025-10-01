@@ -258,7 +258,6 @@ endpoints to type-specific RESTful architecture. Ensure perfect tenant
 isolation and Clean Architecture compliance.
 
 **Architecture Change:**
-
 - **Old**: `/api/components?type=TYPE` (generic endpoint with filtering)
 - **New**: `/api/components/{type}` (type-based RESTful endpoints)
 
@@ -350,8 +349,7 @@ isolation and Clean Architecture compliance.
   - Type-specific form components: `<spa-navbar-form>`, `<spa-cta-form>`
   - Type-specific editors: `<spa-navbar-editor>`, `<spa-cta-editor>`
   - Shared base components for common functionality
-  - page layout için listeleme sayfasındaki görünüm storefront\src\app\modules\admin\apps\ecommerce\inventory\list\inventory.component.html görünümünde, create ve edit görünümleri ise storefront\src\app\modules\admin\pages\settings\settings.component.html dosyasındaki gibi olsun .
-  - create/edit layoutundaki solda bulunan tab'ları general ve lang(TR/EN) olarak oluşturabiliriz.
+  - No language tabs - single form editing `translations` map
 
 - **Form Validation:**
   - Type-specific validation rules in form components
@@ -367,7 +365,6 @@ isolation and Clean Architecture compliance.
 **API Contract Refactor:**
 
 - **Request DTO:**
-
   ```typescript
   interface ComponentRequest {
     tenantId: number;
@@ -387,7 +384,6 @@ isolation and Clean Architecture compliance.
   ```
 
 - **Response DTO:**
-
   ```typescript
   interface ComponentResponse {
     id: number;
@@ -405,7 +401,6 @@ isolation and Clean Architecture compliance.
 **Database Schema Updates:**
 
 - **Performance Indexes:**
-
   ```sql
   -- Type-based query optimization
   KEY idx_ui_component_tenant_type (tenant_id, type)
@@ -414,7 +409,6 @@ isolation and Clean Architecture compliance.
   ```
 
 - **Validation Constraints:**
-
   ```sql
   CONSTRAINT chk_ui_component_type
     CHECK (type IN ('NAVBAR', 'LOGO', 'CTA', 'BRANDS', 'FAQ', 'BREADCRUMB'))
