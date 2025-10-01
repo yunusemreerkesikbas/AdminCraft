@@ -26,29 +26,31 @@ public class ComponentController {
     this.service = service;
   }
 
-  @GetMapping("/{type}")
-  public ResponseEntity<ApiResponse<List<ComponentResponse>>> listByType(
+  @GetMapping
+  public ResponseEntity<ApiResponse<List<ComponentResponse>>> list(
       @RequestHeader("X-Tenant-ID") Long tenantId,
-      @PathVariable("type") ComponentType type,
-      @RequestParam(value = "status", required = false) String status) {
+      @RequestParam(value = "type", required = false) String type) {
     try {
       Long userTenantId = SecurityUtil.getCurrentUserTenantId();
       if (userTenantId != null && !userTenantId.equals(tenantId)) {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
-      ComponentListFilter filter;
-      if (status != null && !status.isBlank()) {
-        try {
-          var st = com.backend.domain.enums.ComponentStatus.valueOf(status.toUpperCase());
-          filter = new ComponentListFilter(tenantId, type, st);
-        } catch (IllegalArgumentException ex) {
-          return new ResponseEntity<>(ApiResponse.error(400, "ui.component.status.invalid"), HttpStatus.BAD_REQUEST);
-        }
+      if (type == null || type.trim().isEmpty()) {
+        List<ComponentResponse> data = service.list(tenantId);
+        return ResponseEntity.ok(ApiResponse.success("ui.component.list.success", data));
       } else {
-        filter = new ComponentListFilter(tenantId, type, null);
+        try {
+          ComponentType componentType = ComponentType.fromCode(type.trim());
+          ComponentListFilter filter = new ComponentListFilter(tenantId, componentType, null);
+          List<ComponentResponse> data = service.list(tenantId, filter);
+          return ResponseEntity.ok(ApiResponse.success("ui.component.list.filtered.success", data));
+        } catch (IllegalArgumentException e) {
+          String errorMessage = "Invalid component type: " + type + ". Supported types: " + getSupportedTypesMessage();
+          return new ResponseEntity<>(
+              ApiResponse.error(400, errorMessage),
+              HttpStatus.BAD_REQUEST);
+        }
       }
-      List<ComponentResponse> data = service.list(tenantId, filter);
-      return ResponseEntity.ok(ApiResponse.success("ui.component.list.filtered.success", data));
     } catch (Exception e) {
       return new ResponseEntity<>(
           ApiResponse.error(500, "ui.component.list.server.error"),
@@ -56,9 +58,8 @@ public class ComponentController {
     }
   }
 
-  @GetMapping("/{type}/{id}")
+  @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<ComponentResponse>> get(
-      @PathVariable("type") ComponentType type,
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
 
@@ -85,9 +86,8 @@ public class ComponentController {
     }
   }
 
-  @PostMapping("/{type}")
+  @PostMapping
   public ResponseEntity<ApiResponse<ComponentResponse>> create(
-      @PathVariable("type") ComponentType urlType,
       @Valid @RequestBody ComponentRequest request,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
 
@@ -101,9 +101,9 @@ public class ComponentController {
         return new ResponseEntity<>(ApiResponse.error(403, "common.tenant.mismatch"), HttpStatus.FORBIDDEN);
       }
 
-      if (request.type() == null || !request.type().equals(urlType)) {
+      if (request.type() == null) {
         return new ResponseEntity<>(
-            ApiResponse.error(400, "ui.component.type.mismatch"),
+            ApiResponse.error(400, "Component type is required"),
             HttpStatus.BAD_REQUEST);
       }
 
@@ -138,9 +138,8 @@ public class ComponentController {
     }
   }
 
-  @PutMapping("/{type}/{id}")
+  @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<ComponentResponse>> update(
-      @PathVariable("type") ComponentType urlType,
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId,
       @Valid @RequestBody ComponentRequest request) {
@@ -152,8 +151,7 @@ public class ComponentController {
       }
 
       ComponentResponse existing = service.get(id, tenantId);
-      if ((request.type() != null && !request.type().equals(existing.type())) ||
-          (urlType != null && !urlType.equals(existing.type()))) {
+      if (request.type() != null && !request.type().equals(existing.type())) {
         String errorMessage = "Component type cannot be changed. Current type: " + existing.type().getCode();
         return new ResponseEntity<>(
             ApiResponse.error(400, errorMessage),
@@ -186,9 +184,8 @@ public class ComponentController {
     }
   }
 
-  @DeleteMapping("/{type}/{id}")
+  @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> delete(
-      @PathVariable("type") ComponentType type,
       @PathVariable Long id,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
 
@@ -214,13 +211,23 @@ public class ComponentController {
     }
   }
 
-  @GetMapping("/{type}/site")
+  @GetMapping("/site-components")
   public ResponseEntity<ApiResponse<List<SiteComponentResponse>>> getSiteComponents(
-      @PathVariable("type") ComponentType type,
+      @RequestParam("type") String type,
       @RequestParam("lang") String lang,
       @RequestHeader("X-Tenant-ID") Long tenantId) {
 
     try {
+      ComponentType componentType;
+      try {
+        componentType = ComponentType.fromCode(type);
+      } catch (IllegalArgumentException e) {
+        String errorMessage = "Invalid component type: " + type + ". Supported types: " + getSupportedTypesMessage();
+        return new ResponseEntity<>(
+            ApiResponse.error(400, errorMessage),
+            HttpStatus.BAD_REQUEST);
+      }
+
       Language language;
       try {
         language = Language.fromCode(lang)
@@ -232,7 +239,7 @@ public class ComponentController {
             HttpStatus.BAD_REQUEST);
       }
 
-      List<SiteComponentResponse> data = service.getSiteComponents(tenantId, type, language);
+      List<SiteComponentResponse> data = service.getSiteComponents(tenantId, componentType, language);
 
       if (data.isEmpty()) {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

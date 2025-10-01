@@ -29,12 +29,6 @@ public interface ComponentJpaRepository extends JpaRepository<Component, Long> {
                         @Param("type") ComponentType type);
 
         @EntityGraph(attributePaths = { "translations" })
-        @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.type = :type AND c.status = :status ORDER BY c.sortOrder ASC, c.id ASC")
-        List<Component> findAllByTenantIdAndTypeAndStatus(@Param("tenantId") Long tenantId,
-                        @Param("type") ComponentType type,
-                        @Param("status") ComponentStatus status);
-
-        @EntityGraph(attributePaths = { "translations" })
         @Query("SELECT c FROM Component c WHERE c.tenantId = :tenantId AND c.type = :type AND c.key = :key")
         Optional<Component> findByTenantAndTypeAndKey(@Param("tenantId") Long tenantId,
                         @Param("type") ComponentType type,

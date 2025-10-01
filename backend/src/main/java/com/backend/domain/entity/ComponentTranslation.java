@@ -25,9 +25,8 @@ public class ComponentTranslation {
   private Long id;
 
   @NotNull
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "component_id", nullable = false)
-  private Component component;
+  @Column(name = "component_id", nullable = false)
+  private Long componentId;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "language", nullable = false, length = 5)

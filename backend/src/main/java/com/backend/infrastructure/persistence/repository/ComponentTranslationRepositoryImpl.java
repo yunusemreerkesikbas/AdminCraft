@@ -42,6 +42,7 @@ public class ComponentTranslationRepositoryImpl implements ComponentTranslationR
 
   @Override
   public void deleteByComponentId(Long componentId) {
-    jpaRepository.deleteByComponentId(componentId);
+    List<ComponentTranslation> list = jpaRepository.findAllByComponentId(componentId);
+    jpaRepository.deleteAll(list);
   }
 }

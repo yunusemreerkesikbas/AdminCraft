@@ -5,11 +5,9 @@ import com.backend.domain.entity.ComponentTranslation;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ComponentType;
 import com.backend.domain.exception.ComponentConflictException;
-import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.exception.ComponentNotFoundException;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTranslationRepository;
-import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.request.ComponentListFilter;
 import com.backend.presentation.dto.request.ComponentRequest;
 import com.backend.presentation.dto.response.ComponentResponse;
@@ -27,14 +25,11 @@ public class ComponentServiceImpl implements ComponentService {
 
   private final ComponentRepository componentRepository;
   private final ComponentTranslationRepository translationRepository;
-  private final TenantRepository tenantRepository;
 
   public ComponentServiceImpl(ComponentRepository componentRepository,
-      ComponentTranslationRepository translationRepository,
-      TenantRepository tenantRepository) {
+      ComponentTranslationRepository translationRepository) {
     this.componentRepository = componentRepository;
     this.translationRepository = translationRepository;
-    this.tenantRepository = tenantRepository;
   }
 
   @Override
@@ -65,7 +60,7 @@ public class ComponentServiceImpl implements ComponentService {
       var lang = com.backend.domain.enums.Language.fromCode(langCode)
           .orElseThrow(() -> new IllegalArgumentException("Invalid language code: " + langCode));
       ComponentTranslation t = new ComponentTranslation();
-      t.setComponent(saved);
+      t.setComponentId(saved.getId());
       t.setLanguage(lang);
       t.setTitle(payload != null ? payload.title() : null);
       t.setSubtitle(payload != null ? payload.subtitle() : null);
@@ -106,7 +101,7 @@ public class ComponentServiceImpl implements ComponentService {
           .findByComponentIdAndLanguage(id, lang)
           .orElseGet(() -> {
             ComponentTranslation nt = new ComponentTranslation();
-            nt.setComponent(saved);
+            nt.setComponentId(id);
             nt.setLanguage(lang);
             return nt;
           });
@@ -162,8 +157,8 @@ public class ComponentServiceImpl implements ComponentService {
     List<ComponentTranslation> enList = translationRepository
         .findAllByComponentIdInAndLanguage(ids, Language.EN);
 
-    var trByComp = trList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
-    var enByComp = enList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+    var trByComp = trList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
 
     return components.stream()
         .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
@@ -172,14 +167,9 @@ public class ComponentServiceImpl implements ComponentService {
 
   @Override
   public List<ComponentResponse> list(Long tenantId, ComponentListFilter filter) {
-    List<Component> components;
-    if (filter != null && filter.type() != null && filter.status() != null) {
-      components = componentRepository.findAllByTenantIdAndTypeAndStatus(tenantId, filter.type(), filter.status());
-    } else if (filter != null && filter.type() != null) {
-      components = componentRepository.findAllByTenantIdAndType(tenantId, filter.type());
-    } else {
-      components = componentRepository.findAllByTenantId(tenantId);
-    }
+    List<Component> components = (filter != null && filter.type() != null)
+        ? componentRepository.findAllByTenantIdAndType(tenantId, filter.type())
+        : componentRepository.findAllByTenantId(tenantId);
 
     if (components.isEmpty())
       return List.of();
@@ -190,8 +180,8 @@ public class ComponentServiceImpl implements ComponentService {
     List<ComponentTranslation> enList = translationRepository
         .findAllByComponentIdInAndLanguage(ids, Language.EN);
 
-    var trByComp = trList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
-    var enByComp = enList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+    var trByComp = trList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
 
     return components.stream()
         .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
@@ -200,10 +190,6 @@ public class ComponentServiceImpl implements ComponentService {
 
   @Override
   public List<SiteComponentResponse> getSiteComponents(Long tenantId, ComponentType type, Language language) {
-    var tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
-    if (!tenant.getSupportedLanguages().contains(language)) {
-      return List.of();
-    }
     List<Component> components = componentRepository.findActiveVisibleByTenantIdAndType(tenantId, type);
 
     if (components.isEmpty()) {
@@ -215,10 +201,10 @@ public class ComponentServiceImpl implements ComponentService {
     List<ComponentTranslation> translations = translationRepository
         .findAllByComponentIdInAndLanguage(componentIds, language);
     Map<Long, ComponentTranslation> translationMap = translations.stream()
-        .collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+        .collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
     return components.stream()
         .map(component -> ComponentMapper.toSiteResponse(component, translationMap.get(component.getId())))
-        .filter(response -> response != null)
+        .filter(response -> response != null) // Filter out null responses (no translation found)
         .collect(Collectors.toList());
   }
 
