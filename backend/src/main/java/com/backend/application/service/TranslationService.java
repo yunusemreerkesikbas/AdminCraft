@@ -68,4 +68,39 @@ public interface TranslationService {
    */
   void deleteByComponentId(Long componentId, Long tenantId);
 
+  // =======================================================================================
+  // BACKWARD COMPATIBILITY: Legacy methods without tenant validation
+  // These methods are DEPRECATED and should be replaced with tenant-aware versions
+  // =======================================================================================
+
+  /**
+   * @deprecated Use {@link #findByComponentIdsAndLanguage(List, Language, Long)} instead
+   * This method lacks tenant validation and poses security risks
+   */
+  @Deprecated(since = "1.0", forRemoval = true)
+  Map<Long, ComponentTranslation> findByComponentIdsAndLanguage(List<Long> componentIds,
+      Language language);
+
+  /**
+   * @deprecated Use {@link #findByComponentIdAndLanguages(Long, Set, Long)} instead
+   * This method lacks tenant validation and poses security risks
+   */
+  @Deprecated(since = "1.0", forRemoval = true)
+  Map<Language, ComponentTranslation> findByComponentIdAndLanguages(Long componentId,
+      Set<Language> languages);
+
+  /**
+   * @deprecated Use {@link #findByComponentIdsAndLanguages(List, Set, Long)} instead
+   * This method lacks tenant validation and poses security risks
+   */
+  @Deprecated(since = "1.0", forRemoval = true)
+  Map<Long, Map<Language, ComponentTranslation>> findByComponentIdsAndLanguages(
+      List<Long> componentIds, Set<Language> languages);
+
+  /**
+   * @deprecated Use {@link #deleteByComponentId(Long, Long)} instead
+   * This method lacks tenant validation and poses security risks
+   */
+  @Deprecated(since = "1.0", forRemoval = true)
+  void deleteByComponentId(Long componentId);
 }

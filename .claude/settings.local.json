@@ -34,6 +34,7 @@
       "Bash(ng build:*)",
       "Bash(./gradlew:*)",
       "Bash(find:*)",
+      "Bash(git push:*)",
       "Bash(bash_4)",
       "Bash(cat:*)",
       "Bash(taskkill:*)",
@@ -57,8 +58,7 @@
       "Bash(npx ng:*)",
       "Bash(dir)",
       "Bash(gh pr list:*)",
-      "Bash(mvn compile:*)",
-      "Bash(mvn test:*)"
+      "Bash(mvn compile:*)"
     ],
     "deny": [],
     "additionalDirectories": [
