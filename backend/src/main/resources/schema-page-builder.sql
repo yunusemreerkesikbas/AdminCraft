@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- UI Components (Sprint 10) - Type-Based Routing Optimized
+-- UI Components (Sprint 10)
 CREATE TABLE IF NOT EXISTS ui_components (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   tenant_id BIGINT NOT NULL,
@@ -234,26 +234,11 @@ CREATE TABLE IF NOT EXISTS ui_components (
   updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_by BIGINT NOT NULL,
   updated_by BIGINT NULL,
-
-  -- CONSTRAINTS
   UNIQUE KEY uk_ui_component_tenant_type_key (tenant_id, type, component_key),
-  CONSTRAINT chk_ui_component_type CHECK (type IN ('NAVBAR', 'LOGO', 'CTA', 'BRANDS', 'FAQ', 'BREADCRUMB')),
-  CONSTRAINT chk_ui_component_status CHECK (status IN ('ACTIVE', 'INACTIVE')),
-  CONSTRAINT chk_ui_component_key_format CHECK (component_key REGEXP '^[a-z0-9._-]+$'),
-  CONSTRAINT chk_ui_component_sort_order CHECK (sort_order >= 0),
-
-  -- PERFORMANCE INDEXES - Type-Based Routing Optimized
   KEY idx_ui_component_tenant (tenant_id),
   KEY idx_ui_component_type (type),
   KEY idx_ui_component_status (status),
   KEY idx_ui_component_sort (sort_order),
-  KEY idx_ui_component_tenant_type (tenant_id, type), -- Main type-based query
-  KEY idx_ui_component_tenant_type_status (tenant_id, type, status), -- Filtered type queries
-  KEY idx_ui_component_tenant_type_sort (tenant_id, type, sort_order, status), -- Ordered type queries
-  KEY idx_ui_component_tenant_type_visible (tenant_id, type, visible, status), -- Visible-only queries
-  KEY idx_ui_component_tenant_status_sort (tenant_id, status, sort_order), -- Status-based queries
-
-  -- FOREIGN KEYS
   CONSTRAINT fk_ui_component_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -264,20 +249,9 @@ CREATE TABLE IF NOT EXISTS ui_component_translations (
   title VARCHAR(200) NULL,
   subtitle VARCHAR(300) NULL,
   data LONGTEXT NULL,
-
-  -- CONSTRAINTS
   UNIQUE KEY uk_ui_component_translation_lang (component_id, language),
-  CONSTRAINT chk_ui_comp_tr_language CHECK (language IN ('tr', 'en')),
-  CONSTRAINT chk_ui_comp_tr_title_length CHECK (title IS NULL OR CHAR_LENGTH(TRIM(title)) > 0),
-  CONSTRAINT chk_ui_comp_tr_subtitle_length CHECK (subtitle IS NULL OR CHAR_LENGTH(TRIM(subtitle)) > 0),
-
-  -- PERFORMANCE INDEXES - Translation Loading Optimized
   KEY idx_ui_comp_tr_component (component_id),
   KEY idx_ui_comp_tr_language (language),
-  KEY idx_ui_comp_tr_component_lang (component_id, language), -- Specific translation lookup
-  KEY idx_ui_comp_tr_batch_load (component_id, language, title), -- Batch loading with fallback
-
-  -- FOREIGN KEYS
   CONSTRAINT fk_ui_comp_tr_component FOREIGN KEY (component_id)
     REFERENCES ui_components(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -250,32 +250,27 @@ hierarchical categories, and publish with SEO.
 - Week 2: Angular builder UI (sections/blocks, preview, categories).
 - Half week: SEO/i18n polish, tests, docs, sample pages.
 
-#### **Sprint 10: UI Components Management (Type-Based Routing Refactor)**
+#### **Sprint 10: UI Components Management**
 
-**Goal:** Complete CRUD for site UI components with type-based routing,
-semantic URLs, typed DTOs, and strong validation. Refactor from generic
-endpoints to type-specific RESTful architecture. Ensure perfect tenant
-isolation and Clean Architecture compliance.
-
-**Architecture Change:**
-- **Old**: `/api/components?type=TYPE` (generic endpoint with filtering)
-- **New**: `/api/components/{type}` (type-based RESTful endpoints)
+**Goal:** Minimal CRUD for site UI components (navbar, logo, CTA, brands, FAQ,
+breadcrumb) with type-based navigation, typed DTOs, and no JSON text inputs.
+Admin UI is language-agnostic (no tabs); all translations are edited together
+as a single object. No media management, no search/sort/pagination, no RBAC.
 
 **Decisions:**
 
 - Component types: `NAVBAR`, `LOGO`, `CTA`, `BRANDS`, `FAQ`, `BREADCRUMB`.
 - Status: `ACTIVE` / `INACTIVE` plus `visible` flag.
 - `sortOrder`: optional, default `0`.
-- Type-based routing: Each component type has dedicated endpoints.
-- URL-Request consistency: URL type **must** match request body type.
-- Translations stored as map: `translations: Record<lang, T>` (e.g. `tr`, `en`).
-- Unique constraint: `(tenantId, type, key)` must be unique.
-- Admin UI uses sidebar children under "UI Component Yönetimi" with
-  type-specific routes: `/:tenant/component/type/:type`.
-- Type-specific validation: Each component type has data structure rules.
-- Performance optimized: Type-based database indexes.
+- Translations stored as a map: `translations: Record<lang, T>` (e.g. `tr`, `en`).
+- Unique constraint: `(tenantId, type, key)` must be unique (key optional if
+  each type has a single active instance per tenant; we keep key for future).
+- Admin UI uses sidebar children under “UI Component Yönetimi” to open
+  type-filtered lists; forms are type-fixed routes.
+- Remove JSON textarea and language tabs from Admin UI.
+- No language fallback at runtime; missing language returns empty (204/404).
 
-**Backend Refactor:**
+**Scope:**
 
 - **Domain Layer:**
   - Enums: `ComponentType { NAVBAR, LOGO, CTA, BRANDS, FAQ, BREADCRUMB }`,
@@ -283,158 +278,62 @@ isolation and Clean Architecture compliance.
   - Entities:
     - `Component`: id, tenantId, type, key, status, visible, sortOrder(0),
       createdAt, updatedAt. Unique (tenantId, type, key).
-    - `ComponentTranslation`: component_id, language, title, subtitle, data.
-  - Business Rules:
-    - Type-specific data validation per component type.
-    - URL-Request type consistency validation.
+    - `ComponentTranslation`: replaced logically by a translations map at API
+      boundary; persistence may still serialize to JSON internally.
 
 - **Application Layer:**
-  - Service: `ComponentService` with type-specific methods:
-    - `createByType(tenantId, type, request)`
-    - `updateByType(tenantId, type, id, request)`
-    - `deleteByType(tenantId, type, id)`
-    - `getByType(tenantId, type, id)`
-    - `listByType(tenantId, type)`
-  - Type-specific validation:
-    - NAVBAR: requires `items` array with `label` and `url`
-    - CTA: requires `title`, `buttonText`, `buttonUrl`
-    - FAQ: requires `items` array with `question` and `answer`
-    - BRANDS: requires `brands` array with `name` and `logoUrl`
-    - LOGO: requires `logoUrl`, optional `altText`
-    - BREADCRUMB: requires `separator`, optional `homeText`
+  - Service: `ComponentService` (+ `ServiceImpl`) with CRUD and unique key
+    check. `@Transactional` for multi-step operations.
 
 - **Infrastructure Layer:**
-  - Repositories: `ComponentRepository` with optimized type-based queries:
-    - `findByTenantIdAndType(tenantId, type)`
-    - `findByTenantIdAndTypeAndId(tenantId, type, id)`
-    - `existsByTenantIdAndTypeAndKey(tenantId, type, key)`
-  - Database optimizations:
-    - Composite indexes: `(tenant_id, type)`, `(tenant_id, type, status)`
-    - Check constraints for type and status validation.
+  - Repositories: `ComponentRepository` (and optional translation persistence),
+    JPQL and `@EntityGraph` where needed.
 
 - **Presentation Layer (REST):**
-  - Controller: `ComponentController` with type-based endpoints:
-    - `GET /api/components/{type}` → list by type
-    - `GET /api/components/{type}/{id}` → get by type and ID
-    - `POST /api/components/{type}` → create by type
-    - `PUT /api/components/{type}/{id}` → update by type
-    - `DELETE /api/components/{type}/{id}` → delete by type
-  - Type validation: URL type must match request body type.
-**Frontend Refactor (Angular 19):**
+  - Controller: `ComponentController` returning `ResponseEntity<ApiResponse<?>>`.
+  - Endpoints (tenant-aware):
+    - `GET /api/components?type=TYPE` → list by type (filter on backend).
+    - `GET /api/components/{id}`
+    - `POST /api/components` (upsert typed DTO with `translations` map)
+    - `PUT /api/components/{id}` (same DTO)
+    - `DELETE /api/components/{id}`
+  - Site read endpoint (no fallback):
+    - `GET /api/site-components?type=TYPE&lang=LANG` → returns only requested
+      language’s data for that type (204/404 if missing).
 
-- **Routing Architecture:**
-  - Navigation: under `UI Component Yönetimi` add children for each type:
-    - Navbar → `/:tenant/components/navbar`
-    - Logo → `/:tenant/components/logo`
-    - CTA → `/:tenant/components/cta`
-    - Brands → `/:tenant/components/brands`
-    - FAQ → `/:tenant/components/faq`
-    - Breadcrumb → `/:tenant/components/breadcrumb`
-  - Route structure:
-    - `/:tenant/components/navbar` (navbar list page)
-    - `/:tenant/components/navbar/new` (create navbar form)
-    - `/:tenant/components/navbar/:id` (edit navbar form)
+- **DTO Contract (examples):**
+  - Admin Upsert (typed + translations):
+    - Common: `{ tenantId, type, key, status, visible, sortOrder, translations }`
+    - `translations: { [lang: string]: T }` where `T` depends on `type`.
+    - Examples: `NavbarData`, `CtaData`, `FaqData` (typed structures, no JSON
+      string fields).
 
-- **Service Layer:**
-  - Type-specific service methods:
-    - `listNavbar()`, `createNavbar()`, `updateNavbar()`, `deleteNavbar()`
-    - `listCta()`, `createCta()`, `updateCta()`, `deleteCta()`
-    - Generic method: `listByType(type)`, `createByType(type, data)`
-  - Service endpoints map to new API structure:
-    - `GET /api/components/navbar` for navbar list
-    - `POST /api/components/cta` for CTA creation
+- **Admin Frontend (Angular 19):**
+  - Navigation: under `UI Component Yönetimi` add children (Navbar, CTA, FAQ,
+    Logo, Brands, Breadcrumb) linking to `/:tenant/component/type/:type`.
+  - Routes:
+    - `/:tenant/component/type/:type` (type-filtered list)
+    - `/:tenant/component/type/:type/new` (type-fixed create form)
+    - `/:tenant/component/type/:type/:id` (type-fixed edit form)
+  - List page: displays only the selected type; simple table; edit/delete.
+  - Form page: type-specific editor components (e.g. `<spa-navbar-editor>`),
+    no language tabs, no JSON input. Editor edits a `translations` map in a
+    single view (all languages together), with strong typings.
+  - Notifications: use existing `NotificationService` for CRUD success/error.
+  - use the custom fields under @custom-ui in the form fields, or else let's create a new component and extend it.
 
-- **Component Architecture:**
-  - Type-specific list components: `<spa-navbar-list>`, `<spa-cta-list>`
-  - Type-specific form components: `<spa-navbar-form>`, `<spa-cta-form>`
-  - Type-specific editors: `<spa-navbar-editor>`, `<spa-cta-editor>`
-  - Shared base components for common functionality
-  - No language tabs - single form editing `translations` map
-
-- **Form Validation:**
-  - Type-specific validation rules in form components
-  - URL-Request type consistency validation
-  - Component data structure validation (navbar items, CTA fields, etc.)
-  - Real-time validation with error display
-
-- **State Management:**
-  - Type-specific stores or services for each component type
-  - Optimistic updates with error rollback
-  - Toast notifications for CRUD operations
-
-**API Contract Refactor:**
-
-- **Request DTO:**
-  ```typescript
-  interface ComponentRequest {
-    tenantId: number;
-    type: ComponentType; // Must match URL type
-    key: string;
-    status?: 'ACTIVE' | 'INACTIVE';
-    visible?: boolean;
-    sortOrder?: number;
-    translations: {
-      [lang: string]: {
-        title?: string;
-        subtitle?: string;
-        data?: string; // Type-specific JSON structure
-      };
-    };
-  }
-  ```
-
-- **Response DTO:**
-  ```typescript
-  interface ComponentResponse {
-    id: number;
-    tenantId: number;
-    type: ComponentType;
-    key: string;
-    status: 'ACTIVE' | 'INACTIVE';
-    visible: boolean;
-    sortOrder: number;
-    tr?: ComponentTranslation;
-    en?: ComponentTranslation;
-  }
-  ```
-
-**Database Schema Updates:**
-
-- **Performance Indexes:**
-  ```sql
-  -- Type-based query optimization
-  KEY idx_ui_component_tenant_type (tenant_id, type)
-  KEY idx_ui_component_tenant_type_status (tenant_id, type, status)
-  KEY idx_ui_component_tenant_type_sort (tenant_id, type, sort_order, status)
-  ```
-
-- **Validation Constraints:**
-  ```sql
-  CONSTRAINT chk_ui_component_type
-    CHECK (type IN ('NAVBAR', 'LOGO', 'CTA', 'BRANDS', 'FAQ', 'BREADCRUMB'))
-  CONSTRAINT chk_ui_component_status
-    CHECK (status IN ('ACTIVE', 'INACTIVE'))
-  ```
-
-**Migration Strategy:**
-
-1. **Phase 1:** Backend API refactor (controller, service, repository)
-2. **Phase 2:** Database index optimization
-3. **Phase 3:** Frontend routing and service updates
-4. **Phase 4:** Component-specific form editors
-5. **Phase 5:** Testing and validation
+- **i18n:**
+  - Admin UI labels via Transloco as usual; component data i18n is handled as
+    structured `translations` maps, not JSON strings nor UI language tabs.
 
 **Acceptance Criteria:**
 
-- ✅ Type-based endpoints: `/api/components/{type}` for all 6 component types
-- ✅ URL-Request type consistency enforced with 400 error on mismatch
-- ✅ Unique `(tenantId, type, key)` constraint enforced; 409 on conflict
-- ✅ Frontend routing: `/:tenant/components/{type}` with type-specific UI
-- ✅ Type-specific data validation per component type
-- ✅ Performance: type-based queries < 200ms with proper indexing
-- ✅ Perfect tenant isolation across all operations
-- ✅ Clean Architecture compliance maintained
-- ✅ No breaking changes to existing translations structure
+- Create, list by type, update, delete UI Components per tenant.
+- Unique `(tenantId, type, key)` enforced; localized errors on conflict.
+- Admin list renders type-filtered items; form saves typed translations map.
+- Site endpoint returns only requested language; no fallback applied.
+- `sortOrder` defaults to `0` when not provided.
+- most important tenant isolation !
 
 #### **Sprint 6: Admin Toast Notifications (1 week)**
 

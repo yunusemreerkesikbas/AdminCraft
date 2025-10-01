@@ -18,8 +18,6 @@ public interface ComponentRepository {
 
   List<Component> findByTenantAndStatus(Long tenantId, ComponentStatus status);
 
-  List<Component> findActiveVisibleByTenantIdAndType(Long tenantId, ComponentType type);
-
   Component save(Component component);
 
   void delete(Component component);

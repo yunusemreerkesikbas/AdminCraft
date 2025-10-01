@@ -11,7 +11,6 @@ import com.backend.domain.repository.ComponentTranslationRepository;
 import com.backend.presentation.dto.request.ComponentListFilter;
 import com.backend.presentation.dto.request.ComponentRequest;
 import com.backend.presentation.dto.response.ComponentResponse;
-import com.backend.presentation.dto.response.SiteComponentResponse;
 import com.backend.presentation.mapper.ComponentMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -26,6 +25,7 @@ public class ComponentServiceImpl implements ComponentService {
   private final ComponentRepository componentRepository;
   private final ComponentTranslationRepository translationRepository;
 
+  // Constructor injection following Clean Architecture principles
   public ComponentServiceImpl(ComponentRepository componentRepository,
       ComponentTranslationRepository translationRepository) {
     this.componentRepository = componentRepository;
@@ -54,6 +54,7 @@ public class ComponentServiceImpl implements ComponentService {
 
     var saved = componentRepository.save(component);
 
+    // Save provided translations map as-is (no fallback)
     for (var entry : request.translations().entrySet()) {
       var langCode = entry.getKey();
       var payload = entry.getValue();
@@ -123,9 +124,13 @@ public class ComponentServiceImpl implements ComponentService {
   public void delete(Long id, Long tenantId) {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
+
+    // Validate tenant access using domain method
     if (!component.isValidForTenant(tenantId)) {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
+
+    // Delete translations first, then component
     translationRepository.deleteByComponentId(component.getId());
     componentRepository.delete(component);
   }
@@ -135,6 +140,7 @@ public class ComponentServiceImpl implements ComponentService {
     Component component = componentRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new ComponentNotFoundException("ui.component.not.found"));
 
+    // Validate tenant access using domain method
     if (!component.isValidForTenant(tenantId)) {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
@@ -185,26 +191,6 @@ public class ComponentServiceImpl implements ComponentService {
 
     return components.stream()
         .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<SiteComponentResponse> getSiteComponents(Long tenantId, ComponentType type, Language language) {
-    List<Component> components = componentRepository.findActiveVisibleByTenantIdAndType(tenantId, type);
-
-    if (components.isEmpty()) {
-      return List.of();
-    }
-    List<Long> componentIds = components.stream()
-        .map(Component::getId)
-        .collect(Collectors.toList());
-    List<ComponentTranslation> translations = translationRepository
-        .findAllByComponentIdInAndLanguage(componentIds, language);
-    Map<Long, ComponentTranslation> translationMap = translations.stream()
-        .collect(Collectors.toMap(ComponentTranslation::getComponentId, t -> t));
-    return components.stream()
-        .map(component -> ComponentMapper.toSiteResponse(component, translationMap.get(component.getId())))
-        .filter(response -> response != null) // Filter out null responses (no translation found)
         .collect(Collectors.toList());
   }
 
