@@ -12,8 +12,6 @@ public interface ComponentRepository {
 
   List<Component> findAllByTenantId(Long tenantId);
 
-  List<Component> findAllByTenantIdAndType(Long tenantId, ComponentType type);
-
   Optional<Component> findByTenantAndTypeAndKey(Long tenantId, ComponentType type, String key);
 
   List<Component> findByTenantAndStatus(Long tenantId, ComponentStatus status);

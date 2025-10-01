@@ -252,23 +252,22 @@ hierarchical categories, and publish with SEO.
 
 #### **Sprint 10: UI Components Management**
 
-**Goal:** Minimal CRUD for site UI components (navbar, logo, CTA, brands, FAQ,
-breadcrumb) with type-based navigation, typed DTOs, and no JSON text inputs.
-Admin UI is language-agnostic (no tabs); all translations are edited together
-as a single object. No media management, no search/sort/pagination, no RBAC.
+**Goal:** Deliver minimal CRUD for UI components used on the site front-end
+(navbar, logo, CTA, brands, FAQ, breadcrumb) with generic TR/EN translations
+and a simple Admin UI. No media management, no search/sort/pagination, and no
+RBAC in this sprint.
 
 **Decisions:**
 
 - Component types: `NAVBAR`, `LOGO`, `CTA`, `BRANDS`, `FAQ`, `BREADCRUMB`.
 - Status: `ACTIVE` / `INACTIVE` plus `visible` flag.
 - `sortOrder`: optional, default `0`.
-- Translations stored as a map: `translations: Record<lang, T>` (e.g. `tr`, `en`).
-- Unique constraint: `(tenantId, type, key)` must be unique (key optional if
-  each type has a single active instance per tenant; we keep key for future).
-- Admin UI uses sidebar children under “UI Component Yönetimi” to open
-  type-filtered lists; forms are type-fixed routes.
-- Remove JSON textarea and language tabs from Admin UI.
-- No language fallback at runtime; missing language returns empty (204/404).
+- Translations: TR/EN for now, modeled generically to enable future languages.
+- Unique constraint: `(tenantId, type, key)` must be unique.
+- Admin UI always shows both language tabs (TR/EN). Site front-end reads
+  language-specific data at runtime.
+- Routes: `/:tenant/component` (list), `/:tenant/component/:type` (create/edit).
+- Out of scope: media management, list search/sort/pagination, RBAC.
 
 **Scope:**
 
@@ -278,62 +277,56 @@ as a single object. No media management, no search/sort/pagination, no RBAC.
   - Entities:
     - `Component`: id, tenantId, type, key, status, visible, sortOrder(0),
       createdAt, updatedAt. Unique (tenantId, type, key).
-    - `ComponentTranslation`: replaced logically by a translations map at API
-      boundary; persistence may still serialize to JSON internally.
+    - `ComponentTranslation`: id, componentId, language, title?, subtitle?,
+      `data` JSON (free-form per type for this sprint).
 
 - **Application Layer:**
   - Service: `ComponentService` (+ `ServiceImpl`) with CRUD and unique key
     check. `@Transactional` for multi-step operations.
 
 - **Infrastructure Layer:**
-  - Repositories: `ComponentRepository` (and optional translation persistence),
-    JPQL and `@EntityGraph` where needed.
+  - Repositories: `ComponentRepository`, `ComponentTranslationRepository`
+    (JPQL, `@EntityGraph` where necessary), basic CRUD only.
 
 - **Presentation Layer (REST):**
   - Controller: `ComponentController` returning `ResponseEntity<ApiResponse<?>>`.
   - Endpoints (tenant-aware):
-    - `GET /api/components?type=TYPE` → list by type (filter on backend).
+    - `GET /api/components` → list all for tenant (no filters)
     - `GET /api/components/{id}`
-    - `POST /api/components` (upsert typed DTO with `translations` map)
-    - `PUT /api/components/{id}` (same DTO)
+    - `POST /api/components`
+    - `PUT /api/components/{id}`
     - `DELETE /api/components/{id}`
-  - Site read endpoint (no fallback):
-    - `GET /api/site-components?type=TYPE&lang=LANG` → returns only requested
-      language’s data for that type (204/404 if missing).
-
-- **DTO Contract (examples):**
-  - Admin Upsert (typed + translations):
-    - Common: `{ tenantId, type, key, status, visible, sortOrder, translations }`
-    - `translations: { [lang: string]: T }` where `T` depends on `type`.
-    - Examples: `NavbarData`, `CtaData`, `FaqData` (typed structures, no JSON
-      string fields).
+  - Errors via `GlobalExceptionHandler` with i18n messages.
 
 - **Admin Frontend (Angular 19):**
-  - Navigation: under `UI Component Yönetimi` add children (Navbar, CTA, FAQ,
-    Logo, Brands, Breadcrumb) linking to `/:tenant/component/type/:type`.
-  - Routes:
-    - `/:tenant/component/type/:type` (type-filtered list)
-    - `/:tenant/component/type/:type/new` (type-fixed create form)
-    - `/:tenant/component/type/:type/:id` (type-fixed edit form)
-  - List page: displays only the selected type; simple table; edit/delete.
-  - Form page: type-specific editor components (e.g. `<spa-navbar-editor>`),
-    no language tabs, no JSON input. Editor edits a `translations` map in a
-    single view (all languages together), with strong typings.
-  - Notifications: use existing `NotificationService` for CRUD success/error.
-  - use the custom fields under @custom-ui in the form fields, or else let's create a new component and extend it.
+  - Module: `@custom/components`.
+  - Routes: `/:tenant/component` (list), `/:tenant/component/:type` (form).
+  - List page: Simple table (no search/sort/pagination), actions to edit/delete.
+  - Form page: `fullwidth-2` layout with tabs: General | Türkçe | English.
+    - General: type, key, status, visible, sortOrder.
+    - Türkçe/English: title, subtitle, free-form `data` (this sprint untyped).
+  - Toasts: use existing `NotificationService` for CRUD success/error.
 
-- **i18n:**
-  - Admin UI labels via Transloco as usual; component data i18n is handled as
-    structured `translations` maps, not JSON strings nor UI language tabs.
+**i18n:**
+
+- Backend: add CRUD success/error keys to `messages_tr.properties` and
+  `messages_en.properties`.
+- Frontend: Transloco keys for labels and toasts.
 
 **Acceptance Criteria:**
 
-- Create, list by type, update, delete UI Components per tenant.
-- Unique `(tenantId, type, key)` enforced; localized errors on conflict.
-- Admin list renders type-filtered items; form saves typed translations map.
-- Site endpoint returns only requested language; no fallback applied.
+- Create, read, update, delete UI Components per tenant.
+- Unique `(tenantId, type, key)` enforced; returns localized errors on conflict.
+- Admin list renders items; form saves both TR/EN payloads in one request.
+- Toast notifications shown on success/error; controller returns `ApiResponse`.
 - `sortOrder` defaults to `0` when not provided.
-- most important tenant isolation !
+
+**Timeline:** 1.5 weeks
+
+- Days 1-2: Enums, entities, repositories
+- Days 3-4: Service, controller, i18n messages
+- Days 5-7: Angular module, list, form (tabs) with toasts
+- Days 8-9: Minimal tests and refinements
 
 #### **Sprint 6: Admin Toast Notifications (1 week)**
 

@@ -8,6 +8,7 @@
 
 - `Authorization: Bearer <token>` (gerekliyse)
 - `X-Tenant-ID: <tenantId>` (zorunlu)
+- `X-User-ID: <userId>` (create/update için zorunlu)
 - `Accept-Language: tr|en` (opsiyonel)
 
 ### Types
@@ -17,7 +18,7 @@
 
 ### DTO’lar
 
-ComponentRequest
+CreateComponentRequest
 
 ```
 {
@@ -27,13 +28,28 @@ ComponentRequest
   status?: 'ACTIVE'|'INACTIVE',
   visible?: boolean (default true),
   sortOrder?: number (default 0),
-  translations: {
-    [lang: 'tr'|'en'|string]: {
-      title?: string (<=200),
-      subtitle?: string (<=300),
-      data?: string (JSON string)
-    }
-  }
+  titleTr?: string (<=200),
+  subtitleTr?: string (<=300),
+  dataTr?: string (JSON string),
+  titleEn?: string (<=200),
+  subtitleEn?: string (<=300),
+  dataEn?: string (JSON string)
+}
+```
+
+UpdateComponentRequest
+
+```
+{
+  status?: 'ACTIVE'|'INACTIVE',
+  visible?: boolean,
+  sortOrder?: number,
+  titleTr?: string,
+  subtitleTr?: string,
+  dataTr?: string,
+  titleEn?: string,
+  subtitleEn?: string,
+  dataEn?: string
 }
 ```
 
@@ -75,8 +91,8 @@ Create
 
 ```
 POST /api/components
-Headers: X-Tenant-ID,  Content-Type: application/json
-Body: ComponentRequest
+Headers: X-Tenant-ID, X-User-ID, Content-Type: application/json
+Body: CreateComponentRequest
 Response: ApiResponse<ComponentResponse>
 ```
 
@@ -84,8 +100,8 @@ Update
 
 ```
 PUT /api/components/{id}
-Headers: X-Tenant-ID,  Content-Type: application/json
-Body: ComponentRequest
+Headers: X-Tenant-ID, X-User-ID, Content-Type: application/json
+Body: UpdateComponentRequest
 Response: ApiResponse<ComponentResponse>
 ```
 
@@ -111,7 +127,7 @@ Navbar oluşturma (TR/EN)
 
 ```
 POST /api/components
-Headers: X-Tenant-ID: 1, 
+Headers: X-Tenant-ID: 1, X-User-ID: 2
 {
   "tenantId": 1,
   "type": "NAVBAR",
@@ -129,7 +145,7 @@ Navbar güncelleme
 
 ```
 PUT /api/components/1
-Headers: X-Tenant-ID: 1, 
+Headers: X-Tenant-ID: 1, X-User-ID: 2
 {
   "sortOrder": 1,
   "titleTr": "Birincil Navigasyon - Güncellendi"
@@ -139,5 +155,6 @@ Headers: X-Tenant-ID: 1,
 ### Frontend Notları
 
 - İsteklerde `X-Tenant-ID` header’ını zorunlu gönderin.
+- Create/Update için `X-User-ID` gönderin.
 - `dataTr`/`dataEn` alanları JSON string; TS tarafında tip güvenliği için interface oluşturun ve `JSON.stringify`/`JSON.parse` kullanın.
 - Cevap `ApiResponse` sarmalında gelir: `result`, `message`, `data`.
