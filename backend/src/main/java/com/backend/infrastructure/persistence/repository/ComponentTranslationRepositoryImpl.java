@@ -52,9 +52,9 @@ public class ComponentTranslationRepositoryImpl implements ComponentTranslationR
     if (componentIds == null || componentIds.isEmpty()) {
       return Map.of();
     }
-
+    
     List<ComponentTranslation> translations = jpaRepository.findAllByComponentIdIn(componentIds);
-
+    
     // Group translations by componentId and then by language for efficient lookup
     return translations.stream()
         .collect(Collectors.groupingBy(
@@ -63,7 +63,8 @@ public class ComponentTranslationRepositoryImpl implements ComponentTranslationR
                 ComponentTranslation::getLanguage,
                 translation -> translation,
                 (existing, replacement) -> replacement // Handle duplicates by keeping the last one
-            )));
+            )
+        ));
   }
 
   @Override
@@ -73,7 +74,6 @@ public class ComponentTranslationRepositoryImpl implements ComponentTranslationR
 
   @Override
   public void deleteByComponentId(Long componentId) {
-    List<ComponentTranslation> list = jpaRepository.findAllByComponentId(componentId);
-    jpaRepository.deleteAll(list);
+    jpaRepository.deleteAllByComponentId(componentId);
   }
 }

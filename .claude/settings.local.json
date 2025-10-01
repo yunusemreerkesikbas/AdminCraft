@@ -53,8 +53,7 @@
       "Bash(npm install:*)",
       "Bash(npm info:*)",
       "Bash(npx ng build:*)",
-      "Bash(npx tsc:*)",
-      "WebFetch(domain:github.com)"
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "additionalDirectories": [
