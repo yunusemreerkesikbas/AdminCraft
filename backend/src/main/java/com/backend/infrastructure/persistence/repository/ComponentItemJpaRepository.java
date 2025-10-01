@@ -25,8 +25,5 @@ public interface ComponentItemJpaRepository extends JpaRepository<ComponentItem,
 
   @Query("SELECT i FROM ComponentItem i WHERE i.id = :id AND i.component.id = :componentId")
   Optional<ComponentItem> findByIdAndComponentId(@Param("id") Long id, @Param("componentId") Long componentId);
-
-  @Query("SELECT i FROM ComponentItem i WHERE i.parent.id = :parentId ORDER BY i.sortOrder, i.id")
-  List<ComponentItem> findByParentId(@Param("parentId") Long parentId);
 }
 

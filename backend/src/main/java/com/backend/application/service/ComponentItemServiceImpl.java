@@ -106,6 +106,7 @@ public class ComponentItemServiceImpl implements ComponentItemService {
     ComponentItem item = new ComponentItem();
     item.setComponent(component);
     item.setUid(request.uid());
+    item.setUuid(java.util.UUID.randomUUID().toString());
     item.setVisible(Boolean.TRUE.equals(request.visible()));
     if (request.sortOrder() != null)
       item.setSortOrder(request.sortOrder());
@@ -153,7 +154,8 @@ public class ComponentItemServiceImpl implements ComponentItemService {
       int level = parent.getLevel() == null ? 1 : parent.getLevel() + 1;
       if (level > 3)
         throw new IllegalArgumentException("ui.navbar.level.exceeded");
-      validateNoCycle(item, parent);
+      if (Objects.equals(parent.getId(), item.getId()))
+        throw new IllegalArgumentException("ui.navbar.parent.cycle");
       item.setParent(parent);
       item.setLevel(level);
     }
@@ -180,7 +182,7 @@ public class ComponentItemServiceImpl implements ComponentItemService {
   }
 
   @Override
-  @Transactional(rollbackFor = Exception.class)
+  @Transactional
   public void reorder(Long tenantId, Long componentId, NavbarItemsReorderRequest request) {
     if (request == null || request.changes() == null || request.changes().isEmpty())
       return;
@@ -190,11 +192,9 @@ public class ComponentItemServiceImpl implements ComponentItemService {
       if (ch.parentId() != null) {
         ComponentItem parent = itemRepository.findByIdAndComponentId(ch.parentId(), componentId)
             .orElseThrow(() -> new IllegalArgumentException("ui.navbar.parent.not.found"));
-        validateNoCycle(item, parent);
         int level = parent.getLevel() == null ? 1 : parent.getLevel() + 1;
         if (level > 3)
           throw new IllegalArgumentException("ui.navbar.level.exceeded");
-        validateDescendantDepth(item, level);
         item.setParent(parent);
         item.setLevel(level);
       } else {
@@ -207,64 +207,9 @@ public class ComponentItemServiceImpl implements ComponentItemService {
     }
   }
 
-  /**
-   * Validates that setting newParent as parent of item won't create a cycle
-   * by traversing the parent chain of newParent to ensure item is not in it.
-   */
-  private void validateNoCycle(ComponentItem item, ComponentItem newParent) {
-    ComponentItem current = newParent;
-    Set<Long> visited = new HashSet<>();
-
-    while (current != null) {
-      if (Objects.equals(current.getId(), item.getId())) {
-        throw new IllegalArgumentException("ui.navbar.parent.cycle");
-      }
-
-      // Prevent infinite loops in case of existing data corruption
-      if (visited.contains(current.getId())) {
-        throw new IllegalArgumentException("ui.navbar.parent.cycle.detected");
-      }
-      visited.add(current.getId());
-
-      current = current.getParent();
-    }
-  }
-
-  /**
-   * Validates that moving item to newLevel won't cause its descendants
-   * to exceed the maximum level limit of 3.
-   */
-  private void validateDescendantDepth(ComponentItem item, int newLevel) {
-    if (newLevel > 3) {
-      throw new IllegalArgumentException("ui.navbar.level.exceeded");
-    }
-
-    // Find maximum depth of descendants
-    int maxDescendantDepth = findMaxDescendantDepth(item);
-    if (newLevel + maxDescendantDepth > 3) {
-      throw new IllegalArgumentException("ui.navbar.descendant.level.exceeded");
-    }
-  }
-
-  /**
-   * Recursively finds the maximum depth of descendants for the given item.
-   */
-  private int findMaxDescendantDepth(ComponentItem item) {
-    List<ComponentItem> children = itemRepository.findByParentId(item.getId());
-    if (children.isEmpty()) {
-      return 0;
-    }
-
-    return children.stream()
-        .mapToInt(child -> 1 + findMaxDescendantDepth(child))
-        .max()
-        .orElse(0);
-  }
-
   private void upsertItemTranslations(Long tenantId, ComponentItem item, NavbarItemRequest request) {
     if (request.translations() == null || request.translations().isEmpty())
       return;
-
     var supported = languageService.getSupportedLanguages(tenantId);
     for (var entry : request.translations().entrySet()) {
       Language lang = Language.fromCode(entry.getKey())
@@ -272,26 +217,16 @@ public class ComponentItemServiceImpl implements ComponentItemService {
       if (!supported.contains(lang)) {
         throw new IllegalArgumentException("language.unsupported: " + entry.getKey());
       }
-
       var payload = entry.getValue();
-      var existingTranslation = itemTranslationRepository.findByItemIdAndLanguage(item.getId(), lang);
-
-      ComponentItemTranslation tr;
-      if (existingTranslation.isPresent()) {
-        tr = existingTranslation.get();
-      } else {
-        tr = new ComponentItemTranslation();
-        tr.setItem(item);
-        tr.setLanguage(lang);
-      }
-
+      var tr = new ComponentItemTranslation();
+      tr.setItem(item);
+      tr.setLanguage(lang);
       tr.setTitle(payload.title());
       tr.setSubtitle(payload.subtitle());
       tr.setUrl(payload.url());
       tr.setSeoTitle(payload.seoTitle());
       tr.setSeoDescription(payload.seoDescription());
       tr.setSeoKeywords(payload.seoKeywords());
-
       itemTranslationRepository.save(tr);
     }
   }
