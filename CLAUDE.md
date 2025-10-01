@@ -685,7 +685,7 @@ the hierarchy using `parentId`.
 - `items[]` is a flat list; each item carries `parentId` for hierarchy.
 - No `depth/expand/visible` query parameters.
 - `visible` exists only on item level as a boolean.
-- Ordering: `parentId NULLS FIRST`, then `level ASC`, then `sortOrder ASC`, then `id ASC`.
+- Ordering: `parentId NULLS FIRST`, then `level ASC`, then `sortOrder ASC`.
 - Multi‑tenant isolation enforced via `X-Tenant-ID`; type mismatch → 400.
 
 **Endpoint (final):**

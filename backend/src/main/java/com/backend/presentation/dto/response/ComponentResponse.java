@@ -13,5 +13,15 @@ public record ComponentResponse(
     String key,
     String uid,
     String uuid,
+    ComponentStatus status,
+    boolean visible,
+    Integer sortOrder,
+    String styleClasses,
+    Map<String, ComponentTranslationDto> translations,
     List<NavbarItemEntryResponse> items) {
+  public static record ComponentTranslationDto(
+      String title,
+      String subtitle,
+      String data) {
+  }
 }

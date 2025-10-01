@@ -82,7 +82,10 @@ public class ComponentServiceImpl implements ComponentService {
     }
     translationService.upsertTranslations(saved, map);
 
-    return ComponentMapper.toResponse(saved);
+    // SECURITY: Use secure method with tenant validation
+    var langsMap = translationService.findByComponentIdAndLanguages(
+        saved.getId(), languageService.getSupportedLanguages(tenantId), tenantId);
+    return ComponentMapper.toResponse(saved, langsMap);
   }
 
   @Override
@@ -117,7 +120,10 @@ public class ComponentServiceImpl implements ComponentService {
     }
     translationService.upsertTranslations(saved, map);
 
-    return ComponentMapper.toResponse(saved);
+    // SECURITY: Use secure method with tenant validation
+    var langsMap = translationService.findByComponentIdAndLanguages(
+        saved.getId(), languageService.getSupportedLanguages(tenantId), tenantId);
+    return ComponentMapper.toResponse(saved, langsMap);
   }
 
   @Override
@@ -143,7 +149,10 @@ public class ComponentServiceImpl implements ComponentService {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
 
-    return ComponentMapper.toResponse(component);
+    // SECURITY: Use secure method with tenant validation
+    var langsMap = translationService.findByComponentIdAndLanguages(
+        id, languageService.getSupportedLanguages(tenantId), tenantId);
+    return ComponentMapper.toResponse(component, langsMap);
   }
 
   @Override
@@ -158,6 +167,9 @@ public class ComponentServiceImpl implements ComponentService {
     if (!com.backend.domain.enums.ComponentType.NAVBAR.equals(component.getType())) {
       throw new IllegalArgumentException("ui.component.type.mismatch");
     }
+
+    var langsMap = translationService.findByComponentIdAndLanguages(
+        id, languageService.getSupportedLanguages(tenantId), tenantId);
 
     // Flat items with translations
     java.util.List<com.backend.domain.entity.ComponentItem> items = componentRepository.findItemsByComponentId(id);
@@ -188,14 +200,10 @@ public class ComponentServiceImpl implements ComponentService {
     }
 
     // Return with items
+    var resp = ComponentMapper.toResponse(component, langsMap);
     return new ComponentResponse(
-        component.getId(),
-        component.getTenantId(),
-        component.getType(),
-        component.getKey(),
-        component.getUid(),
-        component.getUuid(),
-        itemsResponse);
+        resp.id(), resp.tenantId(), resp.type(), resp.key(), resp.uid(), resp.uuid(),
+        resp.status(), resp.visible(), resp.sortOrder(), resp.styleClasses(), resp.translations(), itemsResponse);
   }
 
   @Override
@@ -205,8 +213,19 @@ public class ComponentServiceImpl implements ComponentService {
       return List.of();
     }
 
+    // PERFORMANCE FIX: Use batch query with tenant validation
+    List<Long> componentIds = components.stream()
+        .map(Component::getId)
+        .collect(Collectors.toList());
+
+    var supportedLanguages = languageService.getSupportedLanguages(tenantId);
+
+    // SECURITY: Use secure batch query with tenant validation
+    Map<Long, Map<Language, ComponentTranslation>> translationsMap = translationService
+        .findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
+
     return components.stream()
-        .map(ComponentMapper::toResponse)
+        .map(c -> ComponentMapper.toResponse(c, translationsMap.get(c.getId())))
         .collect(Collectors.toList());
   }
 
@@ -224,8 +243,19 @@ public class ComponentServiceImpl implements ComponentService {
     if (components.isEmpty())
       return List.of();
 
+    // PERFORMANCE FIX: Use batch query with tenant validation
+    List<Long> componentIds = components.stream()
+        .map(Component::getId)
+        .collect(Collectors.toList());
+
+    var supportedLanguages = languageService.getSupportedLanguages(tenantId);
+
+    // SECURITY: Use secure batch query with tenant validation
+    Map<Long, Map<Language, ComponentTranslation>> translationsMap = translationService
+        .findByComponentIdsAndLanguages(componentIds, supportedLanguages, tenantId);
+
     return components.stream()
-        .map(ComponentMapper::toResponse)
+        .map(c -> ComponentMapper.toResponse(c, translationsMap.get(c.getId())))
         .collect(Collectors.toList());
   }
 

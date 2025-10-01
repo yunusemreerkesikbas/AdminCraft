@@ -58,8 +58,7 @@
       "Bash(dir)",
       "Bash(gh pr list:*)",
       "Bash(mvn compile:*)",
-      "Bash(mvn test:*)",
-      "Bash(mvn clean:*)"
+      "Bash(mvn test:*)"
     ],
     "deny": [],
     "additionalDirectories": [
