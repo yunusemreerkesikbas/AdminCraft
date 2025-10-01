@@ -7,10 +7,6 @@ export default [
         loadChildren: () => import('./pages/page-builder.routes').then(m => m.default)
     },
     {
-        path: 'components',
-        loadChildren: () => import('./components/components.routes').then(m => m.default)
-    },
-    {
         path: 'settings',
         loadChildren: () => import('./settings/site-settings.routes').then(m => m.default)
     }

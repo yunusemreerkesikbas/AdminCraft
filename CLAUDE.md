@@ -250,33 +250,26 @@ hierarchical categories, and publish with SEO.
 - Week 2: Angular builder UI (sections/blocks, preview, categories).
 - Half week: SEO/i18n polish, tests, docs, sample pages.
 
-#### **Sprint 10: UI Components Management (Type-Based Routing Refactor)**
+#### **Sprint 10: UI Components Management**
 
-**Goal:** Complete CRUD for site UI components with type-based routing,
-semantic URLs, typed DTOs, and strong validation. Refactor from generic
-endpoints to type-specific RESTful architecture. Ensure perfect tenant
-isolation and Clean Architecture compliance.
-
-**Architecture Change:**
-
-- **Old**: `/api/components?type=TYPE` (generic endpoint with filtering)
-- **New**: `/api/components/{type}` (type-based RESTful endpoints)
+**Goal:** Deliver minimal CRUD for UI components used on the site front-end
+(navbar, logo, CTA, brands, FAQ, breadcrumb) with generic TR/EN translations
+and a simple Admin UI. No media management, no search/sort/pagination, and no
+RBAC in this sprint.
 
 **Decisions:**
 
 - Component types: `NAVBAR`, `LOGO`, `CTA`, `BRANDS`, `FAQ`, `BREADCRUMB`.
 - Status: `ACTIVE` / `INACTIVE` plus `visible` flag.
 - `sortOrder`: optional, default `0`.
-- Type-based routing: Each component type has dedicated endpoints.
-- URL-Request consistency: URL type **must** match request body type.
-- Translations stored as map: `translations: Record<lang, T>` (e.g. `tr`, `en`).
+- Translations: TR/EN for now, modeled generically to enable future languages.
 - Unique constraint: `(tenantId, type, key)` must be unique.
-- Admin UI uses sidebar children under "UI Component Yönetimi" with
-  type-specific routes: `/:tenant/component/type/:type`.
-- Type-specific validation: Each component type has data structure rules.
-- Performance optimized: Type-based database indexes.
+- Admin UI always shows both language tabs (TR/EN). Site front-end reads
+  language-specific data at runtime.
+- Routes: `/:tenant/component` (list), `/:tenant/component/:type` (create/edit).
+- Out of scope: media management, list search/sort/pagination, RBAC.
 
-**Backend Refactor:**
+**Scope:**
 
 - **Domain Layer:**
   - Enums: `ComponentType { NAVBAR, LOGO, CTA, BRANDS, FAQ, BREADCRUMB }`,
@@ -284,490 +277,56 @@ isolation and Clean Architecture compliance.
   - Entities:
     - `Component`: id, tenantId, type, key, status, visible, sortOrder(0),
       createdAt, updatedAt. Unique (tenantId, type, key).
-    - `ComponentTranslation`: component_id, language, title, subtitle, data.
-  - Business Rules:
-    - Type-specific data validation per component type.
-    - URL-Request type consistency validation.
+    - `ComponentTranslation`: id, componentId, language, title?, subtitle?,
+      `data` JSON (free-form per type for this sprint).
 
 - **Application Layer:**
-  - Service: `ComponentService` with type-specific methods:
-    - `createByType(tenantId, type, request)`
-    - `updateByType(tenantId, type, id, request)`
-    - `deleteByType(tenantId, type, id)`
-    - `getByType(tenantId, type, id)`
-    - `listByType(tenantId, type)`
-  - Type-specific validation:
-    - NAVBAR: requires `items` array with `label` and `url`
-    - CTA: requires `title`, `buttonText`, `buttonUrl`
-    - FAQ: requires `items` array with `question` and `answer`
-    - BRANDS: requires `brands` array with `name` and `logoUrl`
-    - LOGO: requires `logoUrl`, optional `altText`
-    - BREADCRUMB: requires `separator`, optional `homeText`
+  - Service: `ComponentService` (+ `ServiceImpl`) with CRUD and unique key
+    check. `@Transactional` for multi-step operations.
 
 - **Infrastructure Layer:**
-  - Repositories: `ComponentRepository` with optimized type-based queries:
-    - `findByTenantIdAndType(tenantId, type)`
-    - `findByTenantIdAndTypeAndId(tenantId, type, id)`
-    - `existsByTenantIdAndTypeAndKey(tenantId, type, key)`
-  - Database optimizations:
-    - Composite indexes: `(tenant_id, type)`, `(tenant_id, type, status)`
-    - Check constraints for type and status validation.
+  - Repositories: `ComponentRepository`, `ComponentTranslationRepository`
+    (JPQL, `@EntityGraph` where necessary), basic CRUD only.
 
 - **Presentation Layer (REST):**
-  - Controller: `ComponentController` with type-based endpoints:
-    - `GET /api/components/{type}` → list by type
-    - `GET /api/components/{type}/{id}` → get by type and ID
-    - `POST /api/components/{type}` → create by type
-    - `PUT /api/components/{type}/{id}` → update by type
-    - `DELETE /api/components/{type}/{id}` → delete by type
-  - Type validation: URL type must match request body type.
-**Frontend Refactor (Angular 19):**
+  - Controller: `ComponentController` returning `ResponseEntity<ApiResponse<?>>`.
+  - Endpoints (tenant-aware):
+    - `GET /api/components` → list all for tenant (no filters)
+    - `GET /api/components/{id}`
+    - `POST /api/components`
+    - `PUT /api/components/{id}`
+    - `DELETE /api/components/{id}`
+  - Errors via `GlobalExceptionHandler` with i18n messages.
 
-- **Routing Architecture:**
-  - Navigation: under `UI Component Yönetimi` add children for each type:
-    - Navbar → `/:tenant/components/navbar`
-    - Logo → `/:tenant/components/logo`
-    - CTA → `/:tenant/components/cta`
-    - Brands → `/:tenant/components/brands`
-    - FAQ → `/:tenant/components/faq`
-    - Breadcrumb → `/:tenant/components/breadcrumb`
-  - Route structure:
-    - `/:tenant/components/navbar` (navbar list page)
-    - `/:tenant/components/navbar/new` (create navbar form)
-    - `/:tenant/components/navbar/:id` (edit navbar form)
+- **Admin Frontend (Angular 19):**
+  - Module: `@custom/components`.
+  - Routes: `/:tenant/component` (list), `/:tenant/component/:type` (form).
+  - List page: Simple table (no search/sort/pagination), actions to edit/delete.
+  - Form page: `fullwidth-2` layout with tabs: General | Türkçe | English.
+    - General: type, key, status, visible, sortOrder.
+    - Türkçe/English: title, subtitle, free-form `data` (this sprint untyped).
+  - Toasts: use existing `NotificationService` for CRUD success/error.
 
-- **Service Layer:**
-  - Type-specific service methods:
-    - `listNavbar()`, `createNavbar()`, `updateNavbar()`, `deleteNavbar()`
-    - `listCta()`, `createCta()`, `updateCta()`, `deleteCta()`
-    - Generic method: `listByType(type)`, `createByType(type, data)`
-  - Service endpoints map to new API structure:
-    - `GET /api/components/navbar` for navbar list
-    - `POST /api/components/cta` for CTA creation
+**i18n:**
 
-- **Component Architecture:**
-  - Type-specific list components: `<spa-navbar-list>`, `<spa-cta-list>`
-  - Type-specific form components: `<spa-navbar-form>`, `<spa-cta-form>`
-  - Type-specific editors: `<spa-navbar-editor>`, `<spa-cta-editor>`
-  - Shared base components for common functionality
-  - page layout için listeleme sayfasındaki görünüm storefront\src\app\modules\admin\apps\ecommerce\inventory\list\inventory.component.html görünümünde, create ve edit görünümleri ise storefront\src\app\modules\admin\pages\settings\settings.component.html dosyasındaki gibi olsun .
-  - create/edit layoutundaki solda bulunan tab'ları general ve lang(TR/EN) olarak oluşturabiliriz.
-
-- **Form Validation:**
-  - Type-specific validation rules in form components
-  - URL-Request type consistency validation
-  - Component data structure validation (navbar items, CTA fields, etc.)
-  - Real-time validation with error display
-
-- **State Management:**
-  - Type-specific stores or services for each component type
-  - Optimistic updates with error rollback
-  - Toast notifications for CRUD operations
-
-**API Contract Refactor:**
-
-- **Request DTO:**
-
-  ```typescript
-  interface ComponentRequest {
-    tenantId: number;
-    type: ComponentType; // Must match URL type
-    key: string;
-    status?: 'ACTIVE' | 'INACTIVE';
-    visible?: boolean;
-    sortOrder?: number;
-    translations: {
-      [lang: string]: {
-        title?: string;
-        subtitle?: string;
-        data?: string; // Type-specific JSON structure
-      };
-    };
-  }
-  ```
-
-- **Response DTO:**
-
-  ```typescript
-  interface ComponentResponse {
-    id: number;
-    tenantId: number;
-    type: ComponentType;
-    key: string;
-    status: 'ACTIVE' | 'INACTIVE';
-    visible: boolean;
-    sortOrder: number;
-    tr?: ComponentTranslation;
-    en?: ComponentTranslation;
-  }
-  ```
-
-**Database Schema Updates:**
-
-- **Performance Indexes:**
-
-  ```sql
-  -- Type-based query optimization
-  KEY idx_ui_component_tenant_type (tenant_id, type)
-  KEY idx_ui_component_tenant_type_status (tenant_id, type, status)
-  KEY idx_ui_component_tenant_type_sort (tenant_id, type, sort_order, status)
-  ```
-
-- **Validation Constraints:**
-
-  ```sql
-  CONSTRAINT chk_ui_component_type
-    CHECK (type IN ('NAVBAR', 'LOGO', 'CTA', 'BRANDS', 'FAQ', 'BREADCRUMB'))
-  CONSTRAINT chk_ui_component_status
-    CHECK (status IN ('ACTIVE', 'INACTIVE'))
-  ```
-
-**Migration Strategy:**
-
-1. **Phase 1:** Backend API refactor (controller, service, repository)
-2. **Phase 2:** Database index optimization
-3. **Phase 3:** Frontend routing and service updates
-4. **Phase 4:** Component-specific form editors
-5. **Phase 5:** Testing and validation
+- Backend: add CRUD success/error keys to `messages_tr.properties` and
+  `messages_en.properties`.
+- Frontend: Transloco keys for labels and toasts.
 
 **Acceptance Criteria:**
 
-- ✅ Type-based endpoints: `/api/components/{type}` for all 6 component types
-- ✅ URL-Request type consistency enforced with 400 error on mismatch
-- ✅ Unique `(tenantId, type, key)` constraint enforced; 409 on conflict
-- ✅ Frontend routing: `/:tenant/components/{type}` with type-specific UI
-- ✅ Type-specific data validation per component type
-- ✅ Performance: type-based queries < 200ms with proper indexing
-- ✅ Perfect tenant isolation across all operations
-- ✅ Clean Architecture compliance maintained
-- ✅ No breaking changes to existing translations structure
+- Create, read, update, delete UI Components per tenant.
+- Unique `(tenantId, type, key)` enforced; returns localized errors on conflict.
+- Admin list renders items; form saves both TR/EN payloads in one request.
+- Toast notifications shown on success/error; controller returns `ApiResponse`.
+- `sortOrder` defaults to `0` when not provided.
 
-#### **Sprint 11: Tenant Supported Languages**
+**Timeline:** 1.5 weeks
 
-**Goal:** Manage site languages inline on Tenant screen; centralize language
-and translation orchestration; wire component translations to tenant languages.
-
-**Decisions (final):**
-
-- Supported language enum (platform catalog): `tr` (default at tenant
-  creation), `en`, `es`, `ar`, `ru`.
-- Admin UI is language-agnostic; public site uses PATH strategy (`/{lang}/…`).
-- Tenant languages are managed via inline multi-select on
-  `tenants-list` (no separate page):
-  - TR shown in multi-select only if it is not the `defaultLanguage`.
-  - Changing `defaultLanguage` auto-adds that language to `supported` if
-    missing.
-- Separate endpoint for tenant languages: `PATCH /api/languages/tenant`.
-- RTL impact: only public site for now; Admin UI remains LTR.
-- Component translations: default language translation NOT mandatory on create.
-  Reads may fallback to default. No delete translation endpoint; data retained
-  (hidden if language unsupported).
-
-**Backend Scope (Staged Plan):**
-
-- Stage 1 (Non-breaking):
-  - Keep `ComponentResponse` with `tr`/`en` fields.
-  - Introduce `TranslationService` to orchestrate all translation CRUD,
-    batch reads, and fallback. `ComponentServiceImpl` delegates to it.
-  - Expand `LanguageService`:
-    - `getSupportedLanguages(tenantId)` with short TTL cache
-    - `validateTranslationKeys(tenantId, translations)`
-    - `resolveEffectiveLanguage(tenantId, requested)`
-  - Component create/update validates `translations.keys ⊆ supported` via
-    `LanguageService`; translations persisted via `TranslationService`.
-  - Site read uses `resolveEffectiveLanguage`+fallback via `TranslationService`.
-
-- Stage 2 (Breaking - implemented):
-  - `ComponentResponse` artık `translations: Map<string, TranslationDto>`
-    döner (TR/EN alanları kaldırıldı).
-  - Admin UI dinamik dil sekmelerini `translations` map’inden üretmelidir.
-
-**API (Presentation):**
-
-- `GET /languages` → platform catalog.
-- `GET /languages/tenant` → `{ defaultLanguage, supported[] }`.
-- `PATCH /languages/tenant` (admin-only) with rules:
-  - `supported` not empty; contains `defaultLanguage`.
-  - `supported ⊆ {tr,en,es,ar,ru}`; ISO 639-1 check.
-  - Tenant isolation; cache invalidation after update.
-
-**API (Response) – Component (Stage 2):**
-
-```typescript
-interface ComponentResponse {
-  id: number;
-  tenantId: number;
-  type: ComponentType;
-  key: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  visible: boolean;
-  sortOrder: number;
-  translations: Record<string, {
-    title?: string;
-    subtitle?: string;
-    data?: string; // type-specific JSON
-  }>;
-}
-```
-
-**Application:**
-
-- `LanguageService`: resolve + validation + caching (short TTL).
-- `TranslationService`: centralized translation CRUD, batch read, fallback
-  (metotlar: upsertTranslations, findByComponentIdsAndLanguage,
-  findByComponentIdAndLanguages, getForLanguageWithFallback, deleteByComponentId).
-- `ComponentService`: yalnızca orkestrasyon yapar; dil-özel (TR/EN) kod yok.
-
-**Infrastructure:**
-
-- Use repository batch queries to avoid N+1.
-- Indexes already present on component tables (tenant,type,status,…).
-
-**Frontend (Admin) Scope:**
-
-- `tenants-list.component` inline form:
-  - Multi-select for `supportedLanguages` (EN/ES/AR/RU). TR is implicit if
-    it is the default; otherwise selectable.
-  - Separate select for `defaultLanguage`; on change, auto-add to
-    `supported`.
-  - On create: default `tr`, supported `["tr"]`.
-  - On save: call `PATCH /languages/tenant`; then refresh language
-    facade/state so other forms (components) update tabs dynamically.
-- HTTP interceptor continues to set `Accept-Language` from active language.
-- Component forms render language tabs from tenant `supportedLanguages`.
-
-**Validation Rules:**
-
-- Tenant: `default ∈ supported`, `supported ⊆ {tr,en,es,ar,ru}`, ≥1 language.
-- Components: `translations.keys ⊆ supported`; default translation not
-  required; unknown language → 400.
-
-**API Examples:**
-
-- `GET /languages/tenant` →
-  `{ "defaultLanguage": "tr", "supported": ["tr","en"] }`
-- `PATCH /languages/tenant` →
-  `{ "defaultLanguage": "en", "supported": ["tr","en","ar"] }`
-
-**Acceptance Criteria:**
-
-- Admin can pick multiple supported languages inline on tenant form; TR is
-  auto-included when default; default change auto-adds to supported.
-- Backend enforces validation and tenant isolation; caches invalidated on
-  update.
-- Component create/update rejects translations outside supported set; reads
-  fallback to default when requested translation does not exist.
-- Stage 2: `ComponentResponse.translations` map’i yayında; Admin UI bu map’e
-  göre dinamik sekmelerle çalışır.
-- Public site only exposes paths for supported languages.
-
-**Notes:** No translation deletion endpoint in this sprint; data retained and
-not shown if language is unsupported. RTL applies only to public site.
-
-#### **Sprint 11 – Phase 2: Navbar i18n Menu Management (Config-Driven, No JSON Editing in UI)**
-
-**Goal:** Manage Navbar with dynamic language tabs (per tenant languages), menu
-items with 3-level hierarchy, language-specific URL and SEO fields, and fully
-type-safe admin forms without any JSON editing.
-
-**Decisions:**
-
-- Language-based URL: `translations[lang].url` (no global URL)
-- SEO fields (language-based): `seoTitle`, `seoDescription`, `seoKeywords`
-- Identifiers: user-provided `uid` + backend-generated `uuid`
-- Reorder: for now via `sortOrder` input (DnD can come later)
-- Internal link: free-text URL for now
-- Hierarchy: up to 3 levels; no item count limit
-- Component root adds `styleClasses` (global styling hooks)
-
-**Backend Scope:**
-
-- DB (MySQL):
-  - `components` (existing) → new column: `style_classes VARCHAR(255) NULL`
-  - `component_items`:
-    - `id BIGINT PK AI`, `component_id BIGINT FK components(id)`
-    - `uid VARCHAR(100) NOT NULL` (user-provided, UNIQUE per component)
-    - `uuid CHAR(36) NOT NULL` (backend-generated)
-    - `parent_id BIGINT NULL` (self FK)
-    - `level TINYINT NOT NULL DEFAULT 1` (CHECK level BETWEEN 1 AND 3)
-    - `visible BOOLEAN DEFAULT TRUE`, `sort_order INT DEFAULT 0`
-    - `created_at`, `updated_at`
-    - Constraints/Indexes: `UNIQUE(component_id, uid)`,
-      `INDEX(component_id, parent_id)`, `INDEX(level)`
-  - `component_item_translations`:
-    - `id BIGINT PK AI`, `item_id BIGINT FK component_items(id)`
-    - `language VARCHAR(5) NOT NULL` (ISO 639-1)
-    - `title VARCHAR(200) NULL`, `subtitle TEXT NULL`
-    - `url VARCHAR(255) NULL`
-    - `seo_title VARCHAR(60) NULL`, `seo_description VARCHAR(160) NULL`,
-      `seo_keywords VARCHAR(255) NULL`
-    - Constraints/Indexes: `UNIQUE(item_id, language)`,
-      `INDEX(item_id, language)`, `INDEX(language)`
-  - `tenant_supported_languages.language` length must be `VARCHAR(5)`
-
-- Repositories:
-  - `ComponentItemRepository`, `ComponentItemTranslationRepository`
-  - Use `@EntityGraph` to avoid N+1 on tree/children fetches
-
-- Services (Application):
-  - `ComponentItemService`:
-    - `listTree(componentId)`, `createItem(componentId, dto)`
-    - `updateItem(itemId, dto)`, `deleteItem(itemId)`
-    - `reorder(componentId, changes[])` (bulk parent/sort updates)
-  - `TranslationService`: upsert and batch read
-  - Rules: `translations.keys ⊆ tenant.supportedLanguages`, `level ≤ 3`,
-    prevent cyclic parents, ensure `uid` uniqueness
-
-- Endpoints (type-based subresources):
-  - `GET /api/components/navbar/{id}/items/tree`
-  - `POST /api/components/navbar/{id}/items`
-  - `PUT /api/components/navbar/items/{itemId}`
-  - `DELETE /api/components/navbar/items/{itemId}`
-  - `PATCH /api/components/navbar/{id}/items/reorder`
-  - `PUT /api/components/{type}/{id}` (includes component root `styleClasses`)
-
-**Frontend Scope (Angular 19):**
-
-- Config-driven schema (e.g., `components.config.ts`):
-  - NAVBAR `globalFields`: `visible`, `sortOrder`, `styleClasses`
-  - NAVBAR `i18nFields`: `title`, `subtitle`, `url`, `seoTitle`,
-    `seoDescription`, `seoKeywords`
-- Language tabs generated dynamically from `TenantLanguagesService`
-- NavbarForm:
-  - General tab: global fields
-  - Language tabs: i18n fields (schema-driven; no JSON editor)
-  - Item management page: tree list + create/edit dialogs (forms)
-- Validation:
-  - Required, maxLength, pattern (uid), `level ≤ 3`, default-language fallback
-- UX:
-  - Reorder via input; recompute `level` on parent change
-  - Parent selector shows only valid candidates (depth guard)
-
-**API Contracts (summary):**
-
-- Component (root) update (existing endpoint):
-  - Request: `{ ..., styleClasses?: string, translations: Record<lang, {...}> }`
-- Item create/update:
-  - Request: `{ uid: string, parentId?: number, visible?: boolean,
-      sortOrder?: number,
-      translations: Record<lang, {
-        title?: string, subtitle?: string, url?: string,
-        seoTitle?: string, seoDescription?: string, seoKeywords?: string
-      }> }`
-  - Response: item + translations map (aligned with Stage 2)
-
-**Validation & Security:**
-
-- Tenant isolation: `X-Tenant-ID` header; repositories filter by tenant
-- URL/SEO required rules enforced by type-specific validators
-- RBAC: editor/admin permissions
-
-**Acceptance Criteria:**
-
-- Navbar language tabs update dynamically when tenant languages change
-- Navbar items can be created/updated/deleted up to 3 levels deep
-- Ordering managed by `sortOrder`; parent changes are validated safely
-- No JSON editing; all fields via type-safe form controls
-- Endpoints follow type-based architecture; no N+1 issues
-
-#### **Sprint 11 – Phase 3: Navbar API Simplification (Flat Items, Tree Removed)**
-
-**Goal:** Remove the `/items/tree` endpoint. Return NAVBAR data as a flat
-`items[]` list inside `GET /api/components/{type}/{id}`. The client builds
-the hierarchy using `parentId`.
-
-**Decisions (final):**
-
-- `/api/components/navbar/{id}/items/tree` is removed.
-- Combined response under `GET /api/components/{type}/{id}`.
-- Root payload is reduced to `{ id, tenantId, type, key, uid, uuid }`.
-- Root fields removed: `status, visible, sortOrder, styleClasses, translations`.
-- `items[]` is a flat list; each item carries `parentId` for hierarchy.
-- No `depth/expand/visible` query parameters.
-- `visible` exists only on item level as a boolean.
-- Ordering: `parentId NULLS FIRST`, then `level ASC`, then `sortOrder ASC`, then `id ASC`.
-- Multi‑tenant isolation enforced via `X-Tenant-ID`; type mismatch → 400.
-
-**Endpoint (final):**
-
-- `GET /api/components/{type}/{id}`
-  - Header: `X-Tenant-ID: <tenantId>`
-  - Response (sample):
-
-```json
-{
-  "result": "SUCCESS",
-  "message": "ui.component.get.success",
-  "data": {
-    "id": 1,
-    "tenantId": 1,
-    "type": "NAVBAR",
-    "key": "main",
-    "uid": "main-navbar",
-    "uuid": "8f9b5f2c-3f8e-4b2a-8f2e-0a1e9f2a9b00",
-    "items": [
-      {
-        "id": 101,
-        "uid": "services",
-        "uuid": "0e53c1a6-2d9a-4a2c-a2c2-9c8b6f6c0001",
-        "parentId": null,
-        "level": 1,
-        "visible": true,
-        "sortOrder": 2,
-        "translations": {
-          "tr": {
-            "title": "Hizmetler",
-            "subtitle": null,
-            "url": "/hizmetler",
-            "seoTitle": "Hizmetler",
-            "seoDescription": "Tüm hizmetlerimiz",
-            "seoKeywords": "hizmet, solar, bakım"
-          },
-          "en": {
-            "title": "Services",
-            "subtitle": null,
-            "url": "/services",
-            "seoTitle": "Services",
-            "seoDescription": "All services",
-            "seoKeywords": "service, solar, maintenance"
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
-**Backend Scope:**
-
-- Controller: remove `/items/tree`; return `items[]` within `/{type}/{id}`.
-- Service: fetch flat items by componentId with tenant filter; apply ordering;
-  load translations via batch/`@EntityGraph` (no N+1).
-- DTO/Mapper: simplify root; implement the `items[]` schema.
-- Cache: unified response cache key `tenantId+type+id`; invalidate on item
-  mutations.
-- Security: validate `X-Tenant-ID`; ensure URL–body type consistency.
-- Tests: remove `/items/tree` tests; add unified response tests.
-
-**Frontend (Admin) Scope:**
-
-- Service: stop calling `/items/tree`; consume `items[]` from `/{type}/{id}`.
-- Models: update root + `items[]` types (including SEO fields).
-- UI: build parent/child select options from `items[]`; show `visible` as a
-  boolean; no depth/expand.
-
-**Acceptance Criteria:**
-
-- `GET /api/components/{type}/{id}` returns root + `items[]` in a single call.
-- All `/items/tree` usages are removed from the project.
-- Admin UI correctly builds hierarchy and ordering from `items[]`.
-- No tenant isolation leaks; type mismatch returns 400.
-- No N+1 queries; target latency < 200ms on sample data.
-
-**Migration Notes:**
-
-- Replace frontend usages of `/items/tree` with `/{type}/{id}` response.
-- Update Postman collection and API docs per the new contract.
+- Days 1-2: Enums, entities, repositories
+- Days 3-4: Service, controller, i18n messages
+- Days 5-7: Angular module, list, form (tabs) with toasts
+- Days 8-9: Minimal tests and refinements
 
 #### **Sprint 6: Admin Toast Notifications (1 week)**
 

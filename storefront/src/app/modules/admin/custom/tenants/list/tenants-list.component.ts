@@ -33,7 +33,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { TenantLanguagesService, TenantLanguagesState } from '@core/language/tenant-languages.service';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -49,14 +48,12 @@ import {
     debounceTime,
     map,
     merge,
-    of,
     switchMap,
     takeUntil,
 } from 'rxjs';
 import { TenantsService } from '../tenants.service';
 import {
     CreateTenantRequest,
-    LANGUAGE_LABELS,
     Language,
     Tenant,
     TenantPagination,
@@ -132,10 +129,10 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Language and status options
     languages: Language[] = [Language.TR, Language.EN];
     statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
-    languageOptions: SpaSelectOption<Language>[] = [];
-    private _allowedLangs: Language[] = [Language.TR, Language.EN];
-
-    private _initialLanguages: TenantLanguagesState | null = null;
+    languageOptions: SpaSelectOption<Language>[] = [
+        { value: Language.TR, label: 'Türkçe' },
+        { value: Language.EN, label: 'English' },
+    ];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -146,8 +143,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
         private _formBuilder: UntypedFormBuilder,
-        private _tenantsService: TenantsService,
-        private _tenantLanguages: TenantLanguagesService
+        private _tenantsService: TenantsService
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -166,33 +162,12 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             adminEmail: ['', [Validators.required, Validators.email]],
             phone: [''],
             defaultLanguage: [Language.TR, [Validators.required]],
-            supportedLanguages: [[Language.TR], [Validators.required]],
             customDomain: [''],
             timezone: ['Europe/Istanbul'],
             currency: ['TRY'],
             sslEnabled: [true],
             notes: ['']
         });
-
-        // Load language catalog from backend and build options
-        this._tenantLanguages
-            .loadCatalog()
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((list) => {
-                this._allowedLangs = list && list.length ? list : [Language.TR, Language.EN];
-                this.languageOptions = this._allowedLangs.map((l) => ({ value: l, label: LANGUAGE_LABELS[l] }));
-                // Ensure form values respect allowed languages
-                const curDef = this.selectedTenantForm.get('defaultLanguage')?.value as Language;
-                const curSup: Language[] = (this.selectedTenantForm.get('supportedLanguages')?.value as Language[]) || [];
-                const filteredSup = curSup.filter((l) => this._allowedLangs.includes(l));
-                const ensured = filteredSup.includes(curDef) ? filteredSup : [...filteredSup, curDef].filter((l) => this._allowedLangs.includes(l));
-                this.selectedTenantForm.get('supportedLanguages')?.setValue(this.#uniqueLanguages(ensured));
-                if (!this._allowedLangs.includes(curDef)) {
-                    const fallback = this._allowedLangs[0];
-                    this.selectedTenantForm.get('defaultLanguage')?.setValue(fallback);
-                }
-                this._changeDetectorRef.markForCheck();
-            });
 
         // Get the tenants
         this.tenants$ = this._tenantsService.tenants$;
@@ -299,29 +274,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.selectedTenant = tenant;
 
                 // Fill the form
-                this.selectedTenantForm.patchValue({
-                    ...tenant,
-                    supportedLanguages: tenant.supportedLanguages?.length
-                        ? tenant.supportedLanguages
-                        : [tenant.defaultLanguage]
-                });
-
-                // Load authoritative tenant languages via service (header uses tenant id)
-                if (tenant?.id) {
-                    this._tenantLanguages
-                        .loadTenantLanguages()
-                        .pipe(takeUntil(this._unsubscribeAll))
-                        .subscribe((state) => {
-                            this._initialLanguages = state;
-                            this.selectedTenantForm
-                                .get('defaultLanguage')
-                                ?.setValue(state.defaultLanguage);
-                            this.selectedTenantForm
-                                .get('supportedLanguages')
-                                ?.setValue(state.supported);
-                            this._changeDetectorRef.markForCheck();
-                        });
-                }
+                this.selectedTenantForm.patchValue(tenant);
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -344,7 +297,6 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectedTenantForm.reset();
         this.selectedTenantForm.patchValue({
             defaultLanguage: Language.TR,
-            supportedLanguages: [Language.TR],
             timezone: 'Europe/Istanbul',
             currency: 'TRY',
             sslEnabled: true
@@ -370,41 +322,11 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // If we have a tenant ID, update the existing tenant...
         if (this.selectedTenant) {
-            const currentDefault = this.selectedTenantForm.get('defaultLanguage')?.value as Language;
-            const currentSupported = (this.selectedTenantForm.get('supportedLanguages')?.value as Language[]) || [];
-
-            // Ensure default is in supported set
-            const ensuredSupported = currentSupported.includes(currentDefault)
-                ? currentSupported
-                : [...currentSupported, currentDefault];
-
-            const filteredSupported = this.#uniqueLanguages(
-                ensuredSupported.filter((l) => this._allowedLangs.includes(l))
-            );
-
-            const needsLangUpdate = this._initialLanguages
-                ? (this._initialLanguages.defaultLanguage !== currentDefault) ||
-                  (this.#diffLanguages(this._initialLanguages.supported, filteredSupported))
-                : true;
-
             this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
-                .pipe(
-                    switchMap(() => needsLangUpdate
-                        ? this._tenantLanguages.updateTenantLanguages({
-                              defaultLanguage: currentDefault,
-                              supported: filteredSupported,
-                          })
-                        : of(null)
-                    ),
-                    takeUntil(this._unsubscribeAll)
-                )
+                .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
                         this.#notify.success('admin.common.messages.operationSuccess');
-                        this._initialLanguages = {
-                            defaultLanguage: currentDefault,
-                            supported: filteredSupported,
-                        };
                     },
                     error: () => {
                         this.#notify.alert('admin.common.errors.unexpected');
@@ -564,32 +486,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
-    onDefaultLanguageChange(lang: Language): void {
-        const supportedCtrl = this.selectedTenantForm.get('supportedLanguages');
-        const list: Language[] = (supportedCtrl?.value as Language[]) || [];
-        if (!list.includes(lang)) {
-            supportedCtrl?.setValue([...list, lang]);
-        }
-    }
-
-    onSupportedLanguagesChange(list: Language[]): void {
-        const def = this.selectedTenantForm.get('defaultLanguage')?.value as Language;
-        const filtered = (list || []).filter((l) => this._allowedLangs.includes(l));
-        const ensured = filtered.includes(def) ? filtered : [...filtered, def];
-        this.selectedTenantForm.get('supportedLanguages')?.setValue(this.#uniqueLanguages(ensured));
-    }
-
-    #uniqueLanguages(list: Language[]): Language[] {
-        return Array.from(new Set(list));
-    }
-
-    #diffLanguages(a: Language[], b: Language[]): boolean {
-        const sa = new Set(a);
-        const sb = new Set(b);
-        if (sa.size !== sb.size) return true;
-        for (const v of sa) if (!sb.has(v)) return true;
-        return false;
-    }
+    
 
     /**
      * Track by function for ngFor loops

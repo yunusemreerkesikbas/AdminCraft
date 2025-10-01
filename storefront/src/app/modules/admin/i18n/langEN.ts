@@ -284,23 +284,6 @@ export const langEN = {
             deleteSuccess: 'Site successfully deleted',
             publishSuccess: 'Site successfully published',
         },
-        components: {
-            common: {
-                panels: {
-                    general: 'General',
-                    tr: 'Turkish',
-                    en: 'English',
-                },
-                fields: {
-                    key: 'Key',
-                    visible: 'Visible',
-                    sortOrder: 'Sort Order',
-                },
-            },
-            navbar: {
-                title: 'Navbar Components'
-            }
-        },
         siteSettings: {
             title: 'Site Settings',
             panels: {

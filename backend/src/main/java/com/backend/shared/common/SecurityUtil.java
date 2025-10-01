@@ -6,22 +6,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Map;
 
 public class SecurityUtil {
-
+    
     private SecurityUtil() {
         // Utility class
     }
-
+    
     /**
      * Gets the currently authenticated user ID from security context
      * @return User ID or null if not authenticated
      */
     public static Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-
+        
         // Get user ID from authentication details (set by JWT filter)
         Object details = authentication.getDetails();
         if (details instanceof Map) {
@@ -32,7 +32,7 @@ public class SecurityUtil {
                 return (Long) userId;
             }
         }
-
+        
         // Fallback: Use email as identifier (temporary)
         Object principal = authentication.getPrincipal();
         if (principal instanceof String) {
@@ -41,10 +41,10 @@ public class SecurityUtil {
             // TODO: Replace with actual user lookup by email
             return Math.abs((long) email.hashCode()) % 1000000L + 1L;
         }
-
+        
         return null;
     }
-
+    
     /**
      * Gets the currently authenticated user ID, throws exception if not found
      * @return User ID
@@ -57,18 +57,18 @@ public class SecurityUtil {
         }
         return userId;
     }
-
+    
     /**
      * Gets the currently authenticated user's tenant ID
      * @return Tenant ID or null if not authenticated or no tenant
      */
     public static Long getCurrentUserTenantId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-
+        
         Object details = authentication.getDetails();
         if (details instanceof Map) {
             @SuppressWarnings("unchecked")
@@ -78,53 +78,40 @@ public class SecurityUtil {
                 return (Long) tenantId;
             }
         }
-
+        
         return null;
     }
-
-    /**
-     * Gets the currently authenticated user's tenant ID, throws exception if not found
-     * @return Tenant ID
-     * @throws IllegalStateException if user is not authenticated or has no tenant
-     */
-    public static Long getCurrentTenantId() {
-        Long tenantId = getCurrentUserTenantId();
-        if (tenantId == null) {
-            throw new IllegalStateException("User is not authenticated or has no tenant assigned");
-        }
-        return tenantId;
-    }
-
+    
     /**
      * Gets the currently authenticated user's email
      * @return Email or null if not authenticated
      */
     public static String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-
+        
         Object principal = authentication.getPrincipal();
         if (principal instanceof String) {
             return (String) principal;
         }
-
+        
         return null;
     }
-
+    
     /**
      * Gets the currently authenticated user's role
      * @return Role or null if not authenticated
      */
     public static String getCurrentUserRole() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-
+        
         Object details = authentication.getDetails();
         if (details instanceof Map) {
             @SuppressWarnings("unchecked")
@@ -134,17 +121,17 @@ public class SecurityUtil {
                 return (String) role;
             }
         }
-
+        
         return null;
     }
-
+    
     /**
      * Checks if a user is authenticated
      * @return true if authenticated
      */
     public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.isAuthenticated() &&
+        return authentication != null && authentication.isAuthenticated() && 
                !"anonymousUser".equals(authentication.getPrincipal());
     }
 }

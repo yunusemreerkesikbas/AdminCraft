@@ -21,84 +21,85 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tenant {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     @NotBlank(message = "validation.subdomain.required")
     @Size(min = 3, max = 50, message = "validation.subdomain.size")
     @Column(unique = true, nullable = false)
     private String subdomain;
-
+    
     @NotBlank(message = "validation.company.name.required")
     @Size(max = 100, message = "validation.company.name.size")
     @Column(name = "company_name", nullable = false)
     private String companyName;
-
+    
     @NotBlank(message = "validation.database.name.required")
     @Size(max = 50, message = "validation.database.name.size")
     @Column(name = "database_name", unique = true, nullable = false)
     private String databaseName;
-
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TenantStatus status = TenantStatus.PENDING;
-
+    
     @Enumerated(EnumType.STRING)
-    @Column(name = "default_language", nullable = false, length = 5)
+    @Column(name = "default_language", nullable = false)
     private Language defaultLanguage = Language.TR;
-
+    
     @ElementCollection(targetClass = Language.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "tenant_supported_languages", joinColumns = @JoinColumn(name = "tenant_id"))
-    @Column(name = "language", length = 5)
+    @CollectionTable(name = "tenant_supported_languages", 
+                    joinColumns = @JoinColumn(name = "tenant_id"))
+    @Column(name = "language")
     private Set<Language> supportedLanguages = new HashSet<>(Set.of(Language.TR));
-
+    
     @Email(message = "validation.email.invalid")
     @NotBlank(message = "validation.admin.email.required")
     @Column(name = "admin_email", nullable = false)
     private String adminEmail;
-
+    
     @NotBlank(message = "validation.admin.name.required")
     @Size(max = 100, message = "validation.admin.name.size")
     @Column(name = "admin_name", nullable = false)
     private String adminName;
-
+    
     @Size(max = 20, message = "validation.phone.size")
     private String phone;
-
+    
     @Size(max = 100, message = "validation.custom.domain.size")
     @Column(name = "custom_domain")
     private String customDomain;
-
+    
     @Column(name = "ssl_enabled")
     private Boolean sslEnabled = false;
-
+    
     @Size(max = 50, message = "validation.timezone.size")
     private String timezone = "Europe/Istanbul";
-
+    
     @Size(max = 3, message = "validation.currency.size")
     private String currency = "TRY";
-
+    
     @Column(name = "storage_used_mb")
     private Long storageUsedMb = 0L;
-
+    
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
+    
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    
     @Column(name = "activated_at")
     private LocalDateTime activatedAt;
-
+    
     @Column(name = "last_backup_at")
     private LocalDateTime lastBackupAt;
-
+    
     @Size(max = 1000, message = "validation.notes.size")
     private String notes;
-
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -107,61 +108,61 @@ public class Tenant {
             databaseName = "tenant_" + subdomain + "_db";
         }
     }
-
+    
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
+    
     // Business methods
     public boolean canBeActivated() {
         return status == TenantStatus.PENDING;
     }
-
+    
     public void activate() {
         if (!canBeActivated()) {
             throw new TenantCannotBeActivatedException(
-                    "Tenant with status " + status + " cannot be activated");
+                "Tenant with status " + status + " cannot be activated");
         }
         this.status = TenantStatus.ACTIVE;
         this.activatedAt = LocalDateTime.now();
     }
-
+    
     public boolean canBeSuspended() {
         return status == TenantStatus.ACTIVE;
     }
-
+    
     public void suspend() {
         if (!canBeSuspended()) {
             throw new IllegalStateException(
-                    "Tenant with status " + status + " cannot be suspended");
+                "Tenant with status " + status + " cannot be suspended");
         }
         this.status = TenantStatus.SUSPENDED;
     }
-
+    
     public void setMaintenance() {
         this.status = TenantStatus.MAINTENANCE;
     }
-
+    
     public boolean isActive() {
         return status == TenantStatus.ACTIVE;
     }
-
+    
     public boolean supportsLanguage(Language language) {
         return supportedLanguages.contains(language);
     }
-
+    
     public void addSupportedLanguage(Language language) {
         supportedLanguages.add(language);
     }
-
+    
     public void removeSupportedLanguage(Language language) {
         if (language.equals(defaultLanguage)) {
             throw new IllegalArgumentException("Cannot remove default language");
         }
         supportedLanguages.remove(language);
     }
-
+    
     public String getFullDomain() {
         return customDomain != null ? customDomain : subdomain + ".admincraft.com";
     }
