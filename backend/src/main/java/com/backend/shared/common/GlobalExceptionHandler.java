@@ -23,7 +23,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private final MessageSource messageSource;
-
+    
     public GlobalExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
@@ -45,21 +45,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-    // UI Component Exceptions
-    @ExceptionHandler({ ComponentConflictException.class, ComponentConflictException.class })
-    public ResponseEntity<ApiResponse<?>> handleComponentConflict(RuntimeException ex) {
-        String message = getMessage("ui.component.key.conflict");
-        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler({ ComponentNotFoundException.class, ComponentNotFoundException.class })
-    public ResponseEntity<ApiResponse<?>> handleComponentNotFound(RuntimeException ex) {
-        String message = getMessage("ui.component.not.found");
-        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
     // Authentication Exceptions
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidCredentials(InvalidCredentialsException ex) {
@@ -68,7 +53,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-
+    
     @ExceptionHandler(UserAccountDisabledException.class)
     public ResponseEntity<ApiResponse<?>> handleUserAccountDisabled(UserAccountDisabledException ex) {
         log.warn("User account disabled exception: {}", ex.getMessage());
@@ -76,7 +61,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-
+    
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {
         log.warn("Invalid token exception: {}", ex.getMessage());
@@ -84,7 +69,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-
+    
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex) {
         log.warn("User not found exception: {}", ex.getMessage());
@@ -108,7 +93,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-
+    
     // Business Logic Exceptions
     @ExceptionHandler(TenantNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleTenantNotFound(TenantNotFoundException ex) {
@@ -141,7 +126,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
+    
     // Security Exceptions
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException ex) {
@@ -159,7 +144,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
+    
     // Validation Exceptions
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -173,7 +158,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-
+    
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception: ", ex);
@@ -189,7 +174,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
+    
     private String getMessage(String key) {
         try {
             return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());

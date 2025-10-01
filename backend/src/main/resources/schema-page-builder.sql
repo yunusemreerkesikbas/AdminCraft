@@ -220,37 +220,3 @@ CREATE TABLE IF NOT EXISTS site_settings (
   FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
--- UI Components (Sprint 10)
-CREATE TABLE IF NOT EXISTS ui_components (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  tenant_id BIGINT NOT NULL,
-  type VARCHAR(30) NOT NULL,
-  component_key VARCHAR(100) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-  visible BOOLEAN NOT NULL DEFAULT TRUE,
-  sort_order INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created_by BIGINT NOT NULL,
-  updated_by BIGINT NULL,
-  UNIQUE KEY uk_ui_component_tenant_type_key (tenant_id, type, component_key),
-  KEY idx_ui_component_tenant (tenant_id),
-  KEY idx_ui_component_type (type),
-  KEY idx_ui_component_status (status),
-  KEY idx_ui_component_sort (sort_order)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS ui_component_translations (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  component_id BIGINT NOT NULL,
-  language VARCHAR(5) NOT NULL,
-  title VARCHAR(200) NULL,
-  subtitle VARCHAR(300) NULL,
-  data LONGTEXT NULL,
-  UNIQUE KEY uk_ui_component_translation_lang (component_id, language),
-  KEY idx_ui_comp_tr_component (component_id),
-  KEY idx_ui_comp_tr_language (language),
-  CONSTRAINT fk_ui_comp_tr_component FOREIGN KEY (component_id)
-    REFERENCES ui_components(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

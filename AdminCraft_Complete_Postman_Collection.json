@@ -1435,83 +1435,6 @@
 					}
 				}
 			]
-		},
-		{
-			"name": "🧩 Components Management",
-			"item": [
-				{
-					"name": "Components - List",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept-Language", "value": "tr" },
-							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
-							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
-						],
-						"url": "{{baseUrl}}/api/components"
-					}
-				},
-				{
-					"name": "Components - Get by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{ "key": "Accept-Language", "value": "tr" },
-							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
-							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
-						],
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
-					}
-				},
-				{
-					"name": "Components - Create",
-					"request": {
-						"method": "POST",
-						"header": [
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Accept-Language", "value": "tr" },
-							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
-							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
-							{ "key": "X-User-ID", "value": "{{currentUserId}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"tenantId\": {{currentTenantId}},\n  \"type\": \"NAVBAR\",\n  \"key\": \"primary-navbar\",\n  \"status\": \"ACTIVE\",\n  \"visible\": true,\n  \"sortOrder\": 0,\n  \"titleTr\": \"Birincil Navigasyon\",\n  \"subtitleTr\": \"Üst menü\",\n  \"dataTr\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Ana Sayfa\\\",\\\"url\\\":\\\"/\\\"}] }\",\n  \"titleEn\": \"Primary Navigation\",\n  \"subtitleEn\": \"Top menu\",\n  \"dataEn\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Home\\\",\\\"url\\\":\\\"/en\\\"}]}\"\n}"
-						},
-						"url": "{{baseUrl}}/api/components"
-					}
-				},
-				{
-					"name": "Components - Update",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Accept-Language", "value": "tr" },
-							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
-							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
-							{ "key": "X-User-ID", "value": "{{currentUserId}}" }
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"status\": \"ACTIVE\",\n  \"visible\": true,\n  \"sortOrder\": 1,\n  \"titleTr\": \"Birincil Navigasyon - Güncellendi\",\n  \"subtitleTr\": \"Üst menü\",\n  \"dataTr\": \"{\\\"items\\\":[{\\\"label\\\":\\\"Kurumsal\\\",\\\"url\\\":\\\"/kurumsal\\\"}]}\",\n  \"titleEn\": \"Primary Navigation - Updated\",\n  \"subtitleEn\": \"Top menu\",\n  \"dataEn\": \"{\\\"items\\\":[{\\\"label\\\":\\\"About\\\",\\\"url\\\":\\\"/en/about\\\"}]}\"\n}"
-						},
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
-					}
-				},
-				{
-					"name": "Components - Delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{ "key": "Accept-Language", "value": "tr" },
-							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
-							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" }
-						],
-						"url": "{{baseUrl}}/api/components/{{componentId}}"
-					}
-				}
-			]
 		}
 	],
 	"event": [
@@ -1600,11 +1523,6 @@
 		},
 		{
 			"key": "mediaId",
-			"value": "1",
-			"type": "string"
-		},
-		{
-			"key": "componentId",
 			"value": "1",
 			"type": "string"
 		}
