@@ -28,19 +28,13 @@ public class ComponentServiceImpl implements ComponentService {
   private final ComponentRepository componentRepository;
   private final ComponentTranslationRepository translationRepository;
   private final TenantRepository tenantRepository;
-  private final LanguageService languageService;
-  private final TranslationService translationService;
 
   public ComponentServiceImpl(ComponentRepository componentRepository,
       ComponentTranslationRepository translationRepository,
-      TenantRepository tenantRepository,
-      LanguageService languageService,
-      TranslationService translationService) {
+      TenantRepository tenantRepository) {
     this.componentRepository = componentRepository;
     this.translationRepository = translationRepository;
     this.tenantRepository = tenantRepository;
-    this.languageService = languageService;
-    this.translationService = translationService;
   }
 
   @Override
@@ -63,23 +57,25 @@ public class ComponentServiceImpl implements ComponentService {
       component.setSortOrder(request.sortOrder());
     component.setCreatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
-    languageService.validateTranslationKeys(tenantId, request.translations());
-
     var saved = componentRepository.save(component);
 
-    // Map<String, I18nPayload> -> Map<Language, I18nPayload>
-    java.util.Map<com.backend.domain.enums.Language, ComponentRequest.I18nPayload> map = new java.util.HashMap<>();
-    for (var e : request.translations().entrySet()) {
-      var lang = com.backend.domain.enums.Language.fromCode(e.getKey())
-          .orElseThrow(() -> new IllegalArgumentException("language.invalid"));
-      map.put(lang, e.getValue());
+    for (var entry : request.translations().entrySet()) {
+      var langCode = entry.getKey();
+      var payload = entry.getValue();
+      var lang = com.backend.domain.enums.Language.fromCode(langCode)
+          .orElseThrow(() -> new IllegalArgumentException("Invalid language code: " + langCode));
+      ComponentTranslation t = new ComponentTranslation();
+      t.setComponent(saved);
+      t.setLanguage(lang);
+      t.setTitle(payload != null ? payload.title() : null);
+      t.setSubtitle(payload != null ? payload.subtitle() : null);
+      t.setData(payload != null ? payload.data() : null);
+      translationRepository.save(t);
     }
-    translationService.upsertTranslations(saved, map);
 
-    // Stage 2: map-based response; load only languages present for this component
-    var langsMap = translationService.findByComponentIdAndLanguages(
-        saved.getId(), languageService.getSupportedLanguages(tenantId));
-    return ComponentMapper.toResponse(saved, langsMap);
+    var tr = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.TR).orElse(null);
+    var en = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.EN).orElse(null);
+    return ComponentMapper.toResponse(saved, tr, en);
   }
 
   @Override
@@ -100,21 +96,31 @@ public class ComponentServiceImpl implements ComponentService {
       component.setSortOrder(request.sortOrder());
     component.setUpdatedBy(com.backend.shared.common.SecurityUtil.getCurrentUserIdOrThrow());
 
-    languageService.validateTranslationKeys(tenantId, request.translations());
-
     var saved = componentRepository.save(component);
 
-    java.util.Map<com.backend.domain.enums.Language, ComponentRequest.I18nPayload> map = new java.util.HashMap<>();
-    for (var e : request.translations().entrySet()) {
-      var lang = com.backend.domain.enums.Language.fromCode(e.getKey())
-          .orElseThrow(() -> new IllegalArgumentException("language.invalid"));
-      map.put(lang, e.getValue());
+    for (var entry : request.translations().entrySet()) {
+      var lang = Language.fromCode(entry.getKey())
+          .orElseThrow(() -> new IllegalArgumentException("Invalid language code: " + entry.getKey()));
+      var payload = entry.getValue();
+      ComponentTranslation t = translationRepository
+          .findByComponentIdAndLanguage(id, lang)
+          .orElseGet(() -> {
+            ComponentTranslation nt = new ComponentTranslation();
+            nt.setComponent(saved);
+            nt.setLanguage(lang);
+            return nt;
+          });
+      if (payload != null) {
+        t.setTitle(payload.title());
+        t.setSubtitle(payload.subtitle());
+        t.setData(payload.data());
+      }
+      translationRepository.save(t);
     }
-    translationService.upsertTranslations(saved, map);
 
-    var langsMap = translationService.findByComponentIdAndLanguages(
-        saved.getId(), languageService.getSupportedLanguages(tenantId));
-    return ComponentMapper.toResponse(saved, langsMap);
+    var tr = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.TR).orElse(null);
+    var en = translationRepository.findByComponentIdAndLanguage(saved.getId(), Language.EN).orElse(null);
+    return ComponentMapper.toResponse(saved, tr, en);
   }
 
   @Override
@@ -138,9 +144,9 @@ public class ComponentServiceImpl implements ComponentService {
       throw new ComponentNotFoundException("ui.component.not.found");
     }
 
-    var langsMap = translationService.findByComponentIdAndLanguages(
-        id, languageService.getSupportedLanguages(tenantId));
-    return ComponentMapper.toResponse(component, langsMap);
+    var tr = translationRepository.findByComponentIdAndLanguage(id, Language.TR).orElse(null);
+    var en = translationRepository.findByComponentIdAndLanguage(id, Language.EN).orElse(null);
+    return ComponentMapper.toResponse(component, tr, en);
   }
 
   @Override
@@ -151,13 +157,16 @@ public class ComponentServiceImpl implements ComponentService {
     }
 
     List<Long> ids = components.stream().map(Component::getId).collect(Collectors.toList());
-    // For list: keep returning only langs present per component; optional
-    // optimization:
-    // fetch supported set once; per component fetch map (can be batched later)
-    var supported = languageService.getSupportedLanguages(tenantId);
+    List<ComponentTranslation> trList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.TR);
+    List<ComponentTranslation> enList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.EN);
+
+    var trByComp = trList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+
     return components.stream()
-        .map(c -> ComponentMapper.toResponse(c,
-            translationService.findByComponentIdAndLanguages(c.getId(), supported)))
+        .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
         .collect(Collectors.toList());
   }
 
@@ -176,16 +185,25 @@ public class ComponentServiceImpl implements ComponentService {
       return List.of();
 
     List<Long> ids = components.stream().map(Component::getId).collect(Collectors.toList());
-    var supported = languageService.getSupportedLanguages(tenantId);
+    List<ComponentTranslation> trList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.TR);
+    List<ComponentTranslation> enList = translationRepository
+        .findAllByComponentIdInAndLanguage(ids, Language.EN);
+
+    var trByComp = trList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+    var enByComp = enList.stream().collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
+
     return components.stream()
-        .map(c -> ComponentMapper.toResponse(c,
-            translationService.findByComponentIdAndLanguages(c.getId(), supported)))
+        .map(c -> ComponentMapper.toResponse(c, trByComp.get(c.getId()), enByComp.get(c.getId())))
         .collect(Collectors.toList());
   }
 
   @Override
   public List<SiteComponentResponse> getSiteComponents(Long tenantId, ComponentType type, Language language) {
-    Language effectiveLanguage = languageService.resolveEffectiveLanguage(tenantId, language);
+    var tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new TenantNotFoundException(tenantId));
+    if (!tenant.getSupportedLanguages().contains(language)) {
+      return List.of();
+    }
     List<Component> components = componentRepository.findActiveVisibleByTenantIdAndType(tenantId, type);
 
     if (components.isEmpty()) {
@@ -194,10 +212,13 @@ public class ComponentServiceImpl implements ComponentService {
     List<Long> componentIds = components.stream()
         .map(Component::getId)
         .collect(Collectors.toList());
-    Map<Long, ComponentTranslation> translationMap = translationService
-        .findByComponentIdsAndLanguage(componentIds, effectiveLanguage);
+    List<ComponentTranslation> translations = translationRepository
+        .findAllByComponentIdInAndLanguage(componentIds, language);
+    Map<Long, ComponentTranslation> translationMap = translations.stream()
+        .collect(Collectors.toMap(t -> t.getComponent().getId(), t -> t));
     return components.stream()
         .map(component -> ComponentMapper.toSiteResponse(component, translationMap.get(component.getId())))
+        .filter(response -> response != null)
         .collect(Collectors.toList());
   }
 

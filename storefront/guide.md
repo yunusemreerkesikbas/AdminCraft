@@ -56,7 +56,7 @@
 }
 ```
 
-- Admin read response (`ComponentResponse`, Stage 2):
+- Admin read response (`ComponentResponse`):
 
 ```
 {
@@ -67,11 +67,8 @@
   "status": "ACTIVE",
   "visible": true,
   "sortOrder": 0,
-  "translations": {
-    "tr": { "title": "Birincil", "subtitle": "Üst menü", "data": "{...}" },
-    "en": { "title": "Primary", "subtitle": "Top menu", "data": "{...}" },
-    "es": { "title": "Principal" }
-  }
+  "tr": { "title": "Birincil", "subtitle": "Üst menü", "data": "{...}" },
+  "en": { "title": "Primary", "subtitle": "Top menu", "data": "{...}" }
 }
 ```
 
@@ -117,39 +114,3 @@ getComponents(type: string, tenantId: number, status?: 'ACTIVE'|'INACTIVE') {
 - URL `type` MUST match body `type` on POST/PUT.
 - `key` must match `^[a-z0-9._-]+$`.
 - `site` endpoint returns only active and visible items in requested language.
-
----
-
-## Sprint 11 – Tenant Supported Languages (Admin UI)
-
-### Yeni Dil API’leri
-
-- `GET /languages` → platform kataloğu
-- `GET /languages/tenant` → `{ defaultLanguage, supported: string[] }`
-- `PATCH /languages/tenant` → tenant dil ayarlarını günceller
-
-Headerlar: `X-Tenant-ID` (zorunlu), `Authorization` (gerekirse)
-
-### Admin UI Kullanımı
-
-1) Tenant ekranında diller
-
-- Açılışta `GET /languages/tenant` ile değerleri yükleyin.
-- Kullanıcı seçimlerini `PATCH /languages/tenant` ile kaydedin.
-- Kaydın ardından uygulama durumundaki (store/service) dil bilgisini yenileyin.
-
-2) Component formları (dinamik sekmeler)
-
-- Tenant `supportedLanguages` listesine göre sekmeleri üretin.
-- Form submit sırasında `translations` map’ini seçili dillere göre gönderin.
-
-3) Admin okuma (`ComponentResponse` Stage 2)
-
-- `translations: Record<string, ComponentTranslation>` döner.
-- UI, sekme/dil alanlarını bu map’ten doldurur (ör. tr,en,es,ar,ru).
-
-### Geçiş Notları (Stage 1 → Stage 2)
-
-- Eski `tr`/`en` alanları kaldırıldı. Tüm diller `translations` map’inde.
-- UI tarafta TR/EN’e özel kodları kaldırın; sekmeleri `supportedLanguages` ve
-  `ComponentResponse.translations` üzerinden dinamik üretin.
