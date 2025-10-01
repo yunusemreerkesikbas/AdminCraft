@@ -473,31 +473,7 @@
                                             (ngModelChange)="
                                                 selectedTenantForm
                                                     .get('defaultLanguage')
-                                                    ?.setValue($event);
-                                                onDefaultLanguageChange($event)
-                                            "
-                                            [styleClasses]="'mt-4'"
-                                        ></spa-select>
-
-                                        <spa-select
-                                            [label]="
-                                                'admin.tenants.fields.supportedLanguages'
-                                                    | transloco
-                                            "
-                                            [options]="languageOptions"
-                                            [multiple]="true"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'supportedLanguages'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                onSupportedLanguagesChange(
-                                                    $event
-                                                )
+                                                    ?.setValue($event)
                                             "
                                             [styleClasses]="'mt-4'"
                                         ></spa-select>

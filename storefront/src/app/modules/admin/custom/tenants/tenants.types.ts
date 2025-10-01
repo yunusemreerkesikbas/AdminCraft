@@ -38,19 +38,8 @@ export enum TenantStatus {
 
 export enum Language {
     TR = 'TR',
-    EN = 'EN',
-    ES = 'ES',
-    AR = 'AR',
-    RU = 'RU'
+    EN = 'EN'
 }
-
-export const LANGUAGE_LABELS: Record<Language, string> = {
-    [Language.TR]: 'Türkçe',
-    [Language.EN]: 'English',
-    [Language.ES]: 'Español',
-    [Language.AR]: 'العربية',
-    [Language.RU]: 'Русский'
-};
 
 export interface CreateTenantRequest {
     companyName: string;
