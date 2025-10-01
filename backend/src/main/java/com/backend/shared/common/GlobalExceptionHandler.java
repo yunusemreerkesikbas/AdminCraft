@@ -143,15 +143,6 @@ public class GlobalExceptionHandler {
     }
 
     // Security Exceptions
-    @ExceptionHandler(TenantSecurityException.class)
-    public ResponseEntity<ApiResponse<?>> handleTenantSecurity(TenantSecurityException ex) {
-        // SECURITY: Log the violation with high severity
-        log.error("SECURITY VIOLATION - Tenant isolation breach detected: {}", ex.getMessage());
-        String message = getMessage("security.tenant.access.denied");
-        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
-        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-    }
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied exception: {}", ex.getMessage());

@@ -56,9 +56,7 @@
       "Bash(npx tsc:*)",
       "WebFetch(domain:github.com)",
       "Bash(npx ng:*)",
-      "Bash(dir)",
-      "Bash(gh pr list:*)",
-      "Bash(mvn compile:*)"
+      "Bash(dir)"
     ],
     "deny": [],
     "additionalDirectories": [

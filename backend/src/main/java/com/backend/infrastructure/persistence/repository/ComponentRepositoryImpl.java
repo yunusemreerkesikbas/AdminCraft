@@ -3,21 +3,15 @@ package com.backend.infrastructure.persistence.repository;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.ComponentType;
-import com.backend.domain.exception.TenantSecurityException;
 import com.backend.domain.repository.ComponentRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 public class ComponentRepositoryImpl implements ComponentRepository {
-
-  private static final Logger logger = LoggerFactory.getLogger(ComponentRepositoryImpl.class);
 
   private final ComponentJpaRepository jpaRepository;
 
@@ -68,90 +62,5 @@ public class ComponentRepositoryImpl implements ComponentRepository {
   @Override
   public void delete(Component component) {
     jpaRepository.delete(component);
-  }
-
-  // =======================================================================================
-  // SECURITY: Tenant Validation Methods - Critical for preventing cross-tenant data access
-  // =======================================================================================
-
-  @Override
-  public List<Component> findAllByIdInAndTenantId(List<Long> componentIds, Long tenantId) {
-    if (componentIds == null || componentIds.isEmpty()) {
-      return List.of();
-    }
-
-    List<Component> components = jpaRepository.findAllByIdInAndTenantId(componentIds, tenantId);
-
-    // Verify all requested components were found
-    if (components.size() != componentIds.size()) {
-      Set<Long> foundIds = components.stream().map(Component::getId).collect(Collectors.toSet());
-      List<Long> missingIds = componentIds.stream()
-          .filter(id -> !foundIds.contains(id))
-          .collect(Collectors.toList());
-
-      logger.error("SECURITY VIOLATION: Some components not found or don't belong to tenant {}. " +
-                   "Requested: {}, Found: {}, Missing: {}",
-                   tenantId, componentIds, foundIds, missingIds);
-
-      throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
-    }
-
-    logger.debug("Validated {} components belong to tenant {}", components.size(), tenantId);
-    return components;
-  }
-
-  @Override
-  public boolean existsByIdAndTenantId(Long componentId, Long tenantId) {
-    if (componentId == null || tenantId == null) {
-      return false;
-    }
-
-    boolean exists = jpaRepository.existsByIdAndTenantId(componentId, tenantId);
-    logger.debug("Component {} exists for tenant {}: {}", componentId, tenantId, exists);
-    return exists;
-  }
-
-  @Override
-  public void validateComponentBelongsToTenant(Long componentId, Long tenantId) {
-    if (componentId == null || tenantId == null) {
-      logger.error("SECURITY VIOLATION: Null component ID {} or tenant ID {} in validation",
-                   componentId, tenantId);
-      throw TenantSecurityException.invalidComponentAccess(componentId, tenantId);
-    }
-
-    if (!existsByIdAndTenantId(componentId, tenantId)) {
-      logger.error("SECURITY VIOLATION: Component {} does not belong to tenant {} or doesn't exist",
-                   componentId, tenantId);
-      throw TenantSecurityException.invalidComponentAccess(componentId, tenantId);
-    }
-
-    logger.debug("Component {} validated for tenant {}", componentId, tenantId);
-  }
-
-  @Override
-  public void validateComponentsBelongToTenant(List<Long> componentIds, Long tenantId) {
-    if (componentIds == null || componentIds.isEmpty()) {
-      return; // Empty list is valid
-    }
-
-    if (tenantId == null) {
-      logger.error("SECURITY VIOLATION: Null tenant ID in batch validation for components: {}",
-                   componentIds);
-      throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
-    }
-
-    try {
-      // This method will throw exception if any component is missing or belongs to wrong tenant
-      findAllByIdInAndTenantId(componentIds, tenantId);
-      logger.debug("Batch validation successful for {} components in tenant {}",
-                   componentIds.size(), tenantId);
-    } catch (TenantSecurityException e) {
-      // Re-throw the security exception
-      throw e;
-    } catch (Exception e) {
-      logger.error("SECURITY VIOLATION: Unexpected error during batch validation for tenant {}. " +
-                   "Component IDs: {}, Error: {}", tenantId, componentIds, e.getMessage());
-      throw TenantSecurityException.invalidBatchComponentAccess(tenantId);
-    }
   }
 }

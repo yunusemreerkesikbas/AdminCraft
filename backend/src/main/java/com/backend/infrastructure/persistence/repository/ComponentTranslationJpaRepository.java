@@ -25,10 +25,6 @@ public interface ComponentTranslationJpaRepository extends JpaRepository<Compone
         List<ComponentTranslation> findAllByComponentIdInAndLanguage(@Param("componentIds") List<Long> componentIds,
                         @Param("language") Language language);
 
-        @Query("SELECT t FROM ComponentTranslation t WHERE t.component.id IN :componentIds AND t.language IN :languages")
-        List<ComponentTranslation> findAllByComponentIdInAndLanguageIn(@Param("componentIds") List<Long> componentIds,
-                        @Param("languages") List<Language> languages);
-
         @Modifying
         @Query("DELETE FROM ComponentTranslation t WHERE t.component.id = :componentId")
         void deleteByComponentId(@Param("componentId") Long componentId);

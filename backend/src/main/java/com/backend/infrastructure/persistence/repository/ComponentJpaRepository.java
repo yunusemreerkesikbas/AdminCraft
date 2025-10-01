@@ -53,43 +53,4 @@ public interface ComponentJpaRepository extends JpaRepository<Component, Long> {
                         "ORDER BY c.sortOrder ASC, c.id ASC")
         List<Component> findActiveVisibleByTenantIdAndType(@Param("tenantId") Long tenantId,
                         @Param("type") ComponentType type);
-
-        // =======================================================================================
-        // SECURITY: Tenant Validation Methods - Critical for preventing cross-tenant data access
-        // =======================================================================================
-
-        /**
-         * Finds all components by IDs that belong to the specified tenant.
-         * This is used for batch tenant validation to prevent cross-tenant access.
-         *
-         * @param componentIds List of component IDs to find
-         * @param tenantId Expected tenant ID for all components
-         * @return List of components that belong to the tenant
-         */
-        @Query("SELECT c FROM Component c WHERE c.id IN :componentIds AND c.tenantId = :tenantId")
-        List<Component> findAllByIdInAndTenantId(@Param("componentIds") List<Long> componentIds,
-                                               @Param("tenantId") Long tenantId);
-
-        /**
-         * Checks if a component exists and belongs to the specified tenant.
-         * Used for single component tenant validation.
-         *
-         * @param componentId Component ID to check
-         * @param tenantId Expected tenant ID
-         * @return true if component exists and belongs to tenant, false otherwise
-         */
-        @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Component c " +
-               "WHERE c.id = :componentId AND c.tenantId = :tenantId")
-        boolean existsByIdAndTenantId(@Param("componentId") Long componentId, @Param("tenantId") Long tenantId);
-
-        /**
-         * Counts components by IDs that belong to the specified tenant.
-         * Used for optimized batch validation.
-         *
-         * @param componentIds List of component IDs to count
-         * @param tenantId Expected tenant ID
-         * @return Count of components that belong to the tenant
-         */
-        @Query("SELECT COUNT(c) FROM Component c WHERE c.id IN :componentIds AND c.tenantId = :tenantId")
-        Long countByIdInAndTenantId(@Param("componentIds") List<Long> componentIds, @Param("tenantId") Long tenantId);
 }

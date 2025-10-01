@@ -14,8 +14,6 @@ public interface ComponentTranslationRepository {
 
   List<ComponentTranslation> findAllByComponentIdInAndLanguage(List<Long> componentIds, Language language);
 
-  List<ComponentTranslation> findAllByComponentIdInAndLanguageIn(List<Long> componentIds, List<Language> languages);
-
   ComponentTranslation save(ComponentTranslation translation);
 
   void deleteByComponentId(Long componentId);

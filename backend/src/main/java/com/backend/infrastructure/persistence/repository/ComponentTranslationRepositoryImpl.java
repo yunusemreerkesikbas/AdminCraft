@@ -36,14 +36,6 @@ public class ComponentTranslationRepositoryImpl implements ComponentTranslationR
   }
 
   @Override
-  public List<ComponentTranslation> findAllByComponentIdInAndLanguageIn(List<Long> componentIds, List<Language> languages) {
-    if (componentIds == null || componentIds.isEmpty() || languages == null || languages.isEmpty()) {
-      return List.of();
-    }
-    return jpaRepository.findAllByComponentIdInAndLanguageIn(componentIds, languages);
-  }
-
-  @Override
   public ComponentTranslation save(ComponentTranslation translation) {
     return jpaRepository.save(translation);
   }
