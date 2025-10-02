@@ -49,6 +49,11 @@ export class PageListComponent implements OnInit, OnDestroy {
   #notify = inject(NotificationService);
   #cdr = inject(ChangeDetectorRef);
   #itemDialogService = inject(ItemDialogService);
+  #pageBuilderService = inject(PageBuilderService);
+  #tenantContext = inject(TenantContextService);
+  #router = inject(Router);
+  #errorHandler = inject(ErrorHandlingService);
+  #loadingState = inject(LoadingStateService);
 
   isLoading = false;
   tenantId = 1;
@@ -58,17 +63,9 @@ export class PageListComponent implements OnInit, OnDestroy {
   search = '';
   subdomain = '';
 
-  constructor(
-    private _svc: PageBuilderService,
-    private _tenantCtx: TenantContextService,
-    private _router: Router,
-    private _errorHandler: ErrorHandlingService,
-    private _loadingState: LoadingStateService
-  ) {}
-
   ngOnInit(): void {
-    const storedId = this._tenantCtx.getCurrentTenantId();
-    const storedSub = this._tenantCtx.getCurrentSubdomain();
+    const storedId = this.#tenantContext.getCurrentTenantId();
+    const storedSub = this.#tenantContext.getCurrentSubdomain();
     if (storedId) {
       this.tenantId = storedId;
     }
@@ -77,7 +74,7 @@ export class PageListComponent implements OnInit, OnDestroy {
     }
     this.load();
 
-    this._tenantCtx.tenant$
+    this.#tenantContext.tenant$
       .pipe(takeUntil(this.destroy$))
       .subscribe((t) => {
         if (!t) return;
@@ -91,7 +88,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         }
       });
 
-    this._svc.createRequested$
+    this.#pageBuilderService.createRequested$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.openCreateDialog();
@@ -104,25 +101,25 @@ export class PageListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this._loadingState.startLoading(LOADING_OPERATIONS.LOAD_PAGES);
+    this.#loadingState.startLoading(LOADING_OPERATIONS.LOAD_PAGES);
     this.isLoading = true;
 
-    this._svc.listPages(this.tenantId, this.language || undefined)
+    this.#pageBuilderService.listPages(this.tenantId, this.language || undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (list) => {
           this.pages = list;
           this.applyFilter();
           this.isLoading = false;
-          this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
+          this.#loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
           this.#cdr.markForCheck();
         },
         error: (error) => {
-          const errorMessage = this._errorHandler.handleError(error);
-          this._errorHandler.logError(error, 'Loading pages');
+          const errorMessage = this.#errorHandler.handleError(error);
+          this.#errorHandler.logError(error, 'Loading pages');
           this.#notify.alert(errorMessage);
           this.isLoading = false;
-          this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
+          this.#loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
           this.#cdr.markForCheck();
         },
       });
@@ -149,7 +146,7 @@ export class PageListComponent implements OnInit, OnDestroy {
   }
 
   openCreateDialog(): void {
-    this._svc.listCategories(this.tenantId).pipe(take(1)).subscribe(categories => {
+    this.#pageBuilderService.listCategories(this.tenantId).pipe(take(1)).subscribe(categories => {
       const schema = this.#buildDynamicSchema(categories);
       const emptyGeneralData = this.#buildEmptyGeneralData(schema);
       const emptyI18nData = this.#buildEmptyI18nData(schema);
@@ -191,7 +188,7 @@ export class PageListComponent implements OnInit, OnDestroy {
             description: langData?.description || null
           };
 
-          this._svc.createPage(payload).pipe(take(1)).subscribe({
+          this.#pageBuilderService.createPage(payload).pipe(take(1)).subscribe({
             next: (newPage) => {
               this.pages = [newPage, ...this.pages];
               this.applyFilter();
@@ -199,7 +196,7 @@ export class PageListComponent implements OnInit, OnDestroy {
               this.#cdr.markForCheck();
             },
             error: (error) => {
-              const msg = this._errorHandler.handleError(error);
+              const msg = this.#errorHandler.handleError(error);
               this.#notify.alert(msg);
             }
           });
@@ -210,8 +207,8 @@ export class PageListComponent implements OnInit, OnDestroy {
 
   openEditDialog(page: PageDto): void {
     forkJoin({
-      categories: this._svc.listCategories(this.tenantId).pipe(take(1)),
-      languageVersions: this._svc.getPageVersionsBySlug(this.tenantId, page.slug).pipe(take(1))
+      categories: this.#pageBuilderService.listCategories(this.tenantId).pipe(take(1)),
+      languageVersions: this.#pageBuilderService.getPageVersionsBySlug(this.tenantId, page.slug).pipe(take(1))
     }).subscribe(({ categories, languageVersions }) => {
       const schema = this.#buildDynamicSchema(categories);
 
@@ -293,7 +290,7 @@ export class PageListComponent implements OnInit, OnDestroy {
           description: result.tr.description || null,
           featuredImage: trVersion.featuredImage || null
         };
-        requests.push(this._svc.updatePage(payload));
+        requests.push(this.#pageBuilderService.updatePage(payload));
       }
     }
 
@@ -315,7 +312,7 @@ export class PageListComponent implements OnInit, OnDestroy {
           description: result.en.description || null,
           featuredImage: enVersion.featuredImage || null
         };
-        requests.push(this._svc.updatePage(payload));
+        requests.push(this.#pageBuilderService.updatePage(payload));
       }
     }
 
@@ -336,14 +333,14 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cdr.markForCheck();
       },
       error: (error) => {
-        const msg = this._errorHandler.handleError(error);
+        const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
       }
     });
   }
 
   deletePage(page: PageDto): void {
-    this._svc.deletePage(page.id).pipe(take(1)).subscribe({
+    this.#pageBuilderService.deletePage(page.id).pipe(take(1)).subscribe({
       next: () => {
         this.pages = this.pages.filter(p => p.id !== page.id);
         this.applyFilter();
@@ -351,14 +348,14 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cdr.markForCheck();
       },
       error: (error) => {
-        const msg = this._errorHandler.handleError(error);
+        const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
       }
     });
   }
 
   publishPage(page: PageDto): void {
-    this._svc.publishPage(page.id).pipe(take(1)).subscribe({
+    this.#pageBuilderService.publishPage(page.id).pipe(take(1)).subscribe({
       next: (updated) => {
         const idx = this.pages.findIndex(p => p.id === updated.id);
         if (idx > -1) {
@@ -369,14 +366,14 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cdr.markForCheck();
       },
       error: (error) => {
-        const msg = this._errorHandler.handleError(error);
+        const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
       }
     });
   }
 
   unpublishPage(page: PageDto): void {
-    this._svc.unpublishPage(page.id).pipe(take(1)).subscribe({
+    this.#pageBuilderService.unpublishPage(page.id).pipe(take(1)).subscribe({
       next: (updated) => {
         const idx = this.pages.findIndex(p => p.id === updated.id);
         if (idx > -1) {
@@ -387,7 +384,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cdr.markForCheck();
       },
       error: (error) => {
-        const msg = this._errorHandler.handleError(error);
+        const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
       }
     });

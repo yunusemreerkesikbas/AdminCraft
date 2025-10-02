@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    HostListener,
     inject,
     OnInit,
     signal
@@ -71,6 +72,15 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
     }));
   }
 
+  @HostListener('document:keydown.escape', ['$event'])
+  handleEscKey(event: KeyboardEvent): void {
+    const disableClose = this.options.modalData?.disableClose ?? true;
+    if (disableClose) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
   get generalFields(): ReadonlyArray<GeneralFieldConfig & { transformedOptions?: SpaSelectOption[] }> {
     return this.generalFieldsWithOptions;
   }
@@ -86,7 +96,7 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
 
     return field.options.map(opt => ({
       value: opt.value,
-      label: (opt as any).label || opt.labelKey
+      label: opt.label || opt.labelKey || ''
     }));
   }
 

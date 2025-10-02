@@ -103,6 +103,8 @@ export class ItemFormBuilderService {
         return field.minValue ?? 0;
       case 'select':
         return field.options?.[0]?.value ?? '';
+      case 'date':
+        return null;
       default:
         return '';
     }
