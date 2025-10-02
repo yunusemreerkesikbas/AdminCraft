@@ -22,8 +22,6 @@ include all required imports, and ensure proper naming of key components
 
 do not nest code more than 2 levels deep
 
-prefer using the forNext function, located in libs/smart-ngrx/src/common/for-next.function.ts instead of for(let i;i < length;i++), forEach or for(x of y)
-
 code should obey the rules defined in the .eslintrc.json, .prettierrc, .htmlhintrc, and .editorconfig files
 
 functions and methods should not have more than 4 parameters
@@ -48,3 +46,5 @@ angular kodu yazarken tip tanımlamalarına dikkat et. her değişken fonksiyon 
 yeni bir component oluşturulduğunda mvc mimarisine uygun oluşturalım. html css ve ts kodları ayrı dosyalarda olsun . component selectorunun ismi <spa-component-name> formatında olacak . component name başına spa alacak.
 rxjs işlemlerinde gerekli yerlerde take(1) operatorü kullanalım. memory leak olmamasına dikkat edelim. subscription-unsubscription durumlarını kontrol edelim
 componentlerde access modifier kullanımına dikkat edelim. değişken tanımlarında ve metod kullanımlarında gerekli olmadıkça public kullanmayalım.
+kodda yorum satırı kullanmayalım.
+değişken isimleri açık, anlaşılır olsun. örneğin componentSvc gibi bir isimlendirme yerine componentService olarak tanımlayalım.

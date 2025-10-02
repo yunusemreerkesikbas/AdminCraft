@@ -19,6 +19,7 @@ export const langEN = {
                 uploaded: 'Uploaded',
                 created: 'Created',
                 details: 'Details',
+                actions: 'Actions',
             },
             noRecords: 'No records',
             status: {
@@ -32,6 +33,10 @@ export const langEN = {
                 draft: 'Draft',
                 published: 'Published',
                 archived: 'Archived',
+            },
+            languages: {
+                tr: 'Turkish',
+                en: 'English',
             },
             actions: {
                 add: 'Add',
@@ -132,6 +137,25 @@ export const langEN = {
                 },
             },
         },
+        dialog: {
+            title: {
+                create: 'Create New',
+                edit: 'Edit',
+            },
+            tabs: {
+                general: 'General',
+                languages: {
+                    tr: 'Turkish',
+                    en: 'English',
+                },
+            },
+            actions: {
+                save: 'Save',
+                saveTab: 'Save This Tab',
+                saved: 'Saved',
+                cancel: 'Cancel',
+            },
+        },
         dashboard: {
             title: 'Dashboard',
             overview: 'Overview',
@@ -178,17 +202,26 @@ export const langEN = {
             categories: 'Categories',
             sections: 'Sections',
             blocks: 'Blocks',
+            status: {
+                draft: 'Draft',
+                published: 'Published',
+                archived: 'Archived',
+                scheduled: 'Scheduled'
+            },
             fields: {
                 name: 'Name',
                 pageTitle: 'Page Title',
                 slug: 'Slug',
+                status: 'Status',
                 language: 'Language',
                 category: 'Category',
                 parentCategory: 'Parent Category',
+                subtitle: 'Subtitle',
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
                 canonicalUrl: 'Canonical URL',
                 styleClasses: 'CSS Classes',
+                description: 'Description',
                 sectionType: 'Section Type',
                 sectionData: 'Section Data',
                 blockType: 'Block Type',
@@ -197,12 +230,14 @@ export const langEN = {
             messages: {
                 pageCreated: 'Page created',
                 pageUpdated: 'Page updated',
+                tabSaved: 'Tab successfully saved',
                 categoryCreated: 'Category created',
                 categoryUpdated: 'Category updated',
                 categoryDeleted: 'Category deleted',
                 sectionAdded: 'Section added',
                 blockAdded: 'Block added',
                 orderSaved: 'Order saved',
+                languageVersionNotFound: 'Language version not found. Please create a page for this language first.',
             },
             errors: {
                 noTenant: 'Tenant not found',
@@ -382,7 +417,7 @@ export const langEN = {
             activateSuccess: 'Tenant successfully activated',
             suspendSuccess: 'Tenant successfully suspended',
         },
-        
+
         errors: {
             forbidden: 'You do not have permission for this action',
             server: 'A server error occurred. Please try again.',

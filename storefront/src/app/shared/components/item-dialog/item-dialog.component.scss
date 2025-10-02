@@ -1,0 +1,83 @@
+.spa-item-dialog {
+  min-width: 600px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+
+  h2[mat-dialog-title] {
+    flex-shrink: 0;
+  }
+
+  mat-dialog-content {
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .tab-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+
+  mat-dialog-actions {
+    padding: 16px 24px;
+    gap: 12px;
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    background: var(--fuse-bg-card);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 10;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    button {
+      min-width: 100px;
+      height: 40px;
+      padding: 0 24px;
+      font-weight: 500;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .cancel-button {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .save-button {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .spa-item-dialog {
+    min-width: unset;
+    width: 100%;
+  }
+}

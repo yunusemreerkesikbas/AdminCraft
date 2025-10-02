@@ -53,7 +53,9 @@
       "Bash(npm install:*)",
       "Bash(npm info:*)",
       "Bash(npx ng build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir)",
+      "Bash(dir \"%APPDATA%\\Claude\")"
     ],
     "deny": [],
     "additionalDirectories": [

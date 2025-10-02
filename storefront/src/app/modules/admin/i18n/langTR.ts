@@ -19,6 +19,7 @@ export const langTR = {
                 uploaded: 'Yüklendi',
                 created: 'Oluşturulma',
                 details: 'Detaylar',
+                actions: 'İşlemler',
             },
             noRecords: 'Kayıt bulunamadı',
             status: {
@@ -32,6 +33,10 @@ export const langTR = {
                 draft: 'Taslak',
                 published: 'Yayında',
                 archived: 'Arşivlendi',
+            },
+            languages: {
+                tr: 'Türkçe',
+                en: 'İngilizce',
             },
             actions: {
                 add: 'Ekle',
@@ -132,6 +137,25 @@ export const langTR = {
                 },
             },
         },
+        dialog: {
+            title: {
+                create: 'Yeni Oluştur',
+                edit: 'Düzenle',
+            },
+            tabs: {
+                general: 'Genel',
+                languages: {
+                    tr: 'Türkçe',
+                    en: 'İngilizce',
+                },
+            },
+            actions: {
+                save: 'Kaydet',
+                saveTab: 'Bu Sekmeyi Kaydet',
+                saved: 'Kaydedildi',
+                cancel: 'İptal',
+            },
+        },
         dashboard: {
             title: 'Kontrol Paneli',
             overview: 'Genel Bakış',
@@ -178,17 +202,26 @@ export const langTR = {
             categories: 'Kategoriler',
             sections: 'Bölümler',
             blocks: 'Bloklar',
+            status: {
+                draft: 'Taslak',
+                published: 'Yayında',
+                archived: 'Arşivlenmiş',
+                scheduled: 'Zamanlanmış'
+            },
             fields: {
                 name: 'Ad',
                 pageTitle: 'Sayfa Başlığı',
                 slug: 'Slug',
+                status: 'Durum',
                 language: 'Dil',
                 category: 'Kategori',
                 parentCategory: 'Üst Kategori',
+                subtitle: 'Alt Başlık',
                 metaTitle: 'Meta Başlık',
                 metaDescription: 'Meta Açıklama',
                 canonicalUrl: 'Kanonik URL',
                 styleClasses: 'CSS Sınıfları',
+                description: 'Açıklama',
                 sectionType: 'Bölüm Türü',
                 sectionData: 'Bölüm Verisi',
                 blockType: 'Blok Türü',
@@ -197,12 +230,14 @@ export const langTR = {
             messages: {
                 pageCreated: 'Sayfa oluşturuldu',
                 pageUpdated: 'Sayfa güncellendi',
+                tabSaved: 'Sekme başarıyla kaydedildi',
                 categoryCreated: 'Kategori oluşturuldu',
                 categoryUpdated: 'Kategori güncellendi',
                 categoryDeleted: 'Kategori silindi',
                 sectionAdded: 'Bölüm eklendi',
                 blockAdded: 'Blok eklendi',
                 orderSaved: 'Sıralama kaydedildi',
+                languageVersionNotFound: 'Bu dil versiyonu bulunamadı. Önce bu dil için sayfa oluşturun.',
             },
             errors: {
                 noTenant: 'Tenant bulunamadı',
@@ -382,7 +417,7 @@ export const langTR = {
             activateSuccess: 'Tenant başarıyla aktifleştirildi',
             suspendSuccess: 'Tenant başarıyla askıya alındı',
         },
-        
+
         errors: {
             forbidden: 'Bu işlem için yetkiniz yok',
             server: 'Sunucuda bir hata oluştu. Lütfen tekrar deneyin.',
