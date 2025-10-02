@@ -197,7 +197,6 @@ hierarchical categories, and publish with SEO.
     - Live preview, autosave draft, publish flow
     - Category tree management (CRUD, reorder)
   - Conventions:
-    - Use `forNext` utility
     - Private methods with `#`
     - Strong typings, ≤4 params per function
 
@@ -353,7 +352,7 @@ Admin UI using ngx-toastr with i18n, accessibility, and error handling.
   suppression is handled by rules (e.g., 401 and validation errors)
 - i18n: accepts raw text or Transloco keys with params
 - Accessibility: ARIA live region, focusable actions, high contrast
-- Conventions: use `forNext`, `take(1)`, private methods with `#`,
+- Conventions: use  `take(1)`, private methods with `#`,
   selectors prefixed with `<spa-*>`
 
 **Features:**
@@ -446,7 +445,7 @@ forms) with language-aware fields and a simple API contract.
     - `<spa-site-seo-settings>`
     - `<spa-site-address-form>`
   - State: service/store with `GET /api/site-settings` (global + languages)
-  - Conventions: `forNext`, `take(1)`, `#` private methods, strong typings
+  - Conventions:  `take(1)`, `#` private methods, strong typings
   - Notifications: `NotificationService` + error interceptor
 
 **Settings Fields (revised):**
@@ -612,3 +611,114 @@ Key Principles:
 - Error handling and validation
 - Multi-tenant and multi-language aware
 */
+
+#### Sprint 11: Reusable ItemDialog for CRUD (MatDialog + Dynamic i18n Tabs)
+
+Goal: Deliver a reusable, schema-driven dialog to handle Create/Edit with
+General and dynamic Language tabs (TR/EN for now), consistent UX, and
+clean separation of concerns.
+
+Decisions:
+
+- Languages source: manual ['tr','en'] for this sprint; will be fetched from
+  tenant configuration in a future sprint.
+- Save flow: Dialog emits DTO only; caller performs API call (create/update).
+- Notifications: Use existing NotificationService (Transloco-aware toasts).
+- Dialog config (modalData): disableClose (default true), width (default
+  '720px'), optional height, optional styleClasses (mapped to panelClass).
+- ESC behavior: When disableClose is true, ESC is disabled.
+- After save: Show success toast; keep dialog open (user closes manually).
+- Submit UX: Disable Save button while submitting (prevent double clicks).
+- Validations: No custom URL/email/slug validators in this sprint; a general
+  validation service will be added later.
+- File inputs: Not in scope; only text/number/select/checkbox/date.
+- Components placed under shared with <spa-*> selectors.
+
+Scope (Admin Frontend - Angular 19):
+
+- Module: ItemDialogModule exporting <spa-item-dialog> (MatDialog + MatTabGroup)
+- Component: ItemDialogComponent (<spa-item-dialog>)
+- Services:
+  - ItemDialogService: opens dialog with a single options object; returns
+    Observable<DTO | null>
+  - ItemFormBuilderService: builds ReactiveForms from schema (general + i18n)
+- Types:
+  - ItemDialogMode = 'create' | 'edit'
+  - ItemDialogOptions<TDto, TId>
+  - ModalData (disableClose, width, height, styleClasses)
+  - ItemDialogSchema { general[], i18n[] }
+  - Field configs: GeneralFieldConfig, LangFieldConfig
+- Integration: List pages call ItemDialogService; on result, perform API via
+  facade, show toast, and refresh the list; dialog remains open.
+- Conventions: take(1), strong typings, private helpers with #.
+
+API Contract (summary):
+
+```ts
+export type ItemDialogMode = 'create' | 'edit';
+
+export interface ModalData {
+  disableClose?: boolean; // default: true
+  width?: string;         // default: '720px'
+  height?: string;
+  styleClasses?: string[];
+}
+
+export interface ItemDialogOptions<TDto, TId = string> {
+  titleKey: string;
+  mode: ItemDialogMode;
+  schema: ItemDialogSchema;
+  languages: ReadonlyArray<string>; // e.g., ['tr','en']
+  initial?: Partial<TDto>;
+  id?: TId;
+  modalData?: ModalData;
+}
+
+export interface ItemDialogSchema {
+  general: ReadonlyArray<GeneralFieldConfig>;
+  i18n: ReadonlyArray<LangFieldConfig>;
+}
+
+export interface GeneralFieldConfig {
+  key: string;
+  type: 'text' | 'textarea' | 'select' | 'number' | 'checkbox' | 'date';
+  labelKey: string;
+  required?: boolean;
+  options?: ReadonlyArray<{ value: string | number; labelKey: string }>;
+  maxLength?: number;
+}
+
+export interface LangFieldConfig extends GeneralFieldConfig {}
+```
+
+Deliverables:
+
+- ItemDialogModule + <spa-item-dialog> component
+- ItemDialogService, ItemFormBuilderService
+- DTO emit flow wired to feature facades; NotificationService integration
+- i18n keys for dialog base labels added to langTR.ts/langEN.ts:
+  - admin.dialog.title.create, admin.dialog.title.edit
+  - admin.dialog.tabs.general
+  - admin.dialog.tabs.languages.tr, admin.dialog.tabs.languages.en
+- Sample integration in one list view (open dialog, call facade, toast,
+  refresh list)
+
+Acceptance Criteria:
+
+- General and dynamic language tabs render from schema and `languages` input
+- Dialog emits DTO on Save; caller invokes create/update; dialog stays open
+- Save button disabled during submit; ESC disabled when disableClose=true
+- Success toast shown via NotificationService; no memory leaks (take(1))
+- Functions ≤ 4 params (use options objects); strong typings; <spa-*> selectors
+
+Timeline (6–7 days):
+
+- Days 1–2: UX/API finalization; module + component shell; tabs layout
+- Day 3: FormBuilder and schema wiring (general + i18n)
+- Day 4: Service integration (emit DTO), NotificationService usage
+- Day 5: Sample list integration and refinements
+- Day 6–7: Unit tests and documentation
+
+Out of Scope:
+
+- Backend changes, custom validators, media inputs, tenant-based languages fetch

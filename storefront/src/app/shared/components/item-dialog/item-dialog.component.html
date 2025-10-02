@@ -1,0 +1,66 @@
+<div class="spa-item-dialog">
+    <h2 mat-dialog-title>
+        {{
+            (options.mode === 'create'
+                ? 'admin.dialog.title.create'
+                : 'admin.dialog.title.edit'
+            ) | transloco
+        }}:
+        {{ options.titleKey | transloco }}
+    </h2>
+
+    <mat-dialog-content>
+        <mat-tab-group>
+            <mat-tab [label]="'admin.dialog.tabs.general' | transloco">
+                <div class="tab-content">
+                    @for (field of generalFields; track field.key) {
+                        <spa-dialog-field
+                            [field]="field"
+                            [form]="generalForm"
+                            [options]="field.transformedOptions || []"
+                        />
+                    }
+                </div>
+            </mat-tab>
+
+            @for (lang of languages; track lang) {
+                <mat-tab
+                    [label]="'admin.dialog.tabs.languages.' + lang | transloco"
+                >
+                    <div class="tab-content">
+                        @if (getLanguageForm(lang); as langForm) {
+                            @for (field of i18nFields; track field.key) {
+                                <spa-dialog-field
+                                    [field]="field"
+                                    [form]="langForm"
+                                    [options]="field.transformedOptions || []"
+                                />
+                            }
+                        }
+                    </div>
+                </mat-tab>
+            }
+        </mat-tab-group>
+    </mat-dialog-content>
+
+    <mat-dialog-actions>
+        <button
+            mat-button
+            type="button"
+            (click)="cancel()"
+            class="cancel-button"
+        >
+            {{ 'admin.dialog.actions.cancel' | transloco }}
+        </button>
+        <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            class="save-button"
+            [disabled]="isSubmitting()"
+            (click)="save()"
+        >
+            {{ 'admin.dialog.actions.save' | transloco }}
+        </button>
+    </mat-dialog-actions>
+</div>

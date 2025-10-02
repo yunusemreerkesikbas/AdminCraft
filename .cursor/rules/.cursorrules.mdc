@@ -418,7 +418,7 @@ Path) and integrate category selection into the Page Builder form.
     - `<spa-page-categories>`: lazy tree CRUD + reorder + move
     - `<spa-page-category-select>`: cascading pickers or tree selector
   - Integrate into `spa-page-builder-form`; send `categoryId`
-  - Conventions: `take(1)`, `forNext`, `#` for private methods
+  - Conventions: `take(1)`,  `#` for private methods
 
 - **Migration Plan:**
   1) Add `path` and `level` columns
@@ -460,7 +460,7 @@ Admin UI using ngx-toastr with i18n, accessibility, and error handling.
   suppression is handled by rules (e.g., 401 and validation errors)
 - i18n: accepts raw text or Transloco keys with params
 - Accessibility: ARIA live region, focusable actions, high contrast
-- Conventions: use `forNext`, `take(1)`, private methods with `#`,
+- Conventions: use `take(1)`, private methods with `#`,
   selectors prefixed with `<spa-*>`
 
 **Features:**

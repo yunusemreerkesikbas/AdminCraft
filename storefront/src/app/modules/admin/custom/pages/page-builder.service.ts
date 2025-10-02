@@ -19,11 +19,9 @@ import {
 @Injectable({ providedIn: 'root' })
 export class PageBuilderService {
   #api = inject(ApiClientService);
-  // UI bus for header actions
   #createRequested = new Subject<void>();
   readonly createRequested$ = this.#createRequested.asObservable();
 
-  // Pages
   listPages(tenantId: number, language?: 'TR' | 'EN'): Observable<PageDto[]> {
     const qp: Record<string, any> = { tenantId, ...(language && { language }) };
     return this.#api.get<ApiResponse<PageDto[]>>('pages', undefined, qp).pipe(
@@ -31,6 +29,12 @@ export class PageBuilderService {
         const data = r?.data ?? [];
         return Array.isArray(data) ? data : [];
       })
+    );
+  }
+
+  getPageVersionsBySlug(tenantId: number, slug: string): Observable<PageDto[]> {
+    return this.listPages(tenantId).pipe(
+      map(pages => pages.filter(p => p.slug === slug))
     );
   }
 
@@ -74,7 +78,6 @@ export class PageBuilderService {
       .pipe(map((r) => r.result === 'SUCCESS'));
   }
 
-  // Categories
   listCategories(tenantId: number, parentId?: number): Observable<PageCategoryDto[]> {
     const qp: Record<string, any> = { tenantId, ...(parentId !== undefined && { parentId }) };
     return this.#api.get<any>('pageCategories', undefined, qp).pipe(map((r) => r.data || []));
@@ -108,7 +111,6 @@ export class PageBuilderService {
       ...(rootId !== undefined && { rootId }),
       ...(depth !== undefined && { depth }),
     };
-    // Use custom GET without retry to avoid 4x calls on 5xx responses
     return this.#api
       .custom<any>('GET', 'pageCategoryTree', { queryParams: qp, includeAuth: true })
       .pipe(map((r) => r.data || []));
@@ -135,7 +137,6 @@ export class PageBuilderService {
       .pipe(map((r) => r.result === 'SUCCESS'));
   }
 
-  // Sections
   listSections(pageId: number): Observable<PageSectionDto[]> {
     return this.#api
       .get<any>('pageBuilderSections', undefined, { pageId })
@@ -160,7 +161,6 @@ export class PageBuilderService {
       .pipe(map((r) => r.result === 'SUCCESS'));
   }
 
-  // Blocks
   listBlocks(sectionId: number): Observable<PageBlockDto[]> {
     return this.#api
       .get<any>('pageBuilderBlocks', undefined, { sectionId })
@@ -185,5 +185,4 @@ export class PageBuilderService {
       .pipe(map((r) => r.result === 'SUCCESS'));
   }
 }
-
 

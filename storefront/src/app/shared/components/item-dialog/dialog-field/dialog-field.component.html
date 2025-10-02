@@ -1,0 +1,49 @@
+<div class="dialog-field" [formGroup]="form()">
+    @switch (field().type) {
+        @case ('text') {
+            <spa-input
+                [label]="field().labelKey | transloco"
+                [placeholder]="field().placeholder || ''"
+                [formControlName]="field().key"
+                [type]="'text'"
+                [fullWidth]="true"
+            />
+        }
+        @case ('textarea') {
+            <spa-textarea
+                [label]="field().labelKey | transloco"
+                [placeholder]="field().placeholder || ''"
+                [formControlName]="field().key"
+                [rows]="4"
+            />
+        }
+        @case ('select') {
+            <spa-select
+                [label]="field().labelKey | transloco"
+                [placeholder]="field().placeholder || ''"
+                [formControlName]="field().key"
+                [options]="options()"
+            />
+        }
+        @case ('number') {
+            <spa-input
+                [label]="field().labelKey | transloco"
+                [placeholder]="field().placeholder || ''"
+                [formControlName]="field().key"
+                [type]="'number'"
+                [fullWidth]="true"
+            />
+        }
+        @case ('checkbox') {
+            <mat-checkbox [formControlName]="field().key">
+                {{ field().labelKey | transloco }}
+            </mat-checkbox>
+        }
+    }
+
+    @if (isInvalid) {
+        <div class="error-message">
+            {{ getErrorMessage() | transloco }}
+        </div>
+    }
+</div>

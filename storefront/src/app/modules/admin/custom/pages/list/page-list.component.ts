@@ -1,22 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { QuillEditorComponent } from 'ngx-quill';
-import { Subject, takeUntil } from 'rxjs';
+import { ItemDialogService } from '@shared/services/item-dialog.service';
+import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
+import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
-import { CreatePageRequest, PageDto } from '../page-builder.types';
+import { CreatePageRequest, PageCategoryDto, PageDto, UpdatePageRequest } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
-import { PageValidationService } from '../services/page-validation.service';
 
 @Component({
   selector: 'spa-page-list',
@@ -26,28 +23,22 @@ import { PageValidationService } from '../services/page-validation.service';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
-    SpaInputComponent,
-    SpaSelectComponent,
-    QuillEditorComponent,
     TranslocoModule,
   ],
   styles: [
-    /* language=SCSS */
     `
         .inventory-grid {
-            grid-template-columns: auto 180px 80px 96px;
+            grid-template-columns: auto 180px 80px 120px 160px;
 
             @screen md {
-                grid-template-columns: auto 220px 100px 120px;
+                grid-template-columns: auto 220px 100px 140px 180px;
             }
 
             @screen lg {
-                grid-template-columns: auto 260px 120px 140px;
+                grid-template-columns: auto 260px 120px 160px 200px;
             }
         }
     `,
@@ -56,49 +47,26 @@ import { PageValidationService } from '../services/page-validation.service';
 export class PageListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   #notify = inject(NotificationService);
-  
-  isLoading: boolean = false;
-  tenantId: number = 1;
+  #cdr = inject(ChangeDetectorRef);
+  #itemDialogService = inject(ItemDialogService);
+
+  isLoading = false;
+  tenantId = 1;
   language: 'TR' | 'EN' | '' = '';
   pages: PageDto[] = [];
   filtered: PageDto[] = [];
-  search: string = '';
-  subdomain: string = '';
-  selectedPageForm!: FormGroup;
-  selectedPage?: PageDto | null;
-  flashMessage: 'success' | 'error' | null = null;
-  categories: { value: number; label: string }[] = [];
-
-  // create form
-  title: string = '';
-  slug: string = '';
-  createLanguage: 'TR' | 'EN' = 'TR';
-
-  languageOptions: SpaSelectOption<string>[] = [
-    { value: 'TR', label: 'TR' },
-    { value: 'EN', label: 'EN' },
-  ];
-
-  #cdr: ChangeDetectorRef;
-  #fb: FormBuilder;
-  selectedPageId: number | null = null;
+  search = '';
+  subdomain = '';
 
   constructor(
     private _svc: PageBuilderService,
     private _tenantCtx: TenantContextService,
     private _router: Router,
     private _errorHandler: ErrorHandlingService,
-    private _loadingState: LoadingStateService,
-    private _validation: PageValidationService,
-    cdr: ChangeDetectorRef,
-    fb: FormBuilder
-  ) {
-    this.#cdr = cdr;
-    this.#fb = fb;
-  }
+    private _loadingState: LoadingStateService
+  ) {}
 
   ngOnInit(): void {
-    // Initialize from context or storage, then listen for changes
     const storedId = this._tenantCtx.getCurrentTenantId();
     const storedSub = this._tenantCtx.getCurrentSubdomain();
     if (storedId) {
@@ -123,25 +91,22 @@ export class PageListComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Listen header create requests
     this._svc.createRequested$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.createAndOpen();
+        this.openCreateDialog();
       });
   }
 
   load(): void {
     if (!this.tenantId) {
-      this.#notify.warning(
-        'admin.pageBuilder.errors.noTenant'
-      );
+      this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
 
     this._loadingState.startLoading(LOADING_OPERATIONS.LOAD_PAGES);
     this.isLoading = true;
-    
+
     this._svc.listPages(this.tenantId, this.language || undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -156,7 +121,6 @@ export class PageListComponent implements OnInit, OnDestroy {
           const errorMessage = this._errorHandler.handleError(error);
           this._errorHandler.logError(error, 'Loading pages');
           this.#notify.alert(errorMessage);
-          this.flashMessage = 'error';
           this.isLoading = false;
           this._loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
           this.#cdr.markForCheck();
@@ -184,250 +148,380 @@ export class PageListComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  toggleDetails(id: number): void {
-    if (this.selectedPageId === id) {
-      this.selectedPageId = null;
-      this.selectedPage = null;
-      this.flashMessage = null;
-      this.#cdr.markForCheck();
-      return;
-    }
-    this.selectedPageId = id;
-    this.selectedPage = this.pages.find((p) => p.id === id) || null;
-    this.buildForm();
-    this.flashMessage = null;
-    this.#cdr.markForCheck();
-  }
+  openCreateDialog(): void {
+    this._svc.listCategories(this.tenantId).pipe(take(1)).subscribe(categories => {
+      const schema = this.#buildDynamicSchema(categories);
+      const emptyGeneralData = this.#buildEmptyGeneralData(schema);
+      const emptyI18nData = this.#buildEmptyI18nData(schema);
+      
+      const options: ItemDialogOptions<any> = {
+        titleKey: 'admin.pageBuilder.title',
+        mode: 'create',
+        schema,
+        languages: ['tr', 'en'],
+        initial: {
+          ...emptyGeneralData,
+          status: 'DRAFT',
+          language: 'TR',
+          tr: emptyI18nData,
+          en: emptyI18nData
+        },
+        modalData: {
+          disableClose: true,
+          width: '720px',
+          height: '80vh'
+        }
+      };
 
-  buildForm(): void {
-    const p = this.selectedPage!;
-    this.selectedPageForm = this.#fb.group({
-      title: [
-        p?.title || '', 
-        [
-          Validators.required, 
-          PageValidationService.titleValidator()
-        ]
-      ],
-      slug: [
-        p?.slug || '', 
-        [
-          Validators.required, 
-          PageValidationService.slugValidator()
-        ]
-      ],
-      // language is read-only in UI
-      language: [
-        { value: p?.language || 'TR', disabled: true }, 
-        [Validators.required]
-      ],
-      metaTitle: [
-        p?.metaTitle || '', 
-        [PageValidationService.metaTitleValidator()]
-      ],
-      metaDescription: [
-        p?.metaDescription || '', 
-        [PageValidationService.metaDescriptionValidator()]
-      ],
-      canonicalUrl: [
-        p?.canonicalUrl || '', 
-        [PageValidationService.canonicalUrlValidator()]
-      ],
-      categoryId: [p?.categoryId ?? null],
-      subtitle: [p?.subtitle || ''],
-      styleClasses: [p?.styleClasses || ''],
-      description: [p?.description || ''],
-      descriptionHtml: [p?.descriptionHtml || null],
-    });
-    
-    // Auto-generate slug when title changes
-    this.selectedPageForm.get('title')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(title => {
-        if (title && !this.selectedPageForm.get('slug')?.dirty) {
-          const slug = this._validation.generateSlugFromTitle(title);
-          this.selectedPageForm.get('slug')?.setValue(slug);
+      this.#itemDialogService.open(options).subscribe(result => {
+        if (result) {
+          const langData = (result as any)[result.language?.toLowerCase() || 'tr'];
+
+          const payload: CreatePageRequest = {
+            tenantId: this.tenantId,
+            title: langData?.title || 'Untitled',
+            slug: result.slug,
+            language: result.language,
+            categoryId: result.categoryId || null,
+            metaTitle: langData?.metaTitle || null,
+            metaDescription: langData?.metaDescription || null,
+            canonicalUrl: langData?.canonicalUrl || null,
+            subtitle: langData?.subtitle || null,
+            styleClasses: result.styleClasses || null,
+            description: langData?.description || null
+          };
+
+          this._svc.createPage(payload).pipe(take(1)).subscribe({
+            next: (newPage) => {
+              this.pages = [newPage, ...this.pages];
+              this.applyFilter();
+              this.#notify.success('admin.pageBuilder.messages.pageCreated');
+              this.#cdr.markForCheck();
+            },
+            error: (error) => {
+              const msg = this._errorHandler.handleError(error);
+              this.#notify.alert(msg);
+            }
+          });
         }
       });
-    
-    // Load categories once when opening
-    this.loadCategories();
+    });
   }
 
-  updateSelectedPage(): void {
-    if (!this.selectedPage || !this.selectedPageForm?.valid) return;
-    const v = this.selectedPageForm.value;
-    const req = {
-      id: this.selectedPage.id,
-      tenantId: this.tenantId,
-      title: String(v.title || '').trim(),
-      slug: String(v.slug || '').trim(),
-      language: this.selectedPage.language,
-      metaTitle: v.metaTitle || null,
-      metaDescription: v.metaDescription || null,
-      canonicalUrl: v.canonicalUrl || null,
-      categoryId: v.categoryId || null,
-      subtitle: v.subtitle || null,
-      styleClasses: v.styleClasses || null,
-      description: v.description || null,
-      descriptionHtml: v.descriptionHtml || null,
-      featuredImage: this.selectedPage.featuredImage || null,
-    } as any;
+  openEditDialog(page: PageDto): void {
+    forkJoin({
+      categories: this._svc.listCategories(this.tenantId).pipe(take(1)),
+      languageVersions: this._svc.getPageVersionsBySlug(this.tenantId, page.slug).pipe(take(1))
+    }).subscribe(({ categories, languageVersions }) => {
+      const schema = this.#buildDynamicSchema(categories);
 
-    this._svc.updatePage(req)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          // Update local list
-          const idx = this.pages.findIndex((x) => x.id === res.id);
-          if (idx > -1) this.pages[idx] = res;
-          this.applyFilter();
-          this.selectedPage = res;
-          this.buildForm();
-          this.flashMessage = 'success';
-          this.#notify.success('admin.pageBuilder.messages.pageUpdated');
-          this.#cdr.markForCheck();
+      const trVersion = languageVersions.find(p => p.language === 'TR');
+      const enVersion = languageVersions.find(p => p.language === 'EN');
+
+      const basePage = page;
+      const fallbackData = {
+        title: basePage.title || '',
+        subtitle: basePage.subtitle || '',
+        metaTitle: basePage.metaTitle || '',
+        metaDescription: basePage.metaDescription || '',
+        canonicalUrl: basePage.canonicalUrl || '',
+        description: basePage.description || ''
+      };
+
+      const options: ItemDialogOptions<any, number> = {
+        titleKey: 'admin.pageBuilder.title',
+        mode: 'edit',
+        schema,
+        languages: ['tr', 'en'],
+        initial: {
+          slug: basePage.slug,
+          status: basePage.status,
+          language: basePage.language,
+          categoryId: basePage.categoryId,
+          styleClasses: basePage.styleClasses,
+          tr: trVersion ? {
+            title: trVersion.title || '',
+            subtitle: trVersion.subtitle || '',
+            metaTitle: trVersion.metaTitle || '',
+            metaDescription: trVersion.metaDescription || '',
+            canonicalUrl: trVersion.canonicalUrl || '',
+            description: trVersion.description || ''
+          } : fallbackData,
+          en: enVersion ? {
+            title: enVersion.title || '',
+            subtitle: enVersion.subtitle || '',
+            metaTitle: enVersion.metaTitle || '',
+            metaDescription: enVersion.metaDescription || '',
+            canonicalUrl: enVersion.canonicalUrl || '',
+            description: enVersion.description || ''
+          } : fallbackData
         },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.flashMessage = 'error';
-          this.#cdr.markForCheck();
-        },
+        id: basePage.id,
+        modalData: {
+          disableClose: true,
+          width: '720px',
+          height: '80vh'
+        }
+      };
+
+      this.#itemDialogService.open(options).subscribe(result => {
+        if (result) {
+          this.#handleEditSave(result, languageVersions);
+        }
       });
-  }
-
-  publishSelected(): void {
-    if (!this.selectedPage) return;
-    this._svc.publishPage(this.selectedPage.id).subscribe({
-      next: (res) => {
-        const idx = this.pages.findIndex((x) => x.id === res.id);
-        if (idx > -1) this.pages[idx] = res;
-        this.selectedPage = res;
-        this.applyFilter();
-        this.flashMessage = 'success';
-        this.#notify.success('admin.common.messages.operationSuccess');
-        this.#cdr.markForCheck();
-      },
-      error: (error) => {
-        const msg = this._errorHandler.handleError(error);
-        this.#notify.alert(msg);
-        this.flashMessage = 'error';
-        this.#cdr.markForCheck();
-      },
     });
   }
 
-  unpublishSelected(): void {
-    if (!this.selectedPage) return;
-    this._svc.unpublishPage(this.selectedPage.id).subscribe({
-      next: (res) => {
-        const idx = this.pages.findIndex((x) => x.id === res.id);
-        if (idx > -1) this.pages[idx] = res;
-        this.selectedPage = res;
-        this.applyFilter();
-        this.flashMessage = 'success';
-        this.#notify.success('admin.common.messages.operationSuccess');
-        this.#cdr.markForCheck();
-      },
-      error: (error) => {
-        const msg = this._errorHandler.handleError(error);
-        this.#notify.alert(msg);
-        this.flashMessage = 'error';
-        this.#cdr.markForCheck();
-      },
-    });
-  }
+  #handleEditSave(result: any, languageVersions: PageDto[]): void {
+    const requests: Observable<PageDto>[] = [];
 
-  deleteSelected(): void {
-    if (!this.selectedPage) return;
-    const id = this.selectedPage.id;
-    this._svc
-      .deletePage(id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (ok) => {
-          if (ok) {
-            this.pages = this.pages.filter((x) => x.id !== id);
-            this.applyFilter();
-            this.selectedPageId = null;
-            this.selectedPage = null;
-            this.flashMessage = 'success';
-            this.#notify.success('admin.common.messages.operationSuccess');
-            this.#cdr.markForCheck();
+    if (result.tr) {
+      const trVersion = languageVersions.find(p => p.language === 'TR');
+      if (trVersion) {
+        const payload: UpdatePageRequest = {
+          id: trVersion.id,
+          tenantId: this.tenantId,
+          slug: result.slug,
+          language: 'TR',
+          categoryId: result.categoryId || null,
+          styleClasses: result.styleClasses || null,
+          title: result.tr.title,
+          subtitle: result.tr.subtitle || null,
+          metaTitle: result.tr.metaTitle || null,
+          metaDescription: result.tr.metaDescription || null,
+          canonicalUrl: result.tr.canonicalUrl || null,
+          description: result.tr.description || null,
+          featuredImage: trVersion.featuredImage || null
+        };
+        requests.push(this._svc.updatePage(payload));
+      }
+    }
+
+    if (result.en) {
+      const enVersion = languageVersions.find(p => p.language === 'EN');
+      if (enVersion) {
+        const payload: UpdatePageRequest = {
+          id: enVersion.id,
+          tenantId: this.tenantId,
+          slug: result.slug,
+          language: 'EN',
+          categoryId: result.categoryId || null,
+          styleClasses: result.styleClasses || null,
+          title: result.en.title,
+          subtitle: result.en.subtitle || null,
+          metaTitle: result.en.metaTitle || null,
+          metaDescription: result.en.metaDescription || null,
+          canonicalUrl: result.en.canonicalUrl || null,
+          description: result.en.description || null,
+          featuredImage: enVersion.featuredImage || null
+        };
+        requests.push(this._svc.updatePage(payload));
+      }
+    }
+
+    if (requests.length === 0) {
+      return;
+    }
+
+    forkJoin(requests).pipe(take(1)).subscribe({
+      next: (updatedPages) => {
+        updatedPages.forEach(updated => {
+          const idx = this.pages.findIndex(p => p.id === updated.id);
+          if (idx > -1) {
+            this.pages[idx] = updated;
           }
-        },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.flashMessage = 'error';
-          this.#cdr.markForCheck();
-        },
-      });
-  }
-
-  create(): void {
-    if (!this.title?.trim() || !this.slug?.trim()) return;
-    const payload: CreatePageRequest = {
-      tenantId: this.tenantId,
-      title: this.title.trim(),
-      slug: this.slug.trim(),
-      language: this.createLanguage,
-    };
-    this.isLoading = true;
-    this._svc.createPage(payload).subscribe({
-      next: (p) => {
-        this.title = '';
-        this.slug = '';
-        this.createLanguage = 'TR';
-        this.isLoading = false;
-        this.#notify.success('admin.pageBuilder.messages.pageCreated');
-        // navigate to sections editor
-        const sub = this._tenantCtx.getCurrentSubdomain() || 'default';
-        this._router.navigate([`/${sub}/pages/${p.id}`]);
+        });
+        this.applyFilter();
+        this.#notify.success('admin.pageBuilder.messages.pageUpdated');
         this.#cdr.markForCheck();
       },
       error: (error) => {
-        this.isLoading = false;
         const msg = this._errorHandler.handleError(error);
         this.#notify.alert(msg);
-      },
+      }
     });
+  }
+
+  deletePage(page: PageDto): void {
+    this._svc.deletePage(page.id).pipe(take(1)).subscribe({
+      next: () => {
+        this.pages = this.pages.filter(p => p.id !== page.id);
+        this.applyFilter();
+        this.#notify.success('admin.common.messages.operationSuccess');
+        this.#cdr.markForCheck();
+      },
+      error: (error) => {
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
+      }
+    });
+  }
+
+  publishPage(page: PageDto): void {
+    this._svc.publishPage(page.id).pipe(take(1)).subscribe({
+      next: (updated) => {
+        const idx = this.pages.findIndex(p => p.id === updated.id);
+        if (idx > -1) {
+          this.pages[idx] = updated;
+        }
+        this.applyFilter();
+        this.#notify.success('admin.common.messages.operationSuccess');
+        this.#cdr.markForCheck();
+      },
+      error: (error) => {
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
+      }
+    });
+  }
+
+  unpublishPage(page: PageDto): void {
+    this._svc.unpublishPage(page.id).pipe(take(1)).subscribe({
+      next: (updated) => {
+        const idx = this.pages.findIndex(p => p.id === updated.id);
+        if (idx > -1) {
+          this.pages[idx] = updated;
+        }
+        this.applyFilter();
+        this.#notify.success('admin.common.messages.operationSuccess');
+        this.#cdr.markForCheck();
+      },
+      error: (error) => {
+        const msg = this._errorHandler.handleError(error);
+        this.#notify.alert(msg);
+      }
+    });
+  }
+
+  #buildEmptyGeneralData(schema: ItemDialogSchema): Record<string, any> {
+    const emptyData: Record<string, any> = {};
+    schema.general.forEach(field => {
+      if (field.type === 'checkbox') {
+        emptyData[field.key] = false;
+      } else if (field.type === 'number') {
+        emptyData[field.key] = null;
+      } else if (field.type === 'select') {
+        emptyData[field.key] = null;
+      } else {
+        emptyData[field.key] = '';
+      }
+    });
+    return emptyData;
+  }
+
+  #buildEmptyI18nData(schema: ItemDialogSchema): Record<string, any> {
+    const emptyData: Record<string, any> = {};
+    schema.i18n.forEach(field => {
+      if (field.type === 'checkbox') {
+        emptyData[field.key] = false;
+      } else if (field.type === 'number') {
+        emptyData[field.key] = null;
+      } else {
+        emptyData[field.key] = '';
+      }
+    });
+    return emptyData;
+  }
+
+  #buildDynamicSchema(categories: PageCategoryDto[]): ItemDialogSchema {
+    return {
+      general: [
+        {
+          key: 'slug',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.slug',
+          required: true,
+          maxLength: 200
+        },
+        {
+          key: 'status',
+          type: 'select',
+          labelKey: 'admin.pageBuilder.fields.status',
+          required: true,
+          options: [
+            { value: 'DRAFT', labelKey: 'admin.pageBuilder.status.draft' },
+            { value: 'PUBLISHED', labelKey: 'admin.pageBuilder.status.published' },
+            { value: 'ARCHIVED', labelKey: 'admin.pageBuilder.status.archived' },
+            { value: 'SCHEDULED', labelKey: 'admin.pageBuilder.status.scheduled' }
+          ]
+        },
+        {
+          key: 'language',
+          type: 'select',
+          labelKey: 'admin.pageBuilder.fields.language',
+          required: true,
+          options: [
+            { value: 'TR', labelKey: 'admin.common.languages.tr' },
+            { value: 'EN', labelKey: 'admin.common.languages.en' }
+          ]
+        },
+        {
+          key: 'categoryId',
+          type: 'select',
+          labelKey: 'admin.pageBuilder.fields.category',
+          required: false,
+          options: categories.map(c => ({
+            value: c.id,
+            label: c.name
+          }))
+        },
+        {
+          key: 'styleClasses',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.styleClasses',
+          required: false,
+          maxLength: 255
+        }
+      ],
+      i18n: [
+        {
+          key: 'title',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.pageTitle',
+          required: true,
+          maxLength: 200
+        },
+        {
+          key: 'subtitle',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.subtitle',
+          required: false,
+          maxLength: 200
+        },
+        {
+          key: 'metaTitle',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.metaTitle',
+          required: false,
+          maxLength: 60
+        },
+        {
+          key: 'metaDescription',
+          type: 'textarea',
+          labelKey: 'admin.pageBuilder.fields.metaDescription',
+          required: false,
+          maxLength: 160
+        },
+        {
+          key: 'canonicalUrl',
+          type: 'text',
+          labelKey: 'admin.pageBuilder.fields.canonicalUrl',
+          required: false,
+          maxLength: 500
+        },
+        {
+          key: 'description',
+          type: 'textarea',
+          labelKey: 'admin.pageBuilder.fields.description',
+          required: false,
+          maxLength: 1000
+        }
+      ]
+    };
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-  private createAndOpen(): void {
-    const payload: CreatePageRequest = {
-      tenantId: this.tenantId,
-      title: 'Yeni Sayfa',
-      slug: `yeni-sayfa-${Date.now()}`,
-      language: this.selectedPage?.language || 'TR',
-    };
-    this.isLoading = true;
-    this._svc.createPage(payload).subscribe({
-      next: (p) => {
-        // Prepend and open details like inventory pattern
-        this.pages = [p, ...this.pages];
-        this.applyFilter();
-        this.isLoading = false;
-        this.toggleDetails(p.id);
-      },
-      error: () => (this.isLoading = false),
-    });
-  }
-
-  private loadCategories(): void {
-    // Reuse categories endpoint
-    this._svc.listCategories(this.tenantId).subscribe({
-      next: (list) =>
-        (this.categories = list.map((c) => ({ value: c.id, label: c.name }))),
-      error: () => (this.categories = []),
-    });
-  }
 }
-
-
