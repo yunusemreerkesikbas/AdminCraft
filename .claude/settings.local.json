@@ -55,7 +55,13 @@
       "Bash(npx ng build:*)",
       "Bash(npx tsc:*)",
       "Bash(dir)",
-      "Bash(dir \"%APPDATA%\\Claude\")"
+      "Bash(dir \"%APPDATA%\\Claude\")",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp set-env:*)",
+      "Bash(claude mcp:*)",
+      "Bash(tree:*)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn compile:*)"
     ],
     "deny": [],
     "additionalDirectories": [

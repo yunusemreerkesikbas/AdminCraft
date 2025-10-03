@@ -6,10 +6,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(
-    basePackages = "com.backend.infrastructure.persistence.repository"
-)
+@EnableJpaRepositories(basePackages = {
+        "com.backend.infrastructure.persistence.repository",
+        "com.backend.domain.repository"
+})
 public class DatabaseConfig {
-    // Spring Boot will automatically configure DataSource, EntityManagerFactory, and TransactionManager
-    // based on application.yml properties
+
 }

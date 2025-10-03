@@ -43,7 +43,7 @@ hem frontend hem de backend kodlarında tenant izolasyonu konusuna çok dikkat e
 **Debug Checklist:**
 
 - [ ] `@RestController` annotation present
-- [ ] `@RequestMapping("/api/...")` at class level
+- [ ] `@RequestMapping("/...")` at class level
 - [ ] Method mappings use `@GetMapping`, `@PostMapping`, etc.
 - [ ] All methods return `ResponseEntity<ApiResponse<T>>`
 - [ ] Try-catch blocks implemented in all methods
