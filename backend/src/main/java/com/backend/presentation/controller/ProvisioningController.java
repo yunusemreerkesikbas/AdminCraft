@@ -19,6 +19,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
 public class ProvisioningController {
 
   private final ProvisioningService provisioningService;

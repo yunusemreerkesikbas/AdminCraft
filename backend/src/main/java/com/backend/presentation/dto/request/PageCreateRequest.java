@@ -5,9 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record PageCreateRequest(
-
-        @NotNull(message = "validation.tenant.id.required") Long tenantId,
-
         Long categoryId,
 
         PageStatus status, // defaults to DRAFT in entity if null

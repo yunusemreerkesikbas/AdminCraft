@@ -30,6 +30,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
 public class PageController {
 
   private final PageService pageService;
@@ -58,7 +59,7 @@ public class PageController {
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<PageResponse>> getById(
       @PathVariable @NotNull @Min(1) Long id,
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       PageResponse response = pageService.getPageById(id, tenantId);
@@ -75,7 +76,7 @@ public class PageController {
   @GetMapping("/{id}/with-i18n")
   public ResponseEntity<ApiResponse<PageWithI18nResponse>> getWithI18n(
       @PathVariable @NotNull @Min(1) Long id,
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       PageWithI18nResponse response = pageService.getPageWithI18n(id, tenantId);
@@ -109,6 +110,7 @@ public class PageController {
   public ResponseEntity<ApiResponse<PageResponse>> update(
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody PageCreateRequest request,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       Long userId = SecurityUtil.getCurrentUserIdOrThrow();
@@ -128,7 +130,7 @@ public class PageController {
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> delete(
       @PathVariable @NotNull @Min(1) Long id,
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       pageService.deletePage(id, tenantId);
@@ -147,7 +149,7 @@ public class PageController {
   @PutMapping("/{id}/set-home")
   public ResponseEntity<ApiResponse<PageResponse>> setHome(
       @PathVariable @NotNull @Min(1) Long id,
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       PageResponse response = pageService.setHomePage(id, tenantId);
@@ -167,7 +169,7 @@ public class PageController {
   public ResponseEntity<ApiResponse<PageI18nResponse>> getPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       PageI18nResponse response = pageI18nService.getPageI18n(pageId, language, tenantId);
@@ -186,9 +188,10 @@ public class PageController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
       @Valid @RequestBody PageI18nRequest request,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      PageI18nResponse response = pageI18nService.upsertPageI18n(pageId, language, request);
+      PageI18nResponse response = pageI18nService.upsertPageI18n(pageId, language, tenantId, request);
       String successMessage = messageSource.getMessage("page.i18n.update.success",
           null, Locale.forLanguageTag(lang));
       return ResponseEntity.ok(ApiResponse.success(successMessage, response));
@@ -214,9 +217,10 @@ public class PageController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
       @Valid @RequestBody PagePublishRequest request,
+      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      PageI18nResponse response = pageI18nService.publishPageI18n(pageId, language, request);
+      PageI18nResponse response = pageI18nService.publishPageI18n(pageId, language, tenantId, request);
       String successMessage = messageSource.getMessage("page.i18n.publish.success",
           null, Locale.forLanguageTag(lang));
       return ResponseEntity.ok(ApiResponse.success(successMessage, response));

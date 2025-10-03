@@ -9,45 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * Abstract base entity for internationalization (i18n) entities.
- *
- * <p>
- * This class provides common fields for language-specific content following
- * the Multi-Language Page Builder architecture:
- * <ul>
- * <li>id: Primary key (auto-generated)</li>
- * <li>uuid: Server-generated UUID for external references</li>
- * <li>uid: Human-readable stable identifier (auto-generated with "i18n" prefix
- * if not provided)</li>
- * <li>tenantId: Multi-tenant support</li>
- * <li>language: Language code (e.g., TR, EN)</li>
- * <li>updatedAt: Last update timestamp</li>
- * </ul>
- *
- * <p>
- * This base class is designed for i18n side tables following the pattern:
- * {@code <entity>_i18n} with consistent columns for all multi-language content.
- *
- * <p>
- * The {@link PrePersist} hook automatically sets uuid, uid (with "i18n"
- * prefix),
- * and timestamp fields on creation. The {@link PreUpdate} hook automatically
- * updates
- * the updatedAt timestamp.
- *
- * <p>
- * UID generation:
- * <ul>
- * <li>If uid is null or empty on persist, generates "i18n_XXXXXXXX" format</li>
- * <li>Can be overridden before persist by setting a custom uid</li>
- * <li>Should be immutable after creation (enforced at business layer)</li>
- * </ul>
- *
- * @author AdminCraft Team
- * @version 1.0
- * @since 1.0
- */
 @MappedSuperclass
 @Data
 @NoArgsConstructor
@@ -83,7 +44,7 @@ public abstract class BaseI18nEntity {
         }
 
         if (uid == null || uid.trim().isEmpty()) {
-            uid = UuidUidGenerator.generateUid("i18n");
+            uid = UuidUidGenerator.generateUid();
         }
 
         if (updatedAt == null) {

@@ -27,6 +27,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
 public class TenantLanguageController {
 
   private final TenantLanguageService tenantLanguageService;

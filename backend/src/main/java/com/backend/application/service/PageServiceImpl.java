@@ -30,12 +30,13 @@ public class PageServiceImpl implements PageService {
     @Override
     @Transactional
     public PageResponse createPage(PageCreateRequest request, Long userId) {
-        validateUidUniqueness(request.tenantId(), null);
+        Long tenantId = com.backend.shared.common.SecurityUtil.getCurrentUserTenantId();
+        validateUidUniqueness(tenantId, null);
 
         Page page = new Page();
-        page.setTenantId(request.tenantId());
-        page.setUuid(UUID.randomUUID().toString());
-        page.setUid(generateUid());
+        page.setTenantId(tenantId);
+        page.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
+        page.setUid(generateUniqueUidForPage(tenantId));
         page.setCategoryId(request.categoryId());
         page.setStatus(request.status() != null ? request.status() : PageStatus.DRAFT);
         page.setFeaturedImage(request.featuredImage());
@@ -55,7 +56,7 @@ public class PageServiceImpl implements PageService {
     @Transactional(readOnly = true)
     public PageResponse getPageById(Long id, Long tenantId) {
         Page page = pageRepository.findById(id)
-            .orElseThrow(() -> new PageNotFoundException(id));
+                .orElseThrow(() -> new PageNotFoundException(id));
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
@@ -66,7 +67,7 @@ public class PageServiceImpl implements PageService {
     @Transactional(readOnly = true)
     public PageWithI18nResponse getPageWithI18n(Long id, Long tenantId) {
         Page page = pageRepository.findById(id)
-            .orElseThrow(() -> new PageNotFoundException(id));
+                .orElseThrow(() -> new PageNotFoundException(id));
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
@@ -78,25 +79,32 @@ public class PageServiceImpl implements PageService {
     @Transactional(readOnly = true)
     public List<PageResponse> getAllPages(Long tenantId) {
         return pageRepository.findByTenantId(tenantId)
-            .stream()
-            .map(PageResponse::from)
-            .collect(Collectors.toList());
+                .stream()
+                .map(PageResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public PageResponse updatePage(Long id, PageCreateRequest request, Long userId) {
         Page page = pageRepository.findById(id)
-            .orElseThrow(() -> new PageNotFoundException(id));
+                .orElseThrow(() -> new PageNotFoundException(id));
 
-        validateTenantMatch(page.getTenantId(), request.tenantId());
+        Long tenantId = com.backend.shared.common.SecurityUtil.getCurrentUserTenantId();
+        validateTenantMatch(page.getTenantId(), tenantId);
 
-        if (request.categoryId() != null) page.setCategoryId(request.categoryId());
-        if (request.status() != null) page.setStatus(request.status());
-        if (request.featuredImage() != null) page.setFeaturedImage(request.featuredImage());
-        if (request.styleClasses() != null) page.setStyleClasses(request.styleClasses());
-        if (request.isHome() != null) page.setIsHome(request.isHome());
-        if (request.sortOrder() != null) page.setSortOrder(request.sortOrder());
+        if (request.categoryId() != null)
+            page.setCategoryId(request.categoryId());
+        if (request.status() != null)
+            page.setStatus(request.status());
+        if (request.featuredImage() != null)
+            page.setFeaturedImage(request.featuredImage());
+        if (request.styleClasses() != null)
+            page.setStyleClasses(request.styleClasses());
+        if (request.isHome() != null)
+            page.setIsHome(request.isHome());
+        if (request.sortOrder() != null)
+            page.setSortOrder(request.sortOrder());
 
         page.setUpdatedAt(LocalDateTime.now());
         page.setUpdatedBy(userId);
@@ -109,7 +117,7 @@ public class PageServiceImpl implements PageService {
     @Transactional
     public void deletePage(Long id, Long tenantId) {
         Page page = pageRepository.findById(id)
-            .orElseThrow(() -> new PageNotFoundException(id));
+                .orElseThrow(() -> new PageNotFoundException(id));
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
@@ -121,7 +129,7 @@ public class PageServiceImpl implements PageService {
     @Transactional
     public PageResponse setHomePage(Long id, Long tenantId) {
         Page page = pageRepository.findById(id)
-            .orElseThrow(() -> new PageNotFoundException(id));
+                .orElseThrow(() -> new PageNotFoundException(id));
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
@@ -148,7 +156,17 @@ public class PageServiceImpl implements PageService {
         }
     }
 
-    private String generateUid() {
-        return "cmsitem_" + String.format("%08d", (int) (Math.random() * 100000000));
+    private String generateUniqueUidForPage(Long tenantId) {
+        String uid;
+        int attempts = 0;
+        do {
+            uid = com.backend.infrastructure.util.UuidUidGenerator.generateUid();
+            attempts++;
+            // safety to avoid infinite loop in pathological cases
+            if (attempts > 10) {
+                uid = uid + attempts; // slight perturbation
+            }
+        } while (pageRepository.existsByTenantIdAndUid(tenantId, uid));
+        return uid;
     }
 }

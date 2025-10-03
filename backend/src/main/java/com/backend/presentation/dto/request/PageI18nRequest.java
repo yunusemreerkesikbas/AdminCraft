@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 
 public record PageI18nRequest(
 
-        @NotNull(message = "validation.tenant.id.required") Long tenantId,
-
         @NotNull(message = "validation.language.required") Language language,
 
         @Size(max = 255, message = "validation.url.path.size") String urlPath,
