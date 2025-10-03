@@ -98,6 +98,159 @@ src/main/java/com/backend/
 
 ## 🗺️ Sprint Roadmap (Clean Architecture + i18n)
 
+### 🚀 Multi‑Language Page Builder (i18n) — Backend & Frontend Foundations
+
+Goal: Deliver the base multi‑language Page Builder foundation with clean
+contracts, sustainable DB design, and Admin UI hooks. Establish uid/uuid
+conventions and base/extend approach for both backend and frontend.
+
+Scope (this sprint):
+
+- Tenant languages management (GET/PUT) + provisioning trigger (POST)
+- Page i18n model: base tables and endpoints for language‑specific fields
+- Admin UI: dynamic language tabs from supported languages; “Start
+  Provisioning” dialog
+- Root redirect based on Accept‑Language on first visit, cookie afterwards
+- No sitemap in this sprint (deferred)
+
+Key conventions:
+
+- uuid: server‑generated `UUID.randomUUID()` stored per row
+- uid: human‑readable stable identifier; if not provided on create,
+  generate `cmsitem_XXXXXXXX` (8 digits)
+- Base/extend approach:
+  - Backend: base entities/DTOs/services expose common fields (id, uuid,
+    uid, tenantId, audit), feature modules extend/compose
+  - Frontend: base models and service facades; feature facades extend with
+    domain specifics; shared i18n/language context service
+
+URL and language routing:
+
+- Storefront uses subpath strategy: `/:lang/...`
+- Root `/` → 302 to cookie lang if present; else first supported in
+  Accept‑Language; else tenant default language
+- Unsupported lang → 302 to `/{defaultLanguage}/`
+- Cookie: `lang`, TTL 1 year
+
+Tenant languages API:
+
+- `GET /api/tenants/{tenantId}/languages`
+- `PUT /api/tenants/{tenantId}/languages` with validation `default ∈ supported`
+- `POST /api/tenants/{tenantId}/languages/provision` to queue i18n scaffolds
+- `GET /api/provisioning/jobs/{jobId}` for progress
+
+Provisioning (DB‑first, async):
+
+- Purpose: when languages are added, create empty i18n “containers” only
+  (no auto content copy)
+- A queue table tracks jobs; a DB procedure/event processor iterates
+  relevant entities and inserts missing i18n rows with `status=DRAFT`
+- Affected areas: `page_i18n`, `menu_i18n`, `site_settings_i18n`
+
+Page Builder data model (simplified):
+
+- `pages` (language‑agnostic)
+  - id (PK), uuid (UUID), uid (string), tenant_id, category_id?, status,
+    featured_image?, style_classes?, is_home, sort_order, created_at,
+    updated_at, created_by, updated_by
+  - Constraints: unique (tenant_id, uid)
+- `page_i18n` (per language)
+  - id (PK), uuid (UUID), uid (string), page_id (FK), tenant_id,
+    language (ISO), url_path?, title?, subtitle?, meta_title?,
+    meta_description?, description?, description_html?, status, published_at?,
+    scheduled_at?, updated_at
+  - Constraints: unique (tenant_id, language, url_path) when url_path not null;
+    unique (tenant_id, page_id, language); unique (tenant_id, uid)
+
+uid/uuid rules:
+
+- Backend sets `uuid=UUID.randomUUID()` on insert
+- If `uid` is empty on create, backend generates `cmsitem_XXXXXXXX`
+- `uid` is immutable by default (can be relaxed later via dedicated flow)
+
+Page Builder Admin API (i18n focus):
+
+- `GET /api/pages?tenantId=` → list language‑agnostic pages (id, uuid, uid,
+  tenantId, status, etc.)
+- `GET /api/pages/{pageId}/i18n/{lang}?tenantId=` → fetch i18n container
+- `PUT /api/pages/{pageId}/i18n/{lang}` → upsert i18n fields (requires
+  validation on lengths and url safety)
+- `POST /api/pages/{pageId}/publish/{lang}` → publish/schedule per language
+
+Public content API (read):
+
+- `GET /public/:tenantHost/:lang/pages/:urlPath` → returns published i18n,
+  with `isFallbackLanguage` if default language is served
+
+Admin UI behavior:
+
+- `supported_languages` multi‑select; `default_language` single‑select from
+  that set; validations enforced
+- After save, prompt a “Start Provisioning” dialog listing newly added langs
+- Builder screens render dynamic language tabs from `supported_languages`
+
+Out of scope (this sprint):
+
+- Sitemap generation, hreflang, canonical policies
+- AI pre‑translation / transliteration
+- URL change history and redirects
+
+Acceptance criteria (summary):
+
+- Languages can be managed; provisioning queues and creates empty i18n rows
+- Page i18n endpoints CRUD work with `uid/uuid` present in responses
+- Publishing per language requires `urlPath` unique per (tenant, lang)
+- Root redirect and unsupported lang rules behave as specified
+- Admin UI shows language tabs and a provisioning prompt after language save
+
+Risks and mitigations:
+
+- Provisioning on large datasets: async job with progress; idempotent upsert
+- Cross‑tenant leakage: tenant context required in all queries and caches
+- Host/tenant resolution: prioritize custom domain > subdomain, strict 404
+
+### 🔄 Generic Dynamic i18n Framework & Rollout Plan
+
+Objective: Build a reusable, generic i18n framework once and apply it across
+all modules. Page Builder is the pilot. Subsequent modules adopt the same
+patterns with minimal duplication.
+
+Principles:
+
+- i18n side tables per aggregate: `<entity>_i18n` with consistent columns
+  `(id, uuid, uid, <entity>_id, tenant_id, language, ...localized fields...)`
+- Provisioning creates only empty i18n rows for new languages (no data copy)
+- Uniform REST contracts: `GET/PUT /{entity}/{id}/i18n/{lang}`
+- Validation and DTOs follow the same rules (lengths, URL safety, enums)
+- Angular Admin: dynamic language tabs sourced from tenant config
+
+Base components to reuse:
+
+- Backend
+  - BaseEntity: `id, uuid, uid, tenantId, createdAt, updatedAt`
+  - BaseI18nEntity: `id, uuid, uid, tenantId, language, updatedAt`
+  - BaseI18nService<T, Ti18n>
+  - BaseI18nRepository<Ti18n>
+  - LanguageContext + TenantContext utilities
+- Frontend
+  - LanguageContextService (current lang, supported, default)
+  - I18nTabsComponent schema‑driven tabs
+  - BaseCrudService<T> and BaseI18nService<TI18n>
+
+Rollout phases:
+
+1) Page Builder (this sprint)
+2) Site Settings (`site_settings_i18n`)
+3) Categories (`page_category_i18n`) and other CMS modules
+4) UI Components (generic i18n JSON payloads)
+5) Search and caching layers adjusted to include `tenantId+lang`
+
+KPIs:
+
+- Add a new language to a tenant and create all i18n containers in < 2 min
+- Publish a page in a new language without schema/code changes
+- Zero cross‑tenant language leakage in logs and metrics
+
 ### 🏁 **PHASE 1: MVP FOUNDATION (8-10 weeks)**
 
 #### **Sprint 1: Architecture Foundation + i18n Setup (2 weeks)**

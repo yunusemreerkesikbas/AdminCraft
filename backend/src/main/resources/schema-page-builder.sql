@@ -1,34 +1,92 @@
 -- Page Builder Schema (idempotent)
+-- Multi-Language i18n Architecture: pages table stores language-agnostic data,
+-- page_i18n table stores language-specific content (TR/EN)
 
--- pages
+-- pages (language-agnostic)
 CREATE TABLE IF NOT EXISTS pages (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID for external references',
+  uid VARCHAR(50) NOT NULL COMMENT 'Human-readable stable identifier (e.g., cmsitem_12345678)',
   tenant_id BIGINT NOT NULL,
-  title VARCHAR(200) NOT NULL,
-  slug VARCHAR(200) NOT NULL,
-  status ENUM('DRAFT','PUBLISHED','ARCHIVED','SCHEDULED') NOT NULL DEFAULT 'DRAFT',
-  language ENUM('TR','EN') NOT NULL,
   category_id BIGINT NULL,
-  meta_title VARCHAR(60) NULL,
-  meta_description VARCHAR(160) NULL,
-  canonical_url VARCHAR(255) NULL,
-  subtitle VARCHAR(200) NULL,
-  style_classes VARCHAR(255) NULL,
-  description LONGTEXT NULL,
-  description_html LONGTEXT NULL,
-  featured_image VARCHAR(500) NULL,
-  published_at TIMESTAMP NULL,
-  scheduled_at TIMESTAMP NULL,
-  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  status ENUM('DRAFT','PUBLISHED','ARCHIVED','SCHEDULED') DEFAULT 'DRAFT' COMMENT 'Overall page status',
+  featured_image VARCHAR(500) NULL COMMENT 'Primary image for the page',
+  style_classes VARCHAR(255) NULL COMMENT 'Custom CSS classes for styling',
+  is_home BOOLEAN DEFAULT FALSE COMMENT 'Flag for homepage designation',
+  sort_order INT DEFAULT 0 COMMENT 'Display ordering',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_by BIGINT NOT NULL,
   updated_by BIGINT NULL,
-  CONSTRAINT uk_page_slug_tenant_lang UNIQUE (tenant_id, slug, language),
+
+  -- TENANT ISOLATION & UNIQUENESS CONSTRAINTS
+  CONSTRAINT uk_page_uid_tenant UNIQUE (tenant_id, uid),
+
+  -- PERFORMANCE INDICES
   INDEX idx_page_tenant (tenant_id),
-  INDEX idx_page_slug (slug),
   INDEX idx_page_status (status),
-  INDEX idx_page_language (language),
-  INDEX idx_page_published_at (published_at)
+  INDEX idx_page_category (category_id),
+  INDEX idx_page_home (tenant_id, is_home),
+  INDEX idx_page_sort (tenant_id, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- page_i18n (language-specific content)
+CREATE TABLE IF NOT EXISTS page_i18n (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID for external references',
+  uid VARCHAR(50) NOT NULL COMMENT 'Human-readable stable identifier for this i18n entry',
+  page_id BIGINT NOT NULL COMMENT 'Reference to language-agnostic page',
+  tenant_id BIGINT NOT NULL COMMENT 'Tenant isolation',
+  language ENUM('TR','EN') NOT NULL COMMENT 'Content language (ISO code)',
+  url_path VARCHAR(255) NULL COMMENT 'Language-specific URL slug (must be unique per tenant+lang)',
+  title VARCHAR(200) NULL COMMENT 'Page title in this language',
+  subtitle VARCHAR(200) NULL COMMENT 'Page subtitle in this language',
+  meta_title VARCHAR(60) NULL COMMENT 'SEO meta title',
+  meta_description VARCHAR(160) NULL COMMENT 'SEO meta description',
+  description LONGTEXT NULL COMMENT 'Plain text description',
+  description_html LONGTEXT NULL COMMENT 'Rich HTML description',
+  status ENUM('DRAFT','PUBLISHED','ARCHIVED','SCHEDULED') DEFAULT 'DRAFT' COMMENT 'Language-specific status',
+  published_at TIMESTAMP NULL COMMENT 'When this language version was published',
+  scheduled_at TIMESTAMP NULL COMMENT 'Scheduled publish time',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  -- TENANT ISOLATION & UNIQUENESS CONSTRAINTS
+  CONSTRAINT uk_page_i18n_page_lang UNIQUE (tenant_id, page_id, language),
+  CONSTRAINT uk_page_i18n_uid_tenant UNIQUE (tenant_id, uid),
+  CONSTRAINT uk_page_i18n_url_path UNIQUE (tenant_id, language, url_path),
+
+  -- PERFORMANCE INDICES
+  INDEX idx_page_i18n_page (page_id),
+  INDEX idx_page_i18n_tenant_lang (tenant_id, language),
+  INDEX idx_page_i18n_url (tenant_id, language, url_path),
+  INDEX idx_page_i18n_status (tenant_id, language, status),
+  INDEX idx_page_i18n_published (tenant_id, language, published_at),
+
+  -- FOREIGN KEY CASCADE DELETE
+  FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- provisioning_jobs (async i18n provisioning tracking)
+CREATE TABLE IF NOT EXISTS provisioning_jobs (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID for job tracking',
+  tenant_id BIGINT NOT NULL COMMENT 'Tenant isolation',
+  job_type ENUM('LANGUAGE_PROVISIONING') NOT NULL COMMENT 'Type of provisioning job',
+  status ENUM('PENDING','RUNNING','COMPLETED','FAILED') DEFAULT 'PENDING' COMMENT 'Job execution status',
+  languages VARCHAR(255) NULL COMMENT 'JSON array of languages to provision (e.g., ["tr","en"])',
+  total_items INT DEFAULT 0 COMMENT 'Total number of items to process',
+  processed_items INT DEFAULT 0 COMMENT 'Successfully processed items count',
+  failed_items INT DEFAULT 0 COMMENT 'Failed items count',
+  error_message TEXT NULL COMMENT 'Error details if job failed',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  started_at TIMESTAMP NULL COMMENT 'When job execution started',
+  completed_at TIMESTAMP NULL COMMENT 'When job finished (success or failure)',
+
+  -- PERFORMANCE INDICES
+  INDEX idx_provisioning_tenant (tenant_id),
+  INDEX idx_provisioning_status (status),
+  INDEX idx_provisioning_created (created_at),
+  INDEX idx_provisioning_composite (tenant_id, status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- FK from pages to page_categories (idempotent)

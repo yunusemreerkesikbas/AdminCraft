@@ -404,13 +404,13 @@ Path) and integrate category selection into the Page Builder form.
 
 - **Presentation Layer (REST):**
   - `PageCategoryController` (ApiResponse + try/catch):
-    - `GET /api/page-categories/tree?lang=tr&rootId=&depth=`
-    - `GET /api/page-categories/children?parentId=&lang=tr`
-    - `POST /api/page-categories`
-    - `PUT /api/page-categories/{id}`
-    - `PUT /api/page-categories/{id}/move`
-    - `DELETE /api/page-categories/{id}`
-    - `PUT /api/page-categories/reorder`
+    - `GET /page-categories/tree?lang=tr&rootId=&depth=`
+    - `GET /page-categories/children?parentId=&lang=tr`
+    - `POST /page-categories`
+    - `PUT /page-categories/{id}`
+    - `PUT /page-categories/{id}/move`
+    - `DELETE /page-categories/{id}`
+    - `PUT /page-categories/reorder`
   - `PageController`: `categoryId` required on create/update
 
 - **Admin Frontend (Angular 19):**

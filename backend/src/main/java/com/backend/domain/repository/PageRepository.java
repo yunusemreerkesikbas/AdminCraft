@@ -1,36 +1,35 @@
 package com.backend.domain.repository;
 
 import com.backend.domain.entity.Page;
-import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface PageRepository {
+@Repository
+public interface PageRepository extends JpaRepository<Page, Long> {
 
-  Page save(Page page);
+    Optional<Page> findByUuid(String uuid);
 
-  List<Page> saveAll(Iterable<Page> pages);
+    Optional<Page> findByTenantIdAndUid(Long tenantId, String uid);
 
-  Optional<Page> findById(Long id);
+    List<Page> findByTenantId(Long tenantId);
 
-  void deleteById(Long id);
+    List<Page> findByTenantIdAndStatus(Long tenantId, PageStatus status);
 
-  boolean existsById(Long id);
+    List<Page> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
 
-  Optional<Page> findByTenantIdAndSlugAndLanguage(Long tenantId, String slug, Language language);
+    @Query("SELECT p FROM Page p WHERE p.tenantId = :tenantId AND p.isHome = true")
+    Optional<Page> findHomePage(@Param("tenantId") Long tenantId);
 
-  boolean existsByTenantIdAndSlugAndLanguage(Long tenantId, String slug, Language language);
+    @Query("SELECT p FROM Page p WHERE p.tenantId = :tenantId ORDER BY p.sortOrder ASC")
+    List<Page> findByTenantIdOrderBySortOrder(@Param("tenantId") Long tenantId);
 
-  List<Page> findByTenantId(Long tenantId);
+    boolean existsByTenantIdAndUid(Long tenantId, String uid);
 
-  List<Page> findByTenantIdAndLanguage(Long tenantId, Language language);
-
-  List<Page> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
-
-  List<Page> findByTenantIdAndLanguageAndStatus(Long tenantId, Language language, PageStatus status);
-
-  List<Page> findByStatusAndScheduledAtBefore(PageStatus status, LocalDateTime dateTime);
+    long countByTenantId(Long tenantId);
 }

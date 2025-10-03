@@ -21,6 +21,7 @@
 ```
 
 #### **🖥️ Presentation Layer Debugging**
+
 ```bash
 # Common Issues & Solutions
 1. Controller Validation Errors
@@ -31,8 +32,9 @@
 ```
 
 **Debug Checklist:**
+
 - [ ] `@RestController` annotation present
-- [ ] `@RequestMapping("/api/...")` at class level
+- [ ] `@RequestMapping("/...")` at class level
 - [ ] Method mappings use `@GetMapping`, `@PostMapping`, etc.
 - [ ] All methods return `ResponseEntity<ApiResponse<T>>`
 - [ ] Try-catch blocks implemented in all methods
@@ -40,6 +42,7 @@
 - [ ] i18n message keys exist in both `messages_tr.properties` and `messages_en.properties`
 
 #### **📋 Application Layer Debugging**
+
 ```bash
 # Common Issues & Solutions
 1. Service Transaction Boundaries
@@ -50,6 +53,7 @@
 ```
 
 **Debug Checklist:**
+
 - [ ] `@Service` annotation on ServiceImpl classes
 - [ ] `@Transactional` on methods with multiple DB operations
 - [ ] No direct database queries in services
@@ -58,6 +62,7 @@
 - [ ] Multi-language context preserved
 
 #### **🎯 Domain Layer Debugging**
+
 ```bash
 # Common Issues & Solutions
 1. Business Rule Violations
@@ -68,6 +73,7 @@
 ```
 
 **Debug Checklist:**
+
 - [ ] `@Entity` annotation on domain entities
 - [ ] `@Data` from Lombok (unless specified otherwise)
 - [ ] `@Id` and `@GeneratedValue(strategy=GenerationType.IDENTITY)` on IDs
@@ -76,6 +82,7 @@
 - [ ] Business methods implemented in entities
 
 #### **🔧 Infrastructure Layer Debugging**
+
 ```bash
 # Common Issues & Solutions
 1. Repository Query Performance
@@ -86,6 +93,7 @@
 ```
 
 **Debug Checklist:**
+
 - [ ] `@Repository` annotation on repository interfaces
 - [ ] Extends `JpaRepository<Entity, ID>`
 - [ ] JPQL queries for `@Query` methods
@@ -98,13 +106,16 @@
 ### **Backend i18n Issues**
 
 **Common Problems:**
+
 1. **Missing Translation Keys**
+
    ```bash
    # Check logs for missing keys
    grep "No message found under code" logs/application.log
    ```
 
 2. **Locale Resolution Problems**
+
    ```java
    // Debug locale resolution
    @GetMapping("/debug/locale")
@@ -114,6 +125,7 @@
    ```
 
 3. **Character Encoding Issues**
+
    ```properties
    # Ensure UTF-8 encoding in application.yml
    spring:
@@ -122,6 +134,7 @@
    ```
 
 **Debug Commands:**
+
 ```bash
 # Check message bundle loading
 curl -H "Accept-Language: tr" http://localhost:8080/api/debug/messages
@@ -134,13 +147,16 @@ find src/main/resources/i18n -name "*.properties" -exec echo "Checking {}" \; -e
 ### **Frontend Angular i18n Issues**
 
 **Common Problems:**
+
 1. **Missing Translation Files**
+
    ```bash
    ng extract-i18n
    ng build --configuration=production --localize
    ```
 
 2. **Locale Loading Issues**
+
    ```typescript
    // Debug locale service
    console.log('Current Language:', this.languageService.getLanguage());
@@ -152,6 +168,7 @@ find src/main/resources/i18n -name "*.properties" -exec echo "Checking {}" \; -e
 ### **Multi-Tenant Database Issues**
 
 **1. Tenant Database Creation**
+
 ```sql
 -- Check tenant databases
 SHOW DATABASES LIKE 'tenant_%';
@@ -162,6 +179,7 @@ FROM platform_management.tenants;
 ```
 
 **2. Cross-Tenant Data Leakage**
+
 ```sql
 -- Audit query to check data isolation
 SELECT 
@@ -175,6 +193,7 @@ GROUP BY TABLE_NAME;
 ```
 
 **3. Performance Monitoring**
+
 ```sql
 -- Check slow queries
 SELECT 
@@ -193,6 +212,7 @@ ORDER BY query_time DESC LIMIT 10;
 ### **Unit Testing Guidelines**
 
 **Backend (JUnit 5 + Mockito):**
+
 ```java
 // Service Layer Testing Example
 @ExtendWith(MockitoExtension.class)
@@ -223,6 +243,7 @@ class TenantServiceImplTest {
 ```
 
 **Frontend (Jasmine + Karma):**
+
 ```typescript
 describe('LanguageService', () => {
   let service: LanguageService;
@@ -242,6 +263,7 @@ describe('LanguageService', () => {
 ### **Integration Testing**
 
 **API Testing with TestContainers:**
+
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
@@ -261,6 +283,7 @@ class TenantControllerIntegrationTest {
 ```
 
 **Multi-Language Content Testing:**
+
 ```java
 @Test
 void shouldCreateContentInMultipleLanguages() {
@@ -282,6 +305,7 @@ void shouldCreateContentInMultipleLanguages() {
 ### **Database Performance**
 
 **Query Performance Monitoring:**
+
 ```sql
 -- Enable slow query log
 SET GLOBAL slow_query_log = 'ON';
@@ -299,6 +323,7 @@ ORDER BY execution_count DESC;
 ```
 
 **Index Usage Analysis:**
+
 ```sql
 -- Check index usage
 SELECT 
@@ -317,6 +342,7 @@ ORDER BY sum_timer_read DESC;
 ### **Application Performance**
 
 **JVM Monitoring:**
+
 ```bash
 # Memory usage
 jstat -gc [PID] 5s
@@ -329,6 +355,7 @@ jmap -dump:live,format=b,file=heap_dump.hprof [PID]
 ```
 
 **Angular Performance:**
+
 ```typescript
 // Performance monitoring service
 @Injectable()
@@ -348,6 +375,7 @@ export class PerformanceService {
 ### **1. Multi-Tenant Context Issues**
 
 **Problem:** Cross-tenant data access
+
 ```java
 // ❌ BAD: No tenant context
 @GetMapping("/contents")
@@ -366,6 +394,7 @@ public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents(
 ### **2. Language Context Loss**
 
 **Problem:** Language context not preserved across requests
+
 ```java
 // ❌ BAD: Language lost in async processing
 @Async
@@ -385,6 +414,7 @@ public void processContent(Long contentId, String language) {
 ### **3. N+1 Query Problems**
 
 **Problem:** Not using @EntityGraph
+
 ```java
 // ❌ BAD: Causes N+1 queries
 @Query("SELECT c FROM Content c WHERE c.tenantId = :tenantId")
@@ -399,6 +429,7 @@ List<Content> findByTenantId(@Param("tenantId") Long tenantId);
 ### **4. Transaction Boundary Issues**
 
 **Problem:** Missing @Transactional on multi-step operations
+
 ```java
 // ❌ BAD: No transaction boundary
 public void publishContent(Long contentId) {
@@ -423,6 +454,7 @@ public void publishContent(Long contentId) {
 ### **Backend Debugging**
 
 **1. Application Logs:**
+
 ```bash
 # Tail application logs
 tail -f logs/application.log
@@ -435,6 +467,7 @@ grep -i "tenant" logs/application.log | grep "error"
 ```
 
 **2. Database Connection Testing:**
+
 ```bash
 # Test database connectivity
 mysql -h localhost -u root -p -e "SELECT 1"
@@ -447,6 +480,7 @@ mysql -e "SHOW DATABASES LIKE 'tenant_%'"
 ```
 
 **3. Spring Boot Actuator Endpoints:**
+
 ```bash
 # Health check
 curl http://localhost:8080/actuator/health
@@ -461,6 +495,7 @@ curl http://localhost:8080/actuator/env
 ### **Frontend Debugging**
 
 **1. Angular Development Tools:**
+
 ```bash
 # Build with source maps
 ng build --source-map
@@ -474,6 +509,7 @@ npx webpack-bundle-analyzer dist/stats.json
 ```
 
 **2. Browser Development:**
+
 ```javascript
 // Debug language service
 console.log('Current Language:', angular.getTestability().get('LanguageService').getLanguage());
@@ -564,16 +600,19 @@ public TenantResponse getTenantBySubdomain(String subdomain) {
 ### **Critical Issue Response**
 
 **1. Database Issues:**
+
 - Check connection pool: `spring.datasource.hikari.*`
 - Monitor slow queries: Enable MySQL slow query log
 - Verify tenant isolation: Run cross-tenant data audit
 
 **2. Memory Issues:**
+
 - Generate heap dump: `jmap -dump:live,format=b,file=heap.hprof [PID]`
 - Analyze with Eclipse MAT or VisualVM
 - Check for memory leaks in caching layers
 
 **3. Performance Degradation:**
+
 - Enable Spring Boot Actuator metrics
 - Monitor database query execution plans
 - Check Angular change detection performance
@@ -581,6 +620,7 @@ public TenantResponse getTenantBySubdomain(String subdomain) {
 ### **Rollback Procedures**
 
 **1. Database Rollback:**
+
 ```bash
 # Backup before rollback
 mysqldump --all-databases > backup_$(date +%Y%m%d_%H%M%S).sql
@@ -590,6 +630,7 @@ mysql tenant_1_db < previous_version_backup.sql
 ```
 
 **2. Application Rollback:**
+
 ```bash
 # Docker deployment rollback
 docker service update --rollback admincraft-backend
@@ -642,4 +683,4 @@ grep -E "(tenant.*not found|cross-tenant)" logs/application.log
 
 **Last Updated:** $(date +%Y-%m-%d)  
 **Version:** 1.0  
-**Maintainer:** Development Team 
+**Maintainer:** Development Team
