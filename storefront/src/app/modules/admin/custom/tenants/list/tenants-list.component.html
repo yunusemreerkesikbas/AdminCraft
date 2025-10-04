@@ -1,29 +1,23 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    <!-- Header -->
     <div
         class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
     >
-        <!-- Loader -->
         @if (isLoading) {
             <div class="absolute inset-x-0 bottom-0">
                 <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
             </div>
         }
-        <!-- Title -->
         <div class="text-4xl font-extrabold tracking-tight">
             {{ 'admin.tenants.title' | transloco }}
         </div>
-        <!-- Actions -->
         <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <!-- Search -->
             <spa-search-input
                 [placeholder]="'admin.tenants.searchPlaceholder' | transloco"
                 [ngModel]="searchInputControl.value"
                 (ngModelChange)="searchInputControl.setValue($event)"
             ></spa-search-input>
-            <!-- Add tenant button -->
             <button
                 class="ml-4"
                 mat-flat-button
@@ -38,16 +32,13 @@
         </div>
     </div>
 
-    <!-- Main -->
     <div class="flex flex-auto overflow-hidden">
-        <!-- Tenants list -->
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
             @if (tenants$ | async; as tenants) {
                 @if (tenants.length > 0) {
                     <div class="grid">
-                        <!-- Header -->
                         <div
                             class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
                             matSort
@@ -95,7 +86,6 @@
                                 {{ 'admin.common.grid.details' | transloco }}
                             </div>
                         </div>
-                        <!-- Rows -->
                         @for (
                             tenant of tenants;
                             track trackByFn($index, tenant)
@@ -103,7 +93,6 @@
                             <div
                                 class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                             >
-                                <!-- Avatar -->
                                 <div class="flex items-center">
                                     <div
                                         class="relative mr-6 flex h-12 w-12 flex-0 items-center justify-center overflow-hidden rounded-full border bg-gray-100"
@@ -121,17 +110,13 @@
                                     </div>
                                 </div>
 
-                                <!-- Subdomain -->
                                 <div class="hidden truncate md:block">
                                     {{ tenant.subdomain }}
                                 </div>
 
-                                <!-- Company Name -->
                                 <div class="truncate">
                                     {{ tenant.companyName }}
                                 </div>
-
-                                <!-- Status -->
                                 <div class="hidden sm:block">
                                     <div
                                         class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
@@ -152,46 +137,28 @@
                                         }}
                                     </div>
                                 </div>
-
-                                <!-- Language -->
                                 <div class="hidden items-center lg:flex">
                                     <div class="min-w-4">
                                         {{ tenant.defaultLanguage }}
                                     </div>
                                 </div>
-
-                                <!-- Created Date -->
                                 <div class="hidden lg:block">
                                     {{ tenant.createdAt | date: 'shortDate' }}
                                 </div>
-
-                                <!-- Details button -->
-                                <div>
+                                <div class="flex items-center gap-2">
                                     <button
                                         class="h-7 min-h-7 min-w-10 px-2 leading-6"
                                         mat-stroked-button
-                                        (click)="toggleDetails(tenant.id)"
+                                        (click)="editTenant(tenant)"
                                     >
                                         <mat-icon
                                             class="icon-size-5"
                                             [svgIcon]="
-                                                selectedTenant?.id === tenant.id
-                                                    ? 'heroicons_solid:chevron-up'
-                                                    : 'heroicons_solid:chevron-down'
+                                                'heroicons_outline:pencil-square'
                                             "
                                         ></mat-icon>
                                     </button>
                                 </div>
-                            </div>
-                            <div class="grid">
-                                @if (selectedTenant?.id === tenant.id) {
-                                    <ng-container
-                                        *ngTemplateOutlet="
-                                            rowDetailsTemplate;
-                                            context: { $implicit: tenant }
-                                        "
-                                    ></ng-container>
-                                }
                             </div>
                         }
                     </div>
@@ -213,437 +180,6 @@
                     </div>
                 }
             }
-
-            <ng-template #rowDetailsTemplate let-tenant>
-                <div class="overflow-hidden shadow-lg">
-                    <div class="flex border-b">
-                        <!-- Selected tenant form -->
-                        <form
-                            class="flex w-full flex-col"
-                            [formGroup]="selectedTenantForm"
-                        >
-                            <div class="flex flex-col p-8 sm:flex-row">
-                                <!-- Tenant info and status -->
-                                <div
-                                    class="mb-8 flex flex-col items-center sm:mb-0 sm:w-1/4 sm:items-start"
-                                >
-                                    <div class="flex flex-col items-center">
-                                        <div
-                                            class="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border bg-gray-100"
-                                        >
-                                            <span
-                                                class="text-2xl font-semibold text-gray-600"
-                                            >
-                                                {{
-                                                    selectedTenant?.companyName?.substring(
-                                                        0,
-                                                        2
-                                                    ) || 'NA'
-                                                }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Status Actions -->
-                                    <div
-                                        class="mt-8 flex w-full flex-col space-y-2"
-                                    >
-                                        @if (
-                                            selectedTenant &&
-                                            selectedTenant.status === 'PENDING'
-                                        ) {
-                                            <button
-                                                class="w-full"
-                                                mat-flat-button
-                                                [color]="'primary'"
-                                                (click)="activateTenant()"
-                                            >
-                                                {{
-                                                    'admin.tenants.activate'
-                                                        | transloco
-                                                }}
-                                            </button>
-                                        }
-                                        @if (
-                                            selectedTenant &&
-                                            selectedTenant.status === 'ACTIVE'
-                                        ) {
-                                            <button
-                                                class="w-full"
-                                                mat-stroked-button
-                                                [color]="'warn'"
-                                                (click)="suspendTenant()"
-                                            >
-                                                {{
-                                                    'admin.tenants.suspend'
-                                                        | transloco
-                                                }}
-                                            </button>
-                                            <button
-                                                class="w-full"
-                                                mat-stroked-button
-                                                [color]="'accent'"
-                                                (click)="setMaintenanceMode()"
-                                            >
-                                                {{
-                                                    'admin.tenants.maintenance'
-                                                        | transloco
-                                                }}
-                                            </button>
-                                        }
-                                        @if (
-                                            selectedTenant &&
-                                            selectedTenant.status ===
-                                                'SUSPENDED'
-                                        ) {
-                                            <button
-                                                class="w-full"
-                                                mat-flat-button
-                                                [color]="'primary'"
-                                                (click)="activateTenant()"
-                                            >
-                                                {{
-                                                    'admin.tenants.reactivate'
-                                                        | transloco
-                                                }}
-                                            </button>
-                                        }
-                                        @if (
-                                            selectedTenant &&
-                                            selectedTenant.status ===
-                                                'MAINTENANCE'
-                                        ) {
-                                            <button
-                                                class="w-full"
-                                                mat-flat-button
-                                                [color]="'primary'"
-                                                (click)="activateTenant()"
-                                            >
-                                                {{
-                                                    'admin.tenants.endMaintenance'
-                                                        | transloco
-                                                }}
-                                            </button>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-auto flex-wrap sm:w-3/4">
-                                    <!-- Basic Info -->
-                                    <div
-                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
-                                    >
-                                        <!-- Company Name -->
-                                        <spa-input
-                                            [label]="
-                                                'admin.tenants.fields.companyName'
-                                                    | transloco
-                                            "
-                                            [type]="'text'"
-                                            [placeholder]="''"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'companyName'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('companyName')
-                                                    ?.setValue($event)
-                                            "
-                                        ></spa-input>
-
-                                        <!-- Subdomain -->
-                                        <spa-input
-                                            [label]="
-                                                'admin.tenants.fields.subdomain'
-                                                    | transloco
-                                            "
-                                            [placeholder]="''"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'subdomain'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('subdomain')
-                                                    ?.setValue($event)
-                                            "
-                                            (blur)="
-                                                checkSubdomainAvailability()
-                                            "
-                                        >
-                                            <span matSuffix>{{
-                                                'admin.tenants.fields.domainSuffix'
-                                                    | transloco
-                                            }}</span>
-                                        </spa-input>
-
-                                        <!-- Admin Info -->
-                                        <spa-input
-                                            [label]="
-                                                'admin.tenants.fields.adminName'
-                                                    | transloco
-                                            "
-                                            [type]="'text'"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'adminName'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('adminName')
-                                                    ?.setValue($event)
-                                            "
-                                        ></spa-input>
-
-                                        <spa-input
-                                            [label]="
-                                                'admin.tenants.fields.adminEmail'
-                                                    | transloco
-                                            "
-                                            [type]="'email'"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'adminEmail'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('adminEmail')
-                                                    ?.setValue($event)
-                                            "
-                                        ></spa-input>
-
-                                        <!-- Phone -->
-                                        <spa-input
-                                            [label]="
-                                                'admin.common.fields.phone'
-                                                    | transloco
-                                            "
-                                            [type]="'tel'"
-                                            [ngModel]="
-                                                selectedTenantForm.get('phone')
-                                                    ?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('phone')
-                                                    ?.setValue($event)
-                                            "
-                                        ></spa-input>
-                                    </div>
-
-                                    <!-- Settings & Configuration -->
-                                    <div
-                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
-                                    >
-                                        <!-- Language Settings -->
-                                        <div class="mt-4">
-                                            <mat-form-field class="w-full">
-                                                <mat-label>{{ 'admin.common.fields.supportedLanguages' | transloco }}</mat-label>
-                                                <mat-select formControlName="supportedLanguages" multiple>
-                                                    <mat-option *ngFor="let langOpt of languageOptions" [value]="langOpt.value">
-                                                        {{ langOpt.label }}
-                                                    </mat-option>
-                                                </mat-select>
-                                            </mat-form-field>
-                                        </div>
-
-                                        <spa-select
-                                            [label]="
-                                                'admin.tenants.fields.defaultLanguage'
-                                                    | transloco
-                                            "
-                                            [options]="languageOptions"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'defaultLanguage'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('defaultLanguage')
-                                                    ?.setValue($event)
-                                            "
-                                            [styleClasses]="'mt-4'"
-                                        ></spa-select>
-
-                                        <!-- Custom Domain -->
-                                        <spa-input
-                                            [label]="
-                                                'admin.tenants.fields.customDomain'
-                                                    | transloco
-                                            "
-                                            [placeholder]="'example.com'"
-                                            [ngModel]="
-                                                selectedTenantForm.get(
-                                                    'customDomain'
-                                                )?.value
-                                            "
-                                            [ngModelOptions]="{
-                                                standalone: true,
-                                            }"
-                                            (ngModelChange)="
-                                                selectedTenantForm
-                                                    .get('customDomain')
-                                                    ?.setValue($event)
-                                            "
-                                            [styleClasses]="'mt-4'"
-                                        ></spa-input>
-
-                                        <!-- Settings -->
-                                        <div class="flex">
-                                            <div class="mt-4 w-1/2 pr-2">
-                                                <spa-input
-                                                    [label]="
-                                                        'admin.tenants.fields.timezone'
-                                                            | transloco
-                                                    "
-                                                    [ngModel]="
-                                                        selectedTenantForm.get(
-                                                            'timezone'
-                                                        )?.value
-                                                    "
-                                                    [ngModelOptions]="{
-                                                        standalone: true,
-                                                    }"
-                                                    (ngModelChange)="
-                                                        selectedTenantForm
-                                                            .get('timezone')
-                                                            ?.setValue($event)
-                                                    "
-                                                    [styleClasses]="'mt-4'"
-                                                ></spa-input>
-                                            </div>
-                                            <div class="mt-4 w-1/2 pl-2">
-                                                <spa-input
-                                                    [label]="
-                                                        'admin.tenants.fields.currency'
-                                                            | transloco
-                                                    "
-                                                    [ngModel]="
-                                                        selectedTenantForm.get(
-                                                            'currency'
-                                                        )?.value
-                                                    "
-                                                    [ngModelOptions]="{
-                                                        standalone: true,
-                                                    }"
-                                                    (ngModelChange)="
-                                                        selectedTenantForm
-                                                            .get('currency')
-                                                            ?.setValue($event)
-                                                    "
-                                                    [styleClasses]="'mt-4'"
-                                                ></spa-input>
-                                            </div>
-                                        </div>
-
-                                        <!-- SSL Toggle -->
-                                        <div class="mt-4">
-                                            <spa-toggle
-                                                [label]="
-                                                    'admin.tenants.fields.sslEnabled'
-                                                        | transloco
-                                                "
-                                                [ngModel]="
-                                                    selectedTenantForm.get(
-                                                        'sslEnabled'
-                                                    )?.value
-                                                "
-                                                [ngModelOptions]="{
-                                                    standalone: true,
-                                                }"
-                                                (ngModelChange)="
-                                                    selectedTenantForm
-                                                        .get('sslEnabled')
-                                                        ?.setValue($event)
-                                                "
-                                                [styleClasses]="'mt-4'"
-                                            ></spa-toggle>
-                                        </div>
-
-                                        <!-- Notes -->
-                                        <div class="mt-4 w-full">
-                                            <spa-textarea
-                                                [label]="
-                                                    'admin.tenants.fields.notes'
-                                                        | transloco
-                                                "
-                                                [rows]="3"
-                                                [ngModel]="
-                                                    selectedTenantForm.get(
-                                                        'notes'
-                                                    )?.value
-                                                "
-                                                [ngModelOptions]="{
-                                                    standalone: true,
-                                                }"
-                                                (ngModelChange)="
-                                                    selectedTenantForm
-                                                        .get('notes')
-                                                        ?.setValue($event)
-                                                "
-                                                [styleClasses]="'mt-4'"
-                                            ></spa-textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                class="flex w-full items-center justify-between border-t px-8 py-4"
-                            >
-                                <button
-                                    class="-ml-4"
-                                    mat-button
-                                    [color]="'warn'"
-                                    (click)="deleteSelectedTenant()"
-                                    [disabled]="!selectedTenant"
-                                >
-                                    {{ 'admin.tenants.delete' | transloco }}
-                                </button>
-                                <div class="flex items-center">
-                                    <button
-                                        mat-flat-button
-                                        [color]="'primary'"
-                                        (click)="updateSelectedTenant()"
-                                    >
-                                        {{
-                                            selectedTenant
-                                                ? ('admin.tenants.update'
-                                                  | transloco)
-                                                : ('admin.tenants.create'
-                                                  | transloco)
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </ng-template>
         </div>
     </div>
 </div>

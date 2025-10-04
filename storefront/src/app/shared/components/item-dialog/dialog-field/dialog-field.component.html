@@ -22,6 +22,7 @@
                 [label]="field().labelKey | transloco"
                 [placeholder]="field().placeholder || ''"
                 [formControlName]="field().key"
+                [multiple]="field().multiple || false"
                 [options]="options()"
             />
         }
