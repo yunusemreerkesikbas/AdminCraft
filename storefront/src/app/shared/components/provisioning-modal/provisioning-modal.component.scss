@@ -1,0 +1,43 @@
+.provisioning-modal {
+    min-width: 400px;
+
+    .language-list {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+
+        li {
+            margin: 0.5rem 0;
+        }
+    }
+
+    .progress-container {
+        margin-top: 1rem;
+
+        mat-progress-bar {
+            margin: 1rem 0;
+        }
+
+        .status-text {
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .details-text {
+            margin: 0.5rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .success-text {
+            margin: 1rem 0;
+            color: #4caf50;
+            font-weight: 500;
+        }
+
+        .error-text {
+            margin: 1rem 0;
+            color: #f44336;
+            font-weight: 500;
+        }
+    }
+}

@@ -1,6 +1,16 @@
 import { inject, Injectable } from '@angular/core';
-import { Tenant, TenantPagination, CreateTenantRequest, UpdateTenantRequest, TenantStatus } from './tenants.types';
-import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import {
+  Tenant,
+  TenantPagination,
+  CreateTenantRequest,
+  UpdateTenantRequest,
+  TenantStatus,
+  TenantLanguagesDto,
+  UpdateTenantLanguagesRequest,
+  ProvisionLanguagesRequest,
+  ProvisioningJobDto
+} from './tenants.types';
+import { BehaviorSubject, Observable, tap, switchMap, map, interval, takeWhile } from 'rxjs';
 import { ApiClientService } from '@core/api/api-client.service';
 import { EndpointKey } from '@modules/admin/api-endpoints';
 
@@ -252,6 +262,37 @@ export class TenantsService {
     checkSubdomainAvailability(subdomain: string): Observable<boolean> {
         return this._apiClient.get<any>('tenantCheckSubdomain', { subdomain }).pipe(
             map((response) => response.result === 'SUCCESS' && response.data === true)
+        );
+    }
+
+    getTenantLanguages(tenantId: number): Observable<TenantLanguagesDto> {
+        return this._apiClient.get<any>('tenantLanguages', { tenantId }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    updateTenantLanguages(tenantId: number, req: UpdateTenantLanguagesRequest): Observable<TenantLanguagesDto> {
+        return this._apiClient.put<any>('tenantLanguages', req, { tenantId }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    provisionLanguages(tenantId: number, req: ProvisionLanguagesRequest): Observable<ProvisioningJobDto> {
+        return this._apiClient.post<any>('tenantLanguagesProvision', req, { tenantId }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    getProvisioningJob(jobUuid: string): Observable<ProvisioningJobDto> {
+        return this._apiClient.get<any>('provisioningJob', { jobUuid }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    pollProvisioningJob(jobUuid: string, intervalMs: number = 2000): Observable<ProvisioningJobDto> {
+        return interval(intervalMs).pipe(
+            switchMap(() => this.getProvisioningJob(jobUuid)),
+            takeWhile((job) => job.status === 'PENDING' || job.status === 'RUNNING', true)
         );
     }
 }

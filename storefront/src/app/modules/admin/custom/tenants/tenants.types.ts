@@ -38,8 +38,19 @@ export enum TenantStatus {
 
 export enum Language {
     TR = 'TR',
-    EN = 'EN'
+    EN = 'EN',
+    ES = 'ES',
+    RU = 'RU',
+    AR = 'AR'
 }
+
+export const LANGUAGE_LABELS: Record<Language, string> = {
+    [Language.TR]: 'Türkçe',
+    [Language.EN]: 'English',
+    [Language.ES]: 'Español',
+    [Language.RU]: 'Русский',
+    [Language.AR]: 'العربية'
+};
 
 export interface CreateTenantRequest {
     companyName: string;
@@ -69,4 +80,32 @@ export interface UpdateTenantRequest {
     currency?: string;
     sslEnabled?: boolean;
     notes?: string;
+}
+
+export interface TenantLanguagesDto {
+    defaultLanguage: Language;
+    supportedLanguages: Language[];
+}
+
+export interface UpdateTenantLanguagesRequest {
+    defaultLanguage: Language;
+    supportedLanguages: Language[];
+}
+
+export interface ProvisionLanguagesRequest {
+    languages: Language[];
+}
+
+export interface ProvisioningJobDto {
+    uuid: string;
+    tenantId: number;
+    status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+    type: string;
+    totalItems: number;
+    processedItems: number;
+    failedItems: number;
+    createdAt: string;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    errorMessage?: string | null;
 }

@@ -25,6 +25,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -49,17 +50,20 @@ import {
     map,
     merge,
     switchMap,
+    take,
     takeUntil,
 } from 'rxjs';
 import { TenantsService } from '../tenants.service';
 import {
     CreateTenantRequest,
     Language,
+    LANGUAGE_LABELS,
     Tenant,
     TenantPagination,
     TenantStatus,
     UpdateTenantRequest,
 } from '../tenants.types';
+import { ProvisioningModalComponent } from '@shared/components/provisioning-modal/provisioning-modal.component';
 
 @Component({
     selector: 'tenants-list',
@@ -114,6 +118,7 @@ import {
 })
 export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     private _transloco = inject(TranslocoService);
+    private _dialog = inject(MatDialog);
     #notify = inject(NotificationService);
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
@@ -125,20 +130,16 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedTenant: Tenant | null = null;
     selectedTenantForm: UntypedFormGroup;
-    
-    // Language and status options
-    languages: Language[] = [Language.TR, Language.EN];
+
+    languages: Language[] = Object.values(Language);
     statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
-    languageOptions: SpaSelectOption<Language>[] = [
-        { value: Language.TR, label: 'Türkçe' },
-        { value: Language.EN, label: 'English' },
-    ];
+    languageOptions: SpaSelectOption<Language>[] = Object.values(Language).map(lang => ({
+        value: lang,
+        label: LANGUAGE_LABELS[lang]
+    }));
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    /**
-     * Constructor
-     */
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseConfirmationService: FuseConfirmationService,
@@ -154,13 +155,13 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Create the selected tenant form
         this.selectedTenantForm = this._formBuilder.group({
             companyName: ['', [Validators.required]],
             subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
             adminName: ['', [Validators.required]],
             adminEmail: ['', [Validators.required, Validators.email]],
             phone: [''],
+            supportedLanguages: [[Language.TR], [Validators.required]],
             defaultLanguage: [Language.TR, [Validators.required]],
             customDomain: [''],
             timezone: ['Europe/Istanbul'],
@@ -169,11 +170,9 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             notes: ['']
         });
 
-        // Get the tenants
         this.tenants$ = this._tenantsService.tenants$;
         this.pagination$ = this._tenantsService.pagination$;
 
-        // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
             .pipe(
                 takeUntil(this._unsubscribeAll),
@@ -189,7 +188,6 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             )
             .subscribe();
 
-        // Load initial data
         this._tenantsService.getTenants().subscribe();
     }
 
@@ -292,55 +290,52 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
      * Create tenant
      */
     createTenant(): void {
-        // Create the tenant
         this.selectedTenant = null;
         this.selectedTenantForm.reset();
         this.selectedTenantForm.patchValue({
+            supportedLanguages: [Language.TR],
             defaultLanguage: Language.TR,
             timezone: 'Europe/Istanbul',
             currency: 'TRY',
             sslEnabled: true
         });
 
-        // Mark for check
         this._changeDetectorRef.markForCheck();
     }
 
-    /**
-     * Update the selected tenant using the form data
-     */
     updateSelectedTenant(): void {
-        // Get the tenant object
         const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
 
-        // Remove empty values
         Object.keys(tenant).forEach(key => {
             if (tenant[key] === '' || tenant[key] === null) {
                 delete tenant[key];
             }
         });
 
-        // If we have a tenant ID, update the existing tenant...
         if (this.selectedTenant) {
+            const oldLanguages = this.selectedTenant.supportedLanguages || [];
+            const newLanguages = (tenant as UpdateTenantRequest).supportedLanguages || [];
+            const addedLanguages = newLanguages.filter(lang => !oldLanguages.includes(lang));
+
             this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
+                .pipe(take(1))
                 .subscribe({
                     next: () => {
                         this.#notify.success('admin.common.messages.operationSuccess');
+                        if (addedLanguages.length > 0) {
+                            this.#openProvisioningModal(this.selectedTenant.id, addedLanguages);
+                        }
                     },
                     error: () => {
                         this.#notify.alert('admin.common.errors.unexpected');
                     }
                 });
-        }
-        // Otherwise, create a new tenant...
-        else {
+        } else {
             this._tenantsService.createTenant(tenant as CreateTenantRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
+                .pipe(take(1))
                 .subscribe({
                     next: () => {
                         this.#notify.success('admin.common.messages.operationSuccess');
-                        // Close details
                         this.closeDetails();
                     },
                     error: () => {
@@ -348,6 +343,62 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     }
                 });
         }
+    }
+
+    #openProvisioningModal(tenantId: number, newLanguages: Language[]): void {
+        const dialogRef = this._dialog.open(ProvisioningModalComponent, {
+            width: '500px',
+            disableClose: true,
+            data: { tenantId, newLanguages }
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed: boolean) => {
+            if (confirmed) {
+                this._tenantsService.provisionLanguages(tenantId, { languages: newLanguages })
+                    .pipe(take(1))
+                    .subscribe({
+                        next: (job) => {
+                            this.#trackProvisioningJob(job.uuid);
+                        },
+                        error: () => {
+                            this.#notify.alert('admin.common.errors.unexpected');
+                        }
+                    });
+            }
+        });
+    }
+
+    #trackProvisioningJob(jobUuid: string): void {
+        const dialogRef = this._dialog.open(ProvisioningModalComponent, {
+            width: '500px',
+            disableClose: true,
+            data: {
+                jobUuid,
+                status: 'PENDING',
+                processedItems: 0,
+                totalItems: 0
+            }
+        });
+
+        this._tenantsService.pollProvisioningJob(jobUuid)
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe({
+                next: (job) => {
+                    dialogRef.componentInstance.data = {
+                        jobUuid: job.uuid,
+                        status: job.status,
+                        processedItems: job.processedItems,
+                        totalItems: job.totalItems,
+                        errorMessage: job.errorMessage || undefined
+                    };
+
+                    if (job.status === 'COMPLETED') {
+                        this.#notify.success('admin.common.provisioning.success');
+                    } else if (job.status === 'FAILED') {
+                        this.#notify.alert('admin.common.provisioning.error', { params: { message: job.errorMessage || 'Unknown error' } });
+                    }
+                }
+            });
     }
 
     /**

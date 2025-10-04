@@ -5,12 +5,17 @@ import {
   ApiResponse,
   CreateCategoryRequest,
   CreatePageRequest,
+  Language,
   MoveCategoryRequest,
   PageBlockDto,
   PageCategoryDto,
   PageCategoryTreeNode,
   PageDto,
+  PageI18nDto,
+  PageI18nRequest,
   PageSectionDto,
+  PageWithI18nDto,
+  PublishPageI18nRequest,
   ReorderCategoryRequest,
   UpdateCategoryRequest,
   UpdatePageRequest,
@@ -22,19 +27,12 @@ export class PageBuilderService {
   #createRequested = new Subject<void>();
   readonly createRequested$ = this.#createRequested.asObservable();
 
-  listPages(tenantId: number, language?: 'TR' | 'EN'): Observable<PageDto[]> {
-    const qp: Record<string, any> = { tenantId, ...(language && { language }) };
-    return this.#api.get<ApiResponse<PageDto[]>>('pages', undefined, qp).pipe(
+  listPages(): Observable<PageDto[]> {
+    return this.#api.get<ApiResponse<PageDto[]>>('pages').pipe(
       map((r) => {
         const data = r?.data ?? [];
         return Array.isArray(data) ? data : [];
       })
-    );
-  }
-
-  getPageVersionsBySlug(tenantId: number, slug: string): Observable<PageDto[]> {
-    return this.listPages(tenantId).pipe(
-      map(pages => pages.filter(p => p.slug === slug))
     );
   }
 
@@ -43,146 +41,135 @@ export class PageBuilderService {
   }
 
   getPageById(id: number): Observable<PageDto> {
-    return this.#api.get<any>('pageById', { id }).pipe(map((r) => r.data));
+    return this.#api.get<ApiResponse<PageDto>>('pageById', { id }).pipe(map((r) => r.data));
   }
 
-  getPageBySlug(tenantId: number, language: 'TR' | 'EN', slug: string): Observable<PageDto> {
-    return this.#api
-      .get<any>('pageBySlug', { language, slug }, { tenantId })
-      .pipe(map((r) => r.data));
+  getPageWithI18n(id: number): Observable<PageWithI18nDto> {
+    return this.#api.get<ApiResponse<PageWithI18nDto>>('pageWithI18n', { id }).pipe(map((r) => r.data));
   }
 
   createPage(req: CreatePageRequest): Observable<PageDto> {
-    return this.#api.post<any>('pages', req).pipe(map((r) => r.data));
+    return this.#api.post<ApiResponse<PageDto>>('pages', req).pipe(map((r) => r.data));
   }
 
-  updatePage(req: UpdatePageRequest): Observable<PageDto> {
-    return this.#api.put<any>('pages', req).pipe(map((r) => r.data));
+  updatePage(id: number, req: UpdatePageRequest): Observable<PageDto> {
+    return this.#api.put<ApiResponse<PageDto>>('pageById', req, { id }).pipe(map((r) => r.data));
   }
 
-  publishPage(id: number): Observable<PageDto> {
-    return this.#api.put<any>('pagePublish', {}, { id }).pipe(map((r) => r.data));
+  setPageAsHome(id: number): Observable<PageDto> {
+    return this.#api.put<ApiResponse<PageDto>>('pageSetHome', {}, { id }).pipe(map((r) => r.data));
   }
 
-  unpublishPage(id: number): Observable<PageDto> {
-    return this.#api.put<any>('pageUnpublish', {}, { id }).pipe(map((r) => r.data));
+  deletePage(id: number): Observable<void> {
+    return this.#api.delete<ApiResponse<void>>('pageById', { id }).pipe(map(() => undefined));
   }
 
-  schedulePage(id: number, when: string): Observable<PageDto> {
-    return this.#api.put<any>('pageSchedule', {}, { id }, { when }).pipe(map((r) => r.data));
+  getPageI18n(pageId: number, language: Language): Observable<PageI18nDto> {
+    return this.#api.get<ApiResponse<PageI18nDto>>('pageI18n', { pageId, language }).pipe(map((r) => r.data));
   }
 
-  deletePage(id: number): Observable<boolean> {
-    return this.#api
-      .delete<any>('pageById', { id })
-      .pipe(map((r) => r.result === 'SUCCESS'));
+  updatePageI18n(pageId: number, language: Language, req: PageI18nRequest): Observable<PageI18nDto> {
+    return this.#api.put<ApiResponse<PageI18nDto>>('pageI18n', req, { pageId, language }).pipe(map((r) => r.data));
   }
 
-  listCategories(tenantId: number, parentId?: number): Observable<PageCategoryDto[]> {
-    const qp: Record<string, any> = { tenantId, ...(parentId !== undefined && { parentId }) };
-    return this.#api.get<any>('pageCategories', undefined, qp).pipe(map((r) => r.data || []));
+  publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<PageI18nDto> {
+    return this.#api.post<ApiResponse<PageI18nDto>>('pageI18nPublish', req || {}, { pageId, language }).pipe(map((r) => r.data));
+  }
+
+  listCategories(parentId?: number): Observable<PageCategoryDto[]> {
+    const qp: Record<string, any> = { ...(parentId !== undefined && { parentId }) };
+    return this.#api.get<ApiResponse<PageCategoryDto[]>>('pageCategories', undefined, qp).pipe(map((r) => r.data || []));
   }
 
   getCategory(id: number): Observable<PageCategoryDto> {
-    return this.#api.get<any>('pageCategoryById', { id }).pipe(map((r) => r.data));
+    return this.#api.get<ApiResponse<PageCategoryDto>>('pageCategoryById', { id }).pipe(map((r) => r.data));
   }
 
   createCategory(req: CreateCategoryRequest): Observable<PageCategoryDto> {
-    return this.#api.post<any>('pageCategories', req).pipe(map((r) => r.data));
+    return this.#api.post<ApiResponse<PageCategoryDto>>('pageCategories', req).pipe(map((r) => r.data));
   }
 
   updateCategory(req: UpdateCategoryRequest): Observable<PageCategoryDto> {
-    return this.#api.put<any>('pageCategories', req).pipe(map((r) => r.data));
+    return this.#api.put<ApiResponse<PageCategoryDto>>('pageCategories', req).pipe(map((r) => r.data));
   }
 
-  deleteCategory(id: number): Observable<boolean> {
-    return this.#api.delete<any>('pageCategoryById', { id }).pipe(map((r) => r.result === 'SUCCESS'));
+  deleteCategory(id: number): Observable<void> {
+    return this.#api.delete<ApiResponse<void>>('pageCategoryById', { id }).pipe(map(() => undefined));
   }
 
-  getCategoryTree(
-    tenantId: number,
-    language?: 'TR' | 'EN',
-    rootId?: number | null,
-    depth?: number
-  ): Observable<PageCategoryTreeNode[]> {
+  getCategoryTree(rootId?: number | null, depth?: number): Observable<PageCategoryTreeNode[]> {
     const qp: Record<string, any> = {
-      tenantId,
-      ...(language && { language }),
       ...(rootId !== undefined && { rootId }),
       ...(depth !== undefined && { depth }),
     };
     return this.#api
-      .custom<any>('GET', 'pageCategoryTree', { queryParams: qp, includeAuth: true })
+      .custom<ApiResponse<PageCategoryTreeNode[]>>('GET', 'pageCategoryTree', { queryParams: qp, includeAuth: true })
       .pipe(map((r) => r.data || []));
   }
 
-  getCategoryChildren(
-    tenantId: number,
-    parentId: number | null,
-    language?: 'TR' | 'EN'
-  ): Observable<PageCategoryDto[]> {
-    const qp: Record<string, any> = { tenantId, parentId, ...(language && { language }) };
-    return this.#api.get<any>('pageCategoryChildren', undefined, qp).pipe(map((r) => r.data || []));
+  getCategoryChildren(parentId: number | null): Observable<PageCategoryDto[]> {
+    const qp: Record<string, any> = { parentId };
+    return this.#api.get<ApiResponse<PageCategoryDto[]>>('pageCategoryChildren', undefined, qp).pipe(map((r) => r.data || []));
   }
 
-  moveCategory(req: MoveCategoryRequest): Observable<boolean> {
+  moveCategory(req: MoveCategoryRequest): Observable<void> {
     return this.#api
-      .put<any>('pageCategoryMove', { newParentId: req.newParentId }, { id: req.id })
-      .pipe(map((r) => r.result === 'SUCCESS'));
+      .put<ApiResponse<void>>('pageCategoryMove', { newParentId: req.newParentId }, { id: req.id })
+      .pipe(map(() => undefined));
   }
 
-  reorderCategories(req: ReorderCategoryRequest): Observable<boolean> {
+  reorderCategories(req: ReorderCategoryRequest): Observable<void> {
     return this.#api
-      .put<any>('pageCategoryReorder', { parentId: req.parentId, orderedIds: req.orderedIds })
-      .pipe(map((r) => r.result === 'SUCCESS'));
+      .put<ApiResponse<void>>('pageCategoryReorder', { parentId: req.parentId, orderedIds: req.orderedIds })
+      .pipe(map(() => undefined));
   }
 
   listSections(pageId: number): Observable<PageSectionDto[]> {
     return this.#api
-      .get<any>('pageBuilderSections', undefined, { pageId })
+      .get<ApiResponse<PageSectionDto[]>>('pageBuilderSections', undefined, { pageId })
       .pipe(map((r) => r.data || []));
   }
 
   addSection(pageId: number, type?: string, displayOrder?: number, data?: string): Observable<PageSectionDto> {
     return this.#api
-      .post<any>('pageBuilderSections', { pageId, type, displayOrder, data })
+      .post<ApiResponse<PageSectionDto>>('pageBuilderSections', { pageId, type, displayOrder, data })
       .pipe(map((r) => r.data));
   }
 
   updateSection(id: number, payload: Partial<PageSectionDto>): Observable<PageSectionDto> {
     return this.#api
-      .put<any>('pageBuilderSections', { id, ...payload })
+      .put<ApiResponse<PageSectionDto>>('pageBuilderSections', { id, ...payload })
       .pipe(map((r) => r.data));
   }
 
-  deleteSection(id: number): Observable<boolean> {
+  deleteSection(id: number): Observable<void> {
     return this.#api
-      .delete<any>('pageBuilderSectionById', { id })
-      .pipe(map((r) => r.result === 'SUCCESS'));
+      .delete<ApiResponse<void>>('pageBuilderSectionById', { id })
+      .pipe(map(() => undefined));
   }
 
   listBlocks(sectionId: number): Observable<PageBlockDto[]> {
     return this.#api
-      .get<any>('pageBuilderBlocks', undefined, { sectionId })
+      .get<ApiResponse<PageBlockDto[]>>('pageBuilderBlocks', undefined, { sectionId })
       .pipe(map((r) => r.data || []));
   }
 
   addBlock(sectionId: number, type?: string, displayOrder?: number, data?: string): Observable<PageBlockDto> {
     return this.#api
-      .post<any>('pageBuilderBlocks', { sectionId, type, displayOrder, data })
+      .post<ApiResponse<PageBlockDto>>('pageBuilderBlocks', { sectionId, type, displayOrder, data })
       .pipe(map((r) => r.data));
   }
 
   updateBlock(id: number, payload: Partial<PageBlockDto>): Observable<PageBlockDto> {
     return this.#api
-      .put<any>('pageBuilderBlocks', { id, ...payload })
+      .put<ApiResponse<PageBlockDto>>('pageBuilderBlocks', { id, ...payload })
       .pipe(map((r) => r.data));
   }
 
-  deleteBlock(id: number): Observable<boolean> {
+  deleteBlock(id: number): Observable<void> {
     return this.#api
-      .delete<any>('pageBuilderBlockById', { id })
-      .pipe(map((r) => r.result === 'SUCCESS'));
+      .delete<ApiResponse<void>>('pageBuilderBlockById', { id })
+      .pipe(map(() => undefined));
   }
 }
 

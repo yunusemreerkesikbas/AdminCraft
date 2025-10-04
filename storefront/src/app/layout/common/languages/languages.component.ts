@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
+import { Router } from '@angular/router';
 import {
     FuseNavigationService,
     FuseVerticalNavigationComponent,
@@ -29,13 +30,11 @@ export class LanguagesComponent implements OnInit, OnDestroy {
     activeLang: string;
     flagCodes: any;
 
-    /**
-     * Constructor
-     */
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _fuseNavigationService: FuseNavigationService,
-        private _translocoService: TranslocoService
+        private _translocoService: TranslocoService,
+        private _router: Router
     ) {}
 
     // -----------------------------------------------------------------------------------------------------
@@ -74,14 +73,13 @@ export class LanguagesComponent implements OnInit, OnDestroy {
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * Set the active lang
-     *
-     * @param lang
-     */
     setActiveLang(lang: string): void {
-        // Set the active lang
-        this._translocoService.setActiveLang(lang);
+        const currentUrl = this._router.url;
+        const langPattern = /^\/(tr|en)/;
+        const pathWithoutLang = currentUrl.replace(langPattern, '');
+        const newUrl = `/${lang}${pathWithoutLang || '/dashboards/project'}`;
+
+        this._router.navigateByUrl(newUrl);
     }
 
     /**

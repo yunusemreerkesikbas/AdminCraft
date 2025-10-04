@@ -1,42 +1,83 @@
+export type Language = 'TR' | 'EN';
+export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
+
 export interface PageDto {
   id: number;
+  uuid: string;
+  uid: string;
   tenantId: number;
-  title: string;
-  slug: string;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
-  language: 'TR' | 'EN';
   categoryId?: number | null;
+  status: PageStatus;
+  featuredImage?: string | null;
+  styleClasses?: string | null;
+  isHome: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface PageI18nDto {
+  id: number;
+  uuid: string;
+  uid: string;
+  pageId: number;
+  tenantId: number;
+  language: Language;
+  urlPath?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
-  canonicalUrl?: string | null;
-  subtitle?: string | null;
-  styleClasses?: string | null;
   description?: string | null;
   descriptionHtml?: string | null;
-  featuredImage?: string | null;
+  status: PageStatus;
   publishedAt?: string | null;
   scheduledAt?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface PageWithI18nDto {
+  page: PageDto;
+  translations: {
+    [key in Language]?: PageI18nDto;
+  };
 }
 
 export interface CreatePageRequest {
-  tenantId: number;
-  title: string;
-  slug: string;
-  language: 'TR' | 'EN';
   categoryId?: number | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  canonicalUrl?: string | null;
-  subtitle?: string | null;
-  styleClasses?: string | null;
-  description?: string | null;
+  status?: PageStatus;
   featuredImage?: string | null;
+  styleClasses?: string | null;
+  isHome?: boolean;
+  sortOrder?: number;
 }
 
-export interface UpdatePageRequest extends CreatePageRequest {
+export interface UpdatePageRequest {
   id: number;
+  categoryId?: number | null;
+  status?: PageStatus;
+  featuredImage?: string | null;
+  styleClasses?: string | null;
+  isHome?: boolean;
+  sortOrder?: number;
+}
+
+export interface PageI18nRequest {
+  urlPath?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  description?: string | null;
+  descriptionHtml?: string | null;
+  status?: PageStatus;
+  scheduledAt?: string | null;
+}
+
+export interface PublishPageI18nRequest {
+  scheduledAt?: string | null;
 }
 
 export interface PageCategoryDto {

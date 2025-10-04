@@ -456,6 +456,17 @@
                                         class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
                                     >
                                         <!-- Language Settings -->
+                                        <div class="mt-4">
+                                            <mat-form-field class="w-full">
+                                                <mat-label>{{ 'admin.common.fields.supportedLanguages' | transloco }}</mat-label>
+                                                <mat-select formControlName="supportedLanguages" multiple>
+                                                    <mat-option *ngFor="let langOpt of languageOptions" [value]="langOpt.value">
+                                                        {{ langOpt.label }}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </div>
+
                                         <spa-select
                                             [label]="
                                                 'admin.tenants.fields.defaultLanguage'
