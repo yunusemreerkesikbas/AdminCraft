@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class TenantServiceImpl implements TenantService {
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
+    private final ProvisioningService provisioningService;
 
     @Override
     @Transactional
@@ -85,6 +87,9 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = tenantRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
 
+        // Track old supported languages to detect newly added ones
+        List<Language> oldSupportedLanguages = new ArrayList<>(tenant.getSupportedLanguages());
+
         if (request.companyName() != null) {
             tenant.setCompanyName(request.companyName());
         }
@@ -104,7 +109,7 @@ public class TenantServiceImpl implements TenantService {
             tenant.setSupportedLanguages(request.supportedLanguages());
         }
         if (request.customDomain() != null) {
-            if (!request.customDomain().isEmpty() && 
+            if (!request.customDomain().isEmpty() &&
                 tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
                 throw new IllegalArgumentException("Custom domain already exists: " + request.customDomain());
             }
@@ -124,6 +129,30 @@ public class TenantServiceImpl implements TenantService {
         }
 
         Tenant updatedTenant = tenantRepository.save(tenant);
+
+        // Detect newly added languages and trigger provisioning
+        if (request.supportedLanguages() != null && !request.supportedLanguages().isEmpty()) {
+            List<Language> newLanguages = request.supportedLanguages().stream()
+                .filter(lang -> !oldSupportedLanguages.contains(lang))
+                .toList();
+
+            if (!newLanguages.isEmpty()) {
+                log.info("Detected {} new languages for tenant {}: {}",
+                    newLanguages.size(), id, newLanguages);
+
+                try {
+                    provisioningService.createLanguageProvisioningJob(id, new java.util.HashSet<>(newLanguages));
+                    log.info("Provisioning job created successfully for tenant {} with languages: {}",
+                        id, newLanguages);
+                } catch (Exception ex) {
+                    log.error("Failed to create provisioning job for tenant {} with languages {}: {}",
+                        id, newLanguages, ex.getMessage(), ex);
+                    // Don't fail the tenant update if provisioning fails
+                    // The provisioning can be retried manually if needed
+                }
+            }
+        }
+
         return TenantResponse.from(updatedTenant, displayLanguage);
     }
 

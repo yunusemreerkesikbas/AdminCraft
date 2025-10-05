@@ -2,11 +2,13 @@ package com.backend.application.service;
 
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
+import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.exception.TenantMismatchException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
+import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.request.PageCreateRequest;
 import com.backend.presentation.dto.response.PageResponse;
 import com.backend.presentation.dto.response.PageWithI18nResponse;
@@ -26,6 +28,7 @@ public class PageServiceImpl implements PageService {
     private final PageRepository pageRepository;
     private final PageI18nRepository pageI18nRepository;
     private final PageI18nService pageI18nService;
+    private final TenantRepository tenantRepository;
 
     @Override
     @Transactional
@@ -71,8 +74,12 @@ public class PageServiceImpl implements PageService {
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
+        // Fetch tenant to get supported languages
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + tenantId));
+
         List<PageI18n> i18nList = pageI18nRepository.findByTenantIdAndPageId(tenantId, id);
-        return PageWithI18nResponse.from(page, i18nList);
+        return PageWithI18nResponse.from(page, i18nList, tenant.getSupportedLanguages());
     }
 
     @Override

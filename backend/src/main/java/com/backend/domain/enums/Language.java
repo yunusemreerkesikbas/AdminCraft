@@ -5,7 +5,10 @@ import java.util.Optional;
 
 public enum Language {
     TR("tr", "Türkçe", "Turkish"),
-    EN("en", "İngilizce", "English");
+    EN("en", "İngilizce", "English"),
+    ES("es", "İspanyolca", "Spanish"),
+    RU("ru", "Rusça", "Russian"),
+    AR("ar", "Arapça", "Arabic");
 
     private final String code;
     private final String displayNameTr;
@@ -22,14 +25,14 @@ public enum Language {
     }
 
     public String getDisplayName() {
-        return displayNameTr; // Default to Turkish for backward compatibility
+        return displayNameTr;
     }
 
     public String getDisplayName(Language language) {
         return switch (language) {
             case TR -> displayNameTr;
             case EN -> displayNameEn;
-            default -> displayNameTr;
+            case ES, RU, AR -> displayNameEn;
         };
     }
 

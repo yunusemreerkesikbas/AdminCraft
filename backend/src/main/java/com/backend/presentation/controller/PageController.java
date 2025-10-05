@@ -92,7 +92,7 @@ public class PageController {
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<PageResponse>>> list(
-      @RequestParam @NotNull Long tenantId,
+      @RequestHeader(value = "X-Tenant-ID") Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       List<PageResponse> pages = pageService.getAllPages(tenantId);

@@ -61,7 +61,13 @@
       "Bash(claude mcp:*)",
       "Bash(tree:*)",
       "Bash(mvn clean:*)",
-      "Bash(mvn compile:*)"
+      "Bash(mvn compile:*)",
+      "Bash(findstr mvn:*)",
+      "Bash(.mvnw.cmd clean package -DskipTests)",
+      "Bash(mvnw.cmd clean:*)",
+      "Read(//c/Program Files/MySQL/MySQL Server 8.0/bin/**)",
+      "Bash(mvn test:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "additionalDirectories": [

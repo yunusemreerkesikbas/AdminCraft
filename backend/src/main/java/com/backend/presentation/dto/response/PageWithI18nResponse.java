@@ -7,11 +7,13 @@ import com.backend.domain.enums.Language;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public record PageWithI18nResponse(
         PageResponse page,
-        Map<String, PageI18nResponse> translations // key = language code (lowercase: tr, en)
+        Map<String, PageI18nResponse> translations, // key = language code (lowercase: tr, en)
+        Set<String> availableLanguages // All languages from tenant.supportedLanguages
 ) {
     public PageWithI18nResponse {
         if (page == null) {
@@ -21,9 +23,13 @@ public record PageWithI18nResponse(
         translations = translations == null
                 ? Map.of()
                 : Map.copyOf(translations);
+        // Make availableLanguages immutable and ensure it's never null
+        availableLanguages = availableLanguages == null
+                ? Set.of()
+                : Set.copyOf(availableLanguages);
     }
 
-    public static PageWithI18nResponse from(Page page, List<PageI18n> pageI18nList) {
+    public static PageWithI18nResponse from(Page page, List<PageI18n> pageI18nList, Set<Language> tenantSupportedLanguages) {
         if (page == null) {
             throw new IllegalArgumentException("Page entity cannot be null");
         }
@@ -39,7 +45,14 @@ public record PageWithI18nResponse(
                                 (existing, replacement) -> replacement // In case of duplicate, keep latest
                         ));
 
-        return new PageWithI18nResponse(pageResponse, translationsMap);
+        // Convert tenant's supported languages to lowercase language codes
+        Set<String> availableLangs = tenantSupportedLanguages == null || tenantSupportedLanguages.isEmpty()
+                ? Set.of()
+                : tenantSupportedLanguages.stream()
+                        .map(lang -> lang.getCode().toLowerCase())
+                        .collect(Collectors.toSet());
+
+        return new PageWithI18nResponse(pageResponse, translationsMap, availableLangs);
     }
 
     public PageI18nResponse getTranslation(Language language) {
@@ -64,10 +77,6 @@ public record PageWithI18nResponse(
 
     public boolean hasTranslations() {
         return !translations.isEmpty();
-    }
-
-    public java.util.Set<String> getAvailableLanguages() {
-        return translations.keySet();
     }
 
     public boolean areAllTranslationsPublished() {
