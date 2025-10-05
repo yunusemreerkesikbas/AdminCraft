@@ -1,4 +1,4 @@
-export type Language = 'TR' | 'EN';
+export type Language = 'TR' | 'EN' | 'ES' | 'RU' | 'AR';
 export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
 
 export interface PageDto {
@@ -14,8 +14,6 @@ export interface PageDto {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  createdBy?: string | null;
-  updatedBy?: string | null;
 }
 
 export interface PageI18nDto {
@@ -36,16 +34,47 @@ export interface PageI18nDto {
   publishedAt?: string | null;
   scheduledAt?: string | null;
   updatedAt: string;
+  fallbackLanguage?: boolean;
 }
 
-export interface PageWithI18nDto {
-  page: PageDto;
+export interface PageListDto {
+  id: number;
+  uuid: string;
+  uid: string;
+  tenantId: number;
+  categoryId?: number | null;
+  status: PageStatus;
+  featuredImage?: string | null;
+  styleClasses?: string | null;
+  isHome: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  translations: {
+    [key in Language]?: boolean;
+  };
+}
+
+export interface PageDetailDto {
+  id: number;
+  uuid: string;
+  uid: string;
+  tenantId: number;
+  categoryId?: number | null;
+  status: PageStatus;
+  featuredImage?: string | null;
+  styleClasses?: string | null;
+  isHome: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
   translations: {
     [key in Language]?: PageI18nDto;
   };
-  availableLanguages: string[];
-  translationCount: number;
-  publishedTranslationCount: number;
+  metadata: {
+    translationCount: number;
+    publishedTranslationCount: number;
+  };
 }
 
 export interface CreatePageRequest {

@@ -11,7 +11,7 @@ import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
-import { CreatePageRequest, Language, PageCategoryDto, PageDto, PageI18nRequest, UpdatePageRequest } from '../page-builder.types';
+import { CreatePageRequest, Language, PageCategoryDto, PageListDto, PageI18nRequest, UpdatePageRequest } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
 import { TenantsService } from '../../tenants/tenants.service';
@@ -59,8 +59,8 @@ export class PageListComponent implements OnInit, OnDestroy {
 
   isLoading = false;
   tenantId = 1;
-  pages: PageDto[] = [];
-  filtered: PageDto[] = [];
+  pages: PageListDto[] = [];
+  filtered: PageListDto[] = [];
   search = '';
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
@@ -242,21 +242,21 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  editPage(page: PageDto): void {
-    this.#pageBuilderService.getPageWithI18n(page.id).pipe(take(1)).subscribe({
-      next: (pageWithI18n) => {
+  editPage(page: PageListDto): void {
+    this.#pageBuilderService.getPageDetail(page.id).pipe(take(1)).subscribe({
+      next: (pageDetail) => {
         const schema = this.#buildPageSchema();
         const initial: any = {
-          categoryId: pageWithI18n.page.categoryId,
-          status: pageWithI18n.page.status,
-          isHome: pageWithI18n.page.isHome,
-          sortOrder: pageWithI18n.page.sortOrder,
-          styleClasses: pageWithI18n.page.styleClasses
+          categoryId: pageDetail.categoryId,
+          status: pageDetail.status,
+          isHome: pageDetail.isHome,
+          sortOrder: pageDetail.sortOrder,
+          styleClasses: pageDetail.styleClasses
         };
 
         this.#supportedLanguages.forEach(lang => {
           const langKey = lang.toUpperCase() as Language;
-          const translation = pageWithI18n.translations[langKey];
+          const translation = pageDetail.translations[langKey];
           initial[lang] = {
             urlPath: translation?.urlPath || '',
             title: translation?.title || '',
@@ -292,7 +292,7 @@ export class PageListComponent implements OnInit, OnDestroy {
               isHome: result.isHome || false,
               sortOrder: result.sortOrder || 0,
               styleClasses: result.styleClasses || null,
-              featuredImage: pageWithI18n.page.featuredImage
+              featuredImage: pageDetail.featuredImage
             };
 
             const updates: Observable<any>[] = [
@@ -346,7 +346,7 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  deletePage(page: PageDto): void {
+  deletePage(page: PageListDto): void {
     this.#pageBuilderService.deletePage(page.id).pipe(take(1)).subscribe({
       next: () => {
         this.pages = this.pages.filter(p => p.id !== page.id);
@@ -361,21 +361,21 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  setAsHome(page: PageDto): void {
-    this.#pageBuilderService.setPageAsHome(page.id).pipe(take(1)).subscribe({
-      next: (updated) => {
-        const idx = this.pages.findIndex(p => p.id === updated.id);
-        if (idx > -1) {
-          this.pages[idx] = updated;
-        }
-        this.pages.forEach((p, i) => {
-          if (p.id !== updated.id && p.isHome) {
-            this.pages[i] = { ...p, isHome: false };
-          }
-        });
-        this.applyFilter();
+  setAsHome(page: PageListDto): void {
+    const updateReq: UpdatePageRequest = {
+      id: page.id,
+      categoryId: page.categoryId,
+      status: page.status,
+      isHome: true,
+      sortOrder: page.sortOrder,
+      styleClasses: page.styleClasses,
+      featuredImage: page.featuredImage
+    };
+
+    this.#pageBuilderService.updatePage(page.id, updateReq).pipe(take(1)).subscribe({
+      next: () => {
+        this.load();
         this.#notify.success('admin.common.messages.operationSuccess');
-        this.#cdr.markForCheck();
       },
       error: (error) => {
         const msg = this.#errorHandler.handleError(error);

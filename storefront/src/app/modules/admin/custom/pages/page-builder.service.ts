@@ -14,7 +14,8 @@ import {
   PageI18nDto,
   PageI18nRequest,
   PageSectionDto,
-  PageWithI18nDto,
+  PageDetailDto,
+  PageListDto,
   PublishPageI18nRequest,
   ReorderCategoryRequest,
   UpdateCategoryRequest,
@@ -27,8 +28,8 @@ export class PageBuilderService {
   #createRequested = new Subject<void>();
   readonly createRequested$ = this.#createRequested.asObservable();
 
-  listPages(): Observable<PageDto[]> {
-    return this.#api.get<ApiResponse<PageDto[]>>('pages').pipe(
+  listPages(): Observable<PageListDto[]> {
+    return this.#api.get<ApiResponse<PageListDto[]>>('pages').pipe(
       map((r) => {
         const data = r?.data ?? [];
         return Array.isArray(data) ? data : [];
@@ -44,9 +45,9 @@ export class PageBuilderService {
     return this.#api.get<ApiResponse<PageDto>>('pageById', { id }).pipe(map((r) => r.data));
   }
 
-  getPageWithI18n(id: number): Observable<PageWithI18nDto> {
+  getPageDetail(id: number): Observable<PageDetailDto> {
     return this.#api
-      .get<ApiResponse<PageWithI18nDto>>('pageById', { id }, { include: 'translations' })
+      .get<ApiResponse<PageDetailDto>>('pageById', { id }, { include: 'translations' })
       .pipe(map((r) => r.data));
   }
 
@@ -56,10 +57,6 @@ export class PageBuilderService {
 
   updatePage(id: number, req: UpdatePageRequest): Observable<PageDto> {
     return this.#api.put<ApiResponse<PageDto>>('pageById', req, { id }).pipe(map((r) => r.data));
-  }
-
-  setPageAsHome(id: number): Observable<PageDto> {
-    return this.#api.put<ApiResponse<PageDto>>('pageSetHome', {}, { id }).pipe(map((r) => r.data));
   }
 
   deletePage(id: number): Observable<void> {
