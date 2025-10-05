@@ -40,6 +40,8 @@ import {
 } from 'rxjs';
 import { TenantsService } from '../tenants.service';
 import { CreateTenantRequest, Language, Tenant, TenantPagination, UpdateTenantRequest } from '../tenants.types';
+import { MatDialog } from '@angular/material/dialog';
+import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/components/provisioning-modal/provisioning-modal.component';
 
 @Component({
     selector: 'tenants-list',
@@ -86,6 +88,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     private _transloco = inject(TranslocoService);
     #itemDialog = inject(ItemDialogService);
     #notify = inject(NotificationService);
+    #dialog = inject(MatDialog);
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
@@ -224,6 +227,8 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     editTenant(tenant: Tenant): void {
+        const oldSupportedLanguages = tenant.supportedLanguages || [tenant.defaultLanguage];
+
         const options: ItemDialogOptions<UpdateTenantRequest, number> = {
             titleKey: 'admin.tenants.title',
             mode: 'edit',
@@ -236,7 +241,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                 adminName: tenant.adminName,
                 adminEmail: tenant.adminEmail,
                 phone: tenant.phone || '',
-                supportedLanguages: tenant.supportedLanguages || [tenant.defaultLanguage],
+                supportedLanguages: oldSupportedLanguages,
                 defaultLanguage: tenant.defaultLanguage,
                 customDomain: tenant.customDomain || '',
                 timezone: tenant.timezone || '',
@@ -262,14 +267,84 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
                 Object.keys(payload).forEach((k) => (payload as any)[k] === '' && delete (payload as any)[k]);
 
+                const newLanguages = (payload.supportedLanguages || []).filter(
+                    lang => !oldSupportedLanguages.includes(lang)
+                );
+
                 this._tenantsService
                     .updateTenant(tenant.id, payload)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => this.#notify.success('admin.common.messages.operationSuccess'),
+                        next: () => {
+                            this.#notify.success('admin.common.messages.operationSuccess');
+
+                            if (newLanguages.length > 0) {
+                                this.#showProvisioningModal(tenant.id, newLanguages);
+                            }
+                        },
                         error: () => this.#notify.alert('admin.common.errors.unexpected')
                     });
             });
+    }
+
+    #showProvisioningModal(tenantId: number, newLanguages: Language[]): void {
+        const modalData: ProvisioningModalData = {
+            tenantId,
+            newLanguages
+        };
+
+        const dialogRef = this.#dialog.open(ProvisioningModalComponent, {
+            data: modalData,
+            disableClose: true,
+            width: '500px'
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed: boolean) => {
+            if (!confirmed) return;
+
+            this._tenantsService
+                .provisionLanguages(tenantId, { languages: newLanguages })
+                .pipe(
+                    take(1),
+                    switchMap((job) => {
+                        const progressDialogRef = this.#dialog.open(ProvisioningModalComponent, {
+                            data: {
+                                tenantId,
+                                newLanguages,
+                                jobUuid: job.uuid,
+                                status: job.status,
+                                processedItems: job.processedItems,
+                                totalItems: job.totalItems
+                            } as ProvisioningModalData,
+                            disableClose: true,
+                            width: '500px'
+                        });
+
+                        return this._tenantsService.pollProvisioningJob(job.uuid).pipe(
+                            map((updatedJob) => {
+                                progressDialogRef.componentInstance.data = {
+                                    ...progressDialogRef.componentInstance.data,
+                                    status: updatedJob.status,
+                                    processedItems: updatedJob.processedItems,
+                                    totalItems: updatedJob.totalItems,
+                                    errorMessage: updatedJob.errorMessage
+                                };
+                                return updatedJob;
+                            })
+                        );
+                    })
+                )
+                .subscribe({
+                    next: (job) => {
+                        if (job.status === 'COMPLETED') {
+                            this.#notify.success('admin.provisioning.completed');
+                        } else if (job.status === 'FAILED') {
+                            this.#notify.alert('admin.provisioning.failed');
+                        }
+                    },
+                    error: () => this.#notify.alert('admin.common.errors.unexpected')
+                });
+        });
     }
 
     #buildTenantDialogSchema(): ItemDialogSchema {
@@ -293,7 +368,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             i18n: []
         };
     }
-    
+
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }

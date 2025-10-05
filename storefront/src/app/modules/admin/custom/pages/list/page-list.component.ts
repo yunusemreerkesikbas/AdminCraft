@@ -14,6 +14,7 @@ import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageDto, PageI18nRequest, UpdatePageRequest } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
+import { TenantsService } from '../../tenants/tenants.service';
 
 @Component({
   selector: 'spa-page-list',
@@ -51,6 +52,7 @@ export class PageListComponent implements OnInit, OnDestroy {
   #itemDialogService = inject(ItemDialogService);
   #pageBuilderService = inject(PageBuilderService);
   #tenantContext = inject(TenantContextService);
+  #tenantsService = inject(TenantsService);
   #router = inject(Router);
   #errorHandler = inject(ErrorHandlingService);
   #loadingState = inject(LoadingStateService);
@@ -62,6 +64,7 @@ export class PageListComponent implements OnInit, OnDestroy {
   search = '';
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
+  #supportedLanguages: string[] = ['tr', 'en'];
 
   ngOnInit(): void {
     const storedId = this.#tenantContext.getCurrentTenantId();
@@ -72,6 +75,7 @@ export class PageListComponent implements OnInit, OnDestroy {
     if (storedSub) {
       this.subdomain = storedSub;
     }
+    this.#loadTenantLanguages();
     this.#loadCategories();
     this.load();
 
@@ -85,6 +89,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.tenantId = nextId;
         this.subdomain = nextSub;
         if (changed) {
+          this.#loadTenantLanguages();
           this.#loadCategories();
           this.load();
         }
@@ -145,18 +150,22 @@ export class PageListComponent implements OnInit, OnDestroy {
 
   createPage(): void {
     const schema = this.#buildPageSchema();
+    const initial: any = {
+      status: 'DRAFT',
+      isHome: false,
+      sortOrder: 0
+    };
+
+    this.#supportedLanguages.forEach(lang => {
+      initial[lang] = {};
+    });
+
     const options: ItemDialogOptions<any> = {
       titleKey: 'admin.dialog.title.create',
       mode: 'create',
       schema,
-      languages: ['tr', 'en'],
-      initial: {
-        status: 'DRAFT',
-        isHome: false,
-        sortOrder: 0,
-        tr: {},
-        en: {}
-      },
+      languages: this.#supportedLanguages,
+      initial,
       modalData: {
         disableClose: true,
         width: '720px',
@@ -181,31 +190,30 @@ export class PageListComponent implements OnInit, OnDestroy {
           next: (createdPage) => {
             const i18nUpdates: Observable<any>[] = [];
 
-            if (result.tr) {
-              const trReq: PageI18nRequest = {
-                urlPath: result.tr.urlPath || null,
-                title: result.tr.title || null,
-                subtitle: result.tr.subtitle || null,
-                metaTitle: result.tr.metaTitle || null,
-                metaDescription: result.tr.metaDescription || null,
-                description: result.tr.description || null,
-                status: result.status || 'DRAFT'
-              };
-              i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, 'TR', trReq));
-            }
+            this.#supportedLanguages.forEach(lang => {
+              const hasContent = result[lang] && (
+                result[lang].urlPath ||
+                result[lang].title ||
+                result[lang].subtitle ||
+                result[lang].metaTitle ||
+                result[lang].metaDescription ||
+                result[lang].description
+              );
 
-            if (result.en) {
-              const enReq: PageI18nRequest = {
-                urlPath: result.en.urlPath || null,
-                title: result.en.title || null,
-                subtitle: result.en.subtitle || null,
-                metaTitle: result.en.metaTitle || null,
-                metaDescription: result.en.metaDescription || null,
-                description: result.en.description || null,
-                status: result.status || 'DRAFT'
-              };
-              i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, 'EN', enReq));
-            }
+              if (hasContent) {
+                const i18nReq: PageI18nRequest = {
+                  language: lang.toUpperCase() as Language,
+                  urlPath: result[lang].urlPath || null,
+                  title: result[lang].title || null,
+                  subtitle: result[lang].subtitle || null,
+                  metaTitle: result[lang].metaTitle || null,
+                  metaDescription: result[lang].metaDescription || null,
+                  description: result[lang].description || null,
+                  status: result.status || 'DRAFT'
+                };
+                i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
+              }
+            });
 
             if (i18nUpdates.length > 0) {
               forkJoin(i18nUpdates).pipe(take(1)).subscribe({
@@ -238,34 +246,33 @@ export class PageListComponent implements OnInit, OnDestroy {
     this.#pageBuilderService.getPageWithI18n(page.id).pipe(take(1)).subscribe({
       next: (pageWithI18n) => {
         const schema = this.#buildPageSchema();
+        const initial: any = {
+          categoryId: pageWithI18n.page.categoryId,
+          status: pageWithI18n.page.status,
+          isHome: pageWithI18n.page.isHome,
+          sortOrder: pageWithI18n.page.sortOrder,
+          styleClasses: pageWithI18n.page.styleClasses
+        };
+
+        this.#supportedLanguages.forEach(lang => {
+          const langKey = lang.toUpperCase() as Language;
+          const translation = pageWithI18n.translations[langKey];
+          initial[lang] = {
+            urlPath: translation?.urlPath || '',
+            title: translation?.title || '',
+            subtitle: translation?.subtitle || '',
+            metaTitle: translation?.metaTitle || '',
+            metaDescription: translation?.metaDescription || '',
+            description: translation?.description || ''
+          };
+        });
+
         const options: ItemDialogOptions<any, number> = {
           titleKey: 'admin.dialog.title.edit',
           mode: 'edit',
           schema,
-          languages: ['tr', 'en'],
-          initial: {
-            categoryId: pageWithI18n.page.categoryId,
-            status: pageWithI18n.page.status,
-            isHome: pageWithI18n.page.isHome,
-            sortOrder: pageWithI18n.page.sortOrder,
-            styleClasses: pageWithI18n.page.styleClasses,
-            tr: {
-              urlPath: pageWithI18n.translations.TR?.urlPath || '',
-              title: pageWithI18n.translations.TR?.title || '',
-              subtitle: pageWithI18n.translations.TR?.subtitle || '',
-              metaTitle: pageWithI18n.translations.TR?.metaTitle || '',
-              metaDescription: pageWithI18n.translations.TR?.metaDescription || '',
-              description: pageWithI18n.translations.TR?.description || ''
-            },
-            en: {
-              urlPath: pageWithI18n.translations.EN?.urlPath || '',
-              title: pageWithI18n.translations.EN?.title || '',
-              subtitle: pageWithI18n.translations.EN?.subtitle || '',
-              metaTitle: pageWithI18n.translations.EN?.metaTitle || '',
-              metaDescription: pageWithI18n.translations.EN?.metaDescription || '',
-              description: pageWithI18n.translations.EN?.description || ''
-            }
-          },
+          languages: this.#supportedLanguages,
+          initial,
           id: page.id,
           modalData: {
             disableClose: true,
@@ -292,31 +299,30 @@ export class PageListComponent implements OnInit, OnDestroy {
               this.#pageBuilderService.updatePage(page.id, updatePageReq)
             ];
 
-            if (result.tr) {
-              const trReq: PageI18nRequest = {
-                urlPath: result.tr.urlPath || null,
-                title: result.tr.title || null,
-                subtitle: result.tr.subtitle || null,
-                metaTitle: result.tr.metaTitle || null,
-                metaDescription: result.tr.metaDescription || null,
-                description: result.tr.description || null,
-                status: result.status || 'DRAFT'
-              };
-              updates.push(this.#pageBuilderService.updatePageI18n(page.id, 'TR', trReq));
-            }
+            this.#supportedLanguages.forEach(lang => {
+              const hasContent = result[lang] && (
+                result[lang].urlPath ||
+                result[lang].title ||
+                result[lang].subtitle ||
+                result[lang].metaTitle ||
+                result[lang].metaDescription ||
+                result[lang].description
+              );
 
-            if (result.en) {
-              const enReq: PageI18nRequest = {
-                urlPath: result.en.urlPath || null,
-                title: result.en.title || null,
-                subtitle: result.en.subtitle || null,
-                metaTitle: result.en.metaTitle || null,
-                metaDescription: result.en.metaDescription || null,
-                description: result.en.description || null,
-                status: result.status || 'DRAFT'
-              };
-              updates.push(this.#pageBuilderService.updatePageI18n(page.id, 'EN', enReq));
-            }
+              if (hasContent) {
+                const i18nReq: PageI18nRequest = {
+                  language: lang.toUpperCase() as Language,
+                  urlPath: result[lang].urlPath || null,
+                  title: result[lang].title || null,
+                  subtitle: result[lang].subtitle || null,
+                  metaTitle: result[lang].metaTitle || null,
+                  metaDescription: result[lang].metaDescription || null,
+                  description: result[lang].description || null,
+                  status: result.status || 'DRAFT'
+                };
+                updates.push(this.#pageBuilderService.updatePageI18n(page.id, lang.toUpperCase() as Language, i18nReq));
+              }
+            });
 
             forkJoin(updates).pipe(take(1)).subscribe({
               next: () => {
@@ -374,6 +380,20 @@ export class PageListComponent implements OnInit, OnDestroy {
       error: (error) => {
         const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
+      }
+    });
+  }
+
+  #loadTenantLanguages(): void {
+    if (!this.tenantId) return;
+
+    this.#tenantsService.getTenantLanguages(this.tenantId).pipe(take(1)).subscribe({
+      next: (data) => {
+        this.#supportedLanguages = (data.supportedLanguages || []).map(lang => lang.toLowerCase());
+        this.#cdr.markForCheck();
+      },
+      error: () => {
+        this.#supportedLanguages = ['tr', 'en'];
       }
     });
   }

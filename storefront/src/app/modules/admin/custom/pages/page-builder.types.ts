@@ -43,6 +43,9 @@ export interface PageWithI18nDto {
   translations: {
     [key in Language]?: PageI18nDto;
   };
+  availableLanguages: string[];
+  translationCount: number;
+  publishedTranslationCount: number;
 }
 
 export interface CreatePageRequest {
@@ -65,6 +68,7 @@ export interface UpdatePageRequest {
 }
 
 export interface PageI18nRequest {
+  language?: Language;
   urlPath?: string | null;
   title?: string | null;
   subtitle?: string | null;
