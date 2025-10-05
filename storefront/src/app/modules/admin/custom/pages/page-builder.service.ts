@@ -45,7 +45,9 @@ export class PageBuilderService {
   }
 
   getPageWithI18n(id: number): Observable<PageWithI18nDto> {
-    return this.#api.get<ApiResponse<PageWithI18nDto>>('pageWithI18n', { id }).pipe(map((r) => r.data));
+    return this.#api
+      .get<ApiResponse<PageWithI18nDto>>('pageById', { id }, { include: 'translations' })
+      .pipe(map((r) => r.data));
   }
 
   createPage(req: CreatePageRequest): Observable<PageDto> {

@@ -24,6 +24,8 @@ public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
 
         List<PageI18n> findByTenantIdAndPageId(Long tenantId, Long pageId);
 
+        List<PageI18n> findByTenantId(Long tenantId);
+
         @Query("SELECT pi FROM PageI18n pi WHERE pi.tenantId = :tenantId AND pi.language = :language AND pi.urlPath = :urlPath AND pi.status = 'PUBLISHED'")
         Optional<PageI18n> findPublishedByUrl(@Param("tenantId") Long tenantId,
                         @Param("language") Language language,

@@ -11,7 +11,7 @@ import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.request.PageCreateRequest;
 import com.backend.presentation.dto.response.PageResponse;
-import com.backend.presentation.dto.response.PageWithI18nResponse;
+import com.backend.presentation.dto.response.PageDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,18 +68,14 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageWithI18nResponse getPageWithI18n(Long id, Long tenantId) {
+    public PageDetailResponse getPageWithI18n(Long id, Long tenantId) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
         validateTenantMatch(page.getTenantId(), tenantId);
 
-        // Fetch tenant to get supported languages
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + tenantId));
-
         List<PageI18n> i18nList = pageI18nRepository.findByTenantIdAndPageId(tenantId, id);
-        return PageWithI18nResponse.from(page, i18nList, tenant.getSupportedLanguages());
+        return PageDetailResponse.from(page, i18nList);
     }
 
     @Override
@@ -88,6 +84,20 @@ public class PageServiceImpl implements PageService {
         return pageRepository.findByTenantId(tenantId)
                 .stream()
                 .map(PageResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.backend.presentation.dto.response.PageListResponse> getAllPagesWithTranslations(Long tenantId) {
+        List<Page> pages = pageRepository.findByTenantId(tenantId);
+        List<PageI18n> allTranslations = pageI18nRepository.findByTenantId(tenantId);
+        java.util.Map<Long, List<PageI18n>> translationsByPage = allTranslations.stream()
+                .collect(Collectors.groupingBy(PageI18n::getPageId));
+        return pages.stream()
+                .map(page -> com.backend.presentation.dto.response.PageListResponse.from(
+                        page,
+                        translationsByPage.getOrDefault(page.getId(), java.util.Collections.emptyList())))
                 .collect(Collectors.toList());
     }
 
@@ -130,25 +140,6 @@ public class PageServiceImpl implements PageService {
 
         pageI18nService.deletePageI18n(id);
         pageRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional
-    public PageResponse setHomePage(Long id, Long tenantId) {
-        Page page = pageRepository.findById(id)
-                .orElseThrow(() -> new PageNotFoundException(id));
-
-        validateTenantMatch(page.getTenantId(), tenantId);
-
-        pageRepository.findHomePage(tenantId).ifPresent(currentHome -> {
-            currentHome.unmarkAsHome();
-            pageRepository.save(currentHome);
-        });
-
-        page.markAsHome();
-        page = pageRepository.save(page);
-
-        return PageResponse.from(page);
     }
 
     private void validateTenantMatch(Long pageTenantId, Long requestTenantId) {
