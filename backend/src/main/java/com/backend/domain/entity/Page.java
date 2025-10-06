@@ -43,42 +43,10 @@ public class Page extends BaseEntity {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
-    public boolean canBePublished() {
-        return status == PageStatus.DRAFT;
-    }
-
-    public void markAsHome() {
-        this.isHome = true;
-    }
-
-    public void unmarkAsHome() {
-        this.isHome = false;
-    }
-
-    public boolean canBeEditedBy(Long userId, Long userTenantId) {
-        return getTenantId() != null && getTenantId().equals(userTenantId);
-    }
-
     public void validateEditAuthorization(Long userId, Long userTenantId) {
-        if (!canBeEditedBy(userId, userTenantId)) {
+        if (getTenantId() == null || !getTenantId().equals(userTenantId)) {
             throw new UnauthorizedOperationException(
                     "User " + userId + " cannot edit page from different tenant");
         }
-    }
-
-    public boolean isPublished() {
-        return status == PageStatus.PUBLISHED;
-    }
-
-    public boolean isScheduled() {
-        return status == PageStatus.SCHEDULED;
-    }
-
-    public boolean isArchived() {
-        return status == PageStatus.ARCHIVED;
-    }
-
-    public boolean isHomePage() {
-        return Boolean.TRUE.equals(isHome);
     }
 }

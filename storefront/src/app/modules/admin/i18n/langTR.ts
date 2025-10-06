@@ -9,6 +9,9 @@ export const langTR = {
                 title: 'Başlık',
                 name: 'Ad',
                 slug: 'Slug',
+                uid: 'UID',
+                category: 'Kategori',
+                home: 'Ana Sayfa',
                 level: 'Seviye',
                 role: 'Rol',
                 status: 'Durum',
@@ -37,6 +40,9 @@ export const langTR = {
             languages: {
                 tr: 'Türkçe',
                 en: 'İngilizce',
+                es: 'İspanyolca',
+                ru: 'Rusça',
+                ar: 'Arapça',
             },
             actions: {
                 add: 'Ekle',
@@ -123,6 +129,48 @@ export const langTR = {
                 language: 'Dil',
                 priority: 'Öncelik',
                 notes: 'Notlar',
+                urlPath: 'URL Yolu',
+                subtitle: 'Alt Başlık',
+                metaTitle: 'Meta Başlık',
+                metaDescription: 'Meta Açıklama',
+                defaultLanguage: 'Varsayılan Dil',
+                supportedLanguages: 'Desteklenen Diller',
+            },
+            dialog: {
+                title: {
+                    create: 'Yeni Oluştur',
+                    edit: 'Düzenle',
+                },
+                tabs: {
+                    general: 'Genel',
+                    languages: {
+                        tr: 'Türkçe',
+                        en: 'İngilizce',
+                        es: 'İspanyolca',
+                        ru: 'Rusça',
+                        ar: 'Arapça',
+                    },
+                },
+                actions: {
+                    save: 'Kaydet',
+                    cancel: 'İptal',
+                },
+            },
+            provisioning: {
+                title: 'Dil İçerik Hazırlama',
+                message: 'Yeni eklenen diller için boş içerik kayıtları oluşturulsun mu? Bu işlem birkaç dakika sürebilir.',
+                confirm: 'Başlat',
+                cancel: 'İptal',
+                progress: 'İşleniyor...',
+                status: {
+                    pending: 'Beklemede',
+                    running: 'İşleniyor',
+                    completed: 'Tamamlandı',
+                    failed: 'Başarısız',
+                },
+                details: '{{processed}} / {{total}} öğe işlendi',
+                success: 'Dil içerikleri başarıyla hazırlandı',
+                error: 'Bir hata oluştu: {{message}}',
             },
             confirm: {
                 delete: {
@@ -226,6 +274,11 @@ export const langTR = {
                 sectionData: 'Bölüm Verisi',
                 blockType: 'Blok Türü',
                 blockData: 'Blok Verisi',
+                isHome: 'Ana Sayfa',
+                sortOrder: 'Sıralama',
+            },
+            actions: {
+                setAsHome: 'Ana Sayfa Yap',
             },
             messages: {
                 pageCreated: 'Sayfa oluşturuldu',
@@ -242,6 +295,8 @@ export const langTR = {
             errors: {
                 noTenant: 'Tenant bulunamadı',
                 invalidPageId: 'Geçersiz sayfa ID',
+                creationFailed: 'Sayfa oluşturulamadı',
+                updateFailed: 'Sayfa güncellenemedi',
             },
         },
         media: {

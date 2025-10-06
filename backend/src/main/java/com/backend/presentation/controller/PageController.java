@@ -8,7 +8,8 @@ import com.backend.presentation.dto.request.PageI18nRequest;
 import com.backend.presentation.dto.request.PagePublishRequest;
 import com.backend.presentation.dto.response.PageI18nResponse;
 import com.backend.presentation.dto.response.PageResponse;
-import com.backend.presentation.dto.response.PageWithI18nResponse;
+import com.backend.presentation.dto.response.PageListResponse;
+import com.backend.presentation.dto.response.PageDetailResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 import jakarta.validation.Valid;
@@ -57,11 +58,16 @@ public class PageController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<PageResponse>> getById(
+  public ResponseEntity<ApiResponse<?>> getById(
       @PathVariable @NotNull @Min(1) Long id,
+      @RequestParam(value = "include", required = false) String include,
       @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
+      if (include != null && include.contains("translations")) {
+        PageDetailResponse withI18n = pageService.getPageWithI18n(id, tenantId);
+        return ResponseEntity.ok(ApiResponse.success(withI18n));
+      }
       PageResponse response = pageService.getPageById(id, tenantId);
       return ResponseEntity.ok(ApiResponse.success(response));
     } catch (Exception ex) {
@@ -73,29 +79,12 @@ public class PageController {
     }
   }
 
-  @GetMapping("/{id}/with-i18n")
-  public ResponseEntity<ApiResponse<PageWithI18nResponse>> getWithI18n(
-      @PathVariable @NotNull @Min(1) Long id,
-      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-    try {
-      PageWithI18nResponse response = pageService.getPageWithI18n(id, tenantId);
-      return ResponseEntity.ok(ApiResponse.success(response));
-    } catch (Exception ex) {
-      log.error("Error getting page with i18n {}: {}", id, ex.getMessage());
-      String msg = messageSource.getMessage("page.get.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(ApiResponse.error(msg));
-    }
-  }
-
   @GetMapping
-  public ResponseEntity<ApiResponse<List<PageResponse>>> list(
-      @RequestParam @NotNull Long tenantId,
+  public ResponseEntity<ApiResponse<List<PageListResponse>>> list(
+      @RequestHeader(value = "X-Tenant-ID") Long tenantId,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      List<PageResponse> pages = pageService.getAllPages(tenantId);
+      List<PageListResponse> pages = pageService.getAllPagesWithTranslations(tenantId);
       return ResponseEntity.ok(ApiResponse.success(pages));
     } catch (Exception ex) {
       log.error("Error listing pages: {}", ex.getMessage());
@@ -140,25 +129,6 @@ public class PageController {
     } catch (Exception ex) {
       log.error("Error deleting page {}: {}", id, ex.getMessage());
       String msg = messageSource.getMessage("page.delete.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(msg));
-    }
-  }
-
-  @PutMapping("/{id}/set-home")
-  public ResponseEntity<ApiResponse<PageResponse>> setHome(
-      @PathVariable @NotNull @Min(1) Long id,
-      @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-    try {
-      PageResponse response = pageService.setHomePage(id, tenantId);
-      String successMessage = messageSource.getMessage("page.set.home.success",
-          null, Locale.forLanguageTag(lang));
-      return ResponseEntity.ok(ApiResponse.success(successMessage, response));
-    } catch (Exception ex) {
-      log.error("Error setting home page {}: {}", id, ex.getMessage());
-      String msg = messageSource.getMessage("page.set.home.error",
           new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(ApiResponse.error(msg));

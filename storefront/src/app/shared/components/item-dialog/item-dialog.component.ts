@@ -134,13 +134,46 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
     let isValid = this.generalForm.valid;
 
     for (const form of this.i18nForms.values()) {
-      if (!form.valid) {
+      // Only validate language forms that have content
+      // This allows users to edit a single language without filling all tabs
+      const hasContent = this.#formHasContent(form);
+
+      if (hasContent && !form.valid) {
         isValid = false;
         break;
       }
     }
 
     return isValid;
+  }
+
+  #formHasContent(form: FormGroup): boolean {
+    const values = form.value;
+
+    // Check if any field has a non-empty value
+    return Object.values(values).some(value => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      if (typeof value === 'string') {
+        return value.trim().length > 0;
+      }
+
+      if (typeof value === 'boolean') {
+        return true; // Checkboxes always have a value
+      }
+
+      if (typeof value === 'number') {
+        return true; // Numbers always have a value
+      }
+
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+
+      return true;
+    });
   }
 
   #buildDto(): Partial<TDto> {

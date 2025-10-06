@@ -40,7 +40,7 @@ public record TenantResponse(
             tenant.getStatus(),
             tenant.getStatus().getDisplayName(displayLanguage),
             tenant.getDefaultLanguage(),
-            tenant.getDefaultLanguage().getDisplayName(displayLanguage),
+            tenant.getDefaultLanguage().getEnglishName(),
             tenant.getSupportedLanguages(),
             tenant.getAdminEmail(),
             tenant.getAdminName(),

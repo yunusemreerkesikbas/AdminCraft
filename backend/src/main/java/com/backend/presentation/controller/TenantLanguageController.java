@@ -90,17 +90,16 @@ public class TenantLanguageController {
       @Valid @RequestBody LanguageProvisioningRequest request,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
-      Set<Language> newLanguages = tenantLanguageService.getNewlyAddedLanguages(
-          tenantId, request.languages());
+      Set<Language> languagesToProvision = request.languages();
 
-      if (newLanguages.isEmpty()) {
+      if (languagesToProvision.isEmpty()) {
         String message = messageSource.getMessage("tenant.languages.provision.none",
             null, Locale.forLanguageTag(lang));
         return ResponseEntity.ok(ApiResponse.success(message, null));
       }
 
       ProvisioningJobResponse jobResponse = provisioningService.createLanguageProvisioningJob(
-          tenantId, newLanguages);
+          tenantId, languagesToProvision);
 
       String successMessage = messageSource.getMessage("tenant.languages.provision.started",
           new Object[] { jobResponse.uuid() }, Locale.forLanguageTag(lang));

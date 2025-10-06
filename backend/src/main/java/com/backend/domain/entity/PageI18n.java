@@ -162,34 +162,6 @@ public class PageI18n extends BaseI18nEntity {
         this.status = PageStatus.SCHEDULED;
     }
 
-    public boolean isPublished() {
-        return status == PageStatus.PUBLISHED;
-    }
-
-    public boolean isScheduled() {
-        return status == PageStatus.SCHEDULED;
-    }
-
-    public boolean isArchived() {
-        return status == PageStatus.ARCHIVED;
-    }
-
-    public boolean isDraft() {
-        return status == PageStatus.DRAFT;
-    }
-
-    public String getEffectiveMetaTitle() {
-        return (metaTitle != null && !metaTitle.trim().isEmpty())
-                ? metaTitle
-                : title;
-    }
-
-    public boolean hasCustomMetaTitle() {
-        return metaTitle != null &&
-                !metaTitle.trim().isEmpty() &&
-                !metaTitle.equals(title);
-    }
-
     public void archive() {
         this.status = PageStatus.ARCHIVED;
         this.publishedAt = null;

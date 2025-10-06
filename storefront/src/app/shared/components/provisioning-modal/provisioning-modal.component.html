@@ -1,0 +1,69 @@
+<div class="provisioning-modal">
+    <h2 mat-dialog-title>{{ 'admin.common.provisioning.title' | transloco }}</h2>
+
+    <mat-dialog-content>
+        @if (isConfirmationPhase) {
+            <p>{{ 'admin.common.provisioning.message' | transloco }}</p>
+            @if (data.newLanguages && data.newLanguages.length > 0) {
+                <ul class="language-list">
+                    @for (lang of data.newLanguages; track lang) {
+                        <li>{{ 'admin.common.languages.' + lang.toLowerCase() | transloco }}</li>
+                    }
+                </ul>
+            }
+        }
+
+        @if (isProgressPhase) {
+            <div class="progress-container">
+                <p>{{ 'admin.common.provisioning.progress' | transloco }}</p>
+
+                <mat-progress-bar
+                    [mode]="data.totalItems ? 'determinate' : 'indeterminate'"
+                    [value]="progressPercentage">
+                </mat-progress-bar>
+
+                @if (data.status) {
+                    <p class="status-text">
+                        <strong>{{ 'admin.common.provisioning.status.' + data.status.toLowerCase() | transloco }}</strong>
+                    </p>
+                }
+
+                @if (data.totalItems && data.totalItems > 0) {
+                    <p class="details-text">
+                        {{ 'admin.common.provisioning.details' | transloco: {
+                            processed: data.processedItems || 0,
+                            total: data.totalItems
+                        } }}
+                    </p>
+                }
+
+                @if (isCompleted) {
+                    <p class="success-text">{{ 'admin.common.provisioning.success' | transloco }}</p>
+                }
+
+                @if (isFailed && data.errorMessage) {
+                    <p class="error-text">
+                        {{ 'admin.common.provisioning.error' | transloco: { message: data.errorMessage } }}
+                    </p>
+                }
+            </div>
+        }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        @if (isConfirmationPhase) {
+            <button mat-button (click)="onCancel()">
+                {{ 'admin.common.provisioning.cancel' | transloco }}
+            </button>
+            <button mat-flat-button color="primary" (click)="onConfirm()">
+                {{ 'admin.common.provisioning.confirm' | transloco }}
+            </button>
+        }
+
+        @if (isProgressPhase && canClose) {
+            <button mat-flat-button color="primary" (click)="onClose()">
+                {{ 'admin.common.actions.close' | transloco }}
+            </button>
+        }
+    </mat-dialog-actions>
+</div>

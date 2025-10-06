@@ -16,12 +16,12 @@
                     <div
                         class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
                     >
-                        <div>{{ 'admin.common.grid.title' | transloco }}</div>
+                        <div>{{ 'admin.common.grid.uid' | transloco }}</div>
                         <div class="hidden md:block">
-                            {{ 'admin.common.grid.slug' | transloco }}
+                            {{ 'admin.common.grid.category' | transloco }}
                         </div>
                         <div class="hidden sm:block">
-                            {{ 'admin.common.grid.language' | transloco }}
+                            {{ 'admin.common.grid.home' | transloco }}
                         </div>
                         <div class="hidden sm:block">
                             {{ 'admin.common.grid.status' | transloco }}
@@ -36,12 +36,20 @@
                             class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                         >
                             <div class="truncate font-medium">
-                                {{ p.title }}
+                                {{ p.uid }}
                             </div>
                             <div class="hidden truncate md:block">
-                                /{{ p.slug }}
+                                @if (p.categoryId) {
+                                    Category {{ p.categoryId }}
+                                } @else {
+                                    -
+                                }
                             </div>
-                            <div class="hidden sm:block">{{ p.language }}</div>
+                            <div class="hidden sm:block">
+                                @if (p.isHome) {
+                                    <span class="text-green-600">Home</span>
+                                }
+                            </div>
                             <div class="hidden sm:block">
                                 <span
                                     class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium"
@@ -54,7 +62,7 @@
                             >
                                 <button
                                     mat-icon-button
-                                    (click)="openEditDialog(p)"
+                                    (click)="editPage(p)"
                                     [title]="
                                         'admin.common.actions.edit' | transloco
                                     "
@@ -76,31 +84,17 @@
                                         svgIcon="heroicons_outline:trash"
                                     ></mat-icon>
                                 </button>
-                                @if (p.status !== 'PUBLISHED') {
+                                @if (!p.isHome) {
                                     <button
                                         mat-icon-button
-                                        (click)="publishPage(p)"
+                                        (click)="setAsHome(p)"
                                         [title]="
-                                            'admin.common.actions.publish'
+                                            'admin.pages.actions.setAsHome'
                                                 | transloco
                                         "
                                     >
                                         <mat-icon
-                                            svgIcon="heroicons_outline:check-circle"
-                                        ></mat-icon>
-                                    </button>
-                                }
-                                @if (p.status === 'PUBLISHED') {
-                                    <button
-                                        mat-icon-button
-                                        (click)="unpublishPage(p)"
-                                        [title]="
-                                            'admin.content.unpublish'
-                                                | transloco
-                                        "
-                                    >
-                                        <mat-icon
-                                            svgIcon="heroicons_outline:x-circle"
+                                            svgIcon="heroicons_outline:home"
                                         ></mat-icon>
                                     </button>
                                 }

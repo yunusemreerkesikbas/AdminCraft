@@ -2,36 +2,7 @@
 import { FuseNavigationItem } from '@fuse/components/navigation';
 
 export const defaultNavigation: FuseNavigationItem[] = [
-    {
-        id: 'dashboards',
-        title: 'Dashboards',
-        subtitle: 'Unique dashboard designs',
-        type: 'group',
-        icon: 'heroicons_outline:home',
-        children: [
-            {
-                id: 'dashboards.project',
-                title: 'Project',
-                type: 'basic',
-                icon: 'heroicons_outline:clipboard-document-check',
-                link: '/__TENANT__/project',
-            },
-            {
-                id: 'dashboards.analytics',
-                title: 'Analytics',
-                type: 'basic',
-                icon: 'heroicons_outline:chart-pie',
-                link: '/__TENANT__/analytics',
-            },
-            {
-                id: 'dashboards.finance',
-                title: 'Finance',
-                type: 'basic',
-                icon: 'heroicons_outline:banknotes',
-                link: '/__TENANT__/finance',
-            },
-        ],
-    },
+    
     {
         id: 'apps',
         title: 'Yönetim',
@@ -39,57 +10,56 @@ export const defaultNavigation: FuseNavigationItem[] = [
         type: 'group',
         icon: 'heroicons_outline:home',
         children: [
-            
+
             {
                 id: 'apps.custom.tenants',
                 title: 'Tenant Yönetimi',
                 type: 'basic',
                 icon: 'heroicons_outline:users',
-                link: '/__TENANT__/tenants',
+                link: 'tenants',
             },
-            // Content management removed; use Page Builder instead
             {
                 id: 'apps.custom.media',
                 title: 'Medya Yönetimi',
                 type: 'basic',
                 icon: 'heroicons_outline:photo',
-                link: '/__TENANT__/media',
+                link: 'media',
             },
             {
                 id: 'apps.custom.users',
                 title: 'Kullanıcı Yönetimi',
                 type: 'basic',
                 icon: 'heroicons_outline:user-group',
-                link: '/__TENANT__/users',
+                link: 'users',
             },
-            
+
             {
                 id: 'apps.custom.sites',
                 title: 'Site Yönetimi',
                 type: 'basic',
                 icon: 'heroicons_outline:globe-alt',
-                link: '/__TENANT__/sites',
+                link: 'sites',
             },
             {
                 id: 'apps.custom.pagebuilder',
                 title: 'Page Builder',
                 type: 'basic',
                 icon: 'heroicons_outline:rectangle-stack',
-                link: '/__TENANT__/pages',
+                link: 'pages',
             },
             {
                 id: 'apps.custom.pagebuilder.categories',
                 title: 'Page Categories',
                 type: 'basic',
                 icon: 'heroicons_outline:folder',
-                link: '/__TENANT__/pages/categories',
+                link: 'pages/categories',
             },
             {
                 id: 'apps.custom.settings',
                 title: 'Site Ayarları',
                 type: 'basic',
                 icon: 'heroicons_outline:cog-6-tooth',
-                link: '/__TENANT__/settings',
+                link: 'settings',
             },
         ],
     },

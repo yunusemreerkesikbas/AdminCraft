@@ -1,60 +1,86 @@
 package com.backend.domain.enums;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 
 public enum Language {
-    TR("tr", "Türkçe", "Turkish"),
-    EN("en", "İngilizce", "English");
+
+    TR("tr", "tur", "Turkish", false),
+
+    EN("en", "eng", "English", false),
+    ES("es", "spa", "Spanish", false),
+    RU("ru", "rus", "Russian", false),
+    AR("ar", "ara", "Arabic", true);
 
     private final String code;
-    private final String displayNameTr;
-    private final String displayNameEn;
 
-    Language(String code, String displayNameTr, String displayNameEn) {
+    private final String iso6392;
+    private final String englishName;
+    private final boolean rightToLeft;
+
+    Language(String code, String iso6392, String englishName, boolean rightToLeft) {
         this.code = code;
-        this.displayNameTr = displayNameTr;
-        this.displayNameEn = displayNameEn;
+        this.iso6392 = iso6392;
+        this.englishName = englishName;
+        this.rightToLeft = rightToLeft;
     }
 
     public String getCode() {
         return code;
     }
 
-    public String getDisplayName() {
-        return displayNameTr; // Default to Turkish for backward compatibility
+    public String getIso6392() {
+        return iso6392;
     }
 
-    public String getDisplayName(Language language) {
-        return switch (language) {
-            case TR -> displayNameTr;
-            case EN -> displayNameEn;
-            default -> displayNameTr;
-        };
+    public String getEnglishName() {
+        return englishName;
     }
 
-    public String getDisplayNameTr() {
-        return displayNameTr;
+    public boolean isRightToLeft() {
+        return rightToLeft;
     }
 
-    public String getDisplayNameEn() {
-        return displayNameEn;
+    public Locale toLocale() {
+        return new Locale(code);
     }
 
     public static Optional<Language> fromCode(String code) {
-        if (code == null) {
+        if (code == null || code.trim().isEmpty()) {
             return Optional.empty();
         }
         return Arrays.stream(values())
                 .filter(language -> language.code.equalsIgnoreCase(code.trim()))
                 .findFirst();
     }
-    
+
+    public static Optional<Language> fromLocale(Locale locale) {
+        if (locale == null) {
+            return Optional.empty();
+        }
+        return fromCode(locale.getLanguage());
+    }
+
     public static Language fromCodeOrDefault(String code, Language defaultLanguage) {
         return fromCode(code).orElse(defaultLanguage);
     }
-    
+
     public static Language fromCodeOrDefault(String code) {
-        return fromCodeOrDefault(code, TR); // Default to Turkish
+        return fromCodeOrDefault(code, TR);
+    }
+
+    public static Language getDefault() {
+        return TR;
+    }
+
+    public static String[] getAllCodes() {
+        return Arrays.stream(values())
+                .map(Language::getCode)
+                .toArray(String[]::new);
+    }
+
+    public static boolean isSupported(String code) {
+        return fromCode(code).isPresent();
     }
 }

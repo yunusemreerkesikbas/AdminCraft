@@ -1,5 +1,6 @@
 package com.backend.shared.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,13 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    private String result;    // SUCCESS or ERROR
-    private String message;   // success or error message
-    private T data;           // return object from service class, if successful
-    private Integer code;     // HTTP status code for errors, null for success
+    private String result; // SUCCESS or ERROR
+    private String message; // success or error message
+    private T data; // return object from service class, if successful
+    private Integer code; // HTTP status code for errors, null for success
 
-    // Constructor without code (for backward compatibility)
     public ApiResponse(String result, String message, T data) {
         this.result = result;
         this.message = message;

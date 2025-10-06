@@ -1,5 +1,7 @@
 package com.backend.presentation.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.backend.domain.entity.Page;
 import com.backend.domain.enums.PageStatus;
 import java.time.LocalDateTime;
@@ -16,9 +18,7 @@ public record PageResponse(
         Boolean isHome,
         Integer sortOrder,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        Long createdBy,
-        Long updatedBy) {
+        LocalDateTime updatedAt) {
 
     public static PageResponse from(Page page) {
         if (page == null) {
@@ -37,24 +37,12 @@ public record PageResponse(
                 page.getIsHome(),
                 page.getSortOrder(),
                 page.getCreatedAt(),
-                page.getUpdatedAt(),
-                page.getCreatedBy(),
-                page.getUpdatedBy());
+                page.getUpdatedAt());
     }
 
+    @JsonIgnore
     public boolean isHomePage() {
         return Boolean.TRUE.equals(isHome);
     }
 
-    public boolean hasFeaturedImage() {
-        return featuredImage != null && !featuredImage.trim().isEmpty();
-    }
-
-    public boolean hasStyleClasses() {
-        return styleClasses != null && !styleClasses.trim().isEmpty();
-    }
-
-    public boolean hasCategory() {
-        return categoryId != null;
-    }
 }

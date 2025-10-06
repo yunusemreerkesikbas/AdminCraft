@@ -9,6 +9,9 @@ export const langEN = {
                 title: 'Title',
                 name: 'Name',
                 slug: 'Slug',
+                uid: 'UID',
+                category: 'Category',
+                home: 'Home',
                 level: 'Level',
                 role: 'Role',
                 status: 'Status',
@@ -37,6 +40,9 @@ export const langEN = {
             languages: {
                 tr: 'Turkish',
                 en: 'English',
+                es: 'Spanish',
+                ru: 'Russian',
+                ar: 'Arabic',
             },
             actions: {
                 add: 'Add',
@@ -123,6 +129,48 @@ export const langEN = {
                 language: 'Language',
                 priority: 'Priority',
                 notes: 'Notes',
+                urlPath: 'URL Path',
+                subtitle: 'Subtitle',
+                metaTitle: 'Meta Title',
+                metaDescription: 'Meta Description',
+                defaultLanguage: 'Default Language',
+                supportedLanguages: 'Supported Languages',
+            },
+            dialog: {
+                title: {
+                    create: 'Create New',
+                    edit: 'Edit',
+                },
+                tabs: {
+                    general: 'General',
+                    languages: {
+                        tr: 'Turkish',
+                        en: 'English',
+                        es: 'Spanish',
+                        ru: 'Russian',
+                        ar: 'Arabic',
+                    },
+                },
+                actions: {
+                    save: 'Save',
+                    cancel: 'Cancel',
+                },
+            },
+            provisioning: {
+                title: 'Language Content Provisioning',
+                message: 'Create empty content records for newly added languages? This may take a few minutes.',
+                confirm: 'Start',
+                cancel: 'Cancel',
+                progress: 'Processing...',
+                status: {
+                    pending: 'Pending',
+                    running: 'Running',
+                    completed: 'Completed',
+                    failed: 'Failed',
+                },
+                details: '{{processed}} / {{total}} items processed',
+                success: 'Language content successfully provisioned',
+                error: 'An error occurred: {{message}}',
             },
             confirm: {
                 delete: {
@@ -226,6 +274,11 @@ export const langEN = {
                 sectionData: 'Section Data',
                 blockType: 'Block Type',
                 blockData: 'Block Data',
+                isHome: 'Home Page',
+                sortOrder: 'Sort Order',
+            },
+            actions: {
+                setAsHome: 'Set as Home',
             },
             messages: {
                 pageCreated: 'Page created',
@@ -242,6 +295,8 @@ export const langEN = {
             errors: {
                 noTenant: 'Tenant not found',
                 invalidPageId: 'Invalid page ID',
+                creationFailed: 'Failed to create page',
+                updateFailed: 'Failed to update page',
             },
         },
         media: {

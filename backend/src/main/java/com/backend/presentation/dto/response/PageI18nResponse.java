@@ -1,5 +1,7 @@
 package com.backend.presentation.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
@@ -23,8 +25,7 @@ public record PageI18nResponse(
         LocalDateTime publishedAt,
         LocalDateTime scheduledAt,
         LocalDateTime updatedAt,
-        Boolean isFallbackLanguage // indicates if this is fallback content
-) {
+        Boolean fallbackLanguage) {
     public static PageI18nResponse from(PageI18n pageI18n, boolean isFallback) {
         if (pageI18n == null) {
             throw new IllegalArgumentException("PageI18n entity cannot be null");
@@ -53,49 +54,5 @@ public record PageI18nResponse(
 
     public static PageI18nResponse from(PageI18n pageI18n) {
         return from(pageI18n, false);
-    }
-
-    public boolean isPublished() {
-        return status == PageStatus.PUBLISHED;
-    }
-
-    public boolean isScheduled() {
-        return status == PageStatus.SCHEDULED;
-    }
-
-    public boolean isDraft() {
-        return status == PageStatus.DRAFT;
-    }
-
-    public boolean isArchived() {
-        return status == PageStatus.ARCHIVED;
-    }
-
-    public boolean isFallback() {
-        return Boolean.TRUE.equals(isFallbackLanguage);
-    }
-
-    public String getEffectiveMetaTitle() {
-        return (metaTitle != null && !metaTitle.trim().isEmpty())
-                ? metaTitle
-                : title;
-    }
-
-    public boolean hasCustomMetaTitle() {
-        return metaTitle != null &&
-                !metaTitle.trim().isEmpty() &&
-                !metaTitle.equals(title);
-    }
-
-    public boolean hasUrlPath() {
-        return urlPath != null && !urlPath.trim().isEmpty();
-    }
-
-    public boolean hasTitle() {
-        return title != null && !title.trim().isEmpty();
-    }
-
-    public boolean isReadyForPublication() {
-        return hasTitle() && hasUrlPath();
     }
 }

@@ -23,6 +23,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     tenantMaintenance: 'tenants/${id}/maintenance',
     tenantStatsCount: 'tenants/stats/count',
     tenantBySubdomain: 'tenants/subdomain/${subdomain}',
+    tenantLanguages: 'tenants/${tenantId}/languages',
+    tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
 
     // ----- CONTENT (removed, replaced by Page Builder) -----
 
@@ -45,10 +47,16 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PAGE BUILDER: PAGES -----
     pages: 'pages',
     pageById: 'pages/${id}',
+    pageWithI18n: 'pages/${id}/with-i18n',
+    pageSetHome: 'pages/${id}/set-home',
     pageBySlug: 'pages/slug/${language}/${slug}',
     pagePublish: 'pages/${id}/publish',
     pageUnpublish: 'pages/${id}/unpublish',
     pageSchedule: 'pages/${id}/schedule',
+
+    // ----- PAGE BUILDER: PAGE I18N -----
+    pageI18n: 'pages/${pageId}/i18n/${language}',
+    pageI18nPublish: 'pages/${pageId}/publish/${language}',
 
     // ----- PAGE BUILDER: CATEGORIES -----
     pageCategories: 'page-categories',
@@ -62,7 +70,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageBuilderSections: 'page-builder/sections',
     pageBuilderSectionById: 'page-builder/sections/${id}',
     pageBuilderBlocks: 'page-builder/blocks',
-    pageBuilderBlockById: 'page-builder/blocks/${id}'
+    pageBuilderBlockById: 'page-builder/blocks/${id}',
+
+    // ----- PROVISIONING -----
+    provisioningJob: 'provisioning/jobs/${jobUuid}'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

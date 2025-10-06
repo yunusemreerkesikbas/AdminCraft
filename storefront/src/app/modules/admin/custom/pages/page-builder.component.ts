@@ -1,18 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router, RouterModule } from '@angular/router';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
+import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
-import { take } from 'rxjs';
+import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from './page-builder.service';
-import { PageCategoryDto } from './page-builder.types';
+import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest } from './page-builder.types';
+import { CreatePageFormData, PageI18nFormData } from './models/page-form.types';
+import { PageSchemaBuilderService } from './services/page-schema-builder.service';
 
 @Component({
   selector: 'spa-page-builder',
@@ -30,14 +33,41 @@ import { PageCategoryDto } from './page-builder.types';
     TranslocoPipe,
   ],
 })
-export class PageBuilderComponent {
+export class PageBuilderComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   #pageBuilderService = inject(PageBuilderService);
   #tenantContext = inject(TenantContextService);
+  #languageContext = inject(LanguageContextService);
   #router = inject(Router);
   #itemDialogService = inject(ItemDialogService);
   #notificationService = inject(NotificationService);
+  #cdr = inject(ChangeDetectorRef);
+  #schemaBuilder = inject(PageSchemaBuilderService);
 
   isLoading = false;
+  #cachedCategories: PageCategoryDto[] = [];
+  #supportedLanguages: string[] = [];
+
+  ngOnInit(): void {
+    const tenantId = this.#tenantContext.getCurrentTenantId();
+
+    // Subscribe to supported languages from LanguageContextService
+    this.#languageContext.supportedLanguages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((languages) => {
+        this.#supportedLanguages = languages;
+        this.#cdr.markForCheck();
+      });
+
+    if (tenantId) {
+      this.#loadCategories(tenantId);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   create(): void {
     const tenantId = this.#tenantContext.getCurrentTenantId();
@@ -46,170 +76,106 @@ export class PageBuilderComponent {
       return;
     }
 
-    this.#pageBuilderService.listCategories(tenantId)
-      .pipe(take(1))
-      .subscribe(categories => {
-        const schema = this.#buildDynamicSchema(categories);
-        const emptyGeneralData = this.#buildEmptyGeneralData(schema);
-        const emptyI18nData = this.#buildEmptyI18nData(schema);
+    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
+    const initial: CreatePageFormData = {
+      status: 'DRAFT',
+      isHome: false,
+      sortOrder: 0
+    };
 
-        const options: ItemDialogOptions<any> = {
-          titleKey: 'admin.pageBuilder.title',
-          mode: 'create',
-          schema,
-          languages: ['tr', 'en'],
-          initial: {
-            ...emptyGeneralData,
-            status: 'DRAFT',
-            language: 'TR',
-            tr: emptyI18nData,
-            en: emptyI18nData
-          },
-          modalData: {
-            disableClose: true,
-            width: '720px',
-            height: '80vh'
-          }
+    this.#supportedLanguages.forEach(lang => {
+      initial[lang] = {};
+    });
+
+    const options: ItemDialogOptions<CreatePageFormData> = {
+      titleKey: 'admin.dialog.title.create',
+      mode: 'create',
+      schema,
+      languages: this.#supportedLanguages,
+      initial,
+      modalData: {
+        disableClose: true,
+        width: '720px',
+        height: '80vh'
+      }
+    };
+
+    this.#itemDialogService.open(options).pipe(take(1)).subscribe(result => {
+      if (!result) return;
+
+      try {
+        const generalReq: CreatePageRequest = {
+          categoryId: result.categoryId || null,
+          status: result.status || 'DRAFT',
+          isHome: result.isHome || false,
+          sortOrder: result.sortOrder || 0,
+          styleClasses: result.styleClasses || null,
+          featuredImage: null
         };
 
-        this.#itemDialogService
-          .open(options)
-          .pipe(take(1))
-          .subscribe(result => {
-            if (result) {
-              console.log('Dialog result:', result);
-              this.#notificationService.success(
-                'admin.pageBuilder.messages.pageCreated'
+        this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
+          next: (createdPage) => {
+            const i18nUpdates: Observable<PageI18nRequest>[] = [];
+
+            this.#supportedLanguages.forEach(lang => {
+              const langData = result[lang] as PageI18nFormData | undefined;
+              const hasContent = langData && (
+                langData.urlPath ||
+                langData.title ||
+                langData.subtitle ||
+                langData.metaTitle ||
+                langData.metaDescription ||
+                langData.description
               );
+
+              if (hasContent && langData) {
+                const i18nReq: PageI18nRequest = {
+                  language: lang.toUpperCase() as Language,
+                  urlPath: langData.urlPath || null,
+                  title: langData.title || null,
+                  subtitle: langData.subtitle || null,
+                  metaTitle: langData.metaTitle || null,
+                  metaDescription: langData.metaDescription || null,
+                  description: langData.description || null,
+                  status: result.status || 'DRAFT'
+                };
+                i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
+              }
+            });
+
+            if (i18nUpdates.length > 0) {
+              forkJoin(i18nUpdates).pipe(take(1)).subscribe({
+                next: () => {
+                  this.#notificationService.success('admin.pageBuilder.messages.pageCreated');
+                  this.#router.navigate(['/admin/pages']);
+                },
+                error: (err) => {
+                  this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+                }
+              });
+            } else {
+              this.#notificationService.success('admin.pageBuilder.messages.pageCreated');
+              this.#router.navigate(['/admin/pages']);
             }
-          });
-      });
-  }
-
-  #buildEmptyGeneralData(schema: ItemDialogSchema): Record<string, any> {
-    const emptyData: Record<string, any> = {};
-    schema.general.forEach(field => {
-      if (field.type === 'checkbox') {
-        emptyData[field.key] = false;
-      } else if (field.type === 'number') {
-        emptyData[field.key] = null;
-      } else if (field.type === 'select') {
-        emptyData[field.key] = null;
-      } else {
-        emptyData[field.key] = '';
+          },
+          error: (error) => {
+            this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+          }
+        });
+      } catch (err) {
+        this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
       }
     });
-    return emptyData;
   }
 
-  #buildEmptyI18nData(schema: ItemDialogSchema): Record<string, any> {
-    const emptyData: Record<string, any> = {};
-    schema.i18n.forEach(field => {
-      if (field.type === 'checkbox') {
-        emptyData[field.key] = false;
-      } else if (field.type === 'number') {
-        emptyData[field.key] = null;
-      } else {
-        emptyData[field.key] = '';
+  #loadCategories(tenantId: number): void {
+    this.#pageBuilderService.listCategories(tenantId).pipe(take(1)).subscribe({
+      next: (categories) => {
+        this.#cachedCategories = categories;
+      },
+      error: () => {
+        this.#cachedCategories = [];
       }
     });
-    return emptyData;
-  }
-
-  #buildDynamicSchema(categories: PageCategoryDto[]): ItemDialogSchema {
-    return {
-      general: [
-        {
-          key: 'slug',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.slug',
-          required: true,
-          maxLength: 200
-        },
-        {
-          key: 'status',
-          type: 'select',
-          labelKey: 'admin.pageBuilder.fields.status',
-          required: true,
-          options: [
-            { value: 'DRAFT', labelKey: 'admin.pageBuilder.status.draft' },
-            { value: 'PUBLISHED', labelKey: 'admin.pageBuilder.status.published' },
-            { value: 'ARCHIVED', labelKey: 'admin.pageBuilder.status.archived' },
-            { value: 'SCHEDULED', labelKey: 'admin.pageBuilder.status.scheduled' }
-          ]
-        },
-        {
-          key: 'language',
-          type: 'select',
-          labelKey: 'admin.pageBuilder.fields.language',
-          required: true,
-          options: [
-            { value: 'TR', labelKey: 'admin.common.languages.tr' },
-            { value: 'EN', labelKey: 'admin.common.languages.en' }
-          ]
-        },
-        {
-          key: 'categoryId',
-          type: 'select',
-          labelKey: 'admin.pageBuilder.fields.category',
-          required: false,
-          options: categories.map(c => ({
-            value: c.id,
-            label: c.name
-          }))
-        },
-        {
-          key: 'styleClasses',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.styleClasses',
-          required: false,
-          maxLength: 255
-        }
-      ],
-      i18n: [
-        {
-          key: 'title',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.pageTitle',
-          required: true,
-          maxLength: 200
-        },
-        {
-          key: 'subtitle',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.subtitle',
-          required: false,
-          maxLength: 200
-        },
-        {
-          key: 'metaTitle',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.metaTitle',
-          required: false,
-          maxLength: 60
-        },
-        {
-          key: 'metaDescription',
-          type: 'textarea',
-          labelKey: 'admin.pageBuilder.fields.metaDescription',
-          required: false,
-          maxLength: 160
-        },
-        {
-          key: 'canonicalUrl',
-          type: 'text',
-          labelKey: 'admin.pageBuilder.fields.canonicalUrl',
-          required: false,
-          maxLength: 500
-        },
-        {
-          key: 'description',
-          type: 'textarea',
-          labelKey: 'admin.pageBuilder.fields.description',
-          required: false,
-          maxLength: 1000
-        }
-      ]
-    };
   }
 }

@@ -73,33 +73,39 @@ export class NavigationMockApi {
                 });
             });
 
-            // Replace __TENANT__ placeholder in links with current tenant
-            const sub = localStorage.getItem('currentTenantSubdomain') || 'default';
-            const replaceLinks = (items: any[]) => {
+            const currentLang = localStorage.getItem('lang') || 'tr';
+            const currentTenant = localStorage.getItem('currentTenantSubdomain') || 'default';
+
+            const updateLinks = (items: any[]) => {
                 items?.forEach((item) => {
                     if (item.link && typeof item.link === 'string') {
-                        item.link = item.link.replace('__TENANT__', sub);
+                        if (item.link.includes('dashboards/')) {
+                            item.link = `/${currentLang}/${item.link}`;
+                        } else {
+                            item.link = `/${currentLang}/${currentTenant}/${item.link}`;
+                        }
                     }
                     if (item.children?.length) {
-                        replaceLinks(item.children);
+                        updateLinks(item.children);
                     }
                 });
             };
 
-            replaceLinks(this._defaultNavigation);
-            replaceLinks(this._compactNavigation);
-            replaceLinks(this._futuristicNavigation);
-            replaceLinks(this._horizontalNavigation);
+            const navCopy = {
+                default: cloneDeep(this._defaultNavigation),
+                compact: cloneDeep(this._compactNavigation),
+                futuristic: cloneDeep(this._futuristicNavigation),
+                horizontal: cloneDeep(this._horizontalNavigation)
+            };
 
-            // Return the response
+            updateLinks(navCopy.default);
+            updateLinks(navCopy.compact);
+            updateLinks(navCopy.futuristic);
+            updateLinks(navCopy.horizontal);
+
             return [
                 200,
-                {
-                    compact: cloneDeep(this._compactNavigation),
-                    default: cloneDeep(this._defaultNavigation),
-                    futuristic: cloneDeep(this._futuristicNavigation),
-                    horizontal: cloneDeep(this._horizontalNavigation),
-                },
+                navCopy,
             ];
         });
     }

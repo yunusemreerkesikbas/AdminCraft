@@ -2,8 +2,7 @@ import {
     AsyncPipe,
     CommonModule,
     DatePipe,
-    NgClass,
-    NgTemplateOutlet,
+    NgClass
 } from '@angular/common';
 import {
     AfterViewInit,
@@ -16,32 +15,19 @@ import {
     ViewEncapsulation,
     inject,
 } from '@angular/core';
-import {
-    FormsModule,
-    ReactiveFormsModule,
-    UntypedFormBuilder,
-    UntypedFormControl,
-    UntypedFormGroup,
-    Validators,
-} from '@angular/forms';
+import { FormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { fuseAnimations } from '@fuse/animations';
-import { FuseConfirmationService } from '@fuse/services/confirmation';
+ 
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
-import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { ItemDialogService } from '@shared/services/item-dialog.service';
+import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import {
     Observable,
     Subject,
@@ -49,17 +35,13 @@ import {
     map,
     merge,
     switchMap,
+    take,
     takeUntil,
 } from 'rxjs';
 import { TenantsService } from '../tenants.service';
-import {
-    CreateTenantRequest,
-    Language,
-    Tenant,
-    TenantPagination,
-    TenantStatus,
-    UpdateTenantRequest,
-} from '../tenants.types';
+import { CreateTenantRequest, Language, Tenant, TenantPagination, UpdateTenantRequest } from '../tenants.types';
+import { MatDialog } from '@angular/material/dialog';
+import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/components/provisioning-modal/provisioning-modal.component';
 
 @Component({
     selector: 'tenants-list',
@@ -90,31 +72,23 @@ import {
     imports: [
         CommonModule,
         MatProgressBarModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
         FormsModule,
-        ReactiveFormsModule,
         MatButtonModule,
         MatSortModule,
-        NgTemplateOutlet,
         MatPaginatorModule,
         NgClass,
-        MatSelectModule,
-        MatSlideToggleModule,
         AsyncPipe,
         DatePipe,
         TranslocoPipe,
-        SpaInputComponent,
-        SpaSelectComponent,
-        SpaTextareaComponent,
-        SpaToggleComponent,
         SpaSearchInputComponent,
     ],
 })
 export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
     private _transloco = inject(TranslocoService);
+    #itemDialog = inject(ItemDialogService);
     #notify = inject(NotificationService);
+    #dialog = inject(MatDialog);
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
 
@@ -123,63 +97,24 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     isLoading: boolean = false;
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedTenant: Tenant | null = null;
-    selectedTenantForm: UntypedFormGroup;
     
-    // Language and status options
-    languages: Language[] = [Language.TR, Language.EN];
-    statuses: TenantStatus[] = [TenantStatus.PENDING, TenantStatus.ACTIVE, TenantStatus.SUSPENDED, TenantStatus.MAINTENANCE];
-    languageOptions: SpaSelectOption<Language>[] = [
-        { value: Language.TR, label: 'Türkçe' },
-        { value: Language.EN, label: 'English' },
-    ];
 
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    /**
-     * Constructor
-     */
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
-        private _fuseConfirmationService: FuseConfirmationService,
-        private _formBuilder: UntypedFormBuilder,
         private _tenantsService: TenantsService
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Create the selected tenant form
-        this.selectedTenantForm = this._formBuilder.group({
-            companyName: ['', [Validators.required]],
-            subdomain: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-            adminName: ['', [Validators.required]],
-            adminEmail: ['', [Validators.required, Validators.email]],
-            phone: [''],
-            defaultLanguage: [Language.TR, [Validators.required]],
-            customDomain: [''],
-            timezone: ['Europe/Istanbul'],
-            currency: ['TRY'],
-            sslEnabled: [true],
-            notes: ['']
-        });
-
-        // Get the tenants
         this.tenants$ = this._tenantsService.tenants$;
         this.pagination$ = this._tenantsService.pagination$;
 
-        // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
             .pipe(
                 takeUntil(this._unsubscribeAll),
                 debounceTime(300),
                 switchMap((query) => {
-                    this.closeDetails();
                     this.isLoading = true;
                     return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
                 }),
@@ -189,41 +124,26 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             )
             .subscribe();
 
-        // Load initial data
         this._tenantsService.getTenants().subscribe();
     }
 
-    /**
-     * After view init
-     */
     ngAfterViewInit(): void {
         if (this._sort && this._paginator) {
-            // Set the initial sort
             this._sort.sort({
                 id: 'companyName',
                 start: 'asc',
                 disableClear: true,
             });
-
-            // Mark for check
             this._changeDetectorRef.markForCheck();
-
-            // If the user changes the sort order...
             this._sort.sortChange
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe(() => {
-                    // Reset back to the first page
                     this._paginator.pageIndex = 0;
-
-                    // Close the details
-                    this.closeDetails();
                 });
 
-            // Get tenants if sort or page changes
             merge(this._sort.sortChange, this._paginator.page)
                 .pipe(
                     switchMap(() => {
-                        this.closeDetails();
                         this.isLoading = true;
                         return this._tenantsService.getTenants(
                             this._paginator.pageIndex,
@@ -241,256 +161,214 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+    createTenant(): void {
+        const options: ItemDialogOptions<CreateTenantRequest> = {
+            titleKey: 'admin.tenants.title',
+            mode: 'create',
+            schema: this.#buildTenantDialogSchema(),
+            languages: [],
+            initial: {
+                companyName: '',
+                subdomain: '',
+                adminName: '',
+                adminEmail: '',
+                phone: '',
+                supportedLanguages: [Language.TR],
+                defaultLanguage: Language.TR,
+                customDomain: '',
+                timezone: 'Europe/Istanbul',
+                currency: 'TRY',
+                sslEnabled: true,
+                notes: ''
+            },
+            modalData: { disableClose: true, width: '720px' }
+        };
 
-    /**
-     * Toggle tenant details
-     */
-    toggleDetails(tenantId: number): void {
-        // If the tenant is already selected...
-        if (this.selectedTenant && this.selectedTenant.id === tenantId) {
-            // Close the details
-            this.closeDetails();
-            return;
-        }
+        this.#itemDialog
+            .open<CreateTenantRequest>(options)
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (!result) return;
 
-        // Get the tenant by id
-        this._tenantsService
-            .getTenantById(tenantId)
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tenant) => {
-                // Set the selected tenant
-                this.selectedTenant = tenant;
+                const payload: CreateTenantRequest = {
+                    companyName: result.companyName || '',
+                    subdomain: result.subdomain || '',
+                    adminName: result.adminName || '',
+                    adminEmail: result.adminEmail || '',
+                    phone: result.phone || undefined,
+                    supportedLanguages: (result.supportedLanguages as Language[]) || [Language.TR],
+                    defaultLanguage: (result.defaultLanguage as Language) || Language.TR,
+                    customDomain: result.customDomain || undefined,
+                    timezone: result.timezone || undefined,
+                    currency: result.currency || undefined,
+                    sslEnabled: result.sslEnabled ?? true,
+                    notes: result.notes || undefined
+                };
 
-                // Fill the form
-                this.selectedTenantForm.patchValue(tenant);
+                if (!payload.supportedLanguages.includes(payload.defaultLanguage)) {
+                    this.#notify.warning('admin.tenants.validation.defaultLanguageInSupported');
+                    return;
+                }
 
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
+                this._tenantsService
+                    .createTenant(payload)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: () => this.#notify.success('admin.common.messages.operationSuccess'),
+                        error: () => this.#notify.alert('admin.common.errors.unexpected')
+                    });
             });
     }
 
-    /**
-     * Close the details
-     */
-    closeDetails(): void {
-        this.selectedTenant = null;
-    }
+    editTenant(tenant: Tenant): void {
+        const oldSupportedLanguages = tenant.supportedLanguages || [tenant.defaultLanguage];
 
-    /**
-     * Create tenant
-     */
-    createTenant(): void {
-        // Create the tenant
-        this.selectedTenant = null;
-        this.selectedTenantForm.reset();
-        this.selectedTenantForm.patchValue({
-            defaultLanguage: Language.TR,
-            timezone: 'Europe/Istanbul',
-            currency: 'TRY',
-            sslEnabled: true
-        });
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Update the selected tenant using the form data
-     */
-    updateSelectedTenant(): void {
-        // Get the tenant object
-        const tenant = this.selectedTenantForm.getRawValue() as CreateTenantRequest | UpdateTenantRequest;
-
-        // Remove empty values
-        Object.keys(tenant).forEach(key => {
-            if (tenant[key] === '' || tenant[key] === null) {
-                delete tenant[key];
-            }
-        });
-
-        // If we have a tenant ID, update the existing tenant...
-        if (this.selectedTenant) {
-            this._tenantsService.updateTenant(this.selectedTenant.id, tenant as UpdateTenantRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: () => {
-                        this.#notify.success('admin.common.messages.operationSuccess');
-                    },
-                    error: () => {
-                        this.#notify.alert('admin.common.errors.unexpected');
-                    }
-                });
-        }
-        // Otherwise, create a new tenant...
-        else {
-            this._tenantsService.createTenant(tenant as CreateTenantRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: () => {
-                        this.#notify.success('admin.common.messages.operationSuccess');
-                        // Close details
-                        this.closeDetails();
-                    },
-                    error: () => {
-                        this.#notify.alert('admin.common.errors.unexpected');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Delete the selected tenant
-     */
-    deleteSelectedTenant(): void {
-        // Open the confirmation dialog
-        const confirmation = this._fuseConfirmationService.open({
-            title: this._transloco.translate(
-                'admin.tenants.messages.confirmDeleteTitle'
-            ),
-            message: this._transloco.translate(
-                'admin.tenants.messages.confirmDeleteMsg'
-            ),
-            actions: {
-                confirm: {
-                    label: this._transloco.translate(
-                        'admin.tenants.actions.delete'
-                    ),
-                },
+        const options: ItemDialogOptions<UpdateTenantRequest, number> = {
+            titleKey: 'admin.tenants.title',
+            mode: 'edit',
+            schema: this.#buildTenantDialogSchema(),
+            languages: [],
+            id: tenant.id,
+            initial: {
+                companyName: tenant.companyName,
+                subdomain: tenant.subdomain,
+                adminName: tenant.adminName,
+                adminEmail: tenant.adminEmail,
+                phone: tenant.phone || '',
+                supportedLanguages: oldSupportedLanguages,
+                defaultLanguage: tenant.defaultLanguage,
+                customDomain: tenant.customDomain || '',
+                timezone: tenant.timezone || '',
+                currency: tenant.currency || '',
+                sslEnabled: tenant.sslEnabled ?? true,
+                notes: tenant.notes || ''
             },
-        });
+            modalData: { disableClose: true, width: '720px' }
+        };
 
-        // Subscribe to the confirmation dialog closed action
-        confirmation.afterClosed().subscribe((result) => {
-            // If the confirm button pressed...
-            if (result === 'confirmed') {
-                // Get the tenant object
-                const tenant = this.selectedTenant;
+        this.#itemDialog
+            .open<UpdateTenantRequest, number>(options)
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (!result) return;
 
-                // Delete the tenant on the server
-                this._tenantsService.deleteTenant(tenant.id)
-                    .pipe(takeUntil(this._unsubscribeAll))
+                const payload: UpdateTenantRequest = { ...result } as UpdateTenantRequest;
+
+                if (payload.supportedLanguages && payload.defaultLanguage && !payload.supportedLanguages.includes(payload.defaultLanguage)) {
+                    this.#notify.warning('admin.tenants.validation.defaultLanguageInSupported');
+                    return;
+                }
+
+                Object.keys(payload).forEach((k) => (payload as any)[k] === '' && delete (payload as any)[k]);
+
+                const newLanguages = (payload.supportedLanguages || []).filter(
+                    lang => !oldSupportedLanguages.includes(lang)
+                );
+
+                this._tenantsService
+                    .updateTenant(tenant.id, payload)
+                    .pipe(take(1))
                     .subscribe({
                         next: () => {
-                            // Close the details
-                            this.closeDetails();
                             this.#notify.success('admin.common.messages.operationSuccess');
+
+                            if (newLanguages.length > 0) {
+                                this.#showProvisioningModal(tenant.id, newLanguages);
+                            }
                         },
-                        error: () => {
-                            this.#notify.alert('admin.common.errors.unexpected');
-                        }
+                        error: () => this.#notify.alert('admin.common.errors.unexpected')
                     });
-            }
+            });
+    }
+
+    #showProvisioningModal(tenantId: number, newLanguages: Language[]): void {
+        const modalData: ProvisioningModalData = {
+            tenantId,
+            newLanguages
+        };
+
+        const dialogRef = this.#dialog.open(ProvisioningModalComponent, {
+            data: modalData,
+            disableClose: true,
+            width: '500px'
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed: boolean) => {
+            if (!confirmed) return;
+
+            this._tenantsService
+                .provisionLanguages(tenantId, { languages: newLanguages })
+                .pipe(
+                    take(1),
+                    switchMap((job) => {
+                        const progressDialogRef = this.#dialog.open(ProvisioningModalComponent, {
+                            data: {
+                                tenantId,
+                                newLanguages,
+                                jobUuid: job.uuid,
+                                status: job.status,
+                                processedItems: job.processedItems,
+                                totalItems: job.totalItems
+                            } as ProvisioningModalData,
+                            disableClose: true,
+                            width: '500px'
+                        });
+
+                        return this._tenantsService.pollProvisioningJob(job.uuid).pipe(
+                            map((updatedJob) => {
+                                progressDialogRef.componentInstance.data = {
+                                    ...progressDialogRef.componentInstance.data,
+                                    status: updatedJob.status,
+                                    processedItems: updatedJob.processedItems,
+                                    totalItems: updatedJob.totalItems,
+                                    errorMessage: updatedJob.errorMessage
+                                };
+                                return updatedJob;
+                            })
+                        );
+                    })
+                )
+                .subscribe({
+                    next: (job) => {
+                        if (job.status === 'COMPLETED') {
+                            this.#notify.success('admin.provisioning.completed');
+                        } else if (job.status === 'FAILED') {
+                            this.#notify.alert('admin.provisioning.failed');
+                        }
+                    },
+                    error: () => this.#notify.alert('admin.common.errors.unexpected')
+                });
         });
     }
 
-    /**
-     * Activate tenant
-     */
-    activateTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.activateTenant(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.#notify.success('admin.common.messages.operationSuccess');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.#notify.alert('admin.common.errors.unexpected');
-                    }
-                });
-        }
+    #buildTenantDialogSchema(): ItemDialogSchema {
+        const languageOptions = Object.values(Language).map((lang) => ({ value: lang as Language, label: lang }));
+
+        return {
+            general: [
+                { key: 'companyName', type: 'text', labelKey: 'admin.tenants.fields.companyName', required: true, maxLength: 200 },
+                { key: 'subdomain', type: 'text', labelKey: 'admin.tenants.fields.subdomain', required: true, maxLength: 50, placeholder: 'acme' },
+                { key: 'adminName', type: 'text', labelKey: 'admin.tenants.fields.adminName', required: true, maxLength: 100 },
+                { key: 'adminEmail', type: 'text', labelKey: 'admin.tenants.fields.adminEmail', required: true, maxLength: 150 },
+                { key: 'phone', type: 'text', labelKey: 'admin.common.fields.phone', maxLength: 30 },
+                { key: 'supportedLanguages', type: 'select', labelKey: 'admin.common.fields.supportedLanguages', required: true, options: languageOptions, multiple: true },
+                { key: 'defaultLanguage', type: 'select', labelKey: 'admin.tenants.fields.defaultLanguage', required: true, options: languageOptions },
+                { key: 'customDomain', type: 'text', labelKey: 'admin.tenants.fields.customDomain', maxLength: 200, placeholder: 'example.com' },
+                { key: 'timezone', type: 'text', labelKey: 'admin.tenants.fields.timezone', maxLength: 100 },
+                { key: 'currency', type: 'text', labelKey: 'admin.tenants.fields.currency', maxLength: 10 },
+                { key: 'sslEnabled', type: 'checkbox', labelKey: 'admin.tenants.fields.sslEnabled' },
+                { key: 'notes', type: 'textarea', labelKey: 'admin.tenants.fields.notes', maxLength: 1000, placeholder: '' }
+            ],
+            i18n: []
+        };
     }
 
-    /**
-     * Suspend tenant
-     */
-    suspendTenant(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.suspendTenant(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.#notify.success('admin.common.messages.operationSuccess');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.#notify.alert('admin.common.errors.unexpected');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Set maintenance mode
-     */
-    setMaintenanceMode(): void {
-        if (this.selectedTenant) {
-            this._tenantsService.setMaintenanceMode(this.selectedTenant.id)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe({
-                    next: (updatedTenant) => {
-                        this.selectedTenant = updatedTenant;
-                        this.selectedTenantForm.patchValue(updatedTenant);
-                        this.#notify.success('admin.common.messages.operationSuccess');
-                        this._changeDetectorRef.markForCheck();
-                    },
-                    error: () => {
-                        this.#notify.alert('admin.common.errors.unexpected');
-                    }
-                });
-        }
-    }
-
-    /**
-     * Check subdomain availability
-     */
-    checkSubdomainAvailability(): void {
-        const subdomain = this.selectedTenantForm.get('subdomain')?.value;
-        if (subdomain && subdomain.length > 2) {
-            // If we're editing an existing tenant and the subdomain hasn't changed, don't check
-            if (this.selectedTenant && this.selectedTenant.subdomain === subdomain) {
-                // Clear any existing errors for the current tenant's subdomain
-                const control = this.selectedTenantForm.get('subdomain');
-                if (control?.hasError('unavailable')) {
-                    const errors = { ...control.errors };
-                    delete errors.unavailable;
-                    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
-                }
-                return;
-            }
-
-            this._tenantsService.checkSubdomainAvailability(subdomain)
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe((available) => {
-                    if (!available) {
-                        this.selectedTenantForm.get('subdomain')?.setErrors({ unavailable: true });
-                    }
-                });
-        }
-    }
-
-    
-
-    /**
-     * Track by function for ngFor loops
-     */
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }

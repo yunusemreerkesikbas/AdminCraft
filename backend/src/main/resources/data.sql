@@ -97,35 +97,77 @@ INSERT IGNORE INTO users (
 -- Default password for all users: admin123
 
 -- =====================================================
--- 5. INSERT DUMMY PAGE BUILDER PAGES
+-- 5. INSERT DUMMY PAGE BUILDER PAGES (Multi-Language Architecture)
 -- =====================================================
 
--- Sample pages for Tenant 1 (Demo Company) for Page Builder
+-- Page 1: Homepage (language-agnostic data)
 INSERT IGNORE INTO pages (
-  tenant_id, title, slug, status, language, category_id,
-  meta_title, meta_description, canonical_url,
-  published_at, created_at, updated_at, created_by
-) VALUES
-(
-  1, 'Ana Sayfa (PB)', 'ana-sayfa', 'PUBLISHED', 'TR', NULL,
-  'Demo Şirketi - Ana Sayfa (PB)',
-  'Page Builder ile oluşturulmuş ana sayfa',
-  NULL,
-  NOW(), NOW(), NOW(), 1
-),
-(
-  1, 'Hakkımızda (PB)', 'hakkimizda', 'DRAFT', 'TR', NULL,
-  'Demo Şirketi - Hakkımızda (PB)',
-  'Page Builder ile oluşturulmuş hakkımızda sayfası',
-  NULL,
-  NULL, NOW(), NOW(), 1
-),
-(
-  1, 'Home (PB)', 'home', 'PUBLISHED', 'EN', NULL,
-  'Demo Company - Home (PB)',
-  'Homepage created with Page Builder',
-  NULL,
-  NOW(), NOW(), NOW(), 1
+  tenant_id, uid, status, is_home, sort_order, category_id,
+  created_at, updated_at, created_by, updated_by
+) VALUES (
+  1, 'homepage', 'PUBLISHED', TRUE, 0, NULL,
+  NOW(), NOW(), 1, 1
+);
+
+-- Page 1: Turkish translations
+INSERT IGNORE INTO page_i18n (
+  page_id, tenant_id, uid, language, url_path, title, subtitle,
+  meta_title, meta_description, description, status,
+  published_at, updated_at
+) VALUES (
+  (SELECT id FROM pages WHERE tenant_id = 1 AND uid = 'homepage' LIMIT 1),
+  1, 'homepage-tr', 'TR', '/ana-sayfa', 'Ana Sayfa', 'Hoş Geldiniz',
+  'Demo Şirketi - Ana Sayfa', 'Page Builder ile oluşturulmuş ana sayfa',
+  'Demo şirketimizin resmi ana sayfası', 'PUBLISHED',
+  NOW(), NOW()
+);
+
+-- Page 1: English translations
+INSERT IGNORE INTO page_i18n (
+  page_id, tenant_id, uid, language, url_path, title, subtitle,
+  meta_title, meta_description, description, status,
+  published_at, updated_at
+) VALUES (
+  (SELECT id FROM pages WHERE tenant_id = 1 AND uid = 'homepage' LIMIT 1),
+  1, 'homepage-en', 'EN', '/home', 'Home', 'Welcome',
+  'Demo Company - Home', 'Homepage created with Page Builder',
+  'Official homepage of our demo company', 'PUBLISHED',
+  NOW(), NOW()
+);
+
+-- Page 2: About Us (language-agnostic data)
+INSERT IGNORE INTO pages (
+  tenant_id, uid, status, is_home, sort_order, category_id,
+  created_at, updated_at, created_by, updated_by
+) VALUES (
+  1, 'about-us', 'DRAFT', FALSE, 1, NULL,
+  NOW(), NOW(), 1, 1
+);
+
+-- Page 2: Turkish translations
+INSERT IGNORE INTO page_i18n (
+  page_id, tenant_id, uid, language, url_path, title, subtitle,
+  meta_title, meta_description, description, status,
+  updated_at
+) VALUES (
+  (SELECT id FROM pages WHERE tenant_id = 1 AND uid = 'about-us' LIMIT 1),
+  1, 'about-us-tr', 'TR', '/hakkimizda', 'Hakkımızda', 'Bizi Tanıyın',
+  'Demo Şirketi - Hakkımızda', 'Page Builder ile oluşturulmuş hakkımızda sayfası',
+  'Şirketimiz hakkında detaylı bilgi', 'DRAFT',
+  NOW()
+);
+
+-- Page 2: English translations
+INSERT IGNORE INTO page_i18n (
+  page_id, tenant_id, uid, language, url_path, title, subtitle,
+  meta_title, meta_description, description, status,
+  updated_at
+) VALUES (
+  (SELECT id FROM pages WHERE tenant_id = 1 AND uid = 'about-us' LIMIT 1),
+  1, 'about-us-en', 'EN', '/about', 'About Us', 'Get to Know Us',
+  'Demo Company - About Us', 'About us page created with Page Builder',
+  'Detailed information about our company', 'DRAFT',
+  NOW()
 );
 
 -- =====================================================

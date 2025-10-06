@@ -28,6 +28,7 @@ export interface GeneralFieldConfig {
   labelKey: string;
   required?: boolean;
   options?: ReadonlyArray<{ value: string | number; labelKey?: string; label?: string }>;
+  multiple?: boolean;
   maxLength?: number;
   minValue?: number;
   maxValue?: number;

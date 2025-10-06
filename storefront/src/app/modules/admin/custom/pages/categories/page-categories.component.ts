@@ -128,7 +128,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     }
     this.isLoading = true;
     this._svc
-      .getCategoryTree(this.tenantId, this.language || undefined, null)
+      .getCategoryTree(null)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: (nodes) => {
@@ -399,14 +399,12 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .deleteCategory(id)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
-        next: (ok) => {
-          if (ok) {
-            this.loadTree();
-            this.selectedCategoryId = null;
-            this.selected = null;
-            this.form.reset({ name: '', slug: '', parentId: null });
-            this.#cdr.markForCheck();
-          }
+        next: () => {
+          this.loadTree();
+          this.selectedCategoryId = null;
+          this.selected = null;
+          this.form.reset({ name: '', slug: '', parentId: null });
+          this.#cdr.markForCheck();
         },
         error: (error) => {
           const msg = this._errorHandler.handleError(error);

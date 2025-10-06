@@ -104,6 +104,23 @@ PREPARE stmt FROM @sql_stmt;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- MIGRATION: Remove legacy 'slug' column from pages table (if exists)
+-- This column was part of the old single-language architecture and should not exist.
+-- The multi-language architecture uses 'url_path' in page_i18n table instead.
+SET @col_exists = (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'pages'
+    AND COLUMN_NAME = 'slug'
+);
+SET @sql_drop_slug = IF(@col_exists > 0,
+  'ALTER TABLE pages DROP COLUMN slug',
+  'SELECT 1'
+);
+PREPARE stmt_drop_slug FROM @sql_drop_slug;
+EXECUTE stmt_drop_slug;
+DEALLOCATE PREPARE stmt_drop_slug;
+
 -- page_categories
 CREATE TABLE IF NOT EXISTS page_categories (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
