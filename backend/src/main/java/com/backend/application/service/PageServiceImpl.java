@@ -143,6 +143,9 @@ public class PageServiceImpl implements PageService {
     }
 
     private void validateTenantMatch(Long pageTenantId, Long requestTenantId) {
+        if (pageTenantId == null || requestTenantId == null) {
+            throw new IllegalArgumentException("Tenant IDs cannot be null");
+        }
         if (!pageTenantId.equals(requestTenantId)) {
             throw new TenantMismatchException(requestTenantId, pageTenantId);
         }

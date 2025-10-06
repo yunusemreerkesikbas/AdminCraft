@@ -115,8 +115,8 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
         if (!exists) {
             PageI18n pageI18n = new PageI18n();
-            pageI18n.setUuid(UUID.randomUUID().toString());
-            pageI18n.setUid("cmsitem_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            pageI18n.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
+            pageI18n.setUid(com.backend.infrastructure.util.UuidUidGenerator.generateUid());
             pageI18n.setPageId(page.getId());
             pageI18n.setTenantId(page.getTenantId());
             pageI18n.setLanguage(language);
