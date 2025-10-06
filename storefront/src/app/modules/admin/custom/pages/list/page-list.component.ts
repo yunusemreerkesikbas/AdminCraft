@@ -4,17 +4,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
+import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
-import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
+import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
+import { CreatePageFormData, EditPageFormData, PageI18nFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
-import { CreatePageRequest, Language, PageCategoryDto, PageListDto, PageI18nRequest, UpdatePageRequest } from '../page-builder.types';
+import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
-import { TenantsService } from '../../tenants/tenants.service';
+import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
 
 @Component({
   selector: 'spa-page-list',
@@ -52,10 +54,11 @@ export class PageListComponent implements OnInit, OnDestroy {
   #itemDialogService = inject(ItemDialogService);
   #pageBuilderService = inject(PageBuilderService);
   #tenantContext = inject(TenantContextService);
-  #tenantsService = inject(TenantsService);
+  #languageContext = inject(LanguageContextService);
   #router = inject(Router);
   #errorHandler = inject(ErrorHandlingService);
   #loadingState = inject(LoadingStateService);
+  #schemaBuilder = inject(PageSchemaBuilderService);
 
   isLoading = false;
   tenantId = 1;
@@ -64,7 +67,7 @@ export class PageListComponent implements OnInit, OnDestroy {
   search = '';
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
-  #supportedLanguages: string[] = ['tr', 'en'];
+  #supportedLanguages: string[] = [];
 
   ngOnInit(): void {
     const storedId = this.#tenantContext.getCurrentTenantId();
@@ -75,7 +78,13 @@ export class PageListComponent implements OnInit, OnDestroy {
     if (storedSub) {
       this.subdomain = storedSub;
     }
-    this.#loadTenantLanguages();
+    this.#languageContext.supportedLanguages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((languages) => {
+        this.#supportedLanguages = languages;
+        this.#cdr.markForCheck();
+      });
+
     this.#loadCategories();
     this.load();
 
@@ -89,7 +98,6 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.tenantId = nextId;
         this.subdomain = nextSub;
         if (changed) {
-          this.#loadTenantLanguages();
           this.#loadCategories();
           this.load();
         }
@@ -149,8 +157,8 @@ export class PageListComponent implements OnInit, OnDestroy {
   }
 
   createPage(): void {
-    const schema = this.#buildPageSchema();
-    const initial: any = {
+    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
+    const initial: CreatePageFormData = {
       status: 'DRAFT',
       isHome: false,
       sortOrder: 0
@@ -160,7 +168,7 @@ export class PageListComponent implements OnInit, OnDestroy {
       initial[lang] = {};
     });
 
-    const options: ItemDialogOptions<any> = {
+    const options: ItemDialogOptions<CreatePageFormData> = {
       titleKey: 'admin.dialog.title.create',
       mode: 'create',
       schema,
@@ -188,27 +196,28 @@ export class PageListComponent implements OnInit, OnDestroy {
 
         this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
           next: (createdPage) => {
-            const i18nUpdates: Observable<any>[] = [];
+            const i18nUpdates: Observable<PageI18nRequest>[] = [];
 
             this.#supportedLanguages.forEach(lang => {
-              const hasContent = result[lang] && (
-                result[lang].urlPath ||
-                result[lang].title ||
-                result[lang].subtitle ||
-                result[lang].metaTitle ||
-                result[lang].metaDescription ||
-                result[lang].description
+              const langData = result[lang] as PageI18nFormData | undefined;
+              const hasContent = langData && (
+                langData.urlPath ||
+                langData.title ||
+                langData.subtitle ||
+                langData.metaTitle ||
+                langData.metaDescription ||
+                langData.description
               );
 
-              if (hasContent) {
+              if (hasContent && langData) {
                 const i18nReq: PageI18nRequest = {
                   language: lang.toUpperCase() as Language,
-                  urlPath: result[lang].urlPath || null,
-                  title: result[lang].title || null,
-                  subtitle: result[lang].subtitle || null,
-                  metaTitle: result[lang].metaTitle || null,
-                  metaDescription: result[lang].metaDescription || null,
-                  description: result[lang].description || null,
+                  urlPath: langData.urlPath || null,
+                  title: langData.title || null,
+                  subtitle: langData.subtitle || null,
+                  metaTitle: langData.metaTitle || null,
+                  metaDescription: langData.metaDescription || null,
+                  description: langData.description || null,
                   status: result.status || 'DRAFT'
                 };
                 i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
@@ -245,8 +254,8 @@ export class PageListComponent implements OnInit, OnDestroy {
   editPage(page: PageListDto): void {
     this.#pageBuilderService.getPageDetail(page.id).pipe(take(1)).subscribe({
       next: (pageDetail) => {
-        const schema = this.#buildPageSchema();
-        const initial: any = {
+        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedCategories);
+        const initial: EditPageFormData = {
           categoryId: pageDetail.categoryId,
           status: pageDetail.status,
           isHome: pageDetail.isHome,
@@ -267,7 +276,7 @@ export class PageListComponent implements OnInit, OnDestroy {
           };
         });
 
-        const options: ItemDialogOptions<any, number> = {
+        const options: ItemDialogOptions<EditPageFormData, number> = {
           titleKey: 'admin.dialog.title.edit',
           mode: 'edit',
           schema,
@@ -295,29 +304,30 @@ export class PageListComponent implements OnInit, OnDestroy {
               featuredImage: pageDetail.featuredImage
             };
 
-            const updates: Observable<any>[] = [
+            const updates: Observable<UpdatePageRequest | PageI18nRequest>[] = [
               this.#pageBuilderService.updatePage(page.id, updatePageReq)
             ];
 
             this.#supportedLanguages.forEach(lang => {
-              const hasContent = result[lang] && (
-                result[lang].urlPath ||
-                result[lang].title ||
-                result[lang].subtitle ||
-                result[lang].metaTitle ||
-                result[lang].metaDescription ||
-                result[lang].description
+              const langData = result[lang] as PageI18nFormData | undefined;
+              const hasContent = langData && (
+                langData.urlPath ||
+                langData.title ||
+                langData.subtitle ||
+                langData.metaTitle ||
+                langData.metaDescription ||
+                langData.description
               );
 
-              if (hasContent) {
+              if (hasContent && langData) {
                 const i18nReq: PageI18nRequest = {
                   language: lang.toUpperCase() as Language,
-                  urlPath: result[lang].urlPath || null,
-                  title: result[lang].title || null,
-                  subtitle: result[lang].subtitle || null,
-                  metaTitle: result[lang].metaTitle || null,
-                  metaDescription: result[lang].metaDescription || null,
-                  description: result[lang].description || null,
+                  urlPath: langData.urlPath || null,
+                  title: langData.title || null,
+                  subtitle: langData.subtitle || null,
+                  metaTitle: langData.metaTitle || null,
+                  metaDescription: langData.metaDescription || null,
+                  description: langData.description || null,
                   status: result.status || 'DRAFT'
                 };
                 updates.push(this.#pageBuilderService.updatePageI18n(page.id, lang.toUpperCase() as Language, i18nReq));
@@ -384,20 +394,6 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  #loadTenantLanguages(): void {
-    if (!this.tenantId) return;
-
-    this.#tenantsService.getTenantLanguages(this.tenantId).pipe(take(1)).subscribe({
-      next: (data) => {
-        this.#supportedLanguages = (data.supportedLanguages || []).map(lang => lang.toLowerCase());
-        this.#cdr.markForCheck();
-      },
-      error: () => {
-        this.#supportedLanguages = ['tr', 'en'];
-      }
-    });
-  }
-
   #loadCategories(): void {
     this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({
       next: (categories) => {
@@ -407,83 +403,6 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cachedCategories = [];
       }
     });
-  }
-
-  #buildPageSchema(): ItemDialogSchema {
-    return {
-      general: [
-        {
-          key: 'categoryId',
-          type: 'select',
-          labelKey: 'admin.common.fields.category',
-          options: this.#cachedCategories.map(c => ({
-            value: c.id,
-            label: c.name
-          }))
-        },
-        {
-          key: 'status',
-          type: 'select',
-          labelKey: 'admin.common.fields.status',
-          required: true,
-          options: [
-            { value: 'DRAFT', labelKey: 'admin.common.status.draft' },
-            { value: 'PUBLISHED', labelKey: 'admin.common.status.published' }
-          ]
-        },
-        {
-          key: 'isHome',
-          type: 'checkbox',
-          labelKey: 'admin.pages.fields.isHome'
-        },
-        {
-          key: 'sortOrder',
-          type: 'number',
-          labelKey: 'admin.common.fields.sortOrder',
-          minValue: 0
-        }
-      ],
-      i18n: [
-        {
-          key: 'urlPath',
-          type: 'text',
-          labelKey: 'admin.common.fields.urlPath',
-          required: true,
-          maxLength: 255
-        },
-        {
-          key: 'title',
-          type: 'text',
-          labelKey: 'admin.common.fields.title',
-          required: true,
-          maxLength: 200
-        },
-        {
-          key: 'subtitle',
-          type: 'text',
-          labelKey: 'admin.common.fields.subtitle',
-          maxLength: 200
-        },
-        {
-          key: 'metaTitle',
-          type: 'text',
-          labelKey: 'admin.common.fields.metaTitle',
-          maxLength: 200
-        },
-        {
-          key: 'metaDescription',
-          type: 'textarea',
-          labelKey: 'admin.common.fields.metaDescription',
-          maxLength: 500
-        },
-        {
-          key: 'description',
-          type: 'textarea',
-          labelKey: 'admin.common.fields.description',
-          maxLength: 2000
-        }
-      ]
-    };
   }
 
   ngOnDestroy(): void {
