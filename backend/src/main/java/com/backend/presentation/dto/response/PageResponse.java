@@ -15,7 +15,6 @@ public record PageResponse(
         PageStatus status,
         String featuredImage,
         String styleClasses,
-        Boolean isHome,
         Integer sortOrder,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
@@ -34,15 +33,9 @@ public record PageResponse(
                 page.getStatus(),
                 page.getFeaturedImage(),
                 page.getStyleClasses(),
-                page.getIsHome(),
                 page.getSortOrder(),
                 page.getCreatedAt(),
                 page.getUpdatedAt());
-    }
-
-    @JsonIgnore
-    public boolean isHomePage() {
-        return Boolean.TRUE.equals(isHome);
     }
 
 }

@@ -10,7 +10,6 @@ export interface PageDto {
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
-  isHome: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -46,7 +45,6 @@ export interface PageListDto {
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
-  isHome: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -64,7 +62,6 @@ export interface PageDetailDto {
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
-  isHome: boolean;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -82,7 +79,6 @@ export interface CreatePageRequest {
   status?: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
-  isHome?: boolean;
   sortOrder?: number;
 }
 
@@ -92,7 +88,6 @@ export interface UpdatePageRequest {
   status?: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
-  isHome?: boolean;
   sortOrder?: number;
 }
 

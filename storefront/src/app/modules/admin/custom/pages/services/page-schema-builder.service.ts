@@ -48,11 +48,6 @@ export class PageSchemaBuilderService {
         ]
       },
       {
-        key: 'isHome',
-        type: 'checkbox',
-        labelKey: 'admin.pages.fields.isHome'
-      },
-      {
         key: 'sortOrder',
         type: 'number',
         labelKey: 'admin.common.fields.sortOrder',

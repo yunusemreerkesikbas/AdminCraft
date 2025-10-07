@@ -4,17 +4,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router, RouterModule } from '@angular/router';
-import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { LanguageContextService } from '@core/services/language-context.service';
+import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
-import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
+import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
+import { CreatePageFormData, PageI18nFormData } from './models/page-form.types';
 import { PageBuilderService } from './page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest } from './page-builder.types';
-import { CreatePageFormData, PageI18nFormData } from './models/page-form.types';
 import { PageSchemaBuilderService } from './services/page-schema-builder.service';
 
 @Component({
@@ -60,7 +60,7 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
       });
 
     if (tenantId) {
-      this.#loadCategories(tenantId);
+      this.#loadCategories();
     }
   }
 
@@ -79,7 +79,6 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
     const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
     const initial: CreatePageFormData = {
       status: 'DRAFT',
-      isHome: false,
       sortOrder: 0
     };
 
@@ -107,7 +106,6 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
         const generalReq: CreatePageRequest = {
           categoryId: result.categoryId || null,
           status: result.status || 'DRAFT',
-          isHome: result.isHome || false,
           sortOrder: result.sortOrder || 0,
           styleClasses: result.styleClasses || null,
           featuredImage: null
@@ -168,8 +166,8 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
     });
   }
 
-  #loadCategories(tenantId: number): void {
-    this.#pageBuilderService.listCategories(tenantId).pipe(take(1)).subscribe({
+  #loadCategories(): void {
+    this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({
       next: (categories) => {
         this.#cachedCategories = categories;
       },

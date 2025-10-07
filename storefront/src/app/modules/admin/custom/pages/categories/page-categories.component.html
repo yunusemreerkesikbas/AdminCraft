@@ -6,6 +6,16 @@
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
+            <div class="flex items-center justify-between px-6 py-4 md:px-8">
+                <div class="font-semibold">
+                    {{ 'admin.common.grid.name' | transloco }}
+                </div>
+                <div class="flex items-center gap-2">
+                    <button mat-stroked-button (click)="createRoot()">
+                        {{ 'admin.common.actions.create' | transloco }}
+                    </button>
+                </div>
+            </div>
             @if (filtered.length > 0) {
                 <div class="grid">
                     <!-- Grid header -->
@@ -37,149 +47,36 @@
                             </div>
                             <div class="hidden sm:block">{{ c.level }}</div>
                             <div class="hidden text-right sm:block">
-                                <button
-                                    class="h-7 min-h-7 min-w-10 px-2 leading-6"
-                                    mat-stroked-button
-                                    (click)="toggleDetails(c.id)"
+                                <div
+                                    class="flex items-center justify-end gap-2"
                                 >
-                                    <mat-icon
-                                        class="icon-size-5"
-                                        [svgIcon]="
-                                            selectedCategoryId === c.id
-                                                ? 'heroicons_solid:chevron-up'
-                                                : 'heroicons_solid:chevron-down'
+                                    <button
+                                        mat-icon-button
+                                        (click)="editCategory(c)"
+                                        [title]="
+                                            'admin.common.actions.edit'
+                                                | transloco
                                         "
-                                    ></mat-icon>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="grid">
-                            @if (selectedCategoryId === c.id) {
-                                <div class="overflow-hidden shadow-lg">
-                                    <div class="flex border-b">
-                                        <div class="flex w-full flex-col">
-                                            <div
-                                                class="flex flex-col p-8 sm:flex-row"
-                                            >
-                                                <!-- Left column -->
-                                                <div
-                                                    class="mb-8 flex flex-col sm:mb-0 sm:w-1/4 sm:items-start"
-                                                >
-                                                    <div
-                                                        class="text-2xl font-extrabold tracking-tight"
-                                                    >
-                                                        <span
-                                                            [textContent]="
-                                                                c.name
-                                                            "
-                                                        ></span>
-                                                    </div>
-                                                    <div
-                                                        class="text-secondary mt-2 text-sm"
-                                                    >
-                                                        /<span
-                                                            [textContent]="
-                                                                c.slug
-                                                            "
-                                                        ></span>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Right column (form) -->
-                                                <form
-                                                    class="flex flex-auto flex-wrap sm:w-3/4"
-                                                    [formGroup]="form"
-                                                >
-                                                    <div
-                                                        class="flex w-full flex-col sm:pl-8 lg:w-1/2"
-                                                    >
-                                                        <spa-input
-                                                            [label]="
-                                                                'admin.pageBuilder.fields.name'
-                                                                    | transloco
-                                                            "
-                                                            [type]="'text'"
-                                                            formControlName="name"
-                                                        ></spa-input>
-                                                    </div>
-                                                    <div
-                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:mt-0 lg:w-1/2"
-                                                    >
-                                                        <spa-input
-                                                            [label]="
-                                                                'admin.pageBuilder.fields.slug'
-                                                                    | transloco
-                                                            "
-                                                            [type]="'text'"
-                                                            formControlName="slug"
-                                                        ></spa-input>
-                                                    </div>
-                                                    <div
-                                                        class="mt-4 flex w-full flex-col sm:pl-8 lg:w-1/2"
-                                                    >
-                                                        <spa-select
-                                                            [label]="
-                                                                'admin.pageBuilder.fields.parentCategory'
-                                                                    | transloco
-                                                            "
-                                                            [placeholder]="'—'"
-                                                            [options]="
-                                                                parentOptions
-                                                            "
-                                                            formControlName="parentId"
-                                                        ></spa-select>
-                                                    </div>
-                                                </form>
-                                            </div>
-
-                                            <!-- Footer actions -->
-                                            <div
-                                                class="flex w-full items-center justify-between border-t px-8 py-4"
-                                            >
-                                                <div></div>
-                                                <div
-                                                    class="flex items-center gap-2"
-                                                >
-                                                    <button
-                                                        mat-stroked-button
-                                                        (click)="
-                                                            updateSelectedCategory()
-                                                        "
-                                                    >
-                                                        {{
-                                                            'admin.common.actions.update'
-                                                                | transloco
-                                                        }}
-                                                    </button>
-                                                    <button
-                                                        mat-stroked-button
-                                                        color="warn"
-                                                        (click)="
-                                                            deleteSelectedCategory()
-                                                        "
-                                                    >
-                                                        {{
-                                                            'admin.common.actions.delete'
-                                                                | transloco
-                                                        }}
-                                                    </button>
-                                                    <button
-                                                        mat-button
-                                                        (click)="
-                                                            toggleDetails(0)
-                                                        "
-                                                    >
-                                                        {{
-                                                            'admin.common.actions.close'
-                                                                | transloco
-                                                        }}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    >
+                                        <mat-icon
+                                            svgIcon="heroicons_outline:pencil"
+                                        ></mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="deleteCategory(c.id)"
+                                        [title]="
+                                            'admin.common.actions.delete'
+                                                | transloco
+                                        "
+                                    >
+                                        <mat-icon
+                                            svgIcon="heroicons_outline:trash"
+                                        ></mat-icon>
+                                    </button>
                                 </div>
-                            }
+                            </div>
                         </div>
                     }
                 </div>

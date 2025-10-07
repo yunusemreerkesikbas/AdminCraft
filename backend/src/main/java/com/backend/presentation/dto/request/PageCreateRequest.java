@@ -13,8 +13,6 @@ public record PageCreateRequest(
 
         @Size(max = 255, message = "validation.style.classes.size") String styleClasses,
 
-        Boolean isHome, // defaults to false in entity if null
-
         Integer sortOrder // defaults to 0 in entity if null
 ) {
 

@@ -14,6 +14,7 @@ export class LanguageContextService {
     #cachedTenantId: number | null = null;
 
     constructor() {
+        // Try to load languages from current tenant context
         this.#tenantContextService.tenant$.subscribe((tenant) => {
             if (tenant?.id && tenant.id !== this.#cachedTenantId) {
                 this.#cachedTenantId = tenant.id;
@@ -21,6 +22,12 @@ export class LanguageContextService {
                 this.loadTenantLanguages(tenant.id).pipe(take(1)).subscribe();
             }
         });
+
+        // If no tenant in context, try to load from localStorage tenantId
+        const tenantId = this.#tenantContextService.getCurrentTenantId();
+        if (tenantId && !this.#languagesLoaded) {
+            this.loadTenantLanguages(tenantId).pipe(take(1)).subscribe();
+        }
     }
 
     get supportedLanguages$(): Observable<string[]> {
@@ -49,11 +56,10 @@ export class LanguageContextService {
                 return normalizedLanguages;
             }),
             catchError((error) => {
-                const fallbackLanguages = ['tr', 'en'];
-                this.#supportedLanguages$.next(fallbackLanguages);
-                this.#languagesLoaded = true;
-
-                return of(fallbackLanguages);
+                console.error('Failed to load tenant languages:', error);
+                // Keep current languages if API call fails
+                const currentLanguages = this.#supportedLanguages$.getValue();
+                return of(currentLanguages);
             }),
             take(1)
         );
@@ -74,7 +80,6 @@ export class LanguageContextService {
             });
         } else {
             console.warn('Cannot refresh languages: No tenant context available');
-            this.#supportedLanguages$.next(['tr', 'en']);
         }
     }
 
@@ -91,6 +96,6 @@ export class LanguageContextService {
     reset(): void {
         this.#languagesLoaded = false;
         this.#cachedTenantId = null;
-        this.#supportedLanguages$.next(['tr', 'en']);
+        // Don't reset to hardcoded values, keep current languages
     }
 }

@@ -21,9 +21,6 @@
                             {{ 'admin.common.grid.category' | transloco }}
                         </div>
                         <div class="hidden sm:block">
-                            {{ 'admin.common.grid.home' | transloco }}
-                        </div>
-                        <div class="hidden sm:block">
                             {{ 'admin.common.grid.status' | transloco }}
                         </div>
                         <div class="hidden text-right sm:block">
@@ -45,11 +42,7 @@
                                     -
                                 }
                             </div>
-                            <div class="hidden sm:block">
-                                @if (p.isHome) {
-                                    <span class="text-green-600">Home</span>
-                                }
-                            </div>
+
                             <div class="hidden sm:block">
                                 <span
                                     class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium"
@@ -84,20 +77,6 @@
                                         svgIcon="heroicons_outline:trash"
                                     ></mat-icon>
                                 </button>
-                                @if (!p.isHome) {
-                                    <button
-                                        mat-icon-button
-                                        (click)="setAsHome(p)"
-                                        [title]="
-                                            'admin.pages.actions.setAsHome'
-                                                | transloco
-                                        "
-                                    >
-                                        <mat-icon
-                                            svgIcon="heroicons_outline:home"
-                                        ></mat-icon>
-                                    </button>
-                                }
                             </div>
                         </div>
                     }

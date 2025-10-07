@@ -23,9 +23,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 
     List<Page> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
 
-    @Query("SELECT p FROM Page p WHERE p.tenantId = :tenantId AND p.isHome = true")
-    Optional<Page> findHomePage(@Param("tenantId") Long tenantId);
-
     @Query("SELECT p FROM Page p WHERE p.tenantId = :tenantId ORDER BY p.sortOrder ASC")
     List<Page> findByTenantIdOrderBySortOrder(@Param("tenantId") Long tenantId);
 
