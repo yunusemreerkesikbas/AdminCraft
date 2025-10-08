@@ -11,7 +11,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTreeModule } from '@angular/material/tree';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
@@ -20,12 +19,7 @@ import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Subject, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
-import {
-  CreateCategoryRequest,
-  PageCategoryDto,
-  PageCategoryTreeNode,
-  UpdateCategoryRequest,
-} from '../page-builder.types';
+import { CreateCategoryRequest, PageCategoryDto, UpdateCategoryRequest } from '../page-builder.types';
 import { CategorySchemaBuilderService } from '../services/category-schema-builder.service';
 import { ErrorHandlingService } from '../services/error-handling.service';
 
@@ -39,7 +33,6 @@ import { ErrorHandlingService } from '../services/error-handling.service';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatTreeModule,
     MatProgressBarModule,
     TranslocoModule,
   ],
@@ -67,19 +60,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
 
   tenantId?: number;
   language: 'TR' | 'EN' | '' = '';
-  tree: PageCategoryTreeNode[] = [];
-  flat: Array<{
-    id: number;
-    tenantId: number;
-    name: string;
-    slug: string;
-    parentId: number | null;
-    level: number;
-  }> = [];
+  categories: PageCategoryDto[] = [];
   isLoading: boolean = false;
   filtered: Array<{ id: number; name: string; slug: string; level: number; parentId: number | null }> = [];
   search: string = '';
-  selectedCategoryId: number | null = null;
   parentOptions: SpaSelectOption<number>[] = [];
 
   selected: PageCategoryDto | null = null;
@@ -102,46 +86,53 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       return;
     }
     this.tenantId = storedId;
-    this.loadTree();
+    this.loadCategories();
 
     this._tenantCtx.tenant$.pipe(takeUntil(this.#destroy$)).subscribe((t) => {
       if (!t) return;
       if (t.id !== this.tenantId) {
         this.tenantId = t.id;
-        this.loadTree();
+        this.loadCategories();
       }
     });
   }
 
-  loadTree(): void {
+  loadCategories(): void {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
     this.isLoading = true;
     this._svc
-      .getCategoryTree(null)
+      .listCategories(undefined)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
-        next: (nodes) => {
-          this.tree = Array.isArray(nodes) ? nodes : [];
-          this.flat = [];
-          this.#flatten(this.tree, 1);
+        next: (items) => {
+          const list = Array.isArray(items) ? items : [];
+          this.categories = list;
+          this.filtered = list.map((c) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            level: 1,
+            parentId: c.parentId ?? null,
+          }));
+          this.parentOptions = list.map((c) => ({ label: c.name, value: c.id }));
           this.isLoading = false;
           this.#cdr.markForCheck();
         },
         error: (error) => {
           const msg = this._errorHandler.handleError(error);
           this.#notify.alert(msg);
-          this.tree = [];
-          this.flat = [];
+          this.categories = [];
+          this.filtered = [];
           this.isLoading = false;
           this.#cdr.markForCheck();
         },
       });
   }
 
-  select(node: PageCategoryTreeNode | { id: number; tenantId: number; name: string; slug: string; parentId: number | null }): void {
+  select(node: { id: number; tenantId: number; name: string; slug: string; parentId: number | null }): void {
     this.selected = {
       id: node.id,
       tenantId: node.tenantId,
@@ -152,7 +143,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     this.#cdr.markForCheck();
   }
 
-  createChild(parent?: PageCategoryTreeNode | { id: number }): void {
+  createChild(parent?: { id: number }): void {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
@@ -188,7 +179,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.#notify.success('admin.pageBuilder.messages.categoryCreated');
-              this.loadTree();
+              this.loadCategories();
             },
             error: (error) => {
               const msg = this._errorHandler.handleError(error);
@@ -238,7 +229,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.#notify.success('admin.pageBuilder.messages.categoryUpdated');
-          this.loadTree();
+          this.loadCategories();
         },
         error: (error) => {
           const msg = this._errorHandler.handleError(error);
@@ -249,14 +240,14 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       });
   }
 
-  remove(node: PageCategoryTreeNode): void {
+  remove(item: { id: number }): void {
     this._svc
-      .deleteCategory(node.id)
+      .deleteCategory(item.id)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: () => {
           this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
-          this.loadTree();
+          this.loadCategories();
         },
         error: (error) => {
           const msg = this._errorHandler.handleError(error);
@@ -304,7 +295,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.#notify.success('admin.pageBuilder.messages.categoryUpdated');
-              this.loadTree();
+              this.loadCategories();
             },
             error: (error) => {
               const msg = this._errorHandler.handleError(error);
@@ -322,7 +313,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
-          this.loadTree();
+          this.loadCategories();
         },
         error: (error) => {
           const msg = this._errorHandler.handleError(error);
@@ -331,115 +322,6 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
         },
       });
   }
-
-  moveToRoot(nodeId: number): void {
-    this._svc
-      .moveCategory({ id: nodeId, newParentId: null })
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({ 
-        next: () => { 
-          this.#notify.success('admin.common.messages.operationSuccess');
-          this.loadTree();
-        }, 
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        }
-      });
-  }
-
-  reorderUp(nodeId: number, parentId: number | null): void {
-    const siblings = this.#getSiblings(parentId);
-    const idx = siblings.findIndex((n) => n.id === nodeId);
-    if (idx <= 0) return;
-    const orderedIds = siblings.map((n) => n.id);
-    [orderedIds[idx - 1], orderedIds[idx]] = [orderedIds[idx], orderedIds[idx - 1]];
-    this._svc
-      .reorderCategories({ parentId, orderedIds })
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({ 
-        next: () => { 
-          this.#notify.success('admin.common.messages.operationSuccess');
-          this.loadTree();
-        }, 
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        }
-      });
-  }
-
-  reorderDown(nodeId: number, parentId: number | null): void {
-    const siblings = this.#getSiblings(parentId);
-    const idx = siblings.findIndex((n) => n.id === nodeId);
-    if (idx < 0 || idx >= siblings.length - 1) return;
-    const orderedIds = siblings.map((n) => n.id);
-    [orderedIds[idx + 1], orderedIds[idx]] = [orderedIds[idx], orderedIds[idx + 1]];
-    this._svc
-      .reorderCategories({ parentId, orderedIds })
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({ 
-        next: () => { 
-          this.#notify.success('admin.common.messages.operationSuccess');
-          this.loadTree();
-        }, 
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        }
-      });
-  }
-
-  #flatten(nodes: PageCategoryTreeNode[], level: number): void {
-    nodes.forEach((n) => {
-      this.flat.push({
-        id: n.id,
-        tenantId: n.tenantId,
-        name: n.name,
-        slug: n.slug,
-        parentId: n.parentId ?? null,
-        level,
-      });
-      if (n.children && n.children.length > 0) {
-        this.#flatten(n.children, level + 1);
-      }
-    });
-  }
-
-  #getSiblings(parentId: number | null): Array<{ id: number }> {
-    if (parentId == null) {
-      return this.tree.map((n) => ({ id: n.id }));
-    }
-    const parent = this.#findNode(this.tree, parentId);
-    if (!parent) return [];
-    return (parent.children || []).map((n) => ({ id: n.id }));
-  }
-
-  #findNode(list: PageCategoryTreeNode[], id: number): PageCategoryTreeNode | null {
-    for (const n of list) {
-      if (n.id === id) return n;
-      if (n.children && n.children.length > 0) {
-        const found = this.#findNode(n.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-
-
-
-  
-
-
-
-
-  
-
- 
 
   ngOnDestroy(): void {
     this.#destroy$.next();

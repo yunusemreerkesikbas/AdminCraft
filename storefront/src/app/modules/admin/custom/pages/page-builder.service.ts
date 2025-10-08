@@ -2,24 +2,19 @@ import { inject, Injectable } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
 import { map, Observable, Subject } from 'rxjs';
 import {
-  ApiResponse,
-  CreateCategoryRequest,
-  CreatePageRequest,
-  Language,
-  MoveCategoryRequest,
-  PageBlockDto,
-  PageCategoryDto,
-  PageCategoryTreeNode,
-  PageDto,
-  PageI18nDto,
-  PageI18nRequest,
-  PageSectionDto,
-  PageDetailDto,
-  PageListDto,
-  PublishPageI18nRequest,
-  ReorderCategoryRequest,
-  UpdateCategoryRequest,
-  UpdatePageRequest,
+    ApiResponse,
+    CreateCategoryRequest,
+    CreatePageRequest,
+    Language,
+    PageCategoryDto,
+    PageDetailDto,
+    PageDto,
+    PageI18nDto,
+    PageI18nRequest,
+    PageListDto,
+    PublishPageI18nRequest,
+    UpdateCategoryRequest,
+    UpdatePageRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
@@ -96,79 +91,8 @@ export class PageBuilderService {
     return this.#api.delete<ApiResponse<void>>('pageCategoryById', { id }).pipe(map(() => undefined));
   }
 
-  getCategoryTree(rootId?: number | null, depth?: number): Observable<PageCategoryTreeNode[]> {
-    const qp: Record<string, any> = {
-      ...(rootId !== undefined && { rootId }),
-      ...(depth !== undefined && { depth }),
-    };
-    return this.#api
-      .custom<ApiResponse<PageCategoryTreeNode[]>>('GET', 'pageCategoryTree', { queryParams: qp, includeAuth: true })
-      .pipe(map((r) => r.data || []));
-  }
+  
 
-  getCategoryChildren(parentId: number | null): Observable<PageCategoryDto[]> {
-    const qp: Record<string, any> = { parentId };
-    return this.#api.get<ApiResponse<PageCategoryDto[]>>('pageCategoryChildren', undefined, qp).pipe(map((r) => r.data || []));
-  }
-
-  moveCategory(req: MoveCategoryRequest): Observable<void> {
-    return this.#api
-      .put<ApiResponse<void>>('pageCategoryMove', { newParentId: req.newParentId }, { id: req.id })
-      .pipe(map(() => undefined));
-  }
-
-  reorderCategories(req: ReorderCategoryRequest): Observable<void> {
-    return this.#api
-      .put<ApiResponse<void>>('pageCategoryReorder', { parentId: req.parentId, orderedIds: req.orderedIds })
-      .pipe(map(() => undefined));
-  }
-
-  listSections(pageId: number): Observable<PageSectionDto[]> {
-    return this.#api
-      .get<ApiResponse<PageSectionDto[]>>('pageBuilderSections', undefined, { pageId })
-      .pipe(map((r) => r.data || []));
-  }
-
-  addSection(pageId: number, type?: string, displayOrder?: number, data?: string): Observable<PageSectionDto> {
-    return this.#api
-      .post<ApiResponse<PageSectionDto>>('pageBuilderSections', { pageId, type, displayOrder, data })
-      .pipe(map((r) => r.data));
-  }
-
-  updateSection(id: number, payload: Partial<PageSectionDto>): Observable<PageSectionDto> {
-    return this.#api
-      .put<ApiResponse<PageSectionDto>>('pageBuilderSections', { id, ...payload })
-      .pipe(map((r) => r.data));
-  }
-
-  deleteSection(id: number): Observable<void> {
-    return this.#api
-      .delete<ApiResponse<void>>('pageBuilderSectionById', { id })
-      .pipe(map(() => undefined));
-  }
-
-  listBlocks(sectionId: number): Observable<PageBlockDto[]> {
-    return this.#api
-      .get<ApiResponse<PageBlockDto[]>>('pageBuilderBlocks', undefined, { sectionId })
-      .pipe(map((r) => r.data || []));
-  }
-
-  addBlock(sectionId: number, type?: string, displayOrder?: number, data?: string): Observable<PageBlockDto> {
-    return this.#api
-      .post<ApiResponse<PageBlockDto>>('pageBuilderBlocks', { sectionId, type, displayOrder, data })
-      .pipe(map((r) => r.data));
-  }
-
-  updateBlock(id: number, payload: Partial<PageBlockDto>): Observable<PageBlockDto> {
-    return this.#api
-      .put<ApiResponse<PageBlockDto>>('pageBuilderBlocks', { id, ...payload })
-      .pipe(map((r) => r.data));
-  }
-
-  deleteBlock(id: number): Observable<void> {
-    return this.#api
-      .delete<ApiResponse<void>>('pageBuilderBlockById', { id })
-      .pipe(map(() => undefined));
-  }
+  // Removed non-CRUD and sections/blocks endpoints per refactor
 }
 
