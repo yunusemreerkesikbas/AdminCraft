@@ -36,47 +36,6 @@ public class PageCategoryController {
   private final MessageSource messageSource;
   private final SecurityHelper securityHelper;
 
-  @GetMapping("/tree")
-  public ResponseEntity<ApiResponse<List<com.backend.presentation.dto.response.PageCategoryDto>>> tree(
-      @RequestParam(required = false) Long rootId,
-      @RequestParam(required = false) Integer depth,
-      @RequestParam(required = false, defaultValue = "tr") String lang,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String headerLang) {
-
-    String correlationId = UUID.randomUUID().toString();
-    log.debug("SECURITY_AUDIT: Tree request started - correlationId={}, user={}, rootId={}",
-        correlationId, securityHelper.getCurrentUserEmail(), rootId);
-
-    try {
-      // Güvenlik: Kullanıcının kendi tenant'ından tenantId al
-      Long tenantId = securityHelper.getCurrentUserTenantId();
-
-      var list = categoryService.getTree(tenantId, lang, rootId, depth);
-
-      log.info("SECURITY_AUDIT: Tree request completed successfully - correlationId={}, tenantId={}, itemCount={}",
-          correlationId, tenantId, list.size());
-
-      return ResponseEntity.ok(ApiResponse.success(list));
-
-    } catch (CategoryNotFoundException ex) {
-      log.warn("Business error in tree endpoint [{}]: {}", correlationId, ex.getMessage());
-      String msg = messageSource.getMessage("page.category.not.found",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(headerLang));
-      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(msg));
-
-    } catch (TenantMismatchException ex) {
-      log.warn("SECURITY_ALERT: Tenant access attempt [{}]: {}", correlationId, ex.getMessage());
-      String msg = messageSource.getMessage("common.access.denied", null, Locale.forLanguageTag(headerLang));
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(msg));
-
-    } catch (Exception ex) {
-      log.error("Technical error in tree endpoint [{}]: {}", correlationId, ex.getMessage(), ex);
-      String msg = messageSource.getMessage("page.category.tree.technical.error",
-          new Object[] { correlationId }, Locale.forLanguageTag(headerLang));
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
-    }
-  }
-
   @PostMapping
   public ResponseEntity<ApiResponse<PageCategory>> create(
       @Valid @RequestBody com.backend.presentation.dto.request.CreatePageCategoryRequest req,
@@ -220,55 +179,6 @@ public class PageCategoryController {
       String msg = messageSource.getMessage("page.category.list.technical.error",
           new Object[] { correlationId }, Locale.forLanguageTag(lang));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
-    }
-  }
-
-  @GetMapping("/children")
-  public ResponseEntity<ApiResponse<List<com.backend.presentation.dto.response.PageCategoryDto>>> listChildren(
-      @RequestParam @NotNull Long tenantId,
-      @RequestParam(required = false) Long parentId,
-      @RequestParam(required = false, defaultValue = "tr") String lang,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String headerLang) {
-    try {
-      var list = categoryService.listChildrenLocalized(tenantId, parentId, lang);
-      return ResponseEntity.ok(ApiResponse.success(list));
-    } catch (Exception ex) {
-      String msg = messageSource.getMessage("page.category.children.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(headerLang));
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
-    }
-  }
-
-  @PutMapping("/{id}/move")
-  public ResponseEntity<ApiResponse<Void>> move(
-      @PathVariable @NotNull @Min(1) Long id,
-      @Valid @RequestBody com.backend.presentation.dto.request.MovePageCategoryRequest req,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-    try {
-      categoryService.move(req.tenantId(), id, req.newParentId());
-      String msg = messageSource.getMessage("page.category.move.success",
-          null, Locale.forLanguageTag(lang));
-      return ResponseEntity.ok(ApiResponse.success(msg, null));
-    } catch (Exception ex) {
-      String msg = messageSource.getMessage("page.category.move.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
-    }
-  }
-
-  @PutMapping("/reorder")
-  public ResponseEntity<ApiResponse<Void>> reorder(
-      @Valid @RequestBody com.backend.presentation.dto.request.ReorderPageCategoriesRequest req,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-    try {
-      categoryService.reorder(req.tenantId(), req.parentId(), req.orderedIds());
-      String msg = messageSource.getMessage("page.category.reorder.success",
-          null, Locale.forLanguageTag(lang));
-      return ResponseEntity.ok(ApiResponse.success(msg, null));
-    } catch (Exception ex) {
-      String msg = messageSource.getMessage("page.category.reorder.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
     }
   }
 

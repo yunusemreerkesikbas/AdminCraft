@@ -58,19 +58,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageI18n: 'pages/${pageId}/i18n/${language}',
     pageI18nPublish: 'pages/${pageId}/publish/${language}',
 
-    // ----- PAGE BUILDER: CATEGORIES -----
+    // ----- PAGE BUILDER: CATEGORIES (CRUD only) -----
     pageCategories: 'page-categories',
     pageCategoryById: 'page-categories/${id}',
-    pageCategoryTree: 'page-categories/tree',
-    pageCategoryChildren: 'page-categories/children',
-    pageCategoryMove: 'page-categories/${id}/move',
-    pageCategoryReorder: 'page-categories/reorder',
-
-    // ----- PAGE BUILDER: SECTIONS & BLOCKS -----
-    pageBuilderSections: 'page-builder/sections',
-    pageBuilderSectionById: 'page-builder/sections/${id}',
-    pageBuilderBlocks: 'page-builder/blocks',
-    pageBuilderBlockById: 'page-builder/blocks/${id}',
 
     // ----- PROVISIONING -----
     provisioningJob: 'provisioning/jobs/${jobUuid}'

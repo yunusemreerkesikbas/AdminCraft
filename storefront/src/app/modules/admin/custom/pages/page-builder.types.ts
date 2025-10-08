@@ -139,31 +139,7 @@ export interface UpdateCategoryRequest extends CreateCategoryRequest {
   id: number;
 }
 
-export interface MoveCategoryRequest {
-  id: number;
-  newParentId: number | null;
-}
-
-export interface ReorderCategoryRequest {
-  parentId: number | null;
-  orderedIds: number[];
-}
-
-export interface PageSectionDto {
-  id: number;
-  pageId: number;
-  type?: string | null;
-  displayOrder: number;
-  data?: string | null;
-}
-
-export interface PageBlockDto {
-  id: number;
-  sectionId: number;
-  type?: string | null;
-  displayOrder: number;
-  data?: string | null;
-}
+// Removed Move/Reorder and Sections/Blocks types per refactor
 
 // API Response types
 export interface ApiResponse<T> {

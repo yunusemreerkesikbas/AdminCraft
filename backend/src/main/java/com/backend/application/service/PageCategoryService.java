@@ -6,31 +6,21 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PageCategoryService {
-  PageCategory create(PageCategory category);
+    PageCategory create(PageCategory category);
 
-  PageCategory update(PageCategory category);
+    PageCategory update(PageCategory category);
 
-  void delete(Long id);
+    void delete(Long id);
 
-  Optional<PageCategory> findById(Long id);
-  
-  // Güvenlik: Tenant-aware method'lar
-  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
-  
-  void validateParentBelongsToTenant(Long parentId, Long tenantId);
+    Optional<PageCategory> findById(Long id);
 
-  List<PageCategory> listByTenant(Long tenantId);
+    // Güvenlik: Tenant-aware method'lar
+    Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
 
-  List<PageCategory> listChildren(Long tenantId, Long parentId);
+    void validateParentBelongsToTenant(Long parentId, Long tenantId);
 
-  // New Sprint 5 operations (localized)
-  List<com.backend.presentation.dto.response.PageCategoryDto> getTree(Long tenantId, String languageCode, Long rootId,
-      Integer depth);
+    List<PageCategory> listByTenant(Long tenantId);
 
-  void move(Long tenantId, Long categoryId, Long newParentId);
+    List<PageCategory> listChildren(Long tenantId, Long parentId);
 
-  void reorder(Long tenantId, Long parentId, List<Long> orderedIds);
-
-  List<com.backend.presentation.dto.response.PageCategoryDto> listChildrenLocalized(Long tenantId, Long parentId,
-      String languageCode);
 }
