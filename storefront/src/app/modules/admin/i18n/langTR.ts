@@ -274,11 +274,7 @@ export const langTR = {
                 sectionData: 'Bölüm Verisi',
                 blockType: 'Blok Türü',
                 blockData: 'Blok Verisi',
-                isHome: 'Ana Sayfa',
                 sortOrder: 'Sıralama',
-            },
-            actions: {
-                setAsHome: 'Ana Sayfa Yap',
             },
             messages: {
                 pageCreated: 'Sayfa oluşturuldu',

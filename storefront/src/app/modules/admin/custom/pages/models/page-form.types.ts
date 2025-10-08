@@ -12,7 +12,6 @@ export interface PageI18nFormData {
 export interface CreatePageFormData {
   categoryId?: number | null;
   status?: PageStatus;
-  isHome?: boolean;
   sortOrder?: number;
   styleClasses?: string | null;
 

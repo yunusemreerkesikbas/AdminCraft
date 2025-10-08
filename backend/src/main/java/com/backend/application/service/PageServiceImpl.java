@@ -44,7 +44,6 @@ public class PageServiceImpl implements PageService {
         page.setStatus(request.status() != null ? request.status() : PageStatus.DRAFT);
         page.setFeaturedImage(request.featuredImage());
         page.setStyleClasses(request.styleClasses());
-        page.setIsHome(request.isHome() != null ? request.isHome() : false);
         page.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
         page.setCreatedAt(LocalDateTime.now());
         page.setUpdatedAt(LocalDateTime.now());
@@ -118,8 +117,6 @@ public class PageServiceImpl implements PageService {
             page.setFeaturedImage(request.featuredImage());
         if (request.styleClasses() != null)
             page.setStyleClasses(request.styleClasses());
-        if (request.isHome() != null)
-            page.setIsHome(request.isHome());
         if (request.sortOrder() != null)
             page.setSortOrder(request.sortOrder());
 

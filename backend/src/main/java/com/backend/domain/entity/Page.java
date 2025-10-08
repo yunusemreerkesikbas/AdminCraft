@@ -37,9 +37,6 @@ public class Page extends BaseEntity {
     @Column(name = "style_classes", length = 255)
     private String styleClasses;
 
-    @Column(name = "is_home")
-    private Boolean isHome = false;
-
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 

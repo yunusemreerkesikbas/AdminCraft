@@ -274,11 +274,7 @@ export const langEN = {
                 sectionData: 'Section Data',
                 blockType: 'Block Type',
                 blockData: 'Block Data',
-                isHome: 'Home Page',
                 sortOrder: 'Sort Order',
-            },
-            actions: {
-                setAsHome: 'Set as Home',
             },
             messages: {
                 pageCreated: 'Page created',

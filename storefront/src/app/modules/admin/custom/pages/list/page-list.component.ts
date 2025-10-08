@@ -11,11 +11,11 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
-import { CreatePageFormData, EditPageFormData, PageI18nFormData } from '../models/page-form.types';
+import { CreatePageFormData, EditPageFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
 import { ErrorHandlingService } from '../services/error-handling.service';
-import { LOADING_OPERATIONS, LoadingStateService } from '../services/loading-state.service';
+import { PageFormMapperService } from '../services/page-form-mapper.service';
 import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
 
 @Component({
@@ -57,8 +57,8 @@ export class PageListComponent implements OnInit, OnDestroy {
   #languageContext = inject(LanguageContextService);
   #router = inject(Router);
   #errorHandler = inject(ErrorHandlingService);
-  #loadingState = inject(LoadingStateService);
   #schemaBuilder = inject(PageSchemaBuilderService);
+  #formMapper = inject(PageFormMapperService);
 
   isLoading = false;
   tenantId = 1;
@@ -116,7 +116,6 @@ export class PageListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.#loadingState.startLoading(LOADING_OPERATIONS.LOAD_PAGES);
     this.isLoading = true;
 
     this.#pageBuilderService.listPages()
@@ -126,7 +125,6 @@ export class PageListComponent implements OnInit, OnDestroy {
           this.pages = list;
           this.applyFilter();
           this.isLoading = false;
-          this.#loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
           this.#cdr.markForCheck();
         },
         error: (error) => {
@@ -134,7 +132,6 @@ export class PageListComponent implements OnInit, OnDestroy {
           this.#errorHandler.logError(error, 'Loading pages');
           this.#notify.alert(errorMessage);
           this.isLoading = false;
-          this.#loadingState.stopLoading(LOADING_OPERATIONS.LOAD_PAGES);
           this.#cdr.markForCheck();
         },
       });
@@ -160,7 +157,6 @@ export class PageListComponent implements OnInit, OnDestroy {
     const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
     const initial: CreatePageFormData = {
       status: 'DRAFT',
-      isHome: false,
       sortOrder: 0
     };
 
@@ -185,44 +181,14 @@ export class PageListComponent implements OnInit, OnDestroy {
       if (!result) return;
 
       try {
-        const generalReq: CreatePageRequest = {
-          categoryId: result.categoryId || null,
-          status: result.status || 'DRAFT',
-          isHome: result.isHome || false,
-          sortOrder: result.sortOrder || 0,
-          styleClasses: result.styleClasses || null,
-          featuredImage: null
-        };
+        const generalReq: CreatePageRequest = this.#formMapper.toCreatePageRequest(result);
 
         this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
           next: (createdPage) => {
-            const i18nUpdates: Observable<PageI18nRequest>[] = [];
-
-            this.#supportedLanguages.forEach(lang => {
-              const langData = result[lang] as PageI18nFormData | undefined;
-              const hasContent = langData && (
-                langData.urlPath ||
-                langData.title ||
-                langData.subtitle ||
-                langData.metaTitle ||
-                langData.metaDescription ||
-                langData.description
-              );
-
-              if (hasContent && langData) {
-                const i18nReq: PageI18nRequest = {
-                  language: lang.toUpperCase() as Language,
-                  urlPath: langData.urlPath || null,
-                  title: langData.title || null,
-                  subtitle: langData.subtitle || null,
-                  metaTitle: langData.metaTitle || null,
-                  metaDescription: langData.metaDescription || null,
-                  description: langData.description || null,
-                  status: result.status || 'DRAFT'
-                };
-                i18nUpdates.push(this.#pageBuilderService.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
-              }
-            });
+            const mapped = this.#formMapper.toI18nRequests(this.#supportedLanguages, result, 'DRAFT');
+            const i18nUpdates: Observable<PageI18nRequest>[] = mapped.map(m =>
+              this.#pageBuilderService.updatePageI18n(createdPage.id, m.lang, m.req)
+            );
 
             if (i18nUpdates.length > 0) {
               forkJoin(i18nUpdates).pipe(take(1)).subscribe({
@@ -258,7 +224,6 @@ export class PageListComponent implements OnInit, OnDestroy {
         const initial: EditPageFormData = {
           categoryId: pageDetail.categoryId,
           status: pageDetail.status,
-          isHome: pageDetail.isHome,
           sortOrder: pageDetail.sortOrder,
           styleClasses: pageDetail.styleClasses
         };
@@ -294,45 +259,14 @@ export class PageListComponent implements OnInit, OnDestroy {
           if (!result) return;
 
           try {
-            const updatePageReq: UpdatePageRequest = {
-              id: page.id,
-              categoryId: result.categoryId || null,
-              status: result.status || 'DRAFT',
-              isHome: result.isHome || false,
-              sortOrder: result.sortOrder || 0,
-              styleClasses: result.styleClasses || null,
-              featuredImage: pageDetail.featuredImage
-            };
+            const updatePageReq: UpdatePageRequest = this.#formMapper.toUpdatePageRequest(page.id, result, pageDetail.featuredImage);
 
             const updates: Observable<UpdatePageRequest | PageI18nRequest>[] = [
               this.#pageBuilderService.updatePage(page.id, updatePageReq)
             ];
 
-            this.#supportedLanguages.forEach(lang => {
-              const langData = result[lang] as PageI18nFormData | undefined;
-              const hasContent = langData && (
-                langData.urlPath ||
-                langData.title ||
-                langData.subtitle ||
-                langData.metaTitle ||
-                langData.metaDescription ||
-                langData.description
-              );
-
-              if (hasContent && langData) {
-                const i18nReq: PageI18nRequest = {
-                  language: lang.toUpperCase() as Language,
-                  urlPath: langData.urlPath || null,
-                  title: langData.title || null,
-                  subtitle: langData.subtitle || null,
-                  metaTitle: langData.metaTitle || null,
-                  metaDescription: langData.metaDescription || null,
-                  description: langData.description || null,
-                  status: result.status || 'DRAFT'
-                };
-                updates.push(this.#pageBuilderService.updatePageI18n(page.id, lang.toUpperCase() as Language, i18nReq));
-              }
-            });
+            const mapped = this.#formMapper.toI18nRequests(this.#supportedLanguages, result, 'DRAFT');
+            mapped.forEach(m => updates.push(this.#pageBuilderService.updatePageI18n(page.id, m.lang, m.req)));
 
             forkJoin(updates).pipe(take(1)).subscribe({
               next: () => {
@@ -371,28 +305,7 @@ export class PageListComponent implements OnInit, OnDestroy {
     });
   }
 
-  setAsHome(page: PageListDto): void {
-    const updateReq: UpdatePageRequest = {
-      id: page.id,
-      categoryId: page.categoryId,
-      status: page.status,
-      isHome: true,
-      sortOrder: page.sortOrder,
-      styleClasses: page.styleClasses,
-      featuredImage: page.featuredImage
-    };
-
-    this.#pageBuilderService.updatePage(page.id, updateReq).pipe(take(1)).subscribe({
-      next: () => {
-        this.load();
-        this.#notify.success('admin.common.messages.operationSuccess');
-      },
-      error: (error) => {
-        const msg = this.#errorHandler.handleError(error);
-        this.#notify.alert(msg);
-      }
-    });
-  }
+  
 
   #loadCategories(): void {
     this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({

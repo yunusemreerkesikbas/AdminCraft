@@ -1,4 +1,3 @@
-import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -8,17 +7,18 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+ 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
+import { MatTreeModule } from '@angular/material/tree';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { Subject, takeUntil } from 'rxjs';
+import { ItemDialogService } from '@shared/services/item-dialog.service';
+import { ItemDialogOptions } from '@shared/types/item-dialog.types';
+import { Subject, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
 import {
   CreateCategoryRequest,
@@ -26,6 +26,7 @@ import {
   PageCategoryTreeNode,
   UpdateCategoryRequest,
 } from '../page-builder.types';
+import { CategorySchemaBuilderService } from '../services/category-schema-builder.service';
 import { ErrorHandlingService } from '../services/error-handling.service';
 
 @Component({
@@ -36,15 +37,11 @@ import { ErrorHandlingService } from '../services/error-handling.service';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
     MatTreeModule,
     MatProgressBarModule,
     TranslocoModule,
-    SpaInputComponent,
-    SpaSelectComponent,
   ],
   styles: [
     /* language=SCSS */
@@ -65,15 +62,12 @@ import { ErrorHandlingService } from '../services/error-handling.service';
 })
 export class PageCategoriesComponent implements OnInit, OnDestroy {
   #cdr: ChangeDetectorRef;
-  #fb: FormBuilder;
   #destroy$ = new Subject<void>();
   #notify = inject(NotificationService);
 
   tenantId?: number;
   language: 'TR' | 'EN' | '' = '';
   tree: PageCategoryTreeNode[] = [];
-  treeControl = new NestedTreeControl<PageCategoryTreeNode>((n) => n.children || []);
-  dataSource = new MatTreeNestedDataSource<PageCategoryTreeNode>();
   flat: Array<{
     id: number;
     tenantId: number;
@@ -88,18 +82,17 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   selectedCategoryId: number | null = null;
   parentOptions: SpaSelectOption<number>[] = [];
 
-  form!: FormGroup;
   selected: PageCategoryDto | null = null;
 
   constructor(
     private _svc: PageBuilderService,
     private _tenantCtx: TenantContextService,
     private _errorHandler: ErrorHandlingService,
-    cdr: ChangeDetectorRef,
-    fb: FormBuilder
+    private _dialog: ItemDialogService,
+    private _schema: CategorySchemaBuilderService,
+    cdr: ChangeDetectorRef
   ) {
     this.#cdr = cdr;
-    this.#fb = fb;
   }
 
   ngOnInit(): void {
@@ -109,7 +102,6 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       return;
     }
     this.tenantId = storedId;
-    this.#buildForm();
     this.loadTree();
 
     this._tenantCtx.tenant$.pipe(takeUntil(this.#destroy$)).subscribe((t) => {
@@ -133,11 +125,8 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (nodes) => {
           this.tree = Array.isArray(nodes) ? nodes : [];
-          this.dataSource.data = this.tree;
           this.flat = [];
           this.#flatten(this.tree, 1);
-          this.#applyFilter();
-          this.#buildParentOptions(this.selected?.id ?? null);
           this.isLoading = false;
           this.#cdr.markForCheck();
         },
@@ -145,10 +134,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           const msg = this._errorHandler.handleError(error);
           this.#notify.alert(msg);
           this.tree = [];
-          this.dataSource.data = [];
           this.flat = [];
-          this.#applyFilter();
-          this.#buildParentOptions(this.selected?.id ?? null);
           this.isLoading = false;
           this.#cdr.markForCheck();
         },
@@ -163,8 +149,6 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       slug: node.slug,
       parentId: node.parentId,
     };
-    this.#buildForm(this.selected);
-    this.#buildParentOptions(this.selected.id);
     this.#cdr.markForCheck();
   }
 
@@ -173,25 +157,45 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
-    const payload: CreateCategoryRequest = {
-      tenantId: this.tenantId,
-      name: 'Yeni Kategori',
+    const schema = this._schema.buildCategorySchema(this.parentOptions);
+    const initial = {
+      name: '',
       slug: `kategori-${Date.now()}`,
       parentId: parent?.id ?? null,
+    } as any;
+    const options: ItemDialogOptions<typeof initial> = {
+      titleKey: 'admin.dialog.title.create',
+      mode: 'create',
+      schema,
+      languages: [],
+      initial,
+      modalData: { disableClose: true, width: '640px', height: '70vh' },
     };
-    this._svc
-      .createCategory(payload)
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({
-        next: () => {
-          this.#notify.success('admin.pageBuilder.messages.categoryCreated');
-          this.loadTree();
-        },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        },
+    this._dialog
+      .open(options)
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (!result) return;
+        const payload: CreateCategoryRequest = {
+          tenantId: this.tenantId!,
+          name: String(result.name || '').trim(),
+          slug: String(result.slug || '').trim(),
+          parentId: result.parentId ?? null,
+        };
+        this._svc
+          .createCategory(payload)
+          .pipe(takeUntil(this.#destroy$))
+          .subscribe({
+            next: () => {
+              this.#notify.success('admin.pageBuilder.messages.categoryCreated');
+              this.loadTree();
+            },
+            error: (error) => {
+              const msg = this._errorHandler.handleError(error);
+              this.#notify.alert(msg);
+              this.#cdr.markForCheck();
+            },
+          });
       });
   }
 
@@ -200,15 +204,34 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
-    if (!this.form?.valid || !this.selected || !this.tenantId) return;
-    const v = this.form.value;
-    const payload: UpdateCategoryRequest = {
+    if (!this.selected || !this.tenantId) return;
+    const schema = this._schema.buildCategorySchema(this.parentOptions);
+    const initial = {
+      name: this.selected.name,
+      slug: this.selected.slug,
+      parentId: this.selected.parentId ?? null,
+    } as any;
+    const options: ItemDialogOptions<typeof initial, number> = {
+      titleKey: 'admin.dialog.title.edit',
+      mode: 'edit',
+      schema,
+      languages: [],
+      initial,
       id: this.selected.id,
-      tenantId: this.tenantId,
-      name: String(v.name || '').trim(),
-      slug: String(v.slug || '').trim(),
-      parentId: v.parentId ?? null,
+      modalData: { disableClose: true, width: '640px', height: '70vh' },
     };
+    this._dialog
+      .open(options)
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (!result) return;
+        const payload: UpdateCategoryRequest = {
+          id: this.selected!.id,
+          tenantId: this.tenantId!,
+          name: String(result.name || '').trim(),
+          slug: String(result.slug || '').trim(),
+          parentId: result.parentId ?? null,
+        };
     this._svc
       .updateCategory(payload)
       .pipe(takeUntil(this.#destroy$))
@@ -223,11 +246,78 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.#cdr.markForCheck();
         },
       });
+      });
   }
 
   remove(node: PageCategoryTreeNode): void {
     this._svc
       .deleteCategory(node.id)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => {
+          this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
+          this.loadTree();
+        },
+        error: (error) => {
+          const msg = this._errorHandler.handleError(error);
+          this.#notify.alert(msg);
+          this.#cdr.markForCheck();
+        },
+      });
+  }
+
+  editCategory(cat: { id: number; name: string; slug: string; parentId: number | null }): void {
+    if (!this.tenantId) {
+      this.#notify.warning('admin.pageBuilder.errors.noTenant');
+      return;
+    }
+    const schema = this._schema.buildCategorySchema(this.parentOptions);
+    const initial = {
+      name: cat.name,
+      slug: cat.slug,
+      parentId: cat.parentId ?? null,
+    } as any;
+    const options: ItemDialogOptions<typeof initial, number> = {
+      titleKey: 'admin.dialog.title.edit',
+      mode: 'edit',
+      schema,
+      languages: [],
+      initial,
+      id: cat.id,
+      modalData: { disableClose: true, width: '640px', height: '70vh' },
+    };
+    this._dialog
+      .open(options)
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (!result) return;
+        const payload: UpdateCategoryRequest = {
+          id: cat.id,
+          tenantId: this.tenantId!,
+          name: String(result.name || '').trim(),
+          slug: String(result.slug || '').trim(),
+          parentId: result.parentId ?? null,
+        };
+        this._svc
+          .updateCategory(payload)
+          .pipe(takeUntil(this.#destroy$))
+          .subscribe({
+            next: () => {
+              this.#notify.success('admin.pageBuilder.messages.categoryUpdated');
+              this.loadTree();
+            },
+            error: (error) => {
+              const msg = this._errorHandler.handleError(error);
+              this.#notify.alert(msg);
+              this.#cdr.markForCheck();
+            },
+          });
+      });
+  }
+
+  deleteCategory(id: number): void {
+    this._svc
+      .deleteCategory(id)
       .pipe(takeUntil(this.#destroy$))
       .subscribe({
         next: () => {
@@ -339,138 +429,17 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  hasChild = (_: number, node: PageCategoryTreeNode): boolean =>
-    Array.isArray(node.children) && node.children.length > 0;
 
-  onSearchChange(q: string): void {
-    this.search = (q || '').trim().toLowerCase();
-    this.#applyFilter();
-  }
 
-  toggleDetails(id: number): void {
-    if (this.selectedCategoryId === id) {
-      this.selectedCategoryId = null;
-      this.selected = null;
-      this.form.reset({ name: '', slug: '', parentId: null });
-      this.#cdr.markForCheck();
-      return;
-    }
-    this.selectedCategoryId = id;
-    const cat = this.flat.find((x) => x.id === id);
-    if (cat) {
-      this.select({
-        id: cat.id,
-        tenantId: this.tenantId!,
-        name: cat.name,
-        slug: cat.slug,
-        parentId: cat.parentId,
-      } as any);
-    }
-    this.#cdr.markForCheck();
-  }
 
-  updateSelectedCategory(): void {
-    if (!this.selected || !this.form?.valid || !this.tenantId) return;
-    const v = this.form.value;
-    const payload: UpdateCategoryRequest = {
-      id: this.selected.id,
-      tenantId: this.tenantId,
-      name: String(v.name || '').trim(),
-      slug: String(v.slug || '').trim(),
-      parentId: v.parentId ?? null,
-    };
-    this._svc
-      .updateCategory(payload)
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({ 
-        next: () => this.loadTree(), 
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        }
-      });
-  }
+  
 
-  deleteSelectedCategory(): void {
-    if (!this.selected) return;
-    const id = this.selected.id;
-    this._svc
-      .deleteCategory(id)
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({
-        next: () => {
-          this.loadTree();
-          this.selectedCategoryId = null;
-          this.selected = null;
-          this.form.reset({ name: '', slug: '', parentId: null });
-          this.#cdr.markForCheck();
-        },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        },
-      });
-  }
 
-  // Event handlers for child components
-  onCategoryUpdate(payload: UpdateCategoryRequest): void {
-    this._svc
-      .updateCategory(payload)
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({ 
-        next: () => this.loadTree(), 
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        }
-      });
-  }
 
-  onFormClose(): void {
-    this.toggleDetails(0); // Close the details
-  }
 
-  #applyFilter(): void {
-    const q = this.search;
-    const base = this.flat.map((f) => ({
-      id: f.id,
-      name: f.name,
-      slug: f.slug,
-      level: f.level,
-      parentId: f.parentId,
-    }));
-    this.filtered = !q
-      ? base
-      : base.filter((c) => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q));
-  }
+  
 
-  #buildForm(cat?: PageCategoryDto): void {
-    this.form = this.#fb.group({
-      name: [cat?.name || '', [Validators.required]],
-      slug: [cat?.slug || '', [Validators.required]],
-      parentId: [cat?.parentId ?? null],
-    });
-  }
-
-  #buildParentOptions(skipId: number | null): void {
-    const opts: SpaSelectOption<number>[] = [];
-    const build = (list: typeof this.tree, prefix: string = ''): void => {
-      list.forEach((n) => {
-        if (n.id !== skipId) {
-          const label = prefix ? `${prefix} / ${n.name}` : n.name;
-          opts.push({ value: n.id, label });
-          if (n.children && n.children.length > 0) {
-            build(n.children, label);
-          }
-        }
-      });
-    };
-    build(this.tree);
-    this.parentOptions = opts;
-  }
+ 
 
   ngOnDestroy(): void {
     this.#destroy$.next();
