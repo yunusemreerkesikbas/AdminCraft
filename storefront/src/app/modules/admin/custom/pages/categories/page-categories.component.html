@@ -1,58 +1,88 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
+    <!-- Header -->
+    <admin-page-header
+        [title]="'admin.pageBuilder.categories.title'"
+        [subtitle]="'admin.pageBuilder.categories.subtitle'"
+        [showCreateButton]="true"
+        [isLoading]="isLoading"
+        (createClick)="createCategory()"
+    ></admin-page-header>
+
     <!-- Main -->
     <div class="flex flex-auto overflow-hidden">
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            <div class="flex items-center justify-between px-6 py-4 md:px-8">
-                <div class="font-semibold">
-                    {{ 'admin.common.grid.name' | transloco }}
-                </div>
-                <div class="flex items-center gap-2">
-                    <button mat-stroked-button (click)="createRoot()">
-                        {{ 'admin.common.actions.create' | transloco }}
-                    </button>
-                </div>
-            </div>
-            @if (filtered.length > 0) {
+            @if (categories.length > 0) {
                 <div class="grid">
                     <!-- Grid header -->
                     <div
-                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                        class="text-secondary sticky top-0 z-10 grid grid-cols-[auto_200px_120px_120px] gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
                     >
-                        <div>{{ 'admin.common.grid.name' | transloco }}</div>
-                        <div class="hidden md:block">
-                            {{ 'admin.common.grid.slug' | transloco }}
+                        <div>
+                            {{ 'admin.common.grid.uid' | transloco }}
                         </div>
-                        <div class="hidden sm:block">
-                            {{ 'admin.common.grid.level' | transloco }}
+                        <div class="hidden md:block">
+                            {{ 'admin.common.grid.parentCategory' | transloco }}
+                        </div>
+                        <div class="hidden text-center sm:block">
+                            {{ 'admin.common.grid.status' | transloco }}
                         </div>
                         <div class="hidden text-right sm:block">
-                            {{ 'admin.common.grid.details' | transloco }}
+                            {{ 'admin.common.grid.actions' | transloco }}
                         </div>
                     </div>
                     <!-- Rows -->
-                    @for (c of filtered; track c.id) {
+                    @for (cat of categories; track cat.id) {
                         <div
-                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                            class="grid grid-cols-[auto_200px_120px_120px] items-center gap-4 border-b px-6 py-3 md:px-8"
                         >
-                            <div
-                                class="truncate font-medium"
-                                [textContent]="c.name"
-                            ></div>
-                            <div class="hidden truncate md:block">
-                                /<span [textContent]="c.slug"></span>
+                            <div class="flex flex-col">
+                                <div class="truncate font-medium">
+                                    {{ cat.uid || '#' + cat.id }}
+                                </div>
                             </div>
-                            <div class="hidden sm:block">{{ c.level }}</div>
+                            <div class="hidden truncate md:block">
+                                @if (cat.parentId) {
+                                    <span class="text-sm">{{
+                                        getParentCategoryName(cat.parentId)
+                                    }}</span>
+                                } @else {
+                                    <span class="text-secondary text-sm"
+                                        >-</span
+                                    >
+                                }
+                            </div>
+                            <div class="hidden text-center sm:block">
+                                @if (cat.active) {
+                                    <span
+                                        class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
+                                    >
+                                        {{
+                                            'admin.common.status.active'
+                                                | transloco
+                                        }}
+                                    </span>
+                                } @else {
+                                    <span
+                                        class="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800"
+                                    >
+                                        {{
+                                            'admin.common.status.inactive'
+                                                | transloco
+                                        }}
+                                    </span>
+                                }
+                            </div>
                             <div class="hidden text-right sm:block">
                                 <div
                                     class="flex items-center justify-end gap-2"
                                 >
                                     <button
                                         mat-icon-button
-                                        (click)="editCategory(c)"
+                                        (click)="editCategory(cat.id)"
                                         [title]="
                                             'admin.common.actions.edit'
                                                 | transloco
@@ -65,7 +95,7 @@
                                     <button
                                         mat-icon-button
                                         color="warn"
-                                        (click)="deleteCategory(c.id)"
+                                        (click)="deleteCategory(cat.id)"
                                         [title]="
                                             'admin.common.actions.delete'
                                                 | transloco
@@ -81,10 +111,22 @@
                     }
                 </div>
             } @else {
-                <div
-                    class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
-                >
-                    {{ 'admin.common.noRecords' | transloco }}
+                <div class="border-t p-8 text-center sm:p-16">
+                    <mat-icon
+                        class="text-secondary icon-size-24"
+                        svgIcon="heroicons_outline:folder-open"
+                    ></mat-icon>
+                    <div class="text-secondary mt-4 text-xl font-semibold">
+                        {{ 'admin.common.noRecords' | transloco }}
+                    </div>
+                    <button
+                        class="mt-6"
+                        mat-flat-button
+                        color="primary"
+                        (click)="createCategory()"
+                    >
+                        {{ 'admin.common.actions.createFirst' | transloco }}
+                    </button>
                 </div>
             }
         </div>

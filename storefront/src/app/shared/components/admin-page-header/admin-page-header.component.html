@@ -1,0 +1,40 @@
+<div class="flex items-center justify-between border-b px-6 py-4 md:px-8">
+    <!-- Loader -->
+    @if (isLoading) {
+        <div class="absolute inset-x-0 bottom-0">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+    }
+
+    <!-- Title and Subtitle -->
+    <div>
+        <div class="text-2xl font-semibold">
+            {{ title | transloco }}
+        </div>
+        @if (subtitle) {
+            <div class="text-secondary mt-1 text-sm">
+                {{ subtitle | transloco }}
+            </div>
+        }
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+        <!-- Search -->
+        @if (showSearch) {
+            <spa-search-input
+                [placeholder]="searchPlaceholder ? (searchPlaceholder | transloco) : ('admin.content.searchPlaceholder' | transloco)"
+            ></spa-search-input>
+        }
+
+        <!-- Create Button -->
+        @if (showCreateButton) {
+            <button mat-flat-button color="primary" (click)="onCreateClick()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span class="ml-2">{{
+                    createButtonText ? (createButtonText | transloco) : ('admin.common.actions.create' | transloco)
+                }}</span>
+            </button>
+        }
+    </div>
+</div>

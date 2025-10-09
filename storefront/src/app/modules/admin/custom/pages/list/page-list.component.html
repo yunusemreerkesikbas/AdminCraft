@@ -1,11 +1,14 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    @if (isLoading) {
-        <div class="absolute inset-x-0 bottom-0">
-            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-        </div>
-    }
+    <!-- Header -->
+    <admin-page-header
+        [title]="'admin.pageBuilder.title'"
+        [showSearch]="true"
+        [showCreateButton]="true"
+        [isLoading]="isLoading"
+        (createClick)="create()"
+    ></admin-page-header>
 
     <div class="flex flex-auto overflow-hidden">
         <div

@@ -13,6 +13,7 @@ export interface ItemDialogOptions<TDto, TId = string> {
   schema: ItemDialogSchema;
   languages: ReadonlyArray<string>;
   initial?: Partial<TDto>;
+  i18nInitial?: Record<string, any>;
   id?: TId;
   modalData?: ModalData;
 }
@@ -36,3 +37,5 @@ export interface GeneralFieldConfig {
 }
 
 export interface LangFieldConfig extends GeneralFieldConfig {}
+
+export interface I18nFieldConfig extends GeneralFieldConfig {}

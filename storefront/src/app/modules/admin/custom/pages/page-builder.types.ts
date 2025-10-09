@@ -108,36 +108,78 @@ export interface PublishPageI18nRequest {
   scheduledAt?: string | null;
 }
 
-export interface PageCategoryDto {
+export interface PageCategoryListDto {
   id: number;
-  tenantId: number;
-  name: string;
-  slug: string;
+  uuid: string;
+  uid: string;
   parentId?: number | null;
+  active: boolean;
+  styleClasses?: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  translations: {
+    [key in Language]?: boolean;
+  };
 }
 
-export interface PageCategoryTreeNode {
+export interface PageCategoryI18nDto {
   id: number;
-  tenantId: number;
-  name: string;
-  slug: string;
+  uuid: string;
+  uid: string;
+  language: Language;
+  url?: string | null;
+  title?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  active: boolean;
+  updatedAt: string;
+  fallbackLanguage: boolean;
+}
+
+export interface PageCategoryDetailDto {
+  id: number;
+  uuid: string;
+  uid: string;
   parentId?: number | null;
-  level: number;
-  path: string;
+  active: boolean;
+  styleClasses?: string | null;
   sortOrder: number;
-  children?: PageCategoryTreeNode[];
+  createdAt: string;
+  updatedAt: string;
+  translations: {
+    [key in Language]?: PageCategoryI18nDto;
+  };
+  metadata: {
+    translationCount: number;
+    publishedTranslationCount: number;
+  };
 }
 
 export interface CreateCategoryRequest {
-  tenantId: number;
-  name: string;
-  slug: string;
+  uid?: string | null;
   parentId?: number | null;
+  active?: boolean;
+  styleClasses?: string | null;
+  sortOrder?: number;
 }
 
-export interface UpdateCategoryRequest extends CreateCategoryRequest {
-  id: number;
+export interface UpdateCategoryRequest {
+  parentId?: number | null;
+  active?: boolean;
+  styleClasses?: string | null;
+  sortOrder?: number;
 }
+
+export interface UpsertCategoryI18nRequest {
+  url?: string | null;
+  title?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  active?: boolean;
+}
+
+export type PageCategoryDto = PageCategoryListDto;
 
 // Removed Move/Reorder and Sections/Blocks types per refactor
 

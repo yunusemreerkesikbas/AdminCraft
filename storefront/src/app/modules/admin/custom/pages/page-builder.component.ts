@@ -1,13 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router, RouterModule } from '@angular/router';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
@@ -26,11 +21,6 @@ import { PageSchemaBuilderService } from './services/page-schema-builder.service
   imports: [
     CommonModule,
     RouterModule,
-    MatProgressBarModule,
-    MatButtonModule,
-    MatIconModule,
-    SpaSearchInputComponent,
-    TranslocoPipe,
   ],
 })
 export class PageBuilderComponent implements OnInit, OnDestroy {

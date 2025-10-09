@@ -2,11 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
+import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
@@ -28,8 +28,8 @@ import { PageSchemaBuilderService } from '../services/page-schema-builder.servic
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressBarModule,
     TranslocoModule,
+    AdminPageHeaderComponent,
   ],
   styles: [
     `
@@ -151,6 +151,10 @@ export class PageListComponent implements OnInit, OnDestroy {
 
   refresh(): void {
     this.load();
+  }
+
+  create(): void {
+    this.createPage();
   }
 
   createPage(): void {

@@ -23,6 +23,8 @@ export const langTR = {
                 created: 'Oluşturulma',
                 details: 'Detaylar',
                 actions: 'İşlemler',
+                parent: 'Üst',
+                parentCategory: 'Üst Kategori',
             },
             noRecords: 'Kayıt bulunamadı',
             status: {
@@ -57,6 +59,7 @@ export const langTR = {
                 cancel: 'İptal',
                 save: 'Kaydet',
                 create: 'Oluştur',
+                createFirst: 'İlk Öğeyi Oluştur',
                 manage: 'Yönet',
                 view: 'Görüntüle',
                 search: 'Ara',
@@ -193,8 +196,11 @@ export const langTR = {
             tabs: {
                 general: 'Genel',
                 languages: {
-                    tr: 'Türkçe',
-                    en: 'İngilizce',
+                    TR: 'Türkçe',
+                    EN: 'İngilizce',
+                    ES: 'İspanyolca',
+                    RU: 'Rusça',
+                    AR: 'Arapça',
                 },
             },
             actions: {
@@ -257,7 +263,10 @@ export const langTR = {
                 scheduled: 'Zamanlanmış'
             },
             fields: {
+                uid: 'UID',
                 name: 'Ad',
+                title: 'Başlık',
+                url: 'URL',
                 pageTitle: 'Sayfa Başlığı',
                 slug: 'Slug',
                 status: 'Durum',
@@ -275,6 +284,7 @@ export const langTR = {
                 blockType: 'Blok Türü',
                 blockData: 'Blok Verisi',
                 sortOrder: 'Sıralama',
+                active: 'Aktif',
             },
             messages: {
                 pageCreated: 'Sayfa oluşturuldu',

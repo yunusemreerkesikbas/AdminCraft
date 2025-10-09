@@ -6,7 +6,9 @@ import {
     CreateCategoryRequest,
     CreatePageRequest,
     Language,
-    PageCategoryDto,
+    PageCategoryDetailDto,
+    PageCategoryI18nDto,
+    PageCategoryListDto,
     PageDetailDto,
     PageDto,
     PageI18nDto,
@@ -14,7 +16,8 @@ import {
     PageListDto,
     PublishPageI18nRequest,
     UpdateCategoryRequest,
-    UpdatePageRequest
+    UpdatePageRequest,
+    UpsertCategoryI18nRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
@@ -70,25 +73,32 @@ export class PageBuilderService {
     return this.#api.post<ApiResponse<PageI18nDto>>('pageI18nPublish', req || {}, { pageId, language }).pipe(map((r) => r.data));
   }
 
-  listCategories(parentId?: number): Observable<PageCategoryDto[]> {
-    const qp: Record<string, any> = { ...(parentId !== undefined && { parentId }) };
-    return this.#api.get<ApiResponse<PageCategoryDto[]>>('pageCategories', undefined, qp).pipe(map((r) => r.data || []));
+  listCategories(): Observable<PageCategoryListDto[]> {
+    return this.#api.get<ApiResponse<PageCategoryListDto[]>>('pageCategories').pipe(map((r) => r.data || []));
   }
 
-  getCategory(id: number): Observable<PageCategoryDto> {
-    return this.#api.get<ApiResponse<PageCategoryDto>>('pageCategoryById', { id }).pipe(map((r) => r.data));
+  getCategoryDetail(id: number): Observable<PageCategoryDetailDto> {
+    return this.#api.get<ApiResponse<PageCategoryDetailDto>>('pageCategoryWithTranslations', { id }).pipe(map((r) => r.data));
   }
 
-  createCategory(req: CreateCategoryRequest): Observable<PageCategoryDto> {
-    return this.#api.post<ApiResponse<PageCategoryDto>>('pageCategories', req).pipe(map((r) => r.data));
+  createCategory(req: CreateCategoryRequest): Observable<PageCategoryDetailDto> {
+    return this.#api.post<ApiResponse<PageCategoryDetailDto>>('pageCategories', req).pipe(map((r) => r.data));
   }
 
-  updateCategory(req: UpdateCategoryRequest): Observable<PageCategoryDto> {
-    return this.#api.put<ApiResponse<PageCategoryDto>>('pageCategories', req).pipe(map((r) => r.data));
+  updateCategory(id: number, req: UpdateCategoryRequest): Observable<PageCategoryDetailDto> {
+    return this.#api.put<ApiResponse<PageCategoryDetailDto>>('pageCategoryById', req, { id }).pipe(map((r) => r.data));
   }
 
   deleteCategory(id: number): Observable<void> {
     return this.#api.delete<ApiResponse<void>>('pageCategoryById', { id }).pipe(map(() => undefined));
+  }
+
+  getCategoryI18n(categoryId: number, language: Language): Observable<PageCategoryI18nDto> {
+    return this.#api.get<ApiResponse<PageCategoryI18nDto>>('pageCategoryI18n', { categoryId, language }).pipe(map((r) => r.data));
+  }
+
+  upsertCategoryI18n(categoryId: number, language: Language, req: UpsertCategoryI18nRequest): Observable<PageCategoryI18nDto> {
+    return this.#api.put<ApiResponse<PageCategoryI18nDto>>('pageCategoryI18n', req, { categoryId, language }).pipe(map((r) => r.data));
   }
 
   
