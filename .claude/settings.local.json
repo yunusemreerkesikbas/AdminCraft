@@ -78,7 +78,14 @@
       "Bash(Select-Object -First 50)",
       "Bash(./mvnw.cmd -pl backend:*)",
       "Bash(../mvnw.cmd compile)",
-      "Bash(mvn test-compile:*)"
+      "Bash(mvn test-compile:*)",
+      "mcp__github__get_pull_request",
+      "mcp__github__get_pull_request_files",
+      "mcp__github__list_commits",
+      "mcp__github__list_pull_requests",
+      "mcp__github__get_pull_request_status",
+      "Bash(../mvnw.cmd clean compile)",
+      "Bash(Select-Object -First 100)"
     ],
     "deny": [],
     "additionalDirectories": [

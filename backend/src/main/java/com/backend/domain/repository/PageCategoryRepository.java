@@ -14,9 +14,13 @@ public interface PageCategoryRepository {
 
   Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
 
+  void delete(PageCategory category);
+
   void deleteById(Long id);
 
   boolean existsById(Long id);
+
+  boolean existsByTenantIdAndUid(Long tenantId, String uid);
 
   List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId);
 

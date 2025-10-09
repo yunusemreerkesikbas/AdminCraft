@@ -25,8 +25,10 @@ import lombok.NoArgsConstructor;
 public class PageCategoryI18n extends BaseI18nEntity {
 
   @NotNull
-  @Column(name = "category_id", nullable = false)
-  private Long categoryId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id", nullable = false,
+      foreignKey = @ForeignKey(name = "fk_page_category_i18n_category"))
+  private PageCategory category;
 
   @Size(max = 150)
   @Column(name = "url", length = 150)

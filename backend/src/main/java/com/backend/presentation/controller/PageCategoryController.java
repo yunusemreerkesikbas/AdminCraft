@@ -1,5 +1,9 @@
 package com.backend.presentation.controller;
 
+import com.backend.application.command.CreatePageCategoryCommand;
+import com.backend.application.command.UpdatePageCategoryCommand;
+import com.backend.application.command.UpsertPageCategoryI18nCommand;
+import com.backend.application.query.PageCategoryDetailQuery;
 import com.backend.application.service.PageCategoryService;
 import com.backend.domain.entity.PageCategoryI18n;
 import com.backend.domain.enums.Language;
@@ -51,7 +55,15 @@ public class PageCategoryController {
     try {
       Long userTenantId = securityHelper.getCurrentUserTenantId();
 
-      PageCategoryDetailResponse response = categoryService.create(req, userTenantId);
+      CreatePageCategoryCommand command = new CreatePageCategoryCommand(
+          req.uid(),
+          req.parentId(),
+          req.active(),
+          req.styleClasses(),
+          req.sortOrder()
+      );
+
+      PageCategoryDetailResponse response = categoryService.create(command, userTenantId);
 
       log.info("SECURITY_AUDIT: Category created successfully - correlationId={}, categoryId={}, tenantId={}",
           correlationId, response.id(), userTenantId);
@@ -89,7 +101,14 @@ public class PageCategoryController {
     try {
       Long userTenantId = securityHelper.getCurrentUserTenantId();
 
-      PageCategoryDetailResponse response = categoryService.update(id, req, userTenantId);
+      UpdatePageCategoryCommand command = new UpdatePageCategoryCommand(
+          req.parentId(),
+          req.active(),
+          req.styleClasses(),
+          req.sortOrder()
+      );
+
+      PageCategoryDetailResponse response = categoryService.update(id, command, userTenantId);
 
       log.info("SECURITY_AUDIT: Category updated successfully - correlationId={}, categoryId={}, tenantId={}",
           correlationId, id, userTenantId);
@@ -128,7 +147,9 @@ public class PageCategoryController {
       Long userTenantId = securityHelper.getCurrentUserTenantId();
       boolean includeTranslations = "translations".equals(include);
 
-      PageCategoryDetailResponse response = categoryService.getDetailById(id, userTenantId, includeTranslations);
+      PageCategoryDetailQuery query = new PageCategoryDetailQuery(id, userTenantId, includeTranslations);
+
+      PageCategoryDetailResponse response = categoryService.getDetailById(query);
 
       log.debug("SECURITY_AUDIT: Category retrieved successfully - correlationId={}, categoryId={}, tenantId={}",
           correlationId, id, userTenantId);
@@ -222,7 +243,15 @@ public class PageCategoryController {
       Long tenantId = securityHelper.getCurrentUserTenantId();
       Language languageEnum = Language.valueOf(language.toUpperCase());
 
-      PageCategoryI18nResponse response = categoryService.upsertI18n(id, languageEnum, req, tenantId);
+      UpsertPageCategoryI18nCommand command = new UpsertPageCategoryI18nCommand(
+          req.url(),
+          req.title(),
+          req.metaTitle(),
+          req.metaDescription(),
+          req.active()
+      );
+
+      PageCategoryI18nResponse response = categoryService.upsertI18n(id, languageEnum, command, tenantId);
 
       log.info("SECURITY_AUDIT: Category i18n upserted - correlationId={}, categoryId={}, language={}, tenantId={}",
           correlationId, id, language, tenantId);

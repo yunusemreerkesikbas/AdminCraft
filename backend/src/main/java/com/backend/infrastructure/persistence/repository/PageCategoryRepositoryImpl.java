@@ -35,6 +35,11 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   }
 
   @Override
+  public void delete(PageCategory category) {
+    jpa.delete(category);
+  }
+
+  @Override
   public void deleteById(Long id) {
     jpa.deleteById(id);
   }
@@ -42,6 +47,11 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   @Override
   public boolean existsById(Long id) {
     return jpa.existsById(id);
+  }
+
+  @Override
+  public boolean existsByTenantIdAndUid(Long tenantId, String uid) {
+    return jpa.existsByTenantIdAndUid(tenantId, uid);
   }
 
   @Override

@@ -4,9 +4,9 @@
 
 -- Step 1: Add BaseEntity fields to page_categories (created_at, updated_at only if they don't exist)
 -- uuid, uid, created_by, updated_by already exist, only add created_at and updated_at
-ALTER TABLE page_categories 
-ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER updated_by,
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
+ALTER TABLE page_categories
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER updated_by,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
 
 -- Step 2: Remove language-specific fields from page_categories (name, slug, path, level, status)
 -- First backup data to page_category_i18n
@@ -41,9 +41,9 @@ CREATE TABLE IF NOT EXISTS page_category_i18n (
 -- Step 4: Migrate existing data to page_category_i18n
 -- Assuming existing data is in Turkish (TR)
 INSERT INTO page_category_i18n (uuid, uid, tenant_id, category_id, language, url, title, active, updated_at)
-SELECT 
+SELECT
     UUID() as uuid,
-    CONCAT('cmsitem_', LPAD(FLOOR(RAND() * 100000000), 8, '0')) as uid,
+    CONCAT('catitem_', LPAD(pc.id, 8, '0')) as uid,
     pc.tenant_id,
     pc.id as category_id,
     'TR' as language,
@@ -62,8 +62,8 @@ UPDATE page_categories
 SET uuid = UUID() 
 WHERE uuid IS NULL OR uuid = '';
 
-UPDATE page_categories 
-SET uid = CONCAT('cmsitem_', LPAD(FLOOR(RAND() * 100000000), 8, '0'))
+UPDATE page_categories
+SET uid = CONCAT('catitem_', LPAD(id, 8, '0'))
 WHERE uid IS NULL OR uid = '';
 
 UPDATE page_categories 
@@ -75,11 +75,17 @@ SET updated_at = NOW()
 WHERE updated_at IS NULL;
 
 -- Step 7: Make uuid and uid NOT NULL and UNIQUE
-ALTER TABLE page_categories 
+ALTER TABLE page_categories
 MODIFY COLUMN uuid VARCHAR(36) NOT NULL,
-MODIFY COLUMN uid VARCHAR(50) NOT NULL,
-ADD CONSTRAINT uk_page_category_uuid UNIQUE (uuid),
-ADD CONSTRAINT uk_page_category_uid UNIQUE (uid);
+MODIFY COLUMN uid VARCHAR(50) NOT NULL;
+
+ALTER TABLE page_categories
+DROP INDEX IF EXISTS uk_page_category_uuid,
+DROP INDEX IF EXISTS uk_page_category_uid;
+
+ALTER TABLE page_categories
+ADD CONSTRAINT IF NOT EXISTS uk_page_category_uuid UNIQUE (uuid),
+ADD CONSTRAINT IF NOT EXISTS uk_page_category_uid UNIQUE (uid);
 
 -- Step 8: Drop old language-specific columns
 -- WARNING: Only run this after confirming data migration

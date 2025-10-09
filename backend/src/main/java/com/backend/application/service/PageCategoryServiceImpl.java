@@ -1,5 +1,9 @@
 package com.backend.application.service;
 
+import com.backend.application.command.CreatePageCategoryCommand;
+import com.backend.application.command.UpdatePageCategoryCommand;
+import com.backend.application.command.UpsertPageCategoryI18nCommand;
+import com.backend.application.query.PageCategoryDetailQuery;
 import com.backend.domain.entity.PageCategory;
 import com.backend.domain.entity.PageCategoryI18n;
 import com.backend.domain.entity.Tenant;
@@ -8,9 +12,6 @@ import com.backend.domain.exception.CategoryNotFoundException;
 import com.backend.domain.repository.PageCategoryI18nRepository;
 import com.backend.domain.repository.PageCategoryRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.presentation.dto.request.CreatePageCategoryRequest;
-import com.backend.presentation.dto.request.UpdatePageCategoryRequest;
-import com.backend.presentation.dto.request.UpsertPageCategoryI18nRequest;
 import com.backend.presentation.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,18 +32,24 @@ public class PageCategoryServiceImpl implements PageCategoryService {
   private final TenantRepository tenantRepository;
 
   @Override
-  public PageCategoryDetailResponse create(CreatePageCategoryRequest request, Long tenantId) {
-    if (request.parentId() != null) {
-      validateParentBelongsToTenant(request.parentId(), tenantId);
+  public PageCategoryDetailResponse create(CreatePageCategoryCommand command, Long tenantId) {
+    if (command.uid() != null && !command.uid().trim().isEmpty()) {
+      if (categoryRepository.existsByTenantIdAndUid(tenantId, command.uid())) {
+        throw new IllegalArgumentException("UID already exists for this tenant");
+      }
+    }
+
+    if (command.parentId() != null) {
+      validateParentBelongsToTenant(command.parentId(), tenantId);
     }
 
     PageCategory category = new PageCategory();
     category.setTenantId(tenantId);
-    category.setUid(request.uid());
-    category.setParentId(request.parentId());
-    category.setActive(request.active() != null ? request.active() : true);
-    category.setStyleClasses(request.styleClasses());
-    category.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
+    category.setUid(command.uid());
+    category.setParentId(command.parentId());
+    category.setActive(command.active() != null ? command.active() : true);
+    category.setStyleClasses(command.styleClasses());
+    category.setSortOrder(command.sortOrder() != null ? command.sortOrder() : 0);
 
     PageCategory saved = categoryRepository.save(category);
 
@@ -50,28 +57,28 @@ public class PageCategoryServiceImpl implements PageCategoryService {
   }
 
   @Override
-  public PageCategoryDetailResponse update(Long id, UpdatePageCategoryRequest request, Long tenantId) {
+  public PageCategoryDetailResponse update(Long id, UpdatePageCategoryCommand command, Long tenantId) {
     PageCategory existing = categoryRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
-    if (request.parentId() != null) {
-      if (request.parentId().equals(id)) {
+    if (command.parentId() != null) {
+      if (command.parentId().equals(id)) {
         throw new IllegalArgumentException("Category cannot be parent of itself");
       }
-      validateParentBelongsToTenant(request.parentId(), tenantId);
+      validateParentBelongsToTenant(command.parentId(), tenantId);
     }
 
-    if (request.parentId() != null) {
-      existing.setParentId(request.parentId());
+    if (command.parentId() != null) {
+      existing.setParentId(command.parentId());
     }
-    if (request.active() != null) {
-      existing.setActive(request.active());
+    if (command.active() != null) {
+      existing.setActive(command.active());
     }
-    if (request.styleClasses() != null) {
-      existing.setStyleClasses(request.styleClasses());
+    if (command.styleClasses() != null) {
+      existing.setStyleClasses(command.styleClasses());
     }
-    if (request.sortOrder() != null) {
-      existing.setSortOrder(request.sortOrder());
+    if (command.sortOrder() != null) {
+      existing.setSortOrder(command.sortOrder());
     }
 
     PageCategory updated = categoryRepository.save(existing);
@@ -84,7 +91,7 @@ public class PageCategoryServiceImpl implements PageCategoryService {
     PageCategory category = categoryRepository.findByIdAndTenantId(id, tenantId)
         .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
-    categoryRepository.deleteById(id);
+    categoryRepository.delete(category);
   }
 
   @Override
@@ -98,37 +105,38 @@ public class PageCategoryServiceImpl implements PageCategoryService {
   public List<PageCategoryListResponse> listByTenant(Long tenantId) {
     List<PageCategory> categories = categoryRepository.findByTenantIdOrderBySortOrderAsc(tenantId);
 
+    if (categories.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     List<Long> categoryIds = categories.stream()
         .map(PageCategory::getId)
         .toList();
 
-    List<PageCategoryI18n> allTranslations = categoryIds.isEmpty()
-        ? Collections.emptyList()
-        : i18nRepository.findByTenantIdAndCategoryId(tenantId, categoryIds.get(0));
+    List<PageCategoryI18n> allTranslations = i18nRepository
+        .findByTenantIdAndCategoryIdIn(tenantId, categoryIds);
 
-    Map<Long, List<PageCategoryI18n>> translationsByCategory = new HashMap<>();
-    for (Long catId : categoryIds) {
-      translationsByCategory.put(catId,
-          i18nRepository.findByTenantIdAndCategoryId(tenantId, catId));
-    }
+    Map<Long, List<PageCategoryI18n>> translationsByCategory = allTranslations.stream()
+        .collect(Collectors.groupingBy(i18n -> i18n.getCategory().getId()));
 
     return categories.stream()
-        .map(cat -> toListResponse(cat, translationsByCategory.getOrDefault(cat.getId(), Collections.emptyList())))
+        .map(cat -> toListResponse(cat,
+            translationsByCategory.getOrDefault(cat.getId(), Collections.emptyList())))
         .toList();
   }
 
   @Override
   @Transactional(readOnly = true)
-  public PageCategoryDetailResponse getDetailById(Long id, Long tenantId, boolean includeTranslations) {
-    PageCategory category = categoryRepository.findByIdAndTenantId(id, tenantId)
+  public PageCategoryDetailResponse getDetailById(PageCategoryDetailQuery query) {
+    PageCategory category = categoryRepository.findByIdAndTenantId(query.id(), query.tenantId())
         .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
     Map<String, PageCategoryI18nResponse> translationsMap = new HashMap<>();
     int translationCount = 0;
     int publishedCount = 0;
 
-    if (includeTranslations) {
-      List<PageCategoryI18n> translations = i18nRepository.findByTenantIdAndCategoryId(tenantId, id);
+    if (query.includeTranslations()) {
+      List<PageCategoryI18n> translations = i18nRepository.findByTenantIdAndCategoryId(query.tenantId(), query.id());
       translationCount = translations.size();
 
       for (PageCategoryI18n i18n : translations) {
@@ -144,14 +152,14 @@ public class PageCategoryServiceImpl implements PageCategoryService {
 
   @Override
   public PageCategoryI18nResponse upsertI18n(Long categoryId, Language language,
-      UpsertPageCategoryI18nRequest request, Long tenantId) {
+      UpsertPageCategoryI18nCommand command, Long tenantId) {
 
     PageCategory category = categoryRepository.findByIdAndTenantId(categoryId, tenantId)
         .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
-    if (request.url() != null && !request.url().isEmpty()) {
+    if (command.url() != null && !command.url().isEmpty()) {
       boolean urlExists = i18nRepository.existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
-          tenantId, language, request.url(), categoryId);
+          tenantId, language, command.url(), categoryId);
       if (urlExists) {
         throw new IllegalArgumentException("URL already exists for this language");
       }
@@ -166,24 +174,24 @@ public class PageCategoryServiceImpl implements PageCategoryService {
     } else {
       i18n = new PageCategoryI18n();
       i18n.setTenantId(tenantId);
-      i18n.setCategoryId(categoryId);
+      i18n.setCategory(category);
       i18n.setLanguage(language);
     }
 
-    if (request.url() != null) {
-      i18n.setUrl(request.url());
+    if (command.url() != null) {
+      i18n.setUrl(command.url());
     }
-    if (request.title() != null) {
-      i18n.setTitle(request.title());
+    if (command.title() != null) {
+      i18n.setTitle(command.title());
     }
-    if (request.metaTitle() != null) {
-      i18n.setMetaTitle(request.metaTitle());
+    if (command.metaTitle() != null) {
+      i18n.setMetaTitle(command.metaTitle());
     }
-    if (request.metaDescription() != null) {
-      i18n.setMetaDescription(request.metaDescription());
+    if (command.metaDescription() != null) {
+      i18n.setMetaDescription(command.metaDescription());
     }
-    if (request.active() != null) {
-      i18n.setActive(request.active());
+    if (command.active() != null) {
+      i18n.setActive(command.active());
     }
 
     PageCategoryI18n saved = i18nRepository.save(i18n);

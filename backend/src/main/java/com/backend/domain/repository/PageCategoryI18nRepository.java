@@ -18,8 +18,10 @@ public interface PageCategoryI18nRepository {
 
   List<PageCategoryI18n> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
 
+  List<PageCategoryI18n> findByTenantIdAndCategoryIdIn(Long tenantId, List<Long> categoryIds);
+
   boolean existsByTenantIdAndLanguageAndUrl(Long tenantId, Language language, String url);
-  
+
   boolean existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
       Long tenantId, Language language, String url, Long categoryId);
 }

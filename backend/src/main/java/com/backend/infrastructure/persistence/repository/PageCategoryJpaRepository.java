@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface PageCategoryJpaRepository extends JpaRepository<PageCategory, Long> {
   Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
 
+  boolean existsByTenantIdAndUid(Long tenantId, String uid);
+
   List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId);
 
   List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId);

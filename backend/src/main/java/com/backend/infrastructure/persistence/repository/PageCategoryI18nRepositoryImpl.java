@@ -29,19 +29,24 @@ public class PageCategoryI18nRepositoryImpl implements PageCategoryI18nRepositor
   public Optional<PageCategoryI18n> findByTenantIdAndCategoryIdAndLanguage(Long tenantId,
       Long categoryId,
       Language language) {
-    return jpa.findByTenantIdAndCategoryIdAndLanguage(tenantId, categoryId, language);
+    return jpa.findByTenantIdAndCategory_IdAndLanguage(tenantId, categoryId, language);
   }
 
   @Override
   public List<PageCategoryI18n> findByTenantIdAndCategoryIdInAndLanguage(Long tenantId,
       List<Long> categoryIds,
       Language language) {
-    return jpa.findByTenantIdAndCategoryIdInAndLanguage(tenantId, categoryIds, language);
+    return jpa.findByTenantIdAndCategory_IdInAndLanguage(tenantId, categoryIds, language);
   }
 
   @Override
   public List<PageCategoryI18n> findByTenantIdAndCategoryId(Long tenantId, Long categoryId) {
-    return jpa.findByTenantIdAndCategoryId(tenantId, categoryId);
+    return jpa.findByTenantIdAndCategory_Id(tenantId, categoryId);
+  }
+
+  @Override
+  public List<PageCategoryI18n> findByTenantIdAndCategoryIdIn(Long tenantId, List<Long> categoryIds) {
+    return jpa.findByTenantIdAndCategory_IdIn(tenantId, categoryIds);
   }
 
   @Override
@@ -52,6 +57,6 @@ public class PageCategoryI18nRepositoryImpl implements PageCategoryI18nRepositor
   @Override
   public boolean existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
       Long tenantId, Language language, String url, Long categoryId) {
-    return jpa.existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(tenantId, language, url, categoryId);
+    return jpa.existsByTenantIdAndLanguageAndUrlAndCategory_IdNot(tenantId, language, url, categoryId);
   }
 }
