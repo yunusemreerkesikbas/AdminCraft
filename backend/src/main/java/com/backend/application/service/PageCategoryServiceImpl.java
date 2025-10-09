@@ -1,26 +1,23 @@
 package com.backend.application.service;
 
 import com.backend.domain.entity.PageCategory;
-import com.backend.domain.enums.CategoryStatus;
-import com.backend.domain.enums.Language;
+import com.backend.domain.entity.PageCategoryI18n;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.enums.Language;
 import com.backend.domain.exception.CategoryNotFoundException;
-import com.backend.domain.exception.TenantMismatchException;
+import com.backend.domain.repository.PageCategoryI18nRepository;
 import com.backend.domain.repository.PageCategoryRepository;
-import com.backend.domain.repository.PageCategoryTranslationRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.presentation.dto.response.PageCategoryDto;
+import com.backend.presentation.dto.request.CreatePageCategoryRequest;
+import com.backend.presentation.dto.request.UpdatePageCategoryRequest;
+import com.backend.presentation.dto.request.UpsertPageCategoryI18nRequest;
+import com.backend.presentation.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,205 +27,243 @@ import java.util.stream.Collectors;
 public class PageCategoryServiceImpl implements PageCategoryService {
 
   private final PageCategoryRepository categoryRepository;
-  private final PageCategoryTranslationRepository translationRepository;
+  private final PageCategoryI18nRepository i18nRepository;
   private final TenantRepository tenantRepository;
 
   @Override
-  public PageCategory create(PageCategory category) {
-    if (categoryRepository.existsByTenantIdAndSlug(category.getTenantId(), category.getSlug())) {
-      throw new IllegalArgumentException("Category slug already exists for tenant");
+  public PageCategoryDetailResponse create(CreatePageCategoryRequest request, Long tenantId) {
+    if (request.parentId() != null) {
+      validateParentBelongsToTenant(request.parentId(), tenantId);
     }
-    // Compute path and level
-    String parentPath = null;
-    Integer parentLevel = 0;
-    if (category.getParentId() != null) {
-      PageCategory parent = categoryRepository.findById(category.getParentId())
-          .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
-      if (!Objects.equals(parent.getTenantId(), category.getTenantId())) {
-        throw new IllegalArgumentException("Parent category tenant mismatch");
-      }
-      parentPath = parent.getPath();
-      parentLevel = parent.getLevel() == null ? 0 : parent.getLevel();
-    }
-    String ownPath = (parentPath == null || parentPath.isBlank())
-        ? "/" + category.getSlug()
-        : parentPath + "/" + category.getSlug();
-    category.setPath(ownPath);
-    category.setLevel(parentLevel + 1);
-    if (category.getStatus() == null) {
-      category.setStatus(CategoryStatus.ACTIVE);
-    }
-    if (category.getSortOrder() == null) {
-      category.setSortOrder(0);
-    }
-    return categoryRepository.save(category);
+
+    PageCategory category = new PageCategory();
+    category.setTenantId(tenantId);
+    category.setUid(request.uid());
+    category.setParentId(request.parentId());
+    category.setActive(request.active() != null ? request.active() : true);
+    category.setStyleClasses(request.styleClasses());
+    category.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
+
+    PageCategory saved = categoryRepository.save(category);
+
+    return toDetailResponse(saved, Collections.emptyMap(), 0, 0);
   }
 
   @Override
-  public PageCategory update(PageCategory category) {
-    PageCategory existing = categoryRepository.findById(category.getId())
-        .orElseThrow(() -> new IllegalArgumentException("Category not found"));
-    if (!existing.getSlug().equals(category.getSlug()) &&
-        categoryRepository.existsByTenantIdAndSlug(category.getTenantId(), category.getSlug())) {
-      throw new IllegalArgumentException("Category slug already exists for tenant");
-    }
-    // Recompute path/level if slug or parent changed
-    boolean parentChanged = !Objects.equals(existing.getParentId(), category.getParentId());
-    boolean slugChanged = !Objects.equals(existing.getSlug(), category.getSlug());
-    existing.setName(category.getName());
-    existing.setSlug(category.getSlug());
-    existing.setParentId(category.getParentId());
-    existing.setSortOrder(category.getSortOrder());
-    existing.setStatus(category.getStatus());
+  public PageCategoryDetailResponse update(Long id, UpdatePageCategoryRequest request, Long tenantId) {
+    PageCategory existing = categoryRepository.findByIdAndTenantId(id, tenantId)
+        .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
-    if (parentChanged || slugChanged) {
-      String parentPath = null;
-      Integer parentLevel = 0;
-      if (existing.getParentId() != null) {
-        PageCategory parent = categoryRepository.findById(existing.getParentId())
-            .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
-        parentPath = parent.getPath();
-        parentLevel = parent.getLevel() == null ? 0 : parent.getLevel();
+    if (request.parentId() != null) {
+      if (request.parentId().equals(id)) {
+        throw new IllegalArgumentException("Category cannot be parent of itself");
       }
-      String newPath = (parentPath == null || parentPath.isBlank())
-          ? "/" + existing.getSlug()
-          : parentPath + "/" + existing.getSlug();
-      String oldPath = existing.getPath();
-      existing.setPath(newPath);
-      existing.setLevel(parentLevel + 1);
-
-      // Update descendants paths and levels
-      List<PageCategory> descendants = categoryRepository.findByTenantIdAndPathStartingWith(
-          existing.getTenantId(), oldPath + "/");
-      for (PageCategory d : descendants) {
-        String suffix = d.getPath().substring(oldPath.length());
-        d.setPath(newPath + suffix);
-        // recompute level based on number of '/' in path
-        d.setLevel((int) newPath.chars().filter(ch -> ch == '/').count() +
-            (int) suffix.chars().filter(ch -> ch == '/').count());
-      }
-      categoryRepository.saveAll(descendants);
+      validateParentBelongsToTenant(request.parentId(), tenantId);
     }
-    return categoryRepository.save(existing);
+
+    if (request.parentId() != null) {
+      existing.setParentId(request.parentId());
+    }
+    if (request.active() != null) {
+      existing.setActive(request.active());
+    }
+    if (request.styleClasses() != null) {
+      existing.setStyleClasses(request.styleClasses());
+    }
+    if (request.sortOrder() != null) {
+      existing.setSortOrder(request.sortOrder());
+    }
+
+    PageCategory updated = categoryRepository.save(existing);
+
+    return toDetailResponse(updated, Collections.emptyMap(), 0, 0);
   }
 
   @Override
-  public void delete(Long id) {
-    if (!categoryRepository.existsById(id)) {
-      throw new IllegalArgumentException("Category not found");
-    }
+  public void delete(Long id, Long tenantId) {
+    PageCategory category = categoryRepository.findByIdAndTenantId(id, tenantId)
+        .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+
     categoryRepository.deleteById(id);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public Optional<PageCategory> findById(Long id) {
-    return categoryRepository.findById(id);
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId) {
+  public Optional<PageCategory> findById(Long id, Long tenantId) {
     return categoryRepository.findByIdAndTenantId(id, tenantId);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public void validateParentBelongsToTenant(Long parentId, Long tenantId) {
+  public List<PageCategoryListResponse> listByTenant(Long tenantId) {
+    List<PageCategory> categories = categoryRepository.findByTenantIdOrderBySortOrderAsc(tenantId);
+
+    List<Long> categoryIds = categories.stream()
+        .map(PageCategory::getId)
+        .toList();
+
+    List<PageCategoryI18n> allTranslations = categoryIds.isEmpty()
+        ? Collections.emptyList()
+        : i18nRepository.findByTenantIdAndCategoryId(tenantId, categoryIds.get(0));
+
+    Map<Long, List<PageCategoryI18n>> translationsByCategory = new HashMap<>();
+    for (Long catId : categoryIds) {
+      translationsByCategory.put(catId,
+          i18nRepository.findByTenantIdAndCategoryId(tenantId, catId));
+    }
+
+    return categories.stream()
+        .map(cat -> toListResponse(cat, translationsByCategory.getOrDefault(cat.getId(), Collections.emptyList())))
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public PageCategoryDetailResponse getDetailById(Long id, Long tenantId, boolean includeTranslations) {
+    PageCategory category = categoryRepository.findByIdAndTenantId(id, tenantId)
+        .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+
+    Map<String, PageCategoryI18nResponse> translationsMap = new HashMap<>();
+    int translationCount = 0;
+    int publishedCount = 0;
+
+    if (includeTranslations) {
+      List<PageCategoryI18n> translations = i18nRepository.findByTenantIdAndCategoryId(tenantId, id);
+      translationCount = translations.size();
+
+      for (PageCategoryI18n i18n : translations) {
+        translationsMap.put(i18n.getLanguage().name(), toI18nResponse(i18n, false));
+        if (i18n.getActive()) {
+          publishedCount++;
+        }
+      }
+    }
+
+    return toDetailResponse(category, translationsMap, translationCount, publishedCount);
+  }
+
+  @Override
+  public PageCategoryI18nResponse upsertI18n(Long categoryId, Language language,
+      UpsertPageCategoryI18nRequest request, Long tenantId) {
+
+    PageCategory category = categoryRepository.findByIdAndTenantId(categoryId, tenantId)
+        .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+
+    if (request.url() != null && !request.url().isEmpty()) {
+      boolean urlExists = i18nRepository.existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
+          tenantId, language, request.url(), categoryId);
+      if (urlExists) {
+        throw new IllegalArgumentException("URL already exists for this language");
+      }
+    }
+
+    Optional<PageCategoryI18n> existing = i18nRepository.findByTenantIdAndCategoryIdAndLanguage(
+        tenantId, categoryId, language);
+
+    PageCategoryI18n i18n;
+    if (existing.isPresent()) {
+      i18n = existing.get();
+    } else {
+      i18n = new PageCategoryI18n();
+      i18n.setTenantId(tenantId);
+      i18n.setCategoryId(categoryId);
+      i18n.setLanguage(language);
+    }
+
+    if (request.url() != null) {
+      i18n.setUrl(request.url());
+    }
+    if (request.title() != null) {
+      i18n.setTitle(request.title());
+    }
+    if (request.metaTitle() != null) {
+      i18n.setMetaTitle(request.metaTitle());
+    }
+    if (request.metaDescription() != null) {
+      i18n.setMetaDescription(request.metaDescription());
+    }
+    if (request.active() != null) {
+      i18n.setActive(request.active());
+    }
+
+    PageCategoryI18n saved = i18nRepository.save(i18n);
+    return toI18nResponse(saved, false);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<PageCategoryI18n> getI18n(Long categoryId, Language language, Long tenantId) {
+    return i18nRepository.findByTenantIdAndCategoryIdAndLanguage(tenantId, categoryId, language);
+  }
+
+  private void validateParentBelongsToTenant(Long parentId, Long tenantId) {
     if (parentId == null) {
-      return; // Root category, no validation needed
+      return;
     }
 
     Optional<PageCategory> parent = categoryRepository.findByIdAndTenantId(parentId, tenantId);
     if (parent.isEmpty()) {
       log.warn("SECURITY_ALERT: Attempt to use parent category {} from different tenant by tenant {}",
           parentId, tenantId);
-      throw new TenantMismatchException("Parent category does not belong to the specified tenant");
+      throw new IllegalArgumentException("Parent category does not belong to the specified tenant");
     }
   }
 
-  @Override
-  @Transactional(readOnly = true)
-  public List<PageCategory> listByTenant(Long tenantId) {
-    return categoryRepository.findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(tenantId);
-  }
+  private PageCategoryListResponse toListResponse(PageCategory category, List<PageCategoryI18n> translations) {
+    Map<String, Boolean> translationsMap = new HashMap<>();
 
-  @Override
-  @Transactional(readOnly = true)
-  public List<PageCategory> listChildren(Long tenantId, Long parentId) {
-    return categoryRepository.findByTenantIdAndParentIdOrderBySortOrderAsc(tenantId, parentId);
-  }
-
-  private Language resolveLanguage(Long tenantId, String code) {
-    if (code != null) {
-      try {
-        return Language.valueOf(code.toUpperCase());
-      } catch (Exception ignored) {
-      }
-    }
-    return tenantRepository.findById(tenantId)
-        .map(Tenant::getDefaultLanguage)
-        .orElse(Language.TR);
-  }
-
-  /**
-   * PERFORMANS İYİLEŞTİRMESİ: Batch loading ile N+1 query problemini çözer.
-   * Tüm kategoriler için çevirileri tek sorguda yükler.
-   */
-  private List<PageCategoryDto> toDtoLocalizedBatch(List<PageCategory> categories, Language lang, Long tenantId) {
-    if (categories.isEmpty()) {
-      return List.of();
+    for (Language lang : Language.values()) {
+      boolean hasTranslation = translations.stream()
+          .anyMatch(t -> t.getLanguage() == lang);
+      translationsMap.put(lang.name(), hasTranslation);
     }
 
-    // Batch loading: Tüm kategori ID'lerini al
-    List<Long> categoryIds = categories.stream()
-        .map(PageCategory::getId)
-        .toList();
-
-    // Tek sorguda tüm çevirileri yükle
-    List<com.backend.domain.entity.PageCategoryTranslation> translations = translationRepository
-        .findByTenantIdAndCategoryIdInAndLanguage(tenantId, categoryIds, lang);
-
-    // Lookup map oluştur - O(1) erişim için
-    Map<Long, com.backend.domain.entity.PageCategoryTranslation> translationMap = translations.stream()
-        .collect(Collectors.toMap(
-            com.backend.domain.entity.PageCategoryTranslation::getCategoryId,
-            Function.identity()));
-
-    // DTO'ları oluştur - artık veritabanına additional query yok
-    return categories.stream()
-        .map(c -> toDtoLocalized(c, lang, translationMap))
-        .toList();
+    return new PageCategoryListResponse(
+        category.getId(),
+        category.getUuid(),
+        category.getUid(),
+        category.getParentId(),
+        category.getActive(),
+        category.getStyleClasses(),
+        category.getSortOrder(),
+        category.getCreatedAt(),
+        category.getUpdatedAt(),
+        translationsMap);
   }
 
-  /**
-   * Single category DTO conversion with pre-loaded translations map.
-   * Bu method artık N+1 query problemi yaratmaz.
-   */
-  private PageCategoryDto toDtoLocalized(PageCategory c, Language lang,
-      Map<Long, com.backend.domain.entity.PageCategoryTranslation> translationMap) {
-    var tr = translationMap.get(c.getId());
-    String name = tr != null ? tr.getName() : c.getName();
-    String slug = tr != null ? tr.getSlug() : c.getSlug();
-    return new PageCategoryDto(
-        c.getId(), c.getTenantId(), c.getParentId(), name, slug,
-        c.getPath(), c.getLevel(), c.getSortOrder(), c.getStatus());
+  private PageCategoryDetailResponse toDetailResponse(PageCategory category,
+      Map<String, PageCategoryI18nResponse> translations, int translationCount, int publishedCount) {
+
+    PageCategoryMetadataResponse metadata = new PageCategoryMetadataResponse(
+        translationCount,
+        publishedCount);
+
+    return new PageCategoryDetailResponse(
+        category.getId(),
+        category.getUuid(),
+        category.getUid(),
+        category.getParentId(),
+        category.getActive(),
+        category.getStyleClasses(),
+        category.getSortOrder(),
+        category.getCreatedAt(),
+        category.getUpdatedAt(),
+        translations,
+        metadata);
   }
 
-  /**
-   * Fallback method for single category conversion - DEPRECATED.
-   * Bu method N+1 query yaratır, sadece geriye dönük uyumluluk için.
-   */
-  @Deprecated
-  private PageCategoryDto toDtoLocalized(PageCategory c, Language lang) {
-    log.warn("PERFORMANCE_WARNING: Using deprecated single translation lookup - potential N+1 query for category {}",
-        c.getId());
-    var tr = translationRepository.findByTenantIdAndCategoryIdAndLanguage(
-        c.getTenantId(), c.getId(), lang).orElse(null);
-    String name = tr != null ? tr.getName() : c.getName();
-    String slug = tr != null ? tr.getSlug() : c.getSlug();
-    return new PageCategoryDto(
-        c.getId(), c.getTenantId(), c.getParentId(), name, slug,
-        c.getPath(), c.getLevel(), c.getSortOrder(), c.getStatus());
+  private PageCategoryI18nResponse toI18nResponse(PageCategoryI18n i18n, boolean isFallback) {
+    return new PageCategoryI18nResponse(
+        i18n.getId(),
+        i18n.getUuid(),
+        i18n.getUid(),
+        i18n.getLanguage(),
+        i18n.getUrl(),
+        i18n.getTitle(),
+        i18n.getMetaTitle(),
+        i18n.getMetaDescription(),
+        i18n.getActive(),
+        i18n.getUpdatedAt(),
+        isFallback);
   }
 }

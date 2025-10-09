@@ -45,18 +45,8 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   }
 
   @Override
-  public boolean existsByTenantIdAndSlug(Long tenantId, String slug) {
-    return jpa.existsByTenantIdAndSlug(tenantId, slug);
-  }
-
-  @Override
-  public Optional<PageCategory> findByTenantIdAndSlug(Long tenantId, String slug) {
-    return jpa.findByTenantIdAndSlug(tenantId, slug);
-  }
-
-  @Override
-  public List<PageCategory> findByTenantId(Long tenantId) {
-    return jpa.findByTenantId(tenantId);
+  public List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId) {
+    return jpa.findByTenantIdOrderBySortOrderAsc(tenantId);
   }
 
   @Override
@@ -72,10 +62,5 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   @Override
   public List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId) {
     return jpa.findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(tenantId);
-  }
-
-  @Override
-  public List<PageCategory> findByTenantIdAndPathStartingWith(Long tenantId, String path) {
-    return jpa.findByTenantIdAndPathStartingWith(tenantId, path);
   }
 }
