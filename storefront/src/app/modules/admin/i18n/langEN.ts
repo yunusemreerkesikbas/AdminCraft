@@ -23,6 +23,8 @@ export const langEN = {
                 created: 'Created',
                 details: 'Details',
                 actions: 'Actions',
+                parent: 'Parent',
+                parentCategory: 'Parent Category',
             },
             noRecords: 'No records',
             status: {
@@ -193,8 +195,11 @@ export const langEN = {
             tabs: {
                 general: 'General',
                 languages: {
-                    tr: 'Turkish',
-                    en: 'English',
+                    TR: 'Turkish',
+                    EN: 'English',
+                    ES: 'Spanish',
+                    RU: 'Russian',
+                    AR: 'Arabic',
                 },
             },
             actions: {
@@ -257,7 +262,10 @@ export const langEN = {
                 scheduled: 'Scheduled'
             },
             fields: {
+                uid: 'UID',
                 name: 'Name',
+                title: 'Title',
+                url: 'URL',
                 pageTitle: 'Page Title',
                 slug: 'Slug',
                 status: 'Status',
@@ -275,6 +283,7 @@ export const langEN = {
                 blockType: 'Block Type',
                 blockData: 'Block Data',
                 sortOrder: 'Sort Order',
+                active: 'Active',
             },
             messages: {
                 pageCreated: 'Page created',

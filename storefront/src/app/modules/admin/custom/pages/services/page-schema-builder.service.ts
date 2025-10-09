@@ -18,7 +18,7 @@ export class PageSchemaBuilderService {
   transformCategoryOptions(categories: PageCategoryDto[]): ReadonlyArray<{ value: number; label: string }> {
     return categories.map(category => ({
       value: category.id,
-      label: category.name
+      label: category.uid
     }));
   }
 
@@ -68,14 +68,14 @@ export class PageSchemaBuilderService {
         key: 'urlPath',
         type: 'text',
         labelKey: 'admin.common.fields.urlPath',
-        required: true,
+        required: false,
         maxLength: 255
       },
       {
         key: 'title',
         type: 'text',
         labelKey: 'admin.common.fields.title',
-        required: true,
+        required: false,
         maxLength: 200
       },
       {
