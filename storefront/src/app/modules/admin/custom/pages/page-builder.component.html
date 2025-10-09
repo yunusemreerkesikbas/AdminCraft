@@ -1,47 +1,5 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    <!-- Header -->
-    <div
-        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
-    >
-        <!-- Loader -->
-        @if (isLoading) {
-            <div class="absolute inset-x-0 bottom-0">
-                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-            </div>
-        }
-        <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">
-            {{ 'admin.pageBuilder.title' | transloco }}
-        </div>
-        <!-- Actions -->
-        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <!-- Search (placeholder) -->
-            <spa-search-input
-                [placeholder]="'admin.content.searchPlaceholder' | transloco"
-            ></spa-search-input>
-            <!-- Create page -->
-            <button
-                class="ml-4"
-                mat-flat-button
-                [color]="'primary'"
-                (click)="create()"
-            >
-                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">{{
-                    'admin.common.actions.create' | transloco
-                }}</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Main -->
-    <div class="flex flex-auto overflow-hidden">
-        <div
-            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
-        >
-            <router-outlet></router-outlet>
-        </div>
-    </div>
+    <router-outlet></router-outlet>
 </div>

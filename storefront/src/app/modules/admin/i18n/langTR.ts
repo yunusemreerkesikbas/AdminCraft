@@ -59,6 +59,7 @@ export const langTR = {
                 cancel: 'İptal',
                 save: 'Kaydet',
                 create: 'Oluştur',
+                createFirst: 'İlk Öğeyi Oluştur',
                 manage: 'Yönet',
                 view: 'Görüntüle',
                 search: 'Ara',

@@ -7,13 +7,13 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
- 
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
+import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
@@ -42,9 +42,9 @@ import { ErrorHandlingService } from '../services/error-handling.service';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressBarModule,
     MatTabsModule,
     TranslocoModule,
+    AdminPageHeaderComponent,
   ],
   styles: [
     /* language=SCSS */
@@ -122,8 +122,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.currentLanguage = languagesDto.defaultLanguage || 'TR';
           this.#cdr.markForCheck();
         },
-        error: (error) => {
-          console.error('Failed to load tenant languages:', error);
+        error: () => {
           this.supportedLanguages = ['TR', 'EN'];
           this.#cdr.markForCheck();
         },
@@ -271,10 +270,10 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       styleClasses: detail.styleClasses || null,
       sortOrder: detail.sortOrder,
     };
-    
+
     const i18nInitial: Record<string, any> = {};
     this.supportedLanguages.forEach((lang) => {
-      const existing = detail.translations[lang];
+      const existing = detail.translations?.[lang];
       i18nInitial[lang] = {
         url: existing?.url || '',
         title: existing?.title || '',

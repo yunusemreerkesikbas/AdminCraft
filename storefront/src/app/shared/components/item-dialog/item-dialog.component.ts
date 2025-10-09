@@ -52,10 +52,15 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
   i18nFieldsWithOptions: ReadonlyArray<LangFieldConfig & { transformedOptions?: SpaSelectOption[] }> = [];
 
   ngOnInit(): void {
+    const mergedInitial = {
+      ...this.options.initial as Record<string, any>,
+      ...this.options.i18nInitial
+    };
+
     const forms = this.#formBuilder.buildForms(
       this.options.schema,
       this.options.languages,
-      this.options.initial as Record<string, any>
+      mergedInitial
     );
 
     this.generalForm = forms.generalForm;

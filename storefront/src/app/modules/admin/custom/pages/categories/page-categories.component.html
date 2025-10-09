@@ -2,29 +2,13 @@
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
     <!-- Header -->
-    <div class="flex items-center justify-between border-b px-6 py-4 md:px-8">
-        <div>
-            <div class="text-2xl font-semibold">
-                {{ 'admin.pageBuilder.categories.title' | transloco }}
-            </div>
-            <div class="text-secondary mt-1 text-sm">
-                {{ 'admin.pageBuilder.categories.subtitle' | transloco }}
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button mat-flat-button color="primary" (click)="createCategory()">
-                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
-                <span class="ml-2">{{
-                    'admin.common.actions.create' | transloco
-                }}</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Loading bar -->
-    @if (isLoading) {
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-    }
+    <admin-page-header
+        [title]="'admin.pageBuilder.categories.title'"
+        [subtitle]="'admin.pageBuilder.categories.subtitle'"
+        [showCreateButton]="true"
+        [isLoading]="isLoading"
+        (createClick)="createCategory()"
+    ></admin-page-header>
 
     <!-- Main -->
     <div class="flex flex-auto overflow-hidden">

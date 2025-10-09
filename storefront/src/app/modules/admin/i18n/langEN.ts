@@ -59,6 +59,7 @@ export const langEN = {
                 cancel: 'Cancel',
                 save: 'Save',
                 create: 'Create',
+                createFirst: 'Create First Item',
                 manage: 'Manage',
                 view: 'View',
                 search: 'Search',

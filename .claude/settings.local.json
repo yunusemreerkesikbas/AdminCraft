@@ -85,7 +85,8 @@
       "mcp__github__list_pull_requests",
       "mcp__github__get_pull_request_status",
       "Bash(../mvnw.cmd clean compile)",
-      "Bash(Select-Object -First 100)"
+      "Bash(Select-Object -First 100)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "additionalDirectories": [
