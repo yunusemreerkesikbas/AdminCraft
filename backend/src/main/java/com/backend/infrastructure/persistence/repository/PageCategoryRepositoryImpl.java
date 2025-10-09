@@ -35,6 +35,11 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   }
 
   @Override
+  public void delete(PageCategory category) {
+    jpa.delete(category);
+  }
+
+  @Override
   public void deleteById(Long id) {
     jpa.deleteById(id);
   }
@@ -45,18 +50,13 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   }
 
   @Override
-  public boolean existsByTenantIdAndSlug(Long tenantId, String slug) {
-    return jpa.existsByTenantIdAndSlug(tenantId, slug);
+  public boolean existsByTenantIdAndUid(Long tenantId, String uid) {
+    return jpa.existsByTenantIdAndUid(tenantId, uid);
   }
 
   @Override
-  public Optional<PageCategory> findByTenantIdAndSlug(Long tenantId, String slug) {
-    return jpa.findByTenantIdAndSlug(tenantId, slug);
-  }
-
-  @Override
-  public List<PageCategory> findByTenantId(Long tenantId) {
-    return jpa.findByTenantId(tenantId);
+  public List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId) {
+    return jpa.findByTenantIdOrderBySortOrderAsc(tenantId);
   }
 
   @Override
@@ -72,10 +72,5 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
   @Override
   public List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId) {
     return jpa.findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(tenantId);
-  }
-
-  @Override
-  public List<PageCategory> findByTenantIdAndPathStartingWith(Long tenantId, String path) {
-    return jpa.findByTenantIdAndPathStartingWith(tenantId, path);
   }
 }
