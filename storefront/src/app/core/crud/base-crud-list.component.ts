@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Directive, OnDestroy, OnInit, inject } from '@angular/core';
+import { computed, Directive, OnDestroy, OnInit, signal } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { CrudEntity } from './api.types';
 import { CrudHttpService } from './crud-http.service';
@@ -10,20 +10,22 @@ export abstract class BaseCrudListComponent<
   CreateDto = Partial<T>,
   UpdateDto = Partial<T>
 > implements OnInit, OnDestroy {
-  
+
   protected readonly destroy$ = new Subject<void>();
-  protected cdr = inject(ChangeDetectorRef);
-  
+
   protected abstract service: CrudHttpService<T, CreateDto, UpdateDto>;
   protected abstract store: CrudStore<T>;
 
-  protected items: T[] = [];
-  protected filtered: T[] = [];
-  protected search = '';
-  protected isLoading = false;
+  protected searchQuery = signal<string>('');
+  protected filtered = computed(() => {
+    const items = this.store.items();
+    const query = this.searchQuery().toLowerCase().trim();
+
+    if (!query) return items;
+    return items.filter(item => this.matchesFilter(item, query));
+  });
 
   ngOnInit(): void {
-    this.subscribeToStore();
     this.onInit();
     this.loadItems();
   }
@@ -33,54 +35,39 @@ export abstract class BaseCrudListComponent<
     this.destroy$.complete();
   }
 
-  protected subscribeToStore(): void {
-    this.items = this.store.items();
-    this.isLoading = this.store.isLoading();
-  }
-
   protected loadItems(): void {
+    if (!this.beforeLoad()) return;
+
     this.store.setLoading(true);
-    this.updateFromStore();
-    
-    this.service.list()
+
+    this.fetchItems()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (items) => {
           this.store.setItems(items);
-          this.updateFromStore();
           this.onLoadSuccess(items);
         },
         error: (error) => {
           this.store.setError(this.extractErrorMessage(error));
-          this.updateFromStore();
           this.onLoadError(error);
         },
         complete: () => {
           this.store.setLoading(false);
-          this.updateFromStore();
         }
       });
   }
 
-  protected updateFromStore(): void {
-    this.items = this.store.items();
-    this.isLoading = this.store.isLoading();
-    this.applyFilter();
-    this.cdr.markForCheck();
+
+  protected fetchItems() {
+    return this.service.list();
+  }
+
+  protected beforeLoad(): boolean {
+    return true;
   }
 
   protected refresh(): void {
     this.loadItems();
-  }
-
-  protected applyFilter(): void {
-    const query = (this.search || '').toLowerCase().trim();
-    
-    if (!query) {
-      this.filtered = this.items;
-    } else {
-      this.filtered = this.items.filter(item => this.matchesFilter(item, query));
-    }
   }
 
   protected matchesFilter(item: T, query: string): boolean {
@@ -90,31 +77,25 @@ export abstract class BaseCrudListComponent<
   }
 
   protected onSearchChange(searchTerm: string): void {
-    this.search = searchTerm;
-    this.applyFilter();
-    this.cdr.markForCheck();
+    this.searchQuery.set(searchTerm);
   }
 
   protected deleteItem(item: T): void {
     this.store.setLoading(true);
-    this.updateFromStore();
-    
+
     this.service.delete(item.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.store.removeItem(item.id);
-          this.updateFromStore();
           this.onDeleteSuccess(item);
         },
         error: (error) => {
           this.store.setError(this.extractErrorMessage(error));
-          this.updateFromStore();
           this.onDeleteError(error);
         },
         complete: () => {
           this.store.setLoading(false);
-          this.updateFromStore();
         }
       });
   }

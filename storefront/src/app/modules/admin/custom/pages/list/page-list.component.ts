@@ -49,9 +49,9 @@ import { PageSchemaBuilderService } from '../services/page-schema-builder.servic
 ],
 })
 export class PageListComponent extends BaseCrudListComponent<PageListDto, CreatePageRequest, UpdatePageRequest> {
-  protected service = inject(PageBuilderService) as any;
+  protected service = inject(PageBuilderService);
   protected store = new CrudStore<PageListDto>();
-  
+
   #notify = inject(NotificationService);
   #itemDialogService = inject(ItemDialogService);
   #pageBuilderService = inject(PageBuilderService);
@@ -64,7 +64,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
 
   tenantId = 1;
   subdomain = '';
-  pages: PageListDto[] = [];
   #cachedCategories: PageCategoryDto[] = [];
   #supportedLanguages: string[] = [];
 
@@ -81,7 +80,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       .pipe(takeUntil(this.destroy$))
       .subscribe((languages) => {
         this.#supportedLanguages = languages;
-        this.cdr.markForCheck();
       });
 
     this.#loadCategories();
@@ -108,37 +106,16 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       });
   }
 
-  protected override loadItems(): void {
+  protected override beforeLoad(): boolean {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
-      return;
+      return false;
     }
-    
-    this.store.setLoading(true);
-    this.updateFromStore();
-    
-    this.#pageBuilderService.listPages()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (items) => {
-          this.store.setItems(items);
-          this.updateFromStore();
-          this.onLoadSuccess(items);
-        },
-        error: (error) => {
-          this.store.setError(this.extractErrorMessage(error));
-          this.updateFromStore();
-          this.onLoadError(error);
-        },
-        complete: () => {
-          this.store.setLoading(false);
-          this.updateFromStore();
-        }
-      });
+    return true;
   }
 
-  protected override onLoadSuccess(items: PageListDto[]): void {
-    this.pages = items;
+  protected override fetchItems(): Observable<PageListDto[]> {
+    return this.#pageBuilderService.listPages();
   }
 
   protected override onLoadError(error: any): void {
@@ -305,7 +282,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   }
 
   protected override onDeleteSuccess(item: PageListDto): void {
-    this.pages = this.pages.filter(p => p.id !== item.id);
     this.#notify.success('admin.common.messages.operationSuccess');
   }
 

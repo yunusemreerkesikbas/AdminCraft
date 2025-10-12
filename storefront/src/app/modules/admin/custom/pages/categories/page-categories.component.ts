@@ -57,7 +57,7 @@ import { ErrorHandlingService } from '../services/error-handling.service';
 ],
 })
 export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryListDto, CreateCategoryRequest, UpdateCategoryRequest> {
-  protected service = inject(PageBuilderService) as any;
+  protected service: any = inject(PageBuilderService);
   protected store = new CrudStore<PageCategoryListDto>();
 
   #notify = inject(NotificationService);
@@ -69,12 +69,20 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
   #schema = inject(CategorySchemaBuilderService);
 
   protected supportedLanguages: Language[] = [];
-  
+
   tenantId?: number;
   currentLanguage: Language = 'TR';
-  categories: PageCategoryListDto[] = [];
   parentOptions: SpaSelectOption<number>[] = [];
   selectedCategory: PageCategoryDetailDto | null = null;
+
+  // Template properties
+  get isLoading(): boolean {
+    return this.store.isLoading();
+  }
+
+  get categories(): PageCategoryListDto[] {
+    return this.store.items();
+  }
 
   protected override onInit(): void {
     const storedId = this.#tenantCtx.getCurrentTenantId();
@@ -105,58 +113,36 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
         next: (languagesDto) => {
           this.supportedLanguages = languagesDto.supportedLanguages || [];
           this.currentLanguage = languagesDto.defaultLanguage || 'TR';
-          this.cdr.markForCheck();
         },
         error: () => {
           this.supportedLanguages = ['TR', 'EN'];
-          this.cdr.markForCheck();
         },
       });
   }
 
-  protected override loadItems(): void {
+  protected override beforeLoad(): boolean {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
-      return;
+      return false;
     }
-    
-    this.store.setLoading(true);
-    this.updateFromStore();
-    
-    this.#pageBuilderService
-      .listCategories()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (items) => {
-          this.store.setItems(items);
-          this.updateFromStore();
-          this.onLoadSuccess(items);
-        },
-        error: (error) => {
-          this.store.setError(this.extractErrorMessage(error));
-          this.updateFromStore();
-          this.onLoadError(error);
-        },
-        complete: () => {
-          this.store.setLoading(false);
-          this.updateFromStore();
-        }
-      });
+    return true;
+  }
+
+  protected override fetchItems() {
+    return this.#pageBuilderService.listCategories();
   }
 
   protected override onLoadSuccess(items: PageCategoryListDto[]): void {
     const list = Array.isArray(items) ? items : [];
-    this.categories = list;
-    this.parentOptions = list.map((c) => ({ 
-      label: c.uid || `#${c.id}`, 
-      value: c.id 
+    this.parentOptions = list.map((c) => ({
+      label: c.uid || `#${c.id}`,
+      value: c.id
     }));
   }
 
   protected override onLoadError(error: any): void {
     const msg = this.#errorHandler.handleError(error);
     this.#notify.alert(msg);
-    this.categories = [];
   }
 
   loadCategories(): void {
@@ -227,7 +213,6 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
             error: (error) => {
               const msg = this.#errorHandler.handleError(error);
               this.#notify.alert(msg);
-              this.cdr.markForCheck();
             },
           });
       });
@@ -245,20 +230,17 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
     }
     
     this.store.setLoading(true);
-    this.updateFromStore();
-    
+
     this.#pageBuilderService
       .getCategoryDetail(categoryId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (detail) => {
           this.store.setLoading(false);
-          this.updateFromStore();
           this.#openEditDialog(detail);
         },
         error: (error) => {
           this.store.setLoading(false);
-          this.updateFromStore();
           const msg = this.#errorHandler.handleError(error);
           this.#notify.alert(msg);
         },
@@ -321,7 +303,6 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
             error: (error) => {
               const msg = this.#errorHandler.handleError(error);
               this.#notify.alert(msg);
-              this.cdr.markForCheck();
             },
           });
       });
@@ -365,21 +346,19 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
         error: (error) => {
           const msg = this.#errorHandler.handleError(error);
           this.#notify.alert(msg);
-          this.cdr.markForCheck();
         },
       });
   }
 
   deleteCategory(id: number): void {
-    const category = this.categories.find(c => c.id === id);
+    const category = this.store.items().find(c => c.id === id);
     if (!category) return;
-    
+
     this.deleteItem(category);
   }
 
   protected override onDeleteSuccess(item: PageCategoryListDto): void {
     this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
-    this.loadCategories();
   }
 
   protected override onDeleteError(error: any): void {
@@ -388,7 +367,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
   }
 
   getParentCategoryName(parentId: number): string {
-    const parent = this.categories.find((c) => c.id === parentId);
+    const parent = this.store.items().find((c) => c.id === parentId);
     return parent?.uid || `#${parentId}`;
   }
 }

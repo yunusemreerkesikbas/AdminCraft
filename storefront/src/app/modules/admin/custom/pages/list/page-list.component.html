@@ -6,7 +6,7 @@
         [title]="'admin.pageBuilder.title'"
         [showSearch]="true"
         [showCreateButton]="true"
-        [isLoading]="isLoading"
+        [isLoading]="store.isLoading()"
         (createClick)="create()"
     ></admin-page-header>
 
@@ -14,7 +14,7 @@
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            @if (filtered.length > 0) {
+            @if (filtered().length > 0) {
                 <div class="grid">
                     <div
                         class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
@@ -31,7 +31,7 @@
                         </div>
                     </div>
 
-                    @for (p of filtered; track p.id) {
+                    @for (p of filtered(); track p.id) {
                         <div
                             class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                         >

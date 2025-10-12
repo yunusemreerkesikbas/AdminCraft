@@ -2,25 +2,24 @@ import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable, Subject } from 'rxjs';
 import {
-    CreateCategoryRequest,
-    CreatePageRequest,
-    Language,
-    PageCategoryDetailDto,
-    PageCategoryI18nDto,
-    PageCategoryListDto,
-    PageDetailDto,
-    PageDto,
-    PageI18nDto,
-    PageI18nRequest,
-    PageListDto,
-    PublishPageI18nRequest,
-    UpdateCategoryRequest,
-    UpdatePageRequest,
-    UpsertCategoryI18nRequest
+  CreateCategoryRequest,
+  CreatePageRequest,
+  Language,
+  PageCategoryDetailDto,
+  PageCategoryI18nDto,
+  PageCategoryListDto,
+  PageDetailDto,
+  PageI18nDto,
+  PageI18nRequest,
+  PageListDto,
+  PublishPageI18nRequest,
+  UpdateCategoryRequest,
+  UpdatePageRequest,
+  UpsertCategoryI18nRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
-export class PageBuilderService extends CrudHttpService<PageDto, CreatePageRequest, UpdatePageRequest> {
+export class PageBuilderService extends CrudHttpService<PageListDto, CreatePageRequest, UpdatePageRequest> {
   protected endpoints: CrudEndpoints = {
     list: 'pages',
     getById: 'pageById',
@@ -32,15 +31,19 @@ export class PageBuilderService extends CrudHttpService<PageDto, CreatePageReque
   #createRequested = new Subject<void>();
   readonly createRequested$ = this.#createRequested.asObservable();
 
-  listPages(): Observable<PageListDto[]> {
+  override list(): Observable<PageListDto[]> {
     return this.customGet<PageListDto[]>('pages');
+  }
+
+  listPages(): Observable<PageListDto[]> {
+    return this.list();
   }
 
   requestCreate(): void {
     this.#createRequested.next();
   }
 
-  getPageById(id: number): Observable<PageDto> {
+  getPageById(id: number): Observable<PageListDto> {
     return this.getById(id);
   }
 
@@ -48,11 +51,11 @@ export class PageBuilderService extends CrudHttpService<PageDto, CreatePageReque
     return this.customGet<PageDetailDto>('pageById', { id }, { include: 'translations' });
   }
 
-  createPage(req: CreatePageRequest): Observable<PageDto> {
+  createPage(req: CreatePageRequest): Observable<PageListDto> {
     return this.create(req);
   }
 
-  updatePage(id: number, req: UpdatePageRequest): Observable<PageDto> {
+  updatePage(id: number, req: UpdatePageRequest): Observable<PageListDto> {
     return this.update(id, req);
   }
 
