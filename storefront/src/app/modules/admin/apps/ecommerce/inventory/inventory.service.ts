@@ -1,5 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { environment } from '@environments/environment';
+import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
 import {
     InventoryBrand,
     InventoryCategory,
@@ -9,14 +11,13 @@ import {
     InventoryVendor,
 } from 'app/modules/admin/apps/ecommerce/inventory/inventory.types';
 import {
+    ApiResponse,
+    CreateTenantRequest,
     Tenant,
     TenantPagination,
-    CreateTenantRequest,
-    UpdateTenantRequest,
     TenantResponse,
     TenantStatus,
-    Language,
-    ApiResponse,
+    UpdateTenantRequest
 } from 'app/modules/admin/apps/ecommerce/inventory/tenant.types';
 import {
     BehaviorSubject,
@@ -29,8 +30,6 @@ import {
     tap,
     throwError,
 } from 'rxjs';
-import { environment } from '@environments/environment';
-import { SPA_ENDPOINTS_CONFIG, resolveEndpoint } from '@modules/admin/api-endpoints';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -554,20 +553,6 @@ export class InventoryService {
     }
 
     /**
-     * Get tenant by subdomain
-     */
-    getTenantBySubdomain(
-        subdomain: string,
-        language: string = 'tr'
-    ): Observable<ApiResponse<TenantResponse>> {
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantBySubdomain, { subdomain })}`;
-        return this._httpClient
-            .get<ApiResponse<TenantResponse>>(url, {
-                headers: this.getHttpHeaders(language)
-            });
-    }
-
-    /**
      * Create tenant
      */
     createTenant(
@@ -631,69 +616,6 @@ export class InventoryService {
     }
 
     /**
-     * Activate tenant
-     */
-    activateTenant(
-        id: number,
-        language: string = 'tr'
-    ): Observable<ApiResponse<TenantResponse>> {
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantActivate, { id })}`;
-        return this._httpClient
-            .post<ApiResponse<TenantResponse>>(url, {}, {
-                headers: this.getHttpHeaders(language)
-            })
-            .pipe(
-                tap((response) => {
-                    if (response.success) {
-                        this.updateTenantInLists(id, response.data);
-                    }
-                })
-            );
-    }
-
-    /**
-     * Suspend tenant
-     */
-    suspendTenant(
-        id: number,
-        language: string = 'tr'
-    ): Observable<ApiResponse<TenantResponse>> {
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantSuspend, { id })}`;
-        return this._httpClient
-            .post<ApiResponse<TenantResponse>>(url, {}, {
-                headers: this.getHttpHeaders(language)
-            })
-            .pipe(
-                tap((response) => {
-                    if (response.success) {
-                        this.updateTenantInLists(id, response.data);
-                    }
-                })
-            );
-    }
-
-    /**
-     * Set tenant to maintenance mode
-     */
-    setTenantMaintenance(
-        id: number,
-        language: string = 'tr'
-    ): Observable<ApiResponse<TenantResponse>> {
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantMaintenance, { id })}`;
-        return this._httpClient
-            .post<ApiResponse<TenantResponse>>(url, {}, {
-                headers: this.getHttpHeaders(language)
-            })
-            .pipe(
-                tap((response) => {
-                    if (response.success) {
-                        this.updateTenantInLists(id, response.data);
-                    }
-                })
-            );
-    }
-
-    /**
      * Delete tenant
      */
     deleteTenant(
@@ -724,35 +646,6 @@ export class InventoryService {
                     }
                 })
             );
-    }
-
-    /**
-     * Check subdomain availability
-     */
-    checkSubdomainAvailability(
-        subdomain: string,
-        language: string = 'tr'
-    ): Observable<ApiResponse<boolean>> {
-        const url = `${this.apiUrl}/${resolveEndpoint(SPA_ENDPOINTS_CONFIG.tenantCheckSubdomain, { subdomain })}`;
-        return this._httpClient
-            .get<ApiResponse<boolean>>(url, {
-                headers: this.getHttpHeaders(language)
-            });
-    }
-
-    /**
-     * Get tenant count by status
-     */
-    getTenantCountByStatus(
-        status: TenantStatus,
-        language: string = 'tr'
-    ): Observable<ApiResponse<number>> {
-        const url = `${this.apiUrl}/${SPA_ENDPOINTS_CONFIG.tenantStatsCount}`;
-        return this._httpClient
-            .get<ApiResponse<number>>(url, {
-                headers: this.getHttpHeaders(language),
-                params: { status }
-            });
     }
 
     /**

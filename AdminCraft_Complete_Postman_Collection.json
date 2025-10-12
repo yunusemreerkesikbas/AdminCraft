@@ -262,19 +262,7 @@
 						"url": "{{baseUrl}}/api/tenants/1"
 					}
 				},
-				{
-					"name": "Get Tenant by Subdomain",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "en"
-							}
-						],
-						"url": "{{baseUrl}}/api/tenants/subdomain/tech-blog"
-					}
-				},
+                
 				{
 					"name": "Update Tenant",
 					"request": {
@@ -296,81 +284,11 @@
 						"url": "{{baseUrl}}/api/tenants/1"
 					}
 				},
-				{
-					"name": "Activate Tenant",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "tr"
-							}
-						],
-						"url": "{{baseUrl}}/api/tenants/1/activate"
-					}
-				},
-				{
-					"name": "Suspend Tenant",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "tr"
-							}
-						],
-						"url": "{{baseUrl}}/api/tenants/2/suspend"
-					}
-				},
-				{
-					"name": "Set Maintenance Mode",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "tr"
-							}
-						],
-						"url": "{{baseUrl}}/api/tenants/3/maintenance"
-					}
-				},
-				{
-					"name": "Check Subdomain Availability",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "tr"
-							}
-						],
-						"url": "{{baseUrl}}/api/tenants/check/subdomain/yeni-site"
-					}
-				},
-				{
-					"name": "Get Tenant Count by Status",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "en"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/tenants/stats/count?status=ACTIVE",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "tenants", "stats", "count"],
-							"query": [
-								{
-									"key": "status",
-									"value": "ACTIVE"
-								}
-							]
-						}
-					}
-				}
+                
+                
+                
+                
+                
 			]
 		},
 		{

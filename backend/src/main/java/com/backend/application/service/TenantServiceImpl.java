@@ -56,36 +56,31 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public TenantResponse getTenantById(Long id, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
         return TenantResponse.from(tenant, displayLanguage);
     }
 
-    @Override
-    public TenantResponse getTenantBySubdomain(String subdomain, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findBySubdomain(subdomain)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with subdomain: " + subdomain));
-        return TenantResponse.from(tenant, displayLanguage);
-    }
+    // Removed getTenantBySubdomain
 
     @Override
     public List<TenantResponse> getAllTenants(Language displayLanguage) {
         return tenantRepository.findAll().stream()
-            .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-            .toList();
+                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
+                .toList();
     }
 
     @Override
     public List<TenantResponse> getTenantsByStatus(TenantStatus status, Language displayLanguage) {
         return tenantRepository.findByStatus(status).stream()
-            .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-            .toList();
+                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
+                .toList();
     }
 
     @Override
     @Transactional
     public TenantResponse updateTenant(Long id, UpdateTenantRequest request, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
 
         // Track old supported languages to detect newly added ones
         List<Language> oldSupportedLanguages = new ArrayList<>(tenant.getSupportedLanguages());
@@ -110,7 +105,7 @@ public class TenantServiceImpl implements TenantService {
         }
         if (request.customDomain() != null) {
             if (!request.customDomain().isEmpty() &&
-                tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
+                    tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
                 throw new IllegalArgumentException("Custom domain already exists: " + request.customDomain());
             }
             tenant.setCustomDomain(request.customDomain());
@@ -133,20 +128,20 @@ public class TenantServiceImpl implements TenantService {
         // Detect newly added languages and trigger provisioning
         if (request.supportedLanguages() != null && !request.supportedLanguages().isEmpty()) {
             List<Language> newLanguages = request.supportedLanguages().stream()
-                .filter(lang -> !oldSupportedLanguages.contains(lang))
-                .toList();
+                    .filter(lang -> !oldSupportedLanguages.contains(lang))
+                    .toList();
 
             if (!newLanguages.isEmpty()) {
                 log.info("Detected {} new languages for tenant {}: {}",
-                    newLanguages.size(), id, newLanguages);
+                        newLanguages.size(), id, newLanguages);
 
                 try {
                     provisioningService.createLanguageProvisioningJob(id, new java.util.HashSet<>(newLanguages));
                     log.info("Provisioning job created successfully for tenant {} with languages: {}",
-                        id, newLanguages);
+                            id, newLanguages);
                 } catch (Exception ex) {
                     log.error("Failed to create provisioning job for tenant {} with languages {}: {}",
-                        id, newLanguages, ex.getMessage(), ex);
+                            id, newLanguages, ex.getMessage(), ex);
                     // Don't fail the tenant update if provisioning fails
                     // The provisioning can be retried manually if needed
                 }
@@ -156,38 +151,11 @@ public class TenantServiceImpl implements TenantService {
         return TenantResponse.from(updatedTenant, displayLanguage);
     }
 
-    @Override
-    @Transactional
-    public TenantResponse activateTenant(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+    // Removed activateTenant
 
-        tenant.activate();
-        Tenant activatedTenant = tenantRepository.save(tenant);
-        return TenantResponse.from(activatedTenant, displayLanguage);
-    }
+    // Removed suspendTenant
 
-    @Override
-    @Transactional
-    public TenantResponse suspendTenant(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-
-        tenant.suspend();
-        Tenant suspendedTenant = tenantRepository.save(tenant);
-        return TenantResponse.from(suspendedTenant, displayLanguage);
-    }
-
-    @Override
-    @Transactional
-    public TenantResponse setMaintenanceMode(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-
-        tenant.setMaintenance();
-        Tenant maintenanceTenant = tenantRepository.save(tenant);
-        return TenantResponse.from(maintenanceTenant, displayLanguage);
-    }
+    // Removed setMaintenanceMode
 
     @Override
     @Transactional
@@ -198,57 +166,52 @@ public class TenantServiceImpl implements TenantService {
         tenantRepository.deleteById(id);
     }
 
-    @Override
-    public boolean isSubdomainAvailable(String subdomain) {
-        return !tenantRepository.existsBySubdomain(subdomain);
-    }
+    // Removed isSubdomainAvailable
 
     @Override
     public boolean isCustomDomainAvailable(String customDomain) {
         return !tenantRepository.existsByCustomDomain(customDomain);
     }
 
-    @Override
-    public long getTenantCountByStatus(TenantStatus status) {
-        return tenantRepository.countByStatus(status);
-    }
+    // Removed getTenantCountByStatus
 
     @Override
     public boolean hasAccessToTenant(String currentUserEmail, Long tenantId) {
         log.debug("Checking tenant access for user {} to tenant {}", currentUserEmail, tenantId);
-        
+
         try {
             // Get the current authentication context
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
+
             // First, try to get tenantId from the authentication details (JWT token)
             if (authentication != null && authentication.getDetails() instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
                 String role = (String) details.get("role");
                 Long userTenantId = (Long) details.get("tenantId");
-                
+
                 log.debug("User {} has role {} and tenantId {} from token", currentUserEmail, role, userTenantId);
-                
+
                 // SUPER_ADMIN users have access to all tenants
                 if ("SUPER_ADMIN".equals(role)) {
                     log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
                     return true;
                 }
-                
+
                 // For other roles, check if user's tenant matches the requested tenant
                 if (userTenantId != null && userTenantId.equals(tenantId)) {
                     log.debug("User {} has access to their own tenant {}", currentUserEmail, tenantId);
                     return true;
                 }
-                
-                log.debug("User {} denied access to tenant {} (user tenant: {})", currentUserEmail, tenantId, userTenantId);
+
+                log.debug("User {} denied access to tenant {} (user tenant: {})", currentUserEmail, tenantId,
+                        userTenantId);
                 return false;
             }
-            
+
             // Fallback: if authentication details are not available, query the database
             log.debug("Authentication details not available, falling back to database query");
-            
+
             // Find the current user
             Optional<User> currentUser = userRepository.findByEmail(currentUserEmail);
             if (currentUser.isEmpty()) {
@@ -257,7 +220,7 @@ public class TenantServiceImpl implements TenantService {
             }
 
             User user = currentUser.get();
-            
+
             // SUPER_ADMIN users have access to all tenants
             if (user.getRole().name().equals("SUPER_ADMIN")) {
                 log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
@@ -266,12 +229,13 @@ public class TenantServiceImpl implements TenantService {
 
             // For other roles, check if user belongs to the tenant
             boolean hasAccess = user.getTenantId().equals(tenantId);
-            log.debug("User {} access to tenant {}: {} (user tenant: {})", currentUserEmail, tenantId, hasAccess, user.getTenantId());
+            log.debug("User {} access to tenant {}: {} (user tenant: {})", currentUserEmail, tenantId, hasAccess,
+                    user.getTenantId());
             return hasAccess;
 
         } catch (Exception ex) {
-            log.error("Error checking tenant access for user {} to tenant {}: {}", 
-                     currentUserEmail, tenantId, ex.getMessage());
+            log.error("Error checking tenant access for user {} to tenant {}: {}",
+                    currentUserEmail, tenantId, ex.getMessage());
             return false; // Deny access on error for security
         }
     }

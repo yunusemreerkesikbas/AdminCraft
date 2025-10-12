@@ -21,21 +21,7 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
         delete: 'tenantById'
     };
 
-    activateTenant(id: number): Observable<Tenant> {
-        return this.customPost<Tenant>('tenantActivate', {}, { id });
-    }
-
-    suspendTenant(id: number): Observable<Tenant> {
-        return this.customPost<Tenant>('tenantSuspend', {}, { id });
-    }
-
-    setMaintenanceMode(id: number): Observable<Tenant> {
-        return this.customPost<Tenant>('tenantMaintenance', {}, { id });
-    }
-
-    checkSubdomainAvailability(subdomain: string): Observable<boolean> {
-        return this.customGet<boolean>('tenantCheckSubdomain', { subdomain });
-    }
+    
 
     getTenantLanguages(tenantId: number): Observable<TenantLanguagesDto> {
         return this.customGet<TenantLanguagesDto>('tenantLanguages', { tenantId });
