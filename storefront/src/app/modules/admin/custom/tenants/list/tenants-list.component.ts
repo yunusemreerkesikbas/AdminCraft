@@ -1,47 +1,25 @@
+import { CommonModule, DatePipe, NgClass } from '@angular/common';
 import {
-    AsyncPipe,
-    CommonModule,
-    DatePipe,
-    NgClass
-} from '@angular/common';
-import {
-    AfterViewInit,
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
-    OnDestroy,
-    OnInit,
-    ViewChild,
     ViewEncapsulation,
     inject,
 } from '@angular/core';
-import { FormsModule, UntypedFormControl } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
- 
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/components/provisioning-modal/provisioning-modal.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
-import {
-    Observable,
-    Subject,
-    debounceTime,
-    map,
-    merge,
-    switchMap,
-    take,
-    takeUntil,
-} from 'rxjs';
+import { map, switchMap, take } from 'rxjs';
 import { TenantsService } from '../tenants.service';
-import { CreateTenantRequest, Language, Tenant, TenantPagination, UpdateTenantRequest } from '../tenants.types';
-import { MatDialog } from '@angular/material/dialog';
-import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/components/provisioning-modal/provisioning-modal.component';
+import { CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
 @Component({
     selector: 'tenants-list',
@@ -75,97 +53,19 @@ import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/compo
         MatIconModule,
         FormsModule,
         MatButtonModule,
-        MatSortModule,
-        MatPaginatorModule,
         NgClass,
-        AsyncPipe,
         DatePipe,
         TranslocoPipe,
-        SpaSearchInputComponent,
     ],
 })
-export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
-    private _transloco = inject(TranslocoService);
+export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTenantRequest, UpdateTenantRequest> {
+    protected override service = inject(TenantsService);
+    protected override store = new CrudStore<Tenant>();
+
     #itemDialog = inject(ItemDialogService);
     #notify = inject(NotificationService);
     #dialog = inject(MatDialog);
-    @ViewChild(MatPaginator) private _paginator: MatPaginator;
-    @ViewChild(MatSort) private _sort: MatSort;
 
-    tenants$: Observable<Tenant[]>;
-    pagination$: Observable<TenantPagination>;
-
-    isLoading: boolean = false;
-    searchInputControl: UntypedFormControl = new UntypedFormControl();
-    
-
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
-
-    constructor(
-        private _changeDetectorRef: ChangeDetectorRef,
-        private _tenantsService: TenantsService
-    ) {}
-
-    ngOnInit(): void {
-        this.tenants$ = this._tenantsService.tenants$;
-        this.pagination$ = this._tenantsService.pagination$;
-
-        this.searchInputControl.valueChanges
-            .pipe(
-                takeUntil(this._unsubscribeAll),
-                debounceTime(300),
-                switchMap((query) => {
-                    this.isLoading = true;
-                    return this._tenantsService.getTenants(0, 10, 'companyName', 'asc', query);
-                }),
-                map(() => {
-                    this.isLoading = false;
-                })
-            )
-            .subscribe();
-
-        this._tenantsService.getTenants().subscribe();
-    }
-
-    ngAfterViewInit(): void {
-        if (this._sort && this._paginator) {
-            this._sort.sort({
-                id: 'companyName',
-                start: 'asc',
-                disableClear: true,
-            });
-            this._changeDetectorRef.markForCheck();
-            this._sort.sortChange
-                .pipe(takeUntil(this._unsubscribeAll))
-                .subscribe(() => {
-                    this._paginator.pageIndex = 0;
-                });
-
-            merge(this._sort.sortChange, this._paginator.page)
-                .pipe(
-                    switchMap(() => {
-                        this.isLoading = true;
-                        return this._tenantsService.getTenants(
-                            this._paginator.pageIndex,
-                            this._paginator.pageSize,
-                            this._sort.active,
-                            this._sort.direction as 'asc' | 'desc',
-                            this.searchInputControl.value
-                        );
-                    }),
-                    map(() => {
-                        this.isLoading = false;
-                    })
-                )
-                .subscribe();
-        }
-    }
-
-    ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
-        this._unsubscribeAll.complete();
-    }
 
     createTenant(): void {
         const options: ItemDialogOptions<CreateTenantRequest> = {
@@ -216,11 +116,14 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     return;
                 }
 
-                this._tenantsService
-                    .createTenant(payload)
+                this.service
+                    .create(payload)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => this.#notify.success('admin.common.messages.operationSuccess'),
+                        next: (tenant) => {
+                            this.store.addItem(tenant);
+                            this.#notify.success('admin.common.messages.operationSuccess');
+                        },
                         error: () => this.#notify.alert('admin.common.errors.unexpected')
                     });
             });
@@ -271,11 +174,12 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                     lang => !oldSupportedLanguages.includes(lang)
                 );
 
-                this._tenantsService
-                    .updateTenant(tenant.id, payload)
+                this.service
+                    .update(tenant.id, payload)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => {
+                        next: (updatedTenant) => {
+                            this.store.updateItem(tenant.id, updatedTenant);
                             this.#notify.success('admin.common.messages.operationSuccess');
 
                             if (newLanguages.length > 0) {
@@ -302,7 +206,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
         dialogRef.afterClosed().pipe(take(1)).subscribe((confirmed: boolean) => {
             if (!confirmed) return;
 
-            this._tenantsService
+            this.service
                 .provisionLanguages(tenantId, { languages: newLanguages })
                 .pipe(
                     take(1),
@@ -320,7 +224,7 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
                             width: '500px'
                         });
 
-                        return this._tenantsService.pollProvisioningJob(job.uuid).pipe(
+                        return this.service.pollProvisioningJob(job.uuid).pipe(
                             map((updatedJob) => {
                                 progressDialogRef.componentInstance.data = {
                                     ...progressDialogRef.componentInstance.data,
@@ -367,9 +271,5 @@ export class TenantsListComponent implements OnInit, AfterViewInit, OnDestroy {
             ],
             i18n: []
         };
-    }
-
-    trackByFn(index: number, item: any): any {
-        return item.id || index;
     }
 }

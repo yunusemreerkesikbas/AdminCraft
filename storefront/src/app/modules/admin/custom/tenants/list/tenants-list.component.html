@@ -4,7 +4,7 @@
     <div
         class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
     >
-        @if (isLoading) {
+        @if (store.isLoading()) {
             <div class="absolute inset-x-0 bottom-0">
                 <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
             </div>
@@ -13,11 +13,6 @@
             {{ 'admin.tenants.title' | transloco }}
         </div>
         <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <spa-search-input
-                [placeholder]="'admin.tenants.searchPlaceholder' | transloco"
-                [ngModel]="searchInputControl.value"
-                (ngModelChange)="searchInputControl.setValue($event)"
-            ></spa-search-input>
             <button
                 class="ml-4"
                 mat-flat-button
@@ -36,48 +31,34 @@
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            @if (tenants$ | async; as tenants) {
+            @if (filtered(); as tenants) {
                 @if (tenants.length > 0) {
                     <div class="grid">
                         <div
                             class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
-                            matSort
-                            matSortDisableClear
                         >
                             <div></div>
-                            <div
-                                class="hidden md:block"
-                                [mat-sort-header]="'subdomain'"
-                            >
+                            <div class="hidden md:block">
                                 {{
                                     'admin.tenants.fields.subdomain' | transloco
                                 }}
                             </div>
-                            <div [mat-sort-header]="'companyName'">
+                            <div>
                                 {{
                                     'admin.tenants.fields.companyName'
                                         | transloco
                                 }}
                             </div>
-                            <div
-                                class="hidden sm:block"
-                                [mat-sort-header]="'status'"
-                            >
+                            <div class="hidden sm:block">
                                 {{ 'admin.common.fields.status' | transloco }}
                             </div>
-                            <div
-                                class="hidden lg:block"
-                                [mat-sort-header]="'defaultLanguage'"
-                            >
+                            <div class="hidden lg:block">
                                 {{
                                     'admin.tenants.fields.defaultLanguage'
                                         | transloco
                                 }}
                             </div>
-                            <div
-                                class="hidden lg:block"
-                                [mat-sort-header]="'createdAt'"
-                            >
+                            <div class="hidden lg:block">
                                 {{
                                     'admin.common.fields.createdAt' | transloco
                                 }}
@@ -86,10 +67,7 @@
                                 {{ 'admin.common.grid.details' | transloco }}
                             </div>
                         </div>
-                        @for (
-                            tenant of tenants;
-                            track trackByFn($index, tenant)
-                        ) {
+                        @for (tenant of tenants; track tenant.id) {
                             <div
                                 class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
                             >
@@ -162,16 +140,6 @@
                             </div>
                         }
                     </div>
-
-                    <mat-paginator
-                        class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
-                        [ngClass]="{ 'pointer-events-none': isLoading }"
-                        [length]="(pagination$ | async)?.length || 0"
-                        [pageIndex]="(pagination$ | async)?.page || 0"
-                        [pageSize]="(pagination$ | async)?.size || 10"
-                        [pageSizeOptions]="[5, 10, 25, 100]"
-                        [showFirstLastButtons]="true"
-                    ></mat-paginator>
                 } @else {
                     <div
                         class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"

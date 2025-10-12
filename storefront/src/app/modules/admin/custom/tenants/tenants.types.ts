@@ -20,15 +20,6 @@ export interface Tenant {
     suspendedAt?: string;
 }
 
-export interface TenantPagination {
-    length: number;
-    size: number;
-    page: number;
-    lastPage: number;
-    startIndex: number;
-    endIndex: number;
-}
-
 export enum TenantStatus {
     PENDING = 'PENDING',
     ACTIVE = 'ACTIVE',
