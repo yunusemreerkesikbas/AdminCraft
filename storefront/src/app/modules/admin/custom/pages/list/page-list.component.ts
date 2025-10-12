@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -10,7 +11,7 @@ import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/a
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
+import { Observable, forkJoin, take, takeUntil } from 'rxjs';
 import { CreatePageFormData, EditPageFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
@@ -47,10 +48,11 @@ import { PageSchemaBuilderService } from '../services/page-schema-builder.servic
     `,
 ],
 })
-export class PageListComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
+export class PageListComponent extends BaseCrudListComponent<PageListDto, CreatePageRequest, UpdatePageRequest> {
+  protected service = inject(PageBuilderService);
+  protected store = new CrudStore<PageListDto>();
+
   #notify = inject(NotificationService);
-  #cdr = inject(ChangeDetectorRef);
   #itemDialogService = inject(ItemDialogService);
   #pageBuilderService = inject(PageBuilderService);
   #tenantContext = inject(TenantContextService);
@@ -60,16 +62,12 @@ export class PageListComponent implements OnInit, OnDestroy {
   #schemaBuilder = inject(PageSchemaBuilderService);
   #formMapper = inject(PageFormMapperService);
 
-  isLoading = false;
   tenantId = 1;
-  pages: PageListDto[] = [];
-  filtered: PageListDto[] = [];
-  search = '';
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
   #supportedLanguages: string[] = [];
 
-  ngOnInit(): void {
+  protected override onInit(): void {
     const storedId = this.#tenantContext.getCurrentTenantId();
     const storedSub = this.#tenantContext.getCurrentSubdomain();
     if (storedId) {
@@ -82,11 +80,9 @@ export class PageListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((languages) => {
         this.#supportedLanguages = languages;
-        this.#cdr.markForCheck();
       });
 
     this.#loadCategories();
-    this.load();
 
     this.#tenantContext.tenant$
       .pipe(takeUntil(this.destroy$))
@@ -99,7 +95,7 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.subdomain = nextSub;
         if (changed) {
           this.#loadCategories();
-          this.load();
+          this.loadItems();
         }
       });
 
@@ -110,47 +106,34 @@ export class PageListComponent implements OnInit, OnDestroy {
       });
   }
 
-  load(): void {
+  protected override beforeLoad(): boolean {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
-      return;
+      return false;
     }
-
-    this.isLoading = true;
-
-    this.#pageBuilderService.listPages()
-      .pipe(take(1))
-      .subscribe({
-        next: (list) => {
-          this.pages = list;
-          this.applyFilter();
-          this.isLoading = false;
-          this.#cdr.markForCheck();
-        },
-        error: (error) => {
-          const errorMessage = this.#errorHandler.handleError(error);
-          this.#errorHandler.logError(error, 'Loading pages');
-          this.#notify.alert(errorMessage);
-          this.isLoading = false;
-          this.#cdr.markForCheck();
-        },
-      });
+    return true;
   }
 
-  applyFilter(): void {
-    const q = (this.search || '').toLowerCase();
-    this.filtered = !q
-      ? this.pages
-      : this.pages.filter((p) => p.uid.toLowerCase().includes(q));
+  protected override fetchItems(): Observable<PageListDto[]> {
+    return this.#pageBuilderService.listPages();
+  }
+
+  protected override onLoadError(error: any): void {
+    const errorMessage = this.#errorHandler.handleError(error);
+    this.#errorHandler.logError(error, 'Loading pages');
+    this.#notify.alert(errorMessage);
   }
 
   onSearchChange(q: string): void {
-    this.search = q || '';
-    this.applyFilter();
+    super.onSearchChange(q);
+  }
+
+  load(): void {
+    this.loadItems();
   }
 
   refresh(): void {
-    this.load();
+    this.loadItems();
   }
 
   create(): void {
@@ -295,21 +278,17 @@ export class PageListComponent implements OnInit, OnDestroy {
   }
 
   deletePage(page: PageListDto): void {
-    this.#pageBuilderService.deletePage(page.id).pipe(take(1)).subscribe({
-      next: () => {
-        this.pages = this.pages.filter(p => p.id !== page.id);
-        this.applyFilter();
-        this.#notify.success('admin.common.messages.operationSuccess');
-        this.#cdr.markForCheck();
-      },
-      error: (error) => {
-        const msg = this.#errorHandler.handleError(error);
-        this.#notify.alert(msg);
-      }
-    });
+    this.deleteItem(page);
   }
 
-  
+  protected override onDeleteSuccess(item: PageListDto): void {
+    this.#notify.success('admin.common.messages.operationSuccess');
+  }
+
+  protected override onDeleteError(error: any): void {
+    const msg = this.#errorHandler.handleError(error);
+    this.#notify.alert(msg);
+  }
 
   #loadCategories(): void {
     this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({
@@ -320,10 +299,5 @@ export class PageListComponent implements OnInit, OnDestroy {
         this.#cachedCategories = [];
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

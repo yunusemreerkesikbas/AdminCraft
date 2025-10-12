@@ -1,108 +1,106 @@
-import { inject, Injectable } from '@angular/core';
-import { ApiClientService } from '@core/api/api-client.service';
-import { map, Observable, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { CrudEndpoints, CrudHttpService } from '@core/crud';
+import { Observable, Subject } from 'rxjs';
 import {
-    ApiResponse,
-    CreateCategoryRequest,
-    CreatePageRequest,
-    Language,
-    PageCategoryDetailDto,
-    PageCategoryI18nDto,
-    PageCategoryListDto,
-    PageDetailDto,
-    PageDto,
-    PageI18nDto,
-    PageI18nRequest,
-    PageListDto,
-    PublishPageI18nRequest,
-    UpdateCategoryRequest,
-    UpdatePageRequest,
-    UpsertCategoryI18nRequest
+  CreateCategoryRequest,
+  CreatePageRequest,
+  Language,
+  PageCategoryDetailDto,
+  PageCategoryI18nDto,
+  PageCategoryListDto,
+  PageDetailDto,
+  PageI18nDto,
+  PageI18nRequest,
+  PageListDto,
+  PublishPageI18nRequest,
+  UpdateCategoryRequest,
+  UpdatePageRequest,
+  UpsertCategoryI18nRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
-export class PageBuilderService {
-  #api = inject(ApiClientService);
+export class PageBuilderService extends CrudHttpService<PageListDto, CreatePageRequest, UpdatePageRequest> {
+  protected endpoints: CrudEndpoints = {
+    list: 'pages',
+    getById: 'pageById',
+    create: 'pages',
+    update: 'pageById',
+    delete: 'pageById'
+  };
+
   #createRequested = new Subject<void>();
   readonly createRequested$ = this.#createRequested.asObservable();
 
+  override list(): Observable<PageListDto[]> {
+    return this.customGet<PageListDto[]>('pages');
+  }
+
   listPages(): Observable<PageListDto[]> {
-    return this.#api.get<ApiResponse<PageListDto[]>>('pages').pipe(
-      map((r) => {
-        const data = r?.data ?? [];
-        return Array.isArray(data) ? data : [];
-      })
-    );
+    return this.list();
   }
 
   requestCreate(): void {
     this.#createRequested.next();
   }
 
-  getPageById(id: number): Observable<PageDto> {
-    return this.#api.get<ApiResponse<PageDto>>('pageById', { id }).pipe(map((r) => r.data));
+  getPageById(id: number): Observable<PageListDto> {
+    return this.getById(id);
   }
 
   getPageDetail(id: number): Observable<PageDetailDto> {
-    return this.#api
-      .get<ApiResponse<PageDetailDto>>('pageById', { id }, { include: 'translations' })
-      .pipe(map((r) => r.data));
+    return this.customGet<PageDetailDto>('pageById', { id }, { include: 'translations' });
   }
 
-  createPage(req: CreatePageRequest): Observable<PageDto> {
-    return this.#api.post<ApiResponse<PageDto>>('pages', req).pipe(map((r) => r.data));
+  createPage(req: CreatePageRequest): Observable<PageListDto> {
+    return this.create(req);
   }
 
-  updatePage(id: number, req: UpdatePageRequest): Observable<PageDto> {
-    return this.#api.put<ApiResponse<PageDto>>('pageById', req, { id }).pipe(map((r) => r.data));
+  updatePage(id: number, req: UpdatePageRequest): Observable<PageListDto> {
+    return this.update(id, req);
   }
 
   deletePage(id: number): Observable<void> {
-    return this.#api.delete<ApiResponse<void>>('pageById', { id }).pipe(map(() => undefined));
+    return this.delete(id);
   }
 
   getPageI18n(pageId: number, language: Language): Observable<PageI18nDto> {
-    return this.#api.get<ApiResponse<PageI18nDto>>('pageI18n', { pageId, language }).pipe(map((r) => r.data));
+    return this.customGet<PageI18nDto>('pageI18n', { pageId, language });
   }
 
   updatePageI18n(pageId: number, language: Language, req: PageI18nRequest): Observable<PageI18nDto> {
-    return this.#api.put<ApiResponse<PageI18nDto>>('pageI18n', req, { pageId, language }).pipe(map((r) => r.data));
+    return this.customPut<PageI18nDto>('pageI18n', req, { pageId, language });
   }
 
   publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<PageI18nDto> {
-    return this.#api.post<ApiResponse<PageI18nDto>>('pageI18nPublish', req || {}, { pageId, language }).pipe(map((r) => r.data));
+    return this.customPost<PageI18nDto>('pageI18nPublish', req || {}, { pageId, language });
   }
 
   listCategories(): Observable<PageCategoryListDto[]> {
-    return this.#api.get<ApiResponse<PageCategoryListDto[]>>('pageCategories').pipe(map((r) => r.data || []));
+    return this.customGet<PageCategoryListDto[]>('pageCategories');
   }
 
   getCategoryDetail(id: number): Observable<PageCategoryDetailDto> {
-    return this.#api.get<ApiResponse<PageCategoryDetailDto>>('pageCategoryWithTranslations', { id }).pipe(map((r) => r.data));
+    return this.customGet<PageCategoryDetailDto>('pageCategoryWithTranslations', { id });
   }
 
   createCategory(req: CreateCategoryRequest): Observable<PageCategoryDetailDto> {
-    return this.#api.post<ApiResponse<PageCategoryDetailDto>>('pageCategories', req).pipe(map((r) => r.data));
+    return this.customPost<PageCategoryDetailDto>('pageCategories', req);
   }
 
   updateCategory(id: number, req: UpdateCategoryRequest): Observable<PageCategoryDetailDto> {
-    return this.#api.put<ApiResponse<PageCategoryDetailDto>>('pageCategoryById', req, { id }).pipe(map((r) => r.data));
+    return this.customPut<PageCategoryDetailDto>('pageCategoryById', req, { id });
   }
 
   deleteCategory(id: number): Observable<void> {
-    return this.#api.delete<ApiResponse<void>>('pageCategoryById', { id }).pipe(map(() => undefined));
+    return this.customDelete<void>('pageCategoryById', { id });
   }
 
   getCategoryI18n(categoryId: number, language: Language): Observable<PageCategoryI18nDto> {
-    return this.#api.get<ApiResponse<PageCategoryI18nDto>>('pageCategoryI18n', { categoryId, language }).pipe(map((r) => r.data));
+    return this.customGet<PageCategoryI18nDto>('pageCategoryI18n', { categoryId, language });
   }
 
   upsertCategoryI18n(categoryId: number, language: Language, req: UpsertCategoryI18nRequest): Observable<PageCategoryI18nDto> {
-    return this.#api.put<ApiResponse<PageCategoryI18nDto>>('pageCategoryI18n', req, { categoryId, language }).pipe(map((r) => r.data));
+    return this.customPut<PageCategoryI18nDto>('pageCategoryI18n', req, { categoryId, language });
   }
-
-  
-
-  // Removed non-CRUD and sections/blocks endpoints per refactor
 }
 

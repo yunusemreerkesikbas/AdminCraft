@@ -1,16 +1,9 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-  OnInit,
-  inject,
-} from '@angular/core';
-
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
@@ -18,7 +11,7 @@ import { SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-sel
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { Subject, forkJoin, take, takeUntil } from 'rxjs';
+import { forkJoin, take, takeUntil } from 'rxjs';
 import { TenantsService } from '../../tenants/tenants.service';
 import { PageBuilderService } from '../page-builder.service';
 import {
@@ -63,44 +56,44 @@ import { ErrorHandlingService } from '../services/error-handling.service';
     `,
 ],
 })
-export class PageCategoriesComponent implements OnInit, OnDestroy {
-  #cdr: ChangeDetectorRef;
-  #destroy$ = new Subject<void>();
+export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryListDto, CreateCategoryRequest, UpdateCategoryRequest> {
+  protected service: any = inject(PageBuilderService);
+  protected store = new CrudStore<PageCategoryListDto>();
+
   #notify = inject(NotificationService);
+  #pageBuilderService = inject(PageBuilderService);
+  #tenantCtx = inject(TenantContextService);
+  #tenantsSvc = inject(TenantsService);
+  #errorHandler = inject(ErrorHandlingService);
+  #dialog = inject(ItemDialogService);
+  #schema = inject(CategorySchemaBuilderService);
 
   protected supportedLanguages: Language[] = [];
-  
+
   tenantId?: number;
   currentLanguage: Language = 'TR';
-  categories: PageCategoryListDto[] = [];
-  isLoading: boolean = false;
   parentOptions: SpaSelectOption<number>[] = [];
-  
   selectedCategory: PageCategoryDetailDto | null = null;
 
-  constructor(
-    private _svc: PageBuilderService,
-    private _tenantCtx: TenantContextService,
-    private _tenantsSvc: TenantsService,
-    private _errorHandler: ErrorHandlingService,
-    private _dialog: ItemDialogService,
-    private _schema: CategorySchemaBuilderService,
-    cdr: ChangeDetectorRef
-  ) {
-    this.#cdr = cdr;
+  // Template properties
+  get isLoading(): boolean {
+    return this.store.isLoading();
   }
 
-  ngOnInit(): void {
-    const storedId = this._tenantCtx.getCurrentTenantId();
+  get categories(): PageCategoryListDto[] {
+    return this.store.items();
+  }
+
+  protected override onInit(): void {
+    const storedId = this.#tenantCtx.getCurrentTenantId();
     if (!storedId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
     this.tenantId = storedId;
     this.#loadTenantLanguages();
-    this.loadCategories();
 
-    this._tenantCtx.tenant$.pipe(takeUntil(this.#destroy$)).subscribe((t) => {
+    this.#tenantCtx.tenant$.pipe(takeUntil(this.destroy$)).subscribe((t) => {
       if (!t) return;
       if (t.id !== this.tenantId) {
         this.tenantId = t.id;
@@ -113,50 +106,47 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
   #loadTenantLanguages(): void {
     if (!this.tenantId) return;
     
-    this._tenantsSvc
+    this.#tenantsSvc
       .getTenantLanguages(this.tenantId)
-      .pipe(takeUntil(this.#destroy$))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (languagesDto) => {
           this.supportedLanguages = languagesDto.supportedLanguages || [];
           this.currentLanguage = languagesDto.defaultLanguage || 'TR';
-          this.#cdr.markForCheck();
         },
         error: () => {
           this.supportedLanguages = ['TR', 'EN'];
-          this.#cdr.markForCheck();
         },
       });
   }
 
-  loadCategories(): void {
+  protected override beforeLoad(): boolean {
     if (!this.tenantId) {
       this.#notify.warning('admin.pageBuilder.errors.noTenant');
-      return;
+      return false;
     }
-    this.isLoading = true;
-    this._svc
-      .listCategories()
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({
-        next: (items) => {
-          const list = Array.isArray(items) ? items : [];
-          this.categories = list;
-          this.parentOptions = list.map((c) => ({ 
-            label: c.uid || `#${c.id}`, 
-            value: c.id 
-          }));
-          this.isLoading = false;
-          this.#cdr.markForCheck();
-        },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.categories = [];
-          this.isLoading = false;
-          this.#cdr.markForCheck();
-        },
-      });
+    return true;
+  }
+
+  protected override fetchItems() {
+    return this.#pageBuilderService.listCategories();
+  }
+
+  protected override onLoadSuccess(items: PageCategoryListDto[]): void {
+    const list = Array.isArray(items) ? items : [];
+    this.parentOptions = list.map((c) => ({
+      label: c.uid || `#${c.id}`,
+      value: c.id
+    }));
+  }
+
+  protected override onLoadError(error: any): void {
+    const msg = this.#errorHandler.handleError(error);
+    this.#notify.alert(msg);
+  }
+
+  loadCategories(): void {
+    this.loadItems();
   }
 
   createCategory(): void {
@@ -170,7 +160,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       return;
     }
     
-    const schema = this._schema.buildCategorySchema(this.parentOptions);
+    const schema = this.#schema.buildCategorySchema(this.parentOptions);
     const initial = {
       uid: null,
       parentId: null,
@@ -199,7 +189,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       modalData: { disableClose: true, width: '800px', height: '80vh' },
     };
     
-    this._dialog
+    this.#dialog
       .open(options)
       .pipe(take(1))
       .subscribe((result) => {
@@ -213,17 +203,16 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           sortOrder: result.sortOrder ?? 0,
         };
         
-        this._svc
+        this.#pageBuilderService
           .createCategory(basePayload)
-          .pipe(takeUntil(this.#destroy$))
+          .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (created) => {
               this.#saveI18nForCategory(created.id, result, true);
             },
             error: (error) => {
-              const msg = this._errorHandler.handleError(error);
+              const msg = this.#errorHandler.handleError(error);
               this.#notify.alert(msg);
-              this.#cdr.markForCheck();
             },
           });
       });
@@ -240,29 +229,26 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       return;
     }
     
-    this.isLoading = true;
-    this.#cdr.markForCheck();
-    
-    this._svc
+    this.store.setLoading(true);
+
+    this.#pageBuilderService
       .getCategoryDetail(categoryId)
-      .pipe(takeUntil(this.#destroy$))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (detail) => {
-          this.isLoading = false;
-          this.#cdr.markForCheck();
+          this.store.setLoading(false);
           this.#openEditDialog(detail);
         },
         error: (error) => {
-          this.isLoading = false;
-          const msg = this._errorHandler.handleError(error);
+          this.store.setLoading(false);
+          const msg = this.#errorHandler.handleError(error);
           this.#notify.alert(msg);
-          this.#cdr.markForCheck();
         },
       });
   }
 
   #openEditDialog(detail: PageCategoryDetailDto): void {
-    const schema = this._schema.buildCategorySchema(this.parentOptions);
+    const schema = this.#schema.buildCategorySchema(this.parentOptions);
     const initial = {
       uid: detail.uid,
       parentId: detail.parentId ?? null,
@@ -294,7 +280,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
       modalData: { disableClose: true, width: '800px', height: '80vh' },
     };
     
-    this._dialog
+    this.#dialog
       .open(options)
       .pipe(take(1))
       .subscribe((result) => {
@@ -307,17 +293,16 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           sortOrder: result.sortOrder ?? 0,
         };
         
-        this._svc
+        this.#pageBuilderService
           .updateCategory(detail.id, basePayload)
-          .pipe(takeUntil(this.#destroy$))
+          .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
               this.#saveI18nForCategory(detail.id, result, false);
             },
             error: (error) => {
-              const msg = this._errorHandler.handleError(error);
+              const msg = this.#errorHandler.handleError(error);
               this.#notify.alert(msg);
-              this.#cdr.markForCheck();
             },
           });
       });
@@ -338,7 +323,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           metaDescription: data.metaDescription || null,
           active: data.active ?? true,
         };
-        return this._svc.upsertCategoryI18n(categoryId, lang, payload);
+        return this.#pageBuilderService.upsertCategoryI18n(categoryId, lang, payload);
       });
     
     if (i18nRequests.length === 0) {
@@ -350,7 +335,7 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
     }
     
     forkJoin(i18nRequests)
-      .pipe(takeUntil(this.#destroy$))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.#notify.success(
@@ -359,38 +344,31 @@ export class PageCategoriesComponent implements OnInit, OnDestroy {
           this.loadCategories();
         },
         error: (error) => {
-          const msg = this._errorHandler.handleError(error);
+          const msg = this.#errorHandler.handleError(error);
           this.#notify.alert(msg);
-          this.#cdr.markForCheck();
         },
       });
   }
 
   deleteCategory(id: number): void {
-    this._svc
-      .deleteCategory(id)
-      .pipe(takeUntil(this.#destroy$))
-      .subscribe({
-        next: () => {
-          this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
-          this.loadCategories();
-        },
-        error: (error) => {
-          const msg = this._errorHandler.handleError(error);
-          this.#notify.alert(msg);
-          this.#cdr.markForCheck();
-        },
-      });
+    const category = this.store.items().find(c => c.id === id);
+    if (!category) return;
+
+    this.deleteItem(category);
+  }
+
+  protected override onDeleteSuccess(item: PageCategoryListDto): void {
+    this.#notify.success('admin.pageBuilder.messages.categoryDeleted');
+  }
+
+  protected override onDeleteError(error: any): void {
+    const msg = this.#errorHandler.handleError(error);
+    this.#notify.alert(msg);
   }
 
   getParentCategoryName(parentId: number): string {
-    const parent = this.categories.find((c) => c.id === parentId);
+    const parent = this.store.items().find((c) => c.id === parentId);
     return parent?.uid || `#${parentId}`;
-  }
-
-  ngOnDestroy(): void {
-    this.#destroy$.next();
-    this.#destroy$.complete();
   }
 }
 
