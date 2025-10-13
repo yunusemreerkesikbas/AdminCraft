@@ -17,12 +17,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- TENANTS -----
     tenants: 'tenants',
     tenantById: 'tenants/${id}',
-    tenantCheckSubdomain: 'tenants/check/subdomain/${subdomain}',
-    tenantActivate: 'tenants/${id}/activate',
-    tenantSuspend: 'tenants/${id}/suspend',
-    tenantMaintenance: 'tenants/${id}/maintenance',
-    tenantStatsCount: 'tenants/stats/count',
-    tenantBySubdomain: 'tenants/subdomain/${subdomain}',
+    
     tenantLanguages: 'tenants/${tenantId}/languages',
     tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
 

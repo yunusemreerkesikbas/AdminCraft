@@ -24,8 +24,7 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import {
-    MatCheckboxChange,
-    MatCheckboxModule,
+    MatCheckboxModule
 } from '@angular/material/checkbox';
 import { MatOptionModule, MatRippleModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,22 +39,14 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { InventoryService } from 'app/modules/admin/apps/ecommerce/inventory/inventory.service';
 import {
-    InventoryBrand,
-    InventoryCategory,
-    InventoryPagination,
-    InventoryProduct,
-    InventoryTag,
-    InventoryVendor,
-} from 'app/modules/admin/apps/ecommerce/inventory/inventory.types';
-import {
+    ApiResponse,
+    CreateTenantRequest,
+    Language,
     Tenant,
     TenantPagination,
-    CreateTenantRequest,
-    UpdateTenantRequest,
     TenantResponse,
     TenantStatus,
-    Language,
-    ApiResponse,
+    UpdateTenantRequest,
 } from 'app/modules/admin/apps/ecommerce/inventory/tenant.types';
 import {
     Observable,
@@ -397,79 +388,13 @@ export class InventoryListComponent
         });
     }
 
-    /**
-     * Activate tenant
-     */
-    activateTenant(): void {
-        if (!this.selectedTenant) return;
+    // Removed activateTenant
 
-        this._inventoryService
-            .activateTenant(this.selectedTenant.id, this.currentLanguage)
-            .subscribe((response) => {
-                if (response.success) {
-                    this.showFlashMessage('success');
-                    this.selectedTenant = response.data;
-                    this.selectedTenantForm.patchValue(response.data);
-                } else {
-                    this.showFlashMessage('error');
-                }
-            });
-    }
+    // Removed suspendTenant
 
-    /**
-     * Suspend tenant
-     */
-    suspendTenant(): void {
-        if (!this.selectedTenant) return;
+    // Removed setMaintenanceMode
 
-        this._inventoryService
-            .suspendTenant(this.selectedTenant.id, this.currentLanguage)
-            .subscribe((response) => {
-                if (response.success) {
-                    this.showFlashMessage('success');
-                    this.selectedTenant = response.data;
-                    this.selectedTenantForm.patchValue(response.data);
-                } else {
-                    this.showFlashMessage('error');
-                }
-            });
-    }
-
-    /**
-     * Set tenant to maintenance mode
-     */
-    setMaintenanceMode(): void {
-        if (!this.selectedTenant) return;
-
-        this._inventoryService
-            .setTenantMaintenance(this.selectedTenant.id, this.currentLanguage)
-            .subscribe((response) => {
-                if (response.success) {
-                    this.showFlashMessage('success');
-                    this.selectedTenant = response.data;
-                    this.selectedTenantForm.patchValue(response.data);
-                } else {
-                    this.showFlashMessage('error');
-                }
-            });
-    }
-
-    /**
-     * Check subdomain availability
-     */
-    checkSubdomainAvailability(): void {
-        const subdomain = this.selectedTenantForm.get('subdomain').value;
-        if (!subdomain || subdomain.length < 3) return;
-
-        this._inventoryService
-            .checkSubdomainAvailability(subdomain, this.currentLanguage)
-            .subscribe((response) => {
-                if (response.success) {
-                    // You can add visual feedback here
-                    console.log('Subdomain available:', response.data);
-                }
-            });
-    }
+    // Removed checkSubdomainAvailability
 
     /**
      * Switch language

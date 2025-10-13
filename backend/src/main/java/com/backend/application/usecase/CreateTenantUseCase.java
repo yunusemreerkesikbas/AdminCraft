@@ -22,28 +22,27 @@ public class CreateTenantUseCase {
         if (request.subdomain() == null || request.subdomain().trim().isEmpty()) {
             throw new IllegalArgumentException("Subdomain is required");
         }
-        
+
         if (request.companyName() == null || request.companyName().trim().isEmpty()) {
             throw new IllegalArgumentException("Company name is required");
         }
-        
+
         if (request.adminEmail() == null || request.adminEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin email is required");
         }
-        
+
         if (request.adminName() == null || request.adminName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name is required");
         }
-        
-        if (!tenantService.isSubdomainAvailable(request.subdomain())) {
-            throw new IllegalArgumentException("Subdomain is already taken: " + request.subdomain());
-        }
-        
+
+        // Subdomain availability endpoint removed; rely on repository check in service
+
         // Validate subdomain format
         if (!request.subdomain().matches("^[a-z0-9]+(-[a-z0-9]+)*$")) {
-            throw new IllegalArgumentException("Invalid subdomain format. Use only lowercase letters, numbers, and hyphens.");
+            throw new IllegalArgumentException(
+                    "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens.");
         }
-        
+
         // Ensure default language is in supported languages
         if (!request.supportedLanguages().contains(request.defaultLanguage())) {
             throw new IllegalArgumentException("Default language must be included in supported languages");
