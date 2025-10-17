@@ -1,113 +1,171 @@
-## AdminCraft — Developer Quickstart (Clean Architecture, Multi‑Tenant, i18n)
+## AdminCraft — Developer Quickstart
 
-### Tech & Layout
+### Tech Stack
 
-- Backend: Spring Boot 3, Java 21, Spring Data JPA, MySQL
-- Frontend: Angular 19, TypeScript
-- Clean Architecture: presentation → application → domain → infrastructure
-- Paths: `backend/src/main/java/com/backend/...`, resources: `backend/src/main/resources/...`, admin UI: `storefront/`
+- Backend: Spring Boot 3, Java 21, JPA, MySQL, Flyway
+- Frontend: Angular 19, TypeScript, Signals
+- Architecture: Clean Architecture (presentation → application → domain → infrastructure)
+- Multi-Tenancy: Database-per-tenant (`platform_management` + `ac_tenant_{id}`)
 
-### Common commands
-
-- Backend dev (no seed):
+### Commands
 
 ```bash
+# Backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
-```
 
-- Backend dev with seed (loads `schema-page-builder.sql` + `data.sql` once):
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=dev,seed
-```
-
-- Full build & tests:
-
-```bash
-mvn clean verify
-```
-
-- Run jar:
-
-```bash
-java -Dspring.profiles.active=dev -jar backend/target/<artifact>.jar
-```
-
-- Frontend serve:
-
-```bash
+# Frontend
 cd storefront && npm ci && npm run start
-```
 
-- Local DB (optional):
-
-```bash
+# Docker DB
 docker compose up -d
 ```
 
-### Multi‑tenant essentials
+### Multi-Tenant (Database-per-Tenant)
 
-- Always send `X-Tenant-ID` on admin API calls (Angular HTTP interceptor required).
-- `TenantContext` uses ThreadLocal; cleared per request; tenant is extracted from header/subdomain/JWT.
-- All entities include `tenant_id`; Hibernate `@Filter` enforces isolation.
-- Validate tenant access in services before operations; never leak tenant info in errors/logs.
-- Return DTOs only from services; controllers return `ResponseEntity<ApiResponse<T>>`.
+**Key Principles:**
 
-### i18n essentials
+- Platform DB (`platform_management`): Control plane (tenants, modules, jobs)
+- Tenant DBs (`ac_tenant_{id}`): Data plane (isolated per tenant)
+- ❌ NO tenant_id columns (physical isolation)
+- ✅ Header: `X-Tenant-ID` (Angular interceptor required)
+- ✅ TenantContext: ThreadLocal with `tenantId` + `tenantDbName`
+- ✅ TenantFilter: Validate active, set/clear in finally
+- ✅ HikariCP: LRU cache (max 10 pools, 5 conn, 30m idle)
 
-- Backend messages: `backend/src/main/resources/i18n/messages_{tr|en}.properties` (UTF‑8).
-- Frontend admin uses Angular i18n; site content stored per language (e.g., `pages` + `page_i18n`).
-- See backend endpoints and flows in `.docs.md` (Page Builder and i18n section).
+**Security:**
 
-### Code style (backend)
+- Validate tenant active before ANY operation
+- MDC logging: `tenantId`, `tenantDb`, `correlationId`
+- Truncate API errors (500 chars), log full stacktrace
 
-- Constructor injection, no field `@Autowired`; annotate with `@Service`.
-- Use records for DTOs; validate inputs; never return entities; use `Optional` not `null`.
-- Mark multi‑step operations `@Transactional`; keep orchestration in application layer.
-- Repositories extend `JpaRepository`; prefer `@EntityGraph` to avoid N+1; JPQL with parameters only.
-- Security: input validation, parameterized queries, `@PreAuthorize`, rate limiting; never log sensitive data.
-- Exceptions handled by `GlobalExceptionHandler`; messages are localized.
+### Database Migrations (Flyway)
 
-### Code style (frontend)
+**Platform** (`db/platform/`): Auto-run on startup
 
-- Explicit types everywhere; private members with `#`; components prefixed with `spa-`.
-- Use async pipe or `.pipe(take(1))`; unsubscribe appropriately.
-- Centralize API routes (see `API_ENDPOINTS`); ensure DTOs match `ApiResponse<T>` shape.
-- Include `X-Tenant-ID` header in an HTTP interceptor for all API requests.
+- `V1__baseline.sql` (versioned DDL)
+- `R__seed_modules.sql` (repeatable seeds)
 
-### Workflow & etiquette
+**Tenant** (`db/tenant/{module}/`): Programmatic via ProvisioningService
 
-- Branches: `feature/CMS-123`, `bugfix/CMS-123`, `chore/CMS-123`.
-- Commits: Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`...).
-- PRs: small, focused; rebase on latest `main` before opening; prefer squash merge.
-- Keep layers clean: presentation → application → domain; domain has no external deps.
+- `core/V1__baseline.sql` (required)
+- `pagebuilder/V1__baseline.sql` (module-specific)
 
+**Rules:**
+
+- `hibernate.ddl-auto=none` (Flyway owns schema)
+- utf8mb4 / utf8mb4_unicode_ci
+- NO idempotent DDL logic (Flyway handles it)
+- CREATE DATABASE is ONLY string-concatenated SQL
+
+### Clean Architecture
+
+**Domain**: Entities (BaseEntity, BaseI18nEntity), Repositories  
+**Application**: Commands/Queries (NOT Presentation DTOs), Services, Response DTOs  
+**Infrastructure**: Repos impl, Config, Multi-tenancy  
+**Presentation**: Controllers (map Request DTOs → Commands/Queries)
+
+**i18n Pattern:**
+
+- Base entity: Language-agnostic fields
+- i18n entity: Extend BaseI18nEntity, @ManyToOne to base
+- API: `/api/{resource}/{id}/i18n/{language}` (PUT/GET)
+- UI: Tabs (General | Türkçe | English)
+
+### Provisioning
+
+**Workflow:**
+
+1. POST `/api/provisioning/tenants/{id}/provision` with `{ modules: ["core", "pagebuilder"] }`
+2. Creates ProvisioningJob (pending → running → succeeded/failed)
+3. @Async: Create DB → Flyway migrations → Progress (10% → 100%)
+4. GET `/api/provisioning/jobs/{jobId}` for polling (every 2s)
+
+**Rules:**
+
+- Core module always required
+- Module dependencies auto-selected
+- Errors truncated (500 chars), logged with correlationId
+
+### Frontend CRUD Patterns
+
+**Base Classes** (`core/crud/`):
+
+- `CrudHttpService<T>`: Auto-unwrap ApiResponse, CRUD methods
+- `CrudStore<T>`: Signals (items, isLoading, error)
+- `BaseCrudListComponent<T>`: Lifecycle hooks (beforeLoad, fetchItems, onLoadSuccess)
+- `BaseCrudFormComponent<T>`: Hooks (beforeCreate, beforeUpdate)
+
+**Example:**
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class PageService extends CrudHttpService<Page, CreateDto, UpdateDto> {
+  protected endpoints = { list: 'pages', getById: 'pageById', ... };
+}
+
+export class SpaPageListComponent extends BaseCrudListComponent<Page> {
+  protected service = inject(PageService);
+  protected store = new CrudStore<Page>();
+  protected override fetchItems() { return this.service.list(); }
+}
 ```
-- Focus areas: tenant isolation (filters active), i18n flows, N+1 prevention, transaction boundaries.
+
+**Best Practices:**
+
+- OnPush change detection, standalone components
+- `spa-` prefix, explicit types, private with `#`
+- Use signals or async pipe
+- Polling: unsubscribe in ngOnDestroy
+- Centralized API_ENDPOINTS
+
+### Code Style
+
+**Backend:**
+
+- Constructor injection (no @Autowired)
+- Commands/Queries in application (NOT Presentation DTOs)
+- Return Response DTOs only
+- @EntityGraph for relationships (avoid N+1)
+- @Transactional for multi-step ops
+- JPQL parameterized only (prevent SQL injection)
+
+**Frontend:**
+
+- Extend CrudHttpService / BaseCrudListComponent
+- Signals: store.isLoading(), filtered()
+- take(1) for one-time ops
+- Dialog data typed with interfaces
+
+### Security (OWASP)
+
+- Bean Validation on inputs
+- JPQL parameterized (no string concat except CREATE DATABASE)
+- Never log sensitive data (passwords, tokens, PII)
+- Validate tenant active before routing
+- Rate limiting (5 req/min on provisioning)
 
 ### Gotchas
-- Seed is disabled by default; use `dev,seed` only when needed. See `README.md`.
-- Missing `X-Tenant-ID` will cause 4xx/empty data due to active tenant filters.
-- Sanitize any HTML content on the server before persisting or returning.
-- Do not expose internal IDs or tenant identifiers in API responses.
 
-### Core paths & files
-- Backend code: `backend/src/main/java/com/backend/{presentation|application|domain|infrastructure}`
-- Resources: `backend/src/main/resources/{application*.yml,i18n,migrations}`
-- Admin UI: `storefront/src/app/...`
-- Reference docs: `.docs.md`, `plans/IMPLEMENTATION_STATUS.md`, `README.md`
+- Missing X-Tenant-ID → 4xx/empty data
+- Platform entities need @Qualifier("platformDataSource")
+- Tenant entities: NO tenant_id column
+- Flyway migrations: idempotent (R__) or versioned (V__)
+- CREATE DATABASE: only string-concatenated SQL allowed
+- Polling: must unsubscribe in ngOnDestroy
 
-### Handy API checks
+### Quick Checks
+
 ```bash
-# Health & basic checks
+# Health
 curl -s http://localhost:8080/actuator/health | jq
 
-# i18n check (backend messages)
-curl -s -H "Accept-Language: tr" http://localhost:8080/api/debug/messages
+# Module catalog
+curl -s http://localhost:8080/api/provisioning/modules/catalog | jq
 
-# Tenant header example
-curl -s -H "X-Tenant-ID: 1" http://localhost:8080/api/pages/1
+# Tenant data
+curl -s -H "X-Tenant-ID: 1" http://localhost:8080/api/pages | jq
 ```
 
-—
-Keep this file concise and high‑signal. If a rule conflicts, prefer the Clean Architecture + multi‑tenant/i18n rules captured here and in `.docs.md`.
+---
+**Paths**: `backend/src/main/java/com/backend/`, `storefront/src/app/`, `backend/src/main/resources/db/`  
+**Docs**: `.backendrules`, `.frontendrules`, `.codereviewer`, `plans/`

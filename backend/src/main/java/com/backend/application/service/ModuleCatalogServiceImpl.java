@@ -1,0 +1,58 @@
+package com.backend.application.service;
+
+import com.backend.application.dto.provisioning.ModuleCatalogResponse;
+import com.backend.infrastructure.persistence.platform.entity.ModuleCatalog;
+import com.backend.infrastructure.persistence.platform.repository.ModuleCatalogRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+public class ModuleCatalogServiceImpl implements ModuleCatalogService {
+
+  private final ModuleCatalogRepository moduleCatalogRepository;
+  private final ObjectMapper objectMapper;
+
+  public ModuleCatalogServiceImpl(ModuleCatalogRepository moduleCatalogRepository,
+      ObjectMapper objectMapper) {
+    this.moduleCatalogRepository = moduleCatalogRepository;
+    this.objectMapper = objectMapper;
+  }
+
+  @Override
+  public List<ModuleCatalogResponse> getAllModules() {
+    return moduleCatalogRepository.findAll().stream()
+        .map(this::mapToResponse)
+        .collect(Collectors.toList());
+  }
+
+  private ModuleCatalogResponse mapToResponse(ModuleCatalog module) {
+    List<String> deps = Collections.emptyList();
+
+    if (module.getDeps() != null && !module.getDeps().isBlank()) {
+      try {
+        deps = objectMapper.readValue(module.getDeps(), new TypeReference<List<String>>() {
+        });
+      } catch (Exception e) {
+        log.warn("Failed to parse deps for module {}: {}", module.getCode(), e.getMessage());
+      }
+    }
+
+    return ModuleCatalogResponse.builder()
+        .code(module.getCode())
+        .name(module.getName())
+        .type(module.getType())
+        .version(module.getVersion())
+        .deps(deps)
+        .enabledByDefault(module.getEnabledByDefault())
+        .description(module.getDescription())
+        .build();
+  }
+}
+
