@@ -87,6 +87,13 @@
             <version>1.17.2</version>
         </dependency>
 
+        <!-- Guava for Rate Limiting -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.0.0-jre</version>
+        </dependency>
+
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
