@@ -138,5 +138,61 @@ public class ProvisioningIntegrationTest {
     assertThat(tenantRepository.findById(tenant1.getId()).orElseThrow().getStatus()).isEqualTo("ACTIVE");
     assertThat(tenantRepository.findById(tenant2.getId()).orElseThrow().getStatus()).isEqualTo("ACTIVE");
   }
+
+  @Test
+  void shouldHandleIdempotentProvisioning() {
+    Tenant tenant = Tenant.builder()
+        .subdomain("idempotent-tenant")
+        .companyName("Idempotent Company")
+        .dbName("ac_tenant_idempotent")
+        .status("PENDING")
+        .defaultLanguage("TR")
+        .supportedLanguages("[\"TR\", \"EN\"]")
+        .adminEmail("admin@idempotent.com")
+        .adminName("Idempotent Admin")
+        .build();
+
+    tenant = tenantRepository.save(tenant);
+
+    ProvisionRequest request = ProvisionRequest.builder()
+        .modules(List.of("core", "pagebuilder"))
+        .build();
+
+    // First provisioning
+    ProvisioningJobResponse job1 = provisioningService.provisionTenant(tenant.getId(), request);
+    assertThat(job1.getJobId()).isNotNull();
+
+    await().atMost(30, TimeUnit.SECONDS)
+        .pollInterval(1, TimeUnit.SECONDS)
+        .untilAsserted(() -> {
+          ProvisioningJobResponse status = provisioningService.getJobStatus(job1.getJobId());
+          assertThat(status.getStatus()).isEqualTo("succeeded");
+        });
+
+    // Reset tenant status for second provisioning
+    Tenant activeTenant = tenantRepository.findById(tenant.getId()).orElseThrow();
+    activeTenant.setStatus("PENDING");
+    tenantRepository.save(activeTenant);
+
+    // Second provisioning with same modules (should be idempotent)
+    ProvisioningJobResponse job2 = provisioningService.provisionTenant(tenant.getId(), request);
+    assertThat(job2.getJobId()).isNotNull();
+    assertThat(job2.getJobId()).isNotEqualTo(job1.getJobId());
+
+    await().atMost(30, TimeUnit.SECONDS)
+        .pollInterval(1, TimeUnit.SECONDS)
+        .untilAsserted(() -> {
+          ProvisioningJobResponse status = provisioningService.getJobStatus(job2.getJobId());
+          assertThat(status.getStatus()).isIn("succeeded", "failed");
+          if ("failed".equals(status.getStatus())) {
+            System.err.println("Second provisioning failed: " + status.getError());
+          }
+          // Flyway should handle idempotency - no duplicate key errors
+          assertThat(status.getStatus()).isEqualTo("succeeded");
+        });
+
+    Tenant finalTenant = tenantRepository.findById(tenant.getId()).orElseThrow();
+    assertThat(finalTenant.getStatus()).isEqualTo("ACTIVE");
+  }
 }
 
