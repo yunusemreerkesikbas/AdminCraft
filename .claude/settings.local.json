@@ -90,7 +90,8 @@
       "Bash(gh pr list:*)",
       "Bash(awk:*)",
       "Bash(Select-String -Pattern \"(Starting|Started|Error|Exception|bean)\")",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(gh pr checks:*)"
     ],
     "deny": [],
     "additionalDirectories": [

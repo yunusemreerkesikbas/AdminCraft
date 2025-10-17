@@ -55,8 +55,13 @@ public class TenantFilter extends OncePerRequestFilter {
       }
 
       Long tenantId = Long.parseLong(tenantIdHeader);
-      Tenant tenant = tenantRepository.findById(tenantId)
-          .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
+      Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+
+      if (tenant == null) {
+        log.warn("Tenant not found: {}", tenantId);
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant not found");
+        return;
+      }
 
       if (!"ACTIVE".equals(tenant.getStatus())) {
         log.warn("Inactive tenant access attempt: {}", tenantId);

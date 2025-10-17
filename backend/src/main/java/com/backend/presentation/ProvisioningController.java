@@ -6,12 +6,15 @@ import com.backend.application.dto.provisioning.ProvisioningJobResponse;
 import com.backend.application.service.ModuleCatalogService;
 import com.backend.application.service.ProvisioningService;
 import com.backend.shared.common.ApiResponse;
+import com.google.common.util.concurrent.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RestController
@@ -21,16 +24,39 @@ public class ProvisioningController {
   private final ProvisioningService provisioningService;
   private final ModuleCatalogService moduleCatalogService;
 
+  // Rate limiter: 5 requests per minute per tenant
+  private final ConcurrentHashMap<Long, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
+  private static final double PERMITS_PER_MINUTE = 5.0;
+  private static final double PERMITS_PER_SECOND = PERMITS_PER_MINUTE / 60.0;
+
   public ProvisioningController(ProvisioningService provisioningService,
       ModuleCatalogService moduleCatalogService) {
     this.provisioningService = provisioningService;
     this.moduleCatalogService = moduleCatalogService;
   }
 
+  /**
+   * Get or create rate limiter for tenant
+   */
+  private RateLimiter getRateLimiter(Long tenantId) {
+    return rateLimiters.computeIfAbsent(tenantId,
+        id -> RateLimiter.create(PERMITS_PER_SECOND));
+  }
+
   @PostMapping("/tenants/{tenantId}/provision")
   public ResponseEntity<ApiResponse<ProvisioningJobResponse>> provisionTenant(
       @PathVariable Long tenantId,
       @Valid @RequestBody ProvisionRequest request) {
+
+    // Rate limiting: 5 requests per minute per tenant
+    RateLimiter rateLimiter = getRateLimiter(tenantId);
+    if (!rateLimiter.tryAcquire()) {
+      log.warn("Rate limit exceeded for tenant {}", tenantId);
+      return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(new ApiResponse<>(
+          "ERROR",
+          "Rate limit exceeded. Maximum 5 provisioning requests per minute.",
+          null));
+    }
 
     try {
       log.info("Provisioning request for tenant {} with modules: {}", tenantId, request.getModules());
