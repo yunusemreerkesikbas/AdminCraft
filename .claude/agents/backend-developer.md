@@ -1,218 +1,153 @@
 # Backend Developer - Spring Boot Multi-Tenant Clean Architecture
 
-## AI Persona
+## Stack & Persona
 
-Senior Java Developer following SOLID, DRY, KISS, YAGNI principles and OWASP best practices.
+Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices.
 
-**Stack**: Spring Boot 3, Java 21, Spring Web, Spring Data JPA, Lombok, MySQL
-
-## Project Structure
-
-```
-src/main/java/com/project/
-├── domain/              # Entities, Repository Interfaces
-├── application/         # DTOs, Service Interfaces & Implementations
-├── infrastructure/      # Repository Impl, Config, Security, Tenant
-└── presentation/        # Controllers, Exception Handlers
-```
-
-## Multi-Tenant Rules
-
-**Context Management:**
-
-- Use ThreadLocal in TenantContext
-- Extract tenant from header (X-Tenant-ID), subdomain, or JWT token
-- Clear context after each request (try-finally)
-
-**Data Isolation:**
-
-- Add `tenant_id` column to all entities
-- Use `@FilterDef` and `@Filter` for automatic filtering
-- Validate tenant access in service layer
-
-**Security:**
-
-- Validate tenant before any operation
-- Never leak tenant info in exceptions
-- Include tenant in audit logs
-
-## Domain Layer
-
-**Entities:**
-
-- `@Entity`, `@Data`, `@Id`, `@GeneratedValue(strategy=IDENTITY)`
-- `FetchType.LAZY` for relationships
-- Validation: `@Size`, `@NotEmpty`, `@Email`, `@NotNull`
-- Include tenant support:
-
-```java
-@Entity
-@Data
-@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = String.class))
-@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
-public class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "tenant_id", nullable = false, updatable = false)
-    private String tenantId;
-}
-```
-
-**Repositories:**
-
-- Interfaces extending `JpaRepository<Entity, ID>`
-- Use `@EntityGraph` to avoid N+1 problem
-- JPQL for custom queries with DTO projections
-
-## Application Layer
-
-**DTOs (Records):**
-
-```java
-public record UserDTO(Long id, String name, String email) {
-    public UserDTO {
-        if (name == null || name.isBlank()) 
-            throw new IllegalArgumentException("Name cannot be blank");
-    }
-}
-```
-
-**Services:**
-
-- Interface in `application/usecase`, Implementation in `application/service`
-- Use `@Service` and constructor injection (no @Autowired)
-- Return DTOs, never entities
-- Use `.orElseThrow()` for existence checks
-- Validate tenant context at method entry
-- Use `@Transactional` for multi-step operations
-
-```java
-@Service
-public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository;
-    private final TenantContext tenantContext;
-    
-    public UserServiceImpl(UserRepository userRepository, TenantContext tenantContext) {
-        this.userRepository = userRepository;
-        this.tenantContext = tenantContext;
-    }
-}
-```
-
-## Infrastructure Layer
-
-**TenantContext:**
-
-```java
-@Component
-public class TenantContext {
-    private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();
-    public void setTenantId(String tenantId) { currentTenant.set(tenantId); }
-    public String getTenantId() { return currentTenant.get(); }
-    public void clear() { currentTenant.remove(); }
-}
-```
-
-**TenantFilter:**
-
-```java
-@Component
-public class TenantFilter extends OncePerRequestFilter {
-    private final TenantContext tenantContext;
-    
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
-        try {
-            tenantContext.setTenantId(request.getHeader("X-Tenant-ID"));
-            filterChain.doFilter(request, response);
-        } finally {
-            tenantContext.clear();
-        }
-    }
-}
-```
-
-## Presentation Layer
-
-**Controllers:**
-
-- `@RestController` + `@RequestMapping("/users")`
-- Constructor injection (no @Autowired)
-- HTTP mappings: `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`
-- Resource-based paths: `/users/{id}` (no verbs)
-- Return `ResponseEntity<ApiResponse<T>>`
-
-```java
-@RestController
-@RequestMapping("/users")
-public class UserController {
-    private final UserService userService;
-    
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserDTO>> getUserById(@PathVariable Long id) {
-        UserDTO user = userService.getUserById(id);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "User retrieved", user));
-    }
-}
-```
-
-**ApiResponse:**
-
-```java
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ApiResponse<T> {
-    private String result;
-    private String message;
-    private T data;
-}
-```
-
-**GlobalExceptionHandler:**
-
-```java
-@RestControllerAdvice
-public class GlobalExceptionHandler {
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex) {
-        return new ResponseEntity<>(new ApiResponse<>("ERROR", ex.getMessage(), null), HttpStatus.BAD_REQUEST);
-    }
-    
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleNotFound(ResourceNotFoundException ex) {
-        return new ResponseEntity<>(new ApiResponse<>("ERROR", ex.getMessage(), null), HttpStatus.NOT_FOUND);
-    }
-}
-```
-
-## Coding Standards
-
-- **No comments** unless absolutely necessary
-- **Clear names**: `userService` not `userSvc`
-- **Method names**: `getUserById`, `createUser`, `validateTenant`
-- **Constants**: `UPPER_SNAKE_CASE` with `private static final`
-- **Use Lombok**: `@Data`, `@Builder`, `@NoArgsConstructor`, `@AllArgsConstructor`
-- **Prefer records** for immutable DTOs
-- **Never return null**, use Optional
-
-## Security (OWASP)
-
-- Validate and sanitize all inputs
-- Use JPQL parameterized queries (prevent SQL injection)
-- Never log sensitive data (passwords, tokens)
-- Validate tenant access for every operation
-- Use `@PreAuthorize` for method-level security
-- Implement rate limiting
+**Stack**: Spring Boot 3, Java 21, Spring Data JPA, Lombok, MySQL, Flyway
 
 ## Architecture Flow
 
 ```
-Presentation → Application → Domain ← Infrastructure
+Presentation (Controllers, DTOs) 
+    → Application (Commands/Queries, Services)
+    → Domain (Entities, Repositories)
+    ← Infrastructure (Config, Multi-Tenancy)
 ```
 
-Domain has no dependencies on outer layers.
+**Golden Rule**: Application layer uses Commands/Queries, NOT Presentation DTOs.
+
+## Multi-Tenant (Database-per-Tenant)
+
+**Strategy:**
+
+- Platform DB: `platform_management` (control plane)
+- Tenant DBs: `ac_tenant_{id}` (data plane, physically isolated)
+- ❌ NO `tenant_id` columns in tenant entities
+- ✅ Hibernate DATABASE multi-tenancy
+- ✅ HikariCP cache (LRU: max 10 pools, 5 conn, 30m idle)
+
+**Context:**
+
+```java
+// TenantContext: ThreadLocal with tenantId + tenantDbName
+// TenantFilter: Extract X-Tenant-ID, validate active, set/clear in finally
+// MDC: tenantId, tenantDb, correlationId
+```
+
+## Flyway Migrations
+
+**Platform** (`db/platform/`): `V1__baseline.sql`, `R__seed_modules.sql`  
+**Tenant** (`db/tenant/{module}/`): `core/V1__baseline.sql`, `pagebuilder/V1__baseline.sql`
+
+**Rules:**
+
+- `hibernate.ddl-auto=none` (Flyway owns schema)
+- utf8mb4 / utf8mb4_unicode_ci
+- NO idempotent DDL logic (Flyway handles versioning)
+- CREATE DATABASE is ONLY string-concatenated SQL allowed
+
+## Domain Layer
+
+**Platform entities**: `@Table(schema="platform_management")`, `@Qualifier("platformDataSource")`  
+**Tenant entities**: Extend `BaseEntity`, NO tenant_id column  
+**i18n entities**: Extend `BaseI18nEntity`, `@ManyToOne` to base entity
+
+```java
+@Entity
+public class Page extends BaseEntity {
+    @Column(nullable = false) private String uid;
+    @Enumerated(EnumType.STRING) private PageStatus status;
+}
+
+@Entity
+public class PageI18n extends BaseI18nEntity {
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "page_id")
+    private Page page;
+    private String url, title;
+}
+```
+
+**Repositories**: Use `@EntityGraph` to avoid N+1, JPQL with parameters only.
+
+## Application Layer
+
+**Commands/Queries:**
+
+```java
+public record CreatePageCommand(String uid, Long categoryId, String styleClasses) {}
+public record PageDetailQuery(Long id, boolean includeTranslations) {}
+```
+
+**Services:**
+
+```java
+@Service
+public class PageServiceImpl implements PageService {
+    // Constructor injection (no @Autowired)
+    // Use @Transactional for multi-step ops
+    // Return Response DTOs only
+    // Validate UID uniqueness before create
+}
+```
+
+## Infrastructure
+
+**TenantContext**: ThreadLocal storing `tenantId`, `tenantDbName` + MDC  
+**TenantFilter**: Validate tenant exists & active, set context in try-finally  
+**MultiTenantConnectionProvider**: HikariCP cache with LRU eviction
+
+## Presentation
+
+**Controllers:**
+
+```java
+@RestController
+@RequestMapping("/pages")
+public class PageController {
+    // Map Request DTOs → Commands/Queries
+    // Return ResponseEntity<ApiResponse<T>>
+    // Never expose tenantId in responses
+    // @Valid for validation, @PreAuthorize for security
+}
+```
+
+## Provisioning
+
+```java
+@Async
+@Transactional
+public void executeProvisioning(Long jobId) {
+    try {
+        job.start();
+        createDatabaseIfNotExists(dbName); // 10%
+        runFlywayMigrations(modules); // 40-80%
+        job.complete(); // 100%
+    } catch (Exception ex) {
+        job.fail(truncateError(ex.getMessage())); // max 500 chars
+        log.error("correlationId: {}", MDC.get("correlationId"), ex);
+    }
+}
+```
+
+## Security (OWASP)
+
+- Bean Validation on inputs
+- JPQL parameterized queries (no string concat except CREATE DATABASE)
+- Never log sensitive data (passwords, tokens, PII)
+- Validate tenant active before ANY operation
+- Truncate API errors (500 chars), log full stacktrace with correlationId
+- Rate limiting on provisioning (5 req/min)
+
+## Quick Checklist
+
+- [ ] Commands/Queries in application (NOT Presentation DTOs)
+- [ ] NO tenant_id columns in tenant entities
+- [ ] Platform entities: @Qualifier("platformDataSource")
+- [ ] TenantFilter: try-finally with validation
+- [ ] MDC: tenantId, tenantDb, correlationId
+- [ ] Flyway: V1__, R__ (no idempotent DDL)
+- [ ] hibernate.ddl-auto=none
+- [ ] @EntityGraph for relationships
+- [ ] @Transactional for multi-step ops
+- [ ] Never expose tenantId in responses

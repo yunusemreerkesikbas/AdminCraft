@@ -19,27 +19,39 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    platform:
+      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:1234}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    tenant:
+      host: ${DB_HOST:localhost}
+      port: ${DB_PORT:3307}
+      username: ${DB_USERNAME:root}
+      password: ${DB_PASSWORD:1234}
+      driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
         show_sql: true
+        multiTenancy: DATABASE
+        multi_tenant_connection_provider: com.backend.infrastructure.tenant.MultiTenantConnectionProvider
+        tenant_identifier_resolver: com.backend.infrastructure.tenant.CurrentTenantIdentifierResolver
     show-sql: true
-    defer-datasource-initialization: false
 
-  sql:
-    init:
-      mode: never
-      data-locations: classpath:data.sql
-      schema-locations: classpath:schema-page-builder.sql
+  flyway:
+    enabled: true
+    locations: classpath:db/platform
+    baseline-on-migrate: true
+    baseline-version: 0
+    url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+    user: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
 
   messages:
     basename: i18n/messages
@@ -65,13 +77,19 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:mysql://localhost:3307/admincraft-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-    username: root
-    password: 1234
+    platform:
+      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      username: root
+      password: 1234
+    tenant:
+      host: localhost
+      port: 3307
+      username: root
+      password: 1234
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
 ---
 spring:

@@ -5,7 +5,7 @@ import com.backend.application.service.TenantLanguageService;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.LanguageProvisioningRequest;
 import com.backend.presentation.dto.request.TenantLanguagesUpdateRequest;
-import com.backend.presentation.dto.response.ProvisioningJobResponse;
+import com.backend.application.dto.provisioning.ProvisioningJobResponse;
 import com.backend.presentation.dto.response.TenantLanguagesResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -84,32 +84,33 @@ public class TenantLanguageController {
     }
   }
 
-  @PostMapping("/{tenantId}/languages/provision")
-  public ResponseEntity<ApiResponse<ProvisioningJobResponse>> provisionLanguages(
-      @PathVariable @NotNull @Min(1) Long tenantId,
-      @Valid @RequestBody LanguageProvisioningRequest request,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-    try {
-      Set<Language> languagesToProvision = request.languages();
-
-      if (languagesToProvision.isEmpty()) {
-        String message = messageSource.getMessage("tenant.languages.provision.none",
-            null, Locale.forLanguageTag(lang));
-        return ResponseEntity.ok(ApiResponse.success(message, null));
-      }
-
-      ProvisioningJobResponse jobResponse = provisioningService.createLanguageProvisioningJob(
-          tenantId, languagesToProvision);
-
-      String successMessage = messageSource.getMessage("tenant.languages.provision.started",
-          new Object[] { jobResponse.uuid() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.ok(ApiResponse.success(successMessage, jobResponse));
-    } catch (Exception ex) {
-      log.error("Error provisioning languages for tenantId={}: {}", tenantId, ex.getMessage());
-      String message = messageSource.getMessage("tenant.languages.provision.error",
-          new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error(message));
-    }
-  }
+  // TODO: Language provisioning removed - Sprint 12 refactored to database-per-tenant architecture
+  // @PostMapping("/{tenantId}/languages/provision")
+  // public ResponseEntity<ApiResponse<ProvisioningJobResponse>> provisionLanguages(
+  //     @PathVariable @NotNull @Min(1) Long tenantId,
+  //     @Valid @RequestBody LanguageProvisioningRequest request,
+  //     @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+  //   try {
+  //     Set<Language> languagesToProvision = request.languages();
+  //
+  //     if (languagesToProvision.isEmpty()) {
+  //       String message = messageSource.getMessage("tenant.languages.provision.none",
+  //           null, Locale.forLanguageTag(lang));
+  //       return ResponseEntity.ok(ApiResponse.success(message, null));
+  //     }
+  //
+  //     ProvisioningJobResponse jobResponse = provisioningService.createLanguageProvisioningJob(
+  //         tenantId, languagesToProvision);
+  //
+  //     String successMessage = messageSource.getMessage("tenant.languages.provision.started",
+  //         new Object[] { jobResponse.uuid() }, Locale.forLanguageTag(lang));
+  //     return ResponseEntity.ok(ApiResponse.success(successMessage, jobResponse));
+  //   } catch (Exception ex) {
+  //     log.error("Error provisioning languages for tenantId={}: {}", tenantId, ex.getMessage());
+  //     String message = messageSource.getMessage("tenant.languages.provision.error",
+  //         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+  //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+  //         .body(ApiResponse.error(message));
+  //   }
+  // }
 }
