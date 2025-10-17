@@ -10,10 +10,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ProvisioningModalComponent, ProvisioningModalData } from '@shared/components/provisioning-modal/provisioning-modal.component';
+import { ProvisionDialogComponent } from '@shared/components/provision-dialog/provision-dialog.component';
+import { ProvisionDialogData } from '@shared/components/provision-dialog/provision.types';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
@@ -53,6 +55,7 @@ import { CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../t
         MatIconModule,
         FormsModule,
         MatButtonModule,
+        MatTooltipModule,
         NgClass,
         DatePipe,
         TranslocoPipe,
@@ -192,12 +195,14 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     }
 
     #showProvisioningModal(tenantId: number, newLanguages: Language[]): void {
-        const modalData: ProvisioningModalData = {
+        const modalData: ProvisionDialogData = {
+            type: 'languages',
             tenantId,
+            tenantName: '',
             newLanguages
         };
 
-        const dialogRef = this.#dialog.open(ProvisioningModalComponent, {
+        const dialogRef = this.#dialog.open(ProvisionDialogComponent, {
             data: modalData,
             disableClose: true,
             width: '500px'
@@ -211,15 +216,17 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 .pipe(
                     take(1),
                     switchMap((job) => {
-                        const progressDialogRef = this.#dialog.open(ProvisioningModalComponent, {
+                        const progressDialogRef = this.#dialog.open(ProvisionDialogComponent, {
                             data: {
+                                type: 'languages',
                                 tenantId,
+                                tenantName: '',
                                 newLanguages,
                                 jobUuid: job.uuid,
                                 status: job.status,
                                 processedItems: job.processedItems,
                                 totalItems: job.totalItems
-                            } as ProvisioningModalData,
+                            } as ProvisionDialogData,
                             disableClose: true,
                             width: '500px'
                         });
@@ -271,5 +278,26 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
             ],
             i18n: []
         };
+    }
+
+    provisionTenant(tenant: Tenant): void {
+        const dialogData: ProvisionDialogData = {
+            type: 'modules',
+            tenantId: tenant.id,
+            tenantName: tenant.companyName
+        };
+
+        const dialogRef = this.#dialog.open(ProvisionDialogComponent, {
+            data: dialogData,
+            width: '800px',
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((success) => {
+            if (success) {
+                this.#notify.success('admin.provisioning.success');
+                this.refresh();
+            }
+        });
     }
 }

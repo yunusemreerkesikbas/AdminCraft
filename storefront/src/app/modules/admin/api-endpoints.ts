@@ -60,7 +60,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageCategoryI18n: 'page-categories/${categoryId}/i18n/${language}',
 
     // ----- PROVISIONING -----
-    provisioningJob: 'provisioning/jobs/${jobUuid}'
+    provisioningModulesCatalog: 'provisioning/modules/catalog',
+    provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',
+    provisioningJob: 'provisioning/jobs/${jobId}',
+    provisioningJobByUuid: 'provisioning/jobs/${jobUuid}'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;
