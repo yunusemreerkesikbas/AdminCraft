@@ -1,0 +1,20 @@
+<div class="flex items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <mat-checkbox
+        [checked]="isSelected()"
+        [disabled]="isDisabled()"
+        (change)="onToggle.emit()"
+    ></mat-checkbox>
+    <div class="flex-1">
+        <div class="font-medium">{{ module().name }}</div>
+        <div class="text-secondary text-sm">{{ module().description }}</div>
+        @if (module().deps && module().deps.length > 0) {
+            <div class="mt-2 flex flex-wrap gap-1">
+                @for (dep of module().deps; track dep) {
+                    <mat-chip-option class="text-xs">
+                        Requires: {{ dep }}
+                    </mat-chip-option>
+                }
+            </div>
+        }
+    </div>
+</div>

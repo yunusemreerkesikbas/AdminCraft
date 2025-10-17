@@ -1,0 +1,128 @@
+<div class="w-full max-w-3xl">
+    <h2 mat-dialog-title class="text-2xl font-semibold">
+        {{ 'admin.provisioning.title' | transloco }} - {{ data.tenantName }}
+    </h2>
+
+    <mat-dialog-content class="mat-typography">
+        <!-- Loading State -->
+        @if (isLoading()) {
+            <div class="flex items-center justify-center py-8">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+        }
+
+        <!-- Module Selection -->
+        @if (!isLoading() && !showProgress()) {
+            <div class="space-y-6">
+                <p class="text-secondary">
+                    {{ 'admin.provisioning.description' | transloco }}
+                </p>
+
+                <!-- Module Groups -->
+                @for (group of moduleGroups(); track group.type) {
+                    <div>
+                        <h3 class="mb-3 text-lg font-medium">
+                            {{ group.titleKey | transloco }}
+                        </h3>
+                        <div class="space-y-2">
+                            @for (module of group.modules; track module.code) {
+                                <spa-module-card
+                                    [module]="module"
+                                    [isSelected]="selectedModules().has(module.code)"
+                                    [isDisabled]="isModuleDisabled(module.code)"
+                                    (onToggle)="toggleModule(module.code)"
+                                />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Progress Phase -->
+        @if (showProgress()) {
+            <div class="space-y-4 py-4">
+                <div class="text-center">
+                    <div class="text-lg font-medium" [ngClass]="statusClass()">
+                        @switch (currentJob()?.status) {
+                            @case ('pending') {
+                                {{ 'admin.provisioning.status.pending' | transloco }}
+                            }
+                            @case ('running') {
+                                {{ 'admin.provisioning.status.running' | transloco }}
+                            }
+                            @case ('succeeded') {
+                                {{ 'admin.provisioning.status.succeeded' | transloco }}
+                            }
+                            @case ('failed') {
+                                {{ 'admin.provisioning.status.failed' | transloco }}
+                            }
+                        }
+                    </div>
+                </div>
+
+                <mat-progress-bar
+                    [mode]="progressMode()"
+                    [value]="progressValue()"
+                    [color]="progressColor()"
+                >
+                </mat-progress-bar>
+
+                <div class="text-secondary text-center text-sm">
+                    {{ progressValue() }}%
+                    {{ 'admin.provisioning.complete' | transloco }}
+                </div>
+
+                @if (currentJob()?.error) {
+                    <div class="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                        <div class="mb-1 font-medium text-red-600 dark:text-red-400">
+                            {{ 'admin.provisioning.error' | transloco }}
+                        </div>
+                        <div class="text-sm text-red-600 dark:text-red-400">
+                            {{ currentJob()?.error }}
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (error()) {
+            <div class="mt-4 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                <div class="text-red-600 dark:text-red-400">{{ error() }}</div>
+            </div>
+        }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <!-- Module Selection Actions -->
+        @if (!showProgress()) {
+            <button mat-button (click)="close()">
+                {{ 'common.cancel' | transloco }}
+            </button>
+            <button
+                mat-raised-button
+                color="primary"
+                [disabled]="!canStart() || isLoading()"
+                (click)="startProvisioning()"
+            >
+                {{ 'admin.provisioning.startButton' | transloco }}
+            </button>
+        }
+
+        <!-- Progress Actions -->
+        @if (showProgress()) {
+            @if (currentJob()?.status === 'failed') {
+                <button mat-button (click)="retry()">
+                    {{ 'admin.provisioning.retry' | transloco }}
+                </button>
+            }
+            <button
+                mat-raised-button
+                [disabled]="!canClose()"
+                (click)="close()"
+            >
+                {{ 'common.close' | transloco }}
+            </button>
+        }
+    </mat-dialog-actions>
+</div>

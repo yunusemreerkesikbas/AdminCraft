@@ -14,12 +14,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ProvisionDialogComponent } from '@shared/components/provision-dialog/provision-dialog.component';
-import { ProvisionDialogData } from '@shared/components/provision-dialog/provision.types';
+import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
+import { ModuleProvisionDialogData } from '@shared/components/module-provision-dialog/module-provision.types';
+import { LanguageProvisionDialogComponent } from '@shared/components/language-provision-dialog/language-provision-dialog.component';
+import { LanguageProvisionDialogData } from '@shared/components/language-provision-dialog/language-provision.types';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
-import { map, switchMap, take } from 'rxjs';
+import { take } from 'rxjs';
 import { TenantsService } from '../tenants.service';
 import { CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
@@ -195,14 +197,13 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     }
 
     #showProvisioningModal(tenantId: number, newLanguages: Language[]): void {
-        const modalData: ProvisionDialogData = {
-            type: 'languages',
+        const modalData: LanguageProvisionDialogData = {
             tenantId,
             tenantName: '',
             newLanguages
         };
 
-        const dialogRef = this.#dialog.open(ProvisionDialogComponent, {
+        const dialogRef = this.#dialog.open(LanguageProvisionDialogComponent, {
             data: modalData,
             disableClose: true,
             width: '500px'
@@ -213,12 +214,11 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
 
             this.service
                 .provisionLanguages(tenantId, { languages: newLanguages })
-                .pipe(
-                    take(1),
-                    switchMap((job) => {
-                        const progressDialogRef = this.#dialog.open(ProvisionDialogComponent, {
+                .pipe(take(1))
+                .subscribe({
+                    next: (job) => {
+                        this.#dialog.open(LanguageProvisionDialogComponent, {
                             data: {
-                                type: 'languages',
                                 tenantId,
                                 tenantName: '',
                                 newLanguages,
@@ -226,32 +226,10 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                                 status: job.status,
                                 processedItems: job.processedItems,
                                 totalItems: job.totalItems
-                            } as ProvisionDialogData,
+                            } as LanguageProvisionDialogData,
                             disableClose: true,
                             width: '500px'
                         });
-
-                        return this.service.pollProvisioningJob(job.uuid).pipe(
-                            map((updatedJob) => {
-                                progressDialogRef.componentInstance.data = {
-                                    ...progressDialogRef.componentInstance.data,
-                                    status: updatedJob.status,
-                                    processedItems: updatedJob.processedItems,
-                                    totalItems: updatedJob.totalItems,
-                                    errorMessage: updatedJob.errorMessage
-                                };
-                                return updatedJob;
-                            })
-                        );
-                    })
-                )
-                .subscribe({
-                    next: (job) => {
-                        if (job.status === 'COMPLETED') {
-                            this.#notify.success('admin.provisioning.completed');
-                        } else if (job.status === 'FAILED') {
-                            this.#notify.alert('admin.provisioning.failed');
-                        }
                     },
                     error: () => this.#notify.alert('admin.common.errors.unexpected')
                 });
@@ -281,13 +259,12 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     }
 
     provisionTenant(tenant: Tenant): void {
-        const dialogData: ProvisionDialogData = {
-            type: 'modules',
+        const dialogData: ModuleProvisionDialogData = {
             tenantId: tenant.id,
             tenantName: tenant.companyName
         };
 
-        const dialogRef = this.#dialog.open(ProvisionDialogComponent, {
+        const dialogRef = this.#dialog.open(ModuleProvisionDialogComponent, {
             data: dialogData,
             width: '800px',
             disableClose: true

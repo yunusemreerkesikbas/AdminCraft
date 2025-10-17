@@ -1,22 +1,12 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
-import { ModuleCatalog, ProvisioningJob } from './provision.types';
-
-export interface ApiResponse<T> {
-    result: string;
-    message: string;
-    data: T;
-}
-
-export interface ProvisionRequest {
-    modules: string[];
-}
+import { ModuleCatalog, ProvisioningJob, ApiResponse, ProvisionRequest } from './module-provision.types';
 
 @Injectable({
     providedIn: 'root'
 })
-export class ProvisioningService extends CrudHttpService<any, any, any> {
+export class ModuleProvisionService extends CrudHttpService<any, any, any> {
     protected endpoints: CrudEndpoints = {
         list: 'provisioningModulesCatalog',
         getById: 'provisioningJob',

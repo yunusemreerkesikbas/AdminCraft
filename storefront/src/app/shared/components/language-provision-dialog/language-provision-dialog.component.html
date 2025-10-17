@@ -1,0 +1,85 @@
+<div class="w-full max-w-xl">
+    <h2 mat-dialog-title class="text-2xl font-semibold">
+        {{ 'admin.common.provisioning.title' | transloco }}
+    </h2>
+
+    <mat-dialog-content class="mat-typography">
+        <!-- Confirmation Phase -->
+        @if (isConfirmationPhase()) {
+            <div class="space-y-4">
+                <p>{{ 'admin.common.provisioning.message' | transloco }}</p>
+                @if (data.newLanguages && data.newLanguages.length > 0) {
+                    <ul class="list-disc list-inside space-y-1">
+                        @for (lang of data.newLanguages; track lang) {
+                            <li>{{ 'admin.common.languages.' + lang.toLowerCase() | transloco }}</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+
+        <!-- Progress Phase -->
+        @if (isProgressPhase()) {
+            <div class="space-y-4 py-4">
+                <p>{{ 'admin.common.provisioning.progress' | transloco }}</p>
+
+                <mat-progress-bar
+                    [mode]="progressMode()"
+                    [value]="progressPercentage()"
+                    [color]="progressColor()"
+                >
+                </mat-progress-bar>
+
+                @if (languageJob()?.status) {
+                    <p class="text-center font-medium" [ngClass]="statusClass()">
+                        {{ 'admin.common.provisioning.status.' + languageJob()!.status.toLowerCase() | transloco }}
+                    </p>
+                }
+
+                @if (languageJob()?.totalItems && languageJob()!.totalItems > 0) {
+                    <p class="text-secondary text-center text-sm">
+                        {{ 'admin.common.provisioning.details' | transloco: {
+                            processed: languageJob()!.processedItems || 0,
+                            total: languageJob()!.totalItems
+                        } }}
+                    </p>
+                }
+
+                @if (isCompleted()) {
+                    <div class="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+                        <p class="text-green-600 dark:text-green-400">
+                            {{ 'admin.common.provisioning.success' | transloco }}
+                        </p>
+                    </div>
+                }
+
+                @if (isFailed() && languageJob()?.errorMessage) {
+                    <div class="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                        <p class="text-red-600 dark:text-red-400">
+                            {{ 'admin.common.provisioning.error' | transloco: { message: languageJob()!.errorMessage } }}
+                        </p>
+                    </div>
+                }
+            </div>
+        }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <!-- Confirmation Phase Actions -->
+        @if (isConfirmationPhase()) {
+            <button mat-button (click)="onCancel()">
+                {{ 'admin.common.provisioning.cancel' | transloco }}
+            </button>
+            <button mat-flat-button color="primary" (click)="onConfirm()">
+                {{ 'admin.common.provisioning.confirm' | transloco }}
+            </button>
+        }
+
+        <!-- Progress Phase Actions -->
+        @if (isProgressPhase() && canClose()) {
+            <button mat-flat-button color="primary" (click)="close()">
+                {{ 'admin.common.actions.close' | transloco }}
+            </button>
+        }
+    </mat-dialog-actions>
+</div>

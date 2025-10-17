@@ -45,4 +45,8 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
             takeWhile((job) => job.status === 'PENDING' || job.status === 'RUNNING', true)
         );
     }
+
+    getLanguageProvisioningJobStatus(jobUuid: string): Observable<ProvisioningJobDto> {
+        return this.getProvisioningJob(jobUuid);
+    }
 }
