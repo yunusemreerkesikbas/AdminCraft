@@ -239,7 +239,33 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 - [x] Implement job status polling and retry in Admin UI
 - [x] Add Testcontainers tests for isolation and idempotency
 
+## Post-Implementation Review (PR #68)
 
+**Code Review Findings:**
 
+- ⚠️ @Async self-invocation → Spring proxy won't work
+- ⚠️ Rate limiting not implemented (required in sprint plan)
+- ⚠️ Idempotency test missing
+- ⚠️ TenantFilter has 0% unit test coverage
+- 🐛 TenantFilter throws exception instead of sending HTTP error
+
+**Fixes Applied (3 commits):**
+
+1. **b83c011** - Refactor: Extract async to `AsyncProvisioningExecutor`
+   - Separate component ensures Spring @Async proxy works
+   - Added thread name logging for verification
+   - Expected: `task-executor-X` (not `http-nio-X`)
+
+2. **302ac20** - Feature: Rate limiting (5 req/min per tenant)
+   - Added Guava 33.0.0-jre dependency
+   - Per-tenant RateLimiter with ConcurrentHashMap cache
+   - Returns 429 Too Many Requests on limit exceeded
+
+3. **05b93f4** - Tests: Idempotency + TenantFilter unit tests
+   - Idempotency test: Re-provision same modules → succeeds
+   - 11 TenantFilter unit tests (whitelist, validation, errors, context)
+   - Bug fix: `.orElseThrow()` → `.orElse(null)` with proper 400/403 responses
+
+**Final Status:** ✅ All review issues resolved, tests passing (11/11)
 
 
