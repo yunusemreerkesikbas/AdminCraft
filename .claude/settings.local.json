@@ -91,7 +91,8 @@
       "Bash(awk:*)",
       "Bash(Select-String -Pattern \"(Starting|Started|Error|Exception|bean)\")",
       "Bash(xargs kill:*)",
-      "Bash(gh pr checks:*)"
+      "Bash(gh pr checks:*)",
+      "Bash(Select-Object -First 150)"
     ],
     "deny": [],
     "additionalDirectories": [

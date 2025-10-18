@@ -1,5 +1,6 @@
 package com.backend.application.service;
 
+import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.presentation.dto.request.CreateTenantRequest;
@@ -24,6 +25,7 @@ public interface TenantService {
 
     boolean isCustomDomainAvailable(String customDomain);
 
-    // Security access control method
     boolean hasAccessToTenant(String currentUserEmail, Long tenantId);
+
+    List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage);
 }

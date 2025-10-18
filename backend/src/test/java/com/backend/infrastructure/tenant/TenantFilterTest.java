@@ -219,4 +219,63 @@ class TenantFilterTest {
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
   }
+
+  @Test
+  void shouldBypassFilterForTenantsPathsWhenSuperAdmin() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/tenants");
+
+    // SUPER_ADMIN auth
+    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            "admin@platform.local",
+            null,
+            java.util.List
+                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(tenantContext, never()).setTenantId(anyString());
+
+    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void shouldNotBypassTenantsPathsForNonSuperAdmin() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/tenants");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+
+    // Non-super admin (no authorities)
+    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            "user@tenant.local", null, java.util.List.of()));
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+    verify(filterChain, never()).doFilter(request, response);
+
+    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void shouldBypassFilterForTenantsModulesPathWhenSuperAdmin() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/tenants/1/modules");
+
+    // SUPER_ADMIN auth
+    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            "admin@platform.local",
+            null,
+            java.util.List
+                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(tenantContext, never()).setTenantId(anyString());
+
+    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+  }
 }
