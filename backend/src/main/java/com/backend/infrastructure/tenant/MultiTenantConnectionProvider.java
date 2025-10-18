@@ -48,10 +48,6 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
   @Override
   protected DataSource selectAnyDataSource() {
-    // Return existing datasource if available, otherwise create a default
-    // connection
-    // This is called during Hibernate initialization before any tenant context is
-    // set
     return tenantDataSources.values().stream()
         .findFirst()
         .orElseGet(() -> createDefaultDataSource());
@@ -59,10 +55,6 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
   private DataSource createDefaultDataSource() {
     log.debug("Creating default datasource for Hibernate initialization");
-    // Return a minimal datasource pointing to any tenant DB (will be replaced by
-    // actual tenant DB)
-    // This is just for Hibernate bootstrap, actual queries will use tenant-specific
-    // datasources
     HikariConfig config = new HikariConfig();
     config.setJdbcUrl(String.format(
         "jdbc:mysql://%s:%s/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul",

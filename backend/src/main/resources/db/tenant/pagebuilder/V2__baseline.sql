@@ -77,7 +77,6 @@ CREATE TABLE page_categories (
     INDEX idx_page_category_status (status),
     INDEX idx_page_category_parent_sort (parent_id, sort_order),
     
-    CONSTRAINT chk_category_no_self_parent CHECK (id != parent_id),
     CONSTRAINT chk_category_level_positive CHECK (level > 0 AND level <= 50),
     CONSTRAINT chk_category_path_format CHECK (path REGEXP '^(/[a-z0-9-]+)+$' OR path = '/' OR path IS NULL),
     CONSTRAINT chk_category_slug_format CHECK (slug REGEXP '^[a-z0-9-]+$'),

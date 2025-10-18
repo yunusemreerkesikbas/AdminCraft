@@ -22,11 +22,7 @@ import java.util.Map;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(
-    basePackages = "com.backend.infrastructure.persistence.platform.repository",
-    entityManagerFactoryRef = "platformEntityManagerFactory",
-    transactionManagerRef = "platformTransactionManager"
-)
+@EnableJpaRepositories(basePackages = "com.backend.infrastructure.persistence.platform.repository", entityManagerFactoryRef = "platformEntityManagerFactory", transactionManagerRef = "platformTransactionManager")
 public class PlatformDataSourceConfig {
 
   @Primary
@@ -66,7 +62,3 @@ public class PlatformDataSourceConfig {
     return new JpaTransactionManager(entityManagerFactory);
   }
 }
-
-
-
-
