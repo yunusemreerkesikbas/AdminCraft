@@ -8,6 +8,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -48,10 +51,26 @@ public class TenantFilter extends OncePerRequestFilter {
     try {
       String tenantIdHeader = request.getHeader(TENANT_HEADER);
 
-      if (tenantIdHeader == null || tenantIdHeader.isBlank()) {
-        log.warn("Missing tenant header for request: {}", path);
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
-        return;
+      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+      boolean isSuperAdmin = false;
+      if (auth != null && auth.getAuthorities() != null) {
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+          if ("ROLE_SUPER_ADMIN".equals(authority.getAuthority())) {
+            isSuperAdmin = true;
+            break;
+          }
+        }
+      }
+
+      if ((tenantIdHeader == null || tenantIdHeader.isBlank())) {
+        if (isSuperAdmin) {
+          filterChain.doFilter(request, response);
+          return;
+        } else {
+          log.warn("Missing tenant header for request: {}", path);
+          response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+          return;
+        }
       }
 
       Long tenantId = Long.parseLong(tenantIdHeader);
@@ -91,6 +110,7 @@ public class TenantFilter extends OncePerRequestFilter {
   private boolean isWhitelisted(String path) {
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
+        path.startsWith("/api/auth") ||
         path.startsWith("/api/platform") ||
         path.startsWith("/api/modules/catalog") ||
         path.startsWith("/api/provisioning");

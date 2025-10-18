@@ -20,7 +20,7 @@ spring:
 
   datasource:
     platform:
-      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      jdbc-url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
       username: ${DB_USERNAME:root}
       password: ${DB_PASSWORD:1234}
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -78,7 +78,7 @@ spring:
 
   datasource:
     platform:
-      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      jdbc-url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
       username: root
       password: 1234
     tenant:

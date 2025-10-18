@@ -10,6 +10,9 @@ import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.infrastructure.security.JwtTokenProvider;
+import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
+import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
+import jakarta.servlet.http.HttpServletRequest;
 import com.backend.presentation.dto.request.LoginRequest;
 import com.backend.presentation.dto.response.LoginResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -24,23 +27,32 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
+    private final PlatformAdminUserRepository platformAdminUserRepository;
+    private final HttpServletRequest request;
 
     public AuthenticationServiceImpl(
             UserRepository userRepository,
             JwtTokenProvider jwtTokenProvider,
             PasswordEncoder passwordEncoder,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            PlatformAdminUserRepository platformAdminUserRepository,
+            HttpServletRequest request) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.tenantRepository = tenantRepository;
+        this.platformAdminUserRepository = platformAdminUserRepository;
+        this.request = request;
     }
 
     @Override
     public LoginResponse authenticate(LoginRequest loginRequest) {
         log.info("Authenticating user with email: {}", loginRequest.email());
 
-        // Find user by email
+        String tenantIdHeader = request.getHeader("X-Tenant-ID");
+        if (tenantIdHeader == null || tenantIdHeader.isBlank()) {
+            return authenticatePlatformAdmin(loginRequest);
+        }
         User user = userRepository.findByEmail(loginRequest.email())
                 .orElseThrow(() -> {
                     log.warn("User not found for email: {}", loginRequest.email());
@@ -53,7 +65,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.debug("Password hash length: {}",
                 user.getPasswordHash() != null ? user.getPasswordHash().length() : "null");
 
-        // Check if user can login (includes active, email verified, not locked checks)
         if (!user.canLogin()) {
             log.warn("User cannot login - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                     loginRequest.email(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
@@ -100,6 +111,36 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 resolveTenantSubdomain(user.getTenantId()));
     }
 
+    private LoginResponse authenticatePlatformAdmin(LoginRequest loginRequest) {
+        // Lookup platform admin by email
+        PlatformAdminUser admin = platformAdminUserRepository
+                .findByEmailAndIsActiveTrue(loginRequest.email())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        // Verify password
+        boolean passwordMatches = passwordEncoder.matches(loginRequest.password(), admin.getPasswordHash());
+        if (!passwordMatches) {
+            throw new InvalidCredentialsException();
+        }
+
+        // Issue token with role SUPER_ADMIN and no tenantId
+        String accessToken = jwtTokenProvider.createAccessToken(admin.getEmail(), "SUPER_ADMIN", null);
+        String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpiration(),
+                admin.getId(),
+                admin.getEmail(),
+                admin.getFullName(),
+                "SUPER_ADMIN",
+                null,
+                "TR", // default language for platform admin (could be extended later)
+                null);
+    }
+
     @Override
     public LoginResponse refreshToken(String refreshToken) {
         log.info("Refreshing token");
@@ -109,22 +150,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 !jwtTokenProvider.isRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
         }
-
-        // Extract email from token
         String email = jwtTokenProvider.getEmailFromToken(refreshToken);
-
-        // Find user
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
-
-        // Check if user can still login
         if (!user.canLogin()) {
             log.warn("User cannot refresh token - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                     email, user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
             throw new UserAccountDisabledException();
         }
-
-        // Generate new tokens with tenantId included
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(),
                 user.getTenantId());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
@@ -150,12 +183,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Logging out user");
 
         try {
-            // Validate token
             if (!jwtTokenProvider.validateToken(token)) {
                 throw new InvalidTokenException("Invalid token");
             }
-
-            // Extract email from token for logging
             String email = jwtTokenProvider.getEmailFromToken(token);
 
             // TODO: Add token to blacklist/invalidate token
