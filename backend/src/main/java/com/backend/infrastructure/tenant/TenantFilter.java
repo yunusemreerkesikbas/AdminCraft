@@ -44,8 +44,27 @@ public class TenantFilter extends OncePerRequestFilter {
 
     String path = request.getRequestURI();
     if (isWhitelisted(path)) {
-      filterChain.doFilter(request, response);
-      return;
+      if (path.startsWith("/api/tenants")) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isSuperAdmin = false;
+        if (auth != null && auth.getAuthorities() != null) {
+          for (GrantedAuthority authority : auth.getAuthorities()) {
+            if ("ROLE_SUPER_ADMIN".equals(authority.getAuthority())) {
+              isSuperAdmin = true;
+              break;
+            }
+          }
+        }
+        if (!isSuperAdmin) {
+          // Not super admin -> do not bypass; proceed with normal tenant checks
+        } else {
+          filterChain.doFilter(request, response);
+          return;
+        }
+      } else {
+        filterChain.doFilter(request, response);
+        return;
+      }
     }
 
     try {

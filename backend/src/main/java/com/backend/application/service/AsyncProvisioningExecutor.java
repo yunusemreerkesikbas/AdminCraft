@@ -186,6 +186,13 @@ public class AsyncProvisioningExecutor {
     LocalDateTime now = LocalDateTime.now();
 
     for (String moduleCode : modules) {
+      // Defensive: validate module codes although FE/BE coordinate via enums
+      try {
+        com.backend.domain.enums.ModuleCode.fromCode(moduleCode);
+      } catch (IllegalArgumentException ex) {
+        log.warn("Skipping unknown module code during provisioning: {}", moduleCode);
+        continue;
+      }
       TenantModule tenantModule = TenantModule.builder()
           .tenantId(tenantId)
           .moduleCode(moduleCode)

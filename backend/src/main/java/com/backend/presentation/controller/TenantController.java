@@ -74,6 +74,7 @@ public class TenantController {
         }
 
         @GetMapping
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
         public ResponseEntity<ApiResponse<List<TenantResponse>>> getAllTenants(
                         @RequestParam(required = false) TenantStatus status,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -141,10 +142,16 @@ public class TenantController {
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                         List<TenantModuleResponse> modules = tenantService.getTenantModules(tenantId, displayLanguage);
                         return ResponseEntity.ok(ApiResponse.success(modules));
+                } catch (IllegalArgumentException notFound) {
+                        log.error("Tenant not found when fetching modules for tenant {}", tenantId);
+                        String message = messageSource.getMessage("tenant.not.found", new Object[] { tenantId },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error fetching modules for tenant {}: {}", tenantId, ex.getMessage());
+                        log.error("Error fetching modules for tenant {}", tenantId, ex);
                         String message = messageSource.getMessage("tenant.modules.error",
-                                        new Object[] { tenantId, ex.getMessage() },
+                                        new Object[] { tenantId },
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
