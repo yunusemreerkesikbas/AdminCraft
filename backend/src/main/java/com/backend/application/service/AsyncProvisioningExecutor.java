@@ -2,7 +2,9 @@ package com.backend.application.service;
 
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.Tenant;
+import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
+import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -21,17 +23,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Separate component for async provisioning execution.
- * This ensures Spring's @Async proxy mechanism works correctly
- * (cannot self-invoke @Async methods from same class).
- */
 @Slf4j
 @Component
 public class AsyncProvisioningExecutor {
 
   private final TenantPlatformRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
+  private final TenantModuleRepository tenantModuleRepository;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -46,15 +44,16 @@ public class AsyncProvisioningExecutor {
   private String dbPassword;
 
   public AsyncProvisioningExecutor(TenantPlatformRepository tenantRepository,
-      ProvisioningJobRepository jobRepository) {
+      ProvisioningJobRepository jobRepository,
+      TenantModuleRepository tenantModuleRepository) {
     this.tenantRepository = tenantRepository;
     this.jobRepository = jobRepository;
+    this.tenantModuleRepository = tenantModuleRepository;
   }
 
   @Async
   @Transactional("platformTransactionManager")
   public void executeProvisioning(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
-    // Log thread name to verify async execution
     log.info("Async provisioning started on thread: {}", Thread.currentThread().getName());
 
     MDC.put("correlationId", correlationId);
@@ -75,6 +74,9 @@ public class AsyncProvisioningExecutor {
 
       updateProgress(job, 40);
       runMigrations(tenant.getDbName(), modules);
+
+      updateProgress(job, 70);
+      insertTenantModules(tenant.getId(), modules);
 
       updateProgress(job, 90);
       tenant.setStatus("ACTIVE");
@@ -175,5 +177,26 @@ public class AsyncProvisioningExecutor {
   private void updateProgress(ProvisioningJob job, int progress) {
     job.setProgress(progress);
     jobRepository.save(job);
+  }
+
+  private void insertTenantModules(Long tenantId, List<String> modules) {
+    log.info("Inserting tenant_modules records for tenant {} with modules: {}", tenantId, modules);
+
+    List<TenantModule> tenantModules = new ArrayList<>();
+    LocalDateTime now = LocalDateTime.now();
+
+    for (String moduleCode : modules) {
+      TenantModule tenantModule = TenantModule.builder()
+          .tenantId(tenantId)
+          .moduleCode(moduleCode)
+          .status("enabled")
+          .installedAt(now)
+          .build();
+      tenantModules.add(tenantModule);
+      log.debug("Prepared tenant_module record: tenantId={}, moduleCode={}", tenantId, moduleCode);
+    }
+
+    tenantModuleRepository.saveAll(tenantModules);
+    log.info("Successfully inserted {} tenant_modules records for tenant {}", tenantModules.size(), tenantId);
   }
 }

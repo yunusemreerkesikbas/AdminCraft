@@ -219,4 +219,24 @@ class TenantFilterTest {
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
   }
+
+  @Test
+  void shouldBypassFilterForTenantsPaths() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/tenants");
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(tenantContext, never()).setTenantId(anyString());
+  }
+
+  @Test
+  void shouldBypassFilterForTenantsModulesPath() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/tenants/1/modules");
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(tenantContext, never()).setTenantId(anyString());
+  }
 }

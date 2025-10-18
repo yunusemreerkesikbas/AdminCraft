@@ -1,11 +1,14 @@
 package com.backend.application.service;
 
+import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
+import com.backend.infrastructure.persistence.platform.entity.TenantModule;
+import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
 import com.backend.presentation.dto.response.TenantResponse;
@@ -29,6 +32,7 @@ public class TenantServiceImpl implements TenantService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final ProvisioningService provisioningService;
+    private final TenantModuleRepository tenantModuleRepository;
 
     @Override
     @Transactional
@@ -60,8 +64,6 @@ public class TenantServiceImpl implements TenantService {
         return TenantResponse.from(tenant, displayLanguage);
     }
 
-    // Removed getTenantBySubdomain
-
     @Override
     public List<TenantResponse> getAllTenants(Language displayLanguage) {
         return tenantRepository.findAll().stream()
@@ -81,10 +83,6 @@ public class TenantServiceImpl implements TenantService {
     public TenantResponse updateTenant(Long id, UpdateTenantRequest request, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-
-        // TODO: Language provisioning removed - Sprint 12 refactored to database-per-tenant architecture
-        // Track old supported languages to detect newly added ones
-        // List<Language> oldSupportedLanguages = new ArrayList<>(tenant.getSupportedLanguages());
 
         if (request.companyName() != null) {
             tenant.setCompanyName(request.companyName());
@@ -126,38 +124,8 @@ public class TenantServiceImpl implements TenantService {
 
         Tenant updatedTenant = tenantRepository.save(tenant);
 
-        // TODO: Language provisioning removed - Sprint 12 refactored to database-per-tenant architecture
-        // Detect newly added languages and trigger provisioning
-        // if (request.supportedLanguages() != null && !request.supportedLanguages().isEmpty()) {
-        //     List<Language> newLanguages = request.supportedLanguages().stream()
-        //             .filter(lang -> !oldSupportedLanguages.contains(lang))
-        //             .toList();
-        //
-        //     if (!newLanguages.isEmpty()) {
-        //         log.info("Detected {} new languages for tenant {}: {}",
-        //                 newLanguages.size(), id, newLanguages);
-        //
-        //         try {
-        //             provisioningService.createLanguageProvisioningJob(id, new java.util.HashSet<>(newLanguages));
-        //             log.info("Provisioning job created successfully for tenant {} with languages: {}",
-        //                     id, newLanguages);
-        //         } catch (Exception ex) {
-        //             log.error("Failed to create provisioning job for tenant {} with languages {}: {}",
-        //                     id, newLanguages, ex.getMessage(), ex);
-        //             // Don't fail the tenant update if provisioning fails
-        //             // The provisioning can be retried manually if needed
-        //         }
-        //     }
-        // }
-
         return TenantResponse.from(updatedTenant, displayLanguage);
     }
-
-    // Removed activateTenant
-
-    // Removed suspendTenant
-
-    // Removed setMaintenanceMode
 
     @Override
     @Transactional
@@ -168,24 +136,17 @@ public class TenantServiceImpl implements TenantService {
         tenantRepository.deleteById(id);
     }
 
-    // Removed isSubdomainAvailable
-
     @Override
     public boolean isCustomDomainAvailable(String customDomain) {
         return !tenantRepository.existsByCustomDomain(customDomain);
     }
-
-    // Removed getTenantCountByStatus
 
     @Override
     public boolean hasAccessToTenant(String currentUserEmail, Long tenantId) {
         log.debug("Checking tenant access for user {} to tenant {}", currentUserEmail, tenantId);
 
         try {
-            // Get the current authentication context
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            // First, try to get tenantId from the authentication details (JWT token)
             if (authentication != null && authentication.getDetails() instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
@@ -193,14 +154,10 @@ public class TenantServiceImpl implements TenantService {
                 Long userTenantId = (Long) details.get("tenantId");
 
                 log.debug("User {} has role {} and tenantId {} from token", currentUserEmail, role, userTenantId);
-
-                // SUPER_ADMIN users have access to all tenants
                 if ("SUPER_ADMIN".equals(role)) {
                     log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
                     return true;
                 }
-
-                // For other roles, check if user's tenant matches the requested tenant
                 if (userTenantId != null && userTenantId.equals(tenantId)) {
                     log.debug("User {} has access to their own tenant {}", currentUserEmail, tenantId);
                     return true;
@@ -210,11 +167,7 @@ public class TenantServiceImpl implements TenantService {
                         userTenantId);
                 return false;
             }
-
-            // Fallback: if authentication details are not available, query the database
             log.debug("Authentication details not available, falling back to database query");
-
-            // Find the current user
             Optional<User> currentUser = userRepository.findByEmail(currentUserEmail);
             if (currentUser.isEmpty()) {
                 log.warn("User not found: {}", currentUserEmail);
@@ -222,14 +175,10 @@ public class TenantServiceImpl implements TenantService {
             }
 
             User user = currentUser.get();
-
-            // SUPER_ADMIN users have access to all tenants
             if (user.getRole().name().equals("SUPER_ADMIN")) {
                 log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
                 return true;
             }
-
-            // For other roles, check if user belongs to the tenant
             boolean hasAccess = user.getTenantId().equals(tenantId);
             log.debug("User {} access to tenant {}: {} (user tenant: {})", currentUserEmail, tenantId, hasAccess,
                     user.getTenantId());
@@ -240,5 +189,24 @@ public class TenantServiceImpl implements TenantService {
                     currentUserEmail, tenantId, ex.getMessage());
             return false; // Deny access on error for security
         }
+    }
+
+    @Override
+    public List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage) {
+        log.debug("Fetching modules for tenant: {}", tenantId);
+        tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + tenantId));
+        List<TenantModule> tenantModules = tenantModuleRepository.findByTenantIdAndStatus(tenantId, "enabled");
+        return tenantModules.stream()
+                .map(tm -> TenantModuleResponse.builder()
+                        .id(tm.getId())
+                        .moduleCode(tm.getModuleCode())
+                        .moduleName(
+                                tm.getModuleCatalog() != null ? tm.getModuleCatalog().getName() : tm.getModuleCode())
+                        .status(tm.getStatus())
+                        .targetVersion(tm.getTargetVersion())
+                        .installedAt(tm.getInstalledAt())
+                        .build())
+                .toList();
     }
 }
