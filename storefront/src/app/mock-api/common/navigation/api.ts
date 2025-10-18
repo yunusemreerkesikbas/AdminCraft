@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
 import { FuseMockApiService } from '@fuse/lib/mock-api';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import {
     compactNavigation,
     defaultNavigation,
@@ -20,21 +21,20 @@ export class NavigationMockApi {
     private readonly _horizontalNavigation: FuseNavigationItem[] =
         horizontalNavigation;
 
-    /**
-     * Constructor
-     */
-    constructor(private _fuseMockApiService: FuseMockApiService) {
-        // Register Mock API handlers
+    private _enabledModules: string[] = [];
+
+
+    constructor(
+        private _fuseMockApiService: FuseMockApiService,
+        private _tenantContext: TenantContextService
+    ) {
+        this._tenantContext.tenantModules$.subscribe((modules) => {
+            this._enabledModules = modules;
+        });
+
         this.registerHandlers();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Register Mock API handlers
-     */
     registerHandlers(): void {
         // -----------------------------------------------------------------------------------------------------
         // @ Navigation - GET
@@ -103,10 +103,48 @@ export class NavigationMockApi {
             updateLinks(navCopy.futuristic);
             updateLinks(navCopy.horizontal);
 
+            // Filter navigation by enabled modules
+            const filteredNav = {
+                default: this.filterNavigationByModules(navCopy.default),
+                compact: this.filterNavigationByModules(navCopy.compact),
+                futuristic: this.filterNavigationByModules(navCopy.futuristic),
+                horizontal: this.filterNavigationByModules(navCopy.horizontal)
+            };
+
             return [
                 200,
-                navCopy,
+                filteredNav,
             ];
         });
+    }
+
+    /**
+     * Filter navigation items based on enabled modules
+     */
+    private filterNavigationByModules(items: FuseNavigationItem[]): FuseNavigationItem[] {
+        return items
+            .map(item => {
+                const itemCopy = { ...item };
+
+                // Platform module (requiredModule === null or undefined) → always show
+                if (!itemCopy.requiredModule) {
+                    if (itemCopy.children?.length) {
+                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
+                    }
+                    return itemCopy;
+                }
+
+                // Tenant module → show only if enabled
+                if (this._enabledModules.includes(itemCopy.requiredModule)) {
+                    if (itemCopy.children?.length) {
+                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
+                    }
+                    return itemCopy;
+                }
+
+                // Module not enabled → hide item
+                return null;
+            })
+            .filter(item => item !== null) as FuseNavigationItem[];
     }
 }

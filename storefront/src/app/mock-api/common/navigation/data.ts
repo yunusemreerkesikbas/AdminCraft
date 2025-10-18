@@ -2,7 +2,7 @@
 import { FuseNavigationItem } from '@fuse/components/navigation';
 
 export const defaultNavigation: FuseNavigationItem[] = [
-    
+
     {
         id: 'apps',
         title: 'Yönetim',
@@ -17,6 +17,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:users',
                 link: 'tenants',
+                requiredModule: null, // Platform module - always visible
             },
             {
                 id: 'apps.custom.media',
@@ -24,6 +25,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:photo',
                 link: 'media',
+                requiredModule: 'media', // Requires media module
             },
             {
                 id: 'apps.custom.users',
@@ -31,6 +33,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:user-group',
                 link: 'users',
+                requiredModule: 'core', // Requires core module
             },
 
             {
@@ -39,6 +42,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:globe-alt',
                 link: 'sites',
+                requiredModule: 'core', // Requires core module
             },
             {
                 id: 'apps.custom.pagebuilder',
@@ -46,6 +50,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:rectangle-stack',
                 link: 'pages',
+                requiredModule: 'pagebuilder', // Requires pagebuilder module
             },
             {
                 id: 'apps.custom.pagebuilder.categories',
@@ -53,6 +58,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:folder',
                 link: 'pages/categories',
+                requiredModule: 'page_categories', // Requires page_categories module
             },
             {
                 id: 'apps.custom.settings',
@@ -60,6 +66,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:cog-6-tooth',
                 link: 'settings',
+                requiredModule: 'site_settings', // Requires site_settings module
             },
         ],
     },
