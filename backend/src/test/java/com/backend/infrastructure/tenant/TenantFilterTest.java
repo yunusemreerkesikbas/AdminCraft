@@ -64,6 +64,32 @@ class TenantFilterTest {
     verify(filterChain, never()).doFilter(request, response);
   }
 
+  // SUPER_ADMIN tokens should bypass tenant header requirement
+  // Note: We simulate SecurityContext here minimally by not asserting details;
+  // focus is bypass behavior
+  @Test
+  void shouldBypassWhenSuperAdminAndNoTenantHeader() throws Exception {
+    when(request.getRequestURI()).thenReturn("/api/pages");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+
+    // Simulate JwtAuthenticationFilter having set ROLE_SUPER_ADMIN
+    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            "admin@platform.local",
+            null,
+            java.util.List
+                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(filterChain).doFilter(request, response);
+    verify(response, never()).sendError(anyInt(), anyString());
+
+    // cleanup
+    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+  }
+
   @Test
   void shouldReturnBadRequestWhenTenantHeaderBlank() throws Exception {
     when(request.getRequestURI()).thenReturn("/api/pages");

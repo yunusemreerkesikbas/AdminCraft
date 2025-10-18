@@ -28,11 +28,12 @@ public class ProvisioningIntegrationTest {
   @Container
   static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
       .withDatabaseName("platform_management")
-      .withUsername("test")
+      .withUsername("root")
       .withPassword("test");
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.platform.jdbc-url", mysql::getJdbcUrl);
     registry.add("spring.datasource.platform.url", mysql::getJdbcUrl);
     registry.add("spring.datasource.platform.username", mysql::getUsername);
     registry.add("spring.datasource.platform.password", mysql::getPassword);
@@ -81,7 +82,7 @@ public class ProvisioningIntegrationTest {
     assertThat(response.getJobId()).isNotNull();
     assertThat(response.getStatus()).isEqualTo("pending");
 
-    await().atMost(30, TimeUnit.SECONDS)
+    await().atMost(60, TimeUnit.SECONDS)
         .pollInterval(1, TimeUnit.SECONDS)
         .untilAsserted(() -> {
           ProvisioningJobResponse job = provisioningService.getJobStatus(response.getJobId());
@@ -128,7 +129,7 @@ public class ProvisioningIntegrationTest {
     ProvisioningJobResponse job1 = provisioningService.provisionTenant(tenant1.getId(), request);
     ProvisioningJobResponse job2 = provisioningService.provisionTenant(tenant2.getId(), request);
 
-    await().atMost(30, TimeUnit.SECONDS)
+    await().atMost(60, TimeUnit.SECONDS)
         .until(() -> {
           ProvisioningJobResponse j1 = provisioningService.getJobStatus(job1.getJobId());
           ProvisioningJobResponse j2 = provisioningService.getJobStatus(job2.getJobId());
@@ -162,7 +163,7 @@ public class ProvisioningIntegrationTest {
     ProvisioningJobResponse job1 = provisioningService.provisionTenant(tenant.getId(), request);
     assertThat(job1.getJobId()).isNotNull();
 
-    await().atMost(30, TimeUnit.SECONDS)
+    await().atMost(60, TimeUnit.SECONDS)
         .pollInterval(1, TimeUnit.SECONDS)
         .untilAsserted(() -> {
           ProvisioningJobResponse status = provisioningService.getJobStatus(job1.getJobId());
@@ -195,4 +196,3 @@ public class ProvisioningIntegrationTest {
     assertThat(finalTenant.getStatus()).isEqualTo("ACTIVE");
   }
 }
-

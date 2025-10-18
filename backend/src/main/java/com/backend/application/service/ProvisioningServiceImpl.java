@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -62,7 +64,22 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
       job = jobRepository.save(job);
 
-      asyncExecutor.executeProvisioning(job.getId(), tenant, request.getModules(), correlationId);
+      // Ensure async execution starts AFTER the surrounding transaction commits
+      final Long fJobId = job.getId();
+      final Tenant fTenant = tenant;
+      final java.util.List<String> fModules = request.getModules();
+      final String fCorrelationId = correlationId;
+
+      if (TransactionSynchronizationManager.isSynchronizationActive()) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            asyncExecutor.executeProvisioning(fJobId, fTenant, fModules, fCorrelationId);
+          }
+        });
+      } else {
+        asyncExecutor.executeProvisioning(fJobId, fTenant, fModules, fCorrelationId);
+      }
 
       return mapToResponse(job);
 
@@ -79,7 +96,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
     return mapToResponse(job);
   }
 
-
   private void validateModules(List<String> moduleCodes) {
     for (String code : moduleCodes) {
       moduleCatalogRepository.findByCode(code)
@@ -90,7 +106,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
       throw new IllegalArgumentException("Core module is required");
     }
   }
-
 
   private ProvisioningJobResponse mapToResponse(ProvisioningJob job) {
     return ProvisioningJobResponse.builder()
@@ -106,4 +121,3 @@ public class ProvisioningServiceImpl implements ProvisioningService {
         .build();
   }
 }
-
