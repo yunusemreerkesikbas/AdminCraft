@@ -35,8 +35,8 @@ public class Tenant {
   @Column(name = "db_port")
   private Integer dbPort;
 
-  @Column(name = "db_name", nullable = false, unique = true, length = 100)
-  private String dbName;
+  @Column(name = "database_name", nullable = false, unique = true, length = 100)
+  private String databaseName;
 
   @Column(nullable = false, length = 20)
   private String status;

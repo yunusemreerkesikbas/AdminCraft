@@ -60,7 +60,7 @@ class AsyncProvisioningExecutorTest {
                                 .id(1L)
                                 .subdomain("test-tenant")
                                 .companyName("Test Company")
-                                .dbName("ac_tenant_1")
+                                .databaseName("ac_tenant_1")
                                 .status("PROVISIONING")
                                 .build();
 

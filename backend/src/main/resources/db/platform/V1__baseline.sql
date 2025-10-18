@@ -9,18 +9,26 @@ CREATE TABLE tenants (
     custom_domain VARCHAR(255) NULL COMMENT 'Optional custom domain',
     db_host VARCHAR(100) DEFAULT 'localhost' COMMENT 'Database host',
     db_port INT DEFAULT 3307 COMMENT 'Database port',
-    db_name VARCHAR(100) NOT NULL UNIQUE COMMENT 'Tenant database name (ac_tenant_{id})',
-    status ENUM('PENDING', 'PROVISIONING', 'ACTIVE', 'SUSPENDED', 'DELETED') DEFAULT 'PENDING',
+    database_name VARCHAR(100) NOT NULL UNIQUE COMMENT 'Tenant database name (ac_tenant_{id})',
+    status ENUM('PENDING', 'PROVISIONING', 'ACTIVE', 'SUSPENDED', 'DELETED', 'MAINTENANCE') DEFAULT 'PENDING',
     default_language ENUM('TR', 'EN') DEFAULT 'TR',
     supported_languages JSON DEFAULT ('["TR"]') COMMENT 'Array of supported language codes',
     admin_email VARCHAR(255) NOT NULL,
     admin_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NULL COMMENT 'Contact phone number',
+    ssl_enabled BOOLEAN DEFAULT FALSE COMMENT 'SSL certificate enabled for custom domain',
+    timezone VARCHAR(50) DEFAULT 'Europe/Istanbul' COMMENT 'Tenant timezone',
+    currency VARCHAR(3) DEFAULT 'TRY' COMMENT 'Default currency code',
+    storage_used_mb BIGINT DEFAULT 0 COMMENT 'Storage usage in megabytes',
+    activated_at TIMESTAMP NULL COMMENT 'When tenant was activated',
+    last_backup_at TIMESTAMP NULL COMMENT 'Last backup timestamp',
+    notes VARCHAR(1000) NULL COMMENT 'Administrative notes',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     INDEX idx_subdomain (subdomain),
     INDEX idx_status (status),
-    INDEX idx_db_name (db_name)
+    INDEX idx_database_name (database_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Modules catalog: Available modules for tenants

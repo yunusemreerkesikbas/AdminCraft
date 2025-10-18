@@ -131,7 +131,7 @@ class TenantFilterTest {
   void shouldReturnForbiddenWhenTenantInactive() throws Exception {
     Tenant inactiveTenant = Tenant.builder()
         .id(1L)
-        .dbName("ac_tenant_1")
+        .databaseName("ac_tenant_1")
         .status("PENDING")
         .build();
 
@@ -150,7 +150,7 @@ class TenantFilterTest {
   void shouldSetContextAndProceedWhenTenantActive() throws Exception {
     Tenant activeTenant = Tenant.builder()
         .id(1L)
-        .dbName("ac_tenant_1")
+        .databaseName("ac_tenant_1")
         .status("ACTIVE")
         .build();
 
@@ -171,7 +171,7 @@ class TenantFilterTest {
   void shouldClearContextInFinallyBlock() throws Exception {
     Tenant activeTenant = Tenant.builder()
         .id(1L)
-        .dbName("ac_tenant_1")
+        .databaseName("ac_tenant_1")
         .status("ACTIVE")
         .build();
 
