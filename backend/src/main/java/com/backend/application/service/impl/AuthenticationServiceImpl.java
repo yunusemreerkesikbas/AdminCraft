@@ -4,6 +4,7 @@ import com.backend.application.command.auth.AuthenticateCommand;
 import com.backend.application.service.AuthenticationService;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
 import com.backend.domain.exception.UserAccountDisabledException;
@@ -69,7 +70,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         return new InvalidCredentialsException();
                     });
 
-            if (!"ACTIVE".equals(tenant.getStatus().name())) {
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
                 log.warn("Tenant is not active: tenantId={}, status={}", command.tenantId(), tenant.getStatus());
                 throw new InvalidCredentialsException();
             }
@@ -102,7 +103,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         log.warn("Tenant not found for subdomain: {}", subdomain);
                         return new InvalidCredentialsException(); // Generic error for security
                     });
-            if (!"ACTIVE".equals(tenant.getStatus().name())) {
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
                 log.warn("Tenant is not active: subdomain={}, status={}", subdomain, tenant.getStatus());
                 throw new InvalidCredentialsException();
             }
@@ -124,9 +125,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private LoginResponse authenticateUser(User user, AuthenticateCommand command, Long tenantId, String subdomain) {
-        log.debug("Password hash from DB: {}", user.getPasswordHash());
-        log.debug("Password hash length: {}",
-                user.getPasswordHash() != null ? user.getPasswordHash().length() : "null");
 
         if (!user.canLogin()) {
             log.warn("User cannot login - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
@@ -141,17 +139,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new InvalidCredentialsException();
             }
         }
-        log.debug("Attempting password verification for user: {}", command.email());
+        log.debug("Attempting password verification");
         boolean passwordMatches = passwordEncoder.matches(command.password(), user.getPasswordHash());
 
         if (!passwordMatches) {
-            log.warn("Password verification failed for email: {}", command.email());
+            log.warn("Password verification failed");
             throw new InvalidCredentialsException();
         }
         String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(), tenantId);
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        log.info("Authentication successful for user: {}, tenantId: {}", user.getEmail(), tenantId);
+        log.info("Authentication successful for user: {}", user.getEmail());
 
         return new LoginResponse(
                 accessToken,
@@ -162,9 +160,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getEmail(),
                 user.getFullName(),
                 user.getRole().name(),
-                tenantId,
                 user.getPreferredLanguage().name(),
-                subdomain); // Use subdomain from parameter (already resolved)
+                subdomain);
     }
 
     private LoginResponse authenticatePlatformAdmin(AuthenticateCommand command) {
@@ -187,7 +184,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getEmail(),
                 admin.getFullName(),
                 "SUPER_ADMIN",
-                null,
                 command.preferredLanguageCode(),
                 null);
     }
@@ -223,7 +219,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
-                    null,
                     null);
         } else {
             User user = userRepository.findByEmail(email)
@@ -248,7 +243,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.getEmail(),
                     user.getFullName(),
                     user.getRole().name(),
-                    user.getTenantId(),
                     user.getPreferredLanguage().name(),
                     resolveTenantSubdomain(user.getTenantId()));
         }

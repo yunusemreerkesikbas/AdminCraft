@@ -25,7 +25,7 @@ public final class ValidationConstants {
             "console",
             "portal");
 
-    public static final String SUBDOMAIN_PATTERN = "^[a-z0-9]+(-[a-z0-9]+)*$";
+    public static final String SUBDOMAIN_PATTERN = "^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$";
 
     public static boolean isReservedSubdomain(String subdomain) {
         if (subdomain == null || subdomain.trim().isEmpty()) {
