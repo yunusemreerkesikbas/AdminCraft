@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable, interval, switchMap, takeWhile } from 'rxjs';
+import { TenantModule } from 'app/core/tenant/tenant.types';
 import {
     CreateTenantRequest,
     ProvisionLanguagesRequest,
@@ -48,5 +49,13 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
 
     getLanguageProvisioningJobStatus(jobUuid: string): Observable<ProvisioningJobDto> {
         return this.getProvisioningJob(jobUuid);
+    }
+
+    getAllTenants(): Observable<Tenant[]> {
+        return this.list();
+    }
+
+    getTenantModules(tenantId: number): Observable<TenantModule[]> {
+        return this.customGet<TenantModule[]>('tenantModules', { tenantId });
     }
 }

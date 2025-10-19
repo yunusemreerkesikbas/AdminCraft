@@ -1,8 +1,9 @@
 /* eslint-disable */
 import { FuseNavigationItem } from '@fuse/components/navigation';
+import { NAVIGATION_MODULES } from 'app/core/navigation/navigation-modules.constants';
 
 export const defaultNavigation: FuseNavigationItem[] = [
-    
+
     {
         id: 'apps',
         title: 'Yönetim',
@@ -17,6 +18,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:users',
                 link: 'tenants',
+                requiredModule: null, // Platform module - always visible
             },
             {
                 id: 'apps.custom.media',
@@ -24,6 +26,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:photo',
                 link: 'media',
+                requiredModule: NAVIGATION_MODULES.MEDIA,
             },
             {
                 id: 'apps.custom.users',
@@ -31,6 +34,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:user-group',
                 link: 'users',
+                requiredModule: NAVIGATION_MODULES.CORE,
             },
 
             {
@@ -39,6 +43,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:globe-alt',
                 link: 'sites',
+                requiredModule: NAVIGATION_MODULES.CORE,
             },
             {
                 id: 'apps.custom.pagebuilder',
@@ -46,6 +51,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:rectangle-stack',
                 link: 'pages',
+                requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
             },
             {
                 id: 'apps.custom.pagebuilder.categories',
@@ -53,6 +59,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:folder',
                 link: 'pages/categories',
+                requiredModule: NAVIGATION_MODULES.PAGE_CATEGORIES,
             },
             {
                 id: 'apps.custom.settings',
@@ -60,126 +67,8 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:cog-6-tooth',
                 link: 'settings',
+                requiredModule: NAVIGATION_MODULES.SITE_SETTINGS,
             },
         ],
-    },
-];
-export const compactNavigation: FuseNavigationItem[] = [
-    {
-        id: 'dashboards',
-        title: 'Dashboards',
-        tooltip: 'Dashboards',
-        type: 'aside',
-        icon: 'heroicons_outline:home',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'apps',
-        title: 'Apps',
-        tooltip: 'Apps',
-        type: 'aside',
-        icon: 'heroicons_outline:squares-2x2',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'pages',
-        title: 'Pages',
-        tooltip: 'Pages',
-        type: 'aside',
-        icon: 'heroicons_outline:document-duplicate',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'user-interface',
-        title: 'UI',
-        tooltip: 'UI',
-        type: 'aside',
-        icon: 'heroicons_outline:rectangle-stack',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'navigation-features',
-        title: 'Navigation',
-        tooltip: 'Navigation',
-        type: 'aside',
-        icon: 'heroicons_outline:bars-3',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-];
-export const futuristicNavigation: FuseNavigationItem[] = [
-    {
-        id: 'dashboards',
-        title: 'DASHBOARDS',
-        type: 'group',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'apps',
-        title: 'APPS',
-        type: 'group',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'others',
-        title: 'OTHERS',
-        type: 'group',
-    },
-    {
-        id: 'pages',
-        title: 'Pages',
-        type: 'aside',
-        icon: 'heroicons_outline:document-duplicate',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'user-interface',
-        title: 'User Interface',
-        type: 'aside',
-        icon: 'heroicons_outline:rectangle-stack',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'navigation-features',
-        title: 'Navigation Features',
-        type: 'aside',
-        icon: 'heroicons_outline:bars-3',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-];
-export const horizontalNavigation: FuseNavigationItem[] = [
-    {
-        id: 'dashboards',
-        title: 'Dashboards',
-        type: 'group',
-        icon: 'heroicons_outline:home',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'apps',
-        title: 'Apps',
-        type: 'group',
-        icon: 'heroicons_outline:squares-2x2',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'pages',
-        title: 'Pages',
-        type: 'group',
-        icon: 'heroicons_outline:document-duplicate',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'user-interface',
-        title: 'UI',
-        type: 'group',
-        icon: 'heroicons_outline:rectangle-stack',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
-    },
-    {
-        id: 'navigation-features',
-        title: 'Misc',
-        type: 'group',
-        icon: 'heroicons_outline:bars-3',
-        children: [], // This will be filled from defaultNavigation so we don't have to manage multiple sets of the same navigation
     },
 ];

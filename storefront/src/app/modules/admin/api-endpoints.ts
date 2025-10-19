@@ -17,7 +17,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- TENANTS -----
     tenants: 'tenants',
     tenantById: 'tenants/${id}',
-    
+    tenantModules: 'tenants/${tenantId}/modules',
     tenantLanguages: 'tenants/${tenantId}/languages',
     tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
 

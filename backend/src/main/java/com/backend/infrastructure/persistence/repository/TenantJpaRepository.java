@@ -2,6 +2,7 @@ package com.backend.infrastructure.persistence.repository;
 
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.TenantStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,10 @@ import java.util.Optional;
 
 @Repository
 public interface TenantJpaRepository extends JpaRepository<Tenant, Long> {
+
+    @Override
+    @EntityGraph(attributePaths = {"supportedLanguages"})
+    List<Tenant> findAll();
     
     Optional<Tenant> findBySubdomain(String subdomain);
     

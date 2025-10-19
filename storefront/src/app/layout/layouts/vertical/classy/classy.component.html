@@ -51,6 +51,18 @@
                     {{ user.email }}
                 </div>
             </div>
+            @if (isSuperAdmin) {
+                <div class="mt-4 w-full px-4">
+                    <spa-select
+                        [label]="'Tenant'"
+                        [placeholder]="'Select a tenant...'"
+                        [options]="tenantOptions"
+                        [(ngModel)]="selectedTenantId"
+                        (changed)="onTenantChange($event)"
+                        [styleClasses]="'w-full'"
+                    />
+                </div>
+            }
         </div>
     </ng-container>
     <!-- Navigation footer hook -->
@@ -67,7 +79,7 @@
 <div class="flex w-full min-w-0 flex-auto flex-col">
     <!-- Header -->
     <div
-        class="bg-card relative z-49 flex h-16 w-full flex-0 items-center px-4 shadow dark:border-b dark:bg-transparent dark:shadow-none md:px-6 print:hidden"
+        class="bg-card relative z-49 flex h-16 w-full flex-0 items-center px-4 shadow md:px-6 dark:border-b dark:bg-transparent dark:shadow-none print:hidden"
     >
         <!-- Navigation toggle button -->
         <button mat-icon-button (click)="toggleNavigation('mainNavigation')">
@@ -80,7 +92,6 @@
             <search [appearance]="'bar'"></search>
             <shortcuts></shortcuts>
             <messages></messages>
-            
         </div>
     </div>
 

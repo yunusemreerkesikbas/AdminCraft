@@ -11,7 +11,7 @@ public interface TenantPlatformRepository extends JpaRepository<Tenant, Long> {
 
   Optional<Tenant> findBySubdomain(String subdomain);
 
-  Optional<Tenant> findByDbName(String dbName);
+  Optional<Tenant> findByDatabaseName(String databaseName);
 
   boolean existsBySubdomain(String subdomain);
 }

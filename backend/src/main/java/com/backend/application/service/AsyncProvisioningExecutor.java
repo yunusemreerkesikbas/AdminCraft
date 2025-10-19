@@ -70,10 +70,10 @@ public class AsyncProvisioningExecutor {
       log.info("Starting provisioning for tenant {} with modules: {}", tenant.getId(), modules);
 
       updateProgress(job, 10);
-      createDatabaseIfNotExists(tenant.getDbName());
+      createDatabaseIfNotExists(tenant.getDatabaseName());
 
       updateProgress(job, 40);
-      runMigrations(tenant.getDbName(), modules);
+      runMigrations(tenant.getDatabaseName(), modules);
 
       updateProgress(job, 70);
       insertTenantModules(tenant.getId(), modules);

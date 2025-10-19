@@ -16,9 +16,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { UserService } from 'app/core/user/user.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 
 @Component({
@@ -60,18 +61,12 @@ export class AuthSignInComponent implements OnInit {
         private _authService: AuthService,
         private _formBuilder: UntypedFormBuilder,
         private _router: Router,
-        private _tenantContext: TenantContextService
+        private _tenantContext: TenantContextService,
+        private _userService: UserService,
+        private _translocoService: TranslocoService
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Create the form
         this.signInForm = this._formBuilder.group({
             email: [
                 '',
@@ -82,32 +77,24 @@ export class AuthSignInComponent implements OnInit {
         });
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Sign in
-     */
     signIn(): void {
-        // Mark as submitted and touch controls to trigger validation UI
         this.formSubmitted = true;
         this.signInForm.markAllAsTouched();
-
-        // Return if the form is invalid
         if (this.signInForm.invalid) {
             return;
         }
-
-        // Disable the form
         this.signInForm.disable();
 
-        // Hide the alert
         this.showAlert = false;
-
-        // Sign in
         this._authService.signIn(this.signInForm.value).subscribe(
             () => {
+                const lang = this._translocoService.getActiveLang();
+                const user = this._userService.user;
+                if (user?.role === 'SUPER_ADMIN') {
+                    // SUPER_ADMIN → Platform dashboard (no subdomain)
+                    this._router.navigateByUrl(`/${lang}/dashboards/project`);
+                    return;
+                }
                 const subdomain =
                     this._tenantContext.getCurrentSubdomain() || 'default';
                 const returnUrl = this._activatedRoute.snapshot
@@ -123,7 +110,7 @@ export class AuthSignInComponent implements OnInit {
                     } catch { return null; }
                 };
                 const safeUrl = safe(returnUrl);
-                const fallback = `/${subdomain}/project`;
+                const fallback = `/${lang}/${subdomain}/project`;
                 this._router.navigateByUrl(safeUrl || fallback);
             },
             (response) => {

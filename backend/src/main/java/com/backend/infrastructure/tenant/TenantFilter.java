@@ -108,12 +108,12 @@ public class TenantFilter extends OncePerRequestFilter {
       }
 
       tenantContext.setTenantId(String.valueOf(tenantId));
-      tenantContext.setTenantDbName(tenant.getDbName());
+      tenantContext.setTenantDbName(tenant.getDatabaseName());
 
       MDC.put("tenantId", String.valueOf(tenantId));
-      MDC.put("tenantDb", tenant.getDbName());
+      MDC.put("tenantDb", tenant.getDatabaseName());
 
-      log.debug("Tenant context set: tenantId={}, dbName={}", tenantId, tenant.getDbName());
+      log.debug("Tenant context set: tenantId={}, dbName={}", tenantId, tenant.getDatabaseName());
 
       filterChain.doFilter(request, response);
 
