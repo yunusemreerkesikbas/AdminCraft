@@ -4,5 +4,6 @@ public record AuthenticateCommand(
     String email,
     String password,
     Long tenantId,
+    String subdomain,
     String preferredLanguageCode) {
 }
