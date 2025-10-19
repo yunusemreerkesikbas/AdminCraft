@@ -1,7 +1,8 @@
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { FuseFullscreenComponent } from '@fuse/components/fullscreen';
 import { FuseLoadingBarComponent } from '@fuse/components/loading-bar';
@@ -24,7 +25,7 @@ import { UserComponent } from 'app/layout/common/user/user.component';
 import { TenantsService } from 'app/modules/admin/custom/tenants/tenants.service';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
 import { SpaSelectComponent, SpaSelectOption } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'classy-layout',
@@ -48,13 +49,14 @@ import { Subject, takeUntil } from 'rxjs';
     ],
 })
 export class ClassyLayoutComponent implements OnInit, OnDestroy {
-    isScreenSmall: boolean;
-    navigation: Navigation;
-    user: User;
-    isSuperAdmin: boolean = false;
-    tenantOptions: SpaSelectOption<number>[] = [];
-    selectedTenantId: number | null = null;
-    private tenants: Tenant[] = [];
+    protected isScreenSmall: boolean;
+    protected navigation: Navigation;
+    protected user: User;
+    protected isSuperAdmin: boolean = false;
+    protected tenantOptions: SpaSelectOption<number>[] = [];
+    protected selectedTenantId: number | null = null;
+    #tenants: Tenant[] = [];
+    #snackBar = inject(MatSnackBar);
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     constructor(
@@ -68,7 +70,7 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
         private _tenantsService: TenantsService
     ) {}
 
-    get currentYear(): number {
+    protected get currentYear(): number {
         return new Date().getFullYear();
     }
 
@@ -85,7 +87,6 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
                 this.isSuperAdmin = user?.role === 'SUPER_ADMIN';
                 if (this.isSuperAdmin) {
                     this.loadTenants();
-                    this.restoreLastSelectedTenant();
                 }
             });
         this._tenantContext.selectedTenant$
@@ -105,8 +106,7 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
- 
-    toggleNavigation(name: string): void {
+    protected toggleNavigation(name: string): void {
         const navigation =
             this._fuseNavigationService.getComponent<FuseVerticalNavigationComponent>(
                 name
@@ -117,36 +117,39 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
     }
 
     private loadTenants(): void {
-        this._tenantsService.getAllTenants().subscribe({
-            next: (tenants) => {
-                this.tenants = tenants;
-                this.tenantOptions = tenants.map((t) => ({
-                    value: t.id,
-                    label: `${t.companyName} (${t.subdomain})`,
-                }));
-            },
-            error: (error) => {
-                console.error('Failed to load tenants:', error);
-            },
-        });
+        this._tenantsService.getAllTenants()
+            .pipe(take(1))
+            .subscribe({
+                next: (tenants) => {
+                    this.#tenants = tenants;
+                    this.tenantOptions = tenants.map((t) => ({
+                        value: t.id,
+                        label: `${t.companyName} (${t.subdomain})`,
+                    }));
+                    this.restoreLastSelectedTenant();
+                },
+                error: () => {
+                    this.#snackBar.open('Failed to load tenants', 'Close', { duration: 3000 });
+                },
+            });
     }
 
     private restoreLastSelectedTenant(): void {
         const savedId = this._tenantContext.getSelectedTenantId();
-        if (savedId && this.tenants.length > 0) {
-            const tenant = this.tenants.find((t) => t.id === savedId);
+        if (savedId && this.#tenants.length > 0) {
+            const tenant = this.#tenants.find((t) => t.id === savedId);
             if (tenant) {
                 this._tenantContext.selectTenant(tenant);
             }
         }
     }
 
-    onTenantChange(tenantId: number | null): void {
+    protected onTenantChange(tenantId: number | null): void {
         if (!tenantId) {
             this._tenantContext.clearTenantSelection();
             return;
         }
-        const tenant = this.tenants.find((t) => t.id === tenantId);
+        const tenant = this.#tenants.find((t) => t.id === tenantId);
         if (tenant) {
             this._tenantContext.selectTenant(tenant);
         }

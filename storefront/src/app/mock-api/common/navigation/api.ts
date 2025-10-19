@@ -1,38 +1,38 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
 import { FuseMockApiService } from '@fuse/lib/mock-api';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import {
-    compactNavigation,
     defaultNavigation,
-    futuristicNavigation,
-    horizontalNavigation,
 } from 'app/mock-api/common/navigation/data';
 import { cloneDeep } from 'lodash-es';
+import { Subject, takeUntil } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class NavigationMockApi {
-    private readonly _compactNavigation: FuseNavigationItem[] =
-        compactNavigation;
+export class NavigationMockApi implements OnDestroy {
+    
     private readonly _defaultNavigation: FuseNavigationItem[] =
         defaultNavigation;
-    private readonly _futuristicNavigation: FuseNavigationItem[] =
-        futuristicNavigation;
-    private readonly _horizontalNavigation: FuseNavigationItem[] =
-        horizontalNavigation;
-
     private _enabledModules: string[] = [];
+    #destroy$ = new Subject<void>();
 
 
     constructor(
         private _fuseMockApiService: FuseMockApiService,
         private _tenantContext: TenantContextService
     ) {
-        this._tenantContext.tenantModules$.subscribe((modules) => {
-            this._enabledModules = modules;
-        });
+        this._tenantContext.tenantModules$
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe((modules) => {
+                this._enabledModules = modules;
+            });
 
         this.registerHandlers();
+    }
+
+    ngOnDestroy(): void {
+        this.#destroy$.next();
+        this.#destroy$.complete();
     }
 
     registerHandlers(): void {
@@ -40,38 +40,7 @@ export class NavigationMockApi {
         // @ Navigation - GET
         // -----------------------------------------------------------------------------------------------------
         this._fuseMockApiService.onGet('api/common/navigation').reply(() => {
-            // Fill compact navigation children using the default navigation
-            this._compactNavigation.forEach((compactNavItem) => {
-                this._defaultNavigation.forEach((defaultNavItem) => {
-                    if (defaultNavItem.id === compactNavItem.id) {
-                        compactNavItem.children = cloneDeep(
-                            defaultNavItem.children
-                        );
-                    }
-                });
-            });
-
-            // Fill futuristic navigation children using the default navigation
-            this._futuristicNavigation.forEach((futuristicNavItem) => {
-                this._defaultNavigation.forEach((defaultNavItem) => {
-                    if (defaultNavItem.id === futuristicNavItem.id) {
-                        futuristicNavItem.children = cloneDeep(
-                            defaultNavItem.children
-                        );
-                    }
-                });
-            });
-
-            // Fill horizontal navigation children using the default navigation
-            this._horizontalNavigation.forEach((horizontalNavItem) => {
-                this._defaultNavigation.forEach((defaultNavItem) => {
-                    if (defaultNavItem.id === horizontalNavItem.id) {
-                        horizontalNavItem.children = cloneDeep(
-                            defaultNavItem.children
-                        );
-                    }
-                });
-            });
+           
 
             const currentLang = localStorage.getItem('lang') || 'tr';
             const currentTenant = localStorage.getItem('currentTenantSubdomain') || 'default';
@@ -93,22 +62,13 @@ export class NavigationMockApi {
 
             const navCopy = {
                 default: cloneDeep(this._defaultNavigation),
-                compact: cloneDeep(this._compactNavigation),
-                futuristic: cloneDeep(this._futuristicNavigation),
-                horizontal: cloneDeep(this._horizontalNavigation)
             };
 
             updateLinks(navCopy.default);
-            updateLinks(navCopy.compact);
-            updateLinks(navCopy.futuristic);
-            updateLinks(navCopy.horizontal);
 
             // Filter navigation by enabled modules
             const filteredNav = {
                 default: this.filterNavigationByModules(navCopy.default),
-                compact: this.filterNavigationByModules(navCopy.compact),
-                futuristic: this.filterNavigationByModules(navCopy.futuristic),
-                horizontal: this.filterNavigationByModules(navCopy.horizontal)
             };
 
             return [

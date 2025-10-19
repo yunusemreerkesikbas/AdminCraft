@@ -19,7 +19,6 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantId = tenantContext.getCurrentTenantId();
 
     if (user?.role === 'SUPER_ADMIN' && !tenantId) {
-        console.warn('[TenantInterceptor] No tenant selected, request blocked:', req.url);
         return throwError(() => new Error('Please select a tenant to continue'));
     }
     if (!subdomain && tenantId == null) {

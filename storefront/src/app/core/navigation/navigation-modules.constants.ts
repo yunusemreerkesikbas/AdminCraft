@@ -1,0 +1,10 @@
+export const NAVIGATION_MODULES = {
+    CORE: 'core',
+    PAGEBUILDER: 'pagebuilder',
+    PAGE_CATEGORIES: 'page_categories',
+    SITE_SETTINGS: 'site_settings',
+    MEDIA: 'media'
+} as const;
+
+export type NavigationModuleCode = typeof NAVIGATION_MODULES[keyof typeof NAVIGATION_MODULES];
+

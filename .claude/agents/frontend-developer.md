@@ -179,3 +179,13 @@ protected increment() { this.count.update(v => v + 1); }
 - [ ] Dialog data typed
 - [ ] API endpoints centralized
 - [ ] X-Tenant-ID in interceptor
+
+defensive programming yapmayalım
+try-catch bloklarını mümkünse kullanmayalım.
+kodda yorum satırı ve console.log bırakmayalım
+access modifierda protected veya #private kullanalım. sadece gerekliyse public kullanalım.
+getter setter metodları kullanmamaya çalışalım
+subscription işlemlerinde take(1),takeUntil() ve unsubscribe yapalım.
+modern angular yöntemlerini kullanalım. change detection, control flow, signal
+DOM manipulasyonlarında WindowRef kullanalım. ör: this.windowRef.nativeWindow.localStorage
+değişken ve metod tanımlamalarında tip tanımlamalarına çok özen gösterelim
