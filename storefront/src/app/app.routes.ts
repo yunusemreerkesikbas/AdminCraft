@@ -1,5 +1,5 @@
-import { Route, UrlMatcher, UrlSegment } from '@angular/router';
-import { initialDataResolver, tenantParamResolver } from 'app/app.resolvers';
+import { Route } from '@angular/router';
+import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
@@ -7,16 +7,6 @@ import { LayoutComponent } from 'app/layout/layout.component';
 
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-const tenantMatcher: UrlMatcher = (segments: UrlSegment[]) => {
-    if (!segments.length) { return null; }
-    const seg = segments[0].path;
-    const valid = /^[a-z0-9-]{1,50}$/.test(seg);
-    if (!valid) { return null; }
-    return {
-        consumed: [segments[0]],
-        posParams: { tenant: segments[0] }
-    };
-};
 
 export const appRoutes: Route[] = [
 
@@ -106,29 +96,13 @@ export const appRoutes: Route[] = [
                 {path: '**', redirectTo: 'dashboards/project'}
             ]},
 
-            // Tenant-prefixed routes
-            {
-                matcher: tenantMatcher,
-                runGuardsAndResolvers: 'paramsChange',
-                resolve: { tenant: tenantParamResolver },
-                children: [
-                    // Dashboards under tenant
-                    {path: 'project', loadChildren: () => import('app/modules/admin/dashboards/project/project.routes')},
-                    {path: 'analytics', loadChildren: () => import('app/modules/admin/dashboards/analytics/analytics.routes')},
-                    {path: 'finance', loadChildren: () => import('app/modules/admin/dashboards/finance/finance.routes')},
-                    {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
-
-                    // AdminCraft features under tenant root
-                    {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')},
-                    {path: 'media', loadChildren: () => import('app/modules/admin/custom/media/media.routes')},
-                    {path: 'users', loadChildren: () => import('app/modules/admin/custom/users/users.routes')},
-                    {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
-                    {path: 'pages', loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')},
-                    {path: 'settings', loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')},
-
-                    {path: '', pathMatch: 'full', redirectTo: 'project'}
-                ]
-            },
+            // AdminCraft features (subdomain-based tenant context)
+            {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')},
+            {path: 'media', loadChildren: () => import('app/modules/admin/custom/media/media.routes')},
+            {path: 'users', loadChildren: () => import('app/modules/admin/custom/users/users.routes')},
+            {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
+            {path: 'pages', loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')},
+            {path: 'settings', loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')},
 
             // Pages
             {path: 'pages', children: [

@@ -43,16 +43,11 @@ export class NavigationMockApi implements OnDestroy {
            
 
             const currentLang = localStorage.getItem('lang') || 'tr';
-            const currentTenant = localStorage.getItem('currentTenantSubdomain') || 'default';
 
             const updateLinks = (items: any[]) => {
                 items?.forEach((item) => {
                     if (item.link && typeof item.link === 'string') {
-                        if (item.link.includes('dashboards/')) {
-                            item.link = `/${currentLang}/${item.link}`;
-                        } else {
-                            item.link = `/${currentLang}/${currentTenant}/${item.link}`;
-                        }
+                        item.link = `/${currentLang}/${item.link}`;
                     }
                     if (item.children?.length) {
                         updateLinks(item.children);

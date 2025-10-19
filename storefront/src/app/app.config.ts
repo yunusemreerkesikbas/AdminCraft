@@ -17,6 +17,7 @@ import { provideAuth } from 'app/core/auth/auth.provider';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
 import { SupportedLanguage } from 'app/core/i18n/translation.types';
 import { provideIcons } from 'app/core/icons/icons.provider';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 import { MockApiService } from 'app/mock-api';
 import { provideToastr } from 'ngx-toastr';
@@ -64,7 +65,6 @@ export const appConfig: ApplicationConfig = {
             },
         },
 
-        // Transloco Config - Enhanced with fallback support and error handling
         provideTransloco({
             config: {
                 availableLangs: [
@@ -89,19 +89,15 @@ export const appConfig: ApplicationConfig = {
                 interpolation: ['{{', '}}'], // Consistent with backend i18n
             },
         }),
-        // Translation Initialization with Static Imports (Vite-compatible)
         provideAppInitializer(() => {
             const translocoService = inject(TranslocoService);
 
             return (async () => {
                 try {
-                    // Static imports to avoid Vite dynamic import issues
                     const [adminTR, adminEN] = await Promise.all([
                         import('@modules/admin/i18n/langTR'),
                         import('@modules/admin/i18n/langEN')
                     ]);
-
-                    // Load Turkish translations
                     if (adminTR?.langTR) {
                         translocoService.setTranslation(
                             adminTR.langTR,
@@ -110,7 +106,6 @@ export const appConfig: ApplicationConfig = {
                         );
                     }
 
-                    // Load English translations
                     if (adminEN?.langEN) {
                         translocoService.setTranslation(
                             adminEN.langEN,
@@ -119,13 +114,11 @@ export const appConfig: ApplicationConfig = {
                         );
                     }
 
-                    // Set default language (will be enhanced by TranslationService later)
                     translocoService.setActiveLang(SupportedLanguage.TR);
                     
                 } catch (error) {
                     console.error('Failed to initialize translations:', error);
                     
-                    // Fallback strategy: minimal translations
                     try {
                         const fallbackTranslations = {
                             'admin.common.messages.error': 'An error occurred',
@@ -151,6 +144,11 @@ export const appConfig: ApplicationConfig = {
                     }
                 }
             })();
+        }),
+
+        provideAppInitializer(() => {
+            const tenantContext = inject(TenantContextService);
+            tenantContext.initializeFromHostname();
         }),
 
         // Fuse

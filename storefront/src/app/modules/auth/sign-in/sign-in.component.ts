@@ -53,9 +53,6 @@ export class AuthSignInComponent implements OnInit {
     showAlert: boolean = false;
     formSubmitted: boolean = false;
 
-    /**
-     * Constructor
-     */
     constructor(
         private _activatedRoute: ActivatedRoute,
         private _authService: AuthService,
@@ -91,12 +88,9 @@ export class AuthSignInComponent implements OnInit {
                 const lang = this._translocoService.getActiveLang();
                 const user = this._userService.user;
                 if (user?.role === 'SUPER_ADMIN') {
-                    // SUPER_ADMIN → Platform dashboard (no subdomain)
                     this._router.navigateByUrl(`/${lang}/dashboards/project`);
                     return;
                 }
-                const subdomain =
-                    this._tenantContext.getCurrentSubdomain() || 'default';
                 const returnUrl = this._activatedRoute.snapshot
                     .queryParamMap.get('redirectURL');
                 const safe = (url: string | null) => {
@@ -110,23 +104,16 @@ export class AuthSignInComponent implements OnInit {
                     } catch { return null; }
                 };
                 const safeUrl = safe(returnUrl);
-                const fallback = `/${lang}/${subdomain}/project`;
+                const fallback = `/${lang}/project`;
                 this._router.navigateByUrl(safeUrl || fallback);
             },
             (response) => {
-                // Re-enable the form
                 this.signInForm.enable();
-
-                // Reset the form
                 this.signInNgForm.resetForm();
-
-                // Set the alert
                 this.alert = {
                     type: 'error',
                     message: typeof response === 'string' ? response : 'Wrong email or password',
                 };
-
-                // Show the alert
                 this.showAlert = true;
             }
         );

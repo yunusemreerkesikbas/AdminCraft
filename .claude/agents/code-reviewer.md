@@ -94,6 +94,16 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ Retry on failure
 - ✅ Dialog data typed
 
+defensive programming yapmayalım
+try-catch bloklarını mümkünse kullanmayalım.
+kodda yorum satırı ve console.log bırakmayalım
+access modifierda protected veya #private kullanalım. sadece gerekliyse public kullanalım.
+getter setter metodları kullanmamaya çalışalım
+subscription işlemlerinde take(1),takeUntil() ve unsubscribe yapalım.
+modern angular yöntemlerini kullanalım. change detection, control flow, signal
+DOM manipulasyonlarında WindowRef kullanalım. ör: this.windowRef.nativeWindow.localStorage
+değişken ve metod tanımlamalarında tip tanımlamalarına çok özen gösterelim
+
 ## Output
 
 Begin immediately. Be concise. Focus on high-impact improvements. Educate on best practices.
