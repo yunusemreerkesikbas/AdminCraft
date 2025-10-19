@@ -62,3 +62,4 @@ public class PlatformDataSourceConfig {
     return new JpaTransactionManager(entityManagerFactory);
   }
 }
+
