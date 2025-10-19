@@ -94,7 +94,9 @@
       "Bash(gh pr checks:*)",
       "Bash(Select-Object -First 150)",
       "Bash(mvn:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8080)"
     ],
     "deny": [],
     "additionalDirectories": [

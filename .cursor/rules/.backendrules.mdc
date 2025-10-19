@@ -155,3 +155,6 @@ public void executeProvisioning(Long jobId) {
 - [ ] @EntityGraph for relationships
 - [ ] @Transactional for multi-step ops
 - [ ] Never expose tenantId in responses
+
+kodlarda yorum satırı bırakmayalım. sadece çok gerekli yerde tek satırlık yorum bırakalım.
+defensive programming yapmayalım.

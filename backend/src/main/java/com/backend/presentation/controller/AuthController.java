@@ -31,19 +31,22 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
+            @RequestHeader(value = "X-Tenant-Subdomain", required = false) String subdomain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             log.info("Login attempt for email: {}", loginRequest.email());
 
-            // Input sanitization
             if (loginRequest.email() == null || loginRequest.email().trim().isEmpty()) {
                 throw new IllegalArgumentException("Email cannot be null or empty");
             }
+
+            String effectiveSubdomain = subdomain != null ? subdomain : loginRequest.subdomain();
 
             AuthenticateCommand command = new AuthenticateCommand(
                     loginRequest.email(),
                     loginRequest.password(),
                     tenantId,
+                    effectiveSubdomain,
                     languageCode);
             LoginResponse loginResponse = authenticationService.authenticate(command);
 
@@ -73,17 +76,11 @@ public class AuthController {
             if (refreshToken == null || refreshToken.trim().isEmpty()) {
                 throw new IllegalArgumentException("Refresh token cannot be null or empty");
             }
-
-            // Remove "Bearer " prefix if present
             String token = refreshToken.startsWith("Bearer ") ? refreshToken.substring(7) : refreshToken;
-
-            // Additional token format validation
             if (token.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid token format");
             }
-
             LoginResponse loginResponse = authenticationService.refreshToken(token);
-
             String message = messageSource.getMessage("auth.refresh.success", null,
                     Locale.forLanguageTag(languageCode));
             ApiResponse<LoginResponse> response = ApiResponse.success(message, loginResponse);
@@ -105,13 +102,9 @@ public class AuthController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             log.info("Logout attempt");
-
-            // Input validation
             if (token == null || token.trim().isEmpty()) {
                 throw new IllegalArgumentException("Token cannot be null or empty");
             }
-
-            // Remove "Bearer " prefix if present
             String cleanToken = token.startsWith("Bearer ") ? token.substring(7) : token;
 
             authenticationService.logout(cleanToken);

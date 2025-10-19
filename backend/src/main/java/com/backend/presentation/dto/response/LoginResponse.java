@@ -1,18 +1,16 @@
 package com.backend.presentation.dto.response;
 
 public record LoginResponse(
-    String accessToken,
-    String refreshToken,
-    String tokenType,
-    Long expiresIn,
-    Long userId,
-    String email,
-    String fullName,
-    String role,
-    Long tenantId,
-    String preferredLanguage,
-    String subdomain
-) {
+        String accessToken,
+        String refreshToken,
+        String tokenType,
+        Long expiresIn,
+        Long userId,
+        String email,
+        String fullName,
+        String role,
+        String preferredLanguage,
+        String subdomain) {
     // Compact canonical constructor for validation
     public LoginResponse {
         if (accessToken == null || accessToken.trim().isEmpty()) {

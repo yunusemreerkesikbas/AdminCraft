@@ -12,6 +12,7 @@ import com.backend.infrastructure.persistence.platform.repository.TenantModuleRe
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
 import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.shared.constants.ValidationConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,9 @@ public class TenantServiceImpl implements TenantService {
     @Override
     @Transactional
     public TenantResponse createTenant(CreateTenantRequest request, Language displayLanguage) {
+        if (ValidationConstants.isReservedSubdomain(request.subdomain())) {
+            throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + request.subdomain());
+        }
         if (tenantRepository.existsBySubdomain(request.subdomain())) {
             throw new IllegalArgumentException("Subdomain already exists: " + request.subdomain());
         }

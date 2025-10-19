@@ -4,6 +4,7 @@ import com.backend.application.command.auth.AuthenticateCommand;
 import com.backend.application.service.AuthenticationService;
 import com.backend.domain.entity.User;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
 import com.backend.domain.exception.UserAccountDisabledException;
@@ -28,38 +29,102 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
     private final PlatformAdminUserRepository platformAdminUserRepository;
+    private final com.backend.infrastructure.tenant.TenantContext tenantContext;
 
     public AuthenticationServiceImpl(
             UserRepository userRepository,
             JwtTokenProvider jwtTokenProvider,
             PasswordEncoder passwordEncoder,
             TenantRepository tenantRepository,
-            PlatformAdminUserRepository platformAdminUserRepository) {
+            PlatformAdminUserRepository platformAdminUserRepository,
+            com.backend.infrastructure.tenant.TenantContext tenantContext) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.tenantRepository = tenantRepository;
         this.platformAdminUserRepository = platformAdminUserRepository;
+        this.tenantContext = tenantContext;
     }
 
     @Override
     public LoginResponse authenticate(AuthenticateCommand command) {
         log.info("Authenticating user with email: {}", command.email());
 
-        if (command.tenantId() == null) {
+        if (command.tenantId() != null) {
+            log.debug("Using X-Tenant-ID based authentication: tenantId={}", command.tenantId());
+            return authenticateTenantUserById(command);
+        } else if (command.subdomain() != null && !command.subdomain().trim().isEmpty()) {
+            log.debug("Using subdomain-based authentication: subdomain={}", command.subdomain());
+            return authenticateTenantUserBySubdomain(command);
+        } else {
+            log.debug("Using platform admin authentication");
             return authenticatePlatformAdmin(command);
         }
-        User user = userRepository.findByEmail(command.email())
-                .orElseThrow(() -> {
-                    log.warn("User not found for email: {}", command.email());
-                    return new InvalidCredentialsException();
-                });
+    }
 
-        log.debug("Found user: id={}, email={}, isActive={}, emailVerified={}, tenantId={}",
-                user.getId(), user.getEmail(), user.getIsActive(), user.getEmailVerified(), user.getTenantId());
-        log.debug("Password hash from DB: {}", user.getPasswordHash());
-        log.debug("Password hash length: {}",
-                user.getPasswordHash() != null ? user.getPasswordHash().length() : "null");
+    private LoginResponse authenticateTenantUserById(AuthenticateCommand command) {
+        try {
+            Tenant tenant = tenantRepository.findById(command.tenantId())
+                    .orElseThrow(() -> {
+                        log.warn("Tenant not found for id: {}", command.tenantId());
+                        return new InvalidCredentialsException();
+                    });
+
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
+                log.warn("Tenant is not active: tenantId={}, status={}", command.tenantId(), tenant.getStatus());
+                throw new InvalidCredentialsException();
+            }
+            tenantContext.setTenantId(String.valueOf(tenant.getId()));
+            tenantContext.setTenantDbName(tenant.getDatabaseName());
+            log.debug("TenantContext set: tenantId={}, dbName={}", tenant.getId(), tenant.getDatabaseName());
+            User user = userRepository.findByEmail(command.email())
+                    .orElseThrow(() -> {
+                        log.warn("User not found for email: {}", command.email());
+                        return new InvalidCredentialsException();
+                    });
+
+            return authenticateUser(user, command, tenant.getId(), tenant.getSubdomain());
+        } finally {
+            // CRITICAL: Always clear context after auth
+            tenantContext.clear();
+            log.debug("TenantContext cleared");
+        }
+    }
+
+    private LoginResponse authenticateTenantUserBySubdomain(AuthenticateCommand command) {
+        try {
+            String subdomain = command.subdomain().trim().toLowerCase();
+            if ("admin".equals(subdomain)) {
+                log.debug("Subdomain 'admin' detected, redirecting to platform admin authentication");
+                return authenticatePlatformAdmin(command);
+            }
+            Tenant tenant = tenantRepository.findBySubdomain(subdomain)
+                    .orElseThrow(() -> {
+                        log.warn("Tenant not found for subdomain: {}", subdomain);
+                        return new InvalidCredentialsException(); // Generic error for security
+                    });
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
+                log.warn("Tenant is not active: subdomain={}, status={}", subdomain, tenant.getStatus());
+                throw new InvalidCredentialsException();
+            }
+            tenantContext.setTenantId(String.valueOf(tenant.getId()));
+            tenantContext.setTenantDbName(tenant.getDatabaseName());
+            log.debug("TenantContext set: subdomain={}, tenantId={}, dbName={}", subdomain, tenant.getId(),
+                    tenant.getDatabaseName());
+            User user = userRepository.findByEmail(command.email())
+                    .orElseThrow(() -> {
+                        log.warn("User not found for email: {} in subdomain: {}", command.email(), subdomain);
+                        return new InvalidCredentialsException();
+                    });
+
+            return authenticateUser(user, command, tenant.getId(), tenant.getSubdomain());
+        } finally {
+            tenantContext.clear();
+            log.debug("TenantContext cleared");
+        }
+    }
+
+    private LoginResponse authenticateUser(User user, AuthenticateCommand command, Long tenantId, String subdomain) {
 
         if (!user.canLogin()) {
             log.warn("User cannot login - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
@@ -74,23 +139,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new InvalidCredentialsException();
             }
         }
-
-        // Verify password
-        log.debug("Attempting password verification for user: {}", command.email());
-        // SECURITY: Never log actual passwords
+        log.debug("Attempting password verification");
         boolean passwordMatches = passwordEncoder.matches(command.password(), user.getPasswordHash());
 
         if (!passwordMatches) {
-            log.warn("Password verification failed for email: {}", command.email());
+            log.warn("Password verification failed");
             throw new InvalidCredentialsException();
         }
-
-        // Generate tokens with tenantId included
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(),
-                user.getTenantId());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(), tenantId);
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        log.info("Authentication successful for user: {}, tenantId: {}", user.getEmail(), user.getTenantId());
+        log.info("Authentication successful for user: {}", user.getEmail());
 
         return new LoginResponse(
                 accessToken,
@@ -101,25 +160,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getEmail(),
                 user.getFullName(),
                 user.getRole().name(),
-                user.getTenantId(),
                 user.getPreferredLanguage().name(),
-                // subdomain resolution (optional if user has tenant)
-                resolveTenantSubdomain(user.getTenantId()));
+                subdomain);
     }
 
     private LoginResponse authenticatePlatformAdmin(AuthenticateCommand command) {
-        // Lookup platform admin by email
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(command.email())
                 .orElseThrow(InvalidCredentialsException::new);
-
-        // Verify password
         boolean passwordMatches = passwordEncoder.matches(command.password(), admin.getPasswordHash());
         if (!passwordMatches) {
             throw new InvalidCredentialsException();
         }
-
-        // Issue token with role SUPER_ADMIN and no tenantId
         String accessToken = jwtTokenProvider.createAccessToken(admin.getEmail(), "SUPER_ADMIN", null);
         String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
 
@@ -132,7 +184,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getEmail(),
                 admin.getFullName(),
                 "SUPER_ADMIN",
-                null,
                 command.preferredLanguageCode(),
                 null);
     }
@@ -140,8 +191,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public LoginResponse refreshToken(String refreshToken) {
         log.info("Refreshing token");
-
-        // Validate refresh token
         if (!jwtTokenProvider.validateToken(refreshToken) ||
                 !jwtTokenProvider.isRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
@@ -170,7 +219,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
-                    null,
                     null);
         } else {
             User user = userRepository.findByEmail(email)
@@ -195,7 +243,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.getEmail(),
                     user.getFullName(),
                     user.getRole().name(),
-                    user.getTenantId(),
                     user.getPreferredLanguage().name(),
                     resolveTenantSubdomain(user.getTenantId()));
         }
@@ -212,12 +259,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String email = jwtTokenProvider.getEmailFromToken(token);
             String role = jwtTokenProvider.getRoleFromToken(token);
             Long tenantId = jwtTokenProvider.getTenantIdFromToken(token);
-
-            // TODO: Add token to blacklist/invalidate token
-            // This could be implemented by:
-            // 1. Adding token to a blacklist in Redis/database
-            // 2. Reducing token expiration time
-            // 3. Using a token versioning system
 
             if ("SUPER_ADMIN".equals(role) && tenantId == null) {
                 log.info("Logout successful for platform admin: {}", email);
