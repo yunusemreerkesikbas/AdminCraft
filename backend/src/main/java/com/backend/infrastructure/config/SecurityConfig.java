@@ -61,8 +61,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-
-                // Allow specific origins for development and production
+                // Includes subdomain-based origins for multi-tenant authentication (Sprint 17)
                 configuration.setAllowedOrigins(Arrays.asList(
                                 "http://localhost:4200", // Angular dev server (default)
                                 "http://localhost:4201", // Angular dev server (current project)
@@ -75,6 +74,11 @@ public class SecurityConfig {
                                 "https://localhost:8080", // HTTPS Backend server
                                 "https://localhost:8081" // HTTPS Alternative backend server
                 ));
+                configuration.setAllowedOriginPatterns(Arrays.asList(
+                                "http://*.localhost:4200",
+                                "http://*.localhost:4201",
+                                "https://*.localhost:4200",
+                                "https://*.localhost:4201"));
 
                 // Allow all HTTP methods
                 configuration.setAllowedMethods(Arrays.asList(

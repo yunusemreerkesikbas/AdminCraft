@@ -5,16 +5,12 @@ import { NotificationsService } from 'app/layout/common/notifications/notificati
 import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { TenantContextService } from 'app/core/tenant/tenant-context.service';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
 
 export const initialDataResolver = () => {
     const messagesService = inject(MessagesService);
     const navigationService = inject(NavigationService);
     const notificationsService = inject(NotificationsService);
     const shortcutsService = inject(ShortcutsService);
-
-    // Fork join multiple API endpoint calls to wait all of them to finish
     return forkJoin([
         navigationService.get(),
         messagesService.getAll(),
@@ -22,18 +18,9 @@ export const initialDataResolver = () => {
         shortcutsService.getAll(),
     ]).pipe(
         map((data) => {
-            // ensure placeholder links are replaced based on current tenant
-            // note: replacement is also done in mock API; this is a noop here
-            // kept for completeness if backend supplies links in future
             return data;
         })
     );
 };
 
-export const tenantParamResolver = (route: ActivatedRouteSnapshot) => {
-    const tenantContext = inject(TenantContextService);
-    const t = route.paramMap.get('tenant');
-    if (!t) { return true; }
-    tenantContext.setSubdomain(t);
-    return true;
-};
+// removed: tenantParamResolver no longer used in subdomain-based routing

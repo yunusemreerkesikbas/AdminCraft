@@ -4,11 +4,16 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { throwError } from 'rxjs';
 
+// Platform endpoints that don't require tenant context
+// Note: /api/auth/login NEEDS X-Tenant-Subdomain for Sprint 17 subdomain-based auth
+const PLATFORM_ENDPOINTS: readonly string[] = ['/api/tenants', '/api/provisioning', '/actuator'] as const;
+
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
     const userService = inject(UserService);
-    const platformEndpoints = ['/api/tenants', '/api/provisioning', '/actuator', '/api/auth'];
-    const isPlatformEndpoint = platformEndpoints.some((endpoint) =>
+
+    // Check if this is a platform-only endpoint
+    const isPlatformEndpoint = PLATFORM_ENDPOINTS.some((endpoint) =>
         req.url.includes(endpoint)
     );
     if (isPlatformEndpoint) {

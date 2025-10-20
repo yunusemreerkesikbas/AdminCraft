@@ -3,8 +3,9 @@ alwaysApply: true
 ---
 
 ---
+
 name: code-reviewer
-description: Comprehensive code review for quality, security, and maintainability. Use after completing coding tasks.
+description: Comprehensive code review for quality, security, and maintainability. Use after completing coding tasks
 ---
 
 # Senior Code Reviewer
@@ -21,6 +22,7 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 ## Review Checklist
 
 ### Multi-Tenancy
+
 - ❌ NO tenant_id columns (physical DB isolation)
 - ✅ TenantContext set/cleared in try-finally
 - ✅ TenantFilter validates active tenant
@@ -28,6 +30,7 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ MDC: tenantId, tenantDb, correlationId
 
 ### Database Migrations
+
 - ✅ Versioned: V1__baseline.sql
 - ✅ Repeatable: R__seed.sql (INSERT IGNORE)
 - ✅ NO idempotent DDL (Flyway handles it)
@@ -35,6 +38,7 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ hibernate.ddl-auto=none
 
 ### Clean Architecture
+
 - ✅ Application uses Commands/Queries (NOT Presentation DTOs)
 - ✅ Controllers map DTOs → Commands/Queries
 - ✅ Services return Response DTOs only
@@ -42,6 +46,7 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ Batch loading (findByTenantIdAndEntityIdIn)
 
 ### Async Processing
+
 - ✅ @Async on provisioning methods
 - ✅ Job lifecycle: pending → running → succeeded/failed
 - ✅ Progress tracking (10% → 100%)
@@ -50,18 +55,21 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ CREATE DATABASE IF NOT EXISTS
 
 ### Connection Management
+
 - ✅ HikariDataSource (max 5 per tenant)
 - ✅ LRU eviction (max 10 pools, 30m idle)
 - ✅ ConcurrentHashMap for cache
 - ✅ No connection leaks
 
 ### Platform vs Tenant
+
 - ✅ Platform: infrastructure.persistence.platform.entity
 - ✅ Tenant: domain.entity
 - ✅ @Primary on platform datasource
 - ✅ No mixed transactions
 
 ### Security
+
 - ✅ No SQL injection (JPA only, except CREATE DATABASE)
 - ✅ Tenant validation before routing
 - ✅ No sensitive data in logs
@@ -69,12 +77,14 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ Rate limiting (5 req/min on provisioning)
 
 ### Testing
+
 - ✅ Testcontainers for integration tests
 - ✅ Test tenant isolation
 - ✅ Test idempotency
 - ✅ Awaitility for async assertions
 
 ### Frontend
+
 - ✅ Extend CrudHttpService / BaseCrudListComponent
 - ✅ OnPush change detection
 - ✅ Polling unsubscribed in ngOnDestroy
@@ -82,6 +92,16 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 - ✅ Status badges (pending/running/succeeded/failed)
 - ✅ Retry on failure
 - ✅ Dialog data typed
+
+defensive programming yapmayalım
+try-catch bloklarını mümkünse kullanmayalım.
+kodda yorum satırı ve console.log bırakmayalım
+access modifierda protected veya #private kullanalım. sadece gerekliyse public kullanalım.
+getter setter metodları kullanmamaya çalışalım
+subscription işlemlerinde take(1),takeUntil() ve unsubscribe yapalım.
+modern angular yöntemlerini kullanalım. change detection, control flow, signal
+DOM manipulasyonlarında WindowRef kullanalım. ör: this.windowRef.nativeWindow.localStorage
+değişken ve metod tanımlamalarında tip tanımlamalarına çok özen gösterelim
 
 ## Output
 

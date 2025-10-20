@@ -128,6 +128,58 @@ export class TenantContextService {
         }
         return null;
     }
+
+    extractSubdomainFromHost(): string | null {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost') {
+            this.redirectToAdminLocalhost();
+            return 'admin';
+        }
+        const parts = hostname.split('.');
+        const subdomain = parts[0];
+        if (subdomain === 'admin') {
+            return 'admin';
+        }
+        if (!this.isValidSubdomain(subdomain)) {
+            this.#snackBar.open(
+                'Invalid tenant subdomain. Please contact your administrator.',
+                'Close',
+                { duration: 5000 }
+            );
+            return null;
+        }
+
+        return subdomain;
+    }
+
+    isValidSubdomain(subdomain: string): boolean {
+        if (!subdomain) return false;
+        const pattern = /^[a-z0-9-]{1,50}$/;
+        return pattern.test(subdomain);
+    }
+
+    private redirectToAdminLocalhost(): void {
+        const currentUrl = window.location.href;
+        const newUrl = currentUrl.replace('localhost', 'admin.localhost');
+        if (currentUrl !== newUrl) {
+            window.location.replace(newUrl);
+        }
+    }
+
+    initializeFromHostname(): void {
+        const subdomain = this.extractSubdomainFromHost();
+        if (subdomain) {
+            // Store subdomain even for 'admin' for Sprint 17 authentication
+            this.setSubdomain(subdomain);
+
+            // Clear tenant selection for admin subdomain (platform access)
+            if (subdomain === 'admin') {
+                // Keep subdomain but clear tenant-specific data
+                this._tenant$.next(null);
+                localStorage.removeItem(this.STORAGE_KEYS.tenantId);
+            }
+        }
+    }
 }
 
 
