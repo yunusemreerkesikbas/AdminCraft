@@ -96,7 +96,10 @@
       "Bash(mvn:*)",
       "Bash(tee:*)",
       "Bash(netstat -ano)",
-      "Bash(findstr :8080)"
+      "Bash(findstr :8080)",
+      "Bash(\"C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe\" -u root -p -e \"SELECT id, name, subdomain, database_name, status FROM platform_management.tenants WHERE subdomain = ''democompany'';\")",
+      "Bash(\"C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe\" -u root -p -e \"SHOW DATABASES LIKE ''ac_tenant_%'';\")",
+      "Bash(\"C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe\" -u root -p -e \"SELECT version FROM ac_tenant_1.flyway_schema_history ORDER BY installed_rank DESC LIMIT 5;\")"
     ],
     "deny": [],
     "additionalDirectories": [

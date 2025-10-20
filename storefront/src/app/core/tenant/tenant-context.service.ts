@@ -168,10 +168,16 @@ export class TenantContextService {
 
     initializeFromHostname(): void {
         const subdomain = this.extractSubdomainFromHost();
-        if (subdomain && subdomain !== 'admin') {
+        if (subdomain) {
+            // Store subdomain even for 'admin' for Sprint 17 authentication
             this.setSubdomain(subdomain);
-        } else if (subdomain === 'admin') {
-            this.clear();
+
+            // Clear tenant selection for admin subdomain (platform access)
+            if (subdomain === 'admin') {
+                // Keep subdomain but clear tenant-specific data
+                this._tenant$.next(null);
+                localStorage.removeItem(this.STORAGE_KEYS.tenantId);
+            }
         }
     }
 }
