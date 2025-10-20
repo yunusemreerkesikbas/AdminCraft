@@ -4,11 +4,12 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { throwError } from 'rxjs';
 
+const PLATFORM_ENDPOINTS: readonly string[] = ['/api/tenants', '/api/provisioning', '/actuator', '/api/auth'] as const;
+
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
     const userService = inject(UserService);
-    const platformEndpoints = ['/api/tenants', '/api/provisioning', '/actuator', '/api/auth'];
-    const isPlatformEndpoint = platformEndpoints.some((endpoint) =>
+    const isPlatformEndpoint = PLATFORM_ENDPOINTS.some((endpoint) =>
         req.url.includes(endpoint)
     );
     if (isPlatformEndpoint) {

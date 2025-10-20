@@ -117,8 +117,6 @@ export const appConfig: ApplicationConfig = {
                     translocoService.setActiveLang(SupportedLanguage.TR);
                     
                 } catch (error) {
-                    console.error('Failed to initialize translations:', error);
-                    
                     try {
                         const fallbackTranslations = {
                             'admin.common.messages.error': 'An error occurred',
@@ -137,10 +135,7 @@ export const appConfig: ApplicationConfig = {
                         );
                         
                         translocoService.setActiveLang(SupportedLanguage.EN);
-                        
-                        console.warn('Using fallback translations due to initialization failure');
                     } catch (fallbackError) {
-                        console.error('Critical: Fallback translation loading also failed:', fallbackError);
                     }
                 }
             })();

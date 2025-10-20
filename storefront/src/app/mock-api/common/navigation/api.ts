@@ -42,7 +42,7 @@ export class NavigationMockApi implements OnDestroy {
         this._fuseMockApiService.onGet('api/common/navigation').reply(() => {
            
 
-            const currentLang = localStorage.getItem('lang') || 'tr';
+            const currentLang = (navigator.language?.startsWith('en') ? 'en' : 'tr');
 
             const updateLinks = (items: any[]) => {
                 items?.forEach((item) => {

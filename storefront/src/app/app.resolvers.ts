@@ -1,7 +1,5 @@
 import { inject } from '@angular/core';
-import { ActivatedRouteSnapshot } from '@angular/router';
 import { NavigationService } from 'app/core/navigation/navigation.service';
-import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { MessagesService } from 'app/layout/common/messages/messages.service';
 import { NotificationsService } from 'app/layout/common/notifications/notifications.service';
 import { ShortcutsService } from 'app/layout/common/shortcuts/shortcuts.service';
@@ -25,11 +23,4 @@ export const initialDataResolver = () => {
     );
 };
 
-export const tenantParamResolver = (route: ActivatedRouteSnapshot) => {
-    const tenantContext = inject(TenantContextService);
-    const subdomain = tenantContext.extractSubdomainFromHost();
-    if (subdomain && subdomain !== 'admin') {
-        tenantContext.setSubdomain(subdomain);
-    }
-    return true;
-};
+// removed: tenantParamResolver no longer used in subdomain-based routing
