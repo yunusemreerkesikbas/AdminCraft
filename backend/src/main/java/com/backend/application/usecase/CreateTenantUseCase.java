@@ -1,9 +1,9 @@
 package com.backend.application.usecase;
 
+import com.backend.application.command.CreateTenantCommand;
 import com.backend.application.service.TenantService;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.request.CreateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,38 +13,31 @@ public class CreateTenantUseCase {
     @Autowired
     private TenantService tenantService;
 
-    public TenantResponse execute(CreateTenantRequest request, Language displayLanguage) {
-        validateRequest(request);
-        return tenantService.createTenant(request, displayLanguage);
+    public TenantDetailResponse execute(CreateTenantCommand command, Language displayLanguage) {
+        validate(command);
+        return tenantService.createTenantWithDetail(command, displayLanguage);
     }
 
-    private void validateRequest(CreateTenantRequest request) {
-        if (request.subdomain() == null || request.subdomain().trim().isEmpty()) {
-            throw new IllegalArgumentException("Subdomain is required");
+    private void validate(CreateTenantCommand command) {
+        if (command.subdomain() == null || command.subdomain().trim().isEmpty()) {
+            throw new IllegalArgumentException("validation.subdomain.required");
         }
 
-        if (request.companyName() == null || request.companyName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Company name is required");
+        if (command.companyName() == null || command.companyName().trim().isEmpty()) {
+            throw new IllegalArgumentException("validation.company.name.required");
         }
 
-        if (request.adminEmail() == null || request.adminEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Admin email is required");
+        if (command.adminEmail() == null || command.adminEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("validation.admin.email.required");
         }
 
-        if (request.adminName() == null || request.adminName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Admin name is required");
+        if (command.adminName() == null || command.adminName().trim().isEmpty()) {
+            throw new IllegalArgumentException("validation.admin.name.required");
         }
-
-        // Subdomain availability endpoint removed; rely on repository check in service
-
-        // Validate subdomain format
-        if (!request.subdomain().matches("^[a-z0-9]+(-[a-z0-9]+)*$")) {
-            throw new IllegalArgumentException(
-                    "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens.");
+        if (!command.subdomain().matches("^[a-z0-9]+(-[a-z0-9]+)*$")) {
+            throw new IllegalArgumentException("validation.subdomain.pattern");
         }
-
-        // Ensure default language is in supported languages
-        if (!request.supportedLanguages().contains(request.defaultLanguage())) {
+        if (command.supportedLanguages() == null || !command.supportedLanguages().contains(command.defaultLanguage())) {
             throw new IllegalArgumentException("Default language must be included in supported languages");
         }
     }

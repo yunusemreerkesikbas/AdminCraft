@@ -1,17 +1,23 @@
 package com.backend.application.service;
 
+import com.backend.application.command.CreateTenantCommand;
+import com.backend.application.command.UpdateTenantCommand;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
+import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.TenantModule;
+import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.presentation.dto.request.CreateTenantRequest;
-import com.backend.presentation.dto.request.UpdateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantAdminInfoResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
+import com.backend.presentation.dto.response.TenantListResponse;
+import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.shared.constants.ValidationConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,108 +39,95 @@ public class TenantServiceImpl implements TenantService {
     private final UserRepository userRepository;
     private final ProvisioningService provisioningService;
     private final TenantModuleRepository tenantModuleRepository;
+    private final ProvisioningJobRepository provisioningJobRepository;
 
     @Override
     @Transactional
-    public TenantResponse createTenant(CreateTenantRequest request, Language displayLanguage) {
-        if (ValidationConstants.isReservedSubdomain(request.subdomain())) {
-            throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + request.subdomain());
+    public TenantDetailResponse createTenantWithDetail(CreateTenantCommand command, Language displayLanguage) {
+        if (ValidationConstants.isReservedSubdomain(command.subdomain())) {
+            throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + command.subdomain());
         }
-        if (tenantRepository.existsBySubdomain(request.subdomain())) {
-            throw new IllegalArgumentException("Subdomain already exists: " + request.subdomain());
+        if (tenantRepository.existsBySubdomain(command.subdomain())) {
+            throw new IllegalArgumentException("Subdomain already exists: " + command.subdomain());
         }
 
         Tenant tenant = new Tenant();
-        tenant.setSubdomain(request.subdomain());
-        tenant.setCompanyName(request.companyName());
-        tenant.setAdminEmail(request.adminEmail());
-        tenant.setAdminName(request.adminName());
-        tenant.setPhone(request.phone());
-        tenant.setDefaultLanguage(request.defaultLanguage());
-        tenant.setSupportedLanguages(request.supportedLanguages());
-        tenant.setTimezone(request.timezone());
-        tenant.setCurrency(request.currency());
-        tenant.setNotes(request.notes());
+        tenant.setSubdomain(command.subdomain());
+        tenant.setCompanyName(command.companyName());
+        tenant.setAdminEmail(command.adminEmail());
+        tenant.setAdminName(command.adminName());
+        tenant.setPhone(command.phone());
+        tenant.setDefaultLanguage(command.defaultLanguage());
+        tenant.setSupportedLanguages(command.supportedLanguages());
+        tenant.setTimezone(command.timezone());
+        tenant.setCurrency(command.currency());
+        tenant.setNotes(command.notes());
 
         Tenant savedTenant = tenantRepository.save(tenant);
-        return TenantResponse.from(savedTenant, displayLanguage);
-    }
 
-    @Override
-    public TenantResponse getTenantById(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-        return TenantResponse.from(tenant, displayLanguage);
-    }
+        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(savedTenant.getId());
+        Integer modulesCount = countProvisionedModules(savedTenant.getId());
 
-    @Override
-    public List<TenantResponse> getAllTenants(Language displayLanguage) {
-        return tenantRepository.findAll().stream()
-                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-                .toList();
-    }
-
-    @Override
-    public List<TenantResponse> getTenantsByStatus(TenantStatus status, Language displayLanguage) {
-        return tenantRepository.findByStatus(status).stream()
-                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-                .toList();
+        return TenantDetailResponse.from(savedTenant, displayLanguage, provisioningStatus, modulesCount);
     }
 
     @Override
     @Transactional
-    public TenantResponse updateTenant(Long id, UpdateTenantRequest request, Language displayLanguage) {
+    public TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantCommand command, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+                .orElseThrow(() -> new TenantNotFoundException(id));
 
-        if (request.companyName() != null) {
-            tenant.setCompanyName(request.companyName());
+        if (command.companyName() != null) {
+            tenant.setCompanyName(command.companyName());
         }
-        if (request.adminEmail() != null) {
-            tenant.setAdminEmail(request.adminEmail());
+        if (command.adminEmail() != null) {
+            tenant.setAdminEmail(command.adminEmail());
         }
-        if (request.adminName() != null) {
-            tenant.setAdminName(request.adminName());
+        if (command.adminName() != null) {
+            tenant.setAdminName(command.adminName());
         }
-        if (request.phone() != null) {
-            tenant.setPhone(request.phone());
+        if (command.phone() != null) {
+            tenant.setPhone(command.phone());
         }
-        if (request.defaultLanguage() != null) {
-            tenant.setDefaultLanguage(request.defaultLanguage());
+        if (command.defaultLanguage() != null) {
+            tenant.setDefaultLanguage(command.defaultLanguage());
         }
-        if (request.supportedLanguages() != null && !request.supportedLanguages().isEmpty()) {
-            tenant.setSupportedLanguages(request.supportedLanguages());
+        if (command.supportedLanguages() != null && !command.supportedLanguages().isEmpty()) {
+            tenant.setSupportedLanguages(command.supportedLanguages());
         }
-        if (request.customDomain() != null) {
-            if (!request.customDomain().isEmpty() &&
-                    tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
-                throw new IllegalArgumentException("Custom domain already exists: " + request.customDomain());
+        if (command.customDomain() != null) {
+            if (!command.customDomain().isEmpty() &&
+                    tenantRepository.existsByCustomDomainAndIdNot(command.customDomain(), id)) {
+                throw new IllegalArgumentException("Custom domain already exists: " + command.customDomain());
             }
-            tenant.setCustomDomain(request.customDomain());
+            tenant.setCustomDomain(command.customDomain());
         }
-        if (request.sslEnabled() != null) {
-            tenant.setSslEnabled(request.sslEnabled());
+        if (command.sslEnabled() != null) {
+            tenant.setSslEnabled(command.sslEnabled());
         }
-        if (request.timezone() != null) {
-            tenant.setTimezone(request.timezone());
+        if (command.timezone() != null) {
+            tenant.setTimezone(command.timezone());
         }
-        if (request.currency() != null) {
-            tenant.setCurrency(request.currency());
+        if (command.currency() != null) {
+            tenant.setCurrency(command.currency());
         }
-        if (request.notes() != null) {
-            tenant.setNotes(request.notes());
+        if (command.notes() != null) {
+            tenant.setNotes(command.notes());
         }
 
         Tenant updatedTenant = tenantRepository.save(tenant);
 
-        return TenantResponse.from(updatedTenant, displayLanguage);
+        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(updatedTenant.getId());
+        Integer modulesCount = countProvisionedModules(updatedTenant.getId());
+
+        return TenantDetailResponse.from(updatedTenant, displayLanguage, provisioningStatus, modulesCount);
     }
 
     @Override
     @Transactional
     public void deleteTenant(Long id) {
         if (tenantRepository.findById(id).isEmpty()) {
-            throw new IllegalArgumentException("Tenant not found with id: " + id);
+            throw new TenantNotFoundException(id);
         }
         tenantRepository.deleteById(id);
     }
@@ -199,7 +191,7 @@ public class TenantServiceImpl implements TenantService {
     public List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage) {
         log.debug("Fetching modules for tenant: {}", tenantId);
         tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + tenantId));
+                .orElseThrow(() -> new TenantNotFoundException(tenantId));
         List<TenantModule> tenantModules = tenantModuleRepository.findByTenantIdAndStatus(tenantId, "enabled");
         return tenantModules.stream()
                 .map(tm -> TenantModuleResponse.builder()
@@ -212,5 +204,74 @@ public class TenantServiceImpl implements TenantService {
                         .installedAt(tm.getInstalledAt())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public TenantListResponse getTenantListById(Long id, Language displayLanguage) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new TenantNotFoundException(id));
+        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
+        Integer modulesCount = countProvisionedModules(id);
+        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    @Override
+    public List<TenantListResponse> getAllTenantsAsList(Language displayLanguage) {
+        return tenantRepository.findAll().stream()
+                .map(tenant -> {
+                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                    Integer modulesCount = countProvisionedModules(tenant.getId());
+                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                })
+                .toList();
+    }
+
+    @Override
+    public List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage) {
+        return tenantRepository.findByStatus(status).stream()
+                .map(tenant -> {
+                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                    Integer modulesCount = countProvisionedModules(tenant.getId());
+                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                })
+                .toList();
+    }
+
+    @Override
+    public TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new TenantNotFoundException(id));
+        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
+        Integer modulesCount = countProvisionedModules(id);
+        return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    @Override
+    public TenantAdminInfoResponse getTenantAdminInfo(Long id) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+        return TenantAdminInfoResponse.from(tenant);
+    }
+
+    private ProvisioningStatus calculateProvisioningStatus(Long tenantId) {
+        Optional<ProvisioningJob> latestJob = provisioningJobRepository
+                .findFirstByTenantIdOrderByCreatedAtDesc(tenantId);
+
+        if (latestJob.isEmpty()) {
+            return ProvisioningStatus.IDLE;
+        }
+
+        String jobStatus = latestJob.get().getStatus();
+        return switch (jobStatus) {
+            case "pending", "running" -> ProvisioningStatus.PROVISIONING;
+            case "failed" -> ProvisioningStatus.FAILED;
+            case "succeeded" -> ProvisioningStatus.IDLE;
+            default -> ProvisioningStatus.IDLE;
+        };
+    }
+
+    private Integer countProvisionedModules(Long tenantId) {
+        Integer count = tenantModuleRepository.countEnabledModulesByTenantId(tenantId);
+        return count != null ? count : 0;
     }
 }

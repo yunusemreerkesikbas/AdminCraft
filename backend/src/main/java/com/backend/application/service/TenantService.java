@@ -1,25 +1,17 @@
 package com.backend.application.service;
 
+import com.backend.application.command.CreateTenantCommand;
+import com.backend.application.command.UpdateTenantCommand;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
-import com.backend.presentation.dto.request.CreateTenantRequest;
-import com.backend.presentation.dto.request.UpdateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantAdminInfoResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
+import com.backend.presentation.dto.response.TenantListResponse;
 
 import java.util.List;
 
 public interface TenantService {
-
-    TenantResponse createTenant(CreateTenantRequest request, Language displayLanguage);
-
-    TenantResponse getTenantById(Long id, Language displayLanguage);
-
-    List<TenantResponse> getAllTenants(Language displayLanguage);
-
-    List<TenantResponse> getTenantsByStatus(TenantStatus status, Language displayLanguage);
-
-    TenantResponse updateTenant(Long id, UpdateTenantRequest request, Language displayLanguage);
 
     void deleteTenant(Long id);
 
@@ -28,4 +20,18 @@ public interface TenantService {
     boolean hasAccessToTenant(String currentUserEmail, Long tenantId);
 
     List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage);
+
+    TenantDetailResponse createTenantWithDetail(CreateTenantCommand command, Language displayLanguage);
+
+    TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantCommand command, Language displayLanguage);
+
+    TenantListResponse getTenantListById(Long id, Language displayLanguage);
+
+    List<TenantListResponse> getAllTenantsAsList(Language displayLanguage);
+
+    List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage);
+
+    TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage);
+
+    TenantAdminInfoResponse getTenantAdminInfo(Long id);
 }
