@@ -3,7 +3,7 @@ package com.backend.application.usecase;
 import com.backend.application.service.TenantService;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.CreateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +13,9 @@ public class CreateTenantUseCase {
     @Autowired
     private TenantService tenantService;
 
-    public TenantResponse execute(CreateTenantRequest request, Language displayLanguage) {
+    public TenantDetailResponse execute(CreateTenantRequest request, Language displayLanguage) {
         validateRequest(request);
-        return tenantService.createTenant(request, displayLanguage);
+        return tenantService.createTenantWithDetail(request, displayLanguage);
     }
 
     private void validateRequest(CreateTenantRequest request) {
@@ -34,16 +34,10 @@ public class CreateTenantUseCase {
         if (request.adminName() == null || request.adminName().trim().isEmpty()) {
             throw new IllegalArgumentException("Admin name is required");
         }
-
-        // Subdomain availability endpoint removed; rely on repository check in service
-
-        // Validate subdomain format
         if (!request.subdomain().matches("^[a-z0-9]+(-[a-z0-9]+)*$")) {
             throw new IllegalArgumentException(
                     "Invalid subdomain format. Use only lowercase letters, numbers, and hyphens.");
         }
-
-        // Ensure default language is in supported languages
         if (!request.supportedLanguages().contains(request.defaultLanguage())) {
             throw new IllegalArgumentException("Default language must be included in supported languages");
         }

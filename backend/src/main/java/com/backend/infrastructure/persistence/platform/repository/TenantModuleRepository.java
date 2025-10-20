@@ -18,4 +18,7 @@ public interface TenantModuleRepository extends JpaRepository<TenantModule, Long
   List<TenantModule> findByTenantIdAndStatus(Long tenantId, String status);
 
   boolean existsByTenantIdAndModuleCode(Long tenantId, String moduleCode);
+
+  @Query("SELECT COUNT(tm) FROM TenantModule tm WHERE tm.tenantId = :tenantId AND tm.status = 'enabled'")
+  Integer countEnabledModulesByTenantId(@Param("tenantId") Long tenantId);
 }

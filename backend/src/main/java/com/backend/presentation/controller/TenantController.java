@@ -7,7 +7,9 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantAdminInfoResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
+import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -36,12 +38,12 @@ public class TenantController {
         private final MessageSource messageSource;
 
         @PostMapping
-        public ResponseEntity<ApiResponse<TenantResponse>> createTenant(
+        public ResponseEntity<ApiResponse<TenantDetailResponse>> createTenant(
                         @Valid @RequestBody CreateTenantRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                        TenantResponse response = createTenantUseCase.execute(request, displayLanguage);
+                        TenantDetailResponse response = createTenantUseCase.execute(request, displayLanguage);
                         String message = messageSource.getMessage("tenant.created.success", null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CREATED)
@@ -57,12 +59,12 @@ public class TenantController {
         }
 
         @GetMapping("/{id}")
-        public ResponseEntity<ApiResponse<TenantResponse>> getTenantById(
+        public ResponseEntity<ApiResponse<TenantDetailResponse>> getTenantById(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                        TenantResponse response = tenantService.getTenantById(id, displayLanguage);
+                        TenantDetailResponse response = tenantService.getTenantDetailById(id, displayLanguage);
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
                         log.error("Error getting tenant by id {}: {}", id, ex.getMessage());
@@ -75,14 +77,14 @@ public class TenantController {
 
         @GetMapping
         @PreAuthorize("hasRole('SUPER_ADMIN')")
-        public ResponseEntity<ApiResponse<List<TenantResponse>>> getAllTenants(
+        public ResponseEntity<ApiResponse<List<TenantListResponse>>> getAllTenants(
                         @RequestParam(required = false) TenantStatus status,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                        List<TenantResponse> response = status != null
-                                        ? tenantService.getTenantsByStatus(status, displayLanguage)
-                                        : tenantService.getAllTenants(displayLanguage);
+                        List<TenantListResponse> response = status != null
+                                        ? tenantService.getTenantsByStatusAsList(status, displayLanguage)
+                                        : tenantService.getAllTenantsAsList(displayLanguage);
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
                         log.error("Error getting all tenants: {}", ex.getMessage());
@@ -94,13 +96,14 @@ public class TenantController {
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<ApiResponse<TenantResponse>> updateTenant(
+        public ResponseEntity<ApiResponse<TenantDetailResponse>> updateTenant(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @Valid @RequestBody UpdateTenantRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                        TenantResponse response = tenantService.updateTenant(id, request, displayLanguage);
+                        TenantDetailResponse response = tenantService.updateTenantWithDetail(id, request,
+                                        displayLanguage);
                         String message = messageSource.getMessage("tenant.updated.success", null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -152,6 +155,30 @@ public class TenantController {
                         log.error("Error fetching modules for tenant {}", tenantId, ex);
                         String message = messageSource.getMessage("tenant.modules.error",
                                         new Object[] { tenantId },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        @GetMapping("/{id}/admin")
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
+        public ResponseEntity<ApiResponse<TenantAdminInfoResponse>> getTenantAdminInfo(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        TenantAdminInfoResponse response = tenantService.getTenantAdminInfo(id);
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (IllegalArgumentException notFound) {
+                        log.error("Tenant not found when fetching admin info for tenant {}", id);
+                        String message = messageSource.getMessage("tenant.not.found", new Object[] { id },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error fetching admin info for tenant {}", id, ex);
+                        String message = messageSource.getMessage("tenant.admin.error",
+                                        new Object[] { id },
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));

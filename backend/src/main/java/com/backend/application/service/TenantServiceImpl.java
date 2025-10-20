@@ -7,11 +7,15 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
+import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.TenantModule;
+import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
-import com.backend.presentation.dto.response.TenantResponse;
+import com.backend.presentation.dto.response.TenantAdminInfoResponse;
+import com.backend.presentation.dto.response.TenantDetailResponse;
+import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.constants.ValidationConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +38,11 @@ public class TenantServiceImpl implements TenantService {
     private final UserRepository userRepository;
     private final ProvisioningService provisioningService;
     private final TenantModuleRepository tenantModuleRepository;
+    private final ProvisioningJobRepository provisioningJobRepository;
 
     @Override
     @Transactional
-    public TenantResponse createTenant(CreateTenantRequest request, Language displayLanguage) {
+    public TenantDetailResponse createTenantWithDetail(CreateTenantRequest request, Language displayLanguage) {
         if (ValidationConstants.isReservedSubdomain(request.subdomain())) {
             throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + request.subdomain());
         }
@@ -58,33 +63,16 @@ public class TenantServiceImpl implements TenantService {
         tenant.setNotes(request.notes());
 
         Tenant savedTenant = tenantRepository.save(tenant);
-        return TenantResponse.from(savedTenant, displayLanguage);
-    }
 
-    @Override
-    public TenantResponse getTenantById(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-        return TenantResponse.from(tenant, displayLanguage);
-    }
+        String provisioningStatus = calculateProvisioningStatus(savedTenant.getId());
+        Integer modulesCount = countProvisionedModules(savedTenant.getId());
 
-    @Override
-    public List<TenantResponse> getAllTenants(Language displayLanguage) {
-        return tenantRepository.findAll().stream()
-                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-                .toList();
-    }
-
-    @Override
-    public List<TenantResponse> getTenantsByStatus(TenantStatus status, Language displayLanguage) {
-        return tenantRepository.findByStatus(status).stream()
-                .map(tenant -> TenantResponse.from(tenant, displayLanguage))
-                .toList();
+        return TenantDetailResponse.from(savedTenant, displayLanguage, provisioningStatus, modulesCount);
     }
 
     @Override
     @Transactional
-    public TenantResponse updateTenant(Long id, UpdateTenantRequest request, Language displayLanguage) {
+    public TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantRequest request, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
 
@@ -128,7 +116,10 @@ public class TenantServiceImpl implements TenantService {
 
         Tenant updatedTenant = tenantRepository.save(tenant);
 
-        return TenantResponse.from(updatedTenant, displayLanguage);
+        String provisioningStatus = calculateProvisioningStatus(updatedTenant.getId());
+        Integer modulesCount = countProvisionedModules(updatedTenant.getId());
+
+        return TenantDetailResponse.from(updatedTenant, displayLanguage, provisioningStatus, modulesCount);
     }
 
     @Override
@@ -212,5 +203,78 @@ public class TenantServiceImpl implements TenantService {
                         .installedAt(tm.getInstalledAt())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public TenantListResponse getTenantListById(Long id, Language displayLanguage) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+        String provisioningStatus = calculateProvisioningStatus(id);
+        Integer modulesCount = countProvisionedModules(id);
+        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    @Override
+    public List<TenantListResponse> getAllTenantsAsList(Language displayLanguage) {
+        return tenantRepository.findAll().stream()
+                .map(tenant -> {
+                    String provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                    Integer modulesCount = countProvisionedModules(tenant.getId());
+                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                })
+                .toList();
+    }
+
+    @Override
+    public List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage) {
+        return tenantRepository.findByStatus(status).stream()
+                .map(tenant -> {
+                    String provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                    Integer modulesCount = countProvisionedModules(tenant.getId());
+                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                })
+                .toList();
+    }
+
+    @Override
+    public TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+        String provisioningStatus = calculateProvisioningStatus(id);
+        Integer modulesCount = countProvisionedModules(id);
+        return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    @Override
+    public TenantAdminInfoResponse getTenantAdminInfo(Long id) {
+        Tenant tenant = tenantRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
+        return TenantAdminInfoResponse.from(tenant);
+    }
+
+    private String calculateProvisioningStatus(Long tenantId) {
+        Optional<ProvisioningJob> latestJob = provisioningJobRepository
+                .findFirstByTenantIdOrderByCreatedAtDesc(tenantId);
+
+        if (latestJob.isEmpty()) {
+            return "idle";
+        }
+
+        String jobStatus = latestJob.get().getStatus();
+        return switch (jobStatus) {
+            case "pending", "running" -> "provisioning";
+            case "failed" -> "failed";
+            case "succeeded" -> "idle";
+            default -> {
+                log.warn("Unknown provisioning job status '{}' for tenant {}, defaulting to 'idle'", jobStatus,
+                        tenantId);
+                yield "idle";
+            }
+        };
+    }
+
+    private Integer countProvisionedModules(Long tenantId) {
+        Integer count = tenantModuleRepository.countEnabledModulesByTenantId(tenantId);
+        return count != null ? count : 0;
     }
 }
