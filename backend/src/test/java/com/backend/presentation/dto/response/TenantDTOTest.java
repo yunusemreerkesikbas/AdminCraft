@@ -2,6 +2,7 @@ package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TenantDTOTest {
 
     private Tenant testTenant;
-    private final String testProvisioningStatus = "idle";
+    private final ProvisioningStatus testProvisioningStatus = ProvisioningStatus.IDLE;
     private final Integer testModulesCount = 3;
 
     @BeforeEach
@@ -61,8 +62,7 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount
-        );
+                testModulesCount);
 
         // Then
         assertThat(response).isNotNull();
@@ -87,9 +87,8 @@ class TenantDTOTest {
         TenantListResponse response = TenantListResponse.from(
                 testTenant,
                 Language.TR,
-                "provisioning",
-                testModulesCount
-        );
+                ProvisioningStatus.PROVISIONING,
+                testModulesCount);
 
         // Then
         assertThat(response.provisioningStatus()).isEqualTo("provisioning");
@@ -103,8 +102,7 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                5
-        );
+                5);
 
         // Then
         assertThat(response.provisionedModulesCount()).isEqualTo(5);
@@ -118,10 +116,10 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount
-        );
+                testModulesCount);
 
-        // Then - Verify record doesn't expose admin fields through toString or reflection
+        // Then - Verify record doesn't expose admin fields through toString or
+        // reflection
         String responseString = response.toString();
         assertThat(responseString).doesNotContain("admin@testcompany.com");
         assertThat(responseString).doesNotContain("+905551234567");
@@ -144,8 +142,7 @@ class TenantDTOTest {
                 testTenant,
                 Language.EN,
                 testProvisioningStatus,
-                testModulesCount
-        );
+                testModulesCount);
 
         // Then
         assertThat(response).isNotNull();
@@ -174,8 +171,7 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount
-        );
+                testModulesCount);
 
         // Then - Verify technical fields present
         assertThat(response.databaseName()).isEqualTo("ac_tenant_1");
@@ -196,8 +192,7 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount
-        );
+                testModulesCount);
 
         // Then
         String responseString = response.toString();

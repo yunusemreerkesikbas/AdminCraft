@@ -1,6 +1,7 @@
 package com.backend.presentation.dto.response;
 
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public record TenantDetailResponse(
     public static TenantDetailResponse from(
             com.backend.domain.entity.Tenant tenant,
             Language displayLanguage,
-            String provisioningStatus,
+            ProvisioningStatus provisioningStatus,
             Integer modulesCount) {
         return new TenantDetailResponse(
                 tenant.getId(),
@@ -47,7 +48,7 @@ public record TenantDetailResponse(
                 tenant.getDefaultLanguage(),
                 tenant.getDefaultLanguage().getEnglishName(),
                 tenant.getSupportedLanguages(),
-                provisioningStatus,
+                provisioningStatus.name().toLowerCase(),
                 modulesCount,
                 tenant.getCreatedAt(),
                 tenant.getActivatedAt(),
