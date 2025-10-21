@@ -23,11 +23,9 @@ public interface TenantRepository {
     Optional<Tenant> findByDatabaseName(String databaseName);
     
     Optional<Tenant> findByCustomDomain(String customDomain);
-    
+
     List<Tenant> findByStatus(TenantStatus status);
-    
-    List<Tenant> findByAdminEmail(String adminEmail);
-    
+
     boolean existsBySubdomain(String subdomain);
     
     boolean existsByDatabaseName(String databaseName);

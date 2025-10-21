@@ -461,14 +461,9 @@ export const langEN = {
             fields: {
                 subdomain: 'Subdomain',
                 companyName: 'Company Name',
-                adminEmail: 'Admin Email',
-                adminName: 'Admin Name',
                 defaultLanguage: 'Default Language',
                 supportedLanguages: 'Supported Languages',
                 customDomain: 'Custom Domain',
-                timezone: 'Timezone',
-                currency: 'Currency',
-                sslEnabled: 'SSL Enabled',
                 notes: 'Notes',
                 domainSuffix: '.admincraft.com',
             },
@@ -477,6 +472,27 @@ export const langEN = {
             deleteSuccess: 'Tenant successfully deleted',
             activateSuccess: 'Tenant successfully activated',
             suspendSuccess: 'Tenant successfully suspended',
+            validation: {
+                defaultLanguageInSupported: 'Default language must be in supported languages',
+            },
+        },
+        provisioning: {
+            title: 'Module Provisioning',
+            description: 'Select modules to provision for the tenant. Database structures will be created for selected modules.',
+            startButton: 'Start Provisioning',
+            coreModules: 'Core Modules',
+            b2cModules: 'B2C Modules',
+            b2bModules: 'B2B Modules',
+            status: {
+                pending: 'Pending',
+                running: 'Running',
+                succeeded: 'Completed',
+                failed: 'Failed',
+            },
+            complete: 'complete',
+            error: 'Error',
+            retry: 'Retry',
+            success: 'Modules successfully provisioned',
         },
 
         errors: {
@@ -504,5 +520,10 @@ export const langEN = {
                     'Fuse helps developers build organized dashboards full of rich modules. Join us and start building your application today.',
             },
         },
+    },
+    common: {
+        cancel: 'Cancel',
+        close: 'Close',
+        save: 'Save',
     },
 };

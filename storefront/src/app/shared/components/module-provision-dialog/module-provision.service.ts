@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
-import { ModuleCatalog, ProvisioningJob, ApiResponse, ProvisionRequest } from './module-provision.types';
+import { ApiResponse, ModuleCatalog, ProvisioningJob, ProvisionRequest } from './module-provision.types';
 
 @Injectable({
     providedIn: 'root'
@@ -16,11 +16,11 @@ export class ModuleProvisionService extends CrudHttpService<any, any, any> {
     };
 
     getModulesCatalog(): Observable<ApiResponse<ModuleCatalog[]>> {
-        return this.customGet<ApiResponse<ModuleCatalog[]>>('provisioningModulesCatalog');
+        return this.api.get<ApiResponse<ModuleCatalog[]>>('provisioningModulesCatalog');
     }
 
     provisionTenant(tenantId: number, request: ProvisionRequest): Observable<ApiResponse<ProvisioningJob>> {
-        return this.customPost<ApiResponse<ProvisioningJob>>(
+        return this.api.post<ApiResponse<ProvisioningJob>>(
             'provisioningTenantProvision',
             request,
             { tenantId }
@@ -28,7 +28,7 @@ export class ModuleProvisionService extends CrudHttpService<any, any, any> {
     }
 
     getJobStatus(jobId: number): Observable<ApiResponse<ProvisioningJob>> {
-        return this.customGet<ApiResponse<ProvisioningJob>>(
+        return this.api.get<ApiResponse<ProvisioningJob>>(
             'provisioningJob',
             { jobId }
         );

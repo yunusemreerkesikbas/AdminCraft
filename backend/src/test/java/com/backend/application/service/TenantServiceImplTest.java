@@ -11,7 +11,6 @@ import com.backend.infrastructure.persistence.platform.repository.ProvisioningJo
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.application.command.CreateTenantCommand;
 import com.backend.application.command.UpdateTenantCommand;
-import com.backend.presentation.dto.response.TenantAdminInfoResponse;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,13 +75,7 @@ class TenantServiceImplTest {
                 testTenant.setStatus(TenantStatus.ACTIVE);
                 testTenant.setDefaultLanguage(Language.TR);
                 testTenant.setSupportedLanguages(new HashSet<>(Set.of(Language.TR, Language.EN)));
-                testTenant.setAdminEmail("admin@testcompany.com");
-                testTenant.setAdminName("Admin User");
-                testTenant.setPhone("+905551234567");
-                testTenant.setTimezone("Europe/Istanbul");
-                testTenant.setCurrency("TRY");
                 testTenant.setCustomDomain("testcompany.com");
-                testTenant.setSslEnabled(true);
                 testTenant.setStorageUsedMb(100L);
                 testTenant.setCreatedAt(LocalDateTime.now());
                 testTenant.setUpdatedAt(LocalDateTime.now());
@@ -90,26 +83,15 @@ class TenantServiceImplTest {
                 createRequest = new CreateTenantCommand(
                                 "newcompany",
                                 "New Company",
-                                "admin@newcompany.com",
-                                "Admin",
-                                "+905559876543",
                                 Language.TR,
                                 new HashSet<>(Set.of(Language.TR, Language.EN)),
-                                "Europe/Istanbul",
-                                "TRY",
                                 "Test notes");
 
                 updateRequest = new UpdateTenantCommand(
                                 "Updated Company",
-                                "updated@company.com",
-                                "Updated Admin",
-                                "+905551111111",
                                 Language.EN,
                                 new HashSet<>(Set.of(Language.EN, Language.TR)),
                                 "updated.com",
-                                true,
-                                "UTC",
-                                "USD",
                                 "Updated notes");
         }
 
@@ -338,38 +320,6 @@ class TenantServiceImplTest {
                 // Verify NO admin PII in detail response
                 assertThat(response.toString()).doesNotContain("admin@testcompany.com");
                 assertThat(response.toString()).doesNotContain("+905551234567");
-        }
-
-        @Test
-        @DisplayName("Should get tenant admin info successfully")
-        void testGetTenantAdminInfo_Success() {
-                // Given
-                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
-
-                // When
-                TenantAdminInfoResponse response = tenantService.getTenantAdminInfo(1L);
-
-                // Then
-                assertThat(response).isNotNull();
-                assertThat(response.adminEmail()).isEqualTo("admin@testcompany.com");
-                assertThat(response.adminName()).isEqualTo("Admin User");
-                assertThat(response.phone()).isEqualTo("+905551234567");
-
-                verify(tenantRepository).findById(1L);
-        }
-
-        @Test
-        @DisplayName("Should throw exception when getting admin info for non-existent tenant")
-        void testGetTenantAdminInfo_TenantNotFound() {
-                // Given
-                when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
-
-                // When/Then
-                assertThatThrownBy(() -> tenantService.getTenantAdminInfo(999L))
-                                .isInstanceOf(IllegalArgumentException.class)
-                                .hasMessageContaining("Tenant not found");
-
-                verify(tenantRepository).findById(999L);
         }
 
         // ========================================

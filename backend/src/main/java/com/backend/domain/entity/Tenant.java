@@ -51,37 +51,15 @@ public class Tenant {
     
     @ElementCollection(targetClass = Language.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "tenant_supported_languages", 
+    @CollectionTable(name = "tenant_supported_languages",
                     joinColumns = @JoinColumn(name = "tenant_id"))
     @Column(name = "language")
     private Set<Language> supportedLanguages = new HashSet<>(Set.of(Language.TR));
-    
-    @Email(message = "validation.email.invalid")
-    @NotBlank(message = "validation.admin.email.required")
-    @Column(name = "admin_email", nullable = false)
-    private String adminEmail;
-    
-    @NotBlank(message = "validation.admin.name.required")
-    @Size(max = 100, message = "validation.admin.name.size")
-    @Column(name = "admin_name", nullable = false)
-    private String adminName;
-    
-    @Size(max = 20, message = "validation.phone.size")
-    private String phone;
-    
+
     @Size(max = 100, message = "validation.custom.domain.size")
     @Column(name = "custom_domain")
     private String customDomain;
-    
-    @Column(name = "ssl_enabled")
-    private Boolean sslEnabled = false;
-    
-    @Size(max = 50, message = "validation.timezone.size")
-    private String timezone = "Europe/Istanbul";
-    
-    @Size(max = 3, message = "validation.currency.size")
-    private String currency = "TRY";
-    
+
     @Column(name = "storage_used_mb")
     private Long storageUsedMb = 0L;
     

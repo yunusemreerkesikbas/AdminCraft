@@ -141,3 +141,4 @@ ADD CONSTRAINT fk_pages_category
 FOREIGN KEY (category_id) REFERENCES page_categories(id) ON DELETE SET NULL;
 
 
+

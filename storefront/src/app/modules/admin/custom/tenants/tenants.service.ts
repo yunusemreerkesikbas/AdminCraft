@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
-import { Observable, interval, switchMap, takeWhile } from 'rxjs';
 import { TenantModule } from 'app/core/tenant/tenant.types';
+import { Observable, interval, switchMap, takeWhile } from 'rxjs';
 import {
     CreateTenantRequest,
     ProvisionLanguagesRequest,

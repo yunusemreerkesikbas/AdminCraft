@@ -6,23 +6,25 @@ import java.util.Optional;
 
 public enum Language {
 
-    TR("tr", "tur", "Turkish", false),
+    TR("tr", "tur", "Turkish", "Türkçe", false),
 
-    EN("en", "eng", "English", false),
-    ES("es", "spa", "Spanish", false),
-    RU("ru", "rus", "Russian", false),
-    AR("ar", "ara", "Arabic", true);
+    EN("en", "eng", "English", "English", false),
+    ES("es", "spa", "Spanish", "Español", false),
+    RU("ru", "rus", "Russian", "Русский", false),
+    AR("ar", "ara", "Arabic", "العربية", true);
 
     private final String code;
 
     private final String iso6392;
     private final String englishName;
+    private final String nativeName;
     private final boolean rightToLeft;
 
-    Language(String code, String iso6392, String englishName, boolean rightToLeft) {
+    Language(String code, String iso6392, String englishName, String nativeName, boolean rightToLeft) {
         this.code = code;
         this.iso6392 = iso6392;
         this.englishName = englishName;
+        this.nativeName = nativeName;
         this.rightToLeft = rightToLeft;
     }
 
@@ -36,6 +38,10 @@ public enum Language {
 
     public String getEnglishName() {
         return englishName;
+    }
+
+    public String getNativeName() {
+        return nativeName;
     }
 
     public boolean isRightToLeft() {

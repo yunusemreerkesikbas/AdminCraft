@@ -27,16 +27,10 @@ public class CreateTenantUseCase {
             throw new IllegalArgumentException("validation.company.name.required");
         }
 
-        if (command.adminEmail() == null || command.adminEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("validation.admin.email.required");
-        }
-
-        if (command.adminName() == null || command.adminName().trim().isEmpty()) {
-            throw new IllegalArgumentException("validation.admin.name.required");
-        }
         if (!command.subdomain().matches("^[a-z0-9]+(-[a-z0-9]+)*$")) {
             throw new IllegalArgumentException("validation.subdomain.pattern");
         }
+
         if (command.supportedLanguages() == null || !command.supportedLanguages().contains(command.defaultLanguage())) {
             throw new IllegalArgumentException("Default language must be included in supported languages");
         }

@@ -290,19 +290,23 @@ export class TranslationService {
             return this._config$.getValue().supportedLanguages.includes(language);
         }
         
-        return tenant.supportedLanguages?.some((lang: Language) => 
+        return tenant.supportedLanguages?.some((lang: Language | { code: string }) => 
             this.mapTenantLanguageToSupported(lang) === language
         ) ?? false;
     }
 
-    private mapTenantLanguageToSupported(tenantLanguage: Language): SupportedLanguage {
-        switch (tenantLanguage) {
+    private mapTenantLanguageToSupported(tenantLanguage: Language | { code: string }): SupportedLanguage {
+        const code = typeof tenantLanguage === 'object' ? tenantLanguage.code : tenantLanguage;
+        
+        switch (code) {
             case Language.TR:
+            case 'TR':
                 return SupportedLanguage.TR;
             case Language.EN:
+            case 'EN':
                 return SupportedLanguage.EN;
             default:
-                return SupportedLanguage.TR; // fallback
+                return SupportedLanguage.TR;
         }
     }
 

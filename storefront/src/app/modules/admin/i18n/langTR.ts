@@ -461,14 +461,9 @@ export const langTR = {
             fields: {
                 subdomain: 'Alt Alan Adı',
                 companyName: 'Şirket Adı',
-                adminEmail: 'Yönetici E-posta',
-                adminName: 'Yönetici Adı',
                 defaultLanguage: 'Varsayılan Dil',
                 supportedLanguages: 'Desteklenen Diller',
                 customDomain: 'Özel Alan Adı',
-                timezone: 'Zaman Dilimi',
-                currency: 'Para Birimi',
-                sslEnabled: 'SSL Etkin',
                 notes: 'Notlar',
                 domainSuffix: '.admincraft.com',
             },
@@ -477,6 +472,27 @@ export const langTR = {
             deleteSuccess: 'Tenant başarıyla silindi',
             activateSuccess: 'Tenant başarıyla aktifleştirildi',
             suspendSuccess: 'Tenant başarıyla askıya alındı',
+            validation: {
+                defaultLanguageInSupported: 'Varsayılan dil desteklenen diller arasında olmalıdır',
+            },
+        },
+        provisioning: {
+            title: 'Modül Hazırlama',
+            description: 'Tenant için yüklenecek modülleri seçin. Seçilen modüller için veritabanı yapıları oluşturulacaktır.',
+            startButton: 'Hazırlamayı Başlat',
+            coreModules: 'Temel Modüller',
+            b2cModules: 'B2C Modülleri',
+            b2bModules: 'B2B Modülleri',
+            status: {
+                pending: 'Beklemede',
+                running: 'İşleniyor',
+                succeeded: 'Tamamlandı',
+                failed: 'Başarısız',
+            },
+            complete: 'tamamlandı',
+            error: 'Hata',
+            retry: 'Tekrar Dene',
+            success: 'Modüller başarıyla hazırlandı',
         },
 
         errors: {
@@ -504,5 +520,10 @@ export const langTR = {
                     'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
             },
         },
+    },
+    common: {
+        cancel: 'İptal',
+        close: 'Kapat',
+        save: 'Kaydet',
     },
 };

@@ -14,10 +14,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
-import { ModuleProvisionDialogData } from '@shared/components/module-provision-dialog/module-provision.types';
 import { LanguageProvisionDialogComponent } from '@shared/components/language-provision-dialog/language-provision-dialog.component';
 import { LanguageProvisionDialogData } from '@shared/components/language-provision-dialog/language-provision.types';
+import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
+import { ModuleProvisionDialogData } from '@shared/components/module-provision-dialog/module-provision.types';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
@@ -81,15 +81,9 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
             initial: {
                 companyName: '',
                 subdomain: '',
-                adminName: '',
-                adminEmail: '',
-                phone: '',
                 supportedLanguages: [Language.TR],
                 defaultLanguage: Language.TR,
                 customDomain: '',
-                timezone: 'Europe/Istanbul',
-                currency: 'TRY',
-                sslEnabled: true,
                 notes: ''
             },
             modalData: { disableClose: true, width: '720px' }
@@ -104,15 +98,9 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 const payload: CreateTenantRequest = {
                     companyName: result.companyName || '',
                     subdomain: result.subdomain || '',
-                    adminName: result.adminName || '',
-                    adminEmail: result.adminEmail || '',
-                    phone: result.phone || undefined,
                     supportedLanguages: (result.supportedLanguages as Language[]) || [Language.TR],
                     defaultLanguage: (result.defaultLanguage as Language) || Language.TR,
                     customDomain: result.customDomain || undefined,
-                    timezone: result.timezone || undefined,
-                    currency: result.currency || undefined,
-                    sslEnabled: result.sslEnabled ?? true,
                     notes: result.notes || undefined
                 };
 
@@ -128,6 +116,8 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                         next: (tenant) => {
                             this.store.addItem(tenant);
                             this.#notify.success('admin.common.messages.operationSuccess');
+                            
+                            this.provisionTenant(tenant);
                         },
                         error: () => this.#notify.alert('admin.common.errors.unexpected')
                     });
@@ -135,26 +125,21 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     }
 
     editTenant(tenant: Tenant): void {
-        const oldSupportedLanguages = tenant.supportedLanguages || [tenant.defaultLanguage];
+        const oldSupportedLanguages: Language[] = tenant.supportedLanguages 
+            ? tenant.supportedLanguages.map(lang => lang.code as Language)
+            : [tenant.defaultLanguage];
 
         const options: ItemDialogOptions<UpdateTenantRequest, number> = {
             titleKey: 'admin.tenants.title',
             mode: 'edit',
-            schema: this.#buildTenantDialogSchema(),
+            schema: this.#buildTenantDialogSchema(true),
             languages: [],
             id: tenant.id,
             initial: {
                 companyName: tenant.companyName,
-                subdomain: tenant.subdomain,
-                adminName: tenant.adminName,
-                adminEmail: tenant.adminEmail,
-                phone: tenant.phone || '',
                 supportedLanguages: oldSupportedLanguages,
                 defaultLanguage: tenant.defaultLanguage,
                 customDomain: tenant.customDomain || '',
-                timezone: tenant.timezone || '',
-                currency: tenant.currency || '',
-                sslEnabled: tenant.sslEnabled ?? true,
                 notes: tenant.notes || ''
             },
             modalData: { disableClose: true, width: '720px' }
@@ -236,24 +221,26 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
         });
     }
 
-    #buildTenantDialogSchema(): ItemDialogSchema {
+    #buildTenantDialogSchema(isEdit: boolean = false): ItemDialogSchema {
         const languageOptions = Object.values(Language).map((lang) => ({ value: lang as Language, label: lang }));
 
+        const baseFields = [
+            { key: 'companyName', type: 'text' as const, labelKey: 'admin.tenants.fields.companyName', required: true, maxLength: 200, placeholder: 'Acme Inc.' },
+        ];
+
+        const subdomainField = !isEdit ? [
+            { key: 'subdomain', type: 'text' as const, labelKey: 'admin.tenants.fields.subdomain', required: true, maxLength: 50, placeholder: 'acme' }
+        ] : [];
+
+        const commonFields = [
+            { key: 'supportedLanguages', type: 'select' as const, labelKey: 'admin.common.fields.supportedLanguages', required: true, options: languageOptions, multiple: true },
+            { key: 'defaultLanguage', type: 'select' as const, labelKey: 'admin.tenants.fields.defaultLanguage', required: true, options: languageOptions },
+            { key: 'customDomain', type: 'text' as const, labelKey: 'admin.tenants.fields.customDomain', maxLength: 200, placeholder: 'example.com' },
+            { key: 'notes', type: 'textarea' as const, labelKey: 'admin.tenants.fields.notes', maxLength: 1000, placeholder: '' }
+        ];
+
         return {
-            general: [
-                { key: 'companyName', type: 'text', labelKey: 'admin.tenants.fields.companyName', required: true, maxLength: 200 },
-                { key: 'subdomain', type: 'text', labelKey: 'admin.tenants.fields.subdomain', required: true, maxLength: 50, placeholder: 'acme' },
-                { key: 'adminName', type: 'text', labelKey: 'admin.tenants.fields.adminName', required: true, maxLength: 100 },
-                { key: 'adminEmail', type: 'text', labelKey: 'admin.tenants.fields.adminEmail', required: true, maxLength: 150 },
-                { key: 'phone', type: 'text', labelKey: 'admin.common.fields.phone', maxLength: 30 },
-                { key: 'supportedLanguages', type: 'select', labelKey: 'admin.common.fields.supportedLanguages', required: true, options: languageOptions, multiple: true },
-                { key: 'defaultLanguage', type: 'select', labelKey: 'admin.tenants.fields.defaultLanguage', required: true, options: languageOptions },
-                { key: 'customDomain', type: 'text', labelKey: 'admin.tenants.fields.customDomain', maxLength: 200, placeholder: 'example.com' },
-                { key: 'timezone', type: 'text', labelKey: 'admin.tenants.fields.timezone', maxLength: 100 },
-                { key: 'currency', type: 'text', labelKey: 'admin.tenants.fields.currency', maxLength: 10 },
-                { key: 'sslEnabled', type: 'checkbox', labelKey: 'admin.tenants.fields.sslEnabled' },
-                { key: 'notes', type: 'textarea', labelKey: 'admin.tenants.fields.notes', maxLength: 1000, placeholder: '' }
-            ],
+            general: [...baseFields, ...subdomainField, ...commonFields],
             i18n: []
         };
     }

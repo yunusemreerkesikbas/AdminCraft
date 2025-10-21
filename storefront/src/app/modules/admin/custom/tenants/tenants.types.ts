@@ -5,14 +5,8 @@ export interface Tenant {
     databaseName: string;
     status: TenantStatus;
     defaultLanguage: Language;
-    supportedLanguages: Language[];
-    adminEmail: string;
-    adminName: string;
-    phone?: string;
+    supportedLanguages: LanguageResponse[];
     customDomain?: string;
-    timezone?: string;
-    currency?: string;
-    sslEnabled?: boolean;
     notes?: string;
     createdAt: string;
     updatedAt?: string;
@@ -43,33 +37,27 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
     [Language.AR]: 'العربية'
 };
 
+export interface LanguageResponse {
+    code: string;
+    nativeName: string;
+    englishName: string;
+    rtl: boolean;
+}
+
 export interface CreateTenantRequest {
     companyName: string;
     subdomain: string;
-    adminName: string;
-    adminEmail: string;
-    phone?: string;
     defaultLanguage: Language;
     supportedLanguages: Language[];
     customDomain?: string;
-    timezone?: string;
-    currency?: string;
-    sslEnabled?: boolean;
     notes?: string;
 }
 
 export interface UpdateTenantRequest {
     companyName?: string;
-    subdomain?: string;
-    adminName?: string;
-    adminEmail?: string;
-    phone?: string;
     defaultLanguage?: Language;
     supportedLanguages?: Language[];
     customDomain?: string;
-    timezone?: string;
-    currency?: string;
-    sslEnabled?: boolean;
     notes?: string;
 }
 
@@ -99,4 +87,29 @@ export interface ProvisioningJobDto {
     startedAt?: string | null;
     completedAt?: string | null;
     errorMessage?: string | null;
+}
+
+export interface TenantListResponse {
+    id: number;
+    subdomain: string;
+    companyName: string;
+    status: TenantStatus;
+    defaultLanguage: Language;
+    supportedLanguages: LanguageResponse[];
+
+    provisioningStatus: 'idle' | 'provisioning' | 'failed';
+    provisionedModulesCount: number;
+
+    createdAt: string;
+    activatedAt?: string;
+    customDomain?: string;
+}
+
+export interface TenantDetailResponse extends TenantListResponse {
+    databaseName: string;
+    storageUsedMb?: number;
+    fullDomain?: string;
+    updatedAt?: string;
+    lastBackupAt?: string;
+    notes?: string;
 }
