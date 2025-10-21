@@ -7,7 +7,6 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.presentation.dto.request.CreateTenantRequest;
 import com.backend.presentation.dto.request.UpdateTenantRequest;
-import com.backend.presentation.dto.response.TenantAdminInfoResponse;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.common.ApiResponse;
@@ -44,10 +43,8 @@ public class TenantController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                 var cmd = new com.backend.application.command.CreateTenantCommand(
-                                request.subdomain(), request.companyName(), request.adminEmail(),
-                                request.adminName(), request.phone(), request.defaultLanguage(),
-                                request.supportedLanguages(), request.timezone(), request.currency(),
-                                request.notes());
+                                request.subdomain(), request.companyName(), request.defaultLanguage(),
+                                request.supportedLanguages(), request.notes());
                 TenantDetailResponse response = createTenantUseCase.execute(cmd, displayLanguage);
                 String message = messageSource.getMessage("tenant.created.success", null,
                                 Locale.forLanguageTag(languageCode));
@@ -85,10 +82,8 @@ public class TenantController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                 var cmd = new com.backend.application.command.UpdateTenantCommand(
-                                request.companyName(), request.adminEmail(), request.adminName(),
-                                request.phone(), request.defaultLanguage(), request.supportedLanguages(),
-                                request.customDomain(), request.sslEnabled(), request.timezone(),
-                                request.currency(), request.notes());
+                                request.companyName(), request.defaultLanguage(), request.supportedLanguages(),
+                                request.customDomain(), request.notes());
                 TenantDetailResponse response = tenantService.updateTenantWithDetail(id, cmd, displayLanguage);
                 String message = messageSource.getMessage("tenant.updated.success", null,
                                 Locale.forLanguageTag(languageCode));
@@ -114,14 +109,5 @@ public class TenantController {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                 List<TenantModuleResponse> modules = tenantService.getTenantModules(tenantId, displayLanguage);
                 return ResponseEntity.ok(ApiResponse.success(modules));
-        }
-
-        @GetMapping("/{id}/admin")
-        @PreAuthorize("hasRole('SUPER_ADMIN')")
-        public ResponseEntity<ApiResponse<TenantAdminInfoResponse>> getTenantAdminInfo(
-                        @PathVariable @Valid @NotNull @Min(1) Long id,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                TenantAdminInfoResponse response = tenantService.getTenantAdminInfo(id);
-                return ResponseEntity.ok(ApiResponse.success(response));
         }
 }

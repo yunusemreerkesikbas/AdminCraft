@@ -74,12 +74,7 @@ public class TenantRepositoryImpl implements TenantRepository {
     public List<Tenant> findByStatus(TenantStatus status) {
         return tenantJpaRepository.findByStatus(status);
     }
-    
-    @Override
-    public List<Tenant> findByAdminEmail(String adminEmail) {
-        return tenantJpaRepository.findByAdminEmail(adminEmail);
-    }
-    
+
     @Override
     public boolean existsBySubdomain(String subdomain) {
         return tenantJpaRepository.existsBySubdomain(subdomain);

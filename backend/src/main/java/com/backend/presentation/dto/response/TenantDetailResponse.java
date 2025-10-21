@@ -6,16 +6,15 @@ import com.backend.domain.enums.TenantStatus;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record TenantDetailResponse(
         Long id,
         String subdomain,
         String companyName,
         TenantStatus status,
-        String statusDisplay,
         Language defaultLanguage,
-        String defaultLanguageDisplay,
-        Set<Language> supportedLanguages,
+        Set<LanguageResponse> supportedLanguages,
         String provisioningStatus,
         Integer provisionedModulesCount,
 
@@ -23,11 +22,8 @@ public record TenantDetailResponse(
         LocalDateTime activatedAt,
 
         String customDomain,
-        Boolean sslEnabled,
 
         String databaseName,
-        String timezone,
-        String currency,
         Long storageUsedMb,
         String fullDomain,
         LocalDateTime updatedAt,
@@ -44,19 +40,16 @@ public record TenantDetailResponse(
                 tenant.getSubdomain(),
                 tenant.getCompanyName(),
                 tenant.getStatus(),
-                tenant.getStatus().getDisplayName(displayLanguage),
                 tenant.getDefaultLanguage(),
-                tenant.getDefaultLanguage().getEnglishName(),
-                tenant.getSupportedLanguages(),
+                tenant.getSupportedLanguages().stream()
+                        .map(LanguageResponse::from)
+                        .collect(Collectors.toSet()),
                 provisioningStatus.name().toLowerCase(),
                 modulesCount,
                 tenant.getCreatedAt(),
                 tenant.getActivatedAt(),
                 tenant.getCustomDomain(),
-                tenant.getSslEnabled(),
                 tenant.getDatabaseName(),
-                tenant.getTimezone(),
-                tenant.getCurrency(),
                 tenant.getStorageUsedMb(),
                 tenant.getFullDomain(),
                 tenant.getUpdatedAt(),

@@ -14,7 +14,6 @@ import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.presentation.dto.response.TenantAdminInfoResponse;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.domain.exception.TenantNotFoundException;
@@ -54,13 +53,8 @@ public class TenantServiceImpl implements TenantService {
         Tenant tenant = new Tenant();
         tenant.setSubdomain(command.subdomain());
         tenant.setCompanyName(command.companyName());
-        tenant.setAdminEmail(command.adminEmail());
-        tenant.setAdminName(command.adminName());
-        tenant.setPhone(command.phone());
         tenant.setDefaultLanguage(command.defaultLanguage());
         tenant.setSupportedLanguages(command.supportedLanguages());
-        tenant.setTimezone(command.timezone());
-        tenant.setCurrency(command.currency());
         tenant.setNotes(command.notes());
 
         Tenant savedTenant = tenantRepository.save(tenant);
@@ -80,15 +74,6 @@ public class TenantServiceImpl implements TenantService {
         if (command.companyName() != null) {
             tenant.setCompanyName(command.companyName());
         }
-        if (command.adminEmail() != null) {
-            tenant.setAdminEmail(command.adminEmail());
-        }
-        if (command.adminName() != null) {
-            tenant.setAdminName(command.adminName());
-        }
-        if (command.phone() != null) {
-            tenant.setPhone(command.phone());
-        }
         if (command.defaultLanguage() != null) {
             tenant.setDefaultLanguage(command.defaultLanguage());
         }
@@ -101,15 +86,6 @@ public class TenantServiceImpl implements TenantService {
                 throw new IllegalArgumentException("Custom domain already exists: " + command.customDomain());
             }
             tenant.setCustomDomain(command.customDomain());
-        }
-        if (command.sslEnabled() != null) {
-            tenant.setSslEnabled(command.sslEnabled());
-        }
-        if (command.timezone() != null) {
-            tenant.setTimezone(command.timezone());
-        }
-        if (command.currency() != null) {
-            tenant.setCurrency(command.currency());
         }
         if (command.notes() != null) {
             tenant.setNotes(command.notes());
@@ -244,13 +220,6 @@ public class TenantServiceImpl implements TenantService {
         ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
         Integer modulesCount = countProvisionedModules(id);
         return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-    }
-
-    @Override
-    public TenantAdminInfoResponse getTenantAdminInfo(Long id) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Tenant not found with id: " + id));
-        return TenantAdminInfoResponse.from(tenant);
     }
 
     private ProvisioningStatus calculateProvisioningStatus(Long tenantId) {

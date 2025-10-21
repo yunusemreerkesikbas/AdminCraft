@@ -5,7 +5,6 @@ import com.backend.application.command.UpdateTenantCommand;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
-import com.backend.presentation.dto.response.TenantAdminInfoResponse;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 
@@ -32,6 +31,4 @@ public interface TenantService {
     List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage);
 
     TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage);
-
-    TenantAdminInfoResponse getTenantAdminInfo(Long id);
 }
