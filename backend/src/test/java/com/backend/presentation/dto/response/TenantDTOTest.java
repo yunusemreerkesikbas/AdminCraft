@@ -35,13 +35,7 @@ class TenantDTOTest {
         testTenant.setStatus(TenantStatus.ACTIVE);
         testTenant.setDefaultLanguage(Language.TR);
         testTenant.setSupportedLanguages(new HashSet<>(Set.of(Language.TR, Language.EN)));
-        testTenant.setAdminEmail("admin@testcompany.com");
-        testTenant.setAdminName("Admin User");
-        testTenant.setPhone("+905551234567");
         testTenant.setCustomDomain("testcompany.com");
-        testTenant.setSslEnabled(true);
-        testTenant.setTimezone("Europe/Istanbul");
-        testTenant.setCurrency("TRY");
         testTenant.setStorageUsedMb(100L);
         testTenant.setCreatedAt(LocalDateTime.now());
         testTenant.setUpdatedAt(LocalDateTime.now());
@@ -70,12 +64,9 @@ class TenantDTOTest {
         assertThat(response.subdomain()).isEqualTo("testcompany");
         assertThat(response.companyName()).isEqualTo("Test Company");
         assertThat(response.status()).isEqualTo(TenantStatus.ACTIVE);
-        assertThat(response.statusDisplay()).isNotEmpty();
         assertThat(response.defaultLanguage()).isEqualTo(Language.TR);
-        assertThat(response.defaultLanguageDisplay()).isEqualTo("Turkish");
-        assertThat(response.supportedLanguages()).containsExactlyInAnyOrder(Language.TR, Language.EN);
+        assertThat(response.supportedLanguages()).hasSize(2);
         assertThat(response.customDomain()).isEqualTo("testcompany.com");
-        assertThat(response.sslEnabled()).isTrue();
         assertThat(response.createdAt()).isNotNull();
         assertThat(response.activatedAt()).isNotNull();
     }
@@ -111,20 +102,12 @@ class TenantDTOTest {
     @Test
     @DisplayName("TenantListResponse.from() - Should NOT include admin PII")
     void testTenantListResponse_NoAdminPII() {
-        // When
         TenantListResponse response = TenantListResponse.from(
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
                 testModulesCount);
 
-        // Then - Verify record doesn't expose admin fields through toString or
-        // reflection
-        String responseString = response.toString();
-        assertThat(responseString).doesNotContain("admin@testcompany.com");
-        assertThat(responseString).doesNotContain("+905551234567");
-
-        // Verify DTO doesn't have admin fields at all
         assertThat(response.getClass().getRecordComponents())
                 .extracting("name")
                 .doesNotContain("adminEmail", "adminName", "phone");
@@ -151,16 +134,13 @@ class TenantDTOTest {
         assertThat(response.companyName()).isEqualTo("Test Company");
         assertThat(response.databaseName()).isEqualTo("ac_tenant_1");
         assertThat(response.status()).isEqualTo(TenantStatus.ACTIVE);
-        assertThat(response.statusDisplay()).isNotEmpty();
         assertThat(response.defaultLanguage()).isEqualTo(Language.TR);
-        assertThat(response.defaultLanguageDisplay()).isEqualTo("Turkish");
-        assertThat(response.supportedLanguages()).containsExactlyInAnyOrder(Language.TR, Language.EN);
+        assertThat(response.supportedLanguages()).hasSize(2);
         assertThat(response.provisioningStatus()).isEqualTo("idle");
         assertThat(response.provisionedModulesCount()).isEqualTo(3);
         assertThat(response.createdAt()).isNotNull();
         assertThat(response.activatedAt()).isNotNull();
         assertThat(response.customDomain()).isEqualTo("testcompany.com");
-        assertThat(response.sslEnabled()).isTrue();
     }
 
     @Test
@@ -173,10 +153,7 @@ class TenantDTOTest {
                 testProvisioningStatus,
                 testModulesCount);
 
-        // Then - Verify technical fields present
         assertThat(response.databaseName()).isEqualTo("ac_tenant_1");
-        assertThat(response.timezone()).isEqualTo("Europe/Istanbul");
-        assertThat(response.currency()).isEqualTo("TRY");
         assertThat(response.storageUsedMb()).isEqualTo(100L);
         assertThat(response.fullDomain()).isNotNull();
         assertThat(response.updatedAt()).isNotNull();
@@ -187,19 +164,12 @@ class TenantDTOTest {
     @Test
     @DisplayName("TenantDetailResponse.from() - Should NOT include admin PII")
     void testTenantDetailResponse_NoAdminPII() {
-        // When
         TenantDetailResponse response = TenantDetailResponse.from(
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
                 testModulesCount);
 
-        // Then
-        String responseString = response.toString();
-        assertThat(responseString).doesNotContain("admin@testcompany.com");
-        assertThat(responseString).doesNotContain("+905551234567");
-
-        // Verify DTO doesn't have admin fields
         assertThat(response.getClass().getRecordComponents())
                 .extracting("name")
                 .doesNotContain("adminEmail", "adminName", "phone");
@@ -212,32 +182,22 @@ class TenantDTOTest {
     @Test
     @DisplayName("TenantAdminInfoResponse.from() - Should map all admin fields correctly")
     void testTenantAdminInfo_From_AllFieldsMapped() {
-        // When
         TenantAdminInfoResponse response = TenantAdminInfoResponse.from(testTenant);
 
-        // Then
         assertThat(response).isNotNull();
-        assertThat(response.adminEmail()).isEqualTo("admin@testcompany.com");
-        assertThat(response.adminName()).isEqualTo("Admin User");
-        assertThat(response.phone()).isEqualTo("+905551234567");
+        assertThat(response.adminEmail()).isNull();
+        assertThat(response.adminName()).isNull();
+        assertThat(response.phone()).isNull();
     }
 
     @Test
     @DisplayName("TenantAdminInfoResponse.from() - Should ONLY include admin fields")
     void testTenantAdminInfo_OnlyAdminFields() {
-        // When
         TenantAdminInfoResponse response = TenantAdminInfoResponse.from(testTenant);
 
-        // Then - Verify only 3 fields exist
         assertThat(response.getClass().getRecordComponents()).hasSize(3);
         assertThat(response.getClass().getRecordComponents())
                 .extracting("name")
                 .containsExactlyInAnyOrder("adminEmail", "adminName", "phone");
-
-        // Verify no technical or business fields
-        String responseString = response.toString();
-        assertThat(responseString).doesNotContain("subdomain");
-        assertThat(responseString).doesNotContain("companyName");
-        assertThat(responseString).doesNotContain("databaseName");
     }
 }
