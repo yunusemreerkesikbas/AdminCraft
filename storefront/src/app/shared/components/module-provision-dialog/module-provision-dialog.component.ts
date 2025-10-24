@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, signal, computed, DestroyRef, inject, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, Inject, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { interval, switchMap } from 'rxjs';
+import { interval, switchMap, takeWhile } from 'rxjs';
 import { ModuleCardComponent } from './module-card/module-card.component';
 import { ModuleProvisionService } from './module-provision.service';
 import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './module-provision.types';
@@ -182,6 +182,10 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
         interval(2000)
             .pipe(
                 switchMap(() => this.#service.getJobStatus(jobId)),
+                takeWhile((response) => {
+                    const job = response.data;
+                    return job?.status === 'pending' || job?.status === 'running';
+                }, true),
                 takeUntilDestroyed(this.#destroyRef)
             )
             .subscribe({

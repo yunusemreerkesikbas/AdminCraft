@@ -480,6 +480,7 @@ export const langTR = {
             title: 'Modül Hazırlama',
             description: 'Tenant için yüklenecek modülleri seçin. Seçilen modüller için veritabanı yapıları oluşturulacaktır.',
             startButton: 'Hazırlamayı Başlat',
+            manualProvision: 'Modül Provision',
             coreModules: 'Temel Modüller',
             b2cModules: 'B2C Modülleri',
             b2bModules: 'B2B Modülleri',
