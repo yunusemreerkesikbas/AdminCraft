@@ -5,7 +5,8 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class CurrentTenantIdentifierResolver implements org.hibernate.context.spi.CurrentTenantIdentifierResolver<String> {
+public class CurrentTenantIdentifierResolver
+    implements org.hibernate.context.spi.CurrentTenantIdentifierResolver<String> {
 
   private static final String DEFAULT_TENANT = "platform_management";
 
@@ -31,17 +32,3 @@ public class CurrentTenantIdentifierResolver implements org.hibernate.context.sp
     return true;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

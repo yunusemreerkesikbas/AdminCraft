@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "provisioning_jobs")
+@Table(name = "provisioning_jobs", schema = "platform_management")
 @Data
 @Builder
 @NoArgsConstructor
@@ -55,4 +55,3 @@ public class ProvisioningJob {
     createdAt = LocalDateTime.now();
   }
 }
-

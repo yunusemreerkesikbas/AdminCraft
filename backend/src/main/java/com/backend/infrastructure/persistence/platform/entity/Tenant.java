@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tenants")
+@Table(name = "tenants", schema = "platform_management")
 @Data
 @Builder
 @NoArgsConstructor
@@ -47,12 +47,6 @@ public class Tenant {
   @Column(name = "supported_languages", columnDefinition = "JSON")
   private String supportedLanguages;
 
-  @Column(name = "admin_email", nullable = false)
-  private String adminEmail;
-
-  @Column(name = "admin_name", nullable = false)
-  private String adminName;
-
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
@@ -70,4 +64,3 @@ public class Tenant {
     updatedAt = LocalDateTime.now();
   }
 }
-
