@@ -1,4 +1,6 @@
-<div class="flex items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:hover:bg-gray-800">
+<div
+    class="flex items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:hover:bg-gray-800"
+>
     <mat-checkbox
         [checked]="isSelected()"
         [disabled]="isDisabled()"
@@ -10,9 +12,9 @@
         @if (module().deps && module().deps.length > 0) {
             <div class="mt-2 flex flex-wrap gap-1">
                 @for (dep of module().deps; track dep) {
-                    <mat-chip-option class="text-xs">
+                    <mat-chip class="text-xs" disabled>
                         Requires: {{ dep }}
-                    </mat-chip-option>
+                    </mat-chip>
                 }
             </div>
         }

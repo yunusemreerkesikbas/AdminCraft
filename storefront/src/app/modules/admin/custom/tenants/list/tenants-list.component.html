@@ -127,6 +127,22 @@
                                     <button
                                         class="h-7 min-h-7 min-w-10 px-2 leading-6"
                                         mat-stroked-button
+                                        [matTooltip]="
+                                            'admin.provisioning.manualProvision'
+                                                | transloco
+                                        "
+                                        (click)="provisionTenant(tenant)"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                'heroicons_outline:server-stack'
+                                            "
+                                        ></mat-icon>
+                                    </button>
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
                                         (click)="editTenant(tenant)"
                                     >
                                         <mat-icon
