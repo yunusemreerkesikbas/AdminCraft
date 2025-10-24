@@ -174,30 +174,4 @@ class TenantDTOTest {
                 .extracting("name")
                 .doesNotContain("adminEmail", "adminName", "phone");
     }
-
-    // ========================================
-    // TenantAdminInfoResponse Tests
-    // ========================================
-
-    @Test
-    @DisplayName("TenantAdminInfoResponse.from() - Should map all admin fields correctly")
-    void testTenantAdminInfo_From_AllFieldsMapped() {
-        TenantAdminInfoResponse response = TenantAdminInfoResponse.from(testTenant);
-
-        assertThat(response).isNotNull();
-        assertThat(response.adminEmail()).isNull();
-        assertThat(response.adminName()).isNull();
-        assertThat(response.phone()).isNull();
-    }
-
-    @Test
-    @DisplayName("TenantAdminInfoResponse.from() - Should ONLY include admin fields")
-    void testTenantAdminInfo_OnlyAdminFields() {
-        TenantAdminInfoResponse response = TenantAdminInfoResponse.from(testTenant);
-
-        assertThat(response.getClass().getRecordComponents()).hasSize(3);
-        assertThat(response.getClass().getRecordComponents())
-                .extracting("name")
-                .containsExactlyInAnyOrder("adminEmail", "adminName", "phone");
-    }
 }

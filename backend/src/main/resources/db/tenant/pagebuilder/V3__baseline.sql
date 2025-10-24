@@ -57,82 +57,52 @@ CREATE TABLE page_i18n (
     FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Page categories table
+-- Page categories table (language-agnostic data)
 CREATE TABLE page_categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(150) NOT NULL UNIQUE,
+    uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID',
+    uid VARCHAR(50) NOT NULL UNIQUE COMMENT 'Human-readable identifier',
     parent_id BIGINT NULL,
-    path VARCHAR(500) NULL,
-    level INT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    style_classes VARCHAR(255) NULL,
     sort_order INT DEFAULT 0,
-    status ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT NULL,
     
-    UNIQUE KEY uk_page_category_slug (slug),
+    UNIQUE KEY uk_page_category_uid (uid),
     INDEX idx_page_category_parent (parent_id),
-    INDEX idx_page_category_path (path(100)),
-    INDEX idx_page_category_level (level),
-    INDEX idx_page_category_status (status),
-    INDEX idx_page_category_parent_sort (parent_id, sort_order),
+    INDEX idx_page_category_active (active),
+    INDEX idx_page_category_sort (parent_id, sort_order),
     
-    CONSTRAINT chk_category_level_positive CHECK (level > 0 AND level <= 50),
-    CONSTRAINT chk_category_path_format CHECK (path REGEXP '^(/[a-z0-9-]+)+$' OR path = '/' OR path IS NULL),
-    CONSTRAINT chk_category_slug_format CHECK (slug REGEXP '^[a-z0-9-]+$'),
-    CONSTRAINT chk_category_name_length CHECK (CHAR_LENGTH(TRIM(name)) >= 1),
-    
-    FOREIGN KEY (parent_id) REFERENCES page_categories(id) ON DELETE CASCADE
+    FOREIGN KEY (parent_id) REFERENCES page_categories(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Page category translations table
-CREATE TABLE page_category_translations (
+-- Page category i18n table (language-specific content)
+CREATE TABLE page_category_i18n (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID',
+    uid VARCHAR(50) NOT NULL UNIQUE COMMENT 'Human-readable identifier',
     category_id BIGINT NOT NULL,
     language ENUM('TR', 'EN') NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(150) NOT NULL,
-    description TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    url VARCHAR(150) NULL COMMENT 'URL slug for this language',
+    title VARCHAR(200) NULL COMMENT 'Category title in this language',
+    meta_title VARCHAR(60) NULL,
+    meta_description VARCHAR(160) NULL,
+    active BOOLEAN DEFAULT TRUE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    UNIQUE KEY uk_page_category_i18n_unique (category_id, language),
-    UNIQUE KEY uk_page_category_i18n_slug_lang (language, slug),
-    INDEX idx_cat_tr_category (category_id),
-    INDEX idx_cat_tr_lang (language),
-    
-    CONSTRAINT chk_translation_slug_format CHECK (slug REGEXP '^[a-z0-9-]+$'),
-    CONSTRAINT chk_translation_name_length CHECK (CHAR_LENGTH(TRIM(name)) >= 1),
+    UNIQUE KEY uk_page_category_i18n_cat_lang (category_id, language),
+    UNIQUE KEY uk_page_category_i18n_uid (uid),
+    UNIQUE KEY uk_page_category_i18n_url_lang (language, url),
+    INDEX idx_cat_i18n_category (category_id),
+    INDEX idx_cat_i18n_lang (language),
+    INDEX idx_cat_i18n_active (language, active),
     
     FOREIGN KEY (category_id) REFERENCES page_categories(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Page sections table
-CREATE TABLE page_sections (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    page_id BIGINT NOT NULL,
-    type VARCHAR(50) NULL,
-    display_order INT DEFAULT 0,
-    data TEXT NULL,
-    
-    INDEX idx_page_section_page (page_id),
-    INDEX idx_page_section_order (display_order),
-    
-    FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Page blocks table
-CREATE TABLE page_blocks (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    section_id BIGINT NOT NULL,
-    type VARCHAR(50) NULL,
-    display_order INT DEFAULT 0,
-    data TEXT NULL,
-    
-    INDEX idx_page_block_section (section_id),
-    INDEX idx_page_block_order (display_order),
-    
-    FOREIGN KEY (section_id) REFERENCES page_sections(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add FK from pages to page_categories

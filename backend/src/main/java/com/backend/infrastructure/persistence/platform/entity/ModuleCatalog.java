@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "modules_catalog")
+@Table(name = "modules_catalog", schema = "platform_management")
 @Data
 @Builder
 @NoArgsConstructor
@@ -58,4 +58,3 @@ public class ModuleCatalog {
     updatedAt = LocalDateTime.now();
   }
 }
-

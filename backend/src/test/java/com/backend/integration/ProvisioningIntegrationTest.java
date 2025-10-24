@@ -66,8 +66,6 @@ public class ProvisioningIntegrationTest {
         .status("PENDING")
         .defaultLanguage("TR")
         .supportedLanguages("[\"TR\", \"EN\"]")
-        .adminEmail("admin@test.com")
-        .adminName("Test Admin")
         .build();
 
     tenant = tenantRepository.save(tenant);
@@ -107,8 +105,6 @@ public class ProvisioningIntegrationTest {
         .status("PENDING")
         .defaultLanguage("TR")
         .supportedLanguages("[\"TR\"]")
-        .adminEmail("admin1@test.com")
-        .adminName("Admin 1")
         .build());
 
     Tenant tenant2 = tenantRepository.save(Tenant.builder()
@@ -118,8 +114,6 @@ public class ProvisioningIntegrationTest {
         .status("PENDING")
         .defaultLanguage("EN")
         .supportedLanguages("[\"EN\"]")
-        .adminEmail("admin2@test.com")
-        .adminName("Admin 2")
         .build());
 
     ProvisionRequest request = ProvisionRequest.builder()
@@ -149,8 +143,6 @@ public class ProvisioningIntegrationTest {
         .status("PENDING")
         .defaultLanguage("TR")
         .supportedLanguages("[\"TR\", \"EN\"]")
-        .adminEmail("admin@idempotent.com")
-        .adminName("Idempotent Admin")
         .build();
 
     tenant = tenantRepository.save(tenant);
