@@ -7,15 +7,15 @@ import com.backend.presentation.dto.response.PageI18nResponse;
 import java.util.List;
 
 public interface PageI18nService {
-    PageI18nResponse getPageI18n(Long pageId, Language language, Long tenantId);
+    PageI18nResponse getPageI18n(Long pageId, Language language);
 
-    PageI18nResponse upsertPageI18n(Long pageId, Language language, Long tenantId, PageI18nRequest request);
+    PageI18nResponse upsertPageI18n(Long pageId, Language language, PageI18nRequest request);
 
-    List<PageI18nResponse> getAllPageI18n(Long pageId, Long tenantId);
+    List<PageI18nResponse> getAllPageI18n(Long pageId);
 
-    PageI18nResponse publishPageI18n(Long pageId, Language language, Long tenantId, PagePublishRequest request);
+    PageI18nResponse publishPageI18n(Long pageId, Language language, PagePublishRequest request);
 
-    PageI18nResponse unpublishPageI18n(Long pageId, Language language, Long tenantId);
+    PageI18nResponse unpublishPageI18n(Long pageId, Language language);
 
     void deletePageI18n(Long pageId);
 }

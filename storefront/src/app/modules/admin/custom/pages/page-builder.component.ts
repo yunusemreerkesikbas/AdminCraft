@@ -39,19 +39,12 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
   #supportedLanguages: string[] = [];
 
   ngOnInit(): void {
-    const tenantId = this.#tenantContext.getCurrentTenantId();
-
-    // Subscribe to supported languages from LanguageContextService
     this.#languageContext.supportedLanguages$
       .pipe(takeUntil(this.destroy$))
       .subscribe((languages) => {
         this.#supportedLanguages = languages;
         this.#cdr.markForCheck();
       });
-
-    if (tenantId) {
-      this.#loadCategories();
-    }
   }
 
   ngOnDestroy(): void {
@@ -64,6 +57,9 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
     if (!tenantId) {
       this.#notificationService.warning('admin.pageBuilder.errors.noTenant');
       return;
+    }
+    if (this.#cachedCategories.length === 0) {
+      this.#loadCategories();
     }
 
     const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);

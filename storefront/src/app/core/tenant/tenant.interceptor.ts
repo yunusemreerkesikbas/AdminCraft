@@ -1,18 +1,18 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
-import { throwError } from 'rxjs';
+import { EMPTY } from 'rxjs';
 
-// Platform endpoints that don't require tenant context
-// Note: /api/auth/login NEEDS X-Tenant-Subdomain for Sprint 17 subdomain-based auth
 const PLATFORM_ENDPOINTS: readonly string[] = ['/api/tenants', '/api/provisioning', '/actuator'] as const;
 
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
     const userService = inject(UserService);
-
-    // Check if this is a platform-only endpoint
+    const router = inject(Router);
+    const snackBar = inject(MatSnackBar);
     const isPlatformEndpoint = PLATFORM_ENDPOINTS.some((endpoint) =>
         req.url.includes(endpoint)
     );
@@ -24,7 +24,13 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantId = tenantContext.getCurrentTenantId();
 
     if (user?.role === 'SUPER_ADMIN' && !tenantId) {
-        return throwError(() => new Error('Please select a tenant to continue'));
+        snackBar.open('Please select a tenant to continue', 'Close', {
+            duration: 5000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+        });
+        router.navigate(['/dashboards']);
+        return EMPTY;
     }
     if (!subdomain && tenantId == null) {
         return next(req);

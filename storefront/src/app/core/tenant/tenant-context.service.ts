@@ -5,7 +5,7 @@ import { ApiResponse } from '@core/crud';
 import { NavigationService } from 'app/core/navigation/navigation.service';
 import { TenantModule } from 'app/core/tenant/tenant.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
-import { BehaviorSubject, catchError, Observable, of, take } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, take } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
@@ -15,8 +15,8 @@ export class TenantContextService {
 
     private readonly STORAGE_KEYS = {
         subdomain: 'currentTenantSubdomain',
-        tenantId: 'tenantId',
-        selectedTenantId: 'selectedTenantId'
+        tenantId: 'superAdminSelectedTenantId',
+        selectedTenantId: 'superAdminSelectedTenantId'
     } as const;
 
     private _tenant$ = new BehaviorSubject<Tenant | null>(null);
@@ -51,6 +51,7 @@ export class TenantContextService {
             this._subdomain$.next(tenant.subdomain);
         }
         if (tenant?.id) {
+            // Changed from sessionStorage to localStorage to persist across page refreshes
             localStorage.setItem(this.STORAGE_KEYS.tenantId, String(tenant.id));
         }
     }
@@ -58,7 +59,7 @@ export class TenantContextService {
     clear(): void {
         this._tenant$.next(null);
         localStorage.removeItem(this.STORAGE_KEYS.subdomain);
-        localStorage.removeItem(this.STORAGE_KEYS.tenantId);
+        localStorage.removeItem(this.STORAGE_KEYS.tenantId); // Changed from sessionStorage
         this._subdomain$.next(null);
     }
 
@@ -75,7 +76,7 @@ export class TenantContextService {
         if (current?.id) {
             return current.id;
         }
-        const fromStorage = localStorage.getItem(this.STORAGE_KEYS.tenantId);
+        const fromStorage = localStorage.getItem(this.STORAGE_KEYS.tenantId); // Changed from sessionStorage
         if (fromStorage) {
             const parsed = Number(fromStorage);
             return Number.isFinite(parsed) ? parsed : null;
@@ -93,7 +94,7 @@ export class TenantContextService {
     selectTenant(tenant: Tenant): void {
         this.setCurrentTenant(tenant);
         this._selectedTenant$.next(tenant);
-        sessionStorage.setItem(this.STORAGE_KEYS.selectedTenantId, String(tenant.id));
+        localStorage.setItem(this.STORAGE_KEYS.selectedTenantId, String(tenant.id));
         this.loadTenantModules(tenant.id);
     }
 
@@ -112,8 +113,6 @@ export class TenantContextService {
                     .filter((m) => m.status === 'enabled')
                     .map((m) => m.moduleCode);
                 this._tenantModules$.next(moduleCodes);
-
-                // Reload navigation to apply module-based filtering
                 this._navigationService.reload();
             });
     }
@@ -121,15 +120,13 @@ export class TenantContextService {
     clearTenantSelection(): void {
         this._selectedTenant$.next(null);
         this._tenantModules$.next([]);
-        sessionStorage.removeItem(this.STORAGE_KEYS.selectedTenantId);
+        localStorage.removeItem(this.STORAGE_KEYS.selectedTenantId);
         localStorage.removeItem(this.STORAGE_KEYS.tenantId);
-
-        // Reload navigation to show all modules
         this._navigationService.reload();
     }
 
     getSelectedTenantId(): number | null {
-        const savedId = sessionStorage.getItem(this.STORAGE_KEYS.selectedTenantId);
+        const savedId = localStorage.getItem(this.STORAGE_KEYS.selectedTenantId); // Changed from sessionStorage
         if (savedId) {
             const parsed = Number(savedId);
             return Number.isFinite(parsed) ? parsed : null;
@@ -177,16 +174,36 @@ export class TenantContextService {
     initializeFromHostname(): void {
         const subdomain = this.extractSubdomainFromHost();
         if (subdomain) {
-            // Store subdomain even for 'admin' for Sprint 17 authentication
             this.setSubdomain(subdomain);
 
-            // Clear tenant selection for admin subdomain (platform access)
             if (subdomain === 'admin') {
-                // Keep subdomain but clear tenant-specific data
                 this._tenant$.next(null);
-                localStorage.removeItem(this.STORAGE_KEYS.tenantId);
+                localStorage.removeItem(this.STORAGE_KEYS.tenantId); // Changed from sessionStorage
             }
         }
+    }
+
+    restoreTenantSelection(): Observable<Tenant | null> {
+        const tenantId = this.getSelectedTenantId();
+        if (!tenantId) {
+            return of(null);
+        }
+
+        return this._httpClient.get<ApiResponse<Tenant>>(`/api/tenants/${tenantId}`).pipe(
+            take(1),
+            map((response) => {
+                if (response.data) {
+                    this.selectTenant(response.data);
+                    return response.data;
+                }
+                return null;
+            }),
+            catchError((error) => {
+                console.error('Failed to restore tenant selection:', error);
+                this.clearTenantSelection();
+                return of(null);
+            })
+        );
     }
 }
 

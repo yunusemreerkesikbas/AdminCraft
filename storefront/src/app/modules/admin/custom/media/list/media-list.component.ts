@@ -49,6 +49,7 @@ import {
     map,
     merge,
     switchMap,
+    take,
     takeUntil,
 } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -252,7 +253,7 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
         // Get the media file by id
         this._mediaService
             .getMediaFileById(mediaFileId)
-            .pipe(takeUntil(this._unsubscribeAll))
+            .pipe(take(1), takeUntil(this._unsubscribeAll))
             .subscribe((mediaFile) => {
                 // Set the selected media file
                 this.selectedMediaFile = mediaFile;
@@ -308,16 +309,16 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
             };
 
             this._mediaService.uploadMediaFile(uploadRequest)
-                .pipe(takeUntil(this._unsubscribeAll))
+                .pipe(take(1), takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
                         // Show a success message
                         this.showFlashMessage('success');
-                        
+
                         // Reset upload form
                         this.uploadForm.reset();
                         this.selectedFile = null;
-                        
+
                         // Close details
                         this.closeDetails();
                     },
@@ -345,7 +346,7 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
             });
 
             this._mediaService.updateMediaFile(this.selectedMediaFile.id, media)
-                .pipe(takeUntil(this._unsubscribeAll))
+                .pipe(take(1), takeUntil(this._unsubscribeAll))
                 .subscribe({
                     next: () => {
                         // Show a success message
@@ -383,7 +384,7 @@ export class MediaListComponent implements OnInit, AfterViewInit, OnDestroy {
 
                 // Delete the media file on the server
                 this._mediaService.deleteMediaFile(mediaFile.id)
-                    .pipe(takeUntil(this._unsubscribeAll))
+                    .pipe(take(1), takeUntil(this._unsubscribeAll))
                     .subscribe(() => {
                         // Close the details
                         this.closeDetails();

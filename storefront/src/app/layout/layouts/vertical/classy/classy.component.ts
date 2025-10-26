@@ -1,8 +1,6 @@
-import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { FuseFullscreenComponent } from '@fuse/components/fullscreen';
 import { FuseLoadingBarComponent } from '@fuse/components/loading-bar';
@@ -13,7 +11,6 @@ import {
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { NavigationService } from 'app/core/navigation/navigation.service';
 import { Navigation } from 'app/core/navigation/navigation.types';
-import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { LanguagesComponent } from 'app/layout/common/languages/languages.component';
@@ -22,10 +19,8 @@ import { NotificationsComponent } from 'app/layout/common/notifications/notifica
 import { SearchComponent } from 'app/layout/common/search/search.component';
 import { ShortcutsComponent } from 'app/layout/common/shortcuts/shortcuts.component';
 import { UserComponent } from 'app/layout/common/user/user.component';
-import { TenantsService } from 'app/modules/admin/custom/tenants/tenants.service';
-import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
-import { SpaSelectComponent, SpaSelectOption } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
-import { Subject, take, takeUntil } from 'rxjs';
+import { TenantSelectorComponent } from 'app/shared/components/tenant-selector';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'classy-layout',
@@ -44,19 +39,13 @@ import { Subject, take, takeUntil } from 'rxjs';
         ShortcutsComponent,
         MessagesComponent,
         RouterOutlet,
-        SpaSelectComponent,
-        FormsModule,
+        TenantSelectorComponent,
     ],
 })
 export class ClassyLayoutComponent implements OnInit, OnDestroy {
     protected isScreenSmall: boolean;
     protected navigation: Navigation;
     protected user: User;
-    protected isSuperAdmin: boolean = false;
-    protected tenantOptions: SpaSelectOption<number>[] = [];
-    protected selectedTenantId: number | null = null;
-    #tenants: Tenant[] = [];
-    #snackBar = inject(MatSnackBar);
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     constructor(
@@ -65,9 +54,7 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
         private _navigationService: NavigationService,
         private _userService: UserService,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
-        private _fuseNavigationService: FuseNavigationService,
-        private _tenantContext: TenantContextService,
-        private _tenantsService: TenantsService
+        private _fuseNavigationService: FuseNavigationService
     ) {}
 
     protected get currentYear(): number {
@@ -84,15 +71,6 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((user: User) => {
                 this.user = user;
-                this.isSuperAdmin = user?.role === 'SUPER_ADMIN';
-                if (this.isSuperAdmin) {
-                    this.loadTenants();
-                }
-            });
-        this._tenantContext.selectedTenant$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tenant: Tenant | null) => {
-                this.selectedTenantId = tenant?.id || null;
             });
         this._fuseMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -113,45 +91,6 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
             );
         if (navigation) {
             navigation.toggle();
-        }
-    }
-
-    private loadTenants(): void {
-        this._tenantsService.getAllTenants()
-            .pipe(take(1))
-            .subscribe({
-                next: (tenants) => {
-                    this.#tenants = tenants;
-                    this.tenantOptions = tenants.map((t) => ({
-                        value: t.id,
-                        label: `${t.companyName} (${t.subdomain})`,
-                    }));
-                    this.restoreLastSelectedTenant();
-                },
-                error: () => {
-                    this.#snackBar.open('Failed to load tenants', 'Close', { duration: 3000 });
-                },
-            });
-    }
-
-    private restoreLastSelectedTenant(): void {
-        const savedId = this._tenantContext.getSelectedTenantId();
-        if (savedId && this.#tenants.length > 0) {
-            const tenant = this.#tenants.find((t) => t.id === savedId);
-            if (tenant) {
-                this._tenantContext.selectTenant(tenant);
-            }
-        }
-    }
-
-    protected onTenantChange(tenantId: number | null): void {
-        if (!tenantId) {
-            this._tenantContext.clearTenantSelection();
-            return;
-        }
-        const tenant = this.#tenants.find((t) => t.id === tenantId);
-        if (tenant) {
-            this._tenantContext.selectTenant(tenant);
         }
     }
 }

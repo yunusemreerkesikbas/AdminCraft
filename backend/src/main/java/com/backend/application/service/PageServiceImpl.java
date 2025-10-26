@@ -51,7 +51,7 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse getPageById(Long id, Long tenantId) {
+    public PageResponse getPageById(Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
@@ -60,7 +60,7 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageDetailResponse getPageWithI18n(Long id, Long tenantId) {
+    public PageDetailResponse getPageWithI18n(Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
@@ -70,7 +70,7 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PageResponse> getAllPages(Long tenantId) {
+    public List<PageResponse> getAllPages() {
         return pageRepository.findAll()
                 .stream()
                 .map(PageResponse::from)
@@ -79,7 +79,7 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<com.backend.presentation.dto.response.PageListResponse> getAllPagesWithTranslations(Long tenantId) {
+    public List<com.backend.presentation.dto.response.PageListResponse> getAllPagesWithTranslations() {
         List<Page> pages = pageRepository.findAll();
         List<PageI18n> allTranslations = pageI18nRepository.findAll();
         java.util.Map<Long, List<PageI18n>> translationsByPage = allTranslations.stream()
@@ -117,7 +117,7 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional
-    public void deletePage(Long id, Long tenantId) {
+    public void deletePage(Long id) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 

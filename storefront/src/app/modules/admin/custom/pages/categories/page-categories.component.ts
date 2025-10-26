@@ -105,10 +105,10 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
 
   #loadTenantLanguages(): void {
     if (!this.tenantId) return;
-    
+
     this.#tenantsSvc
       .getTenantLanguages(this.tenantId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(take(1), takeUntil(this.destroy$))
       .subscribe({
         next: (languagesDto) => {
           this.supportedLanguages = languagesDto.supportedLanguages || [];
@@ -205,7 +205,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
         
         this.#pageBuilderService
           .createCategory(basePayload)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(take(1), takeUntil(this.destroy$))
           .subscribe({
             next: (created) => {
               this.#saveI18nForCategory(created.id, result, true);
@@ -233,7 +233,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
 
     this.#pageBuilderService
       .getCategoryDetail(categoryId)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(take(1), takeUntil(this.destroy$))
       .subscribe({
         next: (detail) => {
           this.store.setLoading(false);
@@ -295,7 +295,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
         
         this.#pageBuilderService
           .updateCategory(detail.id, basePayload)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(take(1), takeUntil(this.destroy$))
           .subscribe({
             next: () => {
               this.#saveI18nForCategory(detail.id, result, false);
@@ -335,7 +335,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
     }
     
     forkJoin(i18nRequests)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(take(1), takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.#notify.success(

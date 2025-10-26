@@ -3,6 +3,7 @@ package com.backend.presentation.controller;
 import com.backend.application.service.MediaService;
 import com.backend.domain.entity.MediaFile;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,10 +28,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
 public class MediaController {
 
     private final MediaService mediaService;
     private final MessageSource messageSource;
+    private final SecurityHelper securityHelper;
 
     // Security constants
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -197,22 +201,15 @@ public class MediaController {
 
     /**
      * Validates tenant access based on current user context
-     * This should be implemented based on your security requirements
+     * SUPER_ADMIN can access all tenants, TENANT_ADMIN must match their tenant
      */
     private void validateTenantAccess(Long tenantId) {
-        // TODO: Implement actual tenant access validation based on current user's tenant
-        // For now, just validate that tenantId is not null and positive
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("Invalid tenant ID");
         }
-        
-        // In a real implementation, you would check if the current user has access to this tenant
-        // Example:
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        // if (!tenantService.userHasAccessToTenant(userDetails.getUsername(), tenantId)) {
-        //     throw new AccessDeniedException("Access denied to tenant: " + tenantId);
-        // }
+
+        // SecurityHelper automatically handles SUPER_ADMIN bypass
+        securityHelper.validateTenantAccess(tenantId);
     }
 
     /**

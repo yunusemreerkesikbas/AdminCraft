@@ -36,9 +36,6 @@ export class NavigationMockApi implements OnDestroy {
     }
 
     registerHandlers(): void {
-        // -----------------------------------------------------------------------------------------------------
-        // @ Navigation - GET
-        // -----------------------------------------------------------------------------------------------------
         this._fuseMockApiService.onGet('api/common/navigation').reply(() => {
            
 
@@ -60,8 +57,6 @@ export class NavigationMockApi implements OnDestroy {
             };
 
             updateLinks(navCopy.default);
-
-            // Filter navigation by enabled modules
             const filteredNav = {
                 default: this.filterNavigationByModules(navCopy.default),
             };
@@ -73,31 +68,16 @@ export class NavigationMockApi implements OnDestroy {
         });
     }
 
-    /**
-     * Filter navigation items based on enabled modules
-     */
     private filterNavigationByModules(items: FuseNavigationItem[]): FuseNavigationItem[] {
         return items
             .map(item => {
                 const itemCopy = { ...item };
-
-                // Platform module (requiredModule === null or undefined) → always show
                 if (!itemCopy.requiredModule) {
                     if (itemCopy.children?.length) {
                         itemCopy.children = this.filterNavigationByModules(itemCopy.children);
                     }
                     return itemCopy;
                 }
-
-                // If no modules enabled (super admin without tenant selection) → show all modules
-                if (this._enabledModules.length === 0) {
-                    if (itemCopy.children?.length) {
-                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
-                    }
-                    return itemCopy;
-                }
-
-                // Tenant module → show only if enabled
                 if (this._enabledModules.includes(itemCopy.requiredModule)) {
                     if (itemCopy.children?.length) {
                         itemCopy.children = this.filterNavigationByModules(itemCopy.children);
@@ -105,7 +85,6 @@ export class NavigationMockApi implements OnDestroy {
                     return itemCopy;
                 }
 
-                // Module not enabled → hide item
                 return null;
             })
             .filter(item => item !== null) as FuseNavigationItem[];

@@ -1,0 +1,10 @@
+@if (isSuperAdmin) {
+    <spa-select
+        [label]="label"
+        [placeholder]="placeholder"
+        [options]="tenantOptions"
+        [(ngModel)]="selectedTenantId"
+        (changed)="onTenantChange($event)"
+        [styleClasses]="styleClasses"
+    />
+}

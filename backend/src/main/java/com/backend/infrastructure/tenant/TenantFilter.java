@@ -26,10 +26,14 @@ public class TenantFilter extends OncePerRequestFilter {
 
   private final TenantContext tenantContext;
   private final TenantPlatformRepository tenantRepository;
+  private final MultiTenantConnectionProvider connectionProvider;
 
-  public TenantFilter(TenantContext tenantContext, TenantPlatformRepository tenantRepository) {
+  public TenantFilter(TenantContext tenantContext,
+                     TenantPlatformRepository tenantRepository,
+                     MultiTenantConnectionProvider connectionProvider) {
     this.tenantContext = tenantContext;
     this.tenantRepository = tenantRepository;
+    this.connectionProvider = connectionProvider;
   }
 
   @Override
@@ -114,6 +118,16 @@ public class TenantFilter extends OncePerRequestFilter {
       MDC.put("tenantDb", tenant.getDatabaseName());
 
       log.debug("Tenant context set: tenantId={}, dbName={}", tenantId, tenant.getDatabaseName());
+
+      // Pre-warm connection pool to prevent lazy initialization failures
+      try {
+        connectionProvider.warmUpConnectionPool(tenant.getDatabaseName());
+      } catch (RuntimeException e) {
+        log.error("Failed to initialize connection pool for tenant {}: {}", tenantId, e.getMessage());
+        response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+            "Tenant database is initializing, please retry in a moment");
+        return;
+      }
 
       filterChain.doFilter(request, response);
 

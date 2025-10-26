@@ -35,28 +35,28 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageI18nResponse getPageI18n(Long pageId, Language language, Long tenantId) {
-        validatePageExists(pageId, tenantId);
+    public PageI18nResponse getPageI18n(Long pageId, Language language) {
+        validatePageExists(pageId);
 
         return pageI18nRepository.findByPageIdAndLanguage(pageId, language)
                 .map(PageI18nResponse::from)
-                .orElseGet(() -> getFallbackLanguageI18n(pageId, tenantId));
+                .orElseGet(() -> getFallbackLanguageI18n(pageId));
     }
 
     @Override
     @Transactional
-    public PageI18nResponse upsertPageI18n(Long pageId, Language language, Long tenantId, PageI18nRequest request) {
-        validatePageExists(pageId, tenantId);
+    public PageI18nResponse upsertPageI18n(Long pageId, Language language, PageI18nRequest request) {
+        validatePageExists(pageId);
         validateLanguageMatch(language, request.language());
 
         if (request.urlPath() != null && !request.urlPath().trim().isEmpty()) {
-            validateUrlPathUniqueness(tenantId, language, request.urlPath(), pageId);
+            validateUrlPathUniqueness(language, request.urlPath(), pageId);
         }
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
                 .map(existing -> updateExistingPageI18n(existing, request))
-                .orElseGet(() -> createNewPageI18n(pageId, tenantId, language, request));
+                .orElseGet(() -> createNewPageI18n(pageId, language, request));
 
         pageI18n = pageI18nRepository.save(pageI18n);
         return PageI18nResponse.from(pageI18n);
@@ -64,8 +64,8 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PageI18nResponse> getAllPageI18n(Long pageId, Long tenantId) {
-        validatePageExists(pageId, tenantId);
+    public List<PageI18nResponse> getAllPageI18n(Long pageId) {
+        validatePageExists(pageId);
 
         return pageI18nRepository.findByPageId(pageId)
                 .stream()
@@ -75,8 +75,8 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     @Override
     @Transactional
-    public PageI18nResponse publishPageI18n(Long pageId, Language language, Long tenantId, PagePublishRequest request) {
-        validatePageExists(pageId, tenantId);
+    public PageI18nResponse publishPageI18n(Long pageId, Language language, PagePublishRequest request) {
+        validatePageExists(pageId);
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
@@ -98,8 +98,8 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     @Override
     @Transactional
-    public PageI18nResponse unpublishPageI18n(Long pageId, Language language, Long tenantId) {
-        validatePageExists(pageId, tenantId);
+    public PageI18nResponse unpublishPageI18n(Long pageId, Language language) {
+        validatePageExists(pageId);
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
@@ -117,15 +117,9 @@ public class PageI18nServiceImpl implements PageI18nService {
         pageI18nRepository.deleteByPageId(pageId);
     }
 
-    private void validatePageExists(Long pageId, Long tenantId) {
+    private void validatePageExists(Long pageId) {
         pageRepository.findById(pageId)
                 .orElseThrow(() -> new PageNotFoundException(pageId));
-    }
-
-    private void validateTenantMatch(Long expectedTenantId, Long actualTenantId) {
-        if (!expectedTenantId.equals(actualTenantId)) {
-            throw new TenantMismatchException(expectedTenantId, actualTenantId);
-        }
     }
 
     private void validateLanguageMatch(Language expected, Language actual) {
@@ -135,7 +129,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         }
     }
 
-    private void validateUrlPathUniqueness(Long tenantId, Language language, String urlPath, Long pageId) {
+    private void validateUrlPathUniqueness(Language language, String urlPath, Long pageId) {
         pageI18nRepository.findByLanguageAndUrlPath(language, urlPath)
                 .ifPresent(existing -> {
                     if (!existing.getPageId().equals(pageId)) {
@@ -160,12 +154,12 @@ public class PageI18nServiceImpl implements PageI18nService {
         }
     }
 
-    private PageI18nResponse getFallbackLanguageI18n(Long pageId, Long tenantId) {
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new TenantNotFoundException(tenantId));
-
-        return pageI18nRepository
-                .findByPageIdAndLanguage(pageId, tenant.getDefaultLanguage())
+    private PageI18nResponse getFallbackLanguageI18n(Long pageId) {
+        // Note: TenantContext routing ensures we're already in the correct tenant database
+        // We'll use the first available i18n entry as fallback instead of tenant's default language
+        return pageI18nRepository.findByPageId(pageId)
+                .stream()
+                .findFirst()
                 .map(pageI18n -> PageI18nResponse.from(pageI18n, true))
                 .orElseThrow(() -> new PageNotFoundException(
                         "No i18n found for pageId: " + pageId + " in any language"));
@@ -193,12 +187,12 @@ public class PageI18nServiceImpl implements PageI18nService {
         return existing;
     }
 
-    private PageI18n createNewPageI18n(Long pageId, Long tenantId, Language language, PageI18nRequest request) {
+    private PageI18n createNewPageI18n(Long pageId, Language language, PageI18nRequest request) {
         PageI18n pageI18n = new PageI18n();
         pageI18n.setPageId(pageId);
         pageI18n.setLanguage(language);
         pageI18n.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
-        pageI18n.setUid(generateUniqueUidForI18n(tenantId));
+        pageI18n.setUid(generateUniqueUidForI18n());
         pageI18n.setUrlPath(request.urlPath());
         pageI18n.setTitle(request.title());
         pageI18n.setSubtitle(request.subtitle());
@@ -213,7 +207,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         return pageI18n;
     }
 
-    private String generateUniqueUidForI18n(Long tenantId) {
+    private String generateUniqueUidForI18n() {
         String uid;
         int attempts = 0;
         do {
