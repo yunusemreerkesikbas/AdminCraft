@@ -19,7 +19,6 @@ public class SiteMapper {
             site.getId(),
             site.getSiteName(),
             site.getDescription(),
-            site.getTenantId(),
             null, // tenantName will be populated separately if needed
             site.getDomain(),
             site.getCustomDomain(),
@@ -57,7 +56,6 @@ public class SiteMapper {
         site.setId(response.id());
         site.setSiteName(response.siteName());
         site.setDescription(response.description());
-        site.setTenantId(response.tenantId());
         site.setDomain(response.domain());
         site.setCustomDomain(response.customDomain());
         site.setEnabledLanguages(response.enabledLanguages());
@@ -75,7 +73,7 @@ public class SiteMapper {
         site.setFacebookPageUrl(response.facebookPageUrl());
         site.setGoogleAnalyticsId(response.googleAnalyticsId());
         site.setGoogleTagManagerId(response.googleTagManagerId());
-        
+
         return site;
     }
     
@@ -87,7 +85,6 @@ public class SiteMapper {
         Site site = new Site();
         site.setSiteName(request.siteName());
         site.setDescription(request.description());
-        site.setTenantId(request.tenantId());
         site.setDomain(request.domain());
         site.setCustomDomain(request.customDomain());
         site.setEnabledLanguages(request.enabledLanguages());
@@ -105,7 +102,7 @@ public class SiteMapper {
         site.setFacebookPageUrl(request.facebookPageUrl());
         site.setGoogleAnalyticsId(request.googleAnalyticsId());
         site.setGoogleTagManagerId(request.googleTagManagerId());
-        
+
         return site;
     }
     

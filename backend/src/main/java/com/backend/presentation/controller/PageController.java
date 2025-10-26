@@ -31,7 +31,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+@org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
 public class PageController {
 
   private final PageService pageService;

@@ -31,7 +31,7 @@ public class SiteSettingsController {
    * Returns global settings and all supported language versions
    */
   @GetMapping
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get() {
     Long tenantId = securityHelper.getCurrentUserTenantId();
     SiteSettingsQuery query = service.getAdminSettings(tenantId);
@@ -44,7 +44,7 @@ public class SiteSettingsController {
    * Supports updating global settings and/or language-specific settings
    */
   @PatchMapping
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> patch(
       @RequestBody SiteSettingsPatchRequest req) {
     Long tenantId = securityHelper.getCurrentUserTenantId();

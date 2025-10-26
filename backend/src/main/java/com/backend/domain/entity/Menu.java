@@ -18,8 +18,8 @@ import java.util.List;
 @Entity
 @Table(name = "menus")
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"tenant", "site", "parent", "children"})
-@ToString(exclude = {"tenant", "site", "parent", "children"})
+@EqualsAndHashCode(callSuper = false, exclude = {"site", "parent", "children"})
+@ToString(exclude = {"site", "parent", "children"})
 public class Menu {
 
     @Id
@@ -39,10 +39,6 @@ public class Menu {
     @Enumerated(EnumType.STRING)
     @Column(name = "language", nullable = false)
     private Language language = Language.TR;
-
-    @NotNull(message = "Tenant ID boş olamaz")
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
 
     @Column(name = "site_id")
     private Long siteId;
@@ -111,10 +107,6 @@ public class Menu {
     private Long updatedBy;
 
     // Relationships
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", insertable = false, updatable = false)
-    private Tenant tenant;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", insertable = false, updatable = false)
     private Site site;
@@ -228,10 +220,9 @@ public class Menu {
         // Default constructor
     }
 
-    public Menu(String name, String url, Language language, Long tenantId) {
+    public Menu(String name, String url, Language language) {
         this.name = name;
         this.url = url;
         this.language = language;
-        this.tenantId = tenantId;
     }
 }

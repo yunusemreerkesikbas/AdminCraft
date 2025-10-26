@@ -10,18 +10,16 @@ import java.util.Optional;
 
 @Repository
 public interface PageCategoryI18nJpaRepository extends JpaRepository<PageCategoryI18n, Long> {
-  Optional<PageCategoryI18n> findByTenantIdAndCategory_IdAndLanguage(
-      Long tenantId, Long categoryId, Language language);
+  Optional<PageCategoryI18n> findByCategory_IdAndLanguage(Long categoryId, Language language);
 
-  List<PageCategoryI18n> findByTenantIdAndCategory_IdInAndLanguage(
-      Long tenantId, List<Long> ids, Language language);
+  List<PageCategoryI18n> findByCategory_IdInAndLanguage(List<Long> ids, Language language);
 
-  List<PageCategoryI18n> findByTenantIdAndCategory_Id(Long tenantId, Long categoryId);
+  List<PageCategoryI18n> findByCategory_Id(Long categoryId);
 
-  List<PageCategoryI18n> findByTenantIdAndCategory_IdIn(Long tenantId, List<Long> categoryIds);
+  List<PageCategoryI18n> findByCategory_IdIn(List<Long> categoryIds);
 
-  boolean existsByTenantIdAndLanguageAndUrl(Long tenantId, Language language, String url);
+  boolean existsByLanguageAndUrl(Language language, String url);
 
-  boolean existsByTenantIdAndLanguageAndUrlAndCategory_IdNot(
-      Long tenantId, Language language, String url, Long categoryId);
+  boolean existsByLanguageAndUrlAndCategory_IdNot(
+      Language language, String url, Long categoryId);
 }

@@ -9,7 +9,6 @@ public record SiteResponse(
     Long id,
     String siteName,
     String description,
-    Long tenantId,
     String tenantName,
     String domain,
     String customDomain,
@@ -20,29 +19,29 @@ public record SiteResponse(
     String themeName,
     Boolean maintenanceMode,
     String maintenanceMessage,
-    
+
     // SEO Information
     String siteTitle,
     String siteDescription,
     String siteKeywords,
-    
+
     // Social Media Information
     String ogImageUrl,
     String twitterHandle,
     String facebookPageUrl,
-    
+
     // Analytics Information
     String googleAnalyticsId,
     String googleTagManagerId,
-    
+
     // URL Information
     String siteUrl,
     String fullDomain,
-    
+
     // Status Information
     Boolean isAccessible,
     Boolean canBePublished,
-    
+
     // Timestamps
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
@@ -53,7 +52,6 @@ public record SiteResponse(
         Long id,
         String siteName,
         String description,
-        Long tenantId,
         String tenantName,
         String domain,
         String customDomain,
@@ -84,7 +82,6 @@ public record SiteResponse(
             id,
             siteName,
             description,
-            tenantId,
             tenantName,
             domain,
             customDomain,

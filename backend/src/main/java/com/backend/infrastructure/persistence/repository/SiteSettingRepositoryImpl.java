@@ -27,46 +27,55 @@ public class SiteSettingRepositoryImpl implements SiteSettingRepository {
 
   @Override
   public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguage(Long tenantId, String key, Language language) {
-    return jpa.findByTenantIdAndSettingKeyAndLanguage(tenantId, key, language);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findBySettingKeyAndLanguage(key, language);
   }
 
   @Override
   public Optional<SiteSetting> findByTenantIdAndSettingKeyAndLanguageIsNull(Long tenantId, String key) {
-    return jpa.findByTenantIdAndSettingKeyAndLanguageIsNull(tenantId, key);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findBySettingKeyAndLanguageIsNull(key);
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndLanguage(Long tenantId, Language language) {
-    return jpa.findByTenantIdAndLanguage(tenantId, language);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByLanguage(language);
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndLanguageIsNull(Long tenantId) {
-    return jpa.findByTenantIdAndLanguageIsNull(tenantId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByLanguageIsNull();
   }
 
   @Override
   public List<SiteSetting> findByTenantId(Long tenantId) {
-    return jpa.findByTenantId(tenantId);
+    // In database-per-tenant model, all settings in current DB belong to tenant
+    return jpa.findAll();
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndSettingKeyIn(Long tenantId, List<String> keys) {
-    return jpa.findByTenantIdAndSettingKeyIn(tenantId, keys);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findBySettingKeyIn(keys);
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndLanguageIn(Long tenantId, List<Language> languages) {
-    return jpa.findByTenantIdAndLanguageIn(tenantId, languages);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByLanguageIn(languages);
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndIsPublicTrue(Long tenantId) {
-    return jpa.findByTenantIdAndIsPublicTrue(tenantId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByIsPublicTrue();
   }
 
   @Override
   public List<SiteSetting> findByTenantIdAndLanguageAndIsPublicTrue(Long tenantId, Language language) {
-    return jpa.findByTenantIdAndLanguageAndIsPublicTrue(tenantId, language);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByLanguageAndIsPublicTrue(language);
   }
 }

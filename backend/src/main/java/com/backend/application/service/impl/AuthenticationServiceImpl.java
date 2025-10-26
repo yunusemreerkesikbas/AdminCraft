@@ -229,10 +229,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new UserAccountDisabledException();
             }
             String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(),
-                    user.getTenantId());
+                    tenantId);
             String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-            log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), user.getTenantId());
+            log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), tenantId);
 
             return new LoginResponse(
                     newAccessToken,
@@ -244,7 +244,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.getFullName(),
                     user.getRole().name(),
                     user.getPreferredLanguage().name(),
-                    resolveTenantSubdomain(user.getTenantId()));
+                    resolveTenantSubdomain(tenantId));
         }
     }
 

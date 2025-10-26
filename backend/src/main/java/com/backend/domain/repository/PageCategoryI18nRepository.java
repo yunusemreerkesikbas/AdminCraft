@@ -10,18 +10,17 @@ public interface PageCategoryI18nRepository {
 
   List<PageCategoryI18n> saveAll(Iterable<PageCategoryI18n> translations);
 
-  Optional<PageCategoryI18n> findByTenantIdAndCategoryIdAndLanguage(
-      Long tenantId, Long categoryId, Language language);
+  Optional<PageCategoryI18n> findByCategoryIdAndLanguage(Long categoryId, Language language);
 
-  List<PageCategoryI18n> findByTenantIdAndCategoryIdInAndLanguage(
-      Long tenantId, List<Long> categoryIds, Language language);
+  List<PageCategoryI18n> findByCategoryIdInAndLanguage(
+      List<Long> categoryIds, Language language);
 
-  List<PageCategoryI18n> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
+  List<PageCategoryI18n> findByCategoryId(Long categoryId);
 
-  List<PageCategoryI18n> findByTenantIdAndCategoryIdIn(Long tenantId, List<Long> categoryIds);
+  List<PageCategoryI18n> findByCategoryIdIn(List<Long> categoryIds);
 
-  boolean existsByTenantIdAndLanguageAndUrl(Long tenantId, Language language, String url);
+  boolean existsByLanguageAndUrl(Language language, String url);
 
-  boolean existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
-      Long tenantId, Language language, String url, Long categoryId);
+  boolean existsByLanguageAndUrlAndCategoryIdNot(
+      Language language, String url, Long categoryId);
 }

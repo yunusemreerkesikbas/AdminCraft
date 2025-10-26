@@ -25,9 +25,6 @@ public abstract class BaseI18nEntity {
     @Column(name = "uid", nullable = false, unique = true, length = 50)
     private String uid;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "language", nullable = false, length = 10)
     private Language language;

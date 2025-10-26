@@ -165,7 +165,6 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
   private SiteSetting createNewSetting(Long tenantId, String key, String value, Language language, SettingType type, Long updatedBy) {
     SiteSetting setting = new SiteSetting();
-    setting.setTenantId(tenantId);
     setting.setSettingKey(key);
     setting.setSettingValue(value);
     setting.setLanguage(language);

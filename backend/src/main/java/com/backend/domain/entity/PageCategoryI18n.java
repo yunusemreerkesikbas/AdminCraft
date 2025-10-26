@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "page_category_i18n", uniqueConstraints = {
-    @UniqueConstraint(columnNames = { "tenant_id", "category_id", "language" }, name = "uk_page_category_i18n_cat_lang"),
-    @UniqueConstraint(columnNames = { "tenant_id", "uid" }, name = "uk_page_category_i18n_uid_tenant"),
-    @UniqueConstraint(columnNames = { "tenant_id", "language", "url" }, name = "uk_page_category_i18n_url")
+    @UniqueConstraint(columnNames = { "category_id", "language" }, name = "uk_page_category_i18n_cat_lang"),
+    @UniqueConstraint(columnNames = { "uid" }, name = "uk_page_category_i18n_uid"),
+    @UniqueConstraint(columnNames = { "language", "url" }, name = "uk_page_category_i18n_url")
 }, indexes = {
     @Index(columnList = "category_id", name = "idx_cat_i18n_category"),
-    @Index(columnList = "tenant_id, language", name = "idx_cat_i18n_tenant_lang"),
-    @Index(columnList = "tenant_id, language, url", name = "idx_cat_i18n_url")
+    @Index(columnList = "language", name = "idx_cat_i18n_lang"),
+    @Index(columnList = "language, url", name = "idx_cat_i18n_url")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

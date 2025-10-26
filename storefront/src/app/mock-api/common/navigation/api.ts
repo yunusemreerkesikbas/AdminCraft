@@ -89,6 +89,14 @@ export class NavigationMockApi implements OnDestroy {
                     return itemCopy;
                 }
 
+                // If no modules enabled (super admin without tenant selection) → show all modules
+                if (this._enabledModules.length === 0) {
+                    if (itemCopy.children?.length) {
+                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
+                    }
+                    return itemCopy;
+                }
+
                 // Tenant module → show only if enabled
                 if (this._enabledModules.includes(itemCopy.requiredModule)) {
                     if (itemCopy.children?.length) {

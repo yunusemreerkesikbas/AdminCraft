@@ -13,15 +13,11 @@ public interface PageJpaRepository extends JpaRepository<Page, Long> {
 
   Optional<Page> findByUuid(String uuid);
 
-  Optional<Page> findByTenantIdAndUid(Long tenantId, String uid);
+  Optional<Page> findByUid(String uid);
 
-  List<Page> findByTenantId(Long tenantId);
+  List<Page> findByStatus(PageStatus status);
 
-  List<Page> findByTenantIdAndStatus(Long tenantId, PageStatus status);
+  List<Page> findByCategoryId(Long categoryId);
 
-  List<Page> findByTenantIdAndCategoryId(Long tenantId, Long categoryId);
-
-  boolean existsByTenantIdAndUid(Long tenantId, String uid);
-
-  long countByTenantId(Long tenantId);
+  boolean existsByUid(String uid);
 }

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "page_categories", indexes = {
-    @Index(columnList = "tenant_id", name = "idx_page_category_tenant"),
     @Index(columnList = "parent_id", name = "idx_page_category_parent"),
     @Index(columnList = "sort_order", name = "idx_page_category_sort")
 })

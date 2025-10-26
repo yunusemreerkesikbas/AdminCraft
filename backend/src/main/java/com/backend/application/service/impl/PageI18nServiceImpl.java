@@ -38,7 +38,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     public PageI18nResponse getPageI18n(Long pageId, Language language, Long tenantId) {
         validatePageExists(pageId, tenantId);
 
-        return pageI18nRepository.findByTenantIdAndPageIdAndLanguage(tenantId, pageId, language)
+        return pageI18nRepository.findByPageIdAndLanguage(pageId, language)
                 .map(PageI18nResponse::from)
                 .orElseGet(() -> getFallbackLanguageI18n(pageId, tenantId));
     }
@@ -54,7 +54,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         }
 
         PageI18n pageI18n = pageI18nRepository
-                .findByTenantIdAndPageIdAndLanguage(tenantId, pageId, language)
+                .findByPageIdAndLanguage(pageId, language)
                 .map(existing -> updateExistingPageI18n(existing, request))
                 .orElseGet(() -> createNewPageI18n(pageId, tenantId, language, request));
 
@@ -67,7 +67,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     public List<PageI18nResponse> getAllPageI18n(Long pageId, Long tenantId) {
         validatePageExists(pageId, tenantId);
 
-        return pageI18nRepository.findByTenantIdAndPageId(tenantId, pageId)
+        return pageI18nRepository.findByPageId(pageId)
                 .stream()
                 .map(PageI18nResponse::from)
                 .collect(Collectors.toList());
@@ -79,7 +79,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         validatePageExists(pageId, tenantId);
 
         PageI18n pageI18n = pageI18nRepository
-                .findByTenantIdAndPageIdAndLanguage(tenantId, pageId, language)
+                .findByPageIdAndLanguage(pageId, language)
                 .orElseThrow(() -> new PageNotFoundException(
                         "PageI18n not found for pageId: " + pageId + " and language: " + language));
 
@@ -102,7 +102,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         validatePageExists(pageId, tenantId);
 
         PageI18n pageI18n = pageI18nRepository
-                .findByTenantIdAndPageIdAndLanguage(tenantId, pageId, language)
+                .findByPageIdAndLanguage(pageId, language)
                 .orElseThrow(() -> new PageNotFoundException(
                         "PageI18n not found for pageId: " + pageId + " and language: " + language));
 
@@ -118,12 +118,8 @@ public class PageI18nServiceImpl implements PageI18nService {
     }
 
     private void validatePageExists(Long pageId, Long tenantId) {
-        Page page = pageRepository.findById(pageId)
+        pageRepository.findById(pageId)
                 .orElseThrow(() -> new PageNotFoundException(pageId));
-
-        if (!page.getTenantId().equals(tenantId)) {
-            throw new TenantMismatchException(tenantId, page.getTenantId());
-        }
     }
 
     private void validateTenantMatch(Long expectedTenantId, Long actualTenantId) {
@@ -140,7 +136,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     }
 
     private void validateUrlPathUniqueness(Long tenantId, Language language, String urlPath, Long pageId) {
-        pageI18nRepository.findByTenantIdAndLanguageAndUrlPath(tenantId, language, urlPath)
+        pageI18nRepository.findByLanguageAndUrlPath(language, urlPath)
                 .ifPresent(existing -> {
                     if (!existing.getPageId().equals(pageId)) {
                         throw new IllegalArgumentException(
@@ -169,7 +165,7 @@ public class PageI18nServiceImpl implements PageI18nService {
                 .orElseThrow(() -> new TenantNotFoundException(tenantId));
 
         return pageI18nRepository
-                .findByTenantIdAndPageIdAndLanguage(tenantId, pageId, tenant.getDefaultLanguage())
+                .findByPageIdAndLanguage(pageId, tenant.getDefaultLanguage())
                 .map(pageI18n -> PageI18nResponse.from(pageI18n, true))
                 .orElseThrow(() -> new PageNotFoundException(
                         "No i18n found for pageId: " + pageId + " in any language"));
@@ -200,7 +196,6 @@ public class PageI18nServiceImpl implements PageI18nService {
     private PageI18n createNewPageI18n(Long pageId, Long tenantId, Language language, PageI18nRequest request) {
         PageI18n pageI18n = new PageI18n();
         pageI18n.setPageId(pageId);
-        pageI18n.setTenantId(tenantId);
         pageI18n.setLanguage(language);
         pageI18n.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
         pageI18n.setUid(generateUniqueUidForI18n(tenantId));
@@ -227,7 +222,7 @@ public class PageI18nServiceImpl implements PageI18nService {
             if (attempts > 10) {
                 uid = uid + attempts;
             }
-        } while (pageI18nRepository.findByTenantIdAndUid(tenantId, uid).isPresent());
+        } while (pageI18nRepository.findByUid(uid).isPresent());
         return uid;
     }
 }

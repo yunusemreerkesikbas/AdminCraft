@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
            @UniqueConstraint(columnNames = "file_name", name = "uk_media_filename")
        },
        indexes = {
-           @Index(columnList = "tenant_id", name = "idx_media_tenant"),
            @Index(columnList = "file_name", name = "idx_media_filename"),
            @Index(columnList = "mime_type", name = "idx_media_mimetype"),
            @Index(columnList = "folder", name = "idx_media_folder"),
@@ -111,9 +110,6 @@ public class MediaFile {
     private String tags; // JSON array of tags
     
     // Access and usage
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
-    
     @Column(name = "uploaded_by", nullable = false)
     private Long uploadedBy;
     
