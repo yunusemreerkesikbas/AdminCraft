@@ -59,37 +59,43 @@ public class UserRepositoryImpl implements UserRepository {
     
     @Override
     public Optional<User> findByEmailAndTenantId(String email, Long tenantId) {
-        return userJpaRepository.findByEmailAndTenantId(email, tenantId);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByEmail(email);
     }
-    
+
     @Override
     public boolean existsByEmail(String email) {
         return userJpaRepository.existsByEmail(email);
     }
-    
+
     @Override
     public boolean existsByEmailAndTenantId(String email, Long tenantId) {
-        return userJpaRepository.existsByEmailAndTenantId(email, tenantId);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.existsByEmail(email);
     }
-    
+
     @Override
     public List<User> findByTenantId(Long tenantId) {
-        return userJpaRepository.findByTenantId(tenantId);
+        // In database-per-tenant model, all users in current DB belong to tenant
+        return userJpaRepository.findAll();
     }
-    
+
     @Override
     public List<User> findByTenantIdAndIsActive(Long tenantId, Boolean isActive) {
-        return userJpaRepository.findByTenantIdAndIsActive(tenantId, isActive);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByIsActive(isActive);
     }
-    
+
     @Override
     public long countByTenantId(Long tenantId) {
-        return userJpaRepository.countByTenantId(tenantId);
+        // In database-per-tenant model, all users in current DB belong to tenant
+        return userJpaRepository.count();
     }
-    
+
     @Override
     public long countByTenantIdAndIsActive(Long tenantId, Boolean isActive) {
-        return userJpaRepository.countByTenantIdAndIsActive(tenantId, isActive);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.countByIsActive(isActive);
     }
     
     @Override
@@ -99,27 +105,30 @@ public class UserRepositoryImpl implements UserRepository {
     
     @Override
     public List<User> findByTenantIdAndRole(Long tenantId, UserRole role) {
-        return userJpaRepository.findByTenantIdAndRole(tenantId, role);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByRole(role);
     }
-    
+
     @Override
     public List<User> findByRoleIn(List<UserRole> roles) {
         return userJpaRepository.findByRoleIn(roles);
     }
-    
+
     @Override
     public long countByTenantIdAndRole(Long tenantId, UserRole role) {
-        return userJpaRepository.countByTenantIdAndRole(tenantId, role);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.countByRole(role);
     }
-    
+
     @Override
     public List<User> findByPreferredLanguage(Language language) {
         return userJpaRepository.findByPreferredLanguage(language);
     }
-    
+
     @Override
     public List<User> findByTenantIdAndPreferredLanguage(Long tenantId, Language language) {
-        return userJpaRepository.findByTenantIdAndPreferredLanguage(tenantId, language);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByPreferredLanguage(language);
     }
     
     @Override
@@ -154,27 +163,30 @@ public class UserRepositoryImpl implements UserRepository {
     
     @Override
     public List<User> findByTenantIdAndFullNameContainingIgnoreCase(Long tenantId, String fullName) {
-        return userJpaRepository.findByTenantIdAndFullNameContainingIgnoreCase(tenantId, fullName);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByFullNameContainingIgnoreCase(fullName);
     }
-    
+
     @Override
     public List<User> findByTenantIdAndEmailContainingIgnoreCase(Long tenantId, String email) {
-        return userJpaRepository.findByTenantIdAndEmailContainingIgnoreCase(tenantId, email);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByEmailContainingIgnoreCase(email);
     }
-    
+
     @Override
     public List<User> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
         return userJpaRepository.findByCreatedAtBetween(startDate, endDate);
     }
-    
+
     @Override
     public List<User> findByLastLoginAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
         return userJpaRepository.findByLastLoginAtBetween(startDate, endDate);
     }
-    
+
     @Override
     public List<User> findByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate) {
-        return userJpaRepository.findByTenantIdAndCreatedAtBetween(tenantId, startDate, endDate);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByCreatedAtBetween(startDate, endDate);
     }
     
     @Override
@@ -189,41 +201,48 @@ public class UserRepositoryImpl implements UserRepository {
     
     @Override
     public List<User> findByTenantIdAndLastLoginAtIsNull(Long tenantId) {
-        return userJpaRepository.findByTenantIdAndLastLoginAtIsNull(tenantId);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByLastLoginAtIsNull();
     }
-    
+
     @Override
     public List<User> findByTenantIdAndDepartment(Long tenantId, String department) {
-        return userJpaRepository.findByTenantIdAndDepartment(tenantId, department);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByDepartment(department);
     }
-    
+
     @Override
     public List<User> findByTenantIdAndJobTitle(Long tenantId, String jobTitle) {
-        return userJpaRepository.findByTenantIdAndJobTitle(tenantId, jobTitle);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.findByJobTitle(jobTitle);
     }
-    
+
     @Override
     public List<User> findByIdIn(List<Long> ids) {
         return userJpaRepository.findByIdIn(ids);
     }
-    
+
     @Override
     public void deleteByTenantId(Long tenantId) {
-        userJpaRepository.deleteByTenantId(tenantId);
+        // In database-per-tenant model, delete all users in current database
+        userJpaRepository.deleteAll();
     }
-    
+
     @Override
     public long countByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate) {
-        return userJpaRepository.countByTenantIdAndCreatedAtBetween(tenantId, startDate, endDate);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.countByCreatedAtBetween(startDate, endDate);
     }
-    
+
     @Override
     public long countByTenantIdAndLastLoginAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate) {
-        return userJpaRepository.countByTenantIdAndLastLoginAtBetween(tenantId, startDate, endDate);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.countByLastLoginAtBetween(startDate, endDate);
     }
-    
+
     @Override
     public long countByTenantIdAndLastLoginAtAfter(Long tenantId, LocalDateTime dateTime) {
-        return userJpaRepository.countByTenantIdAndLastLoginAtAfter(tenantId, dateTime);
+        // In database-per-tenant model, routing is handled by TenantContext
+        return userJpaRepository.countByLastLoginAtAfter(dateTime);
     }
 }

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiResponse } from '@core/crud';
+import { NavigationService } from 'app/core/navigation/navigation.service';
 import { TenantModule } from 'app/core/tenant/tenant.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
 import { BehaviorSubject, catchError, Observable, of, take } from 'rxjs';
@@ -9,6 +10,7 @@ import { BehaviorSubject, catchError, Observable, of, take } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
     private readonly _httpClient = inject(HttpClient);
+    private readonly _navigationService = inject(NavigationService);
     #snackBar = inject(MatSnackBar);
 
     private readonly STORAGE_KEYS = {
@@ -110,6 +112,9 @@ export class TenantContextService {
                     .filter((m) => m.status === 'enabled')
                     .map((m) => m.moduleCode);
                 this._tenantModules$.next(moduleCodes);
+
+                // Reload navigation to apply module-based filtering
+                this._navigationService.reload();
             });
     }
 
@@ -118,6 +123,9 @@ export class TenantContextService {
         this._tenantModules$.next([]);
         sessionStorage.removeItem(this.STORAGE_KEYS.selectedTenantId);
         localStorage.removeItem(this.STORAGE_KEYS.tenantId);
+
+        // Reload navigation to show all modules
+        this._navigationService.reload();
     }
 
     getSelectedTenantId(): number | null {

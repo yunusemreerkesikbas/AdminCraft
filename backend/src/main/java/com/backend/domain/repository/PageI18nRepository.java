@@ -16,26 +16,21 @@ public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
 
         Optional<PageI18n> findByUuid(String uuid);
 
-        Optional<PageI18n> findByTenantIdAndUid(Long tenantId, String uid);
+        Optional<PageI18n> findByUid(String uid);
 
-        Optional<PageI18n> findByTenantIdAndPageIdAndLanguage(Long tenantId, Long pageId, Language language);
+        Optional<PageI18n> findByPageIdAndLanguage(Long pageId, Language language);
 
-        Optional<PageI18n> findByTenantIdAndLanguageAndUrlPath(Long tenantId, Language language, String urlPath);
+        Optional<PageI18n> findByLanguageAndUrlPath(Language language, String urlPath);
 
-        List<PageI18n> findByTenantIdAndPageId(Long tenantId, Long pageId);
+        List<PageI18n> findByPageId(Long pageId);
 
-        List<PageI18n> findByTenantId(Long tenantId);
+        List<PageI18n> findByLanguage(Language language);
 
-        @Query("SELECT pi FROM PageI18n pi WHERE pi.tenantId = :tenantId AND pi.language = :language AND pi.urlPath = :urlPath AND pi.status = 'PUBLISHED'")
-        Optional<PageI18n> findPublishedByUrl(@Param("tenantId") Long tenantId,
-                        @Param("language") Language language,
+        @Query("SELECT pi FROM PageI18n pi WHERE pi.language = :language AND pi.urlPath = :urlPath AND pi.status = 'PUBLISHED'")
+        Optional<PageI18n> findPublishedByUrl(@Param("language") Language language,
                         @Param("urlPath") String urlPath);
 
-        List<PageI18n> findByTenantIdAndLanguage(Long tenantId, Language language);
-
-        List<PageI18n> findByTenantIdAndLanguageAndStatus(Long tenantId, Language language, PageStatus status);
-
-        boolean existsByTenantIdAndPageIdAndLanguage(Long tenantId, Long pageId, Language language);
+        List<PageI18n> findByLanguageAndStatus(Language language, PageStatus status);
 
         boolean existsByPageIdAndLanguage(Long pageId, Language language);
 
@@ -43,15 +38,14 @@ public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
 
         void deleteByPageId(Long pageId);
 
-        @Query("SELECT pi FROM PageI18n pi WHERE pi.tenantId = :tenantId AND pi.language = :language AND pi.status = 'PUBLISHED' ORDER BY pi.publishedAt DESC")
-        List<PageI18n> findPublishedByTenantAndLanguage(@Param("tenantId") Long tenantId,
-                        @Param("language") Language language);
+        @Query("SELECT pi FROM PageI18n pi WHERE pi.language = :language AND pi.status = 'PUBLISHED' ORDER BY pi.publishedAt DESC")
+        List<PageI18n> findPublishedByLanguage(@Param("language") Language language);
 
-        @Query("SELECT pi FROM PageI18n pi WHERE pi.tenantId = :tenantId AND pi.status = 'SCHEDULED' ORDER BY pi.scheduledAt ASC")
-        List<PageI18n> findScheduledByTenant(@Param("tenantId") Long tenantId);
+        @Query("SELECT pi FROM PageI18n pi WHERE pi.status = 'SCHEDULED' ORDER BY pi.scheduledAt ASC")
+        List<PageI18n> findScheduled();
 
         @Query("SELECT pi FROM PageI18n pi WHERE pi.status = 'SCHEDULED' AND pi.scheduledAt <= CURRENT_TIMESTAMP")
         List<PageI18n> findReadyForPublication();
 
-        long countByTenantIdAndLanguageAndStatus(Long tenantId, Language language, PageStatus status);
+        long countByLanguageAndStatus(Language language, PageStatus status);
 }

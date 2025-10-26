@@ -11,10 +11,8 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "pages", indexes = {
-        @Index(columnList = "tenant_id", name = "idx_page_tenant"),
         @Index(columnList = "status", name = "idx_page_status"),
         @Index(columnList = "category_id", name = "idx_page_category"),
-        @Index(columnList = "tenant_id, is_home", name = "idx_page_home"),
         @Index(columnList = "sort_order", name = "idx_page_sort")
 })
 @Data
@@ -41,9 +39,5 @@ public class Page extends BaseEntity {
     private Integer sortOrder = 0;
 
     public void validateEditAuthorization(Long userId, Long userTenantId) {
-        if (getTenantId() == null || !getTenantId().equals(userTenantId)) {
-            throw new UnauthorizedOperationException(
-                    "User " + userId + " cannot edit page from different tenant");
-        }
     }
 }

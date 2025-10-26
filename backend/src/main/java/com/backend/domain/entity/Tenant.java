@@ -1,5 +1,6 @@
 package com.backend.domain.entity;
 
+import com.backend.domain.converter.LanguageSetConverter;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.exception.TenantCannotBeActivatedException;
@@ -48,12 +49,9 @@ public class Tenant {
     @Enumerated(EnumType.STRING)
     @Column(name = "default_language", nullable = false)
     private Language defaultLanguage = Language.TR;
-    
-    @ElementCollection(targetClass = Language.class)
-    @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "tenant_supported_languages",
-                    joinColumns = @JoinColumn(name = "tenant_id"))
-    @Column(name = "language")
+
+    @Convert(converter = LanguageSetConverter.class)
+    @Column(name = "supported_languages", columnDefinition = "JSON")
     private Set<Language> supportedLanguages = new HashSet<>(Set.of(Language.TR));
 
     @Size(max = 100, message = "validation.custom.domain.size")

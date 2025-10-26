@@ -9,15 +9,13 @@ import java.util.Optional;
 
 @Repository
 public interface PageCategoryJpaRepository extends JpaRepository<PageCategory, Long> {
-  Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId);
+  boolean existsByUid(String uid);
 
-  boolean existsByTenantIdAndUid(Long tenantId, String uid);
+  List<PageCategory> findAllByOrderBySortOrderAsc();
 
-  List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId);
+  List<PageCategory> findByParentId(Long parentId);
 
-  List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId);
+  List<PageCategory> findByParentIdOrderBySortOrderAsc(Long parentId);
 
-  List<PageCategory> findByTenantIdAndParentIdOrderBySortOrderAsc(Long tenantId, Long parentId);
-
-  List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId);
+  List<PageCategory> findByParentIdIsNullOrderBySortOrderAsc();
 }

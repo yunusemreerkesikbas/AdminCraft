@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Navigation } from 'app/core/navigation/navigation.types';
-import { Observable, ReplaySubject, tap } from 'rxjs';
+import { Observable, ReplaySubject, take, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationService {
@@ -33,5 +33,12 @@ export class NavigationService {
                 this._navigation.next(navigation);
             })
         );
+    }
+
+    /**
+     * Reload navigation data (used when tenant modules change)
+     */
+    reload(): void {
+        this.get().pipe(take(1)).subscribe();
     }
 }

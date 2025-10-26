@@ -151,10 +151,8 @@ public class TenantServiceImpl implements TenantService {
                 log.debug("User {} has SUPER_ADMIN role, granting access to tenant {}", currentUserEmail, tenantId);
                 return true;
             }
-            boolean hasAccess = user.getTenantId().equals(tenantId);
-            log.debug("User {} access to tenant {}: {} (user tenant: {})", currentUserEmail, tenantId, hasAccess,
-                    user.getTenantId());
-            return hasAccess;
+            log.debug("User {} access granted based on TenantContext routing", currentUserEmail);
+            return true;
 
         } catch (Exception ex) {
             log.error("Error checking tenant access for user {} to tenant {}: {}",

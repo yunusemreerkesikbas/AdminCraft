@@ -5,7 +5,6 @@ import com.backend.domain.entity.PageI18n;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.exception.PageNotFoundException;
-import com.backend.domain.exception.TenantMismatchException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.TenantRepository;
@@ -33,13 +32,9 @@ public class PageServiceImpl implements PageService {
     @Override
     @Transactional
     public PageResponse createPage(PageCreateRequest request, Long userId) {
-        Long tenantId = com.backend.shared.common.SecurityUtil.getCurrentUserTenantId();
-        validateUidUniqueness(tenantId, null);
-
         Page page = new Page();
-        page.setTenantId(tenantId);
         page.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
-        page.setUid(generateUniqueUidForPage(tenantId));
+        page.setUid(generateUniqueUidForPage());
         page.setCategoryId(request.categoryId());
         page.setStatus(request.status() != null ? request.status() : PageStatus.DRAFT);
         page.setFeaturedImage(request.featuredImage());
@@ -60,8 +55,6 @@ public class PageServiceImpl implements PageService {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
-        validateTenantMatch(page.getTenantId(), tenantId);
-
         return PageResponse.from(page);
     }
 
@@ -71,16 +64,14 @@ public class PageServiceImpl implements PageService {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
-        validateTenantMatch(page.getTenantId(), tenantId);
-
-        List<PageI18n> i18nList = pageI18nRepository.findByTenantIdAndPageId(tenantId, id);
+        List<PageI18n> i18nList = pageI18nRepository.findByPageId(id);
         return PageDetailResponse.from(page, i18nList);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PageResponse> getAllPages(Long tenantId) {
-        return pageRepository.findByTenantId(tenantId)
+        return pageRepository.findAll()
                 .stream()
                 .map(PageResponse::from)
                 .collect(Collectors.toList());
@@ -89,8 +80,8 @@ public class PageServiceImpl implements PageService {
     @Override
     @Transactional(readOnly = true)
     public List<com.backend.presentation.dto.response.PageListResponse> getAllPagesWithTranslations(Long tenantId) {
-        List<Page> pages = pageRepository.findByTenantId(tenantId);
-        List<PageI18n> allTranslations = pageI18nRepository.findByTenantId(tenantId);
+        List<Page> pages = pageRepository.findAll();
+        List<PageI18n> allTranslations = pageI18nRepository.findAll();
         java.util.Map<Long, List<PageI18n>> translationsByPage = allTranslations.stream()
                 .collect(Collectors.groupingBy(PageI18n::getPageId));
         return pages.stream()
@@ -105,9 +96,6 @@ public class PageServiceImpl implements PageService {
     public PageResponse updatePage(Long id, PageCreateRequest request, Long userId) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
-
-        Long tenantId = com.backend.shared.common.SecurityUtil.getCurrentUserTenantId();
-        validateTenantMatch(page.getTenantId(), tenantId);
 
         if (request.categoryId() != null)
             page.setCategoryId(request.categoryId());
@@ -133,28 +121,17 @@ public class PageServiceImpl implements PageService {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
-        validateTenantMatch(page.getTenantId(), tenantId);
-
         pageI18nService.deletePageI18n(id);
         pageRepository.deleteById(id);
     }
 
-    private void validateTenantMatch(Long pageTenantId, Long requestTenantId) {
-        if (pageTenantId == null || requestTenantId == null) {
-            throw new IllegalArgumentException("Tenant IDs cannot be null");
-        }
-        if (!pageTenantId.equals(requestTenantId)) {
-            throw new TenantMismatchException(requestTenantId, pageTenantId);
-        }
-    }
-
-    private void validateUidUniqueness(Long tenantId, String uid) {
-        if (uid != null && pageRepository.existsByTenantIdAndUid(tenantId, uid)) {
+    private void validateUidUniqueness(String uid) {
+        if (uid != null && pageRepository.existsByUid(uid)) {
             throw new IllegalArgumentException("Page with uid '" + uid + "' already exists for this tenant");
         }
     }
 
-    private String generateUniqueUidForPage(Long tenantId) {
+    private String generateUniqueUidForPage() {
         String uid;
         int attempts = 0;
         do {
@@ -164,7 +141,7 @@ public class PageServiceImpl implements PageService {
             if (attempts > 10) {
                 uid = uid + attempts; // slight perturbation
             }
-        } while (pageRepository.existsByTenantIdAndUid(tenantId, uid));
+        } while (pageRepository.existsByUid(uid));
         return uid;
     }
 }

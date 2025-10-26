@@ -12,64 +12,16 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * Language-specific Page content (i18n).
- *
- * <p>
- * This entity stores all language-dependent content for pages following
- * the Multi-Language Page Builder architecture. Each {@link Page} can have
- * multiple PageI18n entries (one per language).
- *
- * <p>
- * Key features:
- * <ul>
- * <li>Extends {@link BaseI18nEntity} for uuid, uid, tenantId, language, and
- * updatedAt</li>
- * <li>Stores language-specific fields: title, subtitle, descriptions, SEO
- * metadata</li>
- * <li>Manages per-language URL paths with uniqueness constraints</li>
- * <li>Supports independent publication status per language</li>
- * <li>Provides scheduling and publication tracking per language</li>
- * </ul>
- *
- * <p>
- * Database constraints:
- * <ul>
- * <li>Unique: (tenant_id, page_id, language) - one i18n entry per page per
- * language</li>
- * <li>Unique: (tenant_id, uid) - enforced by BaseI18nEntity</li>
- * <li>Unique: (tenant_id, language, url_path) - URL paths must be unique per
- * tenant and language</li>
- * <li>Indexed: page_id, (tenant_id, language), (tenant_id, language, url_path),
- * (tenant_id, language, status), published_at</li>
- * </ul>
- *
- * <p>
- * Business rules:
- * <ul>
- * <li>Cannot publish without title and urlPath</li>
- * <li>Scheduled publication time must be in the future</li>
- * <li>Publishing sets publishedAt timestamp and clears scheduledAt</li>
- * <li>Unpublishing clears both publishedAt and scheduledAt</li>
- * </ul>
- *
- * @see Page
- * @see BaseI18nEntity
- * @see PageStatus
- * @author AdminCraft Team
- * @version 1.0
- * @since 1.0
- */
 @Entity
 @Table(name = "page_i18n", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "tenant_id", "page_id", "language" }, name = "uk_page_i18n_page_lang"),
-        @UniqueConstraint(columnNames = { "tenant_id", "uid" }, name = "uk_page_i18n_uid_tenant"),
-        @UniqueConstraint(columnNames = { "tenant_id", "language", "url_path" }, name = "uk_page_i18n_url_path")
+        @UniqueConstraint(columnNames = { "page_id", "language" }, name = "uk_page_i18n_page_lang"),
+        @UniqueConstraint(columnNames = { "uid" }, name = "uk_page_i18n_uid"),
+        @UniqueConstraint(columnNames = { "language", "url_path" }, name = "uk_page_i18n_url_path")
 }, indexes = {
         @Index(columnList = "page_id", name = "idx_page_i18n_page"),
-        @Index(columnList = "tenant_id, language", name = "idx_page_i18n_tenant_lang"),
-        @Index(columnList = "tenant_id, language, url_path", name = "idx_page_i18n_url"),
-        @Index(columnList = "tenant_id, language, status", name = "idx_page_i18n_status"),
+        @Index(columnList = "language", name = "idx_page_i18n_lang"),
+        @Index(columnList = "language, url_path", name = "idx_page_i18n_url"),
+        @Index(columnList = "language, status", name = "idx_page_i18n_status"),
         @Index(columnList = "published_at", name = "idx_page_i18n_published")
 })
 @Data

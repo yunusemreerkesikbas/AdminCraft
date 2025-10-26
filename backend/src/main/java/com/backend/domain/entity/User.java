@@ -16,10 +16,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "email", "tenant_id" }, name = "uk_user_email_tenant"),
         @UniqueConstraint(columnNames = "email", name = "uk_user_email")
 }, indexes = {
-        @Index(columnList = "tenant_id", name = "idx_user_tenant"),
         @Index(columnList = "email", name = "idx_user_email"),
         @Index(columnList = "role", name = "idx_user_role"),
         @Index(columnList = "is_active", name = "idx_user_active"),
@@ -65,9 +63,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_language", nullable = false)
     private Language preferredLanguage = Language.TR;
-
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
 
     @Size(max = 20, message = "validation.phone.size")
     private String phone;
@@ -161,19 +156,17 @@ public class User {
     }
 
     // Business methods (page-builder)
+    // Note: Tenant isolation handled by TenantContext + database-per-tenant architecture
     public boolean canAccessPage(Page page) {
-        return this.tenantId.equals(page.getTenantId()) &&
-                this.role.hasPermission(UserRole.Permission.READ_CONTENT);
+        return this.role.hasPermission(UserRole.Permission.READ_CONTENT);
     }
 
     public boolean canEditPage(Page page) {
-        return this.tenantId.equals(page.getTenantId()) &&
-                this.role.hasPermission(UserRole.Permission.WRITE_CONTENT);
+        return this.role.hasPermission(UserRole.Permission.WRITE_CONTENT);
     }
 
     public boolean canDeletePage(Page page) {
-        return this.tenantId.equals(page.getTenantId()) &&
-                this.role.hasPermission(UserRole.Permission.DELETE_CONTENT);
+        return this.role.hasPermission(UserRole.Permission.DELETE_CONTENT);
     }
 
     public boolean canManageUsers() {

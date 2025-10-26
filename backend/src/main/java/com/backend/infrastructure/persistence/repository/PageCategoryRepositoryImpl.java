@@ -31,7 +31,8 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
 
   @Override
   public Optional<PageCategory> findByIdAndTenantId(Long id, Long tenantId) {
-    return jpa.findByIdAndTenantId(id, tenantId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findById(id);
   }
 
   @Override
@@ -51,26 +52,31 @@ public class PageCategoryRepositoryImpl implements PageCategoryRepository {
 
   @Override
   public boolean existsByTenantIdAndUid(Long tenantId, String uid) {
-    return jpa.existsByTenantIdAndUid(tenantId, uid);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.existsByUid(uid);
   }
 
   @Override
   public List<PageCategory> findByTenantIdOrderBySortOrderAsc(Long tenantId) {
-    return jpa.findByTenantIdOrderBySortOrderAsc(tenantId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findAllByOrderBySortOrderAsc();
   }
 
   @Override
   public List<PageCategory> findByTenantIdAndParentId(Long tenantId, Long parentId) {
-    return jpa.findByTenantIdAndParentId(tenantId, parentId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByParentId(parentId);
   }
 
   @Override
   public List<PageCategory> findByTenantIdAndParentIdOrderBySortOrderAsc(Long tenantId, Long parentId) {
-    return jpa.findByTenantIdAndParentIdOrderBySortOrderAsc(tenantId, parentId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByParentIdOrderBySortOrderAsc(parentId);
   }
 
   @Override
   public List<PageCategory> findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(Long tenantId) {
-    return jpa.findByTenantIdAndParentIdIsNullOrderBySortOrderAsc(tenantId);
+    // In database-per-tenant model, routing is handled by TenantContext
+    return jpa.findByParentIdIsNullOrderBySortOrderAsc();
   }
 }

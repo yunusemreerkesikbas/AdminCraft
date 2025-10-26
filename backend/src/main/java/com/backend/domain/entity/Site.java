@@ -18,8 +18,8 @@ import java.util.Set;
 @Entity
 @Table(name = "sites")
 @Data
-@EqualsAndHashCode(callSuper = false, exclude = {"tenant"})
-@ToString(exclude = {"tenant"})
+@EqualsAndHashCode(callSuper = false)
+@ToString
 public class Site {
 
     @Id
@@ -45,12 +45,6 @@ public class Site {
     @Enumerated(EnumType.STRING)
     @Column(name = "default_language", nullable = false)
     private Language defaultLanguage = Language.TR;
-
-    @NotNull(message = "Tenant ID boş olamaz")
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
-
-    // Site configuration fields
     @Column(name = "domain")
     private String domain;
 
@@ -65,8 +59,6 @@ public class Site {
 
     @Column(name = "theme_name")
     private String themeName = "default";
-
-    // SEO Configuration
     @Size(max = 60, message = "Site başlığı 60 karakterden uzun olamaz")
     @Column(name = "site_title", length = 60)
     private String siteTitle;
@@ -79,7 +71,6 @@ public class Site {
     @Column(name = "site_keywords", length = 200)
     private String siteKeywords;
 
-    // Social Media Configuration
     @Column(name = "og_image_url")
     private String ogImageUrl;
 
@@ -115,11 +106,6 @@ public class Site {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
-    // Relationships
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", insertable = false, updatable = false)
-    private Tenant tenant;
-
     // Business Methods
     public boolean isLanguageEnabled(Language language) {
         return enabledLanguages.contains(language);
@@ -139,9 +125,9 @@ public class Site {
 
     public boolean canBePublished() {
         return siteName != null && !siteName.trim().isEmpty() &&
-               !enabledLanguages.isEmpty() &&
-               defaultLanguage != null &&
-               enabledLanguages.contains(defaultLanguage);
+                !enabledLanguages.isEmpty() &&
+                defaultLanguage != null &&
+                enabledLanguages.contains(defaultLanguage);
     }
 
     public void publish() {

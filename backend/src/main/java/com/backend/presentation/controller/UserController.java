@@ -115,13 +115,9 @@ public class UserController {
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Security check - ensure user has access to delete this user
-            Optional<User> user = userService.getUserById(id);
-            if (user.isPresent()) {
-                validateUserAccess(id);
-                validateTenantAccess(user.get().getTenantId());
-            }
-            
+            // Access control handled by TenantContext routing
+            validateUserAccess(id);
+
             userService.deleteUser(id);
             String message = messageSource.getMessage("user.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
@@ -171,13 +167,9 @@ public class UserController {
             @RequestParam @Valid @NotNull Language language,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Security check - ensure user has access to update this user
-            Optional<User> user = userService.getUserById(id);
-            if (user.isPresent()) {
-                validateUserAccess(id);
-                validateTenantAccess(user.get().getTenantId());
-            }
-            
+            // Access control handled by TenantContext routing
+            validateUserAccess(id);
+
             User updatedUser = userService.updateUserLanguage(id, language);
             String message = messageSource.getMessage("user.language.updated.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, updatedUser));

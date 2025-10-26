@@ -69,21 +69,6 @@ public class SiteController {
         }
     }
 
-    @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<ApiResponse<List<SiteResponse>>> getSitesByTenant(
-            @PathVariable @Valid @NotNull @Min(1) Long tenantId,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-        try {
-            Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            List<SiteResponse> sites = siteService.getSitesByTenantId(tenantId, displayLanguage);
-            return ResponseEntity.ok(ApiResponse.success(sites));
-        } catch (Exception ex) {
-            log.error("Error getting sites by tenant {}: {}", tenantId, ex.getMessage());
-            String message = messageSource.getMessage("site.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
-        }
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<SiteResponse>>> getAllSites(

@@ -76,7 +76,6 @@ public class MediaServiceImpl implements MediaService {
             mediaFile.setMimeType(file.getContentType());
             mediaFile.setFileSize(file.getSize());
             mediaFile.setFileExtension(extension);
-            mediaFile.setTenantId(tenantId);
             mediaFile.setUploadedBy(uploadedBy);
             mediaFile.setFolder("uploads");
             mediaFile.setCategory("general");

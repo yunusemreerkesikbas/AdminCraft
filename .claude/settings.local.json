@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mysql:*)",
       "Bash(mvn clean compile:*)",
-      "Bash(mvn test:*)"
+      "Bash(mvn test:*)",
+      "Bash(mvn compile:*)"
     ],
     "deny": [],
     "ask": [],

@@ -26,37 +26,34 @@ public class PageCategoryI18nRepositoryImpl implements PageCategoryI18nRepositor
   }
 
   @Override
-  public Optional<PageCategoryI18n> findByTenantIdAndCategoryIdAndLanguage(Long tenantId,
-      Long categoryId,
-      Language language) {
-    return jpa.findByTenantIdAndCategory_IdAndLanguage(tenantId, categoryId, language);
+  public Optional<PageCategoryI18n> findByCategoryIdAndLanguage(Long categoryId, Language language) {
+    return jpa.findByCategory_IdAndLanguage(categoryId, language);
   }
 
   @Override
-  public List<PageCategoryI18n> findByTenantIdAndCategoryIdInAndLanguage(Long tenantId,
-      List<Long> categoryIds,
-      Language language) {
-    return jpa.findByTenantIdAndCategory_IdInAndLanguage(tenantId, categoryIds, language);
+  public List<PageCategoryI18n> findByCategoryIdInAndLanguage(
+      List<Long> categoryIds, Language language) {
+    return jpa.findByCategory_IdInAndLanguage(categoryIds, language);
   }
 
   @Override
-  public List<PageCategoryI18n> findByTenantIdAndCategoryId(Long tenantId, Long categoryId) {
-    return jpa.findByTenantIdAndCategory_Id(tenantId, categoryId);
+  public List<PageCategoryI18n> findByCategoryId(Long categoryId) {
+    return jpa.findByCategory_Id(categoryId);
   }
 
   @Override
-  public List<PageCategoryI18n> findByTenantIdAndCategoryIdIn(Long tenantId, List<Long> categoryIds) {
-    return jpa.findByTenantIdAndCategory_IdIn(tenantId, categoryIds);
+  public List<PageCategoryI18n> findByCategoryIdIn(List<Long> categoryIds) {
+    return jpa.findByCategory_IdIn(categoryIds);
   }
 
   @Override
-  public boolean existsByTenantIdAndLanguageAndUrl(Long tenantId, Language language, String url) {
-    return jpa.existsByTenantIdAndLanguageAndUrl(tenantId, language, url);
+  public boolean existsByLanguageAndUrl(Language language, String url) {
+    return jpa.existsByLanguageAndUrl(language, url);
   }
 
   @Override
-  public boolean existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
-      Long tenantId, Language language, String url, Long categoryId) {
-    return jpa.existsByTenantIdAndLanguageAndUrlAndCategory_IdNot(tenantId, language, url, categoryId);
+  public boolean existsByLanguageAndUrlAndCategoryIdNot(
+      Language language, String url, Long categoryId) {
+    return jpa.existsByLanguageAndUrlAndCategory_IdNot(language, url, categoryId);
   }
 }

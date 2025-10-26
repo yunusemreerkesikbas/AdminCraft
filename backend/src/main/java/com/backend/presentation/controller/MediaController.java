@@ -70,8 +70,7 @@ public class MediaController {
         try {
             Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
             if (mediaFile.isPresent()) {
-                // Additional tenant-based access control
-                validateTenantAccess(mediaFile.get().getTenantId());
+                // Access control handled by TenantContext routing
                 return ResponseEntity.ok(ApiResponse.success(mediaFile.get()));
             } else {
                 String message = messageSource.getMessage("media.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
@@ -107,12 +106,7 @@ public class MediaController {
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Additional security check - ensure user has access to the media file's tenant
-            Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
-            if (mediaFile.isPresent()) {
-                validateTenantAccess(mediaFile.get().getTenantId());
-            }
-            
+            // Access control handled by TenantContext routing
             mediaService.deleteMediaFile(id);
             String message = messageSource.getMessage("media.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
@@ -150,12 +144,8 @@ public class MediaController {
                 throw new IllegalArgumentException("Alt text cannot exceed 255 characters");
             }
             
-            // Security check for tenant access
-            Optional<MediaFile> mediaFile = mediaService.getMediaFileById(id);
-            if (mediaFile.isPresent()) {
-                validateTenantAccess(mediaFile.get().getTenantId());
-            }
-            
+            // Access control handled by TenantContext routing
+
             // Sanitize alt text
             String sanitizedAltText = sanitizeInput(altText);
             

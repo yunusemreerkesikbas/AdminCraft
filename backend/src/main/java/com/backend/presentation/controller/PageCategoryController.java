@@ -38,7 +38,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
 public class PageCategoryController {
 
   private final PageCategoryService categoryService;

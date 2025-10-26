@@ -44,7 +44,6 @@ public class PageCategoryServiceImpl implements PageCategoryService {
     }
 
     PageCategory category = new PageCategory();
-    category.setTenantId(tenantId);
     category.setUid(command.uid());
     category.setParentId(command.parentId());
     category.setActive(command.active() != null ? command.active() : true);
@@ -114,7 +113,7 @@ public class PageCategoryServiceImpl implements PageCategoryService {
         .toList();
 
     List<PageCategoryI18n> allTranslations = i18nRepository
-        .findByTenantIdAndCategoryIdIn(tenantId, categoryIds);
+        .findByCategoryIdIn(categoryIds);
 
     Map<Long, List<PageCategoryI18n>> translationsByCategory = allTranslations.stream()
         .collect(Collectors.groupingBy(i18n -> i18n.getCategory().getId()));
@@ -136,7 +135,7 @@ public class PageCategoryServiceImpl implements PageCategoryService {
     int publishedCount = 0;
 
     if (query.includeTranslations()) {
-      List<PageCategoryI18n> translations = i18nRepository.findByTenantIdAndCategoryId(query.tenantId(), query.id());
+      List<PageCategoryI18n> translations = i18nRepository.findByCategoryId(query.id());
       translationCount = translations.size();
 
       for (PageCategoryI18n i18n : translations) {
@@ -158,22 +157,21 @@ public class PageCategoryServiceImpl implements PageCategoryService {
         .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
     if (command.url() != null && !command.url().isEmpty()) {
-      boolean urlExists = i18nRepository.existsByTenantIdAndLanguageAndUrlAndCategoryIdNot(
-          tenantId, language, command.url(), categoryId);
+      boolean urlExists = i18nRepository.existsByLanguageAndUrlAndCategoryIdNot(
+          language, command.url(), categoryId);
       if (urlExists) {
         throw new IllegalArgumentException("URL already exists for this language");
       }
     }
 
-    Optional<PageCategoryI18n> existing = i18nRepository.findByTenantIdAndCategoryIdAndLanguage(
-        tenantId, categoryId, language);
+    Optional<PageCategoryI18n> existing = i18nRepository.findByCategoryIdAndLanguage(
+        categoryId, language);
 
     PageCategoryI18n i18n;
     if (existing.isPresent()) {
       i18n = existing.get();
     } else {
       i18n = new PageCategoryI18n();
-      i18n.setTenantId(tenantId);
       i18n.setCategory(category);
       i18n.setLanguage(language);
     }
@@ -201,7 +199,7 @@ public class PageCategoryServiceImpl implements PageCategoryService {
   @Override
   @Transactional(readOnly = true)
   public Optional<PageCategoryI18n> getI18n(Long categoryId, Language language, Long tenantId) {
-    return i18nRepository.findByTenantIdAndCategoryIdAndLanguage(tenantId, categoryId, language);
+    return i18nRepository.findByCategoryIdAndLanguage(categoryId, language);
   }
 
   private void validateParentBelongsToTenant(Long parentId, Long tenantId) {

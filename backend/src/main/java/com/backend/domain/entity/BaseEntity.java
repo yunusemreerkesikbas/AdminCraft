@@ -24,9 +24,6 @@ public abstract class BaseEntity {
     @Column(name = "uid", nullable = false, unique = true, length = 50)
     private String uid;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
