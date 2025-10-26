@@ -10,11 +10,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -158,7 +160,41 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-    
+
+    // Database Constraint Exceptions
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: ", ex); // Log full stack trace
+
+        String userMessage;
+        String exceptionMessage = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+
+        // Detect specific constraint violations and provide user-friendly messages
+        if (exceptionMessage.contains("foreign key constraint")) {
+            userMessage = getMessage("error.data.reference.invalid");
+        } else if (exceptionMessage.contains("unique constraint") ||
+                   exceptionMessage.contains("duplicate")) {
+            userMessage = getMessage("error.data.duplicate");
+        } else {
+            userMessage = getMessage("error.data.integrity");
+        }
+
+        return new ResponseEntity<>(
+            ApiResponse.error(userMessage),
+            HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<?>> handleConstraintViolation(ConstraintViolationException ex) {
+        log.error("Constraint violation: ", ex); // Log full stack trace
+        String message = getMessage("error.validation.constraint");
+        return new ResponseEntity<>(
+            ApiResponse.error(message),
+            HttpStatus.BAD_REQUEST
+        );
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception: ", ex);

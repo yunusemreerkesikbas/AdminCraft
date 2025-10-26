@@ -42,13 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
                 String role = jwtTokenProvider.getRoleFromToken(jwt);
+                Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                 Long tenantId = jwtTokenProvider.getTenantIdFromToken(jwt);
 
                 // Create authentication object with user details
-                UsernamePasswordAuthenticationToken authentication = 
+                UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                        email, 
-                        null, 
+                        email,
+                        null,
                         List.of(new SimpleGrantedAuthority("ROLE_" + role))
                     );
 
@@ -56,11 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Map<String, Object> details = new HashMap<>();
                 details.put("email", email);
                 details.put("role", role);
+                details.put("userId", userId);
                 details.put("tenantId", tenantId);
                 authentication.setDetails(details);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Successfully authenticated user: {} with role: {} and tenantId: {}", email, role, tenantId);
+                log.debug("Successfully authenticated user: {} (ID: {}) with role: {} and tenantId: {}",
+                    email, userId, role, tenantId);
             } else if (StringUtils.hasText(jwt)) {
                 log.warn("Invalid token or wrong token type provided for authentication");
             }

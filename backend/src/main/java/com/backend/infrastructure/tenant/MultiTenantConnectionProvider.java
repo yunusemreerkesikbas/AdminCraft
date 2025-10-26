@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -85,13 +88,66 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
     config.setMaximumPoolSize(MAX_POOL_SIZE_PER_TENANT);
-    config.setMinimumIdle(0);
+    config.setMinimumIdle(1); // Eager initialization: at least 1 connection ready immediately
     config.setIdleTimeout(IDLE_EVICT_MILLIS);
-    config.setConnectionTimeout(10000);
+    config.setConnectionTimeout(60000); // 60s - increased for cold start tenant pool initialization
+    config.setValidationTimeout(5000); // 5s - connection validation timeout
+    config.setInitializationFailTimeout(-1); // Wait indefinitely for pool initialization (important for eager init)
     config.setLeakDetectionThreshold(10000);
     config.setPoolName("TenantPool-" + dbName);
 
     return new HikariDataSource(config);
+  }
+
+  /**
+   * Pre-warms the connection pool for the specified tenant database.
+   * This method eagerly initializes the HikariCP pool and tests the connection
+   * to prevent lazy initialization failures during the first transactional request.
+   * Implements retry logic with exponential backoff for robustness.
+   *
+   * @param tenantDbName the tenant database name (e.g., "ac_tenant_1")
+   * @throws RuntimeException if pool initialization or connection test fails after all retries
+   */
+  public void warmUpConnectionPool(String tenantDbName) {
+    log.debug("Pre-warming connection pool for tenant DB: {}", tenantDbName);
+
+    int maxAttempts = 3;
+    long retryDelayMs = 500;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // Eagerly create or retrieve the datasource (triggers pool initialization if not cached)
+        DataSource dataSource = selectDataSource(tenantDbName);
+
+        // Test the connection with a simple query to ensure pool is fully operational
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+          statement.execute("SELECT 1");
+          log.info("Connection pool pre-warmed successfully for tenant DB: {} (attempt {}/{})",
+              tenantDbName, attempt, maxAttempts);
+          return; // Success, exit method
+        }
+      } catch (SQLException e) {
+        if (attempt == maxAttempts) {
+          // Final attempt failed, throw exception
+          log.error("Failed to pre-warm connection pool for tenant DB {} after {} attempts: {}",
+              tenantDbName, maxAttempts, e.getMessage(), e);
+          throw new RuntimeException("Connection pool initialization failed for tenant: " + tenantDbName, e);
+        }
+
+        // Retry with exponential backoff
+        long delayMs = retryDelayMs * attempt;
+        log.warn("Failed to pre-warm connection pool for tenant DB {} (attempt {}/{}), retrying in {}ms: {}",
+            tenantDbName, attempt, maxAttempts, delayMs, e.getMessage());
+
+        try {
+          Thread.sleep(delayMs);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException("Connection pool pre-warming interrupted for tenant: " + tenantDbName, ie);
+        }
+      }
+    }
   }
 
   private void closeDataSource(DataSource dataSource) {

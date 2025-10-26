@@ -8,10 +8,10 @@ import java.util.List;
 
 public interface PageService {
     PageResponse createPage(PageCreateRequest request, Long userId);
-    PageResponse getPageById(Long id, Long tenantId);
-    PageDetailResponse getPageWithI18n(Long id, Long tenantId);
-    List<PageResponse> getAllPages(Long tenantId);
-    List<PageListResponse> getAllPagesWithTranslations(Long tenantId);
+    PageResponse getPageById(Long id);
+    PageDetailResponse getPageWithI18n(Long id);
+    List<PageResponse> getAllPages();
+    List<PageListResponse> getAllPagesWithTranslations();
     PageResponse updatePage(Long id, PageCreateRequest request, Long userId);
-    void deletePage(Long id, Long tenantId);
+    void deletePage(Long id);
 }

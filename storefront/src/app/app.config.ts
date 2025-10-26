@@ -21,6 +21,7 @@ import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 import { MockApiService } from 'app/mock-api';
 import { provideToastr } from 'ngx-toastr';
+import { firstValueFrom } from 'rxjs';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -144,6 +145,10 @@ export const appConfig: ApplicationConfig = {
         provideAppInitializer(() => {
             const tenantContext = inject(TenantContextService);
             tenantContext.initializeFromHostname();
+            return firstValueFrom(tenantContext.restoreTenantSelection()).catch((error) => {
+                console.warn('Failed to restore tenant selection:', error);
+                return null;
+            });
         }),
 
         // Fuse

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
 public class TenantLanguageController {
 
   private final TenantLanguageService tenantLanguageService;

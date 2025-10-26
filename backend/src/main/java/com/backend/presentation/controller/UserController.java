@@ -4,6 +4,7 @@ import com.backend.application.service.UserService;
 import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,10 +28,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
 public class UserController {
 
     private final UserService userService;
     private final MessageSource messageSource;
+    private final SecurityHelper securityHelper;
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(
@@ -197,38 +201,28 @@ public class UserController {
 
     /**
      * Validates user access based on current user context
+     * Access control is primarily handled by TenantContext routing to correct database
+     * SUPER_ADMIN can access all users, TENANT_ADMIN is restricted by TenantContext
      */
     private void validateUserAccess(Long userId) {
         if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
-        
-        // TODO: Implement actual user access validation based on current user's permissions
-        // In a real implementation, you would check if the current user has access to this user
-        // Example:
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        // if (!userService.userHasAccessToUser(userDetails.getUsername(), userId)) {
-        //     throw new AccessDeniedException("Access denied to user: " + userId);
-        // }
+        // Additional user-level access control can be added here if needed
+        // Current implementation relies on TenantContext for tenant isolation
     }
 
     /**
      * Validates tenant access based on current user context
+     * SUPER_ADMIN can access all tenants, TENANT_ADMIN must match their tenant
      */
     private void validateTenantAccess(Long tenantId) {
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("Invalid tenant ID");
         }
-        
-        // TODO: Implement actual tenant access validation based on current user's tenant
-        // In a real implementation, you would check if the current user has access to this tenant
-        // Example:
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        // if (!tenantService.userHasAccessToTenant(userDetails.getUsername(), tenantId)) {
-        //     throw new AccessDeniedException("Access denied to tenant: " + tenantId);
-        // }
+
+        // SecurityHelper automatically handles SUPER_ADMIN bypass
+        securityHelper.validateTenantAccess(tenantId);
     }
 
     /**

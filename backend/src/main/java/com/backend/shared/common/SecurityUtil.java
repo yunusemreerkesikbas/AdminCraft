@@ -31,17 +31,10 @@ public class SecurityUtil {
             if (userId instanceof Long) {
                 return (Long) userId;
             }
+            // userId is missing from JWT token - this indicates an old token
+            // User needs to re-login to get a token with userId claim
         }
-        
-        // Fallback: Use email as identifier (temporary)
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof String) {
-            String email = (String) principal;
-            // For development purposes, return a hash-based ID
-            // TODO: Replace with actual user lookup by email
-            return Math.abs((long) email.hashCode()) % 1000000L + 1L;
-        }
-        
+
         return null;
     }
     

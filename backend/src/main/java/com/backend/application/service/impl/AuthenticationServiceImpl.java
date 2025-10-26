@@ -146,7 +146,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             log.warn("Password verification failed");
             throw new InvalidCredentialsException();
         }
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(), tenantId);
+        String accessToken = jwtTokenProvider.createAccessToken(
+            user.getEmail(),
+            user.getRole().name(),
+            user.getId(),
+            tenantId
+        );
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         log.info("Authentication successful for user: {}", user.getEmail());
@@ -172,7 +177,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!passwordMatches) {
             throw new InvalidCredentialsException();
         }
-        String accessToken = jwtTokenProvider.createAccessToken(admin.getEmail(), "SUPER_ADMIN", null);
+        String accessToken = jwtTokenProvider.createAccessToken(
+            admin.getEmail(),
+            "SUPER_ADMIN",
+            admin.getId(),
+            null
+        );
         String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
 
         return new LoginResponse(
@@ -204,7 +214,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
 
-            String newAccessToken = jwtTokenProvider.createAccessToken(admin.getEmail(), "SUPER_ADMIN", null);
+            String newAccessToken = jwtTokenProvider.createAccessToken(
+                admin.getEmail(),
+                "SUPER_ADMIN",
+                admin.getId(),
+                null
+            );
             String newRefreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
@@ -228,8 +243,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         email, user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                 throw new UserAccountDisabledException();
             }
-            String newAccessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name(),
-                    tenantId);
+            String newAccessToken = jwtTokenProvider.createAccessToken(
+                user.getEmail(),
+                user.getRole().name(),
+                user.getId(),
+                tenantId
+            );
             String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
             log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), tenantId);

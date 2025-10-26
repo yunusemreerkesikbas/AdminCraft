@@ -26,6 +26,9 @@ class TenantFilterTest {
   private TenantPlatformRepository tenantRepository;
 
   @Mock
+  private MultiTenantConnectionProvider connectionProvider;
+
+  @Mock
   private HttpServletRequest request;
 
   @Mock
@@ -38,7 +41,7 @@ class TenantFilterTest {
 
   @BeforeEach
   void setUp() {
-    tenantFilter = new TenantFilter(tenantContext, tenantRepository);
+    tenantFilter = new TenantFilter(tenantContext, tenantRepository, connectionProvider);
   }
 
   @Test
@@ -158,11 +161,13 @@ class TenantFilterTest {
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("1");
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
+    doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(tenantContext).setTenantId("1");
     verify(tenantContext).setTenantDbName("ac_tenant_1");
+    verify(connectionProvider).warmUpConnectionPool("ac_tenant_1");
     verify(filterChain).doFilter(request, response);
     verify(tenantContext).clear();
   }
@@ -179,6 +184,7 @@ class TenantFilterTest {
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("1");
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
+    doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
     doThrow(new RuntimeException("Test exception")).when(filterChain).doFilter(request, response);
 
     try {
@@ -187,6 +193,32 @@ class TenantFilterTest {
       // Expected
     }
 
+    verify(tenantContext).clear();
+  }
+
+  @Test
+  void shouldReturnServiceUnavailableWhenConnectionPoolInitializationFails() throws Exception {
+    Tenant activeTenant = Tenant.builder()
+        .id(1L)
+        .databaseName("ac_tenant_1")
+        .status("ACTIVE")
+        .build();
+
+    when(request.getRequestURI()).thenReturn("/api/pages");
+    when(request.getHeader("X-Correlation-ID")).thenReturn(null);
+    when(request.getHeader("X-Tenant-ID")).thenReturn("1");
+    when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
+    doThrow(new RuntimeException("Connection pool initialization failed"))
+        .when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
+
+    tenantFilter.doFilterInternal(request, response, filterChain);
+
+    verify(tenantContext).setTenantId("1");
+    verify(tenantContext).setTenantDbName("ac_tenant_1");
+    verify(connectionProvider).warmUpConnectionPool("ac_tenant_1");
+    verify(response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+        "Tenant database is initializing, please retry in a moment");
+    verify(filterChain, never()).doFilter(request, response);
     verify(tenantContext).clear();
   }
 

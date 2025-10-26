@@ -4,7 +4,16 @@
       "Bash(mysql:*)",
       "Bash(mvn clean compile:*)",
       "Bash(mvn test:*)",
-      "Bash(mvn compile:*)"
+      "Bash(mvn compile:*)",
+      "Bash(curl:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(timeout 40 bash:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(cat:*)",
+      "Bash(timeout:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": [],

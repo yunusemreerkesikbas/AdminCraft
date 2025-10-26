@@ -82,7 +82,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         this.#supportedLanguages = languages;
       });
 
-    this.#loadCategories();
 
     this.#tenantContext.tenant$
       .pipe(takeUntil(this.destroy$))

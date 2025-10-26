@@ -25,7 +25,7 @@ public class JwtTokenProvider {
         this.refreshTokenExpiration = jwtProperties.getRefreshExpiration();
     }
 
-    public String createAccessToken(String email, String role, Long tenantId) {
+    public String createAccessToken(String email, String role, Long userId, Long tenantId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
@@ -35,7 +35,12 @@ public class JwtTokenProvider {
                 .claim("type", "access")
                 .issuedAt(now)
                 .expiration(expiryDate);
-        
+
+        // Add userId claim (required for multi-tenant operations)
+        if (userId != null) {
+            builder.claim("userId", userId);
+        }
+
         // Only add tenantId if it's not null (SUPER_ADMIN users might not have a tenantId)
         if (tenantId != null) {
             builder.claim("tenantId", tenantId);
@@ -46,7 +51,12 @@ public class JwtTokenProvider {
 
     // Backward compatibility - keep the old method for refresh tokens
     public String createAccessToken(String email, String role) {
-        return createAccessToken(email, role, null);
+        return createAccessToken(email, role, null, null);
+    }
+
+    // Backward compatibility - for migration
+    public String createAccessToken(String email, String role, Long tenantId) {
+        return createAccessToken(email, role, null, tenantId);
     }
 
     public String createRefreshToken(String email) {
@@ -88,20 +98,44 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        
+
         Object tenantIdObj = claims.get("tenantId");
         if (tenantIdObj == null) {
             return null;
         }
-        
+
         if (tenantIdObj instanceof Number) {
             return ((Number) tenantIdObj).longValue();
         }
-        
+
         try {
             return Long.parseLong(tenantIdObj.toString());
         } catch (NumberFormatException ex) {
             log.warn("Invalid tenantId format in token: {}", tenantIdObj);
+            return null;
+        }
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        Object userIdObj = claims.get("userId");
+        if (userIdObj == null) {
+            return null;
+        }
+
+        if (userIdObj instanceof Number) {
+            return ((Number) userIdObj).longValue();
+        }
+
+        try {
+            return Long.parseLong(userIdObj.toString());
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid userId format in token: {}", userIdObj);
             return null;
         }
     }
