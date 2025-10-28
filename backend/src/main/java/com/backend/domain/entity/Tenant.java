@@ -75,7 +75,16 @@ public class Tenant {
     
     @Size(max = 1000, message = "validation.notes.size")
     private String notes;
-    
+
+    @Email(message = "validation.email.invalid")
+    @Size(max = 255, message = "validation.email.size")
+    @Column(name = "admin_email")
+    private String adminEmail;
+
+    @Size(max = 100, message = "validation.admin.name.size")
+    @Column(name = "admin_name")
+    private String adminName;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

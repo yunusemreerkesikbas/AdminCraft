@@ -6,6 +6,7 @@ import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+import com.backend.infrastructure.tenant.TenantContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,12 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.ObjectProvider;
+
+import static org.mockito.Mockito.when;
+
+//...
 
 @ExtendWith(MockitoExtension.class)
 class AsyncProvisioningExecutorTest {
@@ -34,6 +40,13 @@ class AsyncProvisioningExecutorTest {
 
         @Mock
         private TenantModuleRepository tenantModuleRepository;
+
+        @Mock
+        private TenantContext tenantContext;
+
+        @Mock
+        private ApplicationContext applicationContext;
+
 
         @Captor
         private ArgumentCaptor<List<TenantModule>> tenantModulesCaptor;
@@ -48,7 +61,12 @@ class AsyncProvisioningExecutorTest {
                 executor = new AsyncProvisioningExecutor(
                                 tenantRepository,
                                 jobRepository,
-                                tenantModuleRepository);
+                                tenantModuleRepository,
+                                tenantContext);
+
+                executor.setApplicationContext(applicationContext);
+
+                when(applicationContext.getBean(AsyncProvisioningExecutor.class)).thenReturn(executor);
 
                 // Set test database connection properties
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");

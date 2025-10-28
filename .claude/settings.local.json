@@ -13,7 +13,14 @@
       "Bash(python -m json.tool:*)",
       "Bash(cat:*)",
       "Bash(timeout:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(tee:*)",
+      "Bash(taskkill:*)",
+      "Bash(find:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(mvn test-compile:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": [],

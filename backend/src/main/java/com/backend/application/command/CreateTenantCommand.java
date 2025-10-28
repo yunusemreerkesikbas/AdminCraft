@@ -9,5 +9,7 @@ public record CreateTenantCommand(
     String companyName,
     Language defaultLanguage,
     Set<Language> supportedLanguages,
-    String notes) {
+    String notes,
+    String adminEmail,
+    String adminName) {
 }

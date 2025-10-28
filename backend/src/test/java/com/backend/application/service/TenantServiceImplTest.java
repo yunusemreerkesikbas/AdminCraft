@@ -85,7 +85,9 @@ class TenantServiceImplTest {
                                 "New Company",
                                 Language.TR,
                                 new HashSet<>(Set.of(Language.TR, Language.EN)),
-                                "Test notes");
+                                "Test notes",
+                                "admin@newcompany.com",
+                                "Admin User");
 
                 updateRequest = new UpdateTenantCommand(
                                 "Updated Company",
@@ -149,7 +151,9 @@ class TenantServiceImplTest {
                                 "Company",
                                 Language.TR,
                                 new HashSet<>(Set.of(Language.TR)),
-                                null);
+                                null,
+                                "admin@company.com",
+                                "Admin User");
 
                 assertThatThrownBy(() -> tenantService.createTenantWithDetail(reservedRequest, Language.TR))
                                 .isInstanceOf(IllegalArgumentException.class)

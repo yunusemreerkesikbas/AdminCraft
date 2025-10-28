@@ -6,6 +6,7 @@ import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+import com.backend.infrastructure.tenant.TenantContext;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +24,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+
 @Slf4j
 @Component
-public class AsyncProvisioningExecutor {
+public class AsyncProvisioningExecutor implements ApplicationContextAware {
+
+  private ApplicationContext applicationContext;
+
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
 
   private final TenantPlatformRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
+  private final TenantContext tenantContext;
+  private AsyncProvisioningExecutor self;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -45,11 +58,16 @@ public class AsyncProvisioningExecutor {
 
   public AsyncProvisioningExecutor(TenantPlatformRepository tenantRepository,
       ProvisioningJobRepository jobRepository,
-      TenantModuleRepository tenantModuleRepository) {
+      TenantModuleRepository tenantModuleRepository,
+      TenantContext tenantContext) {
     this.tenantRepository = tenantRepository;
     this.jobRepository = jobRepository;
     this.tenantModuleRepository = tenantModuleRepository;
+    this.tenantContext = tenantContext;
   }
+
+
+
 
   @Async
   @Transactional("platformTransactionManager")
@@ -58,6 +76,8 @@ public class AsyncProvisioningExecutor {
 
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenant.getId()));
+
+    self = applicationContext.getBean(AsyncProvisioningExecutor.class);
 
     ProvisioningJob job = jobRepository.findById(jobId)
         .orElseThrow(() -> new IllegalStateException("Job not found during execution: " + jobId));
@@ -69,16 +89,15 @@ public class AsyncProvisioningExecutor {
 
       log.info("Starting provisioning for tenant {} with modules: {}", tenant.getId(), modules);
 
-      updateProgress(job, 10);
+      updateProgress(job, 20);
       createDatabaseIfNotExists(tenant.getDatabaseName());
 
-      updateProgress(job, 40);
+      updateProgress(job, 60);
       runMigrations(tenant.getDatabaseName(), modules);
 
-      updateProgress(job, 70);
+      updateProgress(job, 90);
       insertTenantModules(tenant.getId(), modules);
 
-      updateProgress(job, 90);
       tenant.setStatus("ACTIVE");
       tenantRepository.save(tenant);
 
@@ -150,13 +169,18 @@ public class AsyncProvisioningExecutor {
 
     DataSource tenantDs = createTenantDataSource(dbName);
 
+    log.debug("Configuring Flyway with locations: {}", locations);
+
     Flyway flyway = Flyway.configure()
         .dataSource(tenantDs)
         .locations(locations.toArray(new String[0]))
         .baselineOnMigrate(true)
         .baselineVersion("0")
+        .outOfOrder(true)
+        .validateOnMigrate(true)
         .load();
 
+    log.debug("Starting Flyway migration for database: {}", dbName);
     flyway.migrate();
 
     log.info("Migrations completed for {}", dbName);
@@ -206,4 +230,5 @@ public class AsyncProvisioningExecutor {
     tenantModuleRepository.saveAll(tenantModules);
     log.info("Successfully inserted {} tenant_modules records for tenant {}", tenantModules.size(), tenantId);
   }
+
 }

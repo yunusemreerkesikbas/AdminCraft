@@ -56,6 +56,8 @@ public class TenantServiceImpl implements TenantService {
         tenant.setDefaultLanguage(command.defaultLanguage());
         tenant.setSupportedLanguages(command.supportedLanguages());
         tenant.setNotes(command.notes());
+        tenant.setAdminEmail(command.adminEmail());
+        tenant.setAdminName(command.adminName());
 
         Tenant savedTenant = tenantRepository.save(tenant);
 
