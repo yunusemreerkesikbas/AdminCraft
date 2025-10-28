@@ -20,6 +20,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     tenantModules: 'tenants/${tenantId}/modules',
     tenantLanguages: 'tenants/${tenantId}/languages',
     tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
+    generateAdminUser: 'tenants/${tenantId}/generate-admin',
 
     // ----- CONTENT (removed, replaced by Page Builder) -----
 

@@ -52,12 +52,7 @@
                             <div class="hidden sm:block">
                                 {{ 'admin.common.fields.status' | transloco }}
                             </div>
-                            <div class="hidden lg:block">
-                                {{
-                                    'admin.tenants.fields.defaultLanguage'
-                                        | transloco
-                                }}
-                            </div>
+
                             <div class="hidden lg:block">
                                 {{
                                     'admin.common.fields.createdAt' | transloco
@@ -115,11 +110,7 @@
                                         }}
                                     </div>
                                 </div>
-                                <div class="hidden items-center lg:flex">
-                                    <div class="min-w-4">
-                                        {{ tenant.defaultLanguage }}
-                                    </div>
-                                </div>
+
                                 <div class="hidden lg:block">
                                     {{ tenant.createdAt | date: 'shortDate' }}
                                 </div>
@@ -137,6 +128,28 @@
                                             class="icon-size-5"
                                             [svgIcon]="
                                                 'heroicons_outline:server-stack'
+                                            "
+                                        ></mat-icon>
+                                    </button>
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
+                                        [matTooltip]="
+                                            tenant.hasAdminUser
+                                                ? ('admin.tenants.actions.adminExists'
+                                                    | transloco)
+                                                : ('admin.tenants.actions.generateAdmin'
+                                                    | transloco)
+                                        "
+                                        [disabled]="tenant.hasAdminUser || tenant.status !== 'ACTIVE'"
+                                        (click)="generateAdminUser(tenant)"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                tenant.hasAdminUser
+                                                    ? 'heroicons_outline:check-circle'
+                                                    : 'heroicons_outline:user-plus'
                                             "
                                         ></mat-icon>
                                     </button>

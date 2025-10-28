@@ -465,6 +465,8 @@ export const langTR = {
                 supportedLanguages: 'Desteklenen Diller',
                 customDomain: 'Özel Alan Adı',
                 notes: 'Notlar',
+                adminName: 'Yönetici Adı',
+                adminEmail: 'Yönetici E-posta',
                 domainSuffix: '.admincraft.com',
             },
             createSuccess: 'Tenant başarıyla oluşturuldu',
@@ -474,6 +476,10 @@ export const langTR = {
             suspendSuccess: 'Tenant başarıyla askıya alındı',
             validation: {
                 defaultLanguageInSupported: 'Varsayılan dil desteklenen diller arasında olmalıdır',
+            },
+            actions: {
+                generateAdmin: 'Admin Kullanıcı Oluştur',
+                adminExists: 'Admin Kullanıcı Mevcut',
             },
         },
         provisioning: {

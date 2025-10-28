@@ -465,6 +465,8 @@ export const langEN = {
                 supportedLanguages: 'Supported Languages',
                 customDomain: 'Custom Domain',
                 notes: 'Notes',
+                adminName: 'Admin Name',
+                adminEmail: 'Admin Email',
                 domainSuffix: '.admincraft.com',
             },
             createSuccess: 'Tenant successfully created',
@@ -474,6 +476,10 @@ export const langEN = {
             suspendSuccess: 'Tenant successfully suspended',
             validation: {
                 defaultLanguageInSupported: 'Default language must be in supported languages',
+            },
+            actions: {
+                generateAdmin: 'Generate Admin User',
+                adminExists: 'Admin User Exists',
             },
         },
         provisioning: {

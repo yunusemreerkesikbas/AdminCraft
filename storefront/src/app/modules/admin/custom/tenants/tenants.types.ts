@@ -8,6 +8,7 @@ export interface Tenant {
     supportedLanguages: LanguageResponse[];
     customDomain?: string;
     notes?: string;
+    hasAdminUser: boolean;
     createdAt: string;
     updatedAt?: string;
     activatedAt?: string;
@@ -96,6 +97,7 @@ export interface TenantListResponse {
     status: TenantStatus;
     defaultLanguage: Language;
     supportedLanguages: LanguageResponse[];
+    hasAdminUser: boolean;
 
     provisioningStatus: 'idle' | 'provisioning' | 'failed';
     provisionedModulesCount: number;
@@ -112,4 +114,15 @@ export interface TenantDetailResponse extends TenantListResponse {
     updatedAt?: string;
     lastBackupAt?: string;
     notes?: string;
+}
+
+/**
+ * Response from generate admin user endpoint
+ * Sprint 20: Tenant Admin User Generator
+ */
+export interface AdminUserResponse {
+    email: string;
+    temporaryPassword: string;
+    subdomain: string;
+    loginUrl: string;
 }

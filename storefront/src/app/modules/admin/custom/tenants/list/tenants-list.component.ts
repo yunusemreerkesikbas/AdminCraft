@@ -22,8 +22,10 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
+import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
+import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { TenantsService } from '../tenants.service';
-import { CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
+import { AdminUserResponse, CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
 @Component({
     selector: 'tenants-list',
@@ -263,5 +265,69 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 this.refresh();
             }
         });
+    }
+
+    generateAdminUser(tenant: Tenant): void {
+        this.service.generateAdminUser(tenant.id)
+            .pipe(take(1))
+            .subscribe({
+                next: (response) => {
+                    const modalConfig: ModalConfig<AdminUserResponse> = {
+                        type: 'success',
+                        variant: 'credentials',
+                        title: 'Admin User Created Successfully',
+                        icon: 'celebration',
+                        data: response,
+                        disableClose: true,
+                        sections: [
+                            {
+                                type: 'info-box',
+                                title: 'Tenant:',
+                                content: response.subdomain
+                            },
+                            {
+                                type: 'copyable-fields',
+                                fields: [
+                                    {
+                                        icon: 'email',
+                                        label: 'Email',
+                                        value: response.email,
+                                        type: 'text'
+                                    },
+                                    {
+                                        icon: 'key',
+                                        label: 'Temporary Password',
+                                        value: response.temporaryPassword,
+                                        type: 'password'
+                                    },
+                                    {
+                                        icon: 'link',
+                                        label: 'Login URL',
+                                        value: response.loginUrl,
+                                        type: 'link'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'alert-box',
+                                alertType: 'warning',
+                                title: 'Important:',
+                                content: 'This password will NOT be shown again after closing this dialog. Please copy and securely share these credentials with the tenant administrator.'
+                            }
+                        ]
+                    };
+
+                    this.#dialog.open(SpaGenericModalComponent, {
+                        data: modalConfig,
+                        disableClose: true,
+                        width: '600px'
+                    });
+                    this.refresh();
+                },
+                error: (err) => {
+                    const message = err.error?.message || 'Failed to generate admin user';
+                    this.#notify.alert(message);
+                }
+            });
     }
 }
