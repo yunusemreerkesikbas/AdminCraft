@@ -99,15 +99,6 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     return new HikariDataSource(config);
   }
 
-  /**
-   * Pre-warms the connection pool for the specified tenant database.
-   * This method eagerly initializes the HikariCP pool and tests the connection
-   * to prevent lazy initialization failures during the first transactional request.
-   * Implements retry logic with exponential backoff for robustness.
-   *
-   * @param tenantDbName the tenant database name (e.g., "ac_tenant_1")
-   * @throws RuntimeException if pool initialization or connection test fails after all retries
-   */
   public void warmUpConnectionPool(String tenantDbName) {
     log.debug("Pre-warming connection pool for tenant DB: {}", tenantDbName);
 
@@ -116,12 +107,9 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        // Eagerly create or retrieve the datasource (triggers pool initialization if not cached)
         DataSource dataSource = selectDataSource(tenantDbName);
-
-        // Test the connection with a simple query to ensure pool is fully operational
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+            Statement statement = connection.createStatement()) {
           statement.execute("SELECT 1");
           log.info("Connection pool pre-warmed successfully for tenant DB: {} (attempt {}/{})",
               tenantDbName, attempt, maxAttempts);
@@ -129,13 +117,10 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
         }
       } catch (SQLException e) {
         if (attempt == maxAttempts) {
-          // Final attempt failed, throw exception
           log.error("Failed to pre-warm connection pool for tenant DB {} after {} attempts: {}",
               tenantDbName, maxAttempts, e.getMessage(), e);
           throw new RuntimeException("Connection pool initialization failed for tenant: " + tenantDbName, e);
         }
-
-        // Retry with exponential backoff
         long delayMs = retryDelayMs * attempt;
         log.warn("Failed to pre-warm connection pool for tenant DB {} (attempt {}/{}), retrying in {}ms: {}",
             tenantDbName, attempt, maxAttempts, delayMs, e.getMessage());
@@ -156,11 +141,3 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     }
   }
 }
-
-
-
-
-
-
-
-

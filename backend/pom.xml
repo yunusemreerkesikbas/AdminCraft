@@ -113,11 +113,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Javax Annotation API -->
+        <!-- Jakarta Annotation API for Spring Boot 3 / Java 21 -->
         <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-            <version>1.3.2</version>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
         </dependency>
 
         <!-- Testing -->
