@@ -28,7 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+@PreAuthorize("hasRole('TENANT_ADMIN')")
 public class UserController {
 
     private final UserService userService;
@@ -45,15 +45,17 @@ public class UserController {
             if (user.isPresent()) {
                 return ResponseEntity.ok(ApiResponse.success(user.get()));
             } else {
-                String message = messageSource.getMessage("user.not.found", new Object[]{id}, Locale.forLanguageTag(languageCode));
+                String message = messageSource.getMessage("user.not.found", new Object[] { id },
+                        Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(message));
+                        .body(ApiResponse.error(message));
             }
         } catch (Exception ex) {
             log.error("Error getting user by id {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("user.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.get.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -62,25 +64,26 @@ public class UserController {
             @PathVariable @Valid @NotBlank @Email String email,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Sanitize email input
             String sanitizedEmail = sanitizeEmail(email);
             if (sanitizedEmail == null || sanitizedEmail.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid email");
             }
-            
+
             Optional<User> user = userService.findByEmail(sanitizedEmail);
             if (user.isPresent()) {
                 return ResponseEntity.ok(ApiResponse.success(user.get()));
             } else {
-                String message = messageSource.getMessage("user.email.not.found", new Object[]{email}, Locale.forLanguageTag(languageCode));
+                String message = messageSource.getMessage("user.email.not.found", new Object[] { email },
+                        Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(message));
+                        .body(ApiResponse.error(message));
             }
         } catch (Exception ex) {
             log.error("Error getting user by email {}: {}", email, ex.getMessage());
-            String message = messageSource.getMessage("user.get.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.get.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -94,9 +97,10 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success(users));
         } catch (Exception ex) {
             log.error("Error getting users by tenant {}: {}", tenantId, ex.getMessage());
-            String message = messageSource.getMessage("user.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.list.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -108,9 +112,10 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success(users));
         } catch (Exception ex) {
             log.error("Error getting all users: {}", ex.getMessage());
-            String message = messageSource.getMessage("user.list.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.list.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -119,17 +124,16 @@ public class UserController {
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            // Access control handled by TenantContext routing
             validateUserAccess(id);
-
             userService.deleteUser(id);
             String message = messageSource.getMessage("user.delete.success", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
             log.error("Error deleting user {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("user.delete.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.delete.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -139,13 +143,15 @@ public class UserController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             User activatedUser = userService.activateUser(id);
-            String message = messageSource.getMessage("user.activated.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.activated.success", null,
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, activatedUser));
         } catch (Exception ex) {
             log.error("Error activating user {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("user.activate.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.activate.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -155,13 +161,15 @@ public class UserController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             User deactivatedUser = userService.deactivateUser(id);
-            String message = messageSource.getMessage("user.deactivated.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.deactivated.success", null,
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, deactivatedUser));
         } catch (Exception ex) {
             log.error("Error deactivating user {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("user.deactivate.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.deactivate.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -175,13 +183,15 @@ public class UserController {
             validateUserAccess(id);
 
             User updatedUser = userService.updateUserLanguage(id, language);
-            String message = messageSource.getMessage("user.language.updated.success", null, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.language.updated.success", null,
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, updatedUser));
         } catch (Exception ex) {
             log.error("Error updating user language for user {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("user.language.update.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.language.update.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
@@ -193,29 +203,19 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.success(currentUser));
         } catch (Exception ex) {
             log.error("Error getting current user: {}", ex.getMessage());
-            String message = messageSource.getMessage("user.current.error", new Object[]{ex.getMessage()}, Locale.forLanguageTag(languageCode));
+            String message = messageSource.getMessage("user.current.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(message));
+                    .body(ApiResponse.error(message));
         }
     }
 
-    /**
-     * Validates user access based on current user context
-     * Access control is primarily handled by TenantContext routing to correct database
-     * SUPER_ADMIN can access all users, TENANT_ADMIN is restricted by TenantContext
-     */
     private void validateUserAccess(Long userId) {
         if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("Invalid user ID");
         }
-        // Additional user-level access control can be added here if needed
-        // Current implementation relies on TenantContext for tenant isolation
     }
 
-    /**
-     * Validates tenant access based on current user context
-     * SUPER_ADMIN can access all tenants, TENANT_ADMIN must match their tenant
-     */
     private void validateTenantAccess(Long tenantId) {
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("Invalid tenant ID");
@@ -225,15 +225,10 @@ public class UserController {
         securityHelper.validateTenantAccess(tenantId);
     }
 
-    /**
-     * Sanitizes email input to prevent injection attacks
-     */
     private String sanitizeEmail(String email) {
         if (email == null) {
             return null;
         }
-        
-        // Basic email sanitization - trim whitespace and convert to lowercase
         return email.trim().toLowerCase();
     }
 }

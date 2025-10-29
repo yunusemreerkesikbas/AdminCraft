@@ -26,12 +26,8 @@ public class SiteSettingsController {
   private final SiteSettingsMapper mapper;
   private final SecurityHelper securityHelper;
 
-  /**
-   * Get site settings for admin interface
-   * Returns global settings and all supported language versions
-   */
   @GetMapping
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get() {
     Long tenantId = securityHelper.getCurrentUserTenantId();
     SiteSettingsQuery query = service.getAdminSettings(tenantId);
@@ -39,12 +35,8 @@ public class SiteSettingsController {
     return ResponseEntity.ok(ApiResponse.success(dto));
   }
 
-  /**
-   * Partially update site settings
-   * Supports updating global settings and/or language-specific settings
-   */
   @PatchMapping
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> patch(
       @RequestBody SiteSettingsPatchRequest req) {
     Long tenantId = securityHelper.getCurrentUserTenantId();
