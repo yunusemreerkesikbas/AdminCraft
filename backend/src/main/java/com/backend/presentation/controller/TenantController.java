@@ -12,6 +12,7 @@ import com.backend.presentation.dto.request.UpdateTenantRequest;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -38,6 +39,7 @@ public class TenantController {
         private final CreateTenantUseCase createTenantUseCase;
         private final MessageSource messageSource;
         private final GenerateTenantAdminUserUseCase generateTenantAdminUserUseCase;
+        private final SecurityHelper securityHelper;
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         @PostMapping
@@ -130,6 +132,26 @@ public class TenantController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CONFLICT)
                                         .body(ApiResponse.<AdminUserResponse>error(HttpStatus.CONFLICT.value(), msg));
+                }
+        }
+
+        @GetMapping("/current/modules")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        public ResponseEntity<ApiResponse<List<TenantModuleResponse>>> getCurrentUserModules(
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        Long userTenantId = securityHelper.getCurrentUserTenantId();
+                        Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+                        List<TenantModuleResponse> modules = tenantService.getTenantModules(userTenantId,
+                                        displayLanguage);
+                        log.debug("Successfully fetched {} modules for tenant: {}", modules.size(), userTenantId);
+                        return ResponseEntity.ok(ApiResponse.success(modules));
+                } catch (Exception ex) {
+                        log.error("Error fetching modules for current user: {}", ex.getMessage(), ex);
+                        String message = messageSource.getMessage("tenant.modules.get.error",
+                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
                 }
         }
 }
