@@ -1,0 +1,202 @@
+// Type-based title styling
+.modal-success-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--fuse-accent);
+    margin-bottom: 1rem;
+
+    mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.modal-error-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--fuse-warn);
+    margin-bottom: 1rem;
+
+    mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.modal-warning-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--fuse-warn);
+    margin-bottom: 1rem;
+
+    mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.modal-info-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--fuse-primary);
+    margin-bottom: 1rem;
+
+    mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+// Info Box Section
+.info-box {
+    padding: 1rem;
+    background: rgba(var(--fuse-primary-rgb), 0.08);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+
+    strong {
+        color: var(--fuse-primary);
+        margin-right: 0.5rem;
+    }
+}
+
+// Divider
+mat-divider {
+    margin: 1.5rem 0;
+}
+
+// Copyable Fields Section
+.copyable-fields-section {
+    padding: 0.5rem 0;
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: rgba(var(--fuse-foreground-rgb), 0.87);
+    }
+}
+
+.copyable-field {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    background: rgba(var(--fuse-foreground-rgb), 0.04);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background: rgba(var(--fuse-foreground-rgb), 0.06);
+    }
+
+    mat-icon:first-child {
+        flex-shrink: 0;
+    }
+}
+
+.field-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.field-label {
+    font-size: 0.75rem;
+    color: rgba(var(--fuse-foreground-rgb), 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.field-value {
+    font-family: 'Roboto Mono', 'Courier New', monospace;
+    font-size: 0.95rem;
+    background: rgba(var(--fuse-foreground-rgb), 0.08);
+    padding: 0.75rem;
+    border-radius: 6px;
+    word-break: break-all;
+    border: 1px solid rgba(var(--fuse-foreground-rgb), 0.12);
+    display: block;
+
+    &.password {
+        letter-spacing: 0.1rem;
+        font-weight: 600;
+        color: var(--fuse-accent);
+    }
+}
+
+.field-link {
+    color: var(--fuse-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    word-break: break-all;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.copy-button {
+    flex-shrink: 0;
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+// Alert Box Section
+.alert-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+
+    mat-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    &.alert-warning {
+        background: rgba(var(--fuse-warn-rgb), 0.08);
+        border-left: 4px solid var(--fuse-warn);
+    }
+
+    &.alert-info {
+        background: rgba(var(--fuse-primary-rgb), 0.08);
+        border-left: 4px solid var(--fuse-primary);
+    }
+}
+
+.alert-text {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.5;
+
+    strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+}
+
+// Dialog Actions
+mat-dialog-actions {
+    padding: 1rem 1.5rem;
+    margin: 0;
+}

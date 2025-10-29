@@ -21,7 +21,8 @@
       "Bash(findstr:*)",
       "Bash(mvn test-compile:*)",
       "Bash(git mv:*)",
-      "Bash(rm:*)"
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": [],
     "ask": [],

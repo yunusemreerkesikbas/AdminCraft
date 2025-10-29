@@ -1,0 +1,94 @@
+<h2 mat-dialog-title [ngClass]="modalClass + '-title'">
+    @if (config.icon) {
+        <mat-icon>{{ config.icon }}</mat-icon>
+    }
+    {{ config.title }}
+</h2>
+
+<mat-dialog-content>
+    @for (section of config.sections; track $index) {
+        <!-- Info Box Section -->
+        @if (section.type === 'info-box') {
+            <div class="info-box">
+                @if (section.title) {
+                    <strong>{{ section.title }}</strong>
+                }
+                @if (section.content) {
+                    <span>{{ section.content }}</span>
+                }
+            </div>
+        }
+
+        <!-- Copyable Fields Section -->
+        @if (section.type === 'copyable-fields') {
+            <div class="copyable-fields-section">
+                @if (section.title) {
+                    <h3 class="section-title">{{ section.title }}</h3>
+                }
+                @for (field of section.fields; track field.label) {
+                    <div class="copyable-field">
+                        <mat-icon color="primary">{{ field.icon }}</mat-icon>
+                        <div class="field-content">
+                            <span class="field-label">{{ field.label }}:</span>
+                            @if (field.type === 'link') {
+                                <a [href]="field.value"
+                                   target="_blank"
+                                   class="field-link">{{ field.value }}</a>
+                            } @else {
+                                <code [class]="'field-value' + (field.type === 'password' ? ' password' : '')">
+                                    {{ field.value }}
+                                </code>
+                            }
+                        </div>
+                        <button mat-icon-button
+                                (click)="copyToClipboard(field.value, field.label)"
+                                matTooltip="Copy to clipboard"
+                                class="copy-button">
+                            <mat-icon>content_copy</mat-icon>
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Alert Box Section -->
+        @if (section.type === 'alert-box') {
+            <div [class]="'alert-box alert-' + (section.alertType || 'info')">
+                <mat-icon [color]="section.alertType === 'warning' ? 'warn' : 'primary'">
+                    {{ section.alertType === 'warning' ? 'warning' : 'info' }}
+                </mat-icon>
+                <div class="alert-text">
+                    @if (section.title) {
+                        <strong>{{ section.title }}</strong>
+                    }
+                    @if (section.content) {
+                        <span>{{ section.content }}</span>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Divider between sections (except last) -->
+        @if ($index < config.sections.length - 1) {
+            <mat-divider></mat-divider>
+        }
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    @if (config.actions && config.actions.length > 0) {
+        @for (action of config.actions; track action.label) {
+            <button mat-raised-button
+                    [color]="action.color || 'primary'"
+                    (click)="executeAction(action)">
+                {{ action.label }}
+            </button>
+        }
+    } @else {
+        <button mat-raised-button
+                color="primary"
+                (click)="close()">
+            Close
+        </button>
+    }
+</mat-dialog-actions>

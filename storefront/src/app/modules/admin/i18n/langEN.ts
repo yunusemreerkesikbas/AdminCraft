@@ -465,6 +465,8 @@ export const langEN = {
                 supportedLanguages: 'Supported Languages',
                 customDomain: 'Custom Domain',
                 notes: 'Notes',
+                adminName: 'Admin Name',
+                adminEmail: 'Admin Email',
                 domainSuffix: '.admincraft.com',
             },
             createSuccess: 'Tenant successfully created',
@@ -474,6 +476,22 @@ export const langEN = {
             suspendSuccess: 'Tenant successfully suspended',
             validation: {
                 defaultLanguageInSupported: 'Default language must be in supported languages',
+            },
+            actions: {
+                generateAdmin: 'Generate Admin User',
+                adminExists: 'Admin User Exists',
+            },
+            modal: {
+                adminCreated: 'Admin User Created Successfully',
+                tenantLabel: 'Tenant:',
+                emailLabel: 'Email',
+                passwordLabel: 'Temporary Password',
+                loginUrlLabel: 'Login URL',
+                importantTitle: 'Important:',
+                passwordWarning: 'This password will NOT be shown again after closing this dialog. Please copy and securely share these credentials with the tenant administrator.',
+            },
+            errors: {
+                adminGenerationFailed: 'Failed to generate admin user',
             },
         },
         provisioning: {

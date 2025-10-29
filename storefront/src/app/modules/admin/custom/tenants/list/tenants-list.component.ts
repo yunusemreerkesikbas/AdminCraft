@@ -13,7 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageProvisionDialogComponent } from '@shared/components/language-provision-dialog/language-provision-dialog.component';
 import { LanguageProvisionDialogData } from '@shared/components/language-provision-dialog/language-provision.types';
 import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
@@ -22,8 +22,10 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
+import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
+import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { TenantsService } from '../tenants.service';
-import { CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
+import { AdminUserResponse, CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
 @Component({
     selector: 'tenants-list',
@@ -70,6 +72,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     #itemDialog = inject(ItemDialogService);
     #notify = inject(NotificationService);
     #dialog = inject(MatDialog);
+    #transloco = inject(TranslocoService);
 
 
     createTenant(): void {
@@ -263,5 +266,72 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 this.refresh();
             }
         });
+    }
+
+    generateAdminUser(tenant: Tenant): void {
+        this.service.generateAdminUser(tenant.id)
+            .pipe(take(1))
+            .subscribe({
+                next: (response) => {
+                    const modalConfig: ModalConfig<AdminUserResponse> = {
+                        type: 'success',
+                        variant: 'credentials',
+                        title: this.#transloco.translate('admin.tenants.modal.adminCreated'),
+                        icon: 'celebration',
+                        data: response,
+                        disableClose: true,
+                        sections: [
+                            {
+                                type: 'info-box',
+                                title: this.#transloco.translate('admin.tenants.modal.tenantLabel'),
+                                content: response.subdomain
+                            },
+                            {
+                                type: 'copyable-fields',
+                                fields: [
+                                    {
+                                        icon: 'email',
+                                        label: this.#transloco.translate('admin.tenants.modal.emailLabel'),
+                                        value: response.email,
+                                        type: 'text'
+                                    },
+                                    {
+                                        icon: 'key',
+                                        label: this.#transloco.translate('admin.tenants.modal.passwordLabel'),
+                                        value: response.temporaryPassword,
+                                        type: 'password'
+                                    },
+                                    {
+                                        icon: 'link',
+                                        label: this.#transloco.translate('admin.tenants.modal.loginUrlLabel'),
+                                        value: response.loginUrl,
+                                        type: 'link'
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'alert-box',
+                                alertType: 'warning',
+                                title: this.#transloco.translate('admin.tenants.modal.importantTitle'),
+                                content: this.#transloco.translate('admin.tenants.modal.passwordWarning')
+                            }
+                        ]
+                    };
+
+                    const dialogRef = this.#dialog.open(SpaGenericModalComponent, {
+                        data: modalConfig,
+                        disableClose: true,
+                        width: '600px'
+                    });
+
+                    dialogRef.afterClosed().pipe(take(1)).subscribe(() => {
+                        this.refresh();
+                    });
+                },
+                error: (err) => {
+                    const message = err.error?.message || this.#transloco.translate('admin.tenants.errors.adminGenerationFailed');
+                    this.#notify.alert(message);
+                }
+            });
     }
 }

@@ -3,6 +3,7 @@ import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { TenantModule } from 'app/core/tenant/tenant.types';
 import { Observable, interval, switchMap, takeWhile } from 'rxjs';
 import {
+    AdminUserResponse,
     CreateTenantRequest,
     ProvisionLanguagesRequest,
     ProvisioningJobDto,
@@ -57,5 +58,9 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
 
     getTenantModules(tenantId: number): Observable<TenantModule[]> {
         return this.customGet<TenantModule[]>('tenantModules', { tenantId });
+    }
+
+    generateAdminUser(tenantId: number): Observable<AdminUserResponse> {
+        return this.customPost<AdminUserResponse>('generateAdminUser', {}, { tenantId });
     }
 }
