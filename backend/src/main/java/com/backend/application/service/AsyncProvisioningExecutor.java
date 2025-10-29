@@ -69,16 +69,15 @@ public class AsyncProvisioningExecutor {
 
       log.info("Starting provisioning for tenant {} with modules: {}", tenant.getId(), modules);
 
-      updateProgress(job, 10);
+      updateProgress(job, 20);
       createDatabaseIfNotExists(tenant.getDatabaseName());
 
-      updateProgress(job, 40);
+      updateProgress(job, 60);
       runMigrations(tenant.getDatabaseName(), modules);
 
-      updateProgress(job, 70);
+      updateProgress(job, 90);
       insertTenantModules(tenant.getId(), modules);
 
-      updateProgress(job, 90);
       tenant.setStatus("ACTIVE");
       tenantRepository.save(tenant);
 
@@ -150,13 +149,18 @@ public class AsyncProvisioningExecutor {
 
     DataSource tenantDs = createTenantDataSource(dbName);
 
+    log.debug("Configuring Flyway with locations: {}", locations);
+
     Flyway flyway = Flyway.configure()
         .dataSource(tenantDs)
         .locations(locations.toArray(new String[0]))
         .baselineOnMigrate(true)
         .baselineVersion("0")
+        .outOfOrder(true)
+        .validateOnMigrate(true)
         .load();
 
+    log.debug("Starting Flyway migration for database: {}", dbName);
     flyway.migrate();
 
     log.info("Migrations completed for {}", dbName);
@@ -206,4 +210,5 @@ public class AsyncProvisioningExecutor {
     tenantModuleRepository.saveAll(tenantModules);
     log.info("Successfully inserted {} tenant_modules records for tenant {}", tenantModules.size(), tenantId);
   }
+
 }

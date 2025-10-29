@@ -1,8 +1,10 @@
 package com.backend.presentation.controller;
 
+import com.backend.application.dto.response.AdminUserResponse;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.application.service.TenantService;
 import com.backend.application.usecase.CreateTenantUseCase;
+import com.backend.application.usecase.GenerateTenantAdminUserUseCase;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.presentation.dto.request.CreateTenantRequest;
@@ -35,6 +37,7 @@ public class TenantController {
         private final TenantService tenantService;
         private final CreateTenantUseCase createTenantUseCase;
         private final MessageSource messageSource;
+        private final GenerateTenantAdminUserUseCase generateTenantAdminUserUseCase;
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         @PostMapping
@@ -44,7 +47,7 @@ public class TenantController {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                 var cmd = new com.backend.application.command.CreateTenantCommand(
                                 request.subdomain(), request.companyName(), request.defaultLanguage(),
-                                request.supportedLanguages(), request.notes());
+                                request.supportedLanguages(), request.notes(), null, null);
                 TenantDetailResponse response = createTenantUseCase.execute(cmd, displayLanguage);
                 String message = messageSource.getMessage("tenant.created.success", null,
                                 Locale.forLanguageTag(languageCode));
@@ -109,5 +112,24 @@ public class TenantController {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                 List<TenantModuleResponse> modules = tenantService.getTenantModules(tenantId, displayLanguage);
                 return ResponseEntity.ok(ApiResponse.success(modules));
+        }
+
+        @PostMapping("/{id}/generate-admin")
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
+        public ResponseEntity<ApiResponse<AdminUserResponse>> generateAdminUser(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        AdminUserResponse response = generateTenantAdminUserUseCase.execute(id);
+                        String message = messageSource.getMessage("tenant.admin.generated.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(message, response));
+                } catch (IllegalStateException ex) {
+                        String code = ex.getMessage();
+                        String msg = messageSource.getMessage(code != null ? code : "error.runtime", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                        .body(ApiResponse.<AdminUserResponse>error(HttpStatus.CONFLICT.value(), msg));
+                }
         }
 }

@@ -47,6 +47,16 @@ public class Tenant {
   @Column(name = "supported_languages", columnDefinition = "JSON")
   private String supportedLanguages;
 
+  @Column(name = "admin_email", length = 255)
+  private String adminEmail;
+
+  @Column(name = "admin_name", length = 100)
+  private String adminName;
+
+  @Column(name = "has_admin_user", nullable = false)
+  @Builder.Default
+  private Boolean hasAdminUser = false;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
