@@ -6,7 +6,6 @@ import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import com.backend.infrastructure.tenant.TenantContext;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,25 +23,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-
 @Slf4j
 @Component
-public class AsyncProvisioningExecutor implements ApplicationContextAware {
-
-  private ApplicationContext applicationContext;
-
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) {
-    this.applicationContext = applicationContext;
-  }
+public class AsyncProvisioningExecutor {
 
   private final TenantPlatformRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
-  private final TenantContext tenantContext;
-  private AsyncProvisioningExecutor self;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -58,16 +45,11 @@ public class AsyncProvisioningExecutor implements ApplicationContextAware {
 
   public AsyncProvisioningExecutor(TenantPlatformRepository tenantRepository,
       ProvisioningJobRepository jobRepository,
-      TenantModuleRepository tenantModuleRepository,
-      TenantContext tenantContext) {
+      TenantModuleRepository tenantModuleRepository) {
     this.tenantRepository = tenantRepository;
     this.jobRepository = jobRepository;
     this.tenantModuleRepository = tenantModuleRepository;
-    this.tenantContext = tenantContext;
   }
-
-
-
 
   @Async
   @Transactional("platformTransactionManager")
@@ -76,8 +58,6 @@ public class AsyncProvisioningExecutor implements ApplicationContextAware {
 
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenant.getId()));
-
-    self = applicationContext.getBean(AsyncProvisioningExecutor.class);
 
     ProvisioningJob job = jobRepository.findById(jobId)
         .orElseThrow(() -> new IllegalStateException("Job not found during execution: " + jobId));
