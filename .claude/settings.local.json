@@ -20,7 +20,9 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(mvn test-compile:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": [],
     "ask": [],

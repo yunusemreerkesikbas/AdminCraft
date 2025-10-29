@@ -481,6 +481,18 @@ export const langTR = {
                 generateAdmin: 'Admin Kullanıcı Oluştur',
                 adminExists: 'Admin Kullanıcı Mevcut',
             },
+            modal: {
+                adminCreated: 'Admin Kullanıcı Başarıyla Oluşturuldu',
+                tenantLabel: 'Tenant:',
+                emailLabel: 'E-posta',
+                passwordLabel: 'Geçici Şifre',
+                loginUrlLabel: 'Giriş URL',
+                importantTitle: 'Önemli:',
+                passwordWarning: 'Bu şifre bu pencere kapatıldıktan sonra bir daha GÖSTERİLMEYECEKTİR. Lütfen bu bilgileri kopyalayın ve tenant yöneticisi ile güvenli şekilde paylaşın.',
+            },
+            errors: {
+                adminGenerationFailed: 'Admin kullanıcı oluşturulamadı',
+            },
         },
         provisioning: {
             title: 'Modül Hazırlama',

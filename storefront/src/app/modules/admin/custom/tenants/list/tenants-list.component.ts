@@ -13,7 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LanguageProvisionDialogComponent } from '@shared/components/language-provision-dialog/language-provision-dialog.component';
 import { LanguageProvisionDialogData } from '@shared/components/language-provision-dialog/language-provision.types';
 import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
@@ -72,6 +72,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
     #itemDialog = inject(ItemDialogService);
     #notify = inject(NotificationService);
     #dialog = inject(MatDialog);
+    #transloco = inject(TranslocoService);
 
 
     createTenant(): void {
@@ -275,14 +276,14 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                     const modalConfig: ModalConfig<AdminUserResponse> = {
                         type: 'success',
                         variant: 'credentials',
-                        title: 'Admin User Created Successfully',
+                        title: this.#transloco.translate('admin.tenants.modal.adminCreated'),
                         icon: 'celebration',
                         data: response,
                         disableClose: true,
                         sections: [
                             {
                                 type: 'info-box',
-                                title: 'Tenant:',
+                                title: this.#transloco.translate('admin.tenants.modal.tenantLabel'),
                                 content: response.subdomain
                             },
                             {
@@ -290,19 +291,19 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                                 fields: [
                                     {
                                         icon: 'email',
-                                        label: 'Email',
+                                        label: this.#transloco.translate('admin.tenants.modal.emailLabel'),
                                         value: response.email,
                                         type: 'text'
                                     },
                                     {
                                         icon: 'key',
-                                        label: 'Temporary Password',
+                                        label: this.#transloco.translate('admin.tenants.modal.passwordLabel'),
                                         value: response.temporaryPassword,
                                         type: 'password'
                                     },
                                     {
                                         icon: 'link',
-                                        label: 'Login URL',
+                                        label: this.#transloco.translate('admin.tenants.modal.loginUrlLabel'),
                                         value: response.loginUrl,
                                         type: 'link'
                                     }
@@ -311,21 +312,24 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                             {
                                 type: 'alert-box',
                                 alertType: 'warning',
-                                title: 'Important:',
-                                content: 'This password will NOT be shown again after closing this dialog. Please copy and securely share these credentials with the tenant administrator.'
+                                title: this.#transloco.translate('admin.tenants.modal.importantTitle'),
+                                content: this.#transloco.translate('admin.tenants.modal.passwordWarning')
                             }
                         ]
                     };
 
-                    this.#dialog.open(SpaGenericModalComponent, {
+                    const dialogRef = this.#dialog.open(SpaGenericModalComponent, {
                         data: modalConfig,
                         disableClose: true,
                         width: '600px'
                     });
-                    this.refresh();
+
+                    dialogRef.afterClosed().pipe(take(1)).subscribe(() => {
+                        this.refresh();
+                    });
                 },
                 error: (err) => {
-                    const message = err.error?.message || 'Failed to generate admin user';
+                    const message = err.error?.message || this.#transloco.translate('admin.tenants.errors.adminGenerationFailed');
                     this.#notify.alert(message);
                 }
             });
