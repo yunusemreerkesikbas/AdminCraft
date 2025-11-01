@@ -55,14 +55,21 @@ export class AuthService {
                         tenantId: response.data.tenantId,
                         preferredLanguage: response.data.preferredLanguage
                     };
-                    this.#userService.user = user;
+                    this.#userService.setUser(user);
                     const subFromLogin: string | undefined =
                         response.data.subdomain ||
                         response.data.tenantSubdomain;
                     if (subFromLogin) {
                         this.#tenantContext.setSubdomain(subFromLogin);
                     }
-                    return of(response.data);
+
+                    return this.#tenantContext.initializeTenantContext(user).pipe(
+                        switchMap(() => of(response.data)),
+                        catchError((error) => {
+                            console.error('Failed to initialize tenant context:', error);
+                            return of(response.data);
+                        })
+                    );
                 } else {
                     return throwError(response.message || 'Authentication failed');
                 }
@@ -84,14 +91,21 @@ export class AuthService {
             if (token) {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const user = {
-                    id: 0,
+                    id: payload.userId || 0,
                     email: payload.sub,
                     name: payload.sub,
                     role: payload.role,
-                    tenantId: 0,
+                    tenantId: payload.tenantId || 0,
                     preferredLanguage: 'tr'
                 };
-                this.#userService.user = user;
+                this.#userService.setUser(user);
+                return this.#tenantContext.initializeTenantContext(user).pipe(
+                    switchMap(() => of(true)),
+                    catchError((error) => {
+                        console.error('Failed to initialize tenant context from token:', error);
+                        return of(true);
+                    })
+                );
             }
             return of(true);
         } catch (error) {
@@ -103,6 +117,7 @@ export class AuthService {
         localStorage.removeItem('accessToken');
         this.clearUserAndTenantInfo();
         this.#authenticated = false;
+        this.#userService.clear();
         return of(true);
     }
 

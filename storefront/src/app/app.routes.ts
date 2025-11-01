@@ -1,31 +1,21 @@
 import { Route } from '@angular/router';
 import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
+import { ModuleGuard } from 'app/core/auth/guards/module.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
-
-/* eslint-disable max-len */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 export const appRoutes: Route[] = [
 
     {path: '', pathMatch : 'full', redirectTo: '/tr'},
 
-    // Redirect signed-in user to the '/dashboards/project'
-    //
-    // After the user signs in, the sign-in page will redirect the user to the 'signed-in-redirect'
-    // path. Below is another redirection for that path to redirect the user to the desired
-    // location. This is a small convenience to keep all main routes together here on this file.
-    // Note: We no longer use this for dynamic tenant redirect.
-    // Kept as a fallback to dashboards.
     {
         path: 'signed-in-redirect',
         pathMatch : 'full',
         redirectTo: 'dashboards/project'
     },
 
-    // Auth routes for guests
     {
         path: '',
         canActivate: [NoAuthGuard],
@@ -42,8 +32,6 @@ export const appRoutes: Route[] = [
             {path: 'sign-up', loadChildren: () => import('app/modules/auth/sign-up/sign-up.routes')}
         ]
     },
-
-    // Auth routes for authenticated users
     {
         path: '',
         canActivate: [AuthGuard],
@@ -57,8 +45,6 @@ export const appRoutes: Route[] = [
             {path: 'unlock-session', loadChildren: () => import('app/modules/auth/unlock-session/unlock-session.routes')}
         ]
     },
-
-    // Landing routes
     {
         path: '',
         component: LayoutComponent,
@@ -69,8 +55,6 @@ export const appRoutes: Route[] = [
             {path: 'home', loadChildren: () => import('app/modules/landing/home/home.routes')},
         ]
     },
-
-    // Language-prefixed admin routes
     {
         path: ':lang',
         canActivate: [LanguageGuard, AuthGuard],
@@ -82,27 +66,46 @@ export const appRoutes: Route[] = [
         children: [
 
             {path: '', redirectTo: 'dashboards/project', pathMatch: 'full'},
-
-            // Dashboards
             {path: 'dashboards', children: [
                 {path: 'project', loadChildren: () => import('app/modules/admin/dashboards/project/project.routes')},
                 {path: 'analytics', loadChildren: () => import('app/modules/admin/dashboards/analytics/analytics.routes')},
                 {path: 'finance', loadChildren: () => import('app/modules/admin/dashboards/finance/finance.routes')},
                 {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
             ]},
-
-            // Legacy apps paths redirect to dashboards
             {path: 'apps', children: [
                 {path: '**', redirectTo: 'dashboards/project'}
             ]},
-
-            // AdminCraft features (subdomain-based tenant context)
-            {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')},
-            {path: 'media', loadChildren: () => import('app/modules/admin/custom/media/media.routes')},
-            {path: 'users', loadChildren: () => import('app/modules/admin/custom/users/users.routes')},
-            {path: 'sites', loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')},
-            {path: 'pages', loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')},
-            {path: 'settings', loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')},
+            {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')}, // Platform feature - no guard
+            {
+                path: 'media',
+                canActivate: [ModuleGuard],
+                data: { requiredModule: 'media' },
+                loadChildren: () => import('app/modules/admin/custom/media/media.routes')
+            },
+            {
+                path: 'users',
+                canActivate: [ModuleGuard],
+                data: { requiredModule: 'core' },
+                loadChildren: () => import('app/modules/admin/custom/users/users.routes')
+            },
+            {
+                path: 'sites',
+                canActivate: [ModuleGuard],
+                data: { requiredModule: 'core' },
+                loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')
+            },
+            {
+                path: 'pages',
+                canActivate: [ModuleGuard],
+                data: { requiredModule: 'pagebuilder' },
+                loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')
+            },
+            {
+                path: 'settings',
+                canActivate: [ModuleGuard],
+                data: { requiredModule: 'site_settings' },
+                loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')
+            },
 
             // Pages
             {path: 'pages', children: [

@@ -85,7 +85,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             return authenticateUser(user, command, tenant.getId(), tenant.getSubdomain());
         } finally {
-            // CRITICAL: Always clear context after auth
             tenantContext.clear();
             log.debug("TenantContext cleared");
         }
@@ -147,11 +146,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
         String accessToken = jwtTokenProvider.createAccessToken(
-            user.getEmail(),
-            user.getRole().name(),
-            user.getId(),
-            tenantId
-        );
+                user.getEmail(),
+                user.getRole().name(),
+                user.getId(),
+                tenantId);
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         log.info("Authentication successful for user: {}", user.getEmail());
@@ -166,7 +164,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getFullName(),
                 user.getRole().name(),
                 user.getPreferredLanguage().name(),
-                subdomain);
+                subdomain,
+                tenantId);
     }
 
     private LoginResponse authenticatePlatformAdmin(AuthenticateCommand command) {
@@ -178,11 +177,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
         String accessToken = jwtTokenProvider.createAccessToken(
-            admin.getEmail(),
-            "SUPER_ADMIN",
-            admin.getId(),
-            null
-        );
+                admin.getEmail(),
+                "SUPER_ADMIN",
+                admin.getId(),
+                null);
         String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
 
         return new LoginResponse(
@@ -195,6 +193,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 admin.getFullName(),
                 "SUPER_ADMIN",
                 command.preferredLanguageCode(),
+                null,
                 null);
     }
 
@@ -215,11 +214,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new UserNotFoundException(email));
 
             String newAccessToken = jwtTokenProvider.createAccessToken(
-                admin.getEmail(),
-                "SUPER_ADMIN",
-                admin.getId(),
-                null
-            );
+                    admin.getEmail(),
+                    "SUPER_ADMIN",
+                    admin.getId(),
+                    null);
             String newRefreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
@@ -234,6 +232,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
+                    null,
                     null);
         } else {
             User user = userRepository.findByEmail(email)
@@ -244,11 +243,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new UserAccountDisabledException();
             }
             String newAccessToken = jwtTokenProvider.createAccessToken(
-                user.getEmail(),
-                user.getRole().name(),
-                user.getId(),
-                tenantId
-            );
+                    user.getEmail(),
+                    user.getRole().name(),
+                    user.getId(),
+                    tenantId);
             String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
             log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), tenantId);
@@ -263,7 +261,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     user.getFullName(),
                     user.getRole().name(),
                     user.getPreferredLanguage().name(),
-                    resolveTenantSubdomain(tenantId));
+                    resolveTenantSubdomain(tenantId),
+                    tenantId);
         }
     }
 

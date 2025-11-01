@@ -39,6 +39,7 @@ public class TenantServiceImpl implements TenantService {
     private final ProvisioningService provisioningService;
     private final TenantModuleRepository tenantModuleRepository;
     private final ProvisioningJobRepository provisioningJobRepository;
+    private final com.backend.infrastructure.tenant.TenantContext tenantContext;
 
     @Override
     @Transactional
@@ -166,20 +167,38 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage) {
         log.debug("Fetching modules for tenant: {}", tenantId);
-        tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new TenantNotFoundException(tenantId));
-        List<TenantModule> tenantModules = tenantModuleRepository.findByTenantIdAndStatus(tenantId, "enabled");
-        return tenantModules.stream()
-                .map(tm -> TenantModuleResponse.builder()
-                        .id(tm.getId())
-                        .moduleCode(tm.getModuleCode())
-                        .moduleName(
-                                tm.getModuleCatalog() != null ? tm.getModuleCatalog().getName() : tm.getModuleCode())
-                        .status(tm.getStatus())
-                        .targetVersion(tm.getTargetVersion())
-                        .installedAt(tm.getInstalledAt())
-                        .build())
-                .toList();
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+
+        try {
+            tenantContext.clear();
+            log.debug("Cleared tenant context to access platform database for tenant: {}", tenantId);
+
+            tenantRepository.findById(tenantId)
+                    .orElseThrow(() -> new TenantNotFoundException(tenantId));
+            List<TenantModule> tenantModules = tenantModuleRepository.findByTenantIdAndStatus(tenantId, "enabled");
+
+            return tenantModules.stream()
+                    .map(tm -> TenantModuleResponse.builder()
+                            .id(tm.getId())
+                            .moduleCode(tm.getModuleCode())
+                            .moduleName(
+                                    tm.getModuleCatalog() != null ? tm.getModuleCatalog().getName()
+                                            : tm.getModuleCode())
+                            .status(tm.getStatus())
+                            .targetVersion(tm.getTargetVersion())
+                            .installedAt(tm.getInstalledAt())
+                            .build())
+                    .toList();
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            log.debug("Restored tenant context after platform database query");
+        }
     }
 
     @Override

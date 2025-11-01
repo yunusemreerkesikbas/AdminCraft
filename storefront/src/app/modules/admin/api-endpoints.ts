@@ -18,6 +18,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     tenants: 'tenants',
     tenantById: 'tenants/${id}',
     tenantModules: 'tenants/${tenantId}/modules',
+    tenantCurrentModules: 'tenants/current/modules', // Sprint 21: TENANT_ADMIN's own modules
     tenantLanguages: 'tenants/${tenantId}/languages',
     tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
     generateAdminUser: 'tenants/${tenantId}/generate-admin',

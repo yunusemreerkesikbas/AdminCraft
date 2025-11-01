@@ -9,7 +9,7 @@ export const tenantGuard: CanActivateFn = (route, state) => {
     const userService = inject(UserService);
     const router = inject(Router);
     const snackBar = inject(MatSnackBar);
-    const user = userService.user;
+    const user = userService.user();
     const tenantId = tenantContext.getCurrentTenantId();
     if (user?.role === 'SUPER_ADMIN' && !tenantId) {
         snackBar.open('Please select a tenant to access this page', 'Close', {
