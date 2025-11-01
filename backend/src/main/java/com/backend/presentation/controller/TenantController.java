@@ -40,6 +40,7 @@ public class TenantController {
         private final MessageSource messageSource;
         private final GenerateTenantAdminUserUseCase generateTenantAdminUserUseCase;
         private final SecurityHelper securityHelper;
+        private final com.backend.infrastructure.tenant.TenantContext tenantContext;
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         @PostMapping
@@ -141,6 +142,15 @@ public class TenantController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         Long userTenantId = securityHelper.getCurrentUserTenantId();
+                        String headerTenantId = tenantContext.getTenantId();
+
+                        if (headerTenantId != null && !userTenantId.equals(Long.parseLong(headerTenantId))) {
+                                String message = messageSource.getMessage("tenant.id.mismatch",
+                                                null, Locale.forLanguageTag(languageCode));
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                                .body(ApiResponse.error(message));
+                        }
+
                         Language displayLanguage = Language.fromCodeOrDefault(languageCode);
                         List<TenantModuleResponse> modules = tenantService.getTenantModules(userTenantId,
                                         displayLanguage);

@@ -27,7 +27,6 @@ docker compose up -d
 - Platform DB (`platform_management`): Control plane (tenants, modules, jobs)
 - Tenant DBs (`ac_tenant_{id}`): Data plane (isolated per tenant)
 - ❌ NO tenant_id columns (physical isolation)
-- ✅ Header: `X-Tenant-ID` (Angular interceptor required)
 - ✅ TenantContext: ThreadLocal with `tenantId` + `tenantDbName`
 - ✅ TenantFilter: Validate active, set/clear in finally
 - ✅ HikariCP: LRU cache (max 10 pools, 5 conn, 30m idle)
@@ -146,7 +145,6 @@ export class SpaPageListComponent extends BaseCrudListComponent<Page> {
 
 ### Gotchas
 
-- Missing X-Tenant-ID → 4xx/empty data
 - Platform entities need @Qualifier("platformDataSource")
 - Tenant entities: NO tenant_id column
 - Flyway migrations: idempotent (R__) or versioned (V__)
@@ -162,8 +160,6 @@ curl -s http://localhost:8080/actuator/health | jq
 # Module catalog
 curl -s http://localhost:8080/api/provisioning/modules/catalog | jq
 
-# Tenant data
-curl -s -H "X-Tenant-ID: 1" http://localhost:8080/api/pages | jq
 ```
 
 ---

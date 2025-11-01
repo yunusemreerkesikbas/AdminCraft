@@ -1,8 +1,9 @@
 import { Route } from '@angular/router';
 import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
-import { ModuleGuard } from 'app/core/auth/guards/module.guard';
+import { moduleGuard } from 'app/core/auth/guards/module.guard';
 import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
+import { superAdminGuard, tenantAdminGuard } from 'app/core/auth/guards/role.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
 
@@ -75,34 +76,38 @@ export const appRoutes: Route[] = [
             {path: 'apps', children: [
                 {path: '**', redirectTo: 'dashboards/project'}
             ]},
-            {path: 'tenants', loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')}, // Platform feature - no guard
+            {
+                path: 'tenants',
+                canActivate: [superAdminGuard],
+                loadChildren: () => import('app/modules/admin/custom/tenants/tenants.routes')
+            },
             {
                 path: 'media',
-                canActivate: [ModuleGuard],
+                canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'media' },
                 loadChildren: () => import('app/modules/admin/custom/media/media.routes')
             },
             {
                 path: 'users',
-                canActivate: [ModuleGuard],
+                canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () => import('app/modules/admin/custom/users/users.routes')
             },
             {
                 path: 'sites',
-                canActivate: [ModuleGuard],
+                canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () => import('app/modules/admin/custom/sites/sites.routes')
             },
             {
                 path: 'pages',
-                canActivate: [ModuleGuard],
+                canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'pagebuilder' },
                 loadChildren: () => import('app/modules/admin/custom/pages/page-builder.routes')
             },
             {
                 path: 'settings',
-                canActivate: [ModuleGuard],
+                canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'site_settings' },
                 loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')
             },

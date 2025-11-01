@@ -383,12 +383,6 @@ public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents() {
     return contentService.getAllContents(); // Gets all tenants' content!
 }
 
-// ✅ GOOD: Tenant-aware query
-@GetMapping("/contents")
-public ResponseEntity<ApiResponse<List<ContentResponse>>> getAllContents(
-        @RequestHeader("X-Tenant-ID") Long tenantId) {
-    return contentService.getContentsByTenant(tenantId);
-}
 ```
 
 ### **2. Language Context Loss**

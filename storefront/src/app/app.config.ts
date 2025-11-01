@@ -146,10 +146,7 @@ export const appConfig: ApplicationConfig = {
         provideAppInitializer(() => {
             const tenantContext = inject(TenantContextService);
             tenantContext.initializeFromHostname();
-            return firstValueFrom(tenantContext.restoreTenantSelection()).catch((error) => {
-                console.warn('Failed to restore tenant selection:', error);
-                return null;
-            });
+            return firstValueFrom(tenantContext.restoreTenantSelection()).catch(() => null);
         }),
 
         provideAppInitializer(() => {

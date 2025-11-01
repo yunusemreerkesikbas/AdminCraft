@@ -36,7 +36,9 @@ export interface FuseNavigationItem {
     };
     children?: FuseNavigationItem[];
     meta?: any;
-    requiredModule?: string | null; // Module code required for this navigation item (null = platform module, always visible)
+    requiredModule?: string | null;
+    requiredRole?: string;
+    excludedRoles?: string[];
 }
 
 export type FuseVerticalNavigationAppearance =
