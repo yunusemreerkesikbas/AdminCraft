@@ -1,0 +1,29 @@
+import { inject } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
+import { NotificationService } from '@shared/notifications/notification.service';
+import { UserService } from 'app/core/user/user.service';
+
+export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
+    return (route: ActivatedRouteSnapshot) => {
+        const userService = inject(UserService);
+        const router = inject(Router);
+        const notify = inject(NotificationService);
+        const user = userService.user();
+        const userRole = user?.role;
+
+        if (!userRole || !allowedRoles.includes(userRole)) {
+            notify.alert('You do not have permission to access this page', {
+                durationMs: 5000
+            });
+
+            const currentLang = route.paramMap.get('lang') || 'tr';
+            router.navigateByUrl(`/${currentLang}/dashboards/project`);
+            return false;
+        }
+
+        return true;
+    };
+};
+
+export const superAdminGuard: CanActivateFn = roleGuard(['SUPER_ADMIN']);
+export const tenantAdminGuard: CanActivateFn = roleGuard(['TENANT_ADMIN']);

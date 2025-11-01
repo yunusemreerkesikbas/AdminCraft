@@ -48,7 +48,7 @@ export class NavigationMockApi {
 
             updateLinks(navCopy.default);
             const filteredNav = {
-                default: this.filterNavigationByModules(navCopy.default),
+                default: this.filterNavigationByModulesAndRoles(navCopy.default),
             };
 
             return [
@@ -58,24 +58,40 @@ export class NavigationMockApi {
         });
     }
 
-    private filterNavigationByModules(items: FuseNavigationItem[]): FuseNavigationItem[] {
+    private filterNavigationByModulesAndRoles(items: FuseNavigationItem[]): FuseNavigationItem[] {
+        const user = this._userService.user();
+        const userRole = user?.role;
+
         return items
             .map(item => {
                 const itemCopy = { ...item };
-                if (!itemCopy.requiredModule) {
-                    if (itemCopy.children?.length) {
-                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
-                    }
-                    return itemCopy;
+
+                // 1. Check role-based restrictions FIRST
+                if (itemCopy.requiredRole && userRole !== itemCopy.requiredRole) {
+                    return null; // Hide if required role doesn't match
                 }
-                if (this._enabledModules.includes(itemCopy.requiredModule)) {
+                if (itemCopy.excludedRoles?.includes(userRole)) {
+                    return null; // Hide if user role is excluded
+                }
+
+                // 2. Then check module restrictions
+                if (!itemCopy.requiredModule) {
+                    // Platform module - no module restriction
                     if (itemCopy.children?.length) {
-                        itemCopy.children = this.filterNavigationByModules(itemCopy.children);
+                        itemCopy.children = this.filterNavigationByModulesAndRoles(itemCopy.children);
                     }
                     return itemCopy;
                 }
 
-                return null;
+                // Check if user has the required module
+                if (this._enabledModules.includes(itemCopy.requiredModule)) {
+                    if (itemCopy.children?.length) {
+                        itemCopy.children = this.filterNavigationByModulesAndRoles(itemCopy.children);
+                    }
+                    return itemCopy;
+                }
+
+                return null; // Module not enabled
             })
             .filter(item => item !== null) as FuseNavigationItem[];
     }

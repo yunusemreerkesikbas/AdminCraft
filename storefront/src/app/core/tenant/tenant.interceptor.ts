@@ -1,7 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { EMPTY } from 'rxjs';
@@ -13,12 +13,11 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
     const userService = inject(UserService);
     const router = inject(Router);
-    const snackBar = inject(MatSnackBar);
+    const notify = inject(NotificationService);
     const isTenantSpecificException = TENANT_SPECIFIC_EXCEPTIONS.some((endpoint) =>
         req.url.includes(endpoint)
     );
-    if (isTenantSpecificException) {
-    } else {
+    if (!isTenantSpecificException) {
         const isPlatformEndpoint = PLATFORM_ENDPOINTS.some((endpoint) => req.url.includes(endpoint)) ||
             req.url.includes('/api/tenants');
 
@@ -34,11 +33,7 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
         : contextTenantId;
 
     if (user?.role === 'SUPER_ADMIN' && !effectiveTenantId) {
-        snackBar.open('Please select a tenant to continue', 'Close', {
-            duration: 5000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top'
-        });
+        notify.alert('Please select a tenant to continue', { durationMs: 5000 });
         router.navigate(['/dashboards']);
         return EMPTY;
     }

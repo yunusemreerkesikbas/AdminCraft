@@ -1,16 +1,11 @@
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, retry, timer } from 'rxjs';
+import { environment } from '@environments/environment';
+import { EndpointKey, resolveEndpoint } from '@modules/admin/api-endpoints';
+import { Observable, retry, throwError, timer } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import { HttpHeadersService } from './http-headers.service';
-import { environment } from '@environments/environment';
-import { resolveEndpoint, EndpointKey } from '@modules/admin/api-endpoints';
 
-/**
- * Centralized API Client Service
- * Following Clean Architecture principles for infrastructure layer
- * Handles all HTTP communication with proper error handling, retry logic, and logging
- */
 @Injectable({
     providedIn: 'root'
 })
@@ -19,9 +14,6 @@ export class ApiClientService {
     private readonly _httpHeaders = inject(HttpHeadersService);
     private readonly _baseUrl = environment.apiBaseUrl;
 
-    /**
-     * GET request with type safety and error handling
-     */
     get<T>(
         endpointKey: EndpointKey,
         params?: Record<string, string | number>,
@@ -43,9 +35,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * POST request with type safety and error handling
-     */
     post<T>(
         endpointKey: EndpointKey,
         body: any,
@@ -68,9 +57,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * PUT request with type safety and error handling
-     */
     put<T>(
         endpointKey: EndpointKey,
         body: any,
@@ -93,9 +79,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * PATCH request with type safety and error handling
-     */
     patch<T>(
         endpointKey: EndpointKey,
         body: any,
@@ -104,7 +87,6 @@ export class ApiClientService {
     ): Observable<T> {
         const url = this.buildUrl(endpointKey, params);
         const httpParams = this.buildHttpParams(queryParams);
-
         return this._http.patch<T>(url, body, {
             headers: this._httpHeaders.getStandardHeaders(),
             params: httpParams
@@ -118,9 +100,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * DELETE request with type safety and error handling
-     */
     delete<T>(
         endpointKey: EndpointKey,
         params?: Record<string, string | number>,
@@ -142,9 +121,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * File upload with progress tracking
-     */
     upload<T>(
         endpointKey: EndpointKey,
         formData: FormData,
@@ -160,9 +136,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * Public API call (without authentication)
-     */
     getPublic<T>(
         endpointKey: EndpointKey,
         params?: Record<string, string | number>,
@@ -180,9 +153,6 @@ export class ApiClientService {
         );
     }
 
-    /**
-     * Custom request with full control
-     */
     custom<T>(
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
         endpointKey: EndpointKey,
@@ -238,9 +208,6 @@ export class ApiClientService {
             catchError((error) => this.handleError(error, method, url))
         );
     }
-
-    // Private helper methods
-
     private buildUrl(endpointKey: EndpointKey, params?: Record<string, string | number>): string {
         const endpoint = resolveEndpoint(endpointKey, params);
         return `${this._baseUrl}/${endpoint}`;
@@ -263,45 +230,31 @@ export class ApiClientService {
     }
 
     private getRetryDelay(error: any, retryIndex: number): Observable<number> {
-        // Don't retry on client errors (4xx) except 408 (timeout)
         if (error instanceof HttpErrorResponse) {
             const status = error.status;
             if (status >= 400 && status < 500 && status !== 408) {
                 return throwError(() => error);
             }
         }
-
-        // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, retryIndex) * 1000;
         return timer(delay);
     }
 
     private handleError(error: any, method: string, url: string): Observable<never> {
-        if (environment.enableLogging) {
-            console.error(`API Error [${method}] ${url}:`, error);
-        }
-
-        // Transform specific error types
         if (error instanceof HttpErrorResponse) {
             switch (error.status) {
                 case 401:
-                    // Handle authentication error
-                    // Could trigger logout or token refresh
                     break;
                 case 403:
-                    // Handle authorization error
                     break;
                 case 404:
-                    // Handle not found
                     break;
                 case 429:
-                    // Handle rate limiting
                     break;
                 case 500:
                 case 502:
                 case 503:
                 case 504:
-                    // Handle server errors
                     break;
             }
         }

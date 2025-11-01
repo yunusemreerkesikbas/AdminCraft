@@ -1,4 +1,5 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal, Signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiClientService } from '@core/api/api-client.service';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
@@ -7,46 +8,44 @@ import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    #authenticated: boolean = false;
-    #apiClient = inject(ApiClientService);
-    #userService = inject(UserService);
-    #tenantContext = inject(TenantContextService);
+    #authenticatedSig = signal<boolean>(false);
+    readonly authenticated: Signal<boolean> = this.#authenticatedSig.asReadonly();
+    readonly authenticated$ = toObservable(this.#authenticatedSig);
 
-    set accessToken(token: string) {
+    readonly #apiClient = inject(ApiClientService);
+    readonly #userService = inject(UserService);
+    readonly #tenantContext = inject(TenantContextService);
+
+    #setAccessToken(token: string): void {
         localStorage.setItem('accessToken', token);
     }
 
-    get accessToken(): string {
+    #getAccessToken(): string {
         return localStorage.getItem('accessToken') ?? '';
     }
 
+    getAccessToken(): string {
+        return this.#getAccessToken();
+    }
+
     forgotPassword(email: string): Observable<any> {
-        return this.#apiClient.custom('POST', 'login', {
-            body: { email },
-            includeAuth: false
-        });
+        return this.#apiClient.post('login', { email });
     }
 
     resetPassword(password: string): Observable<any> {
-        return this.#apiClient.custom('POST', 'login', {
-            body: { password },
-            includeAuth: false
-        });
+        return this.#apiClient.post('login', { password });
     }
 
     signIn(credentials: { email: string; password: string }): Observable<any> {
-        if (this.#authenticated) {
+        if (this.#authenticatedSig()) {
             return throwError('User is already logged in.');
         }
-        return this.#apiClient.custom('POST', 'login', {
-            body: credentials,
-            includeAuth: false
-        }).pipe(
+        return this.#apiClient.post('login', credentials).pipe(
             switchMap((response: any) => {
                 if (response.result === 'SUCCESS' && response.data) {
-                    this.accessToken = response.data.accessToken;
-                    this.#authenticated = true;
-                    this.storeUserAndTenantInfo(response.data);
+                    this.#setAccessToken(response.data.accessToken);
+                    this.#authenticatedSig.set(true);
+                    this.#storeUserAndTenantInfo(response.data);
                     const user = {
                         id: response.data.userId,
                         email: response.data.email,
@@ -65,10 +64,7 @@ export class AuthService {
 
                     return this.#tenantContext.initializeTenantContext(user).pipe(
                         switchMap(() => of(response.data)),
-                        catchError((error) => {
-                            console.error('Failed to initialize tenant context:', error);
-                            return of(response.data);
-                        })
+                        catchError(() => of(response.data))
                     );
                 } else {
                     return throwError(response.message || 'Authentication failed');
@@ -86,8 +82,8 @@ export class AuthService {
 
     signInUsingToken(): Observable<any> {
         try {
-            this.#authenticated = true;
-            const token = this.accessToken;
+            this.#authenticatedSig.set(true);
+            const token = this.#getAccessToken();
             if (token) {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const user = {
@@ -101,10 +97,7 @@ export class AuthService {
                 this.#userService.setUser(user);
                 return this.#tenantContext.initializeTenantContext(user).pipe(
                     switchMap(() => of(true)),
-                    catchError((error) => {
-                        console.error('Failed to initialize tenant context from token:', error);
-                        return of(true);
-                    })
+                    catchError(() => of(true))
                 );
             }
             return of(true);
@@ -115,8 +108,8 @@ export class AuthService {
 
     signOut(): Observable<any> {
         localStorage.removeItem('accessToken');
-        this.clearUserAndTenantInfo();
-        this.#authenticated = false;
+        this.#clearUserAndTenantInfo();
+        this.#authenticatedSig.set(false);
         this.#userService.clear();
         return of(true);
     }
@@ -127,36 +120,31 @@ export class AuthService {
         password: string;
         company: string;
     }): Observable<any> {
-        return this.#apiClient.custom('POST', 'login', {
-            body: user,
-            includeAuth: false
-        });
+        return this.#apiClient.post('login', user);
     }
 
     unlockSession(credentials: {
         email: string;
         password: string;
     }): Observable<any> {
-        return this.#apiClient.custom('POST', 'login', {
-            body: credentials,
-            includeAuth: false
-        });
+        return this.#apiClient.post('login', credentials);
     }
 
     check(): Observable<boolean> {
-        if (this.#authenticated) {
+        if (this.#authenticatedSig()) {
             return of(true);
         }
-        if (!this.accessToken) {
+        const token = this.#getAccessToken();
+        if (!token) {
             return of(false);
         }
-        if (AuthUtils.isTokenExpired(this.accessToken)) {
+        if (AuthUtils.isTokenExpired(token)) {
             return of(false);
         }
         return this.signInUsingToken();
     }
 
-    private storeUserAndTenantInfo(data: any): void {
+    #storeUserAndTenantInfo(data: any): void {
         try {
             if (data.userId) {
                 localStorage.setItem('userId', data.userId.toString());
@@ -169,17 +157,15 @@ export class AuthService {
                 localStorage.setItem('currentTenantSubdomain', subdomain);
             }
         } catch (error) {
-            console.warn('Failed to store user/tenant info for headers:', error);
         }
     }
 
-    private clearUserAndTenantInfo(): void {
+    #clearUserAndTenantInfo(): void {
         try {
             localStorage.removeItem('userId');
             localStorage.removeItem('tenantId');
             localStorage.removeItem('currentTenantSubdomain');
         } catch (error) {
-            console.warn('Failed to clear user/tenant info:', error);
         }
     }
 }

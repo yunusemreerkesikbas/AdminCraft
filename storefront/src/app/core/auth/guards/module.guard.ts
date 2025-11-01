@@ -1,12 +1,12 @@
 import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { UserService } from 'app/core/user/user.service';
+import { NotificationService } from '@shared/notifications/notification.service';
 
-export const ModuleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
+export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
     const userService = inject(UserService);
     const router = inject(Router);
-    const snackBar = inject(MatSnackBar);
+    const notify = inject(NotificationService);
     const requiredModule = route.data?.['requiredModule'] as string | undefined;
 
     if (!requiredModule) {
@@ -19,15 +19,9 @@ export const ModuleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state)
         return true;
     }
     const moduleName = getModuleDisplayName(requiredModule);
-    snackBar.open(
+    notify.alert(
         `This feature requires the "${moduleName}" module. Please contact your administrator.`,
-        'Close',
-        {
-            duration: 5000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-        }
+        { durationMs: 5000 }
     );
     const currentLang = route.paramMap.get('lang') || 'tr';
     router.navigate([`/${currentLang}/dashboards/project`]);

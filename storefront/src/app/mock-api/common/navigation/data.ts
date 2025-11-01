@@ -19,6 +19,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:users',
                 link: 'tenants',
                 requiredModule: null, // Platform module - always visible
+                requiredRole: 'SUPER_ADMIN', // Only SUPER_ADMIN can access tenant management
             },
             {
                 id: 'apps.custom.media',
@@ -27,6 +28,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:photo',
                 link: 'media',
                 requiredModule: NAVIGATION_MODULES.MEDIA,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
             {
                 id: 'apps.custom.users',
@@ -35,6 +37,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:user-group',
                 link: 'users',
                 requiredModule: NAVIGATION_MODULES.CORE,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
 
             {
@@ -44,6 +47,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:globe-alt',
                 link: 'sites',
                 requiredModule: NAVIGATION_MODULES.CORE,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
             {
                 id: 'apps.custom.pagebuilder',
@@ -52,6 +56,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:rectangle-stack',
                 link: 'pages',
                 requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
             {
                 id: 'apps.custom.pagebuilder.categories',
@@ -60,6 +65,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:folder',
                 link: 'pages/categories',
                 requiredModule: NAVIGATION_MODULES.PAGE_CATEGORIES,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
             {
                 id: 'apps.custom.settings',
@@ -68,6 +74,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:cog-6-tooth',
                 link: 'settings',
                 requiredModule: NAVIGATION_MODULES.SITE_SETTINGS,
+                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
             },
         ],
     },

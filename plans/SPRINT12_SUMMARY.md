@@ -1,6 +1,7 @@
 # Sprint 12 Implementation Summary
 
 ## Overview
+
 Successfully implemented database-per-tenant architecture with Flyway migrations, eliminating manual SQL scripts and introducing a modular provisioning system.
 
 ## Completed Features
@@ -8,34 +9,39 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 ### 1. Backend Infrastructure
 
 #### Flyway Integration
+
 - ✅ Added Flyway dependencies (`flyway-core`, `flyway-mysql`)
 - ✅ Configured platform Flyway for control-plane database
 - ✅ Configured programmatic tenant Flyway for dynamic module loading
 - ✅ Set `hibernate.ddl-auto=none` - all schema changes via Flyway
 
 #### Platform Database (Control Plane)
+
 - ✅ Created `platform_management` database schema
 - ✅ Tables: `tenants`, `modules_catalog`, `tenant_modules`, `provisioning_jobs`
 - ✅ Seeded 9 modules (core, pagebuilder, site_settings, content, media, b2c_products, b2c_orders, b2b_quotes, b2b_contracts)
 
 #### Tenant Database Migrations
+
 - ✅ Core module: `users`, `site_settings` tables
 - ✅ Page Builder module: `pages`, `page_i18n`, `page_categories`, `page_category_translations`, `page_sections`, `page_blocks`
 - ✅ Repeatable seeds for default settings and sample pages
 
 #### Multi-Tenancy Runtime
+
 - ✅ `TenantContext` - ThreadLocal for tenant isolation
-- ✅ `TenantFilter` - Extracts `X-Tenant-ID`, validates tenant, sets/clears context
 - ✅ `MultiTenantConnectionProvider` - Hikari DS cache with LRU eviction (max 10 pools, 5 connections each)
 - ✅ `CurrentTenantIdentifierResolver` - Returns tenant DB name from context
 - ✅ Configured Hibernate DATABASE multi-tenancy strategy
 
 #### Platform Data Access
+
 - ✅ Separate `PlatformDataSource` configuration
 - ✅ Platform JPA entities: `Tenant`, `ModuleCatalog`, `ProvisioningJob`
 - ✅ Platform repositories for control-plane data
 
 #### Provisioning Service
+
 - ✅ `createDatabaseIfNotExists()` - Creates `ac_tenant_{id}` databases
 - ✅ Programmatic Flyway migration with module-based locations
 - ✅ Async job execution with progress tracking (10% → 40% → 80% → 90% → 100%)
@@ -43,17 +49,20 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 - ✅ Error handling with truncated messages and correlation IDs
 
 #### REST APIs
+
 - ✅ `POST /api/provisioning/tenants/{id}/provision` - Start provisioning
 - ✅ `GET /api/provisioning/jobs/{jobId}` - Get job status
 - ✅ `GET /api/provisioning/modules/catalog` - List available modules
 
 #### Observability
+
 - ✅ MDC logging with `tenantId`, `tenantDb`, `correlationId`
 - ✅ Localized error messages (TR/EN)
 
 ### 2. Frontend (Admin UI)
 
 #### Provision Dialog Component
+
 - ✅ Unified dynamic component (`provision-dialog`) handles both module and language provisioning via `type` parameter
 - ✅ Module selection UI grouped by type (core/b2b/b2c)
 - ✅ Dependency-aware selection (auto-selects dependencies)
@@ -64,11 +73,13 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 - ✅ Fully responsive Material Design
 
 #### Provisioning Service
+
 - ✅ Angular service with typed API responses
 - ✅ RxJS-based polling mechanism
 - ✅ Error handling and retry logic
 
 #### Tenants List Integration
+
 - ✅ Added "Provision" button with server icon
 - ✅ Tooltip support
 - ✅ Dialog integration with job tracking
@@ -76,6 +87,7 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 ### 3. Testing
 
 #### Integration Tests
+
 - ✅ Testcontainers MySQL setup
 - ✅ Test: Provision tenant with core + pagebuilder modules
 - ✅ Test: Data isolation between two tenants
@@ -85,15 +97,18 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 ### 4. Configuration & Cleanup
 
 #### Docker
+
 - ✅ Updated `01-init-database.sql` to create only `platform_management`
 - ✅ Tenant DBs created dynamically by application
 
 #### Application Config
+
 - ✅ Platform datasource configuration
 - ✅ Tenant datasource properties (host, port, username, password)
 - ✅ Flyway enabled for platform DB
 
 #### Legacy Cleanup
+
 - ✅ Deleted `backend/src/main/resources/schema-page-builder.sql`
 - ✅ Deleted `backend/src/main/resources/data.sql`
 - ✅ Converted all DDL to Flyway versioned migrations
@@ -102,6 +117,7 @@ Successfully implemented database-per-tenant architecture with Flyway migrations
 ## Database Schema
 
 ### Platform DB (`platform_management`)
+
 ```sql
 tenants (id, subdomain, db_name, status, ...)
 modules_catalog (id, code, name, type, version, deps, ...)
@@ -110,6 +126,7 @@ provisioning_jobs (id, tenant_id, type, status, progress, ...)
 ```
 
 ### Tenant DBs (`ac_tenant_{id}`)
+
 ```sql
 -- Core module
 users (id, email, password_hash, role, ...)
@@ -127,10 +144,12 @@ page_blocks (id, section_id, type, ...)
 ## Migration Paths
 
 ### Platform Migrations
+
 - `db/platform/V1__baseline.sql` - Platform tables
 - `db/platform/R__seed_modules.sql` - Module catalog seed
 
 ### Tenant Migrations
+
 - `db/tenant/core/V1__baseline.sql` - Core tables
 - `db/tenant/core/R__seed_roles.sql` - Default settings seed
 - `db/tenant/pagebuilder/V1__baseline.sql` - Page builder tables
@@ -139,6 +158,7 @@ page_blocks (id, section_id, type, ...)
 ## API Endpoints
 
 ### Provisioning
+
 ```http
 POST /api/provisioning/tenants/{tenantId}/provision
 Body: { "modules": ["core", "pagebuilder"] }
@@ -153,7 +173,6 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 
 ## Key Technical Decisions
 
-1. **Tenant Resolution**: Header-based (`X-Tenant-ID`) for local development; designed for subdomain/JWT in production
 2. **DB Naming**: `ac_tenant_{numericId}` - immutable, avoids special characters
 3. **Connection Pooling**: LRU cache with max 10 tenant pools, 5 connections each, 30m idle timeout
 4. **Migration Strategy**: Flyway manages all schema changes; Hibernate validates only
@@ -173,6 +192,7 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 ## Files Created/Modified
 
 ### Created (Backend)
+
 - `backend/src/main/resources/db/platform/V1__baseline.sql`
 - `backend/src/main/resources/db/platform/R__seed_modules.sql`
 - `backend/src/main/resources/db/tenant/core/V1__baseline.sql`
@@ -188,9 +208,11 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 - `backend/src/test/java/com/backend/integration/ProvisioningIntegrationTest.java`
 
 ### Created (Frontend)
+
 - `storefront/src/app/shared/components/provision-dialog/*` (4 files) - Dynamic component for module/language provisioning
 
 ### Modified
+
 - `backend/pom.xml` - Added Flyway, Testcontainers, Awaitility
 - `backend/src/main/resources/application.yml` - Platform/tenant datasources, Flyway config
 - `backend/src/main/java/com/backend/infrastructure/persistence/config/*` - Multi-tenancy setup
@@ -200,6 +222,7 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 - `backend/src/main/resources/i18n/messages_*.properties` - Provisioning messages
 
 ### Deleted
+
 - `backend/src/main/resources/schema-page-builder.sql`
 - `backend/src/main/resources/data.sql`
 - `storefront/src/app/shared/components/provisioning-modal/*` - Consolidated into `provision-dialog`
@@ -319,5 +342,3 @@ Response: { "result": "SUCCESS", "data": [ { "code": "core", "name": "Core Modul
 **Files Deleted:**
 
 - `storefront/src/app/shared/components/provision-dialog/*` (old unified component)
-
-

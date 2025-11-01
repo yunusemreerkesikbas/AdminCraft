@@ -1,43 +1,25 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal, Signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Navigation } from 'app/core/navigation/navigation.types';
-import { Observable, ReplaySubject, take, tap } from 'rxjs';
+import { Observable, take, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationService {
-    private _httpClient = inject(HttpClient);
-    private _navigation: ReplaySubject<Navigation> =
-        new ReplaySubject<Navigation>(1);
+    readonly #httpClient = inject(HttpClient);
+    #navigationSig = signal<Navigation | null>(null);
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Accessors
-    // -----------------------------------------------------------------------------------------------------
+    readonly navigation: Signal<Navigation | null> = this.#navigationSig.asReadonly();
+    readonly navigation$ = toObservable(this.#navigationSig);
 
-    /**
-     * Getter for navigation
-     */
-    get navigation$(): Observable<Navigation> {
-        return this._navigation.asObservable();
-    }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Get all navigation data
-     */
     get(): Observable<Navigation> {
-        return this._httpClient.get<Navigation>('api/common/navigation').pipe(
+        return this.#httpClient.get<Navigation>('api/common/navigation').pipe(
             tap((navigation) => {
-                this._navigation.next(navigation);
+                this.#navigationSig.set(navigation);
             })
         );
     }
 
-    /**
-     * Reload navigation data (used when tenant modules change)
-     */
     reload(): void {
         this.get().pipe(take(1)).subscribe();
     }
