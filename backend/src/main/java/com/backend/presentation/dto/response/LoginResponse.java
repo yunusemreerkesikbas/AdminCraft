@@ -10,8 +10,8 @@ public record LoginResponse(
         String fullName,
         String role,
         String preferredLanguage,
-        String subdomain) {
-    // Compact canonical constructor for validation
+        String subdomain,
+        Long tenantId) {
     public LoginResponse {
         if (accessToken == null || accessToken.trim().isEmpty()) {
             throw new IllegalArgumentException("Access token cannot be null or empty");
