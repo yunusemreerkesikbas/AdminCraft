@@ -1,38 +1,28 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
 import { FuseMockApiService } from '@fuse/lib/mock-api';
-import { TenantContextService } from 'app/core/tenant/tenant-context.service';
+import { UserService } from 'app/core/user/user.service';
 import {
     defaultNavigation,
 } from 'app/mock-api/common/navigation/data';
 import { cloneDeep } from 'lodash-es';
-import { Subject, takeUntil } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class NavigationMockApi implements OnDestroy {
-    
+export class NavigationMockApi {
+    private readonly _userService = inject(UserService);
+
     private readonly _defaultNavigation: FuseNavigationItem[] =
         defaultNavigation;
     private _enabledModules: string[] = [];
-    #destroy$ = new Subject<void>();
-
 
     constructor(
-        private _fuseMockApiService: FuseMockApiService,
-        private _tenantContext: TenantContextService
+        private _fuseMockApiService: FuseMockApiService
     ) {
-        this._tenantContext.tenantModules$
-            .pipe(takeUntil(this.#destroy$))
-            .subscribe((modules) => {
-                this._enabledModules = modules;
-            });
+        effect(() => {
+            this._enabledModules = this._userService.tenantModules();
+        });
 
         this.registerHandlers();
-    }
-
-    ngOnDestroy(): void {
-        this.#destroy$.next();
-        this.#destroy$.complete();
     }
 
     registerHandlers(): void {

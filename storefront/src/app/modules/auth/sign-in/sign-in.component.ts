@@ -86,7 +86,7 @@ export class AuthSignInComponent implements OnInit {
         this._authService.signIn(this.signInForm.value).subscribe(
             () => {
                 const lang = this._translocoService.getActiveLang();
-                const user = this._userService.user;
+                const user = this._userService.user();
                 if (user?.role === 'SUPER_ADMIN') {
                     this._router.navigateByUrl(`/${lang}/dashboards/project`);
                     return;

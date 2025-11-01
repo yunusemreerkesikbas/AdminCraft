@@ -178,7 +178,6 @@ protected increment() { this.count.update(v => v + 1); }
 - [ ] Polling cleaned up
 - [ ] Dialog data typed
 - [ ] API endpoints centralized
-- [ ] X-Tenant-ID in interceptor
 
 defensive programming yapmayalım
 try-catch bloklarını mümkünse kullanmayalım.

@@ -1,16 +1,19 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ApiClientService } from '@core/api/api-client.service';
 import { ApiResponse } from '@core/crud';
 import { NavigationService } from 'app/core/navigation/navigation.service';
 import { TenantModule } from 'app/core/tenant/tenant.types';
+import { UserService } from 'app/core/user/user.service';
+import { User } from 'app/core/user/user.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
 import { BehaviorSubject, catchError, map, Observable, of, take } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
-    private readonly _httpClient = inject(HttpClient);
+    private readonly _apiClient = inject(ApiClientService);
     private readonly _navigationService = inject(NavigationService);
+    private readonly _userService = inject(UserService);
     #snackBar = inject(MatSnackBar);
 
     private readonly STORAGE_KEYS = {
@@ -51,7 +54,6 @@ export class TenantContextService {
             this._subdomain$.next(tenant.subdomain);
         }
         if (tenant?.id) {
-            // Changed from sessionStorage to localStorage to persist across page refreshes
             localStorage.setItem(this.STORAGE_KEYS.tenantId, String(tenant.id));
         }
     }
@@ -59,7 +61,7 @@ export class TenantContextService {
     clear(): void {
         this._tenant$.next(null);
         localStorage.removeItem(this.STORAGE_KEYS.subdomain);
-        localStorage.removeItem(this.STORAGE_KEYS.tenantId); // Changed from sessionStorage
+        localStorage.removeItem(this.STORAGE_KEYS.tenantId);
         this._subdomain$.next(null);
     }
 
@@ -95,12 +97,12 @@ export class TenantContextService {
         this.setCurrentTenant(tenant);
         this._selectedTenant$.next(tenant);
         localStorage.setItem(this.STORAGE_KEYS.selectedTenantId, String(tenant.id));
-        this.loadTenantModules(tenant.id);
+        this.#loadTenantModules(tenant.id);
     }
 
-    private loadTenantModules(tenantId: number): void {
-        this._httpClient
-            .get<ApiResponse<TenantModule[]>>(`/api/tenants/${tenantId}/modules`)
+    #loadTenantModules(tenantId: number): void {
+        this._apiClient
+            .get<ApiResponse<TenantModule[]>>('tenantModules', { tenantId })
             .pipe(
                 take(1),
                 catchError(() => {
@@ -108,18 +110,51 @@ export class TenantContextService {
                     return of({ data: [], result: 'ERROR' } as ApiResponse<TenantModule[]>);
                 })
             )
-            .subscribe((response) => {
+            .subscribe((response: ApiResponse<TenantModule[]>) => {
                 const moduleCodes = response.data
-                    .filter((m) => m.status === 'enabled')
-                    .map((m) => m.moduleCode);
+                    .filter((m: TenantModule) => m.status === 'enabled')
+                    .map((m: TenantModule) => m.moduleCode);
                 this._tenantModules$.next(moduleCodes);
-                this._navigationService.reload();
+                this._userService.setTenantModules(moduleCodes); 
+                setTimeout(() => this._navigationService.reload(), 0);
             });
+    }
+
+    protected loadCurrentUserTenantModules(): Observable<string[]> {
+        return this._apiClient
+            .get<ApiResponse<TenantModule[]>>('tenantCurrentModules')
+            .pipe(
+                take(1),
+                map((response: ApiResponse<TenantModule[]>) => {
+                    const moduleCodes = response.data
+                        .filter((m: TenantModule) => m.status === 'enabled')
+                        .map((m: TenantModule) => m.moduleCode);
+                    this._tenantModules$.next(moduleCodes);
+                    this._userService.setTenantModules(moduleCodes);
+                    setTimeout(() => this._navigationService.reload(), 0);
+                    return moduleCodes;
+                }),
+                catchError((error) => {
+                    console.error('Failed to load current user tenant modules:', error);
+                    this.#snackBar.open('Failed to load tenant modules', 'Close', { duration: 3000 });
+                    return of([]);
+                })
+            );
+    }
+
+    initializeTenantContext(user: User): Observable<any> {
+        if (user.role === 'SUPER_ADMIN') {
+            return this.restoreTenantSelection();
+        } else if (user.role === 'TENANT_ADMIN' && user.tenantId) {
+            return this.loadCurrentUserTenantModules();
+        }
+        return of(null);
     }
 
     clearTenantSelection(): void {
         this._selectedTenant$.next(null);
         this._tenantModules$.next([]);
+        this._userService.setTenantModules([]); // Sync with UserService
         localStorage.removeItem(this.STORAGE_KEYS.selectedTenantId);
         localStorage.removeItem(this.STORAGE_KEYS.tenantId);
         this._navigationService.reload();
@@ -189,9 +224,9 @@ export class TenantContextService {
             return of(null);
         }
 
-        return this._httpClient.get<ApiResponse<Tenant>>(`/api/tenants/${tenantId}`).pipe(
+        return this._apiClient.get<ApiResponse<Tenant>>('tenantById', { id: tenantId }).pipe(
             take(1),
-            map((response) => {
+            map((response: ApiResponse<Tenant>) => {
                 if (response.data) {
                     this.selectTenant(response.data);
                     return response.data;

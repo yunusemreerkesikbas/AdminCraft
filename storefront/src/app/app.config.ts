@@ -14,6 +14,7 @@ import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
 import { provideAuth } from 'app/core/auth/auth.provider';
+import { AuthService } from 'app/core/auth/auth.service';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
 import { SupportedLanguage } from 'app/core/i18n/translation.types';
 import { provideIcons } from 'app/core/icons/icons.provider';
@@ -149,6 +150,11 @@ export const appConfig: ApplicationConfig = {
                 console.warn('Failed to restore tenant selection:', error);
                 return null;
             });
+        }),
+
+        provideAppInitializer(() => {
+            const auth = inject(AuthService);
+            return firstValueFrom(auth.check()).catch(() => true);
         }),
 
         // Fuse

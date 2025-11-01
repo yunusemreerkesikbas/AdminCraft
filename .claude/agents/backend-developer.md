@@ -31,7 +31,7 @@ Presentation (Controllers, DTOs)
 
 ```java
 // TenantContext: ThreadLocal with tenantId + tenantDbName
-// TenantFilter: Extract X-Tenant-ID, validate active, set/clear in finally
+// TenantFilter: validate active, set/clear in finally
 // MDC: tenantId, tenantDb, correlationId
 ```
 
