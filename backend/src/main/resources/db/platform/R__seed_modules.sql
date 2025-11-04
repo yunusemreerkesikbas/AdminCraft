@@ -25,7 +25,7 @@ VALUES (
     '1.0.0', 
     '["core"]',
     TRUE,
-    'Visual page builder with multi-language support: pages, page_i18n, categories, sections, blocks.'
+    'Visual page builder with multi-language support. Includes pages, page_i18n, page_categories, sections, and blocks.'
 );
 
 -- Site Settings module
@@ -40,18 +40,6 @@ VALUES (
     'Global and language-specific site configuration settings.'
 );
 
--- Content Management module
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'content', 
-    'Content Management', 
-    'core', 
-    '1.0.0', 
-    '["core"]',
-    FALSE,
-    'Generic content types and contents with multi-language support.'
-);
-
 -- Media Library module
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
 VALUES (
@@ -60,54 +48,8 @@ VALUES (
     'core', 
     '1.0.0', 
     '["core"]',
-    FALSE,
+    TRUE,
     'Media file management with multi-language alt text support.'
-);
-
--- B2C E-commerce modules (future expansion)
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'b2c_products', 
-    'B2C Products', 
-    'b2c', 
-    '1.0.0', 
-    '["core", "media"]',
-    FALSE,
-    'Product catalog for B2C e-commerce.'
-);
-
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'b2c_orders', 
-    'B2C Orders', 
-    'b2c', 
-    '1.0.0', 
-    '["core", "b2c_products"]',
-    FALSE,
-    'Order management for B2C e-commerce.'
-);
-
--- B2B modules (future expansion)
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'b2b_quotes', 
-    'B2B Quotes', 
-    'b2b', 
-    '1.0.0', 
-    '["core"]',
-    FALSE,
-    'Quote request and management for B2B.'
-);
-
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'b2b_contracts', 
-    'B2B Contracts', 
-    'b2b', 
-    '1.0.0', 
-    '["core", "b2b_quotes"]',
-    FALSE,
-    'Contract management for B2B relationships.'
 );
 
 
