@@ -9,7 +9,7 @@
     <div class="flex-1">
         <div class="font-medium">{{ module().name }}</div>
         <div class="text-secondary text-sm">{{ module().description }}</div>
-        @if (module().deps && module().deps.length > 0) {
+        @if (module().deps?.length) {
             <div class="mt-2 flex flex-wrap gap-1">
                 @for (dep of module().deps; track dep) {
                     <mat-chip class="text-xs" disabled>
