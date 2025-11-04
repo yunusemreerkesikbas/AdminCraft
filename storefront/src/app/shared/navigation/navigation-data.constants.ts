@@ -1,9 +1,7 @@
-/* eslint-disable */
-import { FuseNavigationItem } from '@fuse/components/navigation';
 import { NAVIGATION_MODULES } from 'app/core/navigation/navigation-modules.constants';
+import { AdminCraftNavigationItem } from './navigation.types';
 
-export const defaultNavigation: FuseNavigationItem[] = [
-
+export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
     {
         id: 'apps',
         title: 'Yönetim',
@@ -11,15 +9,14 @@ export const defaultNavigation: FuseNavigationItem[] = [
         type: 'group',
         icon: 'heroicons_outline:home',
         children: [
-
             {
                 id: 'apps.custom.tenants',
                 title: 'Tenant Yönetimi',
                 type: 'basic',
                 icon: 'heroicons_outline:users',
                 link: 'tenants',
-                requiredModule: null, // Platform module - always visible
-                requiredRole: 'SUPER_ADMIN', // Only SUPER_ADMIN can access tenant management
+                requiredModule: null,
+                requiredRole: 'SUPER_ADMIN',
             },
             {
                 id: 'apps.custom.media',
@@ -28,7 +25,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:photo',
                 link: 'media',
                 requiredModule: NAVIGATION_MODULES.MEDIA,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
             {
                 id: 'apps.custom.users',
@@ -37,9 +34,8 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:user-group',
                 link: 'users',
                 requiredModule: NAVIGATION_MODULES.CORE,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
-
             {
                 id: 'apps.custom.sites',
                 title: 'Site Yönetimi',
@@ -47,7 +43,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:globe-alt',
                 link: 'sites',
                 requiredModule: NAVIGATION_MODULES.CORE,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
             {
                 id: 'apps.custom.pagebuilder',
@@ -56,7 +52,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:rectangle-stack',
                 link: 'pages',
                 requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
             {
                 id: 'apps.custom.pagebuilder.categories',
@@ -65,7 +61,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:folder',
                 link: 'pages/categories',
                 requiredModule: NAVIGATION_MODULES.PAGE_CATEGORIES,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
             {
                 id: 'apps.custom.settings',
@@ -74,7 +70,7 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:cog-6-tooth',
                 link: 'settings',
                 requiredModule: NAVIGATION_MODULES.SITE_SETTINGS,
-                excludedRoles: ['SUPER_ADMIN'], // Hide from SUPER_ADMIN
+                excludedRoles: ['SUPER_ADMIN'],
             },
         ],
     },

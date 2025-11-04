@@ -6,36 +6,24 @@ import {
 import { FuseMockApiService } from '@fuse/lib/mock-api';
 import { contacts } from 'app/mock-api/apps/contacts/data';
 import { tasks } from 'app/mock-api/apps/tasks/data';
-import { defaultNavigation } from 'app/mock-api/common/navigation/data';
+import { DEFAULT_NAVIGATION_ITEMS } from 'app/shared/navigation';
 import { cloneDeep } from 'lodash-es';
 
 @Injectable({ providedIn: 'root' })
 export class SearchMockApi {
     private readonly _defaultNavigation: FuseNavigationItem[] =
-        defaultNavigation;
+        DEFAULT_NAVIGATION_ITEMS;
     private readonly _contacts: any[] = contacts;
     private readonly _tasks: any[] = tasks;
 
-    /**
-     * Constructor
-     */
     constructor(
         private _fuseMockApiService: FuseMockApiService,
         private _fuseNavigationService: FuseNavigationService
     ) {
-        // Register Mock API handlers
         this.registerHandlers();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Register Mock API handlers
-     */
     registerHandlers(): void {
-        // Get the flat navigation and store it
         const flatNavigation = this._fuseNavigationService.getFlatNavigation(
             this._defaultNavigation
         );

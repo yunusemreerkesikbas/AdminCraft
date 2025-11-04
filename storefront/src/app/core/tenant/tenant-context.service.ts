@@ -1,23 +1,23 @@
+import { NavigationService } from '@/app/core/navigation/navigation.service';
 import { inject, Injectable, signal, Signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiClientService } from '@core/api/api-client.service';
 import { ApiResponse } from '@core/crud';
-import { NavigationService } from 'app/core/navigation/navigation.service';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { TenantModule } from 'app/core/tenant/tenant.types';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
-import { NotificationService } from '@shared/notifications/notification.service';
 import { catchError, map, Observable, of, switchMap, take, timer } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
-    readonly #apiClient = inject(ApiClientService);
-    readonly #navigationService = inject(NavigationService);
-    readonly #userService = inject(UserService);
-    readonly #notify = inject(NotificationService);
+    #apiClient = inject(ApiClientService);
+    #navigationService = inject(NavigationService);
+    #userService = inject(UserService);
+    #notify = inject(NotificationService);
 
-    readonly #STORAGE_KEYS = {
+    #STORAGE_KEYS = {
         subdomain: 'currentTenantSubdomain',
         tenantId: 'superAdminSelectedTenantId',
         selectedTenantId: 'superAdminSelectedTenantId'
@@ -28,15 +28,15 @@ export class TenantContextService {
     #selectedTenantSig = signal<Tenant | null>(null);
     #tenantModulesSig = signal<string[]>([]);
 
-    readonly tenant: Signal<Tenant | null> = this.#tenantSig.asReadonly();
-    readonly subdomain: Signal<string | null> = this.#subdomainSig.asReadonly();
-    readonly selectedTenant: Signal<Tenant | null> = this.#selectedTenantSig.asReadonly();
-    readonly tenantModules: Signal<string[]> = this.#tenantModulesSig.asReadonly();
+    tenant: Signal<Tenant | null> = this.#tenantSig.asReadonly();
+    subdomain: Signal<string | null> = this.#subdomainSig.asReadonly();
+    selectedTenant: Signal<Tenant | null> = this.#selectedTenantSig.asReadonly();
+    tenantModules: Signal<string[]> = this.#tenantModulesSig.asReadonly();
 
-    readonly tenant$ = toObservable(this.#tenantSig);
-    readonly subdomain$ = toObservable(this.#subdomainSig);
-    readonly selectedTenant$ = toObservable(this.#selectedTenantSig);
-    readonly tenantModules$ = toObservable(this.#tenantModulesSig);
+    tenant$ = toObservable(this.#tenantSig);
+    subdomain$ = toObservable(this.#subdomainSig);
+    selectedTenant$ = toObservable(this.#selectedTenantSig);
+    tenantModules$ = toObservable(this.#tenantModulesSig);
 
     setCurrentTenant(tenant: Tenant): void {
         this.#tenantSig.set(tenant);
