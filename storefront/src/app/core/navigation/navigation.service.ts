@@ -1,26 +1,26 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal, Signal } from '@angular/core';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Navigation } from 'app/core/navigation/navigation.types';
-import { Observable, take, tap } from 'rxjs';
+import { NavigationDataService } from 'app/shared/navigation';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationService {
-    readonly #httpClient = inject(HttpClient);
-    #navigationSig = signal<Navigation | null>(null);
+    readonly #navigationDataService = inject(NavigationDataService);
 
-    readonly navigation: Signal<Navigation | null> = this.#navigationSig.asReadonly();
-    readonly navigation$ = toObservable(this.#navigationSig);
+    readonly navigation: Signal<Navigation> = computed(() => {
+        const filteredItems = this.#navigationDataService.navigation();
+        return {
+            default: filteredItems,
+        };
+    });
 
-    get(): Observable<Navigation> {
-        return this.#httpClient.get<Navigation>('api/common/navigation').pipe(
-            tap((navigation) => {
-                this.#navigationSig.set(navigation);
-            })
-        );
-    }
+    readonly navigation$ = toObservable(this.navigation);
 
     reload(): void {
-        this.get().pipe(take(1)).subscribe();
+        this.#navigationDataService.reload();
+    }
+
+    setLanguage(language: string): void {
+        this.#navigationDataService.setLanguage(language);
     }
 }
