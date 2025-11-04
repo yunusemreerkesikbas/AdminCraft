@@ -11,12 +11,6 @@ import { ModuleCardComponent } from './module-card/module-card.component';
 import { ModuleProvisionService } from './module-provision.service';
 import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './module-provision.types';
 
-interface ModuleGroup {
-    type: 'core' | 'b2c' | 'b2b';
-    titleKey: string;
-    modules: ModuleCatalog[];
-}
-
 @Component({
     selector: 'spa-module-provision-dialog',
     standalone: true,
@@ -43,26 +37,6 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
     protected isLoading = signal<boolean>(false);
     protected isProvisioning = signal<boolean>(false);
     protected error = signal<string | null>(null);
-    protected moduleGroups = computed<ModuleGroup[]>(() => {
-        const allModules = this.modules();
-        return [
-            {
-                type: 'core' as const,
-                titleKey: 'admin.provisioning.coreModules',
-                modules: allModules.filter(m => m.type === 'core')
-            },
-            {
-                type: 'b2c' as const,
-                titleKey: 'admin.provisioning.b2cModules',
-                modules: allModules.filter(m => m.type === 'b2c')
-            },
-            {
-                type: 'b2b' as const,
-                titleKey: 'admin.provisioning.b2bModules',
-                modules: allModules.filter(m => m.type === 'b2b')
-            }
-        ].filter(g => g.modules.length > 0);
-    });
 
     protected canStart = computed(() =>
         this.selectedModules().size > 0 &&

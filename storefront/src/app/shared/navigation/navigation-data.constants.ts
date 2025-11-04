@@ -60,7 +60,7 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:folder',
                 link: 'pages/categories',
-                requiredModule: NAVIGATION_MODULES.PAGE_CATEGORIES,
+                requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {

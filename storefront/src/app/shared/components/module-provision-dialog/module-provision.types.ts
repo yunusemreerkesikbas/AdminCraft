@@ -1,7 +1,7 @@
 export interface ModuleCatalog {
     code: string;
     name: string;
-    type: 'core' | 'b2b' | 'b2c';
+    type: 'core';
     version: string;
     deps: string[];
     enabledByDefault: boolean;

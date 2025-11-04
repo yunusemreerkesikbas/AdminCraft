@@ -18,24 +18,17 @@
                     {{ 'admin.provisioning.description' | transloco }}
                 </p>
 
-                <!-- Module Groups -->
-                @for (group of moduleGroups(); track group.type) {
-                    <div>
-                        <h3 class="mb-3 text-lg font-medium">
-                            {{ group.titleKey | transloco }}
-                        </h3>
-                        <div class="space-y-2">
-                            @for (module of group.modules; track module.code) {
-                                <spa-module-card
-                                    [module]="module"
-                                    [isSelected]="selectedModules().has(module.code)"
-                                    [isDisabled]="isModuleDisabled(module.code)"
-                                    (onToggle)="toggleModule(module.code)"
-                                />
-                            }
-                        </div>
-                    </div>
-                }
+                <!-- Modules -->
+                <div class="space-y-2">
+                    @for (module of modules(); track module.code) {
+                        <spa-module-card
+                            [module]="module"
+                            [isSelected]="selectedModules().has(module.code)"
+                            [isDisabled]="isModuleDisabled(module.code)"
+                            (onToggle)="toggleModule(module.code)"
+                        />
+                    }
+                </div>
             </div>
         }
 
