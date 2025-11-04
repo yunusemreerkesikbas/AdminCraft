@@ -1,45 +1,25 @@
 package com.backend.domain.enums;
 
 public enum ModuleCode {
-    CORE("core", "Çekirdek Sistem", "Core System", true),
-    PAGEBUILDER("pagebuilder", "Sayfa Oluşturucu", "Page Builder", false),
-    PAGE_CATEGORIES("page_categories", "Sayfa Kategorileri", "Page Categories", false),
-    SITE_SETTINGS("site_settings", "Site Ayarları", "Site Settings", false);
+    CORE("core", "Core"),
+    PAGEBUILDER("pagebuilder", "Page Builder"),
+    SITE_SETTINGS("site_settings", "Site Settings"),
+    MEDIA("media", "Media Library");
 
     private final String code;
-    private final String displayNameTr;
-    private final String displayNameEn;
-    private final boolean required;
+    private final String name;
 
-    ModuleCode(String code, String displayNameTr, String displayNameEn, boolean required) {
+    ModuleCode(String code, String name) {
         this.code = code;
-        this.displayNameTr = displayNameTr;
-        this.displayNameEn = displayNameEn;
-        this.required = required;
+        this.name = name;
     }
 
     public String getCode() {
         return code;
     }
 
-    public String getDisplayName(Language language) {
-        return switch (language) {
-            case TR -> displayNameTr;
-            case EN -> displayNameEn;
-            default -> displayNameTr;
-        };
-    }
-
-    public String getDisplayNameTr() {
-        return displayNameTr;
-    }
-
-    public String getDisplayNameEn() {
-        return displayNameEn;
-    }
-
-    public boolean isRequired() {
-        return required;
+    public String getName() {
+        return name;
     }
 
     public static ModuleCode fromCode(String code) {

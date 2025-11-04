@@ -70,6 +70,29 @@ docker compose up -d
 - API: `/api/{resource}/{id}/i18n/{language}` (PUT/GET)
 - UI: Tabs (General | Türkçe | English)
 
+### Module Management
+
+**Active Modules (4):**
+
+- `core` (required): users, roles, sites
+- `pagebuilder`: pages + page_categories (mandatory)
+- `site_settings`: global/i18n config
+- `media`: media files with i18n
+
+**Manual Sync Process:**
+
+When adding new module:
+1. `db/platform/R__seed_modules.sql` → INSERT
+2. `domain/enums/ModuleCode.java` → Enum entry
+3. `core/navigation/navigation-modules.constants.ts` → Constant
+4. `db/tenant/{module}/V*.sql` → Migration
+
+**Rules:**
+
+- page_categories NOT shown in provision dialog (part of pagebuilder)
+- Navigation shows when required module enabled
+- All modules type: 'core' (no b2c/b2b grouping)
+
 ### Provisioning
 
 **Workflow:**
