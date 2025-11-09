@@ -41,15 +41,26 @@ VALUES (
 );
 
 -- Media Library module
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
-    'media', 
-    'Media Library', 
-    'core', 
-    '1.0.0', 
+    'media',
+    'Media Library',
+    'core',
+    '1.0.0',
     '["core"]',
     TRUE,
     'Media file management with multi-language alt text support.'
+);
+
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
+VALUES (
+    'component_library',
+    'Component Library',
+    'core',
+    '1.0.0',
+    '["core"]',
+    FALSE,
+    'Dynamic component management system for reusable UI components with multi-language support.'
 );
 
 

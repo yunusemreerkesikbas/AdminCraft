@@ -10,7 +10,12 @@
       "Bash(Format-Table)",
       "Bash(tasklist:*)",
       "Bash(dir:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(mvn compile:*)",
+      "Bash(cat:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": [],

@@ -1,0 +1,130 @@
+package com.backend.application.service;
+
+import com.backend.application.command.ComponentCommands.*;
+import com.backend.application.query.ComponentQueries.*;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
+import com.backend.domain.entity.Component;
+import com.backend.domain.entity.ComponentI18n;
+import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.repository.ComponentI18nRepository;
+import com.backend.domain.repository.ComponentRepository;
+import com.backend.infrastructure.util.UuidUidGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ComponentServiceImpl implements ComponentService {
+
+    private final ComponentRepository componentRepository;
+    private final ComponentI18nRepository componentI18nRepository;
+    private final ComponentTypeService componentTypeService;
+
+    @Override
+    @Transactional
+    public Component createComponent(CreateComponentCommand command) {
+        componentTypeService.getComponentTypeById(new GetComponentTypeByIdQuery(command.componentTypeId()));
+
+        Component component = new Component();
+        component.setComponentTypeId(command.componentTypeId());
+        component.setCode(command.code());
+        component.setName(command.name());
+        component.setBaseData(command.baseData());
+        component.setExtendedData(command.extendedData());
+        component.setStatus(command.status() != null ? command.status() : ComponentStatus.DRAFT);
+        component.setCreatedBy(command.userId());
+        component.setUpdatedBy(command.userId());
+
+        return componentRepository.save(component);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Component getComponentById(GetComponentByIdQuery query) {
+        return componentRepository.findById(query.id())
+                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + query.id()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Component, List<ComponentI18n>> getComponentWithI18n(GetComponentWithI18nQuery query) {
+        Component component = componentRepository.findById(query.id())
+                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + query.id()));
+        List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(query.id());
+
+        Map<Component, List<ComponentI18n>> result = new HashMap<>();
+        result.put(component, i18nList);
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Component> getAllComponents(GetAllComponentsQuery query) {
+        return componentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations(
+            GetAllComponentsWithTranslationsQuery query) {
+        List<Component> components = componentRepository.findAll();
+        List<ComponentI18n> allTranslations = componentI18nRepository.findAll();
+
+        Map<Long, List<ComponentI18n>> translationsByComponent = allTranslations.stream()
+                .collect(Collectors.groupingBy(ComponentI18n::getComponentId));
+
+        Map<Component, List<ComponentI18n>> result = new HashMap<>();
+        for (Component component : components) {
+            result.put(component, translationsByComponent.getOrDefault(component.getId(), List.of()));
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query) {
+        return componentRepository.findByComponentTypeId(query.typeId());
+    }
+
+    @Override
+    @Transactional
+    public Component updateComponent(UpdateComponentCommand command) {
+        Component component = componentRepository.findById(command.id())
+                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
+
+        componentTypeService.getComponentTypeById(new GetComponentTypeByIdQuery(command.componentTypeId()));
+
+        component.setComponentTypeId(command.componentTypeId());
+        component.setCode(command.code());
+        component.setName(command.name());
+        component.setBaseData(command.baseData());
+        component.setExtendedData(command.extendedData());
+        if (command.status() != null) {
+            component.setStatus(command.status());
+        }
+        component.setUpdatedBy(command.userId());
+
+        return componentRepository.save(component);
+    }
+
+    @Override
+    @Transactional
+    public void deleteComponent(DeleteComponentCommand command) {
+        Component component = componentRepository.findById(command.id())
+                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
+        componentRepository.delete(component);
+    }
+
+    private String generateUniqueUid() {
+        String uid;
+        do {
+            uid = UuidUidGenerator.generateUid();
+        } while (componentRepository.existsByUid(uid));
+        return uid;
+    }
+}
