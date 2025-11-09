@@ -1,0 +1,53 @@
+<div class="spa-link-repeater">
+    <div class="links-header">
+        <button mat-raised-button color="primary" type="button" (click)="addLink()" [disabled]="disabled">
+            <mat-icon>add</mat-icon>
+            {{ 'admin.components.addLink' | transloco }}
+        </button>
+    </div>
+    @if (links().length > 0) {
+        <div class="links-list">
+            @for (link of links(); track $index) {
+                <div class="link-item">
+                    <div class="link-fields">
+                        <mat-form-field appearance="outline" class="flex-1">
+                            <mat-label>{{ 'admin.common.fields.label' | transloco }}</mat-label>
+                            <input matInput
+                                [value]="link.label"
+                                (input)="updateLink($index, 'label', $any($event.target).value)"
+                                [disabled]="disabled">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="flex-1">
+                            <mat-label>{{ 'admin.common.fields.url' | transloco }}</mat-label>
+                            <input matInput
+                                [value]="link.url"
+                                (input)="updateLink($index, 'url', $any($event.target).value)"
+                                [disabled]="disabled">
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="w-32">
+                            <mat-label>{{ 'admin.common.fields.target' | transloco }}</mat-label>
+                            <mat-select
+                                [value]="link.target || '_self'"
+                                (selectionChange)="updateLink($index, 'target', $event.value)"
+                                [disabled]="disabled">
+                                <mat-option value="_self">{{ 'admin.common.target.self' | transloco }}</mat-option>
+                                <mat-option value="_blank">{{ 'admin.common.target.blank' | transloco }}</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div class="link-actions">
+                        <button mat-icon-button type="button" (click)="moveUp($index)" [disabled]="disabled || $index === 0">
+                            <mat-icon>arrow_upward</mat-icon>
+                        </button>
+                        <button mat-icon-button type="button" (click)="moveDown($index)" [disabled]="disabled || $index === links().length - 1">
+                            <mat-icon>arrow_downward</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" type="button" (click)="removeLink($index)" [disabled]="disabled">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

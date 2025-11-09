@@ -1,0 +1,40 @@
+spa-link-repeater {
+    display: block;
+    .spa-link-repeater {
+        .links-header {
+            margin-bottom: 1rem;
+        }
+        .links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .link-item {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .link-fields {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+        .link-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .flex-1 {
+            flex: 1;
+            min-width: 200px;
+        }
+        .w-32 {
+            width: 8rem;
+        }
+    }
+}

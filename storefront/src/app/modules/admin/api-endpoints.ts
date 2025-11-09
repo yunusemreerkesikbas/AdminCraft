@@ -61,6 +61,18 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageCategoryWithTranslations: 'page-categories/${id}?include=translations',
     pageCategoryI18n: 'page-categories/${categoryId}/i18n/${language}',
 
+    // ----- COMPONENT LIBRARY: TYPES -----
+    componentTypes: 'components/types',
+    componentTypeById: 'components/types/${id}',
+    componentTypeValidateSchema: 'components/types/validate-schema',
+
+    // ----- COMPONENT LIBRARY: COMPONENTS -----
+    components: 'components',
+    componentById: 'components/${id}',
+    componentWithI18n: 'components/${id}?include=translations',
+    componentI18n: 'components/${componentId}/i18n/${language}',
+    componentI18nPublish: 'components/${componentId}/publish/${language}',
+
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',

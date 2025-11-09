@@ -111,6 +111,12 @@ export const appRoutes: Route[] = [
                 data: { requiredModule: 'site_settings' },
                 loadChildren: () => import('app/modules/admin/custom/settings/site-settings.routes')
             },
+            {
+                path: 'components',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'component_library' },
+                loadChildren: () => import('app/modules/admin/custom/components/component-library.routes')
+            },
 
             // Pages
             {path: 'pages', children: [
