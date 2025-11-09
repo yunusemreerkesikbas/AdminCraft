@@ -1,0 +1,167 @@
+.extended-fields-builder {
+    padding: 1rem;
+
+    .builder-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+            h3 {
+                margin: 0;
+                font-size: 1.1rem;
+                font-weight: 500;
+            }
+
+            .field-count {
+                background-color: rgba(0, 0, 0, 0.08);
+                padding: 0.25rem 0.75rem;
+                border-radius: 12px;
+                font-size: 0.875rem;
+                font-weight: 500;
+            }
+        }
+
+        button {
+            mat-icon {
+                margin-right: 0.5rem;
+            }
+        }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: rgba(0, 0, 0, 0.5);
+
+        mat-icon {
+            font-size: 48px;
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        p {
+            margin: 0.5rem 0;
+
+            &.hint {
+                font-size: 0.875rem;
+                color: rgba(0, 0, 0, 0.4);
+            }
+        }
+    }
+
+    .fields-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+
+        .field-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 4px;
+            background-color: #fff;
+            transition: box-shadow 0.2s;
+
+            &:hover {
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .field-info {
+                flex: 1;
+
+                .field-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 0.5rem;
+
+                    .field-key {
+                        font-weight: 600;
+                        font-family: 'Courier New', monospace;
+                        color: #1976d2;
+                    }
+
+                    .field-type-badge {
+                        background-color: #e3f2fd;
+                        color: #1976d2;
+                        padding: 0.125rem 0.5rem;
+                        border-radius: 12px;
+                        font-size: 0.75rem;
+                        font-weight: 500;
+                    }
+
+                    .required-badge {
+                        color: #f44336;
+                        font-weight: bold;
+                        font-size: 1.2rem;
+                    }
+                }
+
+                .field-details {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+
+                    .field-label {
+                        color: rgba(0, 0, 0, 0.7);
+                        font-size: 0.9rem;
+                    }
+
+                    .field-constraints {
+                        color: rgba(0, 0, 0, 0.5);
+                        font-size: 0.8rem;
+                    }
+                }
+            }
+
+            .field-actions {
+                display: flex;
+                gap: 0.25rem;
+
+                button {
+                    mat-icon {
+                        font-size: 20px;
+                        width: 20px;
+                        height: 20px;
+                    }
+                }
+            }
+        }
+    }
+
+    .json-preview {
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        padding-top: 1.5rem;
+
+        h4 {
+            margin: 0 0 1rem 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .json-content {
+            background-color: #f5f5f5;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 0;
+        }
+    }
+}

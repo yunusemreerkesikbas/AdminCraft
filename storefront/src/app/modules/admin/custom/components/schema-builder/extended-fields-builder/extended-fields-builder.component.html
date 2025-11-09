@@ -1,0 +1,111 @@
+<div class="extended-fields-builder">
+    <div class="builder-header">
+        <div class="header-left">
+            <h3>{{ 'admin.components.extendedFields.title' | transloco }}</h3>
+            <span class="field-count"
+                >{{ fields().length }} / {{ validationRules.MAX_FIELDS }}</span
+            >
+        </div>
+        <button
+            mat-raised-button
+            color="primary"
+            (click)="addField()"
+            [disabled]="
+                disabled || fields().length >= validationRules.MAX_FIELDS
+            "
+        >
+            <mat-icon>add</mat-icon>
+            {{ 'admin.components.extendedFields.addField' | transloco }}
+        </button>
+    </div>
+
+    @if (fields().length === 0) {
+        <div class="empty-state">
+            <mat-icon>info</mat-icon>
+            <p>{{ 'admin.components.extendedFields.noFields' | transloco }}</p>
+            <p class="hint">
+                {{ 'admin.components.extendedFields.noFieldsHint' | transloco }}
+            </p>
+        </div>
+    } @else {
+        <div class="fields-list">
+            @for (field of fields(); track field.key; let i = $index) {
+                <div class="field-item">
+                    <div class="field-info">
+                        <div class="field-header">
+                            <span class="field-key">{{ field.key }}</span>
+                            <span class="field-type-badge">{{
+                                getFieldTypeLabel(field.type)
+                            }}</span>
+                            @if (field.required) {
+                                <span class="required-badge">*</span>
+                            }
+                        </div>
+                        <div class="field-details">
+                            <span class="field-label">{{ field.label }}</span>
+                            <span class="field-constraints">{{
+                                getFieldConstraintsLabel(field)
+                            }}</span>
+                        </div>
+                    </div>
+
+                    <div class="field-actions">
+                        <button
+                            mat-icon-button
+                            (click)="moveUp(i)"
+                            [disabled]="disabled || i === 0"
+                            matTooltip="{{
+                                'admin.common.actions.moveUp' | transloco
+                            }}"
+                        >
+                            <mat-icon>arrow_upward</mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            (click)="moveDown(i)"
+                            [disabled]="disabled || i === fields().length - 1"
+                            matTooltip="{{
+                                'admin.common.actions.moveDown' | transloco
+                            }}"
+                        >
+                            <mat-icon>arrow_downward</mat-icon>
+                        </button>
+
+                        <button
+                            mat-icon-button
+                            color="primary"
+                            (click)="editField(field, i)"
+                            [disabled]="disabled"
+                            matTooltip="{{
+                                'admin.common.actions.edit' | transloco
+                            }}"
+                        >
+                            <mat-icon>edit</mat-icon>
+                        </button>
+
+                        <button
+                            mat-icon-button
+                            color="warn"
+                            (click)="deleteField(i)"
+                            [disabled]="disabled"
+                            matTooltip="{{
+                                'admin.common.actions.delete' | transloco
+                            }}"
+                        >
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (fields().length > 0) {
+        <div class="json-preview">
+            <h4>
+                {{ 'admin.components.extendedFields.jsonPreview' | transloco }}
+            </h4>
+            <pre class="json-content">{{ getJsonPreview() }}</pre>
+        </div>
+    }
+</div>

@@ -36,6 +36,12 @@
                                     [options]="field.transformedOptions || []"
                                 />
                             }
+                            @if (options.extendedFieldsSchema) {
+                                <spa-dynamic-form
+                                    [schema]="options.extendedFieldsSchema"
+                                    [formGroup]="langForm"
+                                />
+                            }
                         }
                     </div>
                 </mat-tab>

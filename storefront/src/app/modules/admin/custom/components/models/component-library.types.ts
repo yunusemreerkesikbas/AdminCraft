@@ -10,6 +10,25 @@ export interface Link {
     target?: '_blank' | '_self';
 }
 
+export type ExtendedFieldType = 'text' | 'textarea' | 'number' | 'boolean' | 'select';
+
+export interface ExtendedFieldDefinition {
+    key: string;
+    type: ExtendedFieldType;
+    label: string;
+    required?: boolean;
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    min?: number;
+    max?: number;
+    options?: string[];
+}
+
+export interface ExtendedFieldsSchema {
+    i18n: ExtendedFieldDefinition[];
+}
+
 export interface ComponentBaseData {
     order?: number;
     isVisible?: boolean;
@@ -34,6 +53,7 @@ export interface ComponentTypeDto {
     name: string;
     category?: string;
     icon?: string;
+    extendedFieldsSchema?: ExtendedFieldsSchema;
     isSystem: boolean;
     createdAt: string;
 }
@@ -43,12 +63,14 @@ export interface CreateComponentTypeRequest {
     name: string;
     category?: string;
     icon?: string;
+    extendedFieldsSchema?: ExtendedFieldsSchema;
 }
 
 export interface UpdateComponentTypeRequest {
     name: string;
     category?: string;
     icon?: string;
+    extendedFieldsSchema?: ExtendedFieldsSchema;
 }
 
 export interface ComponentDto {
@@ -60,6 +82,7 @@ export interface ComponentDto {
     code: string;
     name: string;
     baseData: ComponentBaseData;
+    extendedData?: Record<string, any>;
     status: ComponentStatus;
     createdAt: string;
     updatedAt?: string;
@@ -90,6 +113,7 @@ export interface ComponentI18nDto {
     componentId: number;
     language: string;
     baseLocalizedData: ComponentBaseLocalizedData;
+    extendedLocalizedData?: Record<string, any>;
     status: ComponentStatus;
     publishedAt?: string;
     createdAt: string;
@@ -98,5 +122,6 @@ export interface ComponentI18nDto {
 
 export interface ComponentI18nRequest {
     baseLocalizedData: ComponentBaseLocalizedData;
+    extendedLocalizedData?: Record<string, any>;
     status: ComponentStatus;
 }

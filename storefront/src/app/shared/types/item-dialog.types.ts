@@ -16,6 +16,7 @@ export interface ItemDialogOptions<TDto, TId = string> {
   i18nInitial?: Record<string, any>;
   id?: TId;
   modalData?: ModalData;
+  extendedFieldsSchema?: any;
 }
 
 export interface ItemDialogSchema {

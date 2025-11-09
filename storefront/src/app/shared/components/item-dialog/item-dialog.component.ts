@@ -1,23 +1,13 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  HostListener,
-  inject,
-  OnInit,
-  signal
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { DynamicFormComponent } from '@modules/admin/custom/components/dynamic-form/dynamic-form.component';
 import { ItemFormBuilderService } from '../../services/item-form-builder.service';
-import {
-  GeneralFieldConfig,
-  ItemDialogOptions,
-  LangFieldConfig
-} from '../../types/item-dialog.types';
+import { GeneralFieldConfig, ItemDialogOptions, LangFieldConfig } from '../../types/item-dialog.types';
 import { SpaSelectOption } from '../custom-ui/spa-select/spa-select.component';
 import { DialogFieldComponent } from './dialog-field/dialog-field.component';
 
@@ -31,7 +21,8 @@ import { DialogFieldComponent } from './dialog-field/dialog-field.component';
     MatButtonModule,
     MatTabsModule,
     TranslocoPipe,
-    DialogFieldComponent
+    DialogFieldComponent,
+    DynamicFormComponent
   ],
   templateUrl: './item-dialog.component.html',
   styleUrls: ['./item-dialog.component.scss'],

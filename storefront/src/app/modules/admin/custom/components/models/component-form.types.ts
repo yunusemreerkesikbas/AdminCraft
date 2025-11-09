@@ -1,4 +1,4 @@
-import { ComponentStatus, Link } from './component-library.types';
+import { ComponentStatus, ExtendedFieldsSchema, Link } from './component-library.types';
 
 export interface ComponentI18nFormData {
     title?: string | null;
@@ -10,6 +10,7 @@ export interface ComponentI18nFormData {
     buttonUrl?: string | null;
     buttonStyle?: string | null;
     links?: Link[] | null;
+    [extendedFieldKey: string]: any;
 }
 
 export interface CreateComponentFormData {
@@ -41,4 +42,5 @@ export interface ComponentTypeFormData {
     name?: string | null;
     category?: string | null;
     icon?: string | null;
+    extendedFieldsSchema?: ExtendedFieldsSchema | null;
 }

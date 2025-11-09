@@ -1,19 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
 import { ComponentTypeFormData } from '../models/component-form.types';
-import {
-    ComponentTypeDto,
-    CreateComponentTypeRequest,
-    UpdateComponentTypeRequest
-} from '../models/component-library.types';
+import { ComponentTypeDto, CreateComponentTypeRequest, ExtendedFieldsSchema, UpdateComponentTypeRequest } from '../models/component-library.types';
+import { ExtendedFieldsBuilderDialogComponent } from '../schema-builder/extended-fields-builder-dialog/extended-fields-builder-dialog.component';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 
@@ -28,6 +26,7 @@ import { ComponentSchemaBuilderService } from '../services/component-schema-buil
         MatButtonModule,
         MatIconModule,
         MatDialogModule,
+        MatTooltipModule,
         TranslocoModule
     ]
 })
@@ -35,6 +34,7 @@ export class ComponentTypesManagerComponent {
     #notify = inject(NotificationService);
     #componentService = inject(ComponentLibraryService);
     #dialog = inject(ItemDialogService);
+    #matDialog = inject(MatDialog);
     #schema = inject(ComponentSchemaBuilderService);
     #dialogRef = inject(MatDialogRef<ComponentTypesManagerComponent>);
     #transloco = inject(TranslocoService);
@@ -68,7 +68,8 @@ export class ComponentTypesManagerComponent {
             code: null,
             name: null,
             category: null,
-            icon: null
+            icon: null,
+            extendedFieldsSchema: null
         };
 
         const options: ItemDialogOptions<ComponentTypeFormData> = {
@@ -89,7 +90,8 @@ export class ComponentTypesManagerComponent {
                     code: result.code!,
                     name: result.name!,
                     category: result.category || undefined,
-                    icon: result.icon || undefined
+                    icon: result.icon || undefined,
+                    extendedFieldsSchema: result.extendedFieldsSchema || undefined
                 };
 
                 this.#componentService.createComponentType(payload)
@@ -115,7 +117,8 @@ export class ComponentTypesManagerComponent {
             code: type.code,
             name: type.name,
             category: type.category || null,
-            icon: type.icon || null
+            icon: type.icon || null,
+            extendedFieldsSchema: type.extendedFieldsSchema || null
         };
 
         const options: ItemDialogOptions<ComponentTypeFormData, number> = {
@@ -136,7 +139,8 @@ export class ComponentTypesManagerComponent {
                 const payload: UpdateComponentTypeRequest = {
                     name: result.name!,
                     category: result.category || undefined,
-                    icon: result.icon || undefined
+                    icon: result.icon || undefined,
+                    extendedFieldsSchema: result.extendedFieldsSchema || undefined
                 };
 
                 this.#componentService.updateComponentType(type.id, payload)
@@ -149,6 +153,36 @@ export class ComponentTypesManagerComponent {
                         error: () => this.#notify.alert('admin.components.types.errors.updateFailed')
                     });
             });
+    }
+
+    manageExtendedFields(type: ComponentTypeDto): void {
+        const dialogRef = this.#matDialog.open(ExtendedFieldsBuilderDialogComponent, {
+            width: '800px',
+            maxHeight: '90vh',
+            data: type.extendedFieldsSchema,
+            disableClose: true
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((schema: ExtendedFieldsSchema | null) => {
+            if (schema === undefined) return;
+
+            const payload: UpdateComponentTypeRequest = {
+                name: type.name,
+                category: type.category || undefined,
+                icon: type.icon || undefined,
+                extendedFieldsSchema: schema || undefined
+            };
+
+            this.#componentService.updateComponentType(type.id, payload)
+                .pipe(take(1))
+                .subscribe({
+                    next: () => {
+                        this.#notify.success('admin.components.types.success.updated');
+                        this.loadTypes();
+                    },
+                    error: () => this.#notify.alert('admin.components.types.errors.updateFailed')
+                });
+        });
     }
 
     deleteType(type: ComponentTypeDto): void {

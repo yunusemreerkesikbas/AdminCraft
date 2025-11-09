@@ -18,14 +18,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 import { ComponentTypesManagerComponent } from '../types/component-types-manager.component';
-import {
-    ComponentDto,
-    ComponentStatus,
-    ComponentTypeDto,
-    CreateComponentRequest,
-    UpdateComponentRequest,
-    ComponentI18nRequest
-} from '../models/component-library.types';
+import { ComponentDto, ComponentDetailDto, ComponentI18nRequest, ComponentStatus, ComponentTypeDto, CreateComponentRequest, UpdateComponentRequest } from '../models/component-library.types';
 import { CreateComponentFormData, EditComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
 
 @Component({
@@ -204,32 +197,30 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             modalData: { disableClose: true, width: '800px', height: '80vh' }
         };
 
-        this.#dialog.open(options)
-            .pipe(take(1))
-            .subscribe((result) => {
-                if (!result) return;
+        this.#dialog.open(options).pipe(take(1)).subscribe((result) => {
+            if (!result) return;
 
-                const basePayload: CreateComponentRequest = {
-                    componentTypeId: result.componentTypeId!,
-                    code: result.code!,
-                    name: result.name!,
-                    status: result.status || ComponentStatus.DRAFT,
-                    baseData: {
-                        order: result.order ?? 0,
-                        isVisible: result.isVisible ?? true,
-                        styleClasses: result.styleClasses || undefined
-                    }
-                };
+            const basePayload: CreateComponentRequest = {
+                componentTypeId: result.componentTypeId!,
+                code: result.code!,
+                name: result.name!,
+                status: result.status || ComponentStatus.DRAFT,
+                baseData: {
+                    order: result.order ?? 0,
+                    isVisible: result.isVisible ?? true,
+                    styleClasses: result.styleClasses || undefined
+                }
+            };
 
-                this.#componentService.createComponent(basePayload)
-                    .pipe(take(1), takeUntil(this.destroy$))
-                    .subscribe({
-                        next: (created) => {
-                            this.#saveI18nForComponent(created.id, result, true);
-                        },
-                        error: () => this.#notify.alert('admin.components.errors.createFailed')
-                    });
-            });
+            this.#componentService.createComponent(basePayload)
+                .pipe(take(1), takeUntil(this.destroy$))
+                .subscribe({
+                    next: (created) => {
+                        this.#saveI18nForComponent(created.id, result, true);
+                    },
+                    error: () => this.#notify.alert('admin.components.errors.createFailed')
+                });
+        });
     }
 
     editComponent(componentId: number): void {
@@ -253,7 +244,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             });
     }
 
-    #openEditDialog(detail: ComponentDto): void {
+    #openEditDialog(detail: ComponentDetailDto): void {
+        const componentType = this.componentTypes().find(t => t.id === detail.componentTypeId);
         const schema = this.#schema.buildComponentEditSchema(this.componentTypes());
         const initial: EditComponentFormData = {
             componentTypeId: detail.componentTypeId,
@@ -267,16 +259,18 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
         const i18nInitial: Record<string, any> = {};
         this.supportedLanguages().forEach((lang) => {
+            const translation = detail.translations?.find(t => t.language === lang);
             i18nInitial[lang] = {
-                title: '',
-                subtitle: '',
-                description: '',
-                imageUrl: '',
-                imageAlt: '',
-                buttonText: '',
-                buttonUrl: '',
-                buttonStyle: '',
-                links: []
+                title: translation?.baseLocalizedData.title || '',
+                subtitle: translation?.baseLocalizedData.subtitle || '',
+                description: translation?.baseLocalizedData.description || '',
+                imageUrl: translation?.baseLocalizedData.imageUrl || '',
+                imageAlt: translation?.baseLocalizedData.imageAlt || '',
+                buttonText: translation?.baseLocalizedData.buttonText || '',
+                buttonUrl: translation?.baseLocalizedData.buttonUrl || '',
+                buttonStyle: translation?.baseLocalizedData.buttonStyle || '',
+                links: translation?.baseLocalizedData.links || [],
+                ...(translation?.extendedLocalizedData || {})
             };
         });
 
@@ -288,7 +282,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             initial,
             i18nInitial,
             id: detail.id,
-            modalData: { disableClose: true, width: '800px', height: '80vh' }
+            modalData: { disableClose: true, width: '800px', height: '80vh' },
+            extendedFieldsSchema: componentType?.extendedFieldsSchema
         };
 
         this.#dialog.open(options)
@@ -322,6 +317,14 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             const langData = formData[lang];
             if (!isComponentI18nFormData(langData)) return null;
 
+            const baseFields = ['title', 'subtitle', 'description', 'imageUrl', 'imageAlt', 'buttonText', 'buttonUrl', 'buttonStyle', 'links'];
+            const extendedLocalizedData: Record<string, any> = {};
+            Object.keys(langData).forEach(key => {
+                if (!baseFields.includes(key)) {
+                    extendedLocalizedData[key] = langData[key];
+                }
+            });
+
             const request: ComponentI18nRequest = {
                 baseLocalizedData: {
                     title: langData.title || undefined,
@@ -334,6 +337,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                     buttonStyle: langData.buttonStyle || undefined,
                     links: langData.links || undefined
                 },
+                extendedLocalizedData: Object.keys(extendedLocalizedData).length > 0 ? extendedLocalizedData : undefined,
                 status: ComponentStatus.DRAFT
             };
 

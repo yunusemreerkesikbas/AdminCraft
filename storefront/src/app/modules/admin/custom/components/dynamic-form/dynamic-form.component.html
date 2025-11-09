@@ -1,0 +1,10 @@
+@if (schema && schema.i18n.length > 0) {
+    <div class="dynamic-form">
+        <h4 class="form-section-title">Extended Fields</h4>
+        @for (field of schema.i18n; track field.key) {
+            <spa-dynamic-field
+                [field]="field"
+                [control]="getControl(field.key)" />
+        }
+    </div>
+}

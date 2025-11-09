@@ -56,6 +56,9 @@
                                 }
                             </div>
                             <div class="col-actions">
+                                <button mat-icon-button (click)="manageExtendedFields(type)" matTooltip="Manage Extended Fields">
+                                    <mat-icon>extension</mat-icon>
+                                </button>
                                 <button mat-icon-button (click)="editType(type)" [disabled]="type.isSystem" matTooltip="Edit">
                                     <mat-icon>edit</mat-icon>
                                 </button>

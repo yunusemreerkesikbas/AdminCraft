@@ -9,6 +9,7 @@ import {
     ComponentTypeDto,
     CreateComponentRequest,
     CreateComponentTypeRequest,
+    ExtendedFieldsSchema,
     UpdateComponentRequest,
     UpdateComponentTypeRequest
 } from '../models/component-library.types';
@@ -77,5 +78,9 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
 
     deleteComponentType(id: number): Observable<void> {
         return this.customDelete<void>('componentTypeById', { id });
+    }
+
+    validateComponentTypeSchema(schema: ExtendedFieldsSchema): Observable<ExtendedFieldsSchema> {
+        return this.customPost<ExtendedFieldsSchema>('componentTypeValidateSchema', schema);
     }
 }
