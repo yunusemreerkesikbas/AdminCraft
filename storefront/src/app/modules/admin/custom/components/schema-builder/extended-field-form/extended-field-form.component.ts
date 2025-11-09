@@ -7,6 +7,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslocoModule } from '@jsverse/transloco';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { ExtendedFieldDefinition, ExtendedFieldType } from '../../models/component-library.types';
 import { ExtendedFieldValidatorService } from '../../validators/extended-field-validator.service';
@@ -40,6 +41,7 @@ export class ExtendedFieldFormComponent implements OnInit {
     #data = inject<ExtendedFieldFormData>(MAT_DIALOG_DATA);
     #fb = inject(FormBuilder);
     #validator = inject(ExtendedFieldValidatorService);
+    #notify = inject(NotificationService);
 
     form!: FormGroup;
     selectedType = signal<ExtendedFieldType>('text');
@@ -173,7 +175,7 @@ export class ExtendedFieldFormComponent implements OnInit {
         }
         const errors = this.#validator.validateFieldDefinition(field);
         if (errors.length > 0) {
-            console.error('Field validation errors:', errors);
+            this.#notify.alert('admin.components.extendedFields.validationFailed');
             this.isSubmitting.set(false);
             return;
         }

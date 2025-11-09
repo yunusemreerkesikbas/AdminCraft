@@ -162,7 +162,7 @@ export class ExtendedFieldsBuilderComponent implements ControlValueAccessor {
 
         const validation = this.#validator.validateSchema(schema);
         if (!validation.valid) {
-            console.warn('Schema validation warnings:', validation.errors);
+            this.#notify.warning('admin.components.extendedFields.validationErrors');
         }
 
         this.#onChange(newFields.length > 0 ? schema : null);

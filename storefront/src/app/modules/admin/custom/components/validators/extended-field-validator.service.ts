@@ -161,11 +161,7 @@ export class ExtendedFieldValidatorService {
                     validators.push(Validators.maxLength(field.maxLength));
                 }
                 if (field.pattern) {
-                    try {
-                        validators.push(Validators.pattern(field.pattern));
-                    } catch (e) {
-                        console.warn('Invalid pattern for field:', field.key);
-                    }
+                    validators.push(Validators.pattern(field.pattern));
                 }
                 break;
 

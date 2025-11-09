@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,7 +30,7 @@ import { ComponentSchemaBuilderService } from '../services/component-schema-buil
         TranslocoModule
     ]
 })
-export class ComponentTypesManagerComponent {
+export class ComponentTypesManagerComponent implements OnInit {
     #notify = inject(NotificationService);
     #componentService = inject(ComponentLibraryService);
     #dialog = inject(ItemDialogService);
