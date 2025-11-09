@@ -2,12 +2,10 @@ package com.backend.infrastructure.persistence.repository;
 
 import com.backend.domain.entity.ComponentType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface ComponentTypeJpaRepository extends JpaRepository<ComponentType, Long> {
+interface ComponentTypeJpaRepository extends JpaRepository<ComponentType, Long> {
     Optional<ComponentType> findByUuid(String uuid);
     Optional<ComponentType> findByUid(String uid);
     Optional<ComponentType> findByCode(String code);

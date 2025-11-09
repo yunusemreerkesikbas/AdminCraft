@@ -1,12 +1,7 @@
 -- Seed data for component types
 -- Repeatable migration: runs on every checksum change
 
--- Clear existing component types (for repeatable execution)
--- Note: This will fail if there are existing components referencing these types
--- In production, you may want to use more sophisticated migration logic
-DELETE FROM component_types WHERE is_system = TRUE;
-
--- Header component type
+-- Header component type (upsert - safe for repeated runs)
 INSERT INTO component_types (
     uuid,
     uid,
@@ -24,10 +19,14 @@ INSERT INTO component_types (
     'navigation',
     'header',
     TRUE,
-    1  -- System user
-);
+    1
+)
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    category = VALUES(category),
+    icon = VALUES(icon);
 
--- Footer component type
+-- Footer component type (upsert - safe for repeated runs)
 INSERT INTO component_types (
     uuid,
     uid,
@@ -45,5 +44,9 @@ INSERT INTO component_types (
     'navigation',
     'footer',
     TRUE,
-    1  -- System user
-);
+    1
+)
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    category = VALUES(category),
+    icon = VALUES(icon);

@@ -1,7 +1,13 @@
 package com.backend.presentation.controller;
 
+import com.backend.application.command.ComponentCommands.*;
+import com.backend.application.command.ComponentI18nCommands.*;
+import com.backend.application.query.ComponentQueries.*;
+import com.backend.application.query.ComponentI18nQueries.*;
 import com.backend.application.service.ComponentI18nService;
 import com.backend.application.service.ComponentService;
+import com.backend.domain.entity.Component;
+import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.ComponentCreateRequest;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
@@ -24,6 +30,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/components")
@@ -43,7 +51,20 @@ public class ComponentController {
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            ComponentResponse response = componentService.createComponent(request, userId);
+            
+            CreateComponentCommand command = new CreateComponentCommand(
+                request.componentTypeId(),
+                request.code(),
+                request.name(),
+                request.baseData(),
+                request.extendedData(),
+                request.status(),
+                userId
+            );
+            
+            Component result = componentService.createComponent(command);
+            ComponentResponse response = ComponentResponse.from(result);
+            
             String successMessage = messageSource.getMessage("component.create.success",
                 null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
@@ -63,10 +84,19 @@ public class ComponentController {
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             if (include != null && include.contains("translations")) {
-                ComponentDetailResponse withI18n = componentService.getComponentWithI18n(id);
-                return ResponseEntity.ok(ApiResponse.success(withI18n));
+                GetComponentWithI18nQuery query = new GetComponentWithI18nQuery(id);
+                Map<Component, List<ComponentI18n>> resultMap = componentService.getComponentWithI18n(query);
+                
+                Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator().next();
+                ComponentDetailResponse response = ComponentDetailResponse.from(entry.getKey(), entry.getValue());
+                
+                return ResponseEntity.ok(ApiResponse.success(response));
             }
-            ComponentResponse response = componentService.getComponentById(id);
+            
+            GetComponentByIdQuery query = new GetComponentByIdQuery(id);
+            Component result = componentService.getComponentById(query);
+            ComponentResponse response = ComponentResponse.from(result);
+            
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting component {}: {}", id, ex.getMessage());
@@ -81,8 +111,14 @@ public class ComponentController {
     public ResponseEntity<ApiResponse<List<ComponentListResponse>>> list(
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            List<ComponentListResponse> components = componentService.getAllComponentsWithTranslations();
-            return ResponseEntity.ok(ApiResponse.success(components));
+            GetAllComponentsWithTranslationsQuery query = new GetAllComponentsWithTranslationsQuery();
+            Map<Component, List<ComponentI18n>> resultMap = componentService.getAllComponentsWithTranslations(query);
+            
+            List<ComponentListResponse> responses = resultMap.entrySet().stream()
+                .map(entry -> ComponentListResponse.from(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(ApiResponse.success(responses));
         } catch (Exception ex) {
             log.error("Error listing components: {}", ex.getMessage());
             String msg = messageSource.getMessage("component.list.error",
@@ -99,7 +135,21 @@ public class ComponentController {
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            ComponentResponse response = componentService.updateComponent(id, request, userId);
+            
+            UpdateComponentCommand command = new UpdateComponentCommand(
+                id,
+                request.componentTypeId(),
+                request.code(),
+                request.name(),
+                request.baseData(),
+                request.extendedData(),
+                request.status(),
+                userId
+            );
+            
+            Component result = componentService.updateComponent(command);
+            ComponentResponse response = ComponentResponse.from(result);
+            
             String successMessage = messageSource.getMessage("component.update.success",
                 null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
@@ -117,7 +167,9 @@ public class ComponentController {
         @PathVariable @NotNull @Min(1) Long id,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            componentService.deleteComponent(id);
+            DeleteComponentCommand command = new DeleteComponentCommand(id);
+            componentService.deleteComponent(command);
+            
             String successMessage = messageSource.getMessage("component.delete.success",
                 null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, null));
@@ -136,7 +188,10 @@ public class ComponentController {
         @PathVariable Language language,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            ComponentI18nResponse response = componentI18nService.getComponentI18n(id, language);
+            GetComponentI18nQuery query = new GetComponentI18nQuery(id, language);
+            ComponentI18n result = componentI18nService.getComponentI18n(query);
+            ComponentI18nResponse response = ComponentI18nResponse.from(result);
+            
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting component i18n for component {} language {}: {}", id, language, ex.getMessage());
@@ -154,7 +209,17 @@ public class ComponentController {
         @Valid @RequestBody ComponentI18nRequest request,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            ComponentI18nResponse response = componentI18nService.upsertComponentI18n(id, language, request);
+            UpsertComponentI18nCommand command = new UpsertComponentI18nCommand(
+                id,
+                language,
+                request.baseLocalizedData(),
+                request.extendedLocalizedData(),
+                request.status()
+            );
+            
+            ComponentI18n result = componentI18nService.upsertComponentI18n(command);
+            ComponentI18nResponse response = ComponentI18nResponse.from(result);
+            
             String successMessage = messageSource.getMessage("component.i18n.upsert.success",
                 null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
@@ -173,7 +238,10 @@ public class ComponentController {
         @PathVariable Language language,
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            ComponentI18nResponse response = componentI18nService.publishComponentI18n(id, language);
+            PublishComponentI18nCommand command = new PublishComponentI18nCommand(id, language);
+            ComponentI18n result = componentI18nService.publishComponentI18n(command);
+            ComponentI18nResponse response = ComponentI18nResponse.from(result);
+            
             String successMessage = messageSource.getMessage("component.i18n.publish.success",
                 null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));

@@ -1,18 +1,29 @@
 package com.backend.domain.repository;
 
 import com.backend.domain.entity.ComponentType;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface ComponentTypeRepository extends JpaRepository<ComponentType, Long> {
+public interface ComponentTypeRepository {
+    Optional<ComponentType> findById(Long id);
+
     Optional<ComponentType> findByUuid(String uuid);
+
     Optional<ComponentType> findByUid(String uid);
+
     Optional<ComponentType> findByCode(String code);
+
+    List<ComponentType> findAll();
+
     List<ComponentType> findByCategory(String category);
+
     List<ComponentType> findByIsSystem(Boolean isSystem);
+
+    ComponentType save(ComponentType entity);
+
+    void delete(ComponentType entity);
+
     boolean existsByCode(String code);
+
     boolean existsByUid(String uid);
 }
