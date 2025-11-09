@@ -1,21 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { TranslocoModule } from '@jsverse/transloco';
+import { MatIconModule } from '@angular/material/icon';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
-import { ComponentLibraryService } from '../services/component-library.service';
-import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
+import { ComponentTypeFormData } from '../models/component-form.types';
 import {
     ComponentTypeDto,
     CreateComponentTypeRequest,
     UpdateComponentTypeRequest
 } from '../models/component-library.types';
-import { ComponentTypeFormData } from '../models/component-form.types';
+import { ComponentLibraryService } from '../services/component-library.service';
+import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 
 @Component({
     selector: 'spa-component-types-manager',
@@ -37,6 +37,7 @@ export class ComponentTypesManagerComponent {
     #dialog = inject(ItemDialogService);
     #schema = inject(ComponentSchemaBuilderService);
     #dialogRef = inject(MatDialogRef<ComponentTypesManagerComponent>);
+    #transloco = inject(TranslocoService);
 
     types = signal<ComponentTypeDto[]>([]);
     isLoading = signal<boolean>(false);
@@ -55,7 +56,7 @@ export class ComponentTypesManagerComponent {
                     this.isLoading.set(false);
                 },
                 error: () => {
-                    this.#notify.alert('Failed to load component types');
+                    this.#notify.alert('admin.components.errors.loadTypesFailed');
                     this.isLoading.set(false);
                 }
             });
@@ -95,17 +96,17 @@ export class ComponentTypesManagerComponent {
                     .pipe(take(1))
                     .subscribe({
                         next: () => {
-                            this.#notify.success('Component type created');
+                            this.#notify.success('admin.components.types.success.created');
                             this.loadTypes();
                         },
-                        error: () => this.#notify.alert('Failed to create component type')
+                        error: () => this.#notify.alert('admin.components.types.errors.createFailed')
                     });
             });
     }
 
     editType(type: ComponentTypeDto): void {
         if (type.isSystem) {
-            this.#notify.warning('Cannot edit system component type');
+            this.#notify.warning('admin.components.types.errors.cannotEditSystem');
             return;
         }
 
@@ -142,21 +143,21 @@ export class ComponentTypesManagerComponent {
                     .pipe(take(1))
                     .subscribe({
                         next: () => {
-                            this.#notify.success('Component type updated');
+                            this.#notify.success('admin.components.types.success.updated');
                             this.loadTypes();
                         },
-                        error: () => this.#notify.alert('Failed to update component type')
+                        error: () => this.#notify.alert('admin.components.types.errors.updateFailed')
                     });
             });
     }
 
     deleteType(type: ComponentTypeDto): void {
         if (type.isSystem) {
-            this.#notify.warning('Cannot delete system component type');
+            this.#notify.warning('admin.components.types.errors.cannotDeleteSystem');
             return;
         }
 
-        if (!confirm(`Are you sure you want to delete "${type.name}"?`)) {
+        if (!confirm(this.#transloco.translate('admin.components.types.confirmDelete', { name: type.name }))) {
             return;
         }
 
@@ -164,10 +165,10 @@ export class ComponentTypesManagerComponent {
             .pipe(take(1))
             .subscribe({
                 next: () => {
-                    this.#notify.success('Component type deleted');
+                    this.#notify.success('admin.components.types.success.deleted');
                     this.loadTypes();
                 },
-                error: () => this.#notify.alert('Failed to delete component type')
+                error: () => this.#notify.alert('admin.components.types.errors.deleteFailed')
             });
     }
 

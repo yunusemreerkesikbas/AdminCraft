@@ -14,6 +14,7 @@ import { ItemDialogService } from '@shared/services/item-dialog.service';
 import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { forkJoin, take, takeUntil } from 'rxjs';
 import { LanguageContextService } from '@core/services/language-context.service';
+import { TranslocoService } from '@jsverse/transloco';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 import { ComponentTypesManagerComponent } from '../types/component-types-manager.component';
@@ -54,8 +55,9 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     #dialog = inject(ItemDialogService);
     #schema = inject(ComponentSchemaBuilderService);
     #matDialog = inject(MatDialog);
+    #transloco = inject(TranslocoService);
 
-    tenantId?: number;
+    protected tenantId?: number;
     componentTypes = signal<ComponentTypeDto[]>([]);
     supportedLanguages = signal<string[]>([]);
 
@@ -64,15 +66,15 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     searchTerm = signal<string>('');
 
     typeOptions = computed<SpaSelectOption<number | null>[]>(() => [
-        { value: null, label: 'All Types' },
+        { value: null, label: this.#transloco.translate('admin.components.filters.allTypes') },
         ...this.componentTypes().map(t => ({ value: t.id, label: t.name }))
     ]);
 
     statusOptions: SpaSelectOption<ComponentStatus | null>[] = [
-        { value: null, label: 'All' },
-        { value: ComponentStatus.ACTIVE, label: 'Active' },
-        { value: ComponentStatus.DRAFT, label: 'Draft' },
-        { value: ComponentStatus.INACTIVE, label: 'Inactive' }
+        { value: null, label: this.#transloco.translate('admin.components.filters.allStatus') },
+        { value: ComponentStatus.ACTIVE, label: this.#transloco.translate('admin.common.status.active') },
+        { value: ComponentStatus.DRAFT, label: this.#transloco.translate('admin.common.status.draft') },
+        { value: ComponentStatus.INACTIVE, label: this.#transloco.translate('admin.common.status.inactive') }
     ];
 
     filteredComponents = computed(() => {
@@ -128,7 +130,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             .pipe(take(1), takeUntil(this.destroy$))
             .subscribe({
                 next: (types) => this.componentTypes.set(types),
-                error: () => this.#notify.alert('Failed to load component types')
+                error: () => this.#notify.alert('admin.components.errors.loadTypesFailed')
             });
     }
 
@@ -145,7 +147,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     protected override onLoadError(error: any): void {
-        this.#notify.alert('Failed to load components');
+        this.#notify.alert('admin.components.errors.loadFailed');
     }
 
     onTypeFilterChange(typeId: number | null): void {
@@ -225,7 +227,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                         next: (created) => {
                             this.#saveI18nForComponent(created.id, result, true);
                         },
-                        error: () => this.#notify.alert('Failed to create component')
+                        error: () => this.#notify.alert('admin.components.errors.createFailed')
                     });
             });
     }
@@ -246,7 +248,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                 },
                 error: () => {
                     this.store.setLoading(false);
-                    this.#notify.alert('Failed to load component details');
+                    this.#notify.alert('admin.components.errors.loadDetailFailed');
                 }
             });
     }
@@ -310,7 +312,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                         next: () => {
                             this.#saveI18nForComponent(detail.id, result, false);
                         },
-                        error: () => this.#notify.alert('Failed to update component')
+                        error: () => this.#notify.alert('admin.components.errors.updateFailed')
                     });
             });
     }
@@ -339,7 +341,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         }).filter(req => req !== null);
 
         if (i18nRequests.length === 0) {
-            this.#notify.success(isCreate ? 'Component created' : 'Component updated');
+            this.#notify.success(isCreate ? 'admin.components.success.created' : 'admin.components.success.updated');
             this.loadItems();
             return;
         }
@@ -348,15 +350,15 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             .pipe(take(1), takeUntil(this.destroy$))
             .subscribe({
                 next: () => {
-                    this.#notify.success(isCreate ? 'Component created' : 'Component updated');
+                    this.#notify.success(isCreate ? 'admin.components.success.created' : 'admin.components.success.updated');
                     this.loadItems();
                 },
-                error: () => this.#notify.alert('Failed to save translations')
+                error: () => this.#notify.alert('admin.components.errors.saveTranslationsFailed')
             });
     }
 
     deleteComponent(componentId: number): void {
-        if (!confirm('Are you sure you want to delete this component?')) {
+        if (!confirm(this.#transloco.translate('admin.components.confirmDelete'))) {
             return;
         }
 
@@ -364,10 +366,10 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             .pipe(take(1), takeUntil(this.destroy$))
             .subscribe({
                 next: () => {
-                    this.#notify.success('Component deleted');
+                    this.#notify.success('admin.components.success.deleted');
                     this.loadItems();
                 },
-                error: () => this.#notify.alert('Failed to delete component')
+                error: () => this.#notify.alert('admin.components.errors.deleteFailed')
             });
     }
 

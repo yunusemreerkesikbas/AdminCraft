@@ -52,7 +52,7 @@ export interface Link {
 export class SpaLinkRepeaterComponent implements ControlValueAccessor {
     links = signal<Link[]>([]);
     disabled = false;
-    #onChange: (val: any) => void = () => {};
+    #onChange: (val: Link[] | null) => void = () => {};
     #onTouched: () => void = () => {};
 
     writeValue(value: Link[]): void {
