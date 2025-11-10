@@ -1,0 +1,75 @@
+<div class="types-manager-dialog">
+    <div class="dialog-header">
+        <h2>{{ 'admin.components.types.title' | transloco }}</h2>
+        <button mat-icon-button (click)="close()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <div class="dialog-content">
+        <div class="actions-bar">
+            <button mat-raised-button color="primary" (click)="createType()">
+                <mat-icon>add</mat-icon>
+                {{ 'admin.components.types.create' | transloco }}
+            </button>
+            <button mat-icon-button (click)="loadTypes()">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+
+        @if (isLoading()) {
+            <div class="loading-container">
+                <mat-icon class="spin">refresh</mat-icon>
+                {{ 'admin.common.loading' | transloco }}
+            </div>
+        } @else {
+            @if (types().length === 0) {
+                <div class="empty-state">
+                    <mat-icon>category</mat-icon>
+                    <p>{{ 'admin.components.types.noTypes' | transloco }}</p>
+                </div>
+            } @else {
+                <div class="types-table">
+                    <div class="table-header">
+                        <div class="col-code">{{ 'admin.common.fields.code' | transloco }}</div>
+                        <div class="col-name">{{ 'admin.common.fields.name' | transloco }}</div>
+                        <div class="col-category">{{ 'admin.components.fields.category' | transloco }}</div>
+                        <div class="col-icon">{{ 'admin.components.fields.icon' | transloco }}</div>
+                        <div class="col-actions">{{ 'admin.common.fields.actions' | transloco }}</div>
+                    </div>
+                    @for (type of types(); track type.id) {
+                        <div class="table-row">
+                            <div class="col-code">
+                                <code>{{ type.code }}</code>
+                                @if (type.isSystem) {
+                                    <span class="system-badge">System</span>
+                                }
+                            </div>
+                            <div class="col-name">{{ type.name }}</div>
+                            <div class="col-category">{{ type.category || '-' }}</div>
+                            <div class="col-icon">
+                                @if (type.icon) {
+                                    <mat-icon>{{ type.icon }}</mat-icon>
+                                    <span class="icon-name">{{ type.icon }}</span>
+                                } @else {
+                                    <span>-</span>
+                                }
+                            </div>
+                            <div class="col-actions">
+                                <button mat-icon-button (click)="manageExtendedFields(type)" matTooltip="Manage Extended Fields">
+                                    <mat-icon>extension</mat-icon>
+                                </button>
+                                <button mat-icon-button (click)="editType(type)" [disabled]="type.isSystem" matTooltip="Edit">
+                                    <mat-icon>edit</mat-icon>
+                                </button>
+                                <button mat-icon-button color="warn" (click)="deleteType(type)" [disabled]="type.isSystem" matTooltip="Delete">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
