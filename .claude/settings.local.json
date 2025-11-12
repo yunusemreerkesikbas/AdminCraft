@@ -15,7 +15,9 @@
       "Bash(findstr:*)",
       "Bash(mvn compile:*)",
       "Bash(cat:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(move \"V1__baseline.sql\" \"V4__component_library_baseline.sql\")",
+      "Bash(mvn clean:*)"
     ],
     "deny": [],
     "ask": [],

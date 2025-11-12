@@ -73,7 +73,7 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.#loadModules();
+        setTimeout(() => this.#loadModules(), 0);
     }
 
     ngOnDestroy(): void {

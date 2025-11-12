@@ -8,13 +8,26 @@
 
     <div class="dialog-content">
         <div class="actions-bar">
-            <button mat-raised-button color="primary" (click)="createType()">
-                <mat-icon>add</mat-icon>
-                {{ 'admin.components.types.create' | transloco }}
-            </button>
-            <button mat-icon-button (click)="loadTypes()">
-                <mat-icon>refresh</mat-icon>
-            </button>
+            <spa-search-input
+                [placeholder]="'admin.common.search' | transloco"
+                [ngModel]="searchTerm()"
+                (ngModelChange)="onSearchChange($event)"
+            >
+            </spa-search-input>
+
+            <div class="action-buttons">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="createType()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.components.types.create' | transloco }}
+                </button>
+                <button mat-icon-button (click)="loadTypes()">
+                    <mat-icon>refresh</mat-icon>
+                </button>
+            </div>
         </div>
 
         @if (isLoading()) {
@@ -23,46 +36,126 @@
                 {{ 'admin.common.loading' | transloco }}
             </div>
         } @else {
-            @if (types().length === 0) {
+            @if (filteredTypes().length === 0) {
                 <div class="empty-state">
                     <mat-icon>category</mat-icon>
-                    <p>{{ 'admin.components.types.noTypes' | transloco }}</p>
+                    @if (searchTerm()) {
+                        <p>
+                            {{
+                                'admin.components.types.noSearchResults'
+                                    | transloco
+                            }}
+                        </p>
+                        <button
+                            mat-button
+                            color="primary"
+                            (click)="searchTerm.set('')"
+                        >
+                            <mat-icon>close</mat-icon>
+                            {{ 'admin.common.actions.reset' | transloco }}
+                        </button>
+                    } @else {
+                        <p>
+                            {{ 'admin.components.types.noTypes' | transloco }}
+                        </p>
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            (click)="createType()"
+                        >
+                            <mat-icon>add</mat-icon>
+                            {{
+                                'admin.components.types.createFirst' | transloco
+                            }}
+                        </button>
+                    }
                 </div>
             } @else {
                 <div class="types-table">
                     <div class="table-header">
-                        <div class="col-code">{{ 'admin.common.fields.code' | transloco }}</div>
-                        <div class="col-name">{{ 'admin.common.fields.name' | transloco }}</div>
-                        <div class="col-category">{{ 'admin.components.fields.category' | transloco }}</div>
-                        <div class="col-icon">{{ 'admin.components.fields.icon' | transloco }}</div>
-                        <div class="col-actions">{{ 'admin.common.fields.actions' | transloco }}</div>
+                        <div class="col-code">
+                            {{ 'admin.common.grid.uid' | transloco }}
+                        </div>
+                        <div class="col-name">
+                            {{ 'admin.common.fields.name' | transloco }}
+                        </div>
+                        <div class="col-category">
+                            {{ 'admin.components.fields.category' | transloco }}
+                        </div>
+                        <div class="col-actions">
+                            {{ 'admin.common.fields.actions' | transloco }}
+                        </div>
                     </div>
-                    @for (type of types(); track type.id) {
-                        <div class="table-row">
+                    @for (type of filteredTypes(); track type.id) {
+                        <div class="types-row">
                             <div class="col-code">
-                                <code>{{ type.code }}</code>
+                                <code>{{ type.uid }}</code>
                                 @if (type.isSystem) {
-                                    <span class="system-badge">System</span>
+                                    <span class="system-badge">{{
+                                        'admin.common.system' | transloco
+                                    }}</span>
                                 }
                             </div>
-                            <div class="col-name">{{ type.name }}</div>
-                            <div class="col-category">{{ type.category || '-' }}</div>
-                            <div class="col-icon">
-                                @if (type.icon) {
-                                    <mat-icon>{{ type.icon }}</mat-icon>
-                                    <span class="icon-name">{{ type.icon }}</span>
+                            <div
+                                class="col-name"
+                                [attr.data-label]="
+                                    'admin.common.fields.name' | transloco
+                                "
+                            >
+                                {{ type.name }}
+                            </div>
+                            <div
+                                class="col-category"
+                                [attr.data-label]="
+                                    'admin.components.fields.category'
+                                        | transloco
+                                "
+                            >
+                                @if (type.category) {
+                                    <span
+                                        class="category-chip"
+                                        [attr.data-category]="type.category"
+                                    >
+                                        {{
+                                            'admin.components.categories.' +
+                                                type.category | transloco
+                                        }}
+                                    </span>
                                 } @else {
-                                    <span>-</span>
+                                    <span class="no-category">-</span>
                                 }
                             </div>
+
                             <div class="col-actions">
-                                <button mat-icon-button (click)="manageExtendedFields(type)" matTooltip="Manage Extended Fields">
+                                <button
+                                    mat-icon-button
+                                    (click)="manageExtendedFields(type)"
+                                    [matTooltip]="
+                                        'admin.components.types.manageFields'
+                                            | transloco
+                                    "
+                                >
                                     <mat-icon>extension</mat-icon>
                                 </button>
-                                <button mat-icon-button (click)="editType(type)" [disabled]="type.isSystem" matTooltip="Edit">
+                                <button
+                                    mat-icon-button
+                                    (click)="editType(type)"
+                                    [disabled]="type.isSystem"
+                                    [matTooltip]="
+                                        'admin.common.edit' | transloco
+                                    "
+                                >
                                     <mat-icon>edit</mat-icon>
                                 </button>
-                                <button mat-icon-button color="warn" (click)="deleteType(type)" [disabled]="type.isSystem" matTooltip="Delete">
+                                <button
+                                    mat-icon-button
+                                    color="warn"
+                                    (click)="deleteType(type)"
+                                    [disabled]="type.isSystem"
+                                    [matTooltip]="
+                                        'admin.common.delete' | transloco
+                                    "
+                                >
                                     <mat-icon>delete</mat-icon>
                                 </button>
                             </div>

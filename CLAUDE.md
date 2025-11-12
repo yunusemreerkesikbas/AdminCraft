@@ -47,7 +47,8 @@ docker compose up -d
 **Tenant** (`db/tenant/{module}/`): Programmatic via ProvisioningService
 
 - `core/V1__baseline.sql` (required)
-- `pagebuilder/V1__baseline.sql` (module-specific)
+- `pagebuilder/V3__baseline.sql` (module-specific)
+- `component_library/V4__component_library_baseline.sql` (module-specific)
 
 **Rules:**
 
@@ -55,6 +56,22 @@ docker compose up -d
 - utf8mb4 / utf8mb4_unicode_ci
 - NO idempotent DDL logic (Flyway handles it)
 - CREATE DATABASE is ONLY string-concatenated SQL
+
+**Versioning Strategy (IMPORTANT):**
+
+- **Global Sequential Versioning**: All tenant modules share a single version sequence
+- Flyway scans ALL module locations together and enforces unique version numbers
+- Version allocation:
+  - **V1-V2**: `core` module (users, roles, sites)
+  - **V3**: `pagebuilder` module (pages, categories)
+  - **V4-V5**: `component_library` module (components, types)
+  - **V6+**: Reserved for future modules
+
+**When adding a new tenant module:**
+1. Check the latest version across ALL modules in `db/tenant/`
+2. Start new module at next available version (e.g., V6, V7, ...)
+3. Use descriptive names: `V6__new_module_baseline.sql`
+4. Update this documentation with version allocation
 
 ### Clean Architecture
 
@@ -72,12 +89,13 @@ docker compose up -d
 
 ### Module Management
 
-**Active Modules (4):**
+**Active Modules (5):**
 
 - `core` (required): users, roles, sites
 - `pagebuilder`: pages + page_categories (mandatory)
 - `site_settings`: global/i18n config
 - `media`: media files with i18n
+- `component_library`: reusable UI components with i18n
 
 **Manual Sync Process:**
 

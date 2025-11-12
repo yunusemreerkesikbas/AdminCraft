@@ -13,13 +13,11 @@
     </div>
 
     <div class="filters-section">
-        <div class="search-box">
-            <mat-icon>search</mat-icon>
-            <input
-                type="text"
-                [placeholder]="'admin.common.search' | transloco"
-                (input)="onSearchChange($any($event.target).value)">
-        </div>
+        <spa-search-input
+            [placeholder]="'admin.common.search' | transloco"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="onSearchChange($event)">
+        </spa-search-input>
 
         <spa-select
             [label]="'admin.components.filters.type' | transloco"
@@ -60,25 +58,29 @@
                     <div class="col-actions">{{ 'admin.common.fields.actions' | transloco }}</div>
                 </div>
                 @for (component of filteredComponents(); track component.id) {
-                    <div class="table-row">
+                    <div class="component-row">
                         <div class="col-name">
                             <div class="name-info">
                                 <span class="name">{{ component.name }}</span>
                                 <span class="code">{{ component.code }}</span>
                             </div>
                         </div>
-                        <div class="col-type">{{ component.componentTypeName || '-' }}</div>
-                        <div class="col-status">
+                        <div class="col-type" [attr.data-label]="'admin.components.fields.type' | transloco">
+                            {{ component.componentTypeName || '-' }}
+                        </div>
+                        <div class="col-status" [attr.data-label]="'admin.common.fields.status' | transloco">
                             <span class="status-badge" [attr.data-status]="component.status">
-                                {{ component.status }}
+                                {{ 'admin.common.status.' + component.status.toLowerCase() | transloco }}
                             </span>
                         </div>
-                        <div class="col-updated">{{ component.updatedAt || component.createdAt | date:'short' }}</div>
+                        <div class="col-updated" [attr.data-label]="'admin.common.fields.updated' | transloco">
+                            {{ component.updatedAt || component.createdAt | date:'short' }}
+                        </div>
                         <div class="col-actions">
-                            <button mat-icon-button (click)="editComponent(component.id)" matTooltip="Edit">
+                            <button mat-icon-button (click)="editComponent(component.id)" [matTooltip]="'admin.common.edit' | transloco">
                                 <mat-icon>edit</mat-icon>
                             </button>
-                            <button mat-icon-button color="warn" (click)="deleteComponent(component.id)" matTooltip="Delete">
+                            <button mat-icon-button color="warn" (click)="deleteComponent(component.id)" [matTooltip]="'admin.common.delete' | transloco">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>

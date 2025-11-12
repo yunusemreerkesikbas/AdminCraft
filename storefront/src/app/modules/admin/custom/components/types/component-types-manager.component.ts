@@ -1,13 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
-import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
+import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
 import { ComponentTypeFormData } from '../models/component-form.types';
 import { ComponentTypeDto, CreateComponentTypeRequest, ExtendedFieldsSchema, UpdateComponentTypeRequest } from '../models/component-library.types';
@@ -23,11 +25,13 @@ import { ComponentSchemaBuilderService } from '../services/component-schema-buil
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         MatButtonModule,
         MatIconModule,
         MatDialogModule,
         MatTooltipModule,
-        TranslocoModule
+        TranslocoModule,
+        SpaSearchInputComponent
     ]
 })
 export class ComponentTypesManagerComponent implements OnInit {
@@ -41,6 +45,18 @@ export class ComponentTypesManagerComponent implements OnInit {
 
     types = signal<ComponentTypeDto[]>([]);
     isLoading = signal<boolean>(false);
+    searchTerm = signal<string>('');
+
+    filteredTypes = computed(() => {
+        const term = this.searchTerm().toLowerCase();
+        if (!term) return this.types();
+
+        return this.types().filter(t =>
+            t.name.toLowerCase().includes(term) ||
+            t.code.toLowerCase().includes(term) ||
+            (t.category && t.category.toLowerCase().includes(term))
+        );
+    });
 
     ngOnInit(): void {
         this.loadTypes();
@@ -204,6 +220,10 @@ export class ComponentTypesManagerComponent implements OnInit {
                 },
                 error: () => this.#notify.alert('admin.components.types.errors.deleteFailed')
             });
+    }
+
+    onSearchChange(term: string): void {
+        this.searchTerm.set(term);
     }
 
     close(): void {
