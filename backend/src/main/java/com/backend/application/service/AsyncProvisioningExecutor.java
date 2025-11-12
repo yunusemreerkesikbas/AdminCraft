@@ -52,39 +52,28 @@ public class AsyncProvisioningExecutor {
   }
 
   @Async
-  @Transactional("platformTransactionManager")
   public void executeProvisioning(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
     log.info("Async provisioning started on thread: {}", Thread.currentThread().getName());
 
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenant.getId()));
 
-    ProvisioningJob job = jobRepository.findById(jobId)
-        .orElseThrow(() -> new IllegalStateException("Job not found during execution: " + jobId));
-
     try {
-      job.setStatus("running");
-      job.setStartedAt(LocalDateTime.now());
-      jobRepository.save(job);
+      updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
 
       log.info("Starting provisioning for tenant {} with modules: {}", tenant.getId(), modules);
 
-      updateProgress(job, 20);
+      updateJobProgress(jobId, 20);
       createDatabaseIfNotExists(tenant.getDatabaseName());
 
-      updateProgress(job, 60);
+      updateJobProgress(jobId, 60);
       runMigrations(tenant.getDatabaseName(), modules);
 
-      updateProgress(job, 90);
+      updateJobProgress(jobId, 90);
       insertTenantModules(tenant.getId(), modules);
 
-      tenant.setStatus("ACTIVE");
-      tenantRepository.save(tenant);
-
-      job.setStatus("succeeded");
-      job.setProgress(100);
-      job.setCompletedAt(LocalDateTime.now());
-      jobRepository.save(job);
+      updateTenantStatus(tenant.getId(), "ACTIVE");
+      updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
 
       log.info("Provisioning completed successfully for tenant {} on thread: {}",
           tenant.getId(), Thread.currentThread().getName());
@@ -97,10 +86,7 @@ public class AsyncProvisioningExecutor {
         errorMessage = errorMessage.substring(0, 497) + "...";
       }
 
-      job.setStatus("failed");
-      job.setError(errorMessage);
-      job.setCompletedAt(LocalDateTime.now());
-      jobRepository.save(job);
+      updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
       MDC.clear();
     }
@@ -178,18 +164,66 @@ public class AsyncProvisioningExecutor {
     return new HikariDataSource(config);
   }
 
-  private void updateProgress(ProvisioningJob job, int progress) {
-    job.setProgress(progress);
+  @Transactional("platformTransactionManager")
+  public void updateJobStatus(Long jobId, String status, Integer progress,
+      String error, LocalDateTime startedAt, LocalDateTime completedAt) {
+    ProvisioningJob job = jobRepository.findById(jobId)
+        .orElseThrow(() -> new IllegalStateException("Job not found: " + jobId));
+
+    job.setStatus(status);
+    if (progress != null)
+      job.setProgress(progress);
+    if (error != null)
+      job.setError(error);
+    if (startedAt != null)
+      job.setStartedAt(startedAt);
+    if (completedAt != null)
+      job.setCompletedAt(completedAt);
+
     jobRepository.save(job);
+    jobRepository.flush(); // Force immediate persistence
+    log.info("Job {} status updated to: {} (progress: {})", jobId, status, job.getProgress());
   }
 
-  private void insertTenantModules(Long tenantId, List<String> modules) {
+  @Transactional("platformTransactionManager")
+  public void updateJobProgress(Long jobId, int progress) {
+    ProvisioningJob job = jobRepository.findById(jobId)
+        .orElseThrow(() -> new IllegalStateException("Job not found: " + jobId));
+    job.setProgress(progress);
+    jobRepository.save(job);
+    jobRepository.flush();
+    log.debug("Job {} progress updated to: {}", jobId, progress);
+  }
+
+  @Transactional("platformTransactionManager")
+  public void updateTenantStatus(Long tenantId, String status) {
+    Tenant tenant = tenantRepository.findById(tenantId)
+        .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
+    tenant.setStatus(status);
+    tenantRepository.save(tenant);
+    log.info("Tenant {} status updated to: {}", tenantId, status);
+  }
+
+  @Transactional("platformTransactionManager")
+  public void insertTenantModules(Long tenantId, List<String> modules) {
     log.info("Inserting tenant_modules records for tenant {} with modules: {}", tenantId, modules);
 
-    List<TenantModule> tenantModules = new ArrayList<>();
+    List<TenantModule> existingModules = tenantModuleRepository.findByTenantId(tenantId);
+    List<String> existingModuleCodes = existingModules.stream()
+        .map(TenantModule::getModuleCode)
+        .toList();
+
+    log.debug("Tenant {} already has modules: {}", tenantId, existingModuleCodes);
+
+    List<TenantModule> newModules = new ArrayList<>();
     LocalDateTime now = LocalDateTime.now();
 
     for (String moduleCode : modules) {
+      if (existingModuleCodes.contains(moduleCode)) {
+        log.debug("Skipping module {} - already installed for tenant {}", moduleCode, tenantId);
+        continue;
+      }
+
       // Defensive: validate module codes although FE/BE coordinate via enums
       try {
         com.backend.domain.enums.ModuleCode.fromCode(moduleCode);
@@ -197,18 +231,23 @@ public class AsyncProvisioningExecutor {
         log.warn("Skipping unknown module code during provisioning: {}", moduleCode);
         continue;
       }
+
       TenantModule tenantModule = TenantModule.builder()
           .tenantId(tenantId)
           .moduleCode(moduleCode)
           .status("enabled")
           .installedAt(now)
           .build();
-      tenantModules.add(tenantModule);
-      log.debug("Prepared tenant_module record: tenantId={}, moduleCode={}", tenantId, moduleCode);
+      newModules.add(tenantModule);
+      log.debug("Prepared NEW tenant_module record: tenantId={}, moduleCode={}", tenantId, moduleCode);
     }
 
-    tenantModuleRepository.saveAll(tenantModules);
-    log.info("Successfully inserted {} tenant_modules records for tenant {}", tenantModules.size(), tenantId);
+    if (!newModules.isEmpty()) {
+      tenantModuleRepository.saveAll(newModules);
+      log.info("Successfully inserted {} new tenant_modules records for tenant {}", newModules.size(), tenantId);
+    } else {
+      log.info("No new modules to insert for tenant {} - all modules already exist", tenantId);
+    }
   }
 
 }

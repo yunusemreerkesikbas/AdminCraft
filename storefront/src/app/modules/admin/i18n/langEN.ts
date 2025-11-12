@@ -114,8 +114,14 @@ export const langEN = {
                 server: 'A server error occurred. Please try again.',
                 unexpected: 'An unexpected error occurred',
             },
+            system: 'System',
+            edit: 'Edit',
+            delete: 'Delete',
+            search: 'Search',
+            create: 'Create',
             fields: {
                 name: 'Name',
+                code: 'Code',
                 email: 'Email',
                 phone: 'Phone',
                 address: 'Address',
@@ -138,6 +144,8 @@ export const langEN = {
                 metaDescription: 'Meta Description',
                 defaultLanguage: 'Default Language',
                 supportedLanguages: 'Supported Languages',
+                actions: 'Actions',
+                updated: 'Updated',
             },
             dialog: {
                 title: {
@@ -470,6 +478,19 @@ export const langEN = {
                 created: 'Component created successfully',
                 updated: 'Component updated successfully',
                 deleted: 'Component deleted successfully',
+            },
+            categories: {
+                navigation: 'Navigation',
+                hero: 'Hero',
+                content: 'Content',
+                layout: 'Layout',
+                feature: 'Feature',
+                cta: 'CTA',
+                testimonial: 'Testimonial',
+                gallery: 'Gallery',
+                pricing: 'Pricing',
+                form: 'Form',
+                other: 'Other'
             },
             types: {
                 title: 'Component Types',

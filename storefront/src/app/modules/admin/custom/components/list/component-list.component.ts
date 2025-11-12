@@ -1,25 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
+import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
-import type { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { forkJoin, take, takeUntil } from 'rxjs';
-import { LanguageContextService } from '@core/services/language-context.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
+import { filter, forkJoin, skip, take, takeUntil } from 'rxjs';
+import { CreateComponentFormData, EditComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
+import { ComponentDetailDto, ComponentDto, ComponentI18nRequest, ComponentStatus, ComponentTypeDto, CreateComponentRequest, UpdateComponentRequest } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 import { ComponentTypesManagerComponent } from '../types/component-types-manager.component';
-import { ComponentDto, ComponentDetailDto, ComponentI18nRequest, ComponentStatus, ComponentTypeDto, CreateComponentRequest, UpdateComponentRequest } from '../models/component-library.types';
-import { CreateComponentFormData, EditComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
+
+const DIALOG_CONFIG = {
+    COMPONENT_FORM: { width: 'min(90vw, 800px)', height: 'min(85vh, 600px)' },
+    TYPES_MANAGER: { width: 'min(90vw, 900px)', height: 'min(85vh, 600px)' }
+} as const;
 
 @Component({
     selector: 'spa-component-list',
@@ -29,11 +36,14 @@ import { CreateComponentFormData, EditComponentFormData, isComponentI18nFormData
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         MatButtonModule,
         MatIconModule,
         MatFormFieldModule,
         MatInputModule,
+        MatTooltipModule,
         TranslocoModule,
+        SpaSearchInputComponent,
         SpaSelectComponent
     ]
 })
@@ -42,7 +52,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     protected store = new CrudStore<ComponentDto>();
 
     #notify = inject(NotificationService);
-    #componentService = inject(ComponentLibraryService);
     #tenantCtx = inject(TenantContextService);
     #langCtx = inject(LanguageContextService);
     #dialog = inject(ItemDialogService);
@@ -89,25 +98,32 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     });
 
     protected override onInit(): void {
-        const storedId = this.#tenantCtx.getCurrentTenantId();
-        if (!storedId) {
-            this.#notify.warning('admin.components.errors.noTenant');
-            return;
-        }
-        this.tenantId = storedId;
-        this.#loadTenantLanguages();
-        this.#loadComponentTypes();
-        this.loadItems();
-
-        this.#tenantCtx.tenant$.pipe(takeUntil(this.destroy$)).subscribe((t) => {
-            if (!t) return;
-            if (t.id !== this.tenantId) {
-                this.tenantId = t.id;
+        this.#tenantCtx.tenant$
+            .pipe(
+                filter(t => !!t),
+                take(1),
+                takeUntil(this.destroy$)
+            )
+            .subscribe((tenant) => {
+                this.tenantId = tenant.id;
                 this.#loadTenantLanguages();
                 this.#loadComponentTypes();
                 this.loadItems();
-            }
-        });
+            });
+        this.#tenantCtx.tenant$
+            .pipe(
+                skip(1),
+                filter(t => !!t),
+                takeUntil(this.destroy$)
+            )
+            .subscribe((tenant) => {
+                if (tenant.id !== this.tenantId) {
+                    this.tenantId = tenant.id;
+                    this.#loadTenantLanguages();
+                    this.#loadComponentTypes();
+                    this.loadItems();
+                }
+            });
     }
 
     #loadTenantLanguages(): void {
@@ -119,8 +135,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     #loadComponentTypes(): void {
-        this.#componentService.listComponentTypes()
-            .pipe(take(1), takeUntil(this.destroy$))
+        this.service.listComponentTypes()
+            .pipe(take(1))
             .subscribe({
                 next: (types) => this.componentTypes.set(types),
                 error: () => this.#notify.alert('admin.components.errors.loadTypesFailed')
@@ -129,14 +145,13 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
     protected override beforeLoad(): boolean {
         if (!this.tenantId) {
-            this.#notify.warning('admin.components.errors.noTenant');
             return false;
         }
         return true;
     }
 
     protected override fetchItems() {
-        return this.#componentService.listComponents();
+        return this.service.listComponents();
     }
 
     protected override onLoadError(error: any): void {
@@ -194,7 +209,11 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             languages: this.supportedLanguages(),
             initial,
             i18nInitial,
-            modalData: { disableClose: true, width: '800px', height: '80vh' }
+            modalData: {
+                disableClose: true,
+                width: DIALOG_CONFIG.COMPONENT_FORM.width,
+                height: DIALOG_CONFIG.COMPONENT_FORM.height
+            }
         };
 
         this.#dialog.open(options).pipe(take(1)).subscribe((result) => {
@@ -212,8 +231,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                 }
             };
 
-            this.#componentService.createComponent(basePayload)
-                .pipe(take(1), takeUntil(this.destroy$))
+            this.service.createComponent(basePayload)
+                .pipe(take(1))
                 .subscribe({
                     next: (created) => {
                         this.#saveI18nForComponent(created.id, result, true);
@@ -230,8 +249,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         }
 
         this.store.setLoading(true);
-        this.#componentService.getComponentDetail(componentId)
-            .pipe(take(1), takeUntil(this.destroy$))
+        this.service.getComponentDetail(componentId)
+            .pipe(take(1))
             .subscribe({
                 next: (detail) => {
                     this.store.setLoading(false);
@@ -282,7 +301,11 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             initial,
             i18nInitial,
             id: detail.id,
-            modalData: { disableClose: true, width: '800px', height: '80vh' },
+            modalData: {
+                disableClose: true,
+                width: DIALOG_CONFIG.COMPONENT_FORM.width,
+                height: DIALOG_CONFIG.COMPONENT_FORM.height
+            },
             extendedFieldsSchema: componentType?.extendedFieldsSchema
         };
 
@@ -301,8 +324,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                     }
                 };
 
-                this.#componentService.updateComponent(detail.id, basePayload)
-                    .pipe(take(1), takeUntil(this.destroy$))
+                this.service.updateComponent(detail.id, basePayload)
+                    .pipe(take(1))
                     .subscribe({
                         next: () => {
                             this.#saveI18nForComponent(detail.id, result, false);
@@ -341,7 +364,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                 status: ComponentStatus.DRAFT
             };
 
-            return this.#componentService.updateComponentI18n(componentId, lang, request);
+            return this.service.updateComponentI18n(componentId, lang, request);
         }).filter(req => req !== null);
 
         if (i18nRequests.length === 0) {
@@ -351,7 +374,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         }
 
         forkJoin(i18nRequests)
-            .pipe(take(1), takeUntil(this.destroy$))
+            .pipe(take(1))
             .subscribe({
                 next: () => {
                     this.#notify.success(isCreate ? 'admin.components.success.created' : 'admin.components.success.updated');
@@ -366,8 +389,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             return;
         }
 
-        this.#componentService.deleteComponent(componentId)
-            .pipe(take(1), takeUntil(this.destroy$))
+        this.service.deleteComponent(componentId)
+            .pipe(take(1))
             .subscribe({
                 next: () => {
                     this.#notify.success('admin.components.success.deleted');
@@ -379,8 +402,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
     openTypesManager(): void {
         const dialogRef = this.#matDialog.open(ComponentTypesManagerComponent, {
-            width: '900px',
-            height: '600px',
+            width: DIALOG_CONFIG.TYPES_MANAGER.width,
+            height: DIALOG_CONFIG.TYPES_MANAGER.height,
             disableClose: false
         });
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GeneralFieldConfig, ItemDialogSchema, LangFieldConfig } from '@shared/types/item-dialog.types';
 import { ComponentTypeDto } from '../models/component-library.types';
+import { COMPONENT_CATEGORIES } from '../models/component-categories.constants';
 
 @Injectable({
     providedIn: 'root'
@@ -161,9 +162,10 @@ export class ComponentSchemaBuilderService {
             },
             {
                 key: 'category',
-                type: 'text',
+                type: 'select',
                 labelKey: 'admin.components.fields.category',
-                maxLength: 50
+                required: false,
+                options: COMPONENT_CATEGORIES
             },
             {
                 key: 'icon',
