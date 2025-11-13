@@ -88,7 +88,7 @@ public class ComponentController {
                 Map<Component, List<ComponentI18n>> resultMap = componentService.getComponentWithI18n(query);
                 
                 Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator().next();
-                ComponentDetailResponse response = ComponentDetailResponse.from(entry.getKey(), entry.getValue());
+                ComponentResponse response = ComponentResponse.from(entry.getKey());
                 
                 return ResponseEntity.ok(ApiResponse.success(response));
             }

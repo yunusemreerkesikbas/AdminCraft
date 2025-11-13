@@ -40,15 +40,12 @@ public class EntryFieldDefinition {
     @Column(name = "field_type", nullable = false, length = 20)
     private EntryFieldType fieldType;
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "label_tr", nullable = false, length = 100)
-    private String labelTr;
+    @Size(max = 50)
+    @Column(name = "migration_version", length = 50)
+    private String migrationVersion;
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "label_en", nullable = false, length = 100)
-    private String labelEn;
+    @Column(name = "applied_at")
+    private LocalDateTime appliedAt;
 
     @Column(name = "is_required")
     private Boolean isRequired = false;

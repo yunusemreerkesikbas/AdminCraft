@@ -2,8 +2,10 @@ package com.backend.application.service;
 
 import com.backend.domain.entity.EntryFieldDefinition;
 import com.backend.domain.enums.EntryFieldType;
+import com.backend.infrastructure.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.Set;
 public class RuntimeMigrationService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final TenantContext tenantContext;
 
     private static final Set<String> RESERVED_KEYWORDS = Set.of(
             "id", "uuid", "uid", "entry_id", "language", "title", "description",
@@ -26,14 +29,31 @@ public class RuntimeMigrationService {
     private static final long MAX_TABLE_ROWS_WARNING = 1_000_000;
 
     @Transactional
-    public void addFieldColumn(EntryFieldDefinition field) {
+    public synchronized void addFieldColumn(EntryFieldDefinition field) {
+        validateTenantContext();
         validateMigrationSafety(field);
         
         String sql = generateAlterTableSql(field);
         
-        log.info("Executing runtime migration: {}", sql);
+        String correlationId = MDC.get("correlationId");
+        log.info("[{}] Executing runtime migration: {}", correlationId, sql);
+        
         jdbcTemplate.execute(sql);
-        log.info("Successfully added column: {}", field.getFieldKey());
+        
+        log.info("[{}] Successfully added column: {} for tenant: {}", 
+            correlationId, field.getFieldKey(), tenantContext.getTenantId());
+    }
+    
+    protected void validateTenantContext() {
+        String tenantId = tenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant context not set");
+        }
+        
+        String tenantDb = tenantContext.getTenantDbName();
+        if (tenantDb == null || tenantDb.trim().isEmpty()) {
+            throw new IllegalStateException("Tenant database name not set");
+        }
     }
 
     private void validateMigrationSafety(EntryFieldDefinition field) {
@@ -68,24 +88,35 @@ public class RuntimeMigrationService {
     private String generateAlterTableSql(EntryFieldDefinition field) {
         String columnType = mapFieldTypeToSqlType(field);
         String nullable = field.getIsRequired() ? "NOT NULL" : "NULL";
+        
+        String escapedColumnName = escapeIdentifier(field.getFieldKey());
 
         return String.format(
-                "ALTER TABLE component_entry_i18n ADD COLUMN %s %s %s",
-                field.getFieldKey(),
+                "ALTER TABLE component_entry_i18n ADD COLUMN %s %s %s, ALGORITHM=INSTANT",
+                escapedColumnName,
                 columnType,
                 nullable
         );
     }
+    
+    protected String escapeIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new IllegalArgumentException("Identifier cannot be null or empty");
+        }
+        
+        String cleaned = identifier.replace("`", "``");
+        return "`" + cleaned + "`";
+    }
 
     private String mapFieldTypeToSqlType(EntryFieldDefinition field) {
         return switch (field.getFieldType()) {
-            case text -> {
+            case TEXT -> {
                 int maxLength = field.getMaxLength() != null ? field.getMaxLength() : 500;
                 yield String.format("VARCHAR(%d)", maxLength);
             }
-            case textarea -> "TEXT";
-            case number -> "DECIMAL(10,2)";
-            case bool -> "BOOLEAN";
+            case TEXTAREA -> "TEXT";
+            case NUMBER -> "DECIMAL(10,2)";
+            case BOOLEAN -> "BOOLEAN";
         };
     }
 

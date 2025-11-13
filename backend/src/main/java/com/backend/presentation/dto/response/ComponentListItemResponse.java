@@ -6,35 +6,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 
 public record ComponentListItemResponse(
-    Long id,
-    String uuid,
-    String uid,
-    Long componentTypeId,
-    String componentTypeName,
-    String code,
-    String name,
-    JsonNode baseData,
-    ComponentStatus status,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt
-) {
-    public static ComponentListItemResponse from(Component component, String typeName) {
+        Long id,
+        String code,
+        String name,
+        Long componentTypeId,
+        String componentTypeName,
+        ComponentStatus status,
+        Integer entryCount) {
+    public static ComponentListItemResponse from(Component component, String typeName, Integer entryCount) {
         if (component == null) {
             throw new IllegalArgumentException("Component entity cannot be null");
         }
         return new ComponentListItemResponse(
-            component.getId(),
-            component.getUuid(),
-            component.getUid(),
-            component.getComponentTypeId(),
-            typeName,
-            component.getCode(),
-            component.getName(),
-            component.getBaseData(),
-            component.getStatus(),
-            component.getCreatedAt(),
-            component.getUpdatedAt()
-        );
+                component.getId(),
+                component.getCode(),
+                component.getName(),
+                component.getComponentTypeId(),
+                typeName,
+                component.getStatus(),
+                entryCount != null ? entryCount : 0);
     }
 }
-

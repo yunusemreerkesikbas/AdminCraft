@@ -41,34 +41,18 @@ public class EntryFieldValidator {
     }
 
     protected void validateConstraints(EntryFieldDefinition field) {
-        if (field.getFieldType() == EntryFieldType.text && field.getMaxLength() != null) {
+        if (field.getFieldType() == EntryFieldType.TEXT && field.getMaxLength() != null) {
             if (field.getMaxLength() < 1 || field.getMaxLength() > 5000) {
                 throw new IllegalArgumentException("Text max length must be between 1 and 5000");
             }
         }
 
-        if (field.getFieldType() == EntryFieldType.number) {
+        if (field.getFieldType() == EntryFieldType.NUMBER) {
             if (field.getMinValue() != null && field.getMaxValue() != null) {
                 if (field.getMinValue().compareTo(field.getMaxValue()) > 0) {
                     throw new IllegalArgumentException("Min value cannot be greater than max value");
                 }
             }
-        }
-    }
-
-    public void validateLabels(String labelTr, String labelEn) {
-        ValidationResult trResult = textValidator.validate(labelTr);
-        if (!trResult.isValid()) {
-            throw new IllegalArgumentException("Turkish label: " + trResult.getFirstError());
-        }
-
-        ValidationResult enResult = textValidator.validate(labelEn);
-        if (!enResult.isValid()) {
-            throw new IllegalArgumentException("English label: " + enResult.getFirstError());
-        }
-
-        if (labelTr.length() > 100 || labelEn.length() > 100) {
-            throw new IllegalArgumentException("Labels must not exceed 100 characters");
         }
     }
 }

@@ -29,8 +29,17 @@ public abstract class BaseI18nEntity {
     @Column(name = "language", nullable = false, length = 10)
     private Language language;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "updated_by")
+    private Long updatedBy;
 
     @PrePersist
     protected void onCreate() {
@@ -42,6 +51,10 @@ public abstract class BaseI18nEntity {
 
         if (uid == null || uid.trim().isEmpty()) {
             uid = UuidUidGenerator.generateUid();
+        }
+
+        if (createdAt == null) {
+            createdAt = now;
         }
 
         if (updatedAt == null) {

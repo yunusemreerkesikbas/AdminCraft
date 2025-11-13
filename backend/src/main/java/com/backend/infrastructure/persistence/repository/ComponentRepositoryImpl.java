@@ -73,5 +73,10 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public List<Object[]> findAllWithTypeNames() {
         return jpaRepository.findAllWithTypeNames();
     }
+
+    @Override
+    public List<Object[]> findAllWithTypeNamesAndEntryCount() {
+        return jpaRepository.findAllWithTypeNamesAndEntryCount();
+    }
 }
 

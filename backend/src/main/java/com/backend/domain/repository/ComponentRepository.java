@@ -18,4 +18,5 @@ public interface ComponentRepository {
     boolean existsByCode(String code);
     boolean existsByUid(String uid);
     List<Object[]> findAllWithTypeNames();
+    List<Object[]> findAllWithTypeNamesAndEntryCount();
 }

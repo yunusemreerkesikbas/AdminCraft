@@ -88,13 +88,14 @@ public class ComponentServiceImpl implements ComponentService {
     @Override
     @Transactional(readOnly = true)
     public List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query) {
-        List<Object[]> results = componentRepository.findAllWithTypeNames();
+        List<Object[]> results = componentRepository.findAllWithTypeNamesAndEntryCount();
         
         return results.stream()
             .map(row -> {
                 Component component = (Component) row[0];
                 String typeName = (String) row[1];
-                return ComponentListItemResponse.from(component, typeName);
+                Long entryCount = (Long) row[2];
+                return ComponentListItemResponse.from(component, typeName, entryCount.intValue());
             })
             .collect(Collectors.toList());
     }

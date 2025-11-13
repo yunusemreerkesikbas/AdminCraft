@@ -6,6 +6,7 @@ import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,11 +39,11 @@ public class ComponentEntryI18nServiceImpl implements ComponentEntryI18nService 
             entryI18n.setLanguage(language);
         }
 
-        entryI18n.setTitle((String) data.get("title"));
-        entryI18n.setDescription((String) data.get("description"));
-        entryI18n.setImageUrl((String) data.get("imageUrl"));
-        entryI18n.setButtonText((String) data.get("buttonText"));
-        entryI18n.setButtonUrl((String) data.get("buttonUrl"));
+        entryI18n.setTitle(sanitizeString((String) data.get("title")));
+        entryI18n.setDescription(sanitizeHtml((String) data.get("description")));
+        entryI18n.setImageUrl(sanitizeUrl((String) data.get("imageUrl")));
+        entryI18n.setButtonText(sanitizeString((String) data.get("buttonText")));
+        entryI18n.setButtonUrl(sanitizeUrl((String) data.get("buttonUrl")));
 
         ComponentEntryI18n saved = entryI18nRepository.save(entryI18n);
 
@@ -55,14 +56,50 @@ public class ComponentEntryI18nServiceImpl implements ComponentEntryI18nService 
     private void updateDynamicFields(Long entryI18nId, Map<String, Object> data) {
         data.forEach((key, value) -> {
             if (!isBaseField(key) && value != null) {
-                String sql = String.format("UPDATE component_entry_i18n SET %s = ? WHERE id = ?", key);
-                jdbcTemplate.update(sql, value, entryI18nId);
+                validateFieldKey(key);
+                String escapedColumn = escapeIdentifier(key);
+                String sql = String.format("UPDATE component_entry_i18n SET %s = ? WHERE id = ?", escapedColumn);
+                Object sanitizedValue = sanitizeValue(value);
+                jdbcTemplate.update(sql, sanitizedValue, entryI18nId);
             }
         });
     }
 
+    protected void validateFieldKey(String fieldKey) {
+        if (!fieldKey.matches("^[a-z][a-zA-Z0-9]{0,49}$")) {
+            throw new IllegalArgumentException("Invalid field key: " + fieldKey);
+        }
+    }
+
+    protected String escapeIdentifier(String identifier) {
+        String cleaned = identifier.replace("`", "``");
+        return "`" + cleaned + "`";
+    }
+
     private boolean isBaseField(String key) {
         return List.of("title", "description", "imageUrl", "buttonText", "buttonUrl", "status").contains(key);
+    }
+
+    protected String sanitizeString(String value) {
+        if (value == null) return null;
+        return Encode.forHtml(value);
+    }
+
+    protected String sanitizeHtml(String value) {
+        if (value == null) return null;
+        return Encode.forHtmlContent(value);
+    }
+
+    protected String sanitizeUrl(String value) {
+        if (value == null) return null;
+        return Encode.forUriComponent(value);
+    }
+
+    protected Object sanitizeValue(Object value) {
+        if (value instanceof String) {
+            return sanitizeString((String) value);
+        }
+        return value;
     }
 
     @Override

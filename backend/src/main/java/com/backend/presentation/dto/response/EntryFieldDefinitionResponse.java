@@ -11,12 +11,12 @@ public record EntryFieldDefinitionResponse(
     Long componentTypeId,
     String fieldKey,
     EntryFieldType fieldType,
-    String labelTr,
-    String labelEn,
     Boolean isRequired,
     Integer maxLength,
     BigDecimal minValue,
     BigDecimal maxValue,
+    String migrationVersion,
+    LocalDateTime appliedAt,
     LocalDateTime createdAt
 ) {
     public static EntryFieldDefinitionResponse from(EntryFieldDefinition entity) {
@@ -25,12 +25,12 @@ public record EntryFieldDefinitionResponse(
             entity.getComponentTypeId(),
             entity.getFieldKey(),
             entity.getFieldType(),
-            entity.getLabelTr(),
-            entity.getLabelEn(),
             entity.getIsRequired(),
             entity.getMaxLength(),
             entity.getMinValue(),
             entity.getMaxValue(),
+            entity.getMigrationVersion(),
+            entity.getAppliedAt(),
             entity.getCreatedAt()
         );
     }

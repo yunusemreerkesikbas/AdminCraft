@@ -2,6 +2,7 @@ package com.backend.shared.common;
 
 import com.backend.domain.exception.*;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private final MessageSource messageSource;
-    
+
     public GlobalExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
@@ -55,7 +56,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-    
+
     @ExceptionHandler(UserAccountDisabledException.class)
     public ResponseEntity<ApiResponse<?>> handleUserAccountDisabled(UserAccountDisabledException ex) {
         log.warn("User account disabled exception: {}", ex.getMessage());
@@ -63,7 +64,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-    
+
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex) {
         log.warn("Invalid token exception: {}", ex.getMessage());
@@ -71,7 +72,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-    
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex) {
         log.warn("User not found exception: {}", ex.getMessage());
@@ -95,8 +96,26 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-    
+
     // Business Logic Exceptions
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleEntityNotFound(EntityNotFoundException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Entity not found: {}", correlationId, ex.getMessage());
+        String message = ex.getMessage();
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateEntityException.class)
+    public ResponseEntity<ApiResponse<?>> handleDuplicateEntity(DuplicateEntityException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Duplicate entity: {}", correlationId, ex.getMessage());
+        String message = ex.getMessage();
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(TenantNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleTenantNotFound(TenantNotFoundException ex) {
         log.warn("Tenant not found exception: {}", ex.getMessage());
@@ -128,7 +147,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-    
+
     // Security Exceptions
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<?>> handleAccessDenied(AccessDeniedException ex) {
@@ -146,7 +165,7 @@ public class GlobalExceptionHandler {
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
-    
+
     // Validation Exceptions
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -173,16 +192,15 @@ public class GlobalExceptionHandler {
         if (exceptionMessage.contains("foreign key constraint")) {
             userMessage = getMessage("error.data.reference.invalid");
         } else if (exceptionMessage.contains("unique constraint") ||
-                   exceptionMessage.contains("duplicate")) {
+                exceptionMessage.contains("duplicate")) {
             userMessage = getMessage("error.data.duplicate");
         } else {
             userMessage = getMessage("error.data.integrity");
         }
 
         return new ResponseEntity<>(
-            ApiResponse.error(userMessage),
-            HttpStatus.BAD_REQUEST
-        );
+                ApiResponse.error(userMessage),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -190,27 +208,37 @@ public class GlobalExceptionHandler {
         log.error("Constraint violation: ", ex); // Log full stack trace
         String message = getMessage("error.validation.constraint");
         return new ResponseEntity<>(
-            ApiResponse.error(message),
-            HttpStatus.BAD_REQUEST
-        );
+                ApiResponse.error(message),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime exception: ", ex);
+        String correlationId = MDC.get("correlationId");
+        log.error("[{}] Runtime exception: ", correlationId, ex);
         String message = getMessage("error.runtime");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(com.backend.domain.exception.MaxFieldLimitException.class)
+    public ResponseEntity<ApiResponse<?>> handleMaxFieldLimit(com.backend.domain.exception.MaxFieldLimitException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Max field limit exceeded: {}", correlationId, ex.getMessage());
+        String message = getMessage("error.max.field.limit");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
-        log.error("Unexpected exception: ", ex);
+        String correlationId = MDC.get("correlationId");
+        log.error("[{}] Unexpected exception: ", correlationId, ex);
         String message = getMessage("error.general");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
+
     private String getMessage(String key) {
         try {
             return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
