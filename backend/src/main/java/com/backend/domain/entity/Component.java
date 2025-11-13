@@ -44,10 +44,6 @@ public class Component extends BaseEntity {
     @Column(name = "base_data", columnDefinition = "JSON")
     private JsonNode baseData;
 
-    @Column(name = "extended_data", columnDefinition = "JSON")
-    @Convert(converter = JsonNodeConverter.class)
-    private JsonNode extendedData;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @NotNull

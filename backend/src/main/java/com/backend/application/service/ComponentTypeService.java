@@ -3,7 +3,6 @@ package com.backend.application.service;
 import com.backend.application.command.ComponentTypeCommands.*;
 import com.backend.application.query.ComponentTypeQueries.*;
 import com.backend.domain.entity.ComponentType;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 public interface ComponentTypeService {
@@ -14,5 +13,4 @@ public interface ComponentTypeService {
     List<ComponentType> getComponentTypesByCategory(GetComponentTypesByCategoryQuery query);
     ComponentType updateComponentType(UpdateComponentTypeCommand command);
     void deleteComponentType(DeleteComponentTypeCommand command);
-    JsonNode validateSchema(JsonNode schema);
 }

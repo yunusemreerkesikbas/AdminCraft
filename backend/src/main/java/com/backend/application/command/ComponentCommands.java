@@ -10,7 +10,6 @@ public class ComponentCommands {
         String code,
         String name,
         JsonNode baseData,
-        JsonNode extendedData,
         ComponentStatus status,
         Long userId
     ) {}
@@ -21,7 +20,6 @@ public class ComponentCommands {
         String code,
         String name,
         JsonNode baseData,
-        JsonNode extendedData,
         ComponentStatus status,
         Long userId
     ) {}

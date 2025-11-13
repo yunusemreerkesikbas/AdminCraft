@@ -13,6 +13,7 @@ import com.backend.presentation.dto.request.ComponentCreateRequest;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
+import com.backend.presentation.dto.response.ComponentListItemResponse;
 import com.backend.presentation.dto.response.ComponentListResponse;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.shared.common.ApiResponse;
@@ -57,7 +58,6 @@ public class ComponentController {
                 request.code(),
                 request.name(),
                 request.baseData(),
-                request.extendedData(),
                 request.status(),
                 userId
             );
@@ -108,15 +108,11 @@ public class ComponentController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ComponentListResponse>>> list(
+    public ResponseEntity<ApiResponse<List<ComponentListItemResponse>>> list(
         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            GetAllComponentsWithTranslationsQuery query = new GetAllComponentsWithTranslationsQuery();
-            Map<Component, List<ComponentI18n>> resultMap = componentService.getAllComponentsWithTranslations(query);
-            
-            List<ComponentListResponse> responses = resultMap.entrySet().stream()
-                .map(entry -> ComponentListResponse.from(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+            GetAllComponentsQuery query = new GetAllComponentsQuery();
+            List<ComponentListItemResponse> responses = componentService.getAllComponentsWithTypeNames(query);
             
             return ResponseEntity.ok(ApiResponse.success(responses));
         } catch (Exception ex) {
@@ -142,7 +138,6 @@ public class ComponentController {
                 request.code(),
                 request.name(),
                 request.baseData(),
-                request.extendedData(),
                 request.status(),
                 userId
             );
@@ -213,7 +208,6 @@ public class ComponentController {
                 id,
                 language,
                 request.baseLocalizedData(),
-                request.extendedLocalizedData(),
                 request.status()
             );
             

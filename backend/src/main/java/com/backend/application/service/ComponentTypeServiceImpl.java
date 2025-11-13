@@ -5,7 +5,6 @@ import com.backend.application.query.ComponentTypeQueries.*;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,30 +17,17 @@ import java.util.List;
 public class ComponentTypeServiceImpl implements ComponentTypeService {
 
     private final ComponentTypeRepository componentTypeRepository;
-    private final ComponentSchemaValidator schemaValidator;
 
     @Override
     @Transactional
     public ComponentType createComponentType(CreateComponentTypeCommand command) {
         log.debug("Creating component type with code: {}", command.code());
 
-        JsonNode sanitizedSchema = null;
-        if (command.extendedFieldsSchema() != null && !command.extendedFieldsSchema().isNull()) {
-            try {
-                sanitizedSchema = schemaValidator.validateSchema(command.extendedFieldsSchema());
-                log.debug("Schema validated successfully for component type: {}", command.code());
-            } catch (IllegalArgumentException e) {
-                log.error("Schema validation failed for component type {}: {}", command.code(), e.getMessage());
-                throw new IllegalArgumentException("Invalid extended fields schema: " + e.getMessage(), e);
-            }
-        }
-
         ComponentType componentType = new ComponentType();
         componentType.setCode(command.code());
         componentType.setName(command.name());
         componentType.setCategory(command.category());
         componentType.setIcon(command.icon());
-        componentType.setExtendedFieldsSchema(sanitizedSchema);
         componentType.setIsSystem(false);
         componentType.setCreatedBy(command.userId());
         componentType.setUpdatedBy(command.userId());
@@ -90,22 +76,10 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
             throw new IllegalStateException("Cannot update system component type");
         }
 
-        JsonNode sanitizedSchema = null;
-        if (command.extendedFieldsSchema() != null && !command.extendedFieldsSchema().isNull()) {
-            try {
-                sanitizedSchema = schemaValidator.validateSchema(command.extendedFieldsSchema());
-                log.debug("Schema validated successfully for component type update: {}", command.id());
-            } catch (IllegalArgumentException e) {
-                log.error("Schema validation failed for component type {}: {}", command.id(), e.getMessage());
-                throw new IllegalArgumentException("Invalid extended fields schema: " + e.getMessage(), e);
-            }
-        }
-
         componentType.setCode(command.code());
         componentType.setName(command.name());
         componentType.setCategory(command.category());
         componentType.setIcon(command.icon());
-        componentType.setExtendedFieldsSchema(sanitizedSchema);
         componentType.setUpdatedBy(command.userId());
 
         componentType = componentTypeRepository.save(componentType);
@@ -124,19 +98,6 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
         }
 
         componentTypeRepository.delete(componentType);
-    }
-
-    @Override
-    public JsonNode validateSchema(JsonNode schema) {
-        log.debug("Validating component type schema");
-        try {
-            JsonNode sanitizedSchema = schemaValidator.validateSchema(schema);
-            log.debug("Schema validation successful");
-            return sanitizedSchema;
-        } catch (IllegalArgumentException e) {
-            log.error("Schema validation failed: {}", e.getMessage());
-            throw new IllegalArgumentException("Schema validation failed: " + e.getMessage(), e);
-        }
     }
 
     private String generateUniqueUid() {

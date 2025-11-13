@@ -35,10 +35,6 @@ public class ComponentI18n extends BaseI18nEntity {
     @Column(name = "base_localized_data", columnDefinition = "JSON")
     private JsonNode baseLocalizedData;
 
-    @Column(name = "extended_localized_data", columnDefinition = "JSON")
-    @Convert(converter = JsonNodeConverter.class)
-    private JsonNode extendedLocalizedData;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @NotNull

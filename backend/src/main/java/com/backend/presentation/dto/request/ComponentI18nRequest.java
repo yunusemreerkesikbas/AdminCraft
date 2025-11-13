@@ -8,8 +8,6 @@ public record ComponentI18nRequest(
     @NotNull(message = "validation.component.i18n.data.required")
     JsonNode baseLocalizedData,
 
-    JsonNode extendedLocalizedData,
-
     ComponentStatus status
 ) {
 }

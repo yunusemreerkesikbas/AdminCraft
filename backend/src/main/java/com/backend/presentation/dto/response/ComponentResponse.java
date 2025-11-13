@@ -13,7 +13,6 @@ public record ComponentResponse(
     String code,
     String name,
     JsonNode baseData,
-    JsonNode extendedData,
     ComponentStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
@@ -30,7 +29,6 @@ public record ComponentResponse(
             entity.getCode(),
             entity.getName(),
             entity.getBaseData(),
-            entity.getExtendedData(),
             entity.getStatus(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()

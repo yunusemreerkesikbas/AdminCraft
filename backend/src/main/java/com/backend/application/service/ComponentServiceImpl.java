@@ -9,6 +9,7 @@ import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
+import com.backend.presentation.dto.response.ComponentListItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,6 @@ public class ComponentServiceImpl implements ComponentService {
         component.setCode(command.code());
         component.setName(command.name());
         component.setBaseData(command.baseData());
-        component.setExtendedData(command.extendedData());
         component.setStatus(command.status() != null ? command.status() : ComponentStatus.DRAFT);
         component.setCreatedBy(command.userId());
         component.setUpdatedBy(command.userId());
@@ -87,6 +87,20 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query) {
+        List<Object[]> results = componentRepository.findAllWithTypeNames();
+        
+        return results.stream()
+            .map(row -> {
+                Component component = (Component) row[0];
+                String typeName = (String) row[1];
+                return ComponentListItemResponse.from(component, typeName);
+            })
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query) {
         return componentRepository.findByComponentTypeId(query.typeId());
     }
@@ -103,7 +117,6 @@ public class ComponentServiceImpl implements ComponentService {
         component.setCode(command.code());
         component.setName(command.name());
         component.setBaseData(command.baseData());
-        component.setExtendedData(command.extendedData());
         if (command.status() != null) {
             component.setStatus(command.status());
         }

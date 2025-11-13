@@ -29,15 +29,6 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
                 .orElseThrow(
                         () -> new IllegalArgumentException("Component not found with id: " + command.componentId()));
 
-        JsonNode validatedExtendedLocalizedData = null;
-        if (command.extendedLocalizedData() != null) {
-            var componentType = componentTypeService.getComponentTypeById(
-                    new GetComponentTypeByIdQuery(component.getComponentTypeId()));
-            validatedExtendedLocalizedData = validateExtendedLocalizedData(
-                    componentType.getExtendedFieldsSchema(),
-                    command.extendedLocalizedData());
-        }
-
         ComponentI18n componentI18n = componentI18nRepository
                 .findByComponentIdAndLanguage(command.componentId(), command.language())
                 .orElse(null);
@@ -49,7 +40,6 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
         }
 
         componentI18n.setBaseLocalizedData(command.baseLocalizedData());
-        componentI18n.setExtendedLocalizedData(validatedExtendedLocalizedData);
         if (command.status() != null) {
             componentI18n.setStatus(command.status());
         }
@@ -108,35 +98,6 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
                         "ComponentI18n not found for componentId: " + command.componentId() + " and language: "
                                 + command.language()));
         componentI18nRepository.delete(componentI18n);
-    }
-
-    private JsonNode validateExtendedLocalizedData(JsonNode extendedFieldsSchema, JsonNode extendedLocalizedData) {
-        if (extendedFieldsSchema == null || extendedLocalizedData == null) {
-            return extendedLocalizedData;
-        }
-        JsonNode i18nFields = extendedFieldsSchema.get("i18n");
-        if (i18nFields == null || !i18nFields.isArray()) {
-            return extendedLocalizedData;
-        }
-        var fieldNames = extendedLocalizedData.fieldNames();
-        while (fieldNames.hasNext()) {
-            String fieldKey = fieldNames.next();
-            boolean foundInSchema = false;
-
-            for (JsonNode fieldDef : i18nFields) {
-                if (fieldDef.get("key").asText().equals(fieldKey)) {
-                    foundInSchema = true;
-                    break;
-                }
-            }
-
-            if (!foundInSchema) {
-                throw new IllegalArgumentException(
-                        "Field '" + fieldKey + "' not defined in component type schema");
-            }
-        }
-
-        return extendedLocalizedData;
     }
 
     private String generateUniqueUid() {
