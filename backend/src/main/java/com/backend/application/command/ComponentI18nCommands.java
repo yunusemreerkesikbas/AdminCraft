@@ -10,7 +10,6 @@ public class ComponentI18nCommands {
         Long componentId,
         Language language,
         JsonNode baseLocalizedData,
-        JsonNode extendedLocalizedData,
         ComponentStatus status
     ) {}
 

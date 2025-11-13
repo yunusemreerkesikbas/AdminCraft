@@ -1,0 +1,47 @@
+package com.backend.infrastructure.persistence.tenant.repository;
+
+import com.backend.domain.entity.EntryFieldDefinition;
+import com.backend.domain.repository.EntryFieldDefinitionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class EntryFieldDefinitionRepositoryImpl implements EntryFieldDefinitionRepository {
+
+    private final JpaEntryFieldDefinitionRepository jpaRepository;
+
+    @Override
+    public EntryFieldDefinition save(EntryFieldDefinition definition) {
+        return jpaRepository.save(definition);
+    }
+
+    @Override
+    public Optional<EntryFieldDefinition> findById(Long id) {
+        return jpaRepository.findById(id);
+    }
+
+    @Override
+    public List<EntryFieldDefinition> findByComponentTypeId(Long componentTypeId) {
+        return jpaRepository.findByComponentTypeId(componentTypeId);
+    }
+
+    @Override
+    public Optional<EntryFieldDefinition> findByComponentTypeIdAndFieldKey(Long componentTypeId, String fieldKey) {
+        return jpaRepository.findByComponentTypeIdAndFieldKey(componentTypeId, fieldKey);
+    }
+
+    @Override
+    public boolean existsByComponentTypeIdAndFieldKey(Long componentTypeId, String fieldKey) {
+        return jpaRepository.existsByComponentTypeIdAndFieldKey(componentTypeId, fieldKey);
+    }
+
+    @Override
+    public void delete(EntryFieldDefinition definition) {
+        jpaRepository.delete(definition);
+    }
+}
+

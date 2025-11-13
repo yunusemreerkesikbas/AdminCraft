@@ -13,7 +13,6 @@ public record ComponentI18nResponse(
     Long componentId,
     Language language,
     JsonNode baseLocalizedData,
-    JsonNode extendedLocalizedData,
     ComponentStatus status,
     LocalDateTime publishedAt,
     LocalDateTime updatedAt
@@ -29,7 +28,6 @@ public record ComponentI18nResponse(
             entity.getComponentId(),
             entity.getLanguage(),
             entity.getBaseLocalizedData(),
-            entity.getExtendedLocalizedData(),
             entity.getStatus(),
             entity.getPublishedAt(),
             entity.getUpdatedAt()

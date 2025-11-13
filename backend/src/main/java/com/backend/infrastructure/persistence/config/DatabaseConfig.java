@@ -20,6 +20,7 @@ import java.util.Map;
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackages = {
                 "com.backend.infrastructure.persistence.repository",
+                "com.backend.infrastructure.persistence.tenant.repository",
                 "com.backend.domain.repository"
 }, entityManagerFactoryRef = "tenantEntityManagerFactory", transactionManagerRef = "tenantTransactionManager")
 public class DatabaseConfig {

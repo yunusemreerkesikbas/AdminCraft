@@ -17,4 +17,6 @@ public interface ComponentRepository {
     void delete(Component entity);
     boolean existsByCode(String code);
     boolean existsByUid(String uid);
+    List<Object[]> findAllWithTypeNames();
+    List<Object[]> findAllWithTypeNamesAndEntryCount();
 }

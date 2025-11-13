@@ -20,8 +20,6 @@ public record ComponentCreateRequest(
 
     JsonNode baseData,
 
-    JsonNode extendedData,
-
     ComponentStatus status
 ) {
     public ComponentCreateRequest {

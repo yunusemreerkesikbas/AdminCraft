@@ -68,5 +68,15 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public boolean existsByUid(String uid) {
         return jpaRepository.existsByUid(uid);
     }
+
+    @Override
+    public List<Object[]> findAllWithTypeNames() {
+        return jpaRepository.findAllWithTypeNames();
+    }
+
+    @Override
+    public List<Object[]> findAllWithTypeNamesAndEntryCount() {
+        return jpaRepository.findAllWithTypeNamesAndEntryCount();
+    }
 }
 

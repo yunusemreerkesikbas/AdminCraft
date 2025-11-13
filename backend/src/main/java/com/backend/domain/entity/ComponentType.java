@@ -44,8 +44,4 @@ public class ComponentType extends BaseEntity {
 
     @Column(name = "is_system", nullable = false)
     private Boolean isSystem = false;
-
-    @Column(name = "extended_fields_schema", columnDefinition = "JSON")
-    @Convert(converter = JsonNodeConverter.class)
-    private JsonNode extendedFieldsSchema;
 }

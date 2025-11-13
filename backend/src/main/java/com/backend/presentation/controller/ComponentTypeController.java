@@ -47,7 +47,6 @@ public class ComponentTypeController {
                     request.name(),
                     request.category(),
                     request.icon(),
-                    request.extendedFieldsSchema(),
                     userId);
 
             ComponentType result = componentTypeService.createComponentType(command);
@@ -118,7 +117,6 @@ public class ComponentTypeController {
                     request.name(),
                     request.category(),
                     request.icon(),
-                    request.extendedFieldsSchema(),
                     userId);
 
             ComponentType result = componentTypeService.updateComponentType(command);
@@ -150,24 +148,6 @@ public class ComponentTypeController {
         } catch (Exception ex) {
             log.error("Error deleting component type {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("component.type.delete.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(msg));
-        }
-    }
-
-    @PostMapping("/validate-schema")
-    public ResponseEntity<ApiResponse<JsonNode>> validateSchema(
-            @RequestBody JsonNode schema,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        try {
-            JsonNode sanitizedSchema = componentTypeService.validateSchema(schema);
-            String successMessage = messageSource.getMessage("component.type.schema.validate.success",
-                    null, Locale.forLanguageTag(lang));
-            return ResponseEntity.ok(ApiResponse.success(successMessage, sanitizedSchema));
-        } catch (Exception ex) {
-            log.error("Schema validation error: {}", ex.getMessage());
-            String msg = messageSource.getMessage("component.type.schema.validate.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(msg));

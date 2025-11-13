@@ -1,7 +1,5 @@
 package com.backend.application.command;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 public class ComponentTypeCommands {
 
     public record CreateComponentTypeCommand(
@@ -9,7 +7,6 @@ public class ComponentTypeCommands {
         String name,
         String category,
         String icon,
-        JsonNode extendedFieldsSchema,
         Long userId
     ) {}
 
@@ -19,7 +16,6 @@ public class ComponentTypeCommands {
         String name,
         String category,
         String icon,
-        JsonNode extendedFieldsSchema,
         Long userId
     ) {}
 

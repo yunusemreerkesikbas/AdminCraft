@@ -1,6 +1,5 @@
 package com.backend.presentation.dto.request;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -17,9 +16,7 @@ public record ComponentTypeCreateRequest(
     String category,
 
     @Size(max = 50, message = "validation.component.type.icon.size")
-    String icon,
-
-    JsonNode extendedFieldsSchema
+    String icon
 ) {
     public ComponentTypeCreateRequest {
         if (code != null) {
