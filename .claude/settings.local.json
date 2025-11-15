@@ -17,7 +17,11 @@
       "Bash(cat:*)",
       "Bash(rm:*)",
       "Bash(move \"V1__baseline.sql\" \"V4__component_library_baseline.sql\")",
-      "Bash(mvn clean:*)"
+      "Bash(mvn clean:*)",
+      "Bash(git diff:*)",
+      "Bash(git config:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": [],
