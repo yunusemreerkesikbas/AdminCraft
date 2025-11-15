@@ -9,8 +9,7 @@ INSERT INTO component_types (
     name,
     category,
     icon,
-    is_system,
-    created_by
+    is_system
 ) VALUES (
     UUID(),
     'comp-type-header',
@@ -18,8 +17,7 @@ INSERT INTO component_types (
     'Header',
     'navigation',
     'header',
-    TRUE,
-    1
+    TRUE
 )
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
@@ -34,8 +32,7 @@ INSERT INTO component_types (
     name,
     category,
     icon,
-    is_system,
-    created_by
+    is_system
 ) VALUES (
     UUID(),
     'comp-type-footer',
@@ -43,8 +40,7 @@ INSERT INTO component_types (
     'Footer',
     'navigation',
     'footer',
-    TRUE,
-    1
+    TRUE
 )
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),

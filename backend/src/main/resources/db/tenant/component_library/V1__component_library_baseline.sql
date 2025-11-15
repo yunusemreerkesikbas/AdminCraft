@@ -13,16 +13,13 @@ CREATE TABLE component_types (
     is_system BOOLEAN DEFAULT FALSE COMMENT 'System-defined types cannot be deleted',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by BIGINT NOT NULL,
+    created_by BIGINT NULL,
     updated_by BIGINT NULL,
 
     UNIQUE KEY uk_component_type_uid (uid),
     UNIQUE KEY uk_component_type_code (code),
     INDEX idx_component_type_category (category),
-    INDEX idx_component_type_system (is_system),
-
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    INDEX idx_component_type_system (is_system)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Components table (component items)
@@ -37,7 +34,7 @@ CREATE TABLE components (
     status ENUM('ACTIVE', 'INACTIVE', 'DRAFT') DEFAULT 'DRAFT',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by BIGINT NOT NULL,
+    created_by BIGINT NULL,
     updated_by BIGINT NULL,
 
     UNIQUE KEY uk_component_uid (uid),
@@ -45,9 +42,7 @@ CREATE TABLE components (
     INDEX idx_component_type (component_type_id),
     INDEX idx_component_status (status),
 
-    FOREIGN KEY (component_type_id) REFERENCES component_types(id) ON DELETE RESTRICT,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (component_type_id) REFERENCES component_types(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Component i18n table (language-specific content)
@@ -60,7 +55,10 @@ CREATE TABLE component_i18n (
     base_localized_data JSON NULL COMMENT 'Standard i18n fields: title, subtitle, description, imageUrl, imageAlt, buttonText, buttonUrl, buttonStyle, links',
     status ENUM('ACTIVE', 'INACTIVE', 'DRAFT') DEFAULT 'DRAFT',
     published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
 
     UNIQUE KEY uk_component_i18n_component_lang (component_id, language),
     UNIQUE KEY uk_component_i18n_uid (uid),

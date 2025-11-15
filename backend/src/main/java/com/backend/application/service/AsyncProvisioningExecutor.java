@@ -122,34 +122,33 @@ public class AsyncProvisioningExecutor {
   private void runMigrations(String dbName, List<String> modules) {
     log.info("Running Flyway migrations for {} with modules: {}", dbName, modules);
 
-    List<String> locations = new ArrayList<>();
-    locations.add("classpath:db/tenant/core");
-
-    for (String module : modules) {
-      if (!"core".equals(module)) {
-        String location = "classpath:db/tenant/" + module;
-        locations.add(location);
-        log.debug("Added migration location: {}", location);
-      }
-    }
-
     DataSource tenantDs = createTenantDataSource(dbName);
 
-    log.debug("Configuring Flyway with locations: {}", locations);
+    List<String> modulesToMigrate = new ArrayList<>();
+    modulesToMigrate.add("core");
+    modulesToMigrate.addAll(modules.stream().filter(m -> !"core".equals(m)).toList());
 
-    Flyway flyway = Flyway.configure()
-        .dataSource(tenantDs)
-        .locations(locations.toArray(new String[0]))
-        .baselineOnMigrate(true)
-        .baselineVersion("0")
-        .outOfOrder(true)
-        .validateOnMigrate(true)
-        .load();
+    for (String module : modulesToMigrate) {
+      String location = "classpath:db/tenant/" + module;
+      String historyTable = "flyway_" + module + "_history";
 
-    log.debug("Starting Flyway migration for database: {}", dbName);
-    flyway.migrate();
+      log.debug("Running Flyway for module: {} (location: {}, table: {})", module, location, historyTable);
 
-    log.info("Migrations completed for {}", dbName);
+      Flyway flyway = Flyway.configure()
+          .dataSource(tenantDs)
+          .locations(location)
+          .table(historyTable)
+          .baselineOnMigrate(true)
+          .baselineVersion("0")
+          .outOfOrder(false)
+          .validateOnMigrate(true)
+          .load();
+
+      flyway.migrate();
+      log.info("Migration completed for module: {}", module);
+    }
+
+    log.info("All migrations completed for {}", dbName);
   }
 
   private DataSource createTenantDataSource(String dbName) {
