@@ -48,203 +48,219 @@ public class ComponentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<ComponentResponse>> create(
-        @Valid @RequestBody ComponentCreateRequest request,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @Valid @RequestBody ComponentCreateRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            
+
             CreateComponentCommand command = new CreateComponentCommand(
-                request.componentTypeId(),
-                request.code(),
-                request.name(),
-                request.baseData(),
-                request.status(),
-                userId
-            );
-            
+                    request.componentTypeId(),
+                    request.code(),
+                    request.name(),
+                    request.baseData(),
+                    request.status(),
+                    userId);
+
             Component result = componentService.createComponent(command);
             ComponentResponse response = ComponentResponse.from(result);
-            
+
             String successMessage = messageSource.getMessage("component.create.success",
-                null, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
             log.error("Error creating component: {}", ex.getMessage());
             String msg = messageSource.getMessage("component.create.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(
-        @PathVariable @NotNull @Min(1) Long id,
-        @RequestParam(value = "include", required = false) String include,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @RequestParam(value = "include", required = false) String include,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             if (include != null && include.contains("translations")) {
                 GetComponentWithI18nQuery query = new GetComponentWithI18nQuery(id);
                 Map<Component, List<ComponentI18n>> resultMap = componentService.getComponentWithI18n(query);
-                
+
                 Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator().next();
-                ComponentResponse response = ComponentResponse.from(entry.getKey());
-                
+                Component component = entry.getKey();
+                List<ComponentI18n> i18nList = entry.getValue();
+                Map<String, ComponentI18nResponse> translationsMap = i18nList.stream()
+                        .collect(Collectors.toMap(
+                                i18n -> i18n.getLanguage().name(), // "TR", "EN", etc.
+                                ComponentI18nResponse::from));
+
+                int publishedCount = (int) i18nList.stream()
+                        .filter(i18n -> i18n.getPublishedAt() != null)
+                        .count();
+                ComponentDetailResponse.Metadata metadata = new ComponentDetailResponse.Metadata(
+                        translationsMap.size(),
+                        publishedCount);
+                String componentTypeName = "";
+                ComponentDetailResponse response = ComponentDetailResponse.from(
+                        component,
+                        componentTypeName,
+                        translationsMap,
+                        metadata);
+
                 return ResponseEntity.ok(ApiResponse.success(response));
             }
-            
+
             GetComponentByIdQuery query = new GetComponentByIdQuery(id);
             Component result = componentService.getComponentById(query);
             ComponentResponse response = ComponentResponse.from(result);
-            
+
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting component {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("component.get.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ComponentListItemResponse>>> list(
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             GetAllComponentsQuery query = new GetAllComponentsQuery();
             List<ComponentListItemResponse> responses = componentService.getAllComponentsWithTypeNames(query);
-            
+
             return ResponseEntity.ok(ApiResponse.success(responses));
         } catch (Exception ex) {
             log.error("Error listing components: {}", ex.getMessage());
             String msg = messageSource.getMessage("component.list.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ComponentResponse>> update(
-        @PathVariable @NotNull @Min(1) Long id,
-        @Valid @RequestBody ComponentCreateRequest request,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @Valid @RequestBody ComponentCreateRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            
+
             UpdateComponentCommand command = new UpdateComponentCommand(
-                id,
-                request.componentTypeId(),
-                request.code(),
-                request.name(),
-                request.baseData(),
-                request.status(),
-                userId
-            );
-            
+                    id,
+                    request.componentTypeId(),
+                    request.code(),
+                    request.name(),
+                    request.baseData(),
+                    request.status(),
+                    userId);
+
             Component result = componentService.updateComponent(command);
             ComponentResponse response = ComponentResponse.from(result);
-            
+
             String successMessage = messageSource.getMessage("component.update.success",
-                null, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
             log.error("Error updating component {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("component.update.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(
-        @PathVariable @NotNull @Min(1) Long id,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             DeleteComponentCommand command = new DeleteComponentCommand(id);
             componentService.deleteComponent(command);
-            
+
             String successMessage = messageSource.getMessage("component.delete.success",
-                null, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, null));
         } catch (Exception ex) {
             log.error("Error deleting component {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("component.delete.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @GetMapping("/{id}/i18n/{language}")
     public ResponseEntity<ApiResponse<ComponentI18nResponse>> getComponentI18n(
-        @PathVariable @NotNull @Min(1) Long id,
-        @PathVariable Language language,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @PathVariable Language language,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             GetComponentI18nQuery query = new GetComponentI18nQuery(id, language);
             ComponentI18n result = componentI18nService.getComponentI18n(query);
             ComponentI18nResponse response = ComponentI18nResponse.from(result);
-            
+
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting component i18n for component {} language {}: {}", id, language, ex.getMessage());
             String msg = messageSource.getMessage("component.i18n.get.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @PutMapping("/{id}/i18n/{language}")
     public ResponseEntity<ApiResponse<ComponentI18nResponse>> upsertComponentI18n(
-        @PathVariable @NotNull @Min(1) Long id,
-        @PathVariable Language language,
-        @Valid @RequestBody ComponentI18nRequest request,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @PathVariable Language language,
+            @Valid @RequestBody ComponentI18nRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             UpsertComponentI18nCommand command = new UpsertComponentI18nCommand(
-                id,
-                language,
-                request.baseLocalizedData(),
-                request.status()
-            );
-            
+                    id,
+                    language,
+                    request.baseLocalizedData(),
+                    request.status());
+
             ComponentI18n result = componentI18nService.upsertComponentI18n(command);
             ComponentI18nResponse response = ComponentI18nResponse.from(result);
-            
+
             String successMessage = messageSource.getMessage("component.i18n.upsert.success",
-                null, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
             log.error("Error upserting component i18n for component {} language {}: {}", id, language, ex.getMessage());
             String msg = messageSource.getMessage("component.i18n.upsert.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 
     @PostMapping("/{id}/publish/{language}")
     public ResponseEntity<ApiResponse<ComponentI18nResponse>> publishComponentI18n(
-        @PathVariable @NotNull @Min(1) Long id,
-        @PathVariable Language language,
-        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+            @PathVariable @NotNull @Min(1) Long id,
+            @PathVariable Language language,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             PublishComponentI18nCommand command = new PublishComponentI18nCommand(id, language);
             ComponentI18n result = componentI18nService.publishComponentI18n(command);
             ComponentI18nResponse response = ComponentI18nResponse.from(result);
-            
+
             String successMessage = messageSource.getMessage("component.i18n.publish.success",
-                null, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
-            log.error("Error publishing component i18n for component {} language {}: {}", id, language, ex.getMessage());
+            log.error("Error publishing component i18n for component {} language {}: {}", id, language,
+                    ex.getMessage());
             String msg = messageSource.getMessage("component.i18n.publish.error",
-                new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(msg));
+                    .body(ApiResponse.error(msg));
         }
     }
 }

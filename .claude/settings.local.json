@@ -21,7 +21,16 @@
       "Bash(git diff:*)",
       "Bash(git config:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(del \"storefront\\src\\app\\modules\\admin\\models\\component-entry.types.ts\")",
+      "Bash(del \"storefront\\src\\app\\modules\\admin\\services\\component-entry.service.ts\")",
+      "Bash(del \"storefront\\src\\app\\modules\\admin\\services\\entry-field.service.ts\")",
+      "Bash(npm run build:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker ps:*)",
+      "Bash(lsof:*)",
+      "Bash(ForEach-Object { Stop-Process -Id $_ -Force } 2)",
+      "Bash($null)"
     ],
     "deny": [],
     "ask": [],

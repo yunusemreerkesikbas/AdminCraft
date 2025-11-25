@@ -55,8 +55,7 @@ public interface UserService {
     User updateProfile(Long userId, String fullName, String phone, String jobTitle, String department);
     User updatePreferences(Long userId, Language preferredLanguage, String timezone);
     User updateUserLanguage(Long userId, Language language);
-    void updateAvatar(Long userId, String avatarUrl);
-    
+
     // Search and filtering
     List<User> searchUsers(Long tenantId, String searchTerm);
     List<User> getUsersByDepartment(Long tenantId, String department);
