@@ -73,6 +73,24 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentI18n: 'components/${componentId}/i18n/${language}',
     componentI18nPublish: 'components/${componentId}/publish/${language}',
 
+    // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
+    componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
+    componentTypeEntryFieldById: 'components/types/${typeId}/entry-fields/${id}',
+    componentTypeEntryFieldsImport: 'components/types/${typeId}/entry-fields/import',
+    componentTypeEntryFieldsExport: 'components/types/${typeId}/entry-fields/export',
+    componentTypeEntryFieldValidate: 'components/types/${typeId}/entry-fields/validate',
+
+    // ----- COMPONENT LIBRARY: ENTRIES -----
+    componentEntriesList: 'components/${componentId}/entries',
+    componentEntriesByComponent: 'components/${componentId}/entries',
+    componentEntriesCreate: 'components/${componentId}/entries',
+    componentEntryById: 'components/entries/${entryId}',
+    componentEntryUpdate: 'components/entries/${entryId}',
+    componentEntryDelete: 'components/entries/${entryId}',
+    componentEntryI18n: 'components/entries/${entryId}/i18n/${language}',
+    componentEntryI18nUpsert: 'components/entries/${entryId}/i18n/${language}',
+    componentEntryPublish: 'components/entries/${entryId}/publish/${language}',
+
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',

@@ -1,0 +1,370 @@
+<h2 mat-dialog-title>
+    {{
+        (mode === 'create'
+            ? 'admin.components.entries.create'
+            : 'admin.components.entries.edit'
+        ) | transloco
+    }}
+</h2>
+
+<mat-dialog-content>
+    <mat-tab-group [(selectedIndex)]="activeTab" [@fadeIn]>
+        <mat-tab [label]="'admin.components.entries.tabs.general' | transloco">
+            <fuse-card class="form-section-card" [@fadeInTop]>
+                <form [formGroup]="generalForm" class="entry-form">
+                    <div class="form-row">
+                        <mat-form-field appearance="outline">
+                            <mat-label>{{
+                                'admin.components.fields.sortOrder' | transloco
+                            }}</mat-label>
+                            <input
+                                matInput
+                                type="number"
+                                formControlName="sortOrder"
+                            />
+                            @if (
+                                generalForm
+                                    .get('sortOrder')
+                                    ?.hasError('required')
+                            ) {
+                                <mat-error>{{
+                                    'admin.validation.required' | transloco
+                                }}</mat-error>
+                            }
+                        </mat-form-field>
+
+                        @if (mode === 'edit') {
+                            <mat-form-field appearance="outline">
+                                <mat-label>{{
+                                    'admin.common.fields.status' | transloco
+                                }}</mat-label>
+                                <mat-select formControlName="status">
+                                    <mat-option value="DRAFT">{{
+                                        'admin.components.status.draft'
+                                            | transloco
+                                    }}</mat-option>
+                                    <mat-option value="ACTIVE">{{
+                                        'admin.components.status.active'
+                                            | transloco
+                                    }}</mat-option>
+                                    <mat-option value="INACTIVE">{{
+                                        'admin.components.status.inactive'
+                                            | transloco
+                                    }}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        }
+                    </div>
+
+                    <mat-checkbox
+                        formControlName="isVisible"
+                        class="visibility-checkbox"
+                    >
+                        <mat-icon>visibility</mat-icon>
+                        {{ 'admin.components.fields.isVisible' | transloco }}
+                    </mat-checkbox>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.styleClasses' | transloco
+                        }}</mat-label>
+                        <input matInput formControlName="styleClasses" />
+                        <mat-icon matPrefix>style</mat-icon>
+                    </mat-form-field>
+                </form>
+            </fuse-card>
+        </mat-tab>
+
+        @for (lang of languages; track lang) {
+            <mat-tab [label]="lang">
+                <fuse-card class="form-section-card" [@fadeInTop]>
+                    <form [formGroup]="i18nForms[lang]" class="entry-form">
+                        <div class="basic-fields-section">
+                            <h4 class="section-title">
+                                <mat-icon>info</mat-icon>
+                                {{
+                                    'admin.components.entries.basicInfo'
+                                        | transloco
+                                }}
+                            </h4>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>{{
+                                    'admin.components.entries.fields.title'
+                                        | transloco
+                                }}</mat-label>
+                                <input matInput formControlName="title" />
+                                <mat-icon matPrefix>title</mat-icon>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>{{
+                                    'admin.components.entries.fields.description'
+                                        | transloco
+                                }}</mat-label>
+                                <textarea
+                                    matInput
+                                    formControlName="description"
+                                    rows="4"
+                                ></textarea>
+                                <mat-icon matPrefix>description</mat-icon>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="media-fields-section">
+                            <h4 class="section-title">
+                                <mat-icon>image</mat-icon>
+                                {{
+                                    'admin.components.entries.mediaInfo'
+                                        | transloco
+                                }}
+                            </h4>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>{{
+                                    'admin.components.entries.fields.imageUrl'
+                                        | transloco
+                                }}</mat-label>
+                                <input matInput formControlName="imageUrl" />
+                                <mat-icon matPrefix>photo</mat-icon>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="action-fields-section">
+                            <h4 class="section-title">
+                                <mat-icon>link</mat-icon>
+                                {{
+                                    'admin.components.entries.actionInfo'
+                                        | transloco
+                                }}
+                            </h4>
+
+                            <div class="form-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>{{
+                                        'admin.components.entries.fields.buttonText'
+                                            | transloco
+                                    }}</mat-label>
+                                    <input
+                                        matInput
+                                        formControlName="buttonText"
+                                    />
+                                    <mat-icon matPrefix>label</mat-icon>
+                                </mat-form-field>
+
+                                <mat-form-field appearance="outline">
+                                    <mat-label>{{
+                                        'admin.components.entries.fields.buttonUrl'
+                                            | transloco
+                                    }}</mat-label>
+                                    <input
+                                        matInput
+                                        formControlName="buttonUrl"
+                                    />
+                                    <mat-icon matPrefix>link</mat-icon>
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        @if (fieldDefinitions().length > 0) {
+                            <fuse-card
+                                class="dynamic-fields-card"
+                                [@expandCollapse]
+                            >
+                                <div class="dynamic-fields-section">
+                                    <h4 class="section-title">
+                                        <mat-icon>extension</mat-icon>
+                                        {{
+                                            'admin.components.entries.customFields'
+                                                | transloco
+                                        }}
+                                    </h4>
+
+                                    @for (
+                                        field of fieldDefinitions();
+                                        track field.fieldKey
+                                    ) {
+                                        <div [@fadeIn]>
+                                            @switch (field.fieldType) {
+                                                @case ('text') {
+                                                    <mat-form-field
+                                                        appearance="outline"
+                                                    >
+                                                        <mat-label>{{
+                                                            getFieldLabel(
+                                                                field.fieldKey
+                                                            ) | transloco
+                                                        }}</mat-label>
+                                                        <input
+                                                            matInput
+                                                            [formControlName]="
+                                                                field.fieldKey
+                                                            "
+                                                        />
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'required'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.required'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'maxlength'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.maxLength'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                    </mat-form-field>
+                                                }
+                                                @case ('textarea') {
+                                                    <mat-form-field
+                                                        appearance="outline"
+                                                    >
+                                                        <mat-label>{{
+                                                            getFieldLabel(
+                                                                field.fieldKey
+                                                            ) | transloco
+                                                        }}</mat-label>
+                                                        <textarea
+                                                            matInput
+                                                            [formControlName]="
+                                                                field.fieldKey
+                                                            "
+                                                            rows="3"
+                                                        ></textarea>
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'required'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.required'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                    </mat-form-field>
+                                                }
+                                                @case ('number') {
+                                                    <mat-form-field
+                                                        appearance="outline"
+                                                    >
+                                                        <mat-label>{{
+                                                            getFieldLabel(
+                                                                field.fieldKey
+                                                            ) | transloco
+                                                        }}</mat-label>
+                                                        <input
+                                                            matInput
+                                                            type="number"
+                                                            [formControlName]="
+                                                                field.fieldKey
+                                                            "
+                                                        />
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'required'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.required'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'min'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.minValue'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                        @if (
+                                                            i18nForms[lang]
+                                                                .get(
+                                                                    field.fieldKey
+                                                                )
+                                                                ?.hasError(
+                                                                    'max'
+                                                                )
+                                                        ) {
+                                                            <mat-error>{{
+                                                                'admin.validation.maxValue'
+                                                                    | transloco
+                                                            }}</mat-error>
+                                                        }
+                                                    </mat-form-field>
+                                                }
+                                                @case ('boolean') {
+                                                    <mat-checkbox
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        class="custom-checkbox"
+                                                    >
+                                                        {{
+                                                            getFieldLabel(
+                                                                field.fieldKey
+                                                            ) | transloco
+                                                        }}
+                                                    </mat-checkbox>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </fuse-card>
+                        }
+                    </form>
+                </fuse-card>
+            </mat-tab>
+        }
+    </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">
+        {{ 'admin.dialog.actions.cancel' | transloco }}
+    </button>
+    <button
+        mat-raised-button
+        color="primary"
+        (click)="save()"
+        [disabled]="!canSave() || isSaving()"
+    >
+        {{
+            (mode === 'create'
+                ? 'admin.dialog.actions.create'
+                : 'admin.dialog.actions.save'
+            ) | transloco
+        }}
+    </button>
+</mat-dialog-actions>

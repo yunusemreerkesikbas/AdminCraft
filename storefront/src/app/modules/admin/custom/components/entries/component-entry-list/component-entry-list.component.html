@@ -1,0 +1,67 @@
+<div class="component-entry-list">
+    <div class="header-section">
+        <h3>{{ 'admin.components.entries.title' | transloco }}</h3>
+        <button mat-raised-button color="primary" (click)="createEntry()">
+            <mat-icon>add</mat-icon>
+            {{ 'admin.components.entries.addEntry' | transloco }}
+        </button>
+    </div>
+
+    @if (store.isLoading()) {
+        <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>{{ 'admin.common.loading' | transloco }}</p>
+        </div>
+    } @else if (store.items().length === 0) {
+        <div class="empty-state">
+            <p>{{ 'admin.components.entries.noEntries' | transloco }}</p>
+            <button mat-raised-button color="primary" (click)="createEntry()">
+                <mat-icon>add</mat-icon>
+                {{ 'admin.components.entries.addFirst' | transloco }}
+            </button>
+        </div>
+    } @else {
+        <div class="entries-list">
+            @for (entry of store.items(); track entry.id) {
+                <div class="entry-row" [@fadeInBottom]>
+                    <div class="entry-main">
+                        <div class="entry-order">
+                            <span class="order-number">{{ entry.sortOrder }}</span>
+                        </div>
+                        <div class="entry-uid">
+                            <span class="uid-label">UID</span>
+                            <span class="uid-value">{{ entry.uid }}</span>
+                        </div>
+                        <div class="entry-status">
+                            <span class="status-badge" [attr.data-status]="entry.status">
+                                {{ 'admin.common.status.' + entry.status.toLowerCase() | transloco }}
+                            </span>
+                        </div>
+                        <div class="entry-visibility">
+                            <span class="visibility-badge" [class.visible]="entry.isVisible">
+                                {{ entry.isVisible ? ('admin.components.entries.visible' | transloco) : ('admin.components.entries.hidden' | transloco) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="entry-actions">
+                        <button
+                            mat-button
+                            (click)="editEntry(entry.id)"
+                        >
+                            <mat-icon>edit</mat-icon>
+                            {{ 'admin.common.actions.edit' | transloco }}
+                        </button>
+                        <button
+                            mat-button
+                            color="warn"
+                            (click)="deleteEntry(entry)"
+                        >
+                            <mat-icon>delete</mat-icon>
+                            {{ 'admin.common.actions.delete' | transloco }}
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

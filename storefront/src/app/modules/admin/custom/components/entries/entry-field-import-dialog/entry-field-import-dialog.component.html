@@ -1,0 +1,150 @@
+<h2 mat-dialog-title>
+    {{ 'admin.components.entryFields.importFields' | transloco }}
+</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="importForm" class="import-form">
+        <mat-form-field appearance="outline" class="json-input-field">
+            <mat-label>{{
+                'admin.components.entryFields.jsonInput' | transloco
+            }}</mat-label>
+            <textarea
+                matInput
+                formControlName="jsonInput"
+                rows="10"
+                placeholder='{"fields": [...]}'
+            ></textarea>
+        </mat-form-field>
+
+        <button
+            mat-raised-button
+            color="accent"
+            type="button"
+            (click)="parseJson()"
+            class="parse-button"
+        >
+            {{ 'admin.components.entryFields.parseJson' | transloco }}
+        </button>
+
+        @if (validationErrors().length > 0) {
+            <div class="validation-errors">
+                <h4>
+                    {{
+                        'admin.components.entryFields.validationErrors'
+                            | transloco
+                    }}
+                </h4>
+                <ul>
+                    @for (error of validationErrors(); track $index) {
+                        <li>{{ error }}</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (parsedFields().length > 0) {
+            <div class="preview-section">
+                <h4>
+                    {{
+                        'admin.components.entryFields.previewFields' | transloco
+                    }}
+                    ({{ parsedFields().length }})
+                </h4>
+                <table
+                    mat-table
+                    [dataSource]="parsedFields()"
+                    class="fields-preview-table"
+                >
+                    <ng-container matColumnDef="fieldKey">
+                        <th mat-header-cell *matHeaderCellDef>
+                            {{
+                                'admin.components.entryFields.fieldKey'
+                                    | transloco
+                            }}
+                        </th>
+                        <td mat-cell *matCellDef="let field">
+                            {{ field.fieldKey }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="fieldType">
+                        <th mat-header-cell *matHeaderCellDef>
+                            {{
+                                'admin.components.entryFields.fieldType'
+                                    | transloco
+                            }}
+                        </th>
+                        <td mat-cell *matCellDef="let field">
+                            {{ field.fieldType }}
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="isRequired">
+                        <th mat-header-cell *matHeaderCellDef>
+                            {{
+                                'admin.components.entryFields.required'
+                                    | transloco
+                            }}
+                        </th>
+                        <td mat-cell *matCellDef="let field">
+                            {{
+                                field.isRequired
+                                    ? ('admin.common.yes' | transloco)
+                                    : ('admin.common.no' | transloco)
+                            }}
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr
+                        mat-row
+                        *matRowDef="let row; columns: displayedColumns"
+                    ></tr>
+                </table>
+            </div>
+        }
+
+        @if (importResult()) {
+            <div class="import-result">
+                <h4>
+                    {{
+                        'admin.components.entryFields.importResult' | transloco
+                    }}
+                </h4>
+                <p>
+                    {{
+                        'admin.components.entryFields.successCount' | transloco
+                    }}: {{ importResult()?.successCount }}
+                </p>
+                <p>
+                    {{
+                        'admin.components.entryFields.failedCount' | transloco
+                    }}: {{ importResult()?.failedCount }}
+                </p>
+                @if (
+                    importResult()?.errors && importResult()!.errors.length > 0
+                ) {
+                    <ul class="error-list">
+                        @for (error of importResult()!.errors; track $index) {
+                            <li>{{ error }}</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
+        {{ 'admin.dialog.actions.cancel' | transloco }}
+    </button>
+    <button
+        mat-raised-button
+        color="primary"
+        (click)="submit()"
+        [disabled]="parsedFields().length === 0 || isSubmitting()"
+    >
+        {{ 'admin.components.entryFields.import' | transloco }}
+    </button>
+</mat-dialog-actions>

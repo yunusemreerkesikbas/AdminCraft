@@ -12,10 +12,10 @@ import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
 import { ComponentTypeFormData } from '../models/component-form.types';
-import { ComponentTypeDto, CreateComponentTypeRequest, ExtendedFieldsSchema, UpdateComponentTypeRequest } from '../models/component-library.types';
-import { ExtendedFieldsBuilderDialogComponent } from '../schema-builder/extended-fields-builder-dialog/extended-fields-builder-dialog.component';
+import { ComponentTypeDto, CreateComponentTypeRequest, UpdateComponentTypeRequest } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
+import { ComponentTypeEditDialogComponent } from './component-type-edit-dialog/component-type-edit-dialog.component';
 
 @Component({
     selector: 'spa-component-types-manager',
@@ -84,8 +84,7 @@ export class ComponentTypesManagerComponent implements OnInit {
             code: null,
             name: null,
             category: null,
-            icon: null,
-            extendedFieldsSchema: null
+            icon: null
         };
 
         const options: ItemDialogOptions<ComponentTypeFormData> = {
@@ -106,8 +105,7 @@ export class ComponentTypesManagerComponent implements OnInit {
                     code: result.code!,
                     name: result.name!,
                     category: result.category || undefined,
-                    icon: result.icon || undefined,
-                    extendedFieldsSchema: result.extendedFieldsSchema || undefined
+                    icon: result.icon || undefined
                 };
 
                 this.#componentService.createComponentType(payload)
@@ -128,78 +126,22 @@ export class ComponentTypesManagerComponent implements OnInit {
             return;
         }
 
-        const schema = this.#schema.buildComponentTypeSchema();
-        const initial: ComponentTypeFormData = {
-            code: type.code,
-            name: type.name,
-            category: type.category || null,
-            icon: type.icon || null,
-            extendedFieldsSchema: type.extendedFieldsSchema || null
-        };
+        const dialogRef = this.#matDialog.open(ComponentTypeEditDialogComponent, {
+            width: '800px',
+            maxHeight: '90vh',
+            disableClose: true,
+            data: { type }
+        });
 
-        const options: ItemDialogOptions<ComponentTypeFormData, number> = {
-            titleKey: 'admin.components.types.edit',
-            mode: 'edit',
-            schema,
-            languages: [],
-            initial,
-            id: type.id,
-            modalData: { disableClose: true, width: '600px' }
-        };
-
-        this.#dialog.open(options)
+        dialogRef.afterClosed()
             .pipe(take(1))
-            .subscribe((result) => {
-                if (!result) return;
-
-                const payload: UpdateComponentTypeRequest = {
-                    name: result.name!,
-                    category: result.category || undefined,
-                    icon: result.icon || undefined,
-                    extendedFieldsSchema: result.extendedFieldsSchema || undefined
-                };
-
-                this.#componentService.updateComponentType(type.id, payload)
-                    .pipe(take(1))
-                    .subscribe({
-                        next: () => {
-                            this.#notify.success('admin.components.types.success.updated');
-                            this.loadTypes();
-                        },
-                        error: () => this.#notify.alert('admin.components.types.errors.updateFailed')
-                    });
+            .subscribe((success) => {
+                if (success) {
+                    this.loadTypes();
+                }
             });
     }
 
-    manageExtendedFields(type: ComponentTypeDto): void {
-        const dialogRef = this.#matDialog.open(ExtendedFieldsBuilderDialogComponent, {
-            width: '800px',
-            maxHeight: '90vh',
-            data: type.extendedFieldsSchema,
-            disableClose: true
-        });
-
-        dialogRef.afterClosed().pipe(take(1)).subscribe((schema: ExtendedFieldsSchema | null) => {
-            if (schema === undefined) return;
-
-            const payload: UpdateComponentTypeRequest = {
-                name: type.name,
-                category: type.category || undefined,
-                icon: type.icon || undefined,
-                extendedFieldsSchema: schema || undefined
-            };
-
-            this.#componentService.updateComponentType(type.id, payload)
-                .pipe(take(1))
-                .subscribe({
-                    next: () => {
-                        this.#notify.success('admin.components.types.success.updated');
-                        this.loadTypes();
-                    },
-                    error: () => this.#notify.alert('admin.components.types.errors.updateFailed')
-                });
-        });
-    }
 
     deleteType(type: ComponentTypeDto): void {
         if (type.isSystem) {
