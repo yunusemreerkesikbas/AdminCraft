@@ -9,11 +9,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { LanguageContextService } from '@core/services/language-context.service';
+import { fuseAnimations } from '@fuse/animations';
+import { FuseCardComponent } from '@fuse/components/card';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { forkJoin, take } from 'rxjs';
-import { FuseCardComponent } from '@fuse/components/card';
-import { fuseAnimations } from '@fuse/animations';
 import { ComponentEntry, CreateEntryRequest, EntryFieldDefinition, EntryI18nDto, EntryI18nRequest, UpdateEntryRequest } from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
@@ -57,10 +58,11 @@ export class ComponentEntryFormComponent implements OnInit {
     #fieldService = inject(EntryFieldService);
     #notify = inject(NotificationService);
     #transloco = inject(TranslocoService);
+    #langCtx = inject(LanguageContextService);
     data = inject<DialogData>(MAT_DIALOG_DATA);
-    
+
     mode: 'create' | 'edit' = 'create';
-    languages: string[] = [];
+    languages = computed(() => this.#langCtx.supportedLanguages());
     activeTab = 0;
 
     generalForm!: FormGroup;
@@ -84,10 +86,8 @@ export class ComponentEntryFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.mode = this.data.mode;
-        this.languages = this.data.languages || ['tr', 'en'];
-
         this.#buildGeneralForm();
-        this.#buildI18nForms(); // Always build i18n forms first
+        this.#buildI18nForms();
 
         if (this.data.componentTypeId) {
             this.#loadFieldDefinitions();
@@ -121,7 +121,7 @@ export class ComponentEntryFormComponent implements OnInit {
     }
 
     #buildI18nForms(): void {
-        this.languages.forEach(lang => {
+        this.languages().forEach(lang => {
             const formGroup = this.#fb.group({
                 title: [this.data.translations?.[lang]?.title || ''],
                 description: [this.data.translations?.[lang]?.description || '']
@@ -132,7 +132,7 @@ export class ComponentEntryFormComponent implements OnInit {
     }
 
     #addDynamicFieldsToForms(): void {
-        this.languages.forEach(lang => {
+        this.languages().forEach(lang => {
             const formGroup = this.i18nForms[lang];
             if (!formGroup) return;
 
@@ -256,7 +256,7 @@ export class ComponentEntryFormComponent implements OnInit {
     }
 
     #saveI18nData(entryId: number): void {
-        const i18nRequests = this.languages.map(lang => {
+        const i18nRequests = this.languages().map(lang => {
             const formData = this.i18nForms[lang].value;
             const baseFields = ['title', 'description'];
 

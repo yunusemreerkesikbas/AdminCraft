@@ -533,6 +533,9 @@ export const langEN = {
                 create: 'Create New Type',
                 edit: 'Edit Type',
                 noTypes: 'No types yet',
+                noSearchResults: 'No types match search criteria',
+                createFirst: 'Create First Type',
+                manageFields: 'Manage Extended Fields',
                 confirmDelete: 'Are you sure you want to delete {{name}} type?',
                 tabs: {
                     general: 'General',

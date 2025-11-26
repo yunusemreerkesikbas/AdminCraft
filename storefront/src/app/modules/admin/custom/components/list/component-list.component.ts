@@ -65,7 +65,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     protected tenantId?: number;
     componentTypes = signal<ComponentTypeDto[]>([]);
     typesLoading = signal<boolean>(false);
-    supportedLanguages = signal<string[]>([]);
+    supportedLanguages = computed(() => this.#langCtx.supportedLanguages());
 
     selectedTypeId = signal<number | null>(null);
     selectedStatus = signal<ComponentStatus | null>(null);
@@ -117,7 +117,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             )
             .subscribe((tenant) => {
                 this.tenantId = tenant.id;
-                this.#loadTenantLanguages();
                 this.loadItems();
             });
         this.#tenantCtx.tenant$
@@ -129,18 +128,9 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             .subscribe((tenant) => {
                 if (tenant.id !== this.tenantId) {
                     this.tenantId = tenant.id;
-                    this.#loadTenantLanguages();
                     this.#loadComponentTypes();
                     this.loadItems();
                 }
-            });
-    }
-
-    #loadTenantLanguages(): void {
-        this.#langCtx.supportedLanguages$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((languages) => {
-                this.supportedLanguages.set(languages || ['tr', 'en']);
             });
     }
 

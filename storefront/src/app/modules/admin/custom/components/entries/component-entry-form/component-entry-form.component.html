@@ -75,7 +75,7 @@
             </fuse-card>
         </mat-tab>
 
-        @for (lang of languages; track lang) {
+        @for (lang of languages(); track lang) {
             <mat-tab [label]="lang">
                 <fuse-card class="form-section-card" [@fadeInTop]>
                     <form [formGroup]="i18nForms[lang]" class="entry-form">
@@ -111,61 +111,6 @@
                             </mat-form-field>
                         </div>
 
-                        <div class="media-fields-section">
-                            <h4 class="section-title">
-                                <mat-icon>image</mat-icon>
-                                {{
-                                    'admin.components.entries.mediaInfo'
-                                        | transloco
-                                }}
-                            </h4>
-
-                            <mat-form-field appearance="outline">
-                                <mat-label>{{
-                                    'admin.components.entries.fields.imageUrl'
-                                        | transloco
-                                }}</mat-label>
-                                <input matInput formControlName="imageUrl" />
-                                <mat-icon matPrefix>photo</mat-icon>
-                            </mat-form-field>
-                        </div>
-
-                        <div class="action-fields-section">
-                            <h4 class="section-title">
-                                <mat-icon>link</mat-icon>
-                                {{
-                                    'admin.components.entries.actionInfo'
-                                        | transloco
-                                }}
-                            </h4>
-
-                            <div class="form-row">
-                                <mat-form-field appearance="outline">
-                                    <mat-label>{{
-                                        'admin.components.entries.fields.buttonText'
-                                            | transloco
-                                    }}</mat-label>
-                                    <input
-                                        matInput
-                                        formControlName="buttonText"
-                                    />
-                                    <mat-icon matPrefix>label</mat-icon>
-                                </mat-form-field>
-
-                                <mat-form-field appearance="outline">
-                                    <mat-label>{{
-                                        'admin.components.entries.fields.buttonUrl'
-                                            | transloco
-                                    }}</mat-label>
-                                    <input
-                                        matInput
-                                        formControlName="buttonUrl"
-                                    />
-                                    <mat-icon matPrefix>link</mat-icon>
-                                </mat-form-field>
-                            </div>
-                        </div>
-
                         @if (fieldDefinitions().length > 0) {
                             <fuse-card
                                 class="dynamic-fields-card"
@@ -191,9 +136,9 @@
                                                         appearance="outline"
                                                     >
                                                         <mat-label>{{
-                                                            getFieldLabel(
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            ) | transloco
+                                                            )
                                                         }}</mat-label>
                                                         <input
                                                             matInput
@@ -236,9 +181,9 @@
                                                         appearance="outline"
                                                     >
                                                         <mat-label>{{
-                                                            getFieldLabel(
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            ) | transloco
+                                                            )
                                                         }}</mat-label>
                                                         <textarea
                                                             matInput
@@ -268,9 +213,9 @@
                                                         appearance="outline"
                                                     >
                                                         <mat-label>{{
-                                                            getFieldLabel(
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            ) | transloco
+                                                            )
                                                         }}</mat-label>
                                                         <input
                                                             matInput
@@ -331,9 +276,9 @@
                                                         class="custom-checkbox"
                                                     >
                                                         {{
-                                                            getFieldLabel(
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            ) | transloco
+                                                            )
                                                         }}
                                                     </mat-checkbox>
                                                 }

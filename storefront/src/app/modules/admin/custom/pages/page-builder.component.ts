@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { Observable, Subject, forkJoin, take, takeUntil } from 'rxjs';
+import { Observable, Subject, forkJoin, take } from 'rxjs';
 import { CreatePageFormData, PageI18nFormData } from './models/page-form.types';
 import { PageBuilderService } from './page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest } from './page-builder.types';
@@ -31,20 +31,16 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
   #router = inject(Router);
   #itemDialogService = inject(ItemDialogService);
   #notificationService = inject(NotificationService);
-  #cdr = inject(ChangeDetectorRef);
   #schemaBuilder = inject(PageSchemaBuilderService);
 
   isLoading = false;
   #cachedCategories: PageCategoryDto[] = [];
-  #supportedLanguages: string[] = [];
+
+  get #supportedLanguages(): string[] {
+    return this.#languageContext.supportedLanguages();
+  }
 
   ngOnInit(): void {
-    this.#languageContext.supportedLanguages$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((languages) => {
-        this.#supportedLanguages = languages;
-        this.#cdr.markForCheck();
-      });
   }
 
   ngOnDestroy(): void {
