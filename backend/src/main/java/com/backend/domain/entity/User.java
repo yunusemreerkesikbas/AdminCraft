@@ -67,10 +67,6 @@ public class User {
     @Size(max = 20, message = "validation.phone.size")
     private String phone;
 
-    @Size(max = 255, message = "validation.avatar.url.size")
-    @Column(name = "avatar_url")
-    private String avatarUrl;
-
     @Size(max = 100, message = "validation.job.title.size")
     @Column(name = "job_title")
     private String jobTitle;

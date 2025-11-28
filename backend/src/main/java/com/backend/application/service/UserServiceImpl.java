@@ -405,14 +405,6 @@ public class UserServiceImpl implements UserService {
         return savedUser;
     }
 
-    @Override
-    public void updateAvatar(Long userId, String avatarUrl) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        user.setAvatarUrl(avatarUrl);
-        userRepository.save(user);
-    }
 
     @Override
     @Transactional(readOnly = true)

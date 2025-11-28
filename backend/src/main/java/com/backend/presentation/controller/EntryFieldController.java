@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 @RestController
-@RequestMapping("/api/components/types")
+@RequestMapping("/components/types")
 @RequiredArgsConstructor
 @Slf4j
 public class EntryFieldController {
