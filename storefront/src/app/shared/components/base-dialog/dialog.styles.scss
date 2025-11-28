@@ -1,0 +1,75 @@
+@mixin dialog-base {
+  mat-dialog-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  mat-dialog-actions {
+    padding: 1rem 1.5rem;
+    margin: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
+@mixin dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+@mixin dialog-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0;
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+@mixin dialog-tabs {
+  .mat-mdc-tab-body-content {
+    padding: 1.5rem 0;
+  }
+  .mat-mdc-tab-group {
+    height: 100%;
+  }
+}
+
+@mixin dialog-readonly-field {
+  .readonly-field {
+    padding: 0.5rem 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem;
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+  }
+}
+
+@mixin dialog-size-small {
+  mat-dialog-content {
+    min-width: 400px;
+    max-width: 500px;
+  }
+}
+
+@mixin dialog-size-medium {
+  mat-dialog-content {
+    min-width: 500px;
+    max-width: 700px;
+  }
+}
+
+@mixin dialog-size-large {
+  mat-dialog-content {
+    min-width: 700px;
+    max-width: 900px;
+  }
+}

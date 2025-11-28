@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { DynamicFormComponent } from '@modules/admin/custom/components/dynamic-form/dynamic-form.component';
 import { ItemFormBuilderService } from '../../services/item-form-builder.service';
 import { GeneralFieldConfig, ItemDialogOptions, LangFieldConfig } from '../../types/item-dialog.types';
 import { SpaSelectOption } from '../custom-ui/spa-select/spa-select.component';
@@ -21,8 +20,7 @@ import { DialogFieldComponent } from './dialog-field/dialog-field.component';
     MatButtonModule,
     MatTabsModule,
     TranslocoPipe,
-    DialogFieldComponent,
-    DynamicFormComponent
+    DialogFieldComponent
   ],
   templateUrl: './item-dialog.component.html',
   styleUrls: ['./item-dialog.component.scss'],
@@ -130,8 +128,6 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
     let isValid = this.generalForm.valid;
 
     for (const form of this.i18nForms.values()) {
-      // Only validate language forms that have content
-      // This allows users to edit a single language without filling all tabs
       const hasContent = this.#formHasContent(form);
 
       if (hasContent && !form.valid) {
@@ -145,8 +141,6 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
 
   #formHasContent(form: FormGroup): boolean {
     const values = form.value;
-
-    // Check if any field has a non-empty value
     return Object.values(values).some(value => {
       if (value === null || value === undefined) {
         return false;
@@ -157,11 +151,11 @@ export class ItemDialogComponent<TDto = any, TId = string> implements OnInit {
       }
 
       if (typeof value === 'boolean') {
-        return true; // Checkboxes always have a value
+        return true;
       }
 
       if (typeof value === 'number') {
-        return true; // Numbers always have a value
+        return true;
       }
 
       if (Array.isArray(value)) {

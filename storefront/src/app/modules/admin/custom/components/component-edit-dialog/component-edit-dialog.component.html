@@ -1,0 +1,167 @@
+<h2 mat-dialog-title>
+    {{ 'admin.dialog.title.edit' | transloco }}: {{ data.component.name }}
+</h2>
+
+<mat-dialog-content>
+    <mat-tab-group [(selectedIndex)]="activeTab">
+        <mat-tab [label]="'admin.components.entries.tabs.general' | transloco">
+            <form [formGroup]="generalForm" class="component-form">
+                <p class="readonly-field">
+                    <strong
+                        >{{ 'admin.common.fields.code' | transloco }}:</strong
+                    >
+                    {{ data.component.code }}
+                </p>
+
+                <p class="readonly-field">
+                    <strong
+                        >{{
+                            'admin.components.fields.type' | transloco
+                        }}:</strong
+                    >
+                    {{ data.component.componentTypeName }}
+                </p>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>{{
+                        'admin.common.fields.name' | transloco
+                    }}</mat-label>
+                    <input matInput formControlName="name" />
+                    @if (generalForm.get('name')?.hasError('required')) {
+                        <mat-error>{{
+                            'admin.validation.required' | transloco
+                        }}</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>{{
+                        'admin.components.fields.sortOrder' | transloco
+                    }}</mat-label>
+                    <input matInput type="number" formControlName="order" />
+                    @if (generalForm.get('order')?.hasError('required')) {
+                        <mat-error>{{
+                            'admin.validation.required' | transloco
+                        }}</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-checkbox formControlName="isVisible">
+                    {{ 'admin.components.fields.isVisible' | transloco }}
+                </mat-checkbox>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>{{
+                        'admin.components.fields.styleClasses' | transloco
+                    }}</mat-label>
+                    <input matInput formControlName="styleClasses" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>{{
+                        'admin.common.fields.status' | transloco
+                    }}</mat-label>
+                    <mat-select formControlName="status">
+                        <mat-option value="DRAFT">{{
+                            'admin.components.status.draft' | transloco
+                        }}</mat-option>
+                        <mat-option value="ACTIVE">{{
+                            'admin.components.status.active' | transloco
+                        }}</mat-option>
+                        <mat-option value="INACTIVE">{{
+                            'admin.components.status.inactive' | transloco
+                        }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <div class="form-actions">
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        (click)="saveGeneral()"
+                        [disabled]="generalForm.invalid || isSubmitting()"
+                    >
+                        {{ 'admin.dialog.actions.save' | transloco }}
+                    </button>
+                </div>
+            </form>
+        </mat-tab>
+
+        @for (lang of languages; track lang) {
+            <mat-tab [label]="lang">
+                <form [formGroup]="i18nForms[lang]" class="component-form">
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.title' | transloco
+                        }}</mat-label>
+                        <input matInput formControlName="title" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.subtitle' | transloco
+                        }}</mat-label>
+                        <input matInput formControlName="subtitle" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.description' | transloco
+                        }}</mat-label>
+                        <textarea
+                            matInput
+                            formControlName="description"
+                            rows="4"
+                        ></textarea>
+                    </mat-form-field>
+
+                    <div class="form-field-wrapper">
+                        <label class="field-label">{{
+                            'admin.components.i18n.links' | transloco
+                        }}</label>
+                        <spa-link-repeater formControlName="links"></spa-link-repeater>
+                    </div>
+
+                    <div class="form-actions">
+                        <button
+                            mat-raised-button
+                            type="button"
+                            (click)="saveI18n(lang)"
+                            [disabled]="
+                                i18nForms[lang].invalid || isSubmitting()
+                            "
+                        >
+                            {{ 'admin.components.saveTranslation' | transloco }}
+                        </button>
+
+                        <button
+                            mat-raised-button
+                            color="accent"
+                            type="button"
+                            (click)="publishI18n(lang)"
+                            [disabled]="
+                                i18nForms[lang].invalid || isSubmitting()
+                            "
+                        >
+                            {{ 'admin.components.publish' | transloco }}
+                        </button>
+                    </div>
+                </form>
+            </mat-tab>
+        }
+
+        <mat-tab [label]="'admin.components.entries.tabs.items' | transloco">
+            <spa-component-entry-list
+                [componentId]="data.component.id"
+                [componentTypeId]="data.component.componentTypeId"
+                [languages]="languages"
+            ></spa-component-entry-list>
+        </mat-tab>
+    </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button color="primary" (click)="closeDialog()">
+        {{ 'admin.dialog.actions.close' | transloco }}
+    </button>
+</mat-dialog-actions>

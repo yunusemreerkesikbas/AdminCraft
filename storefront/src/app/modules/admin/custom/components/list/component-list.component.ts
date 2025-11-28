@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
+import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
@@ -17,7 +18,8 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { filter, forkJoin, skip, take, takeUntil } from 'rxjs';
-import { CreateComponentFormData, EditComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
+import { ComponentEditDialogComponent } from '../component-edit-dialog/component-edit-dialog.component';
+import { CreateComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
 import { ComponentDetailDto, ComponentDto, ComponentI18nRequest, ComponentStatus, ComponentTypeDto, CreateComponentRequest, UpdateComponentRequest } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
@@ -34,6 +36,7 @@ const DIALOG_CONFIG = {
     styleUrls: ['./component-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
+    animations: fuseAnimations,
     imports: [
         CommonModule,
         FormsModule,
@@ -61,7 +64,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
     protected tenantId?: number;
     componentTypes = signal<ComponentTypeDto[]>([]);
-    supportedLanguages = signal<string[]>([]);
+    typesLoading = signal<boolean>(false);
+    supportedLanguages = computed(() => this.#langCtx.supportedLanguages());
 
     selectedTypeId = signal<number | null>(null);
     selectedStatus = signal<ComponentStatus | null>(null);
@@ -97,7 +101,14 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         return items;
     });
 
+    canCreateComponent = computed(() =>
+        !this.typesLoading() &&
+        this.componentTypes().length > 0
+    );
+
     protected override onInit(): void {
+        this.#loadComponentTypes();
+
         this.#tenantCtx.tenant$
             .pipe(
                 filter(t => !!t),
@@ -106,8 +117,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             )
             .subscribe((tenant) => {
                 this.tenantId = tenant.id;
-                this.#loadTenantLanguages();
-                this.#loadComponentTypes();
                 this.loadItems();
             });
         this.#tenantCtx.tenant$
@@ -119,35 +128,26 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             .subscribe((tenant) => {
                 if (tenant.id !== this.tenantId) {
                     this.tenantId = tenant.id;
-                    this.#loadTenantLanguages();
                     this.#loadComponentTypes();
                     this.loadItems();
                 }
             });
     }
 
-    #loadTenantLanguages(): void {
-        this.#langCtx.supportedLanguages$
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((languages) => {
-                this.supportedLanguages.set(languages || ['tr', 'en']);
-            });
-    }
-
     #loadComponentTypes(): void {
+        this.typesLoading.set(true);
         this.service.listComponentTypes()
             .pipe(take(1))
             .subscribe({
-                next: (types) => this.componentTypes.set(types),
-                error: () => this.#notify.alert('admin.components.errors.loadTypesFailed')
+                next: (types) => {
+                    this.componentTypes.set(types);
+                    this.typesLoading.set(false);
+                },
+                error: () => {
+                    this.#notify.alert('admin.components.errors.loadTypesFailed');
+                    this.typesLoading.set(false);
+                }
             });
-    }
-
-    protected override beforeLoad(): boolean {
-        if (!this.tenantId) {
-            return false;
-        }
-        return true;
     }
 
     protected override fetchItems() {
@@ -171,8 +171,12 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     createComponent(): void {
-        if (!this.tenantId || this.componentTypes().length === 0) {
-            this.#notify.warning('admin.components.errors.noTypes');
+        if (!this.canCreateComponent()) {
+            if (this.typesLoading()) {
+                this.#notify.info('admin.components.info.loadingTypes');
+            } else {
+                this.#notify.warning('admin.components.errors.noTypes');
+            }
             return;
         }
 
@@ -193,11 +197,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                 title: '',
                 subtitle: '',
                 description: '',
-                imageUrl: '',
-                imageAlt: '',
-                buttonText: '',
-                buttonUrl: '',
-                buttonStyle: '',
                 links: []
             };
         });
@@ -243,11 +242,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     editComponent(componentId: number): void {
-        if (!this.tenantId) {
-            this.#notify.warning('admin.components.errors.noTenant');
-            return;
-        }
-
         this.store.setLoading(true);
         this.service.getComponentDetail(componentId)
             .pipe(take(1))
@@ -264,74 +258,22 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     #openEditDialog(detail: ComponentDetailDto): void {
-        const componentType = this.componentTypes().find(t => t.id === detail.componentTypeId);
-        const schema = this.#schema.buildComponentEditSchema(this.componentTypes());
-        const initial: EditComponentFormData = {
-            componentTypeId: detail.componentTypeId,
-            code: detail.code,
-            name: detail.name,
-            status: detail.status,
-            order: detail.baseData.order ?? 0,
-            isVisible: detail.baseData.isVisible ?? true,
-            styleClasses: detail.baseData.styleClasses || null
-        };
-
-        const i18nInitial: Record<string, any> = {};
-        this.supportedLanguages().forEach((lang) => {
-            const translation = detail.translations?.find(t => t.language === lang);
-            i18nInitial[lang] = {
-                title: translation?.baseLocalizedData.title || '',
-                subtitle: translation?.baseLocalizedData.subtitle || '',
-                description: translation?.baseLocalizedData.description || '',
-                imageUrl: translation?.baseLocalizedData.imageUrl || '',
-                imageAlt: translation?.baseLocalizedData.imageAlt || '',
-                buttonText: translation?.baseLocalizedData.buttonText || '',
-                buttonUrl: translation?.baseLocalizedData.buttonUrl || '',
-                buttonStyle: translation?.baseLocalizedData.buttonStyle || '',
-                links: translation?.baseLocalizedData.links || [],
-                ...(translation?.extendedLocalizedData || {})
-            };
+        const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
+            width: '900px',
+            maxHeight: '90vh',
+            disableClose: true,
+            data: {
+                component: detail,
+                languages: this.supportedLanguages()
+            }
         });
 
-        const options: ItemDialogOptions<EditComponentFormData, number> = {
-            titleKey: 'admin.dialog.title.edit',
-            mode: 'edit',
-            schema,
-            languages: this.supportedLanguages(),
-            initial,
-            i18nInitial,
-            id: detail.id,
-            modalData: {
-                disableClose: true,
-                width: DIALOG_CONFIG.COMPONENT_FORM.width,
-                height: DIALOG_CONFIG.COMPONENT_FORM.height
-            },
-            extendedFieldsSchema: componentType?.extendedFieldsSchema
-        };
-
-        this.#dialog.open(options)
+        dialogRef.afterClosed()
             .pipe(take(1))
-            .subscribe((result) => {
-                if (!result) return;
-
-                const basePayload: UpdateComponentRequest = {
-                    name: result.name!,
-                    status: result.status || ComponentStatus.DRAFT,
-                    baseData: {
-                        order: result.order ?? 0,
-                        isVisible: result.isVisible ?? true,
-                        styleClasses: result.styleClasses || undefined
-                    }
-                };
-
-                this.service.updateComponent(detail.id, basePayload)
-                    .pipe(take(1))
-                    .subscribe({
-                        next: () => {
-                            this.#saveI18nForComponent(detail.id, result, false);
-                        },
-                        error: () => this.#notify.alert('admin.components.errors.updateFailed')
-                    });
+            .subscribe((success) => {
+                if (success) {
+                    this.loadItems();
+                }
             });
     }
 
@@ -340,27 +282,13 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             const langData = formData[lang];
             if (!isComponentI18nFormData(langData)) return null;
 
-            const baseFields = ['title', 'subtitle', 'description', 'imageUrl', 'imageAlt', 'buttonText', 'buttonUrl', 'buttonStyle', 'links'];
-            const extendedLocalizedData: Record<string, any> = {};
-            Object.keys(langData).forEach(key => {
-                if (!baseFields.includes(key)) {
-                    extendedLocalizedData[key] = langData[key];
-                }
-            });
-
             const request: ComponentI18nRequest = {
                 baseLocalizedData: {
                     title: langData.title || undefined,
                     subtitle: langData.subtitle || undefined,
                     description: langData.description || undefined,
-                    imageUrl: langData.imageUrl || undefined,
-                    imageAlt: langData.imageAlt || undefined,
-                    buttonText: langData.buttonText || undefined,
-                    buttonUrl: langData.buttonUrl || undefined,
-                    buttonStyle: langData.buttonStyle || undefined,
                     links: langData.links || undefined
                 },
-                extendedLocalizedData: Object.keys(extendedLocalizedData).length > 0 ? extendedLocalizedData : undefined,
                 status: ComponentStatus.DRAFT
             };
 

@@ -1,0 +1,198 @@
+---
+trigger: model_decision
+description: Frontend Developer - Angular 19 Multi-Tenant Clean Architecture Angular 19, TypeScript (strict), RxJS, Signals, Material Design
+---
+
+# Frontend Developer - Angular 19 Multi-Tenant Clean Architecture
+
+## Stack
+
+Angular 19, TypeScript (strict), RxJS, Signals, Material Design
+
+## Component Architecture
+
+**Structure**: Standalone, OnPush change detection, `spa-` prefix
+
+```typescript
+@Component({
+  selector: "spa-page-list",
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SpaPageListComponent extends BaseCrudListComponent<Page> {
+  protected service = inject(PageService);
+  protected store = new CrudStore<Page>();
+
+  protected override fetchItems() {
+    return this.service.list();
+  }
+}
+```
+
+**Type Safety**: Explicit types everywhere, private with `#` syntax
+
+```typescript
+private userId: string = '';
+#internalState: boolean = false;
+protected getUser(id: string): Observable<ApiResponse<User>> { ... }
+```
+
+## CRUD Base Classes (`core/crud/`)
+
+### CrudHttpService
+
+```typescript
+@Injectable({ providedIn: "root" })
+export class PageService extends CrudHttpService<Page, CreateDto, UpdateDto> {
+  protected endpoints: CrudEndpoints = {
+    list: "pages",
+    getById: "pageById",
+    create: "pages",
+    update: "pageById",
+    delete: "pageById",
+  };
+}
+```
+
+Auto-unwraps `ApiResponse<T>`, provides CRUD methods.
+
+### CrudStore (Signals)
+
+```typescript
+protected store = new CrudStore<Page>();
+// Signals: items(), isLoading(), error()
+
+// Template
+@if (store.isLoading()) { <mat-spinner/> }
+@for (item of store.items(); track item.id) { <div>{{ item.title }}</div> }
+```
+
+### BaseCrudListComponent
+
+```typescript
+protected override beforeLoad(): boolean { return !!this.tenantId; }
+protected override fetchItems() { return this.service.list(); }
+protected override onLoadSuccess(items: T[]) { this.store.setItems(items); }
+```
+
+Hooks: `beforeLoad()`, `fetchItems()`, `onLoadSuccess()`, `onLoadError()`, `matchesFilter()`
+
+### BaseCrudFormComponent
+
+```typescript
+protected override beforeCreate(dto: CreateDto): CreateDto {
+  return { ...dto, uid: this.generateUid() };
+}
+protected override onCreateSuccess(item: T) {
+  this.router.navigate(['/pages', item.id]);
+}
+```
+
+Hooks: `beforeCreate()`, `beforeUpdate()`, `onCreateSuccess()`, `onUpdateSuccess()`
+
+## API Integration
+
+```typescript
+export const API_ENDPOINTS = {
+  pages: {
+    base: "/pages",
+    byId: (id: number) => `/pages/${id}`,
+    i18n: (id: number, lang: string) => `/pages/${id}/i18n/${lang}`,
+  },
+  provisioning: {
+    start: (tenantId: number) => `/provisioning/tenants/${tenantId}/provision`,
+    jobStatus: (jobId: number) => `/provisioning/jobs/${jobId}`,
+  },
+} as const;
+```
+
+## RxJS & Memory Management
+
+```typescript
+// ✅ One-time ops
+this.service.getById(id).pipe(take(1)).subscribe(...);
+
+// ✅ Async pipe
+protected user$ = this.service.getCurrentUser();
+// Template: @if (user$ | async as user) { ... }
+
+// ✅ Cleanup
+#subscription?: Subscription;
+ngOnDestroy() { this.#subscription?.unsubscribe(); }
+```
+
+## Polling Pattern (Provisioning)
+
+```typescript
+@Component({ selector: "spa-provision-dialog" })
+export class ProvisionDialogComponent implements OnDestroy {
+  protected jobStatus$ = signal<JobResponse | null>(null);
+  #pollSubscription?: Subscription;
+
+  #startPolling(jobId: number): void {
+    this.#pollSubscription = interval(2000)
+      .pipe(
+        switchMap(() => this.service.getJobStatus(jobId)),
+        takeWhile((r) => r.data.status === "running", true)
+      )
+      .subscribe((r) => this.jobStatus$.set(r.data));
+  }
+
+  ngOnDestroy() {
+    this.#pollSubscription?.unsubscribe();
+  }
+}
+```
+
+**Template**: Progress bar + status badges + retry button on failure
+
+## i18n Pattern (Language Tabs)
+
+```typescript
+export class SpaPageFormComponent {
+  protected tabs = ["general", "tr", "en"];
+  protected activeTab = signal("general");
+
+  protected saveGeneral() {
+    this.service.update(this.generalForm.value).pipe(take(1)).subscribe();
+  }
+
+  protected saveI18n(language: string) {
+    this.service.upsertI18n(this.pageId, language, this.i18nForm.value).pipe(take(1)).subscribe();
+  }
+}
+```
+
+## Signals
+
+```typescript
+protected count = signal(0);
+protected doubled = computed(() => this.count() * 2);
+protected increment() { this.count.update(v => v + 1); }
+
+// Template
+<div>Count: {{ count() }}</div>
+<button (click)="increment()">+</button>
+```
+
+## Quick Checklist
+
+- [ ] Extend CrudHttpService / BaseCrudListComponent
+- [ ] Use CrudStore for state
+- [ ] OnPush change detection
+- [ ] Explicit types, private with #
+- [ ] spa- prefix
+- [ ] take(1) or unsubscribe in ngOnDestroy
+- [ ] Polling cleaned up
+- [ ] Dialog data typed
+- [ ] API endpoints centralized
+
+defensive programming yapmayalım
+try-catch bloklarını mümkünse kullanmayalım.
+kodda yorum satırı ve console.log bırakmayalım
+access modifierda protected veya #private kullanalım. sadece gerekliyse public kullanalım.
+getter setter metodları kullanmamaya çalışalım
+subscription işlemlerinde take(1),takeUntil() ve unsubscribe yapalım.
+modern angular yöntemlerini kullanalım. change detection, control flow, signal
+DOM manipulasyonlarında WindowRef kullanalım. ör: this.windowRef.nativeWindow.localStorage
+değişken ve metod tanımlamalarında tip tanımlamalarına çok özen gösterelim

@@ -1,0 +1,82 @@
+.import-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 700px;
+
+    .json-input-field {
+        width: 100%;
+
+        textarea {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+    }
+
+    .parse-button {
+        align-self: flex-start;
+    }
+
+    .validation-errors {
+        padding: 1rem;
+        background-color: #ffebee;
+        border-left: 4px solid #f44336;
+        border-radius: 4px;
+
+        h4 {
+            margin: 0 0 0.5rem 0;
+            color: #c62828;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 1.5rem;
+            color: #b71c1c;
+        }
+    }
+
+    .preview-section {
+        h4 {
+            margin: 0 0 1rem 0;
+        }
+
+        .fields-preview-table {
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    .import-result {
+        padding: 1rem;
+        background-color: #e8f5e9;
+        border-left: 4px solid #4caf50;
+        border-radius: 4px;
+
+        h4 {
+            margin: 0 0 0.5rem 0;
+            color: #2e7d32;
+        }
+
+        p {
+            margin: 0.25rem 0;
+        }
+
+        .error-list {
+            margin: 0.5rem 0 0 0;
+            padding-left: 1.5rem;
+            color: #f44336;
+        }
+    }
+}
+
+mat-dialog-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+
+
+
+
+
+

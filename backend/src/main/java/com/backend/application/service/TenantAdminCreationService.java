@@ -5,7 +5,6 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TenantAdminCreationService {
@@ -23,7 +22,7 @@ public class TenantAdminCreationService {
   }
 
   public void createAdminUser(Long tenantId, String tenantDbName, String adminEmail, String temporaryPassword) {
-    tenantDbExecutor.withTenantTransaction(tenantId, tenantDbName, () -> {
+    tenantDbExecutor.withTenant(tenantId, tenantDbName, () -> {
       if (userRepository.existsByEmail(adminEmail)) {
         throw new IllegalStateException("tenant.admin.already.exists");
       }
@@ -40,9 +39,5 @@ public class TenantAdminCreationService {
       userRepository.save(adminUser);
       return null;
     });
-  }
-
-  public boolean adminExists(Long tenantId, String tenantDbName, String adminEmail) {
-    return tenantDbExecutor.withTenant(tenantId, tenantDbName, () -> userRepository.existsByEmail(adminEmail));
   }
 }

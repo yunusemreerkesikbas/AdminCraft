@@ -5,7 +5,12 @@
             <button mat-icon-button (click)="loadItems()">
                 <mat-icon>refresh</mat-icon>
             </button>
-            <button mat-raised-button color="primary" (click)="createComponent()">
+            <button
+                mat-raised-button
+                color="primary"
+                (click)="createComponent()"
+                [disabled]="!canCreateComponent()"
+            >
                 <mat-icon>add</mat-icon>
                 {{ 'admin.common.create' | transloco }}
             </button>
@@ -16,22 +21,30 @@
         <spa-search-input
             [placeholder]="'admin.common.search' | transloco"
             [ngModel]="searchTerm()"
-            (ngModelChange)="onSearchChange($event)">
+            (ngModelChange)="onSearchChange($event)"
+        >
         </spa-search-input>
 
         <spa-select
             [label]="'admin.components.filters.type' | transloco"
             [options]="typeOptions()"
-            (changed)="onTypeFilterChange($event)">
+            (changed)="onTypeFilterChange($event)"
+        >
         </spa-select>
 
         <spa-select
             [label]="'admin.components.filters.status' | transloco"
             [options]="statusOptions"
-            (changed)="onStatusFilterChange($event)">
+            (changed)="onStatusFilterChange($event)"
+        >
         </spa-select>
 
-        <button mat-raised-button color="accent" (click)="openTypesManager()" class="manage-types-btn">
+        <button
+            mat-raised-button
+            color="accent"
+            (click)="openTypesManager()"
+            class="manage-types-btn"
+        >
             <mat-icon>settings</mat-icon>
             {{ 'admin.components.manageTypes' | transloco }}
         </button>
@@ -40,48 +53,60 @@
     @if (store.isLoading()) {
         <div class="loading-container">
             <mat-icon class="spin">refresh</mat-icon>
-            {{ 'admin.common.loading' | transloco }}
+            <p>{{ 'admin.common.loading' | transloco }}</p>
         </div>
     } @else {
         @if (filteredComponents().length === 0) {
             <div class="empty-state">
-                <mat-icon>inbox</mat-icon>
                 <p>{{ 'admin.components.noComponents' | transloco }}</p>
+                <span class="empty-hint">{{ 'admin.components.createFirstHint' | transloco }}</span>
             </div>
         } @else {
-            <div class="components-table">
-                <div class="table-header">
-                    <div class="col-name">{{ 'admin.common.fields.name' | transloco }}</div>
-                    <div class="col-type">{{ 'admin.components.fields.type' | transloco }}</div>
-                    <div class="col-status">{{ 'admin.common.fields.status' | transloco }}</div>
-                    <div class="col-updated">{{ 'admin.common.fields.updated' | transloco }}</div>
-                    <div class="col-actions">{{ 'admin.common.fields.actions' | transloco }}</div>
-                </div>
+            <div class="components-list">
                 @for (component of filteredComponents(); track component.id) {
-                    <div class="component-row">
-                        <div class="col-name">
-                            <div class="name-info">
-                                <span class="name">{{ component.name }}</span>
-                                <span class="code">{{ component.code }}</span>
+                    <div class="component-row" [@fadeInBottom]>
+                        <div class="component-main">
+                            <div class="component-name-section">
+                                <h3 class="component-name">{{ component.name }}</h3>
+                                <span class="component-code">{{ component.code }}</span>
+                            </div>
+                            <div class="component-uid">
+                                <span class="uid-label">UID</span>
+                                <span class="uid-value">{{ component.uid }}</span>
+                            </div>
+                            <div class="component-type">
+                                <span class="type-label">Type</span>
+                                <span class="type-value">{{ component.componentTypeName || '-' }}</span>
+                            </div>
+                            <div class="component-status">
+                                <span
+                                    class="status-badge"
+                                    [attr.data-status]="component.status"
+                                >
+                                    {{
+                                        'admin.common.status.' +
+                                            (
+                                                component.status || 'draft'
+                                            ).toLowerCase() | transloco
+                                    }}
+                                </span>
                             </div>
                         </div>
-                        <div class="col-type" [attr.data-label]="'admin.components.fields.type' | transloco">
-                            {{ component.componentTypeName || '-' }}
-                        </div>
-                        <div class="col-status" [attr.data-label]="'admin.common.fields.status' | transloco">
-                            <span class="status-badge" [attr.data-status]="component.status">
-                                {{ 'admin.common.status.' + component.status.toLowerCase() | transloco }}
-                            </span>
-                        </div>
-                        <div class="col-updated" [attr.data-label]="'admin.common.fields.updated' | transloco">
-                            {{ component.updatedAt || component.createdAt | date:'short' }}
-                        </div>
-                        <div class="col-actions">
-                            <button mat-icon-button (click)="editComponent(component.id)" [matTooltip]="'admin.common.edit' | transloco">
+                        <div class="component-actions">
+                            <button
+                                mat-button
+                                (click)="editComponent(component.id)"
+                            >
                                 <mat-icon>edit</mat-icon>
+                                {{ 'admin.common.edit' | transloco }}
                             </button>
-                            <button mat-icon-button color="warn" (click)="deleteComponent(component.id)" [matTooltip]="'admin.common.delete' | transloco">
+                            <button
+                                mat-button
+                                color="warn"
+                                (click)="deleteComponent(component.id)"
+                            >
                                 <mat-icon>delete</mat-icon>
+                                {{ 'admin.common.delete' | transloco }}
                             </button>
                         </div>
                     </div>

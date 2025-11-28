@@ -1,0 +1,161 @@
+---
+trigger: model_decision
+description: Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices. Spring Boot 3, Java 21, Spring Data JPA, Lombok, MySQL, Flyway
+---
+
+# Backend Developer - Spring Boot Multi-Tenant Clean Architecture
+
+## Stack & Persona
+
+Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices.
+
+**Stack**: Spring Boot 3, Java 21, Spring Data JPA, Lombok, MySQL, Flyway
+
+## Architecture Flow
+
+```
+Presentation (Controllers, DTOs)
+    → Application (Commands/Queries, Services)
+    → Domain (Entities, Repositories)
+    ← Infrastructure (Config, Multi-Tenancy)
+```
+
+**Golden Rule**: Application layer uses Commands/Queries, NOT Presentation DTOs.
+
+## Multi-Tenant (Database-per-Tenant)
+
+**Strategy:**
+
+- Platform DB: `platform_management` (control plane)
+- Tenant DBs: `ac_tenant_{id}` (data plane, physically isolated)
+- ❌ NO `tenant_id` columns in tenant entities
+- ✅ Hibernate DATABASE multi-tenancy
+- ✅ HikariCP cache (LRU: max 10 pools, 5 conn, 30m idle)
+
+**Context:**
+
+```java
+// TenantContext: ThreadLocal with tenantId + tenantDbName
+// TenantFilter: validate active, set/clear in finally
+// MDC: tenantId, tenantDb, correlationId
+```
+
+## Flyway Migrations
+
+**Platform** (`db/platform/`): `V1__baseline.sql`, `R__seed_modules.sql`  
+**Tenant** (`db/tenant/{module}/`): `core/V1__baseline.sql`, `pagebuilder/V1__baseline.sql`
+
+**Rules:**
+
+- `hibernate.ddl-auto=none` (Flyway owns schema)
+- utf8mb4 / utf8mb4_unicode_ci
+- NO idempotent DDL logic (Flyway handles versioning)
+- CREATE DATABASE is ONLY string-concatenated SQL allowed
+
+## Domain Layer
+
+**Platform entities**: `@Table(schema="platform_management")`, `@Qualifier("platformDataSource")`  
+**Tenant entities**: Extend `BaseEntity`, NO tenant_id column  
+**i18n entities**: Extend `BaseI18nEntity`, `@ManyToOne` to base entity
+
+```java
+@Entity
+public class Page extends BaseEntity {
+    @Column(nullable = false) private String uid;
+    @Enumerated(EnumType.STRING) private PageStatus status;
+}
+
+@Entity
+public class PageI18n extends BaseI18nEntity {
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "page_id")
+    private Page page;
+    private String url, title;
+}
+```
+
+**Repositories**: Use `@EntityGraph` to avoid N+1, JPQL with parameters only.
+
+## Application Layer
+
+**Commands/Queries:**
+
+```java
+public record CreatePageCommand(String uid, Long categoryId, String styleClasses) {}
+public record PageDetailQuery(Long id, boolean includeTranslations) {}
+```
+
+**Services:**
+
+```java
+@Service
+public class PageServiceImpl implements PageService {
+    // Constructor injection (no @Autowired)
+    // Use @Transactional for multi-step ops
+    // Return Response DTOs only
+    // Validate UID uniqueness before create
+}
+```
+
+## Infrastructure
+
+**TenantContext**: ThreadLocal storing `tenantId`, `tenantDbName` + MDC  
+**TenantFilter**: Validate tenant exists & active, set context in try-finally  
+**MultiTenantConnectionProvider**: HikariCP cache with LRU eviction
+
+## Presentation
+
+**Controllers:**
+
+```java
+@RestController
+@RequestMapping("/pages")
+public class PageController {
+    // Map Request DTOs → Commands/Queries
+    // Return ResponseEntity<ApiResponse<T>>
+    // Never expose tenantId in responses
+    // @Valid for validation, @PreAuthorize for security
+}
+```
+
+## Provisioning
+
+```java
+@Async
+@Transactional
+public void executeProvisioning(Long jobId) {
+    try {
+        job.start();
+        createDatabaseIfNotExists(dbName); // 10%
+        runFlywayMigrations(modules); // 40-80%
+        job.complete(); // 100%
+    } catch (Exception ex) {
+        job.fail(truncateError(ex.getMessage())); // max 500 chars
+        log.error("correlationId: {}", MDC.get("correlationId"), ex);
+    }
+}
+```
+
+## Security (OWASP)
+
+- Bean Validation on inputs
+- JPQL parameterized queries (no string concat except CREATE DATABASE)
+- Never log sensitive data (passwords, tokens, PII)
+- Validate tenant active before ANY operation
+- Truncate API errors (500 chars), log full stacktrace with correlationId
+- Rate limiting on provisioning (5 req/min)
+
+## Quick Checklist
+
+- [ ] Commands/Queries in application (NOT Presentation DTOs)
+- [ ] NO tenant_id columns in tenant entities
+- [ ] Platform entities: @Qualifier("platformDataSource")
+- [ ] TenantFilter: try-finally with validation
+- [ ] MDC: tenantId, tenantDb, correlationId
+- [ ] Flyway: V1**, R** (no idempotent DDL)
+- [ ] hibernate.ddl-auto=none
+- [ ] @EntityGraph for relationships
+- [ ] @Transactional for multi-step ops
+- [ ] Never expose tenantId in responses
+
+kodlarda yorum satırı bırakmayalım. sadece çok gerekli yerde tek satırlık yorum bırakalım.
+defensive programming yapmayalım.

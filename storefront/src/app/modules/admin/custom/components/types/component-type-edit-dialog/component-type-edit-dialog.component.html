@@ -1,0 +1,89 @@
+<h2 mat-dialog-title>
+    {{ 'admin.components.types.edit' | transloco }}
+</h2>
+
+<mat-dialog-content>
+    <mat-tab-group [(selectedIndex)]="activeTab" [@fadeIn]>
+        <mat-tab [label]="'admin.components.types.tabs.general' | transloco">
+            <fuse-card class="form-section-card" [@fadeInTop]>
+                <div class="readonly-info-card">
+                    <mat-icon class="info-icon">fingerprint</mat-icon>
+                    <div class="info-content">
+                        <span class="info-label">{{ 'admin.common.fields.code' | transloco }}</span>
+                        <span class="info-value">{{ data.type.code }}</span>
+                    </div>
+                </div>
+
+                <form [formGroup]="form" class="type-form">
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.common.fields.name' | transloco
+                        }}</mat-label>
+                        <input matInput formControlName="name" />
+                        <mat-icon matPrefix>label</mat-icon>
+                        @if (form.get('name')?.hasError('required')) {
+                            <mat-error>{{
+                                'admin.validation.required' | transloco
+                            }}</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.category' | transloco
+                        }}</mat-label>
+                        <mat-select formControlName="category">
+                            <mat-option [value]="null">
+                                <mat-icon>remove</mat-icon>
+                                {{ 'admin.common.none' | transloco }}
+                            </mat-option>
+                            @for (option of categoryOptions; track option.value) {
+                                <mat-option [value]="option.value">
+                                    <mat-icon>category</mat-icon>
+                                    {{ option.labelKey | transloco }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                        <mat-icon matPrefix>category</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>{{
+                            'admin.components.fields.icon' | transloco
+                        }}</mat-label>
+                        <input matInput formControlName="icon" placeholder="icon_name" />
+                        <mat-icon matPrefix>emoji_symbols</mat-icon>
+                        <mat-hint>{{ 'admin.components.types.iconHint' | transloco }}</mat-hint>
+                    </mat-form-field>
+                </form>
+            </fuse-card>
+        </mat-tab>
+
+        <mat-tab
+            [label]="'admin.components.types.tabs.entryFields' | transloco"
+        >
+            <fuse-card class="fields-section-card" [@fadeInTop]>
+                <div class="fields-header">
+                    <mat-icon>extension</mat-icon>
+                    <h3>{{ 'admin.components.types.entryFieldsTitle' | transloco }}</h3>
+                </div>
+                <spa-entry-fields-builder [componentTypeId]="data.type.id" />
+            </fuse-card>
+        </mat-tab>
+    </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
+        {{ 'admin.dialog.actions.cancel' | transloco }}
+    </button>
+    <button
+        mat-raised-button
+        color="primary"
+        (click)="save()"
+        [disabled]="form.invalid || isSubmitting()"
+    >
+        <mat-icon>save</mat-icon>
+        {{ 'admin.dialog.actions.save' | transloco }}
+    </button>
+</mat-dialog-actions>

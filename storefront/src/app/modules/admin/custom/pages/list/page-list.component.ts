@@ -65,7 +65,10 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   tenantId = 1;
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
-  #supportedLanguages: string[] = [];
+
+  get #supportedLanguages(): string[] {
+    return this.#languageContext.supportedLanguages();
+  }
 
   protected override onInit(): void {
     const storedId = this.#tenantContext.getCurrentTenantId();
@@ -76,11 +79,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
     if (storedSub) {
       this.subdomain = storedSub;
     }
-    this.#languageContext.supportedLanguages$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((languages) => {
-        this.#supportedLanguages = languages;
-      });
 
 
     this.#tenantContext.tenant$

@@ -35,35 +35,21 @@ public class GenerateTenantAdminUserUseCase {
     if (!"ACTIVE".equals(tenant.getStatus())) {
       throw new IllegalStateException("Tenant must be ACTIVE to generate admin user");
     }
-
-    String adminEmail = "admin@" + tenant.getSubdomain() + ".com";
-    if (Boolean.TRUE.equals(tenant.getHasAdminUser())
-        && tenantAdminCreationService.adminExists(tenant.getId(), tenant.getDatabaseName(), adminEmail)) {
+    if (Boolean.TRUE.equals(tenant.getHasAdminUser())) {
       throw new IllegalStateException("Admin user already exists for this tenant");
     }
 
+    String adminEmail = "admin@" + tenant.getSubdomain() + ".com";
     String temporaryPassword = passwordGeneratorService.generate();
+    tenantAdminCreationService.createAdminUser(tenant.getId(), tenant.getDatabaseName(), adminEmail, temporaryPassword);
 
-    try {
-      // Step 1: Create user in tenant database FIRST
-      tenantAdminCreationService.createAdminUser(tenant.getId(), tenant.getDatabaseName(), adminEmail,
-          temporaryPassword);
+    tenant.setAdminEmail(adminEmail);
+    tenant.setAdminName("Admin");
+    tenant.setHasAdminUser(true);
+    tenantRepository.save(tenant);
 
-      tenant.setAdminEmail(adminEmail);
-      tenant.setAdminName("Admin");
-      tenant.setHasAdminUser(true);
-      tenantRepository.save(tenant);
-
-      String loginUrl = resolveLoginUrl(tenant.getSubdomain());
-      return new AdminUserResponse(adminEmail, temporaryPassword, tenant.getSubdomain(), loginUrl);
-
-    } catch (Exception e) {
-      tenant.setHasAdminUser(false);
-      tenant.setAdminEmail(null);
-      tenant.setAdminName(null);
-      tenantRepository.save(tenant);
-      throw e;
-    }
+    String loginUrl = resolveLoginUrl(tenant.getSubdomain());
+    return new AdminUserResponse(adminEmail, temporaryPassword, tenant.getSubdomain(), loginUrl);
   }
 
   private String resolveLoginUrl(String subdomain) {
