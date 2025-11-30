@@ -1,11 +1,14 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.ComponentType;
-import com.backend.domain.repository.ComponentTypeRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
+import com.backend.domain.entity.ComponentType;
+import com.backend.domain.repository.ComponentTypeRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -29,11 +32,6 @@ public class ComponentTypeRepositoryImpl implements ComponentTypeRepository {
     }
 
     @Override
-    public Optional<ComponentType> findByCode(String code) {
-        return jpaRepository.findByCode(code);
-    }
-
-    @Override
     public List<ComponentType> findAll() {
         return jpaRepository.findAll();
     }
@@ -41,11 +39,6 @@ public class ComponentTypeRepositoryImpl implements ComponentTypeRepository {
     @Override
     public List<ComponentType> findByCategory(String category) {
         return jpaRepository.findByCategory(category);
-    }
-
-    @Override
-    public List<ComponentType> findByIsSystem(Boolean isSystem) {
-        return jpaRepository.findByIsSystem(isSystem);
     }
 
     @Override
@@ -59,13 +52,8 @@ public class ComponentTypeRepositoryImpl implements ComponentTypeRepository {
     }
 
     @Override
-    public boolean existsByCode(String code) {
-        return jpaRepository.existsByCode(code);
-    }
-
-    @Override
     public boolean existsByUid(String uid) {
         return jpaRepository.existsByUid(uid);
     }
-}
 
+}
