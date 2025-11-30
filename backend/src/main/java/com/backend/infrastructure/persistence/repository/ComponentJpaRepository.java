@@ -15,13 +15,9 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
     Optional<Component> findByUid(String uid);
 
-    Optional<Component> findByCode(String code);
-
     List<Component> findByComponentTypeId(Long componentTypeId);
 
     List<Component> findByStatus(ComponentStatus status);
-
-    boolean existsByCode(String code);
 
     boolean existsByUid(String uid);
 

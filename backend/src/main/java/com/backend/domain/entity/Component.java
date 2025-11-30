@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "components", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "code" }, name = "uk_component_code"),
         @UniqueConstraint(columnNames = { "uid" }, name = "uk_component_uid")
 }, indexes = {
         @Index(columnList = "component_type_id", name = "idx_component_type"),
@@ -29,11 +28,6 @@ public class Component extends BaseEntity {
     @NotNull
     @Column(name = "component_type_id", nullable = false)
     private Long componentTypeId;
-
-    @NotBlank
-    @Size(max = 50)
-    @Column(nullable = false, unique = true, length = 50)
-    private String code;
 
     @NotBlank
     @Size(max = 100)

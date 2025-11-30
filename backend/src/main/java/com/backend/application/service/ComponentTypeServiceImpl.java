@@ -1,15 +1,23 @@
 package com.backend.application.service;
 
-import com.backend.application.command.ComponentTypeCommands.*;
-import com.backend.application.query.ComponentTypeQueries.*;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.application.command.ComponentTypeCommands.CreateComponentTypeCommand;
+import com.backend.application.command.ComponentTypeCommands.DeleteComponentTypeCommand;
+import com.backend.application.command.ComponentTypeCommands.UpdateComponentTypeCommand;
+import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQuery;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByCodeQuery;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +32,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
         log.debug("Creating component type with code: {}", command.code());
 
         ComponentType componentType = new ComponentType();
+        componentType.setUid(generateUniqueUid());
         componentType.setCode(command.code());
         componentType.setName(command.name());
         componentType.setCategory(command.category());

@@ -30,11 +30,6 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     }
 
     @Override
-    public Optional<Component> findByCode(String code) {
-        return jpaRepository.findByCode(code);
-    }
-
-    @Override
     public List<Component> findAll() {
         return jpaRepository.findAll();
     }
@@ -57,11 +52,6 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     @Override
     public void delete(Component entity) {
         jpaRepository.delete(entity);
-    }
-
-    @Override
-    public boolean existsByCode(String code) {
-        return jpaRepository.existsByCode(code);
     }
 
     @Override

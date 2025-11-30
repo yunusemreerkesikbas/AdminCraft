@@ -90,9 +90,6 @@ public class Page extends BaseEntity {
 
     @Column(name = "featured_image", length = 500)
     private String featuredImage;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
 }
 ```
 

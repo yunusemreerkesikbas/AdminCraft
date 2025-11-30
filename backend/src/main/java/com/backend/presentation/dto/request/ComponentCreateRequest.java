@@ -10,10 +10,6 @@ public record ComponentCreateRequest(
     @NotNull(message = "validation.component.type.id.required")
     Long componentTypeId,
 
-    @NotBlank(message = "validation.component.code.required")
-    @Size(max = 50, message = "validation.component.code.size")
-    String code,
-
     @NotBlank(message = "validation.component.name.required")
     @Size(max = 100, message = "validation.component.name.size")
     String name,
@@ -23,9 +19,6 @@ public record ComponentCreateRequest(
     ComponentStatus status
 ) {
     public ComponentCreateRequest {
-        if (code != null) {
-            code = code.trim();
-        }
         if (name != null) {
             name = name.trim();
         }

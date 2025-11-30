@@ -1,18 +1,22 @@
 package com.backend.application.service;
 
-import com.backend.application.command.ComponentI18nCommands.*;
-import com.backend.application.query.ComponentI18nQueries.*;
-import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
-import com.backend.domain.entity.Component;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.application.command.ComponentI18nCommands.DeleteComponentI18nCommand;
+import com.backend.application.command.ComponentI18nCommands.PublishComponentI18nCommand;
+import com.backend.application.command.ComponentI18nCommands.UnpublishComponentI18nCommand;
+import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18nCommand;
+import com.backend.application.query.ComponentI18nQueries.GetComponentI18nByComponentIdQuery;
+import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,26 +24,24 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
 
     private final ComponentI18nRepository componentI18nRepository;
     private final ComponentRepository componentRepository;
-    private final ComponentTypeService componentTypeService;
 
     @Override
     @Transactional
     public ComponentI18n upsertComponentI18n(UpsertComponentI18nCommand command) {
-        Component component = componentRepository.findById(command.componentId())
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Component not found with id: " + command.componentId()));
-
         ComponentI18n componentI18n = componentI18nRepository
                 .findByComponentIdAndLanguage(command.componentId(), command.language())
                 .orElse(null);
 
         if (componentI18n == null) {
             componentI18n = new ComponentI18n();
+            componentI18n.setUid(generateUniqueUid());
             componentI18n.setComponentId(command.componentId());
             componentI18n.setLanguage(command.language());
         }
 
-        componentI18n.setBaseLocalizedData(command.baseLocalizedData());
+        componentI18n.setTitle(command.title());
+        componentI18n.setSubtitle(command.subtitle());
+        componentI18n.setDescription(command.description());
         if (command.status() != null) {
             componentI18n.setStatus(command.status());
         }
@@ -72,7 +74,7 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
                         "ComponentI18n not found for componentId: " + command.componentId() + " and language: "
                                 + command.language()));
 
-        componentI18n.publish();
+        componentI18n.setStatus(com.backend.domain.enums.ComponentStatus.PUBLISHED);
         return componentI18nRepository.save(componentI18n);
     }
 
@@ -85,7 +87,7 @@ public class ComponentI18nServiceImpl implements ComponentI18nService {
                         "ComponentI18n not found for componentId: " + command.componentId() + " and language: "
                                 + command.language()));
 
-        componentI18n.unpublish();
+        componentI18n.setStatus(com.backend.domain.enums.ComponentStatus.DRAFT);
         return componentI18nRepository.save(componentI18n);
     }
 

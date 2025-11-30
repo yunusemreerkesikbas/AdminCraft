@@ -7,7 +7,6 @@ public class ComponentCommands {
 
     public record CreateComponentCommand(
         Long componentTypeId,
-        String code,
         String name,
         JsonNode baseData,
         ComponentStatus status,
@@ -17,7 +16,6 @@ public class ComponentCommands {
     public record UpdateComponentCommand(
         Long id,
         Long componentTypeId,
-        String code,
         String name,
         JsonNode baseData,
         ComponentStatus status,

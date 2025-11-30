@@ -55,7 +55,6 @@ public class ComponentController {
 
             CreateComponentCommand command = new CreateComponentCommand(
                     request.componentTypeId(),
-                    request.code(),
                     request.name(),
                     request.baseData(),
                     request.status(),
@@ -95,7 +94,7 @@ public class ComponentController {
                                 ComponentI18nResponse::from));
 
                 int publishedCount = (int) i18nList.stream()
-                        .filter(i18n -> i18n.getPublishedAt() != null)
+                        .filter(i18n -> com.backend.domain.enums.ComponentStatus.PUBLISHED.equals(i18n.getStatus()))
                         .count();
                 ComponentDetailResponse.Metadata metadata = new ComponentDetailResponse.Metadata(
                         translationsMap.size(),
@@ -152,7 +151,6 @@ public class ComponentController {
             UpdateComponentCommand command = new UpdateComponentCommand(
                     id,
                     request.componentTypeId(),
-                    request.code(),
                     request.name(),
                     request.baseData(),
                     request.status(),
@@ -223,7 +221,9 @@ public class ComponentController {
             UpsertComponentI18nCommand command = new UpsertComponentI18nCommand(
                     id,
                     language,
-                    request.baseLocalizedData(),
+                    request.title(),
+                    request.subtitle(),
+                    request.description(),
                     request.status());
 
             ComponentI18n result = componentI18nService.upsertComponentI18n(command);
