@@ -47,13 +47,6 @@ export class ComponentSchemaBuilderService {
                 options: this.transformTypeOptions(types)
             },
             {
-                key: 'code',
-                type: 'text',
-                labelKey: 'admin.common.fields.code',
-                required: true,
-                maxLength: 100
-            },
-            {
                 key: 'name',
                 type: 'text',
                 labelKey: 'admin.common.fields.name',
@@ -66,9 +59,10 @@ export class ComponentSchemaBuilderService {
                 labelKey: 'admin.common.fields.status',
                 required: true,
                 options: [
-                    { value: 'DRAFT', labelKey: 'admin.common.status.draft' },
-                    { value: 'ACTIVE', labelKey: 'admin.common.status.active' },
-                    { value: 'INACTIVE', labelKey: 'admin.common.status.inactive' }
+                    { value: 'DRAFT', label: 'DRAFT' },
+                    { value: 'PUBLISHED', label: 'PUBLISHED' },
+                    { value: 'SCHEDULED', label: 'SCHEDULED' },
+                    { value: 'ARCHIVED', label: 'ARCHIVED' }
                 ]
             },
             {
@@ -110,36 +104,6 @@ export class ComponentSchemaBuilderService {
                 type: 'textarea',
                 labelKey: 'admin.common.fields.description',
                 maxLength: 2000
-            },
-            {
-                key: 'imageUrl',
-                type: 'text',
-                labelKey: 'admin.common.fields.imageUrl',
-                maxLength: 500
-            },
-            {
-                key: 'imageAlt',
-                type: 'text',
-                labelKey: 'admin.common.fields.imageAlt',
-                maxLength: 200
-            },
-            {
-                key: 'buttonText',
-                type: 'text',
-                labelKey: 'admin.common.fields.buttonText',
-                maxLength: 100
-            },
-            {
-                key: 'buttonUrl',
-                type: 'text',
-                labelKey: 'admin.common.fields.buttonUrl',
-                maxLength: 500
-            },
-            {
-                key: 'buttonStyle',
-                type: 'text',
-                labelKey: 'admin.common.fields.buttonStyle',
-                maxLength: 100
             }
         ];
     }

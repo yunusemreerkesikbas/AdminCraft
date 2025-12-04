@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
+import { ApiResponse } from '@core/crud';
 import { HttpHeadersService } from '@core/api/http-headers.service';
 import { environment } from '@environments/environment';
 import { resolveEndpoint } from '@modules/admin/api-endpoints';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { CreateEntryFieldRequest, EntryFieldDefinitionResponse, ImportResultResponse, ImportSchemaRequest, ValidationResult } from '../models/component-entry.types';
 
 @Injectable({ providedIn: 'root' })
@@ -15,15 +16,18 @@ export class EntryFieldService {
     #baseUrl = environment.apiBaseUrl;
 
     addField(typeId: number, field: CreateEntryFieldRequest): Observable<EntryFieldDefinitionResponse> {
-        return this.#api.post('componentTypeEntryFields', field, { typeId });
+        return this.#api.post<ApiResponse<EntryFieldDefinitionResponse>>('componentTypeEntryFields', field, { typeId })
+            .pipe(map(response => response.data));
     }
 
     getFields(typeId: number): Observable<EntryFieldDefinitionResponse[]> {
-        return this.#api.get('componentTypeEntryFields', { typeId });
+        return this.#api.get<ApiResponse<EntryFieldDefinitionResponse[]>>('componentTypeEntryFields', { typeId })
+            .pipe(map(response => response.data || []));
     }
 
     importSchema(typeId: number, schema: ImportSchemaRequest): Observable<ImportResultResponse> {
-        return this.#api.post('componentTypeEntryFieldsImport', schema, { typeId });
+        return this.#api.post<ApiResponse<ImportResultResponse>>('componentTypeEntryFieldsImport', schema, { typeId })
+            .pipe(map(response => response.data));
     }
 
     exportSchema(typeId: number): Observable<Blob> {
@@ -37,7 +41,8 @@ export class EntryFieldService {
     }
 
     validateField(typeId: number, field: CreateEntryFieldRequest): Observable<ValidationResult> {
-        return this.#api.post('componentTypeEntryFieldValidate', field, { typeId });
+        return this.#api.post<ApiResponse<ValidationResult>>('componentTypeEntryFieldValidate', field, { typeId })
+            .pipe(map(response => response.data));
     }
 }
 

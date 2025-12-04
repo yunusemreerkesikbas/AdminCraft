@@ -59,7 +59,7 @@ export interface CreateEntryRequest {
 }
 
 export interface UpdateEntryRequest {
-    sortOrder: number;
+    sortOrder?: number;
     isVisible: boolean;
     styleClasses?: string;
     status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';

@@ -4,12 +4,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaEmptyStateComponent } from 'app/shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
+import { SpaStatusBadgeComponent } from 'app/shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { finalize, take } from 'rxjs';
 import { ComponentEntry, CreateEntryRequest, UpdateEntryRequest } from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
@@ -26,10 +27,11 @@ import { ComponentEntryFormComponent } from '../component-entry-form/component-e
         CommonModule,
         MatButtonModule,
         MatIconModule,
-        MatTableModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
-        TranslocoModule
+        TranslocoModule,
+        SpaStatusBadgeComponent,
+        SpaEmptyStateComponent
     ]
 })
 export class ComponentEntryListComponent extends BaseCrudListComponent<ComponentEntry, CreateEntryRequest, UpdateEntryRequest> {
@@ -44,10 +46,13 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     @Input({ required: true }) componentTypeId!: number;
     @Input() languages: string[] = ['tr', 'en'];
 
-    displayedColumns = ['uid', 'sortOrder', 'status', 'isVisible', 'actions'];
-
     protected override fetchItems() {
         return this.service.listByComponentId(this.componentId);
+    }
+
+    protected override onLoadSuccess(items: ComponentEntry[]): void {
+        const sortedItems = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+        this.store.setItems(sortedItems);
     }
 
     protected override onLoadError(error: any): void {
@@ -55,6 +60,8 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     createEntry(): void {
+        const sortOrder = this.#calculateNextSortOrder();
+        
         const dialogRef = this.#dialog.open(ComponentEntryFormComponent, {
             width: '800px',
             maxHeight: '90vh',
@@ -63,7 +70,8 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                 mode: 'create',
                 componentId: this.componentId,
                 componentTypeId: this.componentTypeId,
-                languages: this.languages
+                languages: this.languages,
+                sortOrder
             }
         });
 
@@ -76,7 +84,15 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
             });
     }
 
-    editEntry(entryId: number): void {
+    #calculateNextSortOrder(): number {
+        const items = this.store.items();
+        if (items.length === 0) return 0;
+        
+        const maxSortOrder = Math.max(...items.map(item => item.sortOrder));
+        return maxSortOrder + 1;
+    }
+
+    protected editEntry(entryId: number): void {
         this.store.setLoading(true);
         this.service.getEntryDetail(entryId)
             .pipe(
@@ -114,7 +130,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
             });
     }
 
-    deleteEntry(entry: ComponentEntry): void {
+    protected deleteEntry(entry: ComponentEntry): void {
         if (!confirm(this.#transloco.translate('admin.components.entries.confirmDelete', { uid: entry.uid }))) {
             return;
         }
@@ -132,13 +148,5 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
             });
     }
 
-    getStatusColor(status: string): string {
-        switch (status) {
-            case 'ACTIVE': return '#4caf50';
-            case 'DRAFT': return '#ff9800';
-            case 'INACTIVE': return '#9e9e9e';
-            default: return '#000';
-        }
-    }
 }
 

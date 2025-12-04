@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaEmptyStateComponent } from 'app/shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
 import { take } from 'rxjs';
 import { EntryFieldDefinitionResponse } from '../../models/component-entry.types';
 import { EntryFieldService } from '../../services/entry-field.service';
@@ -25,7 +26,8 @@ import { EntryFieldImportDialogComponent } from '../entry-field-import-dialog/en
         MatIconModule,
         MatTableModule,
         MatProgressSpinnerModule,
-        TranslocoModule
+        TranslocoModule,
+        SpaEmptyStateComponent
     ]
 })
 export class EntryFieldsBuilderComponent implements OnInit {

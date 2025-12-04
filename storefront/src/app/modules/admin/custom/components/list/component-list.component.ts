@@ -1,137 +1,105 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BaseCrudListComponent, CrudStore } from '@core/crud';
+import { BaseCrudListComponent } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
-import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { ItemDialogService } from '@shared/services/item-dialog.service';
-import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { filter, forkJoin, skip, take, takeUntil } from 'rxjs';
+import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
+import { SpaEmptyStateComponent } from 'app/shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
+import { SpaSearchInputComponent } from 'app/shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaStatusBadgeComponent } from 'app/shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
+import { take } from 'rxjs';
 import { ComponentEditDialogComponent } from '../component-edit-dialog/component-edit-dialog.component';
-import { CreateComponentFormData, isComponentI18nFormData } from '../models/component-form.types';
-import { ComponentDetailDto, ComponentDto, ComponentI18nRequest, ComponentStatus, ComponentTypeDto, CreateComponentRequest, UpdateComponentRequest } from '../models/component-library.types';
+import {
+    ComponentDetailDto,
+    ComponentDto,
+    ComponentStatus,
+    ComponentTypeDto,
+    CreateComponentRequest,
+    UpdateComponentRequest
+} from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
-import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
+import { ComponentStore } from '../services/component.store';
 import { ComponentTypesManagerComponent } from '../types/component-types-manager.component';
 
 const DIALOG_CONFIG = {
-    COMPONENT_FORM: { width: 'min(90vw, 800px)', height: 'min(85vh, 600px)' },
-    TYPES_MANAGER: { width: 'min(90vw, 900px)', height: 'min(85vh, 600px)' }
-} as const;
+    COMPONENT_FORM: { width: '800px', height: 'auto' },
+    TYPES_MANAGER: { width: '900px', height: '80vh' }
+};
 
 @Component({
     selector: 'spa-component-list',
-    templateUrl: './component-list.component.html',
-    styleUrls: ['./component-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
-    animations: fuseAnimations,
     imports: [
         CommonModule,
         FormsModule,
         MatButtonModule,
         MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
+        MatMenuModule,
         MatTooltipModule,
         TranslocoModule,
+        AdminPageHeaderComponent,
         SpaSearchInputComponent,
-        SpaSelectComponent
-    ]
+        SpaSelectComponent,
+        SpaStatusBadgeComponent,
+        SpaEmptyStateComponent,
+    ],
+    templateUrl: './component-list.component.html',
+    styleUrls: ['./component-list.component.scss'],
+    encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    animations: fuseAnimations,
 })
-export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> {
-    protected service = inject(ComponentLibraryService);
-    protected store = new CrudStore<ComponentDto>();
-
-    #notify = inject(NotificationService);
-    #tenantCtx = inject(TenantContextService);
-    #langCtx = inject(LanguageContextService);
-    #dialog = inject(ItemDialogService);
-    #schema = inject(ComponentSchemaBuilderService);
-    #matDialog = inject(MatDialog);
+export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit {
+    #dialog = inject(MatDialog);
     #transloco = inject(TranslocoService);
-
-    protected tenantId?: number;
-    componentTypes = signal<ComponentTypeDto[]>([]);
-    typesLoading = signal<boolean>(false);
-    supportedLanguages = computed(() => this.#langCtx.supportedLanguages());
-
-    selectedTypeId = signal<number | null>(null);
-    selectedStatus = signal<ComponentStatus | null>(null);
-    searchTerm = signal<string>('');
-
-    typeOptions = computed<SpaSelectOption<number | null>[]>(() => [
-        { value: null, label: this.#transloco.translate('admin.components.filters.allTypes') },
-        ...this.componentTypes().map(t => ({ value: t.id, label: t.name }))
-    ]);
-
-    statusOptions: SpaSelectOption<ComponentStatus | null>[] = [
-        { value: null, label: this.#transloco.translate('admin.components.filters.allStatus') },
-        { value: ComponentStatus.ACTIVE, label: this.#transloco.translate('admin.common.status.active') },
-        { value: ComponentStatus.DRAFT, label: this.#transloco.translate('admin.common.status.draft') },
-        { value: ComponentStatus.INACTIVE, label: this.#transloco.translate('admin.common.status.inactive') }
-    ];
-
-    filteredComponents = computed(() => {
-        let items = this.store.items();
-        if (this.selectedTypeId()) {
-            items = items.filter(c => c.componentTypeId === this.selectedTypeId());
-        }
-        if (this.selectedStatus()) {
-            items = items.filter(c => c.status === this.selectedStatus());
-        }
-        if (this.searchTerm()) {
-            const term = this.searchTerm().toLowerCase();
-            items = items.filter(c =>
-                c.name.toLowerCase().includes(term) ||
-                c.code.toLowerCase().includes(term)
-            );
-        }
-        return items;
+    #notify = inject(NotificationService);
+    #languageContext = inject(LanguageContextService);
+    protected service = inject(ComponentLibraryService);
+    protected store = inject(ComponentStore);
+    protected componentTypes = signal<ComponentTypeDto[]>([]);
+    protected typesLoading = signal<boolean>(false);
+    protected selectedTypeId = signal<number | null>(null);
+    protected selectedStatus = signal<ComponentStatus | null>(null);
+    protected supportedLanguages = computed(() => this.#languageContext.supportedLanguages());
+    protected searchTerm = signal<string>('');
+    protected typeOptions = computed(() => {
+        return this.componentTypes().map(type => ({
+            value: type.id,
+            label: type.name
+        }));
     });
 
-    canCreateComponent = computed(() =>
-        !this.typesLoading() &&
-        this.componentTypes().length > 0
-    );
+    protected filteredComponents = computed(() => {
+        const items = this.store.items();
+        const term = this.searchTerm().toLowerCase();
+        const typeId = this.selectedTypeId();
+        const status = this.selectedStatus();
 
-    protected override onInit(): void {
+        return items.filter(item => {
+            const matchesSearch = !term || item.name.toLowerCase().includes(term) || item.uid.toLowerCase().includes(term);
+            const matchesType = !typeId || item.componentTypeId === typeId;
+            const matchesStatus = !status || (status as any) === 'ALL' || item.status === status;
+
+            return matchesSearch && matchesType && matchesStatus;
+        });
+    });
+    protected readonly statusOptions = [
+        { value: 'ALL', label: 'ALL' },
+        ...Object.values(ComponentStatus).map(s => ({ value: s, label: s }))
+    ];
+
+    override ngOnInit(): void {
+        super.ngOnInit();
         this.#loadComponentTypes();
-
-        this.#tenantCtx.tenant$
-            .pipe(
-                filter(t => !!t),
-                take(1),
-                takeUntil(this.destroy$)
-            )
-            .subscribe((tenant) => {
-                this.tenantId = tenant.id;
-                this.loadItems();
-            });
-        this.#tenantCtx.tenant$
-            .pipe(
-                skip(1),
-                filter(t => !!t),
-                takeUntil(this.destroy$)
-            )
-            .subscribe((tenant) => {
-                if (tenant.id !== this.tenantId) {
-                    this.tenantId = tenant.id;
-                    this.#loadComponentTypes();
-                    this.loadItems();
-                }
-            });
     }
 
     #loadComponentTypes(): void {
@@ -166,8 +134,13 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         this.selectedStatus.set(status);
     }
 
-    onSearchChange(term: string): void {
+    protected override onSearchChange(term: string): void {
         this.searchTerm.set(term);
+        super.onSearchChange(term);
+    }
+
+    canCreateComponent(): boolean {
+        return this.componentTypes().length > 0;
     }
 
     createComponent(): void {
@@ -180,68 +153,33 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             return;
         }
 
-        const schema = this.#schema.buildComponentCreateSchema(this.componentTypes());
-        const initial: CreateComponentFormData = {
-            componentTypeId: null,
-            code: null,
-            name: null,
-            status: ComponentStatus.DRAFT,
-            order: 0,
-            isVisible: true,
-            styleClasses: null
-        };
-
         const i18nInitial: Record<string, any> = {};
         this.supportedLanguages().forEach((lang) => {
             i18nInitial[lang] = {
                 title: '',
                 subtitle: '',
-                description: '',
-                links: []
+                description: ''
             };
         });
 
-        const options: ItemDialogOptions<CreateComponentFormData> = {
-            titleKey: 'admin.dialog.title.create',
-            mode: 'create',
-            schema,
-            languages: this.supportedLanguages(),
-            initial,
-            i18nInitial,
-            modalData: {
-                disableClose: true,
-                width: DIALOG_CONFIG.COMPONENT_FORM.width,
-                height: DIALOG_CONFIG.COMPONENT_FORM.height
+        const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
+            width: DIALOG_CONFIG.COMPONENT_FORM.width,
+            maxHeight: '90vh',
+            disableClose: true,
+            data: {
+                mode: 'create',
+                componentTypes: this.componentTypes(),
+                languages: this.supportedLanguages()
             }
-        };
+        });
 
-        this.#dialog.open(options).pipe(take(1)).subscribe((result) => {
+        dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
             if (!result) return;
-
-            const basePayload: CreateComponentRequest = {
-                componentTypeId: result.componentTypeId!,
-                code: result.code!,
-                name: result.name!,
-                status: result.status || ComponentStatus.DRAFT,
-                baseData: {
-                    order: result.order ?? 0,
-                    isVisible: result.isVisible ?? true,
-                    styleClasses: result.styleClasses || undefined
-                }
-            };
-
-            this.service.createComponent(basePayload)
-                .pipe(take(1))
-                .subscribe({
-                    next: (created) => {
-                        this.#saveI18nForComponent(created.id, result, true);
-                    },
-                    error: () => this.#notify.alert('admin.components.errors.createFailed')
-                });
+            this.loadItems();
         });
     }
 
-    editComponent(componentId: number): void {
+    protected editComponent(componentId: number): void {
         this.store.setLoading(true);
         this.service.getComponentDetail(componentId)
             .pipe(take(1))
@@ -258,13 +196,15 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     #openEditDialog(detail: ComponentDetailDto): void {
-        const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
+        const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
             width: '900px',
             maxHeight: '90vh',
             disableClose: true,
             data: {
+                mode: 'edit',
                 component: detail,
-                languages: this.supportedLanguages()
+                languages: this.supportedLanguages(),
+                componentTypes: this.componentTypes()
             }
         });
 
@@ -277,42 +217,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             });
     }
 
-    #saveI18nForComponent(componentId: number, formData: any, isCreate: boolean): void {
-        const i18nRequests = this.supportedLanguages().map((lang) => {
-            const langData = formData[lang];
-            if (!isComponentI18nFormData(langData)) return null;
-
-            const request: ComponentI18nRequest = {
-                baseLocalizedData: {
-                    title: langData.title || undefined,
-                    subtitle: langData.subtitle || undefined,
-                    description: langData.description || undefined,
-                    links: langData.links || undefined
-                },
-                status: ComponentStatus.DRAFT
-            };
-
-            return this.service.updateComponentI18n(componentId, lang, request);
-        }).filter(req => req !== null);
-
-        if (i18nRequests.length === 0) {
-            this.#notify.success(isCreate ? 'admin.components.success.created' : 'admin.components.success.updated');
-            this.loadItems();
-            return;
-        }
-
-        forkJoin(i18nRequests)
-            .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.#notify.success(isCreate ? 'admin.components.success.created' : 'admin.components.success.updated');
-                    this.loadItems();
-                },
-                error: () => this.#notify.alert('admin.components.errors.saveTranslationsFailed')
-            });
-    }
-
-    deleteComponent(componentId: number): void {
+    protected deleteComponent(componentId: number): void {
         if (!confirm(this.#transloco.translate('admin.components.confirmDelete'))) {
             return;
         }
@@ -329,7 +234,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     }
 
     openTypesManager(): void {
-        const dialogRef = this.#matDialog.open(ComponentTypesManagerComponent, {
+        const dialogRef = this.#dialog.open(ComponentTypesManagerComponent, {
             width: DIALOG_CONFIG.TYPES_MANAGER.width,
             height: DIALOG_CONFIG.TYPES_MANAGER.height,
             disableClose: false

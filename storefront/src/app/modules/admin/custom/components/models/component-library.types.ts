@@ -4,24 +4,6 @@ export enum ComponentStatus {
     INACTIVE = 'INACTIVE'
 }
 
-export interface Link {
-    label: string;
-    url: string;
-    target?: '_blank' | '_self';
-}
-
-export interface ComponentBaseData {
-    order?: number;
-    isVisible?: boolean;
-    styleClasses?: string;
-}
-
-export interface ComponentBaseLocalizedData {
-    title?: string;
-    subtitle?: string;
-    description?: string;
-    links?: Link[];
-}
 
 export interface ComponentTypeDto {
     id: number;
@@ -52,9 +34,10 @@ export interface ComponentDto {
     uid: string;
     componentTypeId: number;
     componentTypeName?: string;
-    code: string;
     name: string;
-    baseData: ComponentBaseData;
+    displayOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
     status: ComponentStatus;
     createdAt: string;
     updatedAt?: string;
@@ -72,15 +55,18 @@ export interface ComponentDetailDto extends ComponentDto {
 
 export interface CreateComponentRequest {
     componentTypeId: number;
-    code: string;
     name: string;
-    baseData: ComponentBaseData;
+    displayOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
     status: ComponentStatus;
 }
 
 export interface UpdateComponentRequest {
     name: string;
-    baseData: ComponentBaseData;
+    displayOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
     status: ComponentStatus;
 }
 
@@ -90,14 +76,16 @@ export interface ComponentI18nDto {
     uid: string;
     componentId: number;
     language: string;
-    baseLocalizedData: ComponentBaseLocalizedData;
+    title?: string;
+    subtitle?: string;
+    description?: string;
     status: ComponentStatus;
-    publishedAt?: string;
-    createdAt: string;
     updatedAt?: string;
 }
 
 export interface ComponentI18nRequest {
-    baseLocalizedData: ComponentBaseLocalizedData;
+    title?: string;
+    subtitle?: string;
+    description?: string;
     status: ComponentStatus;
 }

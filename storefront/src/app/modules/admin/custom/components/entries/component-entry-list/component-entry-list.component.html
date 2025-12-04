@@ -1,63 +1,92 @@
-<div class="component-entry-list">
-    <div class="header-section">
-        <h3>{{ 'admin.components.entries.title' | transloco }}</h3>
-        <button mat-raised-button color="primary" (click)="createEntry()">
+<div class="flex w-full flex-col">
+    <div class="mb-6 flex items-center justify-between">
+        <h3 class="m-0 text-lg font-semibold">
+            {{ 'admin.components.entries.title' | transloco }}
+        </h3>
+        <button mat-flat-button color="primary" (click)="createEntry()">
             <mat-icon>add</mat-icon>
             {{ 'admin.components.entries.addEntry' | transloco }}
         </button>
     </div>
 
     @if (store.isLoading()) {
-        <div class="loading-container">
+        <div class="flex flex-col items-center justify-center py-12">
             <mat-spinner diameter="40"></mat-spinner>
-            <p>{{ 'admin.common.loading' | transloco }}</p>
+            <p class="text-secondary mt-4">
+                {{ 'admin.common.loading' | transloco }}
+            </p>
         </div>
     } @else if (store.items().length === 0) {
-        <div class="empty-state">
-            <p>{{ 'admin.components.entries.noEntries' | transloco }}</p>
-            <button mat-raised-button color="primary" (click)="createEntry()">
+        <spa-empty-state
+            [title]="'admin.components.entries.noEntries' | transloco"
+            [description]="'admin.components.entries.noEntriesDesc' | transloco"
+            icon="inbox"
+        >
+            <button mat-stroked-button color="primary" (click)="createEntry()">
                 <mat-icon>add</mat-icon>
-                {{ 'admin.components.entries.addFirst' | transloco }}
+                {{ 'admin.components.entries.addEntry' | transloco }}
             </button>
-        </div>
+        </spa-empty-state>
     } @else {
-        <div class="entries-list">
+        <div class="flex flex-col gap-2">
             @for (entry of store.items(); track entry.id) {
-                <div class="entry-row" [@fadeInBottom]>
-                    <div class="entry-main">
-                        <div class="entry-order">
-                            <span class="order-number">{{ entry.sortOrder }}</span>
-                        </div>
-                        <div class="entry-uid">
-                            <span class="uid-label">UID</span>
-                            <span class="uid-value">{{ entry.uid }}</span>
-                        </div>
-                        <div class="entry-status">
-                            <span class="status-badge" [attr.data-status]="entry.status">
-                                {{ 'admin.common.status.' + entry.status.toLowerCase() | transloco }}
+                <div
+                    class="bg-card flex flex-col justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-hover sm:flex-row sm:items-center"
+                    [@fadeInBottom]
+                >
+                    <!-- Entry Info -->
+                    <div class="flex min-w-0 flex-col gap-1">
+                        <div class="flex items-center gap-3">
+                            <span
+                                class="text-secondary rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium dark:bg-slate-800"
+                            >
+                                {{ entry.uid }}
                             </span>
+                            <spa-status-badge
+                                [status]="entry.status"
+                                size="sm"
+                            ></spa-status-badge>
+
+                            @if (!entry.isVisible) {
+                                <mat-icon
+                                    class="text-hint icon-size-4"
+                                    [matTooltip]="
+                                        'admin.components.entries.hidden'
+                                            | transloco
+                                    "
+                                    >visibility_off</mat-icon
+                                >
+                            }
                         </div>
-                        <div class="entry-visibility">
-                            <span class="visibility-badge" [class.visible]="entry.isVisible">
-                                {{ entry.isVisible ? ('admin.components.entries.visible' | transloco) : ('admin.components.entries.hidden' | transloco) }}
+
+                        <!-- Translation Preview (if available) -->
+                        @if (entry.translations && entry.translations['en']) {
+                            <span class="truncate text-sm font-medium">
+                                {{ entry.translations['en'].title || '-' }}
                             </span>
-                        </div>
+                        }
                     </div>
-                    <div class="entry-actions">
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
                         <button
-                            mat-button
+                            mat-icon-button
                             (click)="editEntry(entry.id)"
+                            [matTooltip]="
+                                'admin.common.actions.edit' | transloco
+                            "
                         >
                             <mat-icon>edit</mat-icon>
-                            {{ 'admin.common.actions.edit' | transloco }}
                         </button>
                         <button
-                            mat-button
+                            mat-icon-button
                             color="warn"
                             (click)="deleteEntry(entry)"
+                            [matTooltip]="
+                                'admin.common.actions.delete' | transloco
+                            "
                         >
                             <mat-icon>delete</mat-icon>
-                            {{ 'admin.common.actions.delete' | transloco }}
                         </button>
                     </div>
                 </div>

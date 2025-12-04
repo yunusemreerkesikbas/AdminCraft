@@ -1,0 +1,20 @@
+<mat-checkbox
+    [checked]="value"
+    [disabled]="disabled"
+    [class]="styleClasses"
+    (change)="onCheckboxChange($event.checked)"
+    color="primary"
+>
+    <span class="checkbox-content">
+        @if (icon) {
+            <mat-icon class="checkbox-icon">{{ icon }}</mat-icon>
+        }
+        @if (label) {
+            <span class="checkbox-label">{{ label }}</span>
+        }
+    </span>
+</mat-checkbox>
+@if (hint) {
+    <span class="checkbox-hint">{{ hint }}</span>
+}
+
