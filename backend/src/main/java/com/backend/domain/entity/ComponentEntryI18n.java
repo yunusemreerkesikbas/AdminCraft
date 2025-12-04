@@ -1,14 +1,22 @@
 package com.backend.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.backend.domain.enums.ComponentStatus;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "component_entry_i18n", uniqueConstraints = {
@@ -36,18 +44,6 @@ public class ComponentEntryI18n extends BaseI18nEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Size(max = 500)
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
-
-    @Size(max = 100)
-    @Column(name = "button_text", length = 100)
-    private String buttonText;
-
-    @Size(max = 500)
-    @Column(name = "button_url", length = 500)
-    private String buttonUrl;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @NotNull
@@ -68,6 +64,3 @@ public class ComponentEntryI18n extends BaseI18nEntity {
         }
     }
 }
-
-
-

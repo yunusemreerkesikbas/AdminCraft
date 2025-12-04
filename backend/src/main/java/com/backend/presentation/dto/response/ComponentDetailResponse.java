@@ -13,8 +13,9 @@ public record ComponentDetailResponse(
         String name,
         Long componentTypeId,
         String componentTypeName,
-        Integer order,
+        Integer displayOrder,
         Boolean isVisible,
+        String styleClasses,
         ComponentStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
@@ -30,18 +31,6 @@ public record ComponentDetailResponse(
             Map<String, ComponentI18nResponse> translations,
             Metadata metadata) {
 
-        Integer order = 0;
-        Boolean isVisible = true;
-
-        if (component.getBaseData() != null) {
-            if (component.getBaseData().has("order")) {
-                order = component.getBaseData().get("order").asInt(0);
-            }
-            if (component.getBaseData().has("isVisible")) {
-                isVisible = component.getBaseData().get("isVisible").asBoolean(true);
-            }
-        }
-
         return new ComponentDetailResponse(
                 component.getId(),
                 component.getUuid(),
@@ -49,8 +38,9 @@ public record ComponentDetailResponse(
                 component.getName(),
                 component.getComponentTypeId(),
                 componentTypeName,
-                order,
-                isVisible,
+                component.getDisplayOrder(),
+                component.getIsVisible(),
+                component.getStyleClasses(),
                 component.getStatus(),
                 component.getCreatedAt(),
                 component.getUpdatedAt(),

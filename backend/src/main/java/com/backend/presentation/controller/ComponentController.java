@@ -76,7 +76,9 @@ public class ComponentController {
             CreateComponentCommand command = new CreateComponentCommand(
                     request.componentTypeId(),
                     request.name(),
-                    request.baseData(),
+                    request.displayOrder(),
+                    request.isVisible(),
+                    request.styleClasses(),
                     request.status(),
                     userId);
 
@@ -186,7 +188,9 @@ public class ComponentController {
                     id,
                     request.componentTypeId(),
                     request.name(),
-                    request.baseData(),
+                    request.displayOrder(),
+                    request.isVisible(),
+                    request.styleClasses(),
                     request.status(),
                     userId);
 

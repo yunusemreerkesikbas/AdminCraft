@@ -1,7 +1,21 @@
 package com.backend.application.service;
 
-import com.backend.application.command.ComponentCommands.*;
-import com.backend.application.query.ComponentQueries.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.application.command.ComponentCommands.CreateComponentCommand;
+import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
+import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
+import com.backend.application.query.ComponentQueries.GetAllComponentsWithTranslationsQuery;
+import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
+import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
+import com.backend.application.query.ComponentQueries.GetComponentsByTypeIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
@@ -10,13 +24,8 @@ import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +43,9 @@ public class ComponentServiceImpl implements ComponentService {
         Component component = new Component();
         component.setComponentTypeId(command.componentTypeId());
         component.setName(command.name());
-        component.setBaseData(command.baseData());
+        component.setDisplayOrder(command.displayOrder() != null ? command.displayOrder() : 0);
+        component.setIsVisible(command.isVisible() != null ? command.isVisible() : true);
+        component.setStyleClasses(command.styleClasses());
         component.setStatus(command.status() != null ? command.status() : ComponentStatus.DRAFT);
         component.setCreatedBy(command.userId());
         component.setUpdatedBy(command.userId());
@@ -88,15 +99,15 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional(readOnly = true)
     public List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query) {
         List<Object[]> results = componentRepository.findAllWithTypeNamesAndEntryCount();
-        
+
         return results.stream()
-            .map(row -> {
-                Component component = (Component) row[0];
-                String typeName = (String) row[1];
-                Long entryCount = (Long) row[2];
-                return ComponentListItemResponse.from(component, typeName, entryCount.intValue());
-            })
-            .collect(Collectors.toList());
+                .map(row -> {
+                    Component component = (Component) row[0];
+                    String typeName = (String) row[1];
+                    Long entryCount = (Long) row[2];
+                    return ComponentListItemResponse.from(component, typeName, entryCount.intValue());
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -115,7 +126,11 @@ public class ComponentServiceImpl implements ComponentService {
 
         component.setComponentTypeId(command.componentTypeId());
         component.setName(command.name());
-        component.setBaseData(command.baseData());
+        component
+                .setDisplayOrder(command.displayOrder() != null ? command.displayOrder() : component.getDisplayOrder());
+        component.setIsVisible(command.isVisible() != null ? command.isVisible() : component.getIsVisible());
+        component
+                .setStyleClasses(command.styleClasses() != null ? command.styleClasses() : component.getStyleClasses());
         if (command.status() != null) {
             component.setStatus(command.status());
         }
