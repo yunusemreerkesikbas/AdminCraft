@@ -1,0 +1,91 @@
+.spa-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+    border-radius: 9999px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    // Sizes
+    &.size-sm {
+        padding: 0.125rem 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+
+    &.size-md {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8125rem;
+        line-height: 1.25rem;
+    }
+
+    &.size-lg {
+        padding: 0.375rem 1rem;
+        font-size: 0.875rem;
+        line-height: 1.5rem;
+    }
+
+    // Dot for soft variant
+    .badge-dot {
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 50%;
+        background-color: currentColor;
+        opacity: 0.8;
+    }
+
+    // Status Colors & Variants
+
+    // Helper mixin for colors
+    @mixin status-color($bg, $text, $border: transparent) {
+        &.variant-filled {
+            background-color: $text;
+            color: white;
+        }
+        &.variant-outline {
+            background-color: transparent;
+            color: $text;
+            border: 1px solid $text;
+        }
+        &.variant-soft {
+            background-color: $bg;
+            color: $text;
+        }
+    }
+
+    // Active / Success
+    &.status-active,
+    &.status-success,
+    &.status-published {
+        @include status-color(#dcfce7, #166534); // green-100, green-800
+    }
+
+    // Inactive / Error / Deleted
+    &.status-inactive,
+    &.status-error,
+    &.status-deleted,
+    &.status-failed {
+        @include status-color(#fee2e2, #991b1b); // red-100, red-800
+    }
+
+    // Draft / Warning / Pending
+    &.status-draft,
+    &.status-warning,
+    &.status-pending {
+        @include status-color(#fef3c7, #92400e); // amber-100, amber-800
+    }
+
+    // Info / Processing
+    &.status-info,
+    &.status-processing {
+        @include status-color(#dbeafe, #1e40af); // blue-100, blue-800
+    }
+
+    // Default / Unknown
+    &.status-default,
+    &.status-unknown {
+        @include status-color(#f1f5f9, #475569); // slate-100, slate-600
+    }
+}

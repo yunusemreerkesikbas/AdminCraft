@@ -2,20 +2,19 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { fuseAnimations } from '@fuse/animations';
-import { FuseCardComponent } from '@fuse/components/card';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
+import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { forkJoin, take } from 'rxjs';
 import { ComponentEntry, CreateEntryRequest, EntryFieldDefinition, EntryI18nDto, EntryI18nRequest, UpdateEntryRequest } from '../../models/component-entry.types';
+import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
 
@@ -27,6 +26,7 @@ interface DialogData {
     entryId?: number;
     entry?: ComponentEntry;
     translations?: Record<string, EntryI18nDto>;
+    sortOrder?: number;
 }
 
 @Component({
@@ -35,20 +35,18 @@ interface DialogData {
     styleUrls: ['./component-entry-form.component.scss'],
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: fuseAnimations,
     imports: [
         CommonModule,
         ReactiveFormsModule,
         MatDialogModule,
         MatTabsModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
-        MatSelectModule,
-        MatCheckboxModule,
         MatButtonModule,
         TranslocoModule,
-        FuseCardComponent
+        SpaInputComponent,
+        SpaSelectComponent,
+        SpaTextareaComponent,
+        SpaCheckboxComponent
     ]
 })
 export class ComponentEntryFormComponent implements OnInit {
@@ -78,11 +76,7 @@ export class ComponentEntryFormComponent implements OnInit {
         !this.isLoading()
     );
 
-    statusOptions = [
-        { value: 'DRAFT', labelKey: 'admin.common.status.draft' },
-        { value: 'ACTIVE', labelKey: 'admin.common.status.active' },
-        { value: 'INACTIVE', labelKey: 'admin.common.status.inactive' }
-    ];
+    statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
 
     ngOnInit(): void {
         this.mode = this.data.mode;
@@ -96,7 +90,6 @@ export class ComponentEntryFormComponent implements OnInit {
 
     #buildGeneralForm(): void {
         this.generalForm = this.#fb.group({
-            sortOrder: [this.data.entry?.sortOrder ?? 0, Validators.required],
             isVisible: [this.data.entry?.isVisible ?? true],
             styleClasses: [this.data.entry?.styleClasses || ''],
             status: [this.data.entry?.status ?? 'DRAFT', Validators.required]
@@ -105,7 +98,8 @@ export class ComponentEntryFormComponent implements OnInit {
 
     #loadFieldDefinitions(): void {
         this.isLoading.set(true);
-        this.#fieldService.getFields(this.data.componentTypeId)
+        
+        this.#fieldService.getFields(this.data.componentTypeId!)
             .pipe(take(1))
             .subscribe({
                 next: (fields) => {
@@ -216,7 +210,7 @@ export class ComponentEntryFormComponent implements OnInit {
     #createEntry(): void {
         const payload: CreateEntryRequest = {
             componentId: this.data.componentId,
-            sortOrder: this.generalForm.value.sortOrder,
+            sortOrder: this.data.sortOrder ?? 0,
             isVisible: this.generalForm.value.isVisible,
             styleClasses: this.generalForm.value.styleClasses || undefined
         };
@@ -236,7 +230,6 @@ export class ComponentEntryFormComponent implements OnInit {
 
     #updateEntry(): void {
         const payload: UpdateEntryRequest = {
-            sortOrder: this.generalForm.value.sortOrder,
             isVisible: this.generalForm.value.isVisible,
             styleClasses: this.generalForm.value.styleClasses || undefined,
             status: this.generalForm.value.status

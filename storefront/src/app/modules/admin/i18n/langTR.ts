@@ -150,6 +150,9 @@ export const langTR = {
                 label: 'Etiket',
                 url: 'URL',
                 target: 'Hedef',
+                isVisible: 'Görünür mü',
+                styleClasses: 'Stil Sınıfları',
+                order: 'Sıra',
             },
             target: {
                 self: 'Aynı Sekmede',

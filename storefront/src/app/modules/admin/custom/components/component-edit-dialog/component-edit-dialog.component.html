@@ -1,167 +1,221 @@
-<h2 mat-dialog-title>
-    {{ 'admin.dialog.title.edit' | transloco }}: {{ data.component.name }}
-</h2>
+<div class="bg-card flex max-h-[90vh] flex-col">
+    <div class="bg-card flex items-center justify-between border-b px-6 py-4">
+        <div class="flex items-center gap-3">
+            <div
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+                <mat-icon class="icon-size-6">edit</mat-icon>
+            </div>
+            <div class="flex flex-col">
+                <h2 class="text-lg font-semibold leading-none">
+                    {{
+                        (data.component
+                            ? 'admin.dialog.title.edit'
+                            : 'admin.dialog.title.create'
+                        ) | transloco
+                    }}
+                </h2>
+                @if (data.component) {
+                    <span class="text-secondary mt-0.5 text-sm">{{
+                        data.component.name
+                    }}</span>
+                }
+            </div>
+        </div>
+        <button mat-icon-button (click)="closeDialog()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
 
-<mat-dialog-content>
-    <mat-tab-group [(selectedIndex)]="activeTab">
-        <mat-tab [label]="'admin.components.entries.tabs.general' | transloco">
-            <form [formGroup]="generalForm" class="component-form">
-                <p class="readonly-field">
-                    <strong
-                        >{{ 'admin.common.fields.code' | transloco }}:</strong
-                    >
-                    {{ data.component.code }}
-                </p>
+    <!-- Content -->
+    <div class="flex-auto overflow-y-auto">
+        <mat-tab-group
+            [(selectedIndex)]="activeTab"
+            class="component-tabs"
+            animationDuration="0ms"
+            mat-stretch-tabs="false"
+        >
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5">settings</mat-icon>
+                        <span>{{
+                            'admin.components.entries.tabs.general' | transloco
+                        }}</span>
+                    </div>
+                </ng-template>
 
-                <p class="readonly-field">
-                    <strong
-                        >{{
-                            'admin.components.fields.type' | transloco
-                        }}:</strong
-                    >
-                    {{ data.component.componentTypeName }}
-                </p>
+                <div class="p-6 sm:p-8">
+                    <form [formGroup]="generalForm" class="flex flex-col gap-6">
+                        <!-- Basic Info Section -->
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <spa-input
+                                class="sm:col-span-2"
+                                formControlName="name"
+                                [label]="'admin.common.fields.name' | transloco"
+                                [required]="true"
+                            ></spa-input>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.common.fields.name' | transloco
-                    }}</mat-label>
-                    <input matInput formControlName="name" />
-                    @if (generalForm.get('name')?.hasError('required')) {
-                        <mat-error>{{
-                            'admin.validation.required' | transloco
-                        }}</mat-error>
-                    }
-                </mat-form-field>
+                            <spa-select
+                                formControlName="componentTypeId"
+                                [label]="
+                                    'admin.components.fields.type' | transloco
+                                "
+                                [options]="[]"
+                                [required]="true"
+                            ></spa-select>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.components.fields.sortOrder' | transloco
-                    }}</mat-label>
-                    <input matInput type="number" formControlName="order" />
-                    @if (generalForm.get('order')?.hasError('required')) {
-                        <mat-error>{{
-                            'admin.validation.required' | transloco
-                        }}</mat-error>
-                    }
-                </mat-form-field>
+                            <spa-select
+                                formControlName="status"
+                                [label]="
+                                    'admin.common.fields.status' | transloco
+                                "
+                                [options]="statusOptions"
+                                [required]="true"
+                            ></spa-select>
+                        </div>
 
-                <mat-checkbox formControlName="isVisible">
-                    {{ 'admin.components.fields.isVisible' | transloco }}
-                </mat-checkbox>
+                        <div class="my-2 w-full border-t"></div>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.components.fields.styleClasses' | transloco
-                    }}</mat-label>
-                    <input matInput formControlName="styleClasses" />
-                </mat-form-field>
+                        <!-- Appearance Section -->
+                        <div class="flex flex-col gap-4">
+                            <h3 class="text-secondary text-base font-medium">
+                                Appearance
+                            </h3>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.common.fields.status' | transloco
-                    }}</mat-label>
-                    <mat-select formControlName="status">
-                        <mat-option value="DRAFT">{{
-                            'admin.components.status.draft' | transloco
-                        }}</mat-option>
-                        <mat-option value="ACTIVE">{{
-                            'admin.components.status.active' | transloco
-                        }}</mat-option>
-                        <mat-option value="INACTIVE">{{
-                            'admin.components.status.inactive' | transloco
-                        }}</mat-option>
-                    </mat-select>
-                </mat-form-field>
+                            <spa-input
+                                formControlName="styleClasses"
+                                [label]="
+                                    'admin.components.fields.styleClasses'
+                                        | transloco
+                                "
+                                [hint]="
+                                    'admin.components.hints.styleClasses'
+                                        | transloco
+                                "
+                                placeholder="e.g. bg-primary text-white"
+                            ></spa-input>
 
-                <div class="form-actions">
-                    <button
-                        mat-raised-button
-                        color="primary"
-                        (click)="saveGeneral()"
-                        [disabled]="generalForm.invalid || isSubmitting()"
-                    >
-                        {{ 'admin.dialog.actions.save' | transloco }}
-                    </button>
+                            <spa-checkbox
+                                formControlName="isVisible"
+                                [label]="
+                                    'admin.components.fields.isVisible'
+                                        | transloco
+                                "
+                                styleClasses="boxed"
+                            ></spa-checkbox>
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </mat-tab>
-
-        @for (lang of languages; track lang) {
-            <mat-tab [label]="lang">
-                <form [formGroup]="i18nForms[lang]" class="component-form">
-                    <mat-form-field appearance="outline">
-                        <mat-label>{{
-                            'admin.components.fields.title' | transloco
-                        }}</mat-label>
-                        <input matInput formControlName="title" />
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                        <mat-label>{{
-                            'admin.components.fields.subtitle' | transloco
-                        }}</mat-label>
-                        <input matInput formControlName="subtitle" />
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                        <mat-label>{{
-                            'admin.components.fields.description' | transloco
-                        }}</mat-label>
-                        <textarea
-                            matInput
-                            formControlName="description"
-                            rows="4"
-                        ></textarea>
-                    </mat-form-field>
-
-                    <div class="form-field-wrapper">
-                        <label class="field-label">{{
-                            'admin.components.i18n.links' | transloco
-                        }}</label>
-                        <spa-link-repeater formControlName="links"></spa-link-repeater>
-                    </div>
-
-                    <div class="form-actions">
-                        <button
-                            mat-raised-button
-                            type="button"
-                            (click)="saveI18n(lang)"
-                            [disabled]="
-                                i18nForms[lang].invalid || isSubmitting()
-                            "
-                        >
-                            {{ 'admin.components.saveTranslation' | transloco }}
-                        </button>
-
-                        <button
-                            mat-raised-button
-                            color="accent"
-                            type="button"
-                            (click)="publishI18n(lang)"
-                            [disabled]="
-                                i18nForms[lang].invalid || isSubmitting()
-                            "
-                        >
-                            {{ 'admin.components.publish' | transloco }}
-                        </button>
-                    </div>
-                </form>
             </mat-tab>
-        }
 
-        <mat-tab [label]="'admin.components.entries.tabs.items' | transloco">
-            <spa-component-entry-list
-                [componentId]="data.component.id"
-                [componentTypeId]="data.component.componentTypeId"
-                [languages]="languages"
-            ></spa-component-entry-list>
-        </mat-tab>
-    </mat-tab-group>
-</mat-dialog-content>
+            @for (lang of languages; track lang) {
+                <mat-tab>
+                    <ng-template mat-tab-label>
+                        <div class="flex items-center gap-2">
+                            <mat-icon class="icon-size-5">translate</mat-icon>
+                            <span class="uppercase">{{ lang }}</span>
+                        </div>
+                    </ng-template>
 
-<mat-dialog-actions align="end">
-    <button mat-raised-button color="primary" (click)="closeDialog()">
-        {{ 'admin.dialog.actions.close' | transloco }}
-    </button>
-</mat-dialog-actions>
+                    <div class="p-6 sm:p-8">
+                        <form
+                            [formGroup]="i18nForms[lang]"
+                            class="flex flex-col gap-6"
+                        >
+                            <div
+                                class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+                            >
+                                <div
+                                    class="text-secondary mb-4 flex items-center gap-2"
+                                >
+                                    <mat-icon class="icon-size-5"
+                                        >info</mat-icon
+                                    >
+                                    <span
+                                        class="text-sm font-medium uppercase tracking-wide"
+                                    >
+                                        {{
+                                            'admin.components.entries.basicInfo'
+                                                | transloco
+                                        }}
+                                        ({{ lang | uppercase }})
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-col gap-4">
+                                    <spa-input
+                                        formControlName="title"
+                                        [label]="
+                                            'admin.components.fields.title'
+                                                | transloco
+                                        "
+                                    ></spa-input>
+
+                                    <spa-input
+                                        formControlName="subtitle"
+                                        [label]="
+                                            'admin.components.fields.subtitle'
+                                                | transloco
+                                        "
+                                    ></spa-input>
+
+                                    <spa-textarea
+                                        formControlName="description"
+                                        [label]="
+                                            'admin.components.fields.description'
+                                                | transloco
+                                        "
+                                        [rows]="4"
+                                    ></spa-textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </mat-tab>
+            }
+
+            @if (data.component) {
+                <mat-tab>
+                    <ng-template mat-tab-label>
+                        <div class="flex items-center gap-2">
+                            <mat-icon class="icon-size-5">list</mat-icon>
+                            <span>{{
+                                'admin.components.entries.tabs.items'
+                                    | transloco
+                            }}</span>
+                        </div>
+                    </ng-template>
+
+                    <div class="p-6">
+                        <spa-component-entry-list
+                            [componentId]="data.component.id"
+                            [componentTypeId]="data.component.componentTypeId"
+                            [languages]="languages"
+                        ></spa-component-entry-list>
+                    </div>
+                </mat-tab>
+            }
+        </mat-tab-group>
+    </div>
+
+    <!-- Footer -->
+    <div
+        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-6 py-4 dark:bg-slate-900/20"
+    >
+        <button mat-button (click)="closeDialog()">
+            {{ 'admin.dialog.actions.close' | transloco }}
+        </button>
+        <button
+            mat-flat-button
+            color="primary"
+            (click)="saveGeneral()"
+            [disabled]="generalForm.invalid || isSubmitting()"
+        >
+            @if (isSubmitting()) {
+                <mat-icon class="mr-2 animate-spin">sync</mat-icon>
+            }
+            {{ 'admin.dialog.actions.save' | transloco }}
+        </button>
+    </div>
+</div>

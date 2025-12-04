@@ -46,7 +46,7 @@ export class SpaInputComponent implements ControlValueAccessor {
     @Input() label?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
-    @Input() type: 'text' | 'email' | 'password' | 'tel' = 'text';
+    @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' = 'text';
     @Input() styleClasses?: string;
     @Input() fullWidth: boolean = true;
 
@@ -55,8 +55,8 @@ export class SpaInputComponent implements ControlValueAccessor {
     value: string | number | null = null;
     disabled = false;
 
-    private onChange: (val: any) => void = () => {};
-    private onTouched: () => void = () => {};
+    #onChange: (val: any) => void = () => {};
+    #onTouched: () => void = () => {};
 
     writeValue(value: any): void {
         this.value = value;
@@ -64,11 +64,11 @@ export class SpaInputComponent implements ControlValueAccessor {
     }
 
     registerOnChange(fn: any): void {
-        this.onChange = fn;
+        this.#onChange = fn;
     }
 
     registerOnTouched(fn: any): void {
-        this.onTouched = fn;
+        this.#onTouched = fn;
     }
 
     setDisabledState(isDisabled: boolean): void {
@@ -79,11 +79,11 @@ export class SpaInputComponent implements ControlValueAccessor {
     onInput(event: Event): void {
         const target = event.target as HTMLInputElement;
         this.value = target.value;
-        this.onChange(this.value);
+        this.#onChange(this.value);
     }
 
     onBlur(): void {
-        this.onTouched();
+        this.#onTouched();
     }
 }
 

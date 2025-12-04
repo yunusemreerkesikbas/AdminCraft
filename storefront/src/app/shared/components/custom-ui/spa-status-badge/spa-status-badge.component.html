@@ -1,0 +1,11 @@
+<span
+    class="spa-status-badge"
+    [ngClass]="[statusClass, 'size-' + size, 'variant-' + variant]"
+>
+    <span class="badge-dot" *ngIf="variant === 'soft'"></span>
+    <span class="badge-label">
+        {{
+            label || ('admin.common.status.' + (status | lowercase) | transloco)
+        }}
+    </span>
+</span>

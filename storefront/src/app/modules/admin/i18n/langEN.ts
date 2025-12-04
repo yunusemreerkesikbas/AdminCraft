@@ -150,6 +150,9 @@ export const langEN = {
                 label: 'Label',
                 url: 'URL',
                 target: 'Target',
+                isVisible: 'Is Visible',
+                styleClasses: 'Style Classes',
+                order: 'Order',
             },
             target: {
                 self: 'Same Tab',

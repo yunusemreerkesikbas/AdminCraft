@@ -1,100 +1,169 @@
-<div class="entry-fields-builder">
-    <div class="actions-row">
-        <h3>{{ 'admin.components.entryFields.title' | transloco }}</h3>
-        <div class="actions-buttons">
-            <button
-                mat-raised-button
-                color="primary"
-                (click)="openAddFieldDialog()"
+<div class="bg-card flex h-full flex-col overflow-hidden rounded-2xl border">
+    <!-- Header -->
+    <div
+        class="flex items-center justify-between border-b bg-slate-50/50 px-6 py-4 dark:bg-slate-900/20"
+    >
+        <div class="flex items-center gap-3">
+            <div
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
             >
-                <mat-icon>add</mat-icon>
-                {{ 'admin.components.entryFields.addField' | transloco }}
-            </button>
-            <button mat-raised-button (click)="openImportDialog()">
-                <mat-icon>upload_file</mat-icon>
+                <mat-icon class="icon-size-6">extension</mat-icon>
+            </div>
+            <div class="flex flex-col">
+                <h3 class="text-lg font-semibold leading-none">
+                    {{ 'admin.components.entryFields.title' | transloco }}
+                </h3>
+                <p class="text-secondary mt-1 text-sm">
+                    {{ 'admin.components.entryFields.subtitle' | transloco }}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button mat-button (click)="openImportDialog()">
+                <mat-icon class="mr-2">upload_file</mat-icon>
                 {{ 'admin.components.entryFields.import' | transloco }}
             </button>
             <button
-                mat-raised-button
+                mat-button
                 (click)="exportFields()"
                 [disabled]="fields().length === 0"
             >
-                <mat-icon>download</mat-icon>
+                <mat-icon class="mr-2">download</mat-icon>
                 {{ 'admin.components.entryFields.export' | transloco }}
+            </button>
+            <button
+                mat-flat-button
+                color="primary"
+                (click)="openAddFieldDialog()"
+            >
+                <mat-icon class="mr-2">add</mat-icon>
+                {{ 'admin.components.entryFields.addField' | transloco }}
             </button>
         </div>
     </div>
 
-    @if (isLoading()) {
-        <div class="loading-container">
-            <mat-spinner diameter="40"></mat-spinner>
-            <p>{{ 'admin.common.loading' | transloco }}</p>
-        </div>
-    } @else if (fields().length === 0) {
-        <div class="empty-state">
-            <mat-icon>category</mat-icon>
-            <p>{{ 'admin.components.entryFields.noFields' | transloco }}</p>
-            <button
-                mat-raised-button
-                color="primary"
-                (click)="openAddFieldDialog()"
+    <!-- Content -->
+    <div class="bg-card flex-auto overflow-auto">
+        @if (isLoading()) {
+            <div class="flex flex-col items-center justify-center py-12">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p class="text-secondary mt-4">
+                    {{ 'admin.common.loading' | transloco }}
+                </p>
+            </div>
+        } @else if (fields().length === 0) {
+            <spa-empty-state
+                icon="extension"
+                [title]="'admin.components.entryFields.noFields' | transloco"
+                [description]="
+                    'admin.components.entryFields.noFieldsDesc' | transloco
+                "
             >
-                <mat-icon>add</mat-icon>
-                {{ 'admin.components.entryFields.addFirst' | transloco }}
-            </button>
-        </div>
-    } @else {
-        <table mat-table [dataSource]="fields()" class="fields-table">
-            <ng-container matColumnDef="fieldKey">
-                <th mat-header-cell *matHeaderCellDef>
-                    {{ 'admin.components.entryFields.fieldKey' | transloco }}
-                </th>
-                <td mat-cell *matCellDef="let field">
-                    <code>{{ field.fieldKey }}</code>
-                </td>
-            </ng-container>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="openAddFieldDialog()"
+                >
+                    <mat-icon class="mr-2">add</mat-icon>
+                    {{ 'admin.components.entryFields.addFirst' | transloco }}
+                </button>
+            </spa-empty-state>
+        } @else {
+            <table mat-table [dataSource]="fields()" class="w-full">
+                <!-- Field Key Column -->
+                <ng-container matColumnDef="fieldKey">
+                    <th mat-header-cell *matHeaderCellDef class="pl-6">
+                        {{
+                            'admin.components.entryFields.fieldKey' | transloco
+                        }}
+                    </th>
+                    <td mat-cell *matCellDef="let field" class="pl-6">
+                        <code
+                            class="rounded bg-slate-100 px-2 py-1 font-mono text-sm dark:bg-slate-800"
+                        >
+                            {{ field.fieldKey }}
+                        </code>
+                    </td>
+                </ng-container>
 
-            <ng-container matColumnDef="fieldType">
-                <th mat-header-cell *matHeaderCellDef>
-                    {{ 'admin.components.entryFields.fieldType' | transloco }}
-                </th>
-                <td mat-cell *matCellDef="let field">
-                    <span
-                        class="field-type-badge"
-                        [attr.data-type]="field.fieldType"
+                <!-- Field Type Column -->
+                <ng-container matColumnDef="fieldType">
+                    <th mat-header-cell *matHeaderCellDef>
+                        {{
+                            'admin.components.entryFields.fieldType' | transloco
+                        }}
+                    </th>
+                    <td mat-cell *matCellDef="let field">
+                        <span
+                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide"
+                            [ngClass]="{
+                                'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300':
+                                    field.fieldType === 'text',
+                                'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300':
+                                    field.fieldType === 'textarea',
+                                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300':
+                                    field.fieldType === 'number',
+                                'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300':
+                                    field.fieldType === 'boolean',
+                            }"
+                        >
+                            {{
+                                'admin.components.entryFields.types.' +
+                                    field.fieldType | transloco
+                            }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Required Column -->
+                <ng-container matColumnDef="isRequired">
+                    <th
+                        mat-header-cell
+                        *matHeaderCellDef
+                        class="w-24 pr-6 text-center"
                     >
                         {{
-                            'admin.components.entryFields.types.' +
-                                field.fieldType | transloco
+                            'admin.components.entryFields.required' | transloco
                         }}
-                    </span>
-                </td>
-            </ng-container>
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let field"
+                        class="pr-6 text-center"
+                    >
+                        @if (field.isRequired) {
+                            <mat-icon class="text-green-500 icon-size-5"
+                                >check_circle</mat-icon
+                            >
+                        } @else {
+                            <mat-icon
+                                class="text-slate-300 icon-size-5 dark:text-slate-600"
+                                >remove</mat-icon
+                            >
+                        }
+                    </td>
+                </ng-container>
 
-            <ng-container matColumnDef="isRequired">
-                <th mat-header-cell *matHeaderCellDef>
-                    {{ 'admin.components.entryFields.required' | transloco }}
-                </th>
-                <td mat-cell *matCellDef="let field">
-                    @if (field.isRequired) {
-                        <mat-icon class="required-icon">check_circle</mat-icon>
-                    } @else {
-                        <mat-icon class="optional-icon"
-                            >radio_button_unchecked</mat-icon
-                        >
-                    }
-                </td>
-            </ng-container>
+                <tr
+                    mat-header-row
+                    *matHeaderRowDef="displayedColumns; sticky: true"
+                    class="h-12 bg-slate-50 dark:bg-slate-900/20"
+                ></tr>
+                <tr
+                    mat-row
+                    *matRowDef="let row; columns: displayedColumns"
+                    class="h-14 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/10"
+                ></tr>
+            </table>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
-
-        <div class="info-message">
-            <mat-icon>info</mat-icon>
-            <span>{{
-                'admin.components.entryFields.readOnlyNote' | transloco
-            }}</span>
-        </div>
-    }
+            <div
+                class="flex items-center gap-2 border-t border-blue-100 bg-blue-50 p-4 text-sm text-blue-600 dark:border-blue-900/20 dark:bg-blue-900/10 dark:text-blue-400"
+            >
+                <mat-icon class="icon-size-5">info</mat-icon>
+                <span>{{
+                    'admin.components.entryFields.readOnlyNote' | transloco
+                }}</span>
+            </div>
+        }
+    </div>
 </div>

@@ -1,22 +1,20 @@
-import { ComponentStatus, Link } from './component-library.types';
+import { ComponentStatus } from './component-library.types';
 
 export interface ComponentI18nFormData {
     title?: string | null;
     subtitle?: string | null;
     description?: string | null;
-    links?: Link[] | null;
     [extendedFieldKey: string]: any;
 }
 
 export interface CreateComponentFormData {
     componentTypeId?: number | null;
-    code?: string | null;
     name?: string | null;
     status?: ComponentStatus;
     order?: number;
     isVisible?: boolean;
     styleClasses?: string | null;
-    [languageCode: string]: ComponentI18nFormData | number | string | boolean | Link[] | null | undefined;
+    [languageCode: string]: ComponentI18nFormData | number | string | boolean | null | undefined;
 }
 
 export function isComponentI18nFormData(value: unknown): value is ComponentI18nFormData {
@@ -24,7 +22,7 @@ export function isComponentI18nFormData(value: unknown): value is ComponentI18nF
         return false;
     }
     const data = value as Record<string, unknown>;
-    const validKeys = ['title', 'subtitle', 'description', 'links'];
+    const validKeys = ['title', 'subtitle', 'description'];
     const keys = Object.keys(data);
     return keys.length > 0 && keys.some(key => validKeys.includes(key));
 }
