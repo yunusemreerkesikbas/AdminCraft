@@ -49,7 +49,7 @@ public enum Language {
     }
 
     public Locale toLocale() {
-        return new Locale(code);
+        return Locale.of(code);
     }
 
     public static Optional<Language> fromCode(String code) {

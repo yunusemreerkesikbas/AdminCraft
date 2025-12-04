@@ -1,18 +1,31 @@
 package com.backend.domain.entity;
 
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.UserRole;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Pattern;
+import java.time.LocalDateTime;
+
 import org.springframework.web.util.HtmlUtils;
 
-import java.time.LocalDateTime;
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.UserRole;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -151,8 +164,6 @@ public class User {
         }
     }
 
-    // Business methods (page-builder)
-    // Note: Tenant isolation handled by TenantContext + database-per-tenant architecture
     public boolean canAccessPage(Page page) {
         return this.role.hasPermission(UserRole.Permission.READ_CONTENT);
     }

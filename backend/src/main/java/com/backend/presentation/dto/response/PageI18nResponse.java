@@ -1,11 +1,10 @@
 package com.backend.presentation.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
+
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
-import java.time.LocalDateTime;
 
 public record PageI18nResponse(
         Long id,

@@ -1,15 +1,5 @@
 package com.backend.application.service;
 
-import com.backend.domain.entity.MediaFile;
-import com.backend.domain.enums.Language;
-import com.backend.domain.repository.MediaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +9,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.backend.domain.entity.MediaFile;
+import com.backend.domain.enums.Language;
+import com.backend.domain.repository.MediaRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -301,8 +303,6 @@ public class MediaServiceImpl implements MediaService {
     }
 
     private void extractImageDimensions(MediaFile mediaFile, Path filePath) {
-        // TODO: Implement image dimension extraction using ImageIO or similar
-        // For now, setting default values
         mediaFile.setWidth(0);
         mediaFile.setHeight(0);
     }

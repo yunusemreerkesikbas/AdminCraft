@@ -1,8 +1,10 @@
 package com.backend.infrastructure.persistence.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import jakarta.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -16,9 +18,9 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
+import com.zaxxer.hikari.HikariDataSource;
+
+import jakarta.persistence.EntityManagerFactory;
 
 @Configuration
 @EnableTransactionManagement
@@ -62,4 +64,3 @@ public class PlatformDataSourceConfig {
     return new JpaTransactionManager(entityManagerFactory);
   }
 }
-

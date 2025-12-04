@@ -13,7 +13,6 @@ import com.backend.application.query.ComponentI18nQueries.GetComponentI18nByComp
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.repository.ComponentI18nRepository;
-import com.backend.domain.repository.ComponentRepository;
 import com.backend.infrastructure.util.UuidUidGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 public class ComponentI18nServiceImpl implements ComponentI18nService {
 
     private final ComponentI18nRepository componentI18nRepository;
-    private final ComponentRepository componentRepository;
 
     @Override
     @Transactional

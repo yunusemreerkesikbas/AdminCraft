@@ -2,8 +2,6 @@ package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
-import com.fasterxml.jackson.databind.JsonNode;
-import java.time.LocalDateTime;
 
 public record ComponentListItemResponse(
         Long id,

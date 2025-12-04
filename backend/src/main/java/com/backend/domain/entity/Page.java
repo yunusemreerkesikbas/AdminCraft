@@ -1,8 +1,13 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.PageStatus;
-import com.backend.domain.exception.UnauthorizedOperationException;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;

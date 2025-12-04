@@ -1,29 +1,25 @@
 package com.backend.application.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.application.service.PageI18nService;
-import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
-import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.exception.PageCannotBePublishedException;
 import com.backend.domain.exception.PageNotFoundException;
-import com.backend.domain.exception.TenantMismatchException;
-import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
-import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.request.PageI18nRequest;
 import com.backend.presentation.dto.request.PagePublishRequest;
 import com.backend.presentation.dto.response.PageI18nResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +27,6 @@ public class PageI18nServiceImpl implements PageI18nService {
 
     private final PageI18nRepository pageI18nRepository;
     private final PageRepository pageRepository;
-    private final TenantRepository tenantRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -155,8 +150,10 @@ public class PageI18nServiceImpl implements PageI18nService {
     }
 
     private PageI18nResponse getFallbackLanguageI18n(Long pageId) {
-        // Note: TenantContext routing ensures we're already in the correct tenant database
-        // We'll use the first available i18n entry as fallback instead of tenant's default language
+        // Note: TenantContext routing ensures we're already in the correct tenant
+        // database
+        // We'll use the first available i18n entry as fallback instead of tenant's
+        // default language
         return pageI18nRepository.findByPageId(pageId)
                 .stream()
                 .findFirst()

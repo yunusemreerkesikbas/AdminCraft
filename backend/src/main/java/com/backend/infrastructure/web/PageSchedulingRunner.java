@@ -1,20 +1,12 @@
 package com.backend.infrastructure.web;
 
-import com.backend.application.service.PageService;
-import com.backend.domain.enums.PageStatus;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class PageSchedulingRunner {
-
-  private final PageService pageService;
 
   // TODO: Implement scheduled publishing for PageI18n level (multi-language)
   // Runs every minute to publish scheduled pages

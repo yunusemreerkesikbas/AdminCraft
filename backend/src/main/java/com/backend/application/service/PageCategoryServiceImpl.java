@@ -1,25 +1,32 @@
 package com.backend.application.service;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.application.command.CreatePageCategoryCommand;
 import com.backend.application.command.UpdatePageCategoryCommand;
 import com.backend.application.command.UpsertPageCategoryI18nCommand;
 import com.backend.application.query.PageCategoryDetailQuery;
 import com.backend.domain.entity.PageCategory;
 import com.backend.domain.entity.PageCategoryI18n;
-import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
 import com.backend.domain.exception.CategoryNotFoundException;
 import com.backend.domain.repository.PageCategoryI18nRepository;
 import com.backend.domain.repository.PageCategoryRepository;
-import com.backend.domain.repository.TenantRepository;
-import com.backend.presentation.dto.response.*;
+import com.backend.presentation.dto.response.PageCategoryDetailResponse;
+import com.backend.presentation.dto.response.PageCategoryI18nResponse;
+import com.backend.presentation.dto.response.PageCategoryListResponse;
+import com.backend.presentation.dto.response.PageCategoryMetadataResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +36,6 @@ public class PageCategoryServiceImpl implements PageCategoryService {
 
   private final PageCategoryRepository categoryRepository;
   private final PageCategoryI18nRepository i18nRepository;
-  private final TenantRepository tenantRepository;
 
   @Override
   public PageCategoryDetailResponse create(CreatePageCategoryCommand command, Long tenantId) {
