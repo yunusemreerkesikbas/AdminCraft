@@ -1,24 +1,23 @@
 package com.backend.application.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
-import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
-import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.request.PageCreateRequest;
-import com.backend.presentation.dto.response.PageResponse;
 import com.backend.presentation.dto.response.PageDetailResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.backend.presentation.dto.response.PageResponse;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +26,6 @@ public class PageServiceImpl implements PageService {
     private final PageRepository pageRepository;
     private final PageI18nRepository pageI18nRepository;
     private final PageI18nService pageI18nService;
-    private final TenantRepository tenantRepository;
 
     @Override
     @Transactional
@@ -118,17 +116,8 @@ public class PageServiceImpl implements PageService {
     @Override
     @Transactional
     public void deletePage(Long id) {
-        Page page = pageRepository.findById(id)
-                .orElseThrow(() -> new PageNotFoundException(id));
-
         pageI18nService.deletePageI18n(id);
         pageRepository.deleteById(id);
-    }
-
-    private void validateUidUniqueness(String uid) {
-        if (uid != null && pageRepository.existsByUid(uid)) {
-            throw new IllegalArgumentException("Page with uid '" + uid + "' already exists for this tenant");
-        }
     }
 
     private String generateUniqueUidForPage() {
@@ -137,7 +126,6 @@ public class PageServiceImpl implements PageService {
         do {
             uid = com.backend.infrastructure.util.UuidUidGenerator.generateUid();
             attempts++;
-            // safety to avoid infinite loop in pathological cases
             if (attempts > 10) {
                 uid = uid + attempts; // slight perturbation
             }

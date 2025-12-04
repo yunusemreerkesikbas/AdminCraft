@@ -1,23 +1,20 @@
 package com.backend.application.service;
 
+import org.springframework.stereotype.Component;
+
 import com.backend.domain.entity.EntryFieldDefinition;
 import com.backend.domain.enums.EntryFieldType;
 import com.backend.infrastructure.validation.FieldValidator;
 import com.backend.infrastructure.validation.ValidationContext;
 import com.backend.infrastructure.validation.ValidationResult;
-import org.springframework.stereotype.Component;
 
 @Component
 public class EntryFieldValidator {
 
     private final FieldValidator<String> fieldKeyValidator;
-    private final FieldValidator<String> textValidator;
 
-    public EntryFieldValidator(
-            FieldValidator<String> componentFieldKeyValidator,
-            FieldValidator<String> componentFieldTextValidator) {
+    public EntryFieldValidator(FieldValidator<String> componentFieldKeyValidator) {
         this.fieldKeyValidator = componentFieldKeyValidator;
-        this.textValidator = componentFieldTextValidator;
     }
 
     public void validate(EntryFieldDefinition field, long existingFieldCount) {

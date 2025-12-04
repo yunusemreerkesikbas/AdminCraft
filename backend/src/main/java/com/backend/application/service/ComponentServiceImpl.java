@@ -22,7 +22,6 @@ import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
-import com.backend.infrastructure.util.UuidUidGenerator;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -147,11 +146,4 @@ public class ComponentServiceImpl implements ComponentService {
         componentRepository.delete(component);
     }
 
-    private String generateUniqueUid() {
-        String uid;
-        do {
-            uid = UuidUidGenerator.generateUid();
-        } while (componentRepository.existsByUid(uid));
-        return uid;
-    }
 }

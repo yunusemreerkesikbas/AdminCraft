@@ -1,9 +1,12 @@
 package com.backend.presentation.dto.request;
 
-import com.backend.domain.enums.Language;
-import jakarta.validation.constraints.*;
-
 import java.util.Set;
+
+import com.backend.domain.enums.Language;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record CreateSiteRequest(
         @NotBlank(message = "validation.site.name.required") @Size(min = 3, max = 100, message = "validation.site.name.size") String siteName,
@@ -40,54 +43,4 @@ public record CreateSiteRequest(
         @Size(max = 50, message = "validation.google.analytics.id.size") String googleAnalyticsId,
 
         @Size(max = 50, message = "validation.google.tag.manager.id.size") String googleTagManagerId) {
-
-    private static String normalizeString(String value) {
-        return value != null ? value.trim() : null;
-    }
-
-    private static String normalizeStringWithDefault(String value, String defaultValue) {
-        if (value == null || value.trim().isEmpty()) {
-            return defaultValue;
-        }
-        return value.trim();
-    }
-
-    private static String normalizeDomain(String domain) {
-        if (domain == null)
-            return null;
-        return domain.trim().toLowerCase();
-    }
-
-    private static String normalizeTwitterHandle(String handle) {
-        if (handle == null)
-            return null;
-        String trimmed = handle.trim();
-        // Remove @ if present
-        if (trimmed.startsWith("@")) {
-            trimmed = trimmed.substring(1);
-        }
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private static LanguageResult normalizeLanguages(Language defaultLanguage, Set<Language> enabledLanguages) {
-        // If no default language provided, use TR as fallback
-        Language finalDefault = (defaultLanguage != null) ? defaultLanguage : Language.TR;
-
-        // If no enabled languages provided, use default language
-        if (enabledLanguages == null || enabledLanguages.isEmpty()) {
-            return new LanguageResult(finalDefault, Set.of(finalDefault));
-        }
-
-        // Ensure default language is in enabled languages
-        if (!enabledLanguages.contains(finalDefault)) {
-            var mutableLanguages = new java.util.HashSet<>(enabledLanguages);
-            mutableLanguages.add(finalDefault);
-            return new LanguageResult(finalDefault, Set.copyOf(mutableLanguages));
-        }
-
-        return new LanguageResult(finalDefault, enabledLanguages);
-    }
-
-    private record LanguageResult(Language defaultLang, Set<Language> enabledLangs) {
-    }
 }

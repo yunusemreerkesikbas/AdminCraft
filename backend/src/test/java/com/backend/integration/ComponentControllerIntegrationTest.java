@@ -1,16 +1,9 @@
 package com.backend.integration;
 
-import com.backend.domain.entity.Component;
-import com.backend.domain.entity.ComponentType;
-import com.backend.domain.enums.ComponentStatus;
-import com.backend.domain.repository.ComponentRepository;
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import com.backend.infrastructure.tenant.TenantContext;
-import com.backend.presentation.dto.response.ComponentListItemResponse;
-import com.backend.shared.common.ApiResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,11 +17,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc

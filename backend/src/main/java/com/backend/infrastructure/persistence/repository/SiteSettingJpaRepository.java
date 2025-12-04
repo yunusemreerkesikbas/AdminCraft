@@ -1,15 +1,15 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.SiteSetting;
-import com.backend.domain.enums.Language;
-import org.springframework.data.jpa.repository.EntityGraph;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.SiteSetting;
+import com.backend.domain.enums.Language;
 
 @Repository
 public interface SiteSettingJpaRepository extends JpaRepository<SiteSetting, Long> {

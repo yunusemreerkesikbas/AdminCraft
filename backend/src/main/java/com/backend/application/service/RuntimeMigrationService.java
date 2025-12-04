@@ -1,16 +1,17 @@
 package com.backend.application.service;
 
-import com.backend.domain.entity.EntryFieldDefinition;
-import com.backend.domain.enums.EntryFieldType;
-import com.backend.infrastructure.tenant.TenantContext;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Set;
+
 import org.slf4j.MDC;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
+import com.backend.domain.entity.EntryFieldDefinition;
+import com.backend.infrastructure.tenant.TenantContext;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +24,7 @@ public class RuntimeMigrationService {
     private static final Set<String> RESERVED_KEYWORDS = Set.of(
             "id", "uuid", "uid", "entry_id", "language", "title", "description",
             "image_url", "button_text", "button_url", "status", "published_at", "updated_at",
-            "select", "from", "where", "insert", "update", "delete", "drop", "alter", "create"
-    );
+            "select", "from", "where", "insert", "update", "delete", "drop", "alter", "create");
 
     private static final long MAX_TABLE_ROWS_WARNING = 1_000_000;
 
@@ -32,24 +32,24 @@ public class RuntimeMigrationService {
     public synchronized void addFieldColumn(EntryFieldDefinition field) {
         validateTenantContext();
         validateMigrationSafety(field);
-        
+
         String sql = generateAlterTableSql(field);
-        
+
         String correlationId = MDC.get("correlationId");
         log.info("[{}] Executing runtime migration: {}", correlationId, sql);
-        
+
         jdbcTemplate.execute(sql);
-        
-        log.info("[{}] Successfully added column: {} for tenant: {}", 
-            correlationId, field.getFieldKey(), tenantContext.getTenantId());
+
+        log.info("[{}] Successfully added column: {} for tenant: {}",
+                correlationId, field.getFieldKey(), tenantContext.getTenantId());
     }
-    
+
     protected void validateTenantContext() {
         String tenantId = tenantContext.getTenantId();
         if (tenantId == null) {
             throw new IllegalStateException("Tenant context not set");
         }
-        
+
         String tenantDb = tenantContext.getTenantDbName();
         if (tenantDb == null || tenantDb.trim().isEmpty()) {
             throw new IllegalStateException("Tenant database name not set");
@@ -70,8 +70,7 @@ public class RuntimeMigrationService {
                         "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'component_entry_i18n' " +
                         "AND COLUMN_NAME = ?",
                 Boolean.class,
-                field.getFieldKey()
-        );
+                field.getFieldKey());
 
         if (Boolean.TRUE.equals(columnExists)) {
             throw new IllegalArgumentException("Column already exists: " + field.getFieldKey());
@@ -88,22 +87,21 @@ public class RuntimeMigrationService {
     private String generateAlterTableSql(EntryFieldDefinition field) {
         String columnType = mapFieldTypeToSqlType(field);
         String nullable = field.getIsRequired() ? "NOT NULL" : "NULL";
-        
+
         String escapedColumnName = escapeIdentifier(field.getFieldKey());
 
         return String.format(
                 "ALTER TABLE component_entry_i18n ADD COLUMN %s %s %s, ALGORITHM=INSTANT",
                 escapedColumnName,
                 columnType,
-                nullable
-        );
+                nullable);
     }
-    
+
     protected String escapeIdentifier(String identifier) {
         if (identifier == null || identifier.trim().isEmpty()) {
             throw new IllegalArgumentException("Identifier cannot be null or empty");
         }
-        
+
         String cleaned = identifier.replace("`", "``");
         return "`" + cleaned + "`";
     }
@@ -126,9 +124,7 @@ public class RuntimeMigrationService {
                         "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'component_entry_i18n' " +
                         "AND COLUMN_NAME = ?",
                 Boolean.class,
-                columnName
-        );
+                columnName);
         return Boolean.TRUE.equals(exists);
     }
 }
-

@@ -1,12 +1,14 @@
 package com.backend.infrastructure.persistence.tenant.repository;
 
-import com.backend.domain.entity.EntryFieldDefinition;
-import com.backend.domain.repository.EntryFieldDefinitionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
+import com.backend.domain.entity.EntryFieldDefinition;
+import com.backend.domain.repository.EntryFieldDefinitionRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -44,4 +46,3 @@ public class EntryFieldDefinitionRepositoryImpl implements EntryFieldDefinitionR
         jpaRepository.delete(definition);
     }
 }
-

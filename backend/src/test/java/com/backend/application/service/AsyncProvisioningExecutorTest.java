@@ -1,11 +1,10 @@
 package com.backend.application.service;
 
-import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.entity.TenantModule;
-import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,13 +14,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import com.backend.infrastructure.persistence.platform.entity.Tenant;
+import com.backend.infrastructure.persistence.platform.entity.TenantModule;
+import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
+import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
+import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
 
 //...
 
@@ -43,7 +40,6 @@ class AsyncProvisioningExecutorTest {
         private AsyncProvisioningExecutor executor;
 
         private Tenant testTenant;
-        private ProvisioningJob testJob;
 
         @BeforeEach
         void setUp() {
@@ -64,13 +60,6 @@ class AsyncProvisioningExecutorTest {
                                 .companyName("Test Company")
                                 .databaseName("ac_tenant_1")
                                 .status("PROVISIONING")
-                                .build();
-
-                testJob = ProvisioningJob.builder()
-                                .id(1L)
-                                .tenantId(1L)
-                                .status("pending")
-                                .progress(0)
                                 .build();
         }
 

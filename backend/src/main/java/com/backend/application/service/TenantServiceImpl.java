@@ -1,5 +1,14 @@
 package com.backend.application.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.application.command.CreateTenantCommand;
 import com.backend.application.command.UpdateTenantCommand;
 import com.backend.application.dto.tenant.TenantModuleResponse;
@@ -8,6 +17,7 @@ import com.backend.domain.entity.User;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
@@ -16,18 +26,10 @@ import com.backend.infrastructure.persistence.platform.repository.ProvisioningJo
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
-import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.shared.constants.ValidationConstants;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,6 @@ public class TenantServiceImpl implements TenantService {
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
-    private final ProvisioningService provisioningService;
     private final TenantModuleRepository tenantModuleRepository;
     private final ProvisioningJobRepository provisioningJobRepository;
     private final com.backend.infrastructure.tenant.TenantContext tenantContext;

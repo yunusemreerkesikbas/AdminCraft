@@ -1,13 +1,15 @@
 package com.backend.infrastructure.persistence.tenant.repository;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -45,4 +47,3 @@ public class ComponentEntryI18nRepositoryImpl implements ComponentEntryI18nRepos
         return jpaRepository.existsByUid(uid);
     }
 }
-
