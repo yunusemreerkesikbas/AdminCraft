@@ -1,38 +1,57 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.command.ComponentCommands.*;
-import com.backend.application.command.ComponentI18nCommands.*;
-import com.backend.application.query.ComponentQueries.*;
-import com.backend.application.query.ComponentI18nQueries.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.backend.application.command.ComponentCommands.CreateComponentCommand;
+import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
+import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.command.ComponentI18nCommands.PublishComponentI18nCommand;
+import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18nCommand;
+import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
+import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
+import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
+import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.service.ComponentI18nService;
 import com.backend.application.service.ComponentService;
+import com.backend.application.service.ComponentTypeService;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
+import com.backend.domain.entity.ComponentType;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.ComponentCreateRequest;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
-import com.backend.presentation.dto.response.ComponentListResponse;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/components")
@@ -44,6 +63,7 @@ public class ComponentController {
 
     private final ComponentService componentService;
     private final ComponentI18nService componentI18nService;
+    private final ComponentTypeService componentTypeService;
     private final MessageSource messageSource;
 
     @PostMapping
@@ -55,7 +75,6 @@ public class ComponentController {
 
             CreateComponentCommand command = new CreateComponentCommand(
                     request.componentTypeId(),
-                    request.code(),
                     request.name(),
                     request.baseData(),
                     request.status(),
@@ -84,9 +103,11 @@ public class ComponentController {
         try {
             if (include != null && include.contains("translations")) {
                 GetComponentWithI18nQuery query = new GetComponentWithI18nQuery(id);
-                Map<Component, List<ComponentI18n>> resultMap = componentService.getComponentWithI18n(query);
+                Map<Component, List<ComponentI18n>> resultMap = componentService
+                        .getComponentWithI18n(query);
 
-                Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator().next();
+                Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator()
+                        .next();
                 Component component = entry.getKey();
                 List<ComponentI18n> i18nList = entry.getValue();
                 Map<String, ComponentI18nResponse> translationsMap = i18nList.stream()
@@ -95,12 +116,23 @@ public class ComponentController {
                                 ComponentI18nResponse::from));
 
                 int publishedCount = (int) i18nList.stream()
-                        .filter(i18n -> i18n.getPublishedAt() != null)
+                        .filter(i18n -> com.backend.domain.enums.ComponentStatus.PUBLISHED
+                                .equals(i18n.getStatus()))
                         .count();
                 ComponentDetailResponse.Metadata metadata = new ComponentDetailResponse.Metadata(
                         translationsMap.size(),
                         publishedCount);
+
                 String componentTypeName = "";
+                try {
+                    ComponentType componentType = componentTypeService.getComponentTypeById(
+                            new GetComponentTypeByIdQuery(component.getComponentTypeId()));
+                    componentTypeName = componentType.getName();
+                } catch (Exception e) {
+                    log.warn("Could not fetch component type name for id: {}",
+                            component.getComponentTypeId());
+                }
+
                 ComponentDetailResponse response = ComponentDetailResponse.from(
                         component,
                         componentTypeName,
@@ -129,7 +161,8 @@ public class ComponentController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             GetAllComponentsQuery query = new GetAllComponentsQuery();
-            List<ComponentListItemResponse> responses = componentService.getAllComponentsWithTypeNames(query);
+            List<ComponentListItemResponse> responses = componentService
+                    .getAllComponentsWithTypeNames(query);
 
             return ResponseEntity.ok(ApiResponse.success(responses));
         } catch (Exception ex) {
@@ -152,7 +185,6 @@ public class ComponentController {
             UpdateComponentCommand command = new UpdateComponentCommand(
                     id,
                     request.componentTypeId(),
-                    request.code(),
                     request.name(),
                     request.baseData(),
                     request.status(),
@@ -205,7 +237,8 @@ public class ComponentController {
 
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
-            log.error("Error getting component i18n for component {} language {}: {}", id, language, ex.getMessage());
+            log.error("Error getting component i18n for component {} language {}: {}", id, language,
+                    ex.getMessage());
             String msg = messageSource.getMessage("component.i18n.get.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -223,7 +256,9 @@ public class ComponentController {
             UpsertComponentI18nCommand command = new UpsertComponentI18nCommand(
                     id,
                     language,
-                    request.baseLocalizedData(),
+                    request.title(),
+                    request.subtitle(),
+                    request.description(),
                     request.status());
 
             ComponentI18n result = componentI18nService.upsertComponentI18n(command);
@@ -233,7 +268,8 @@ public class ComponentController {
                     null, Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
-            log.error("Error upserting component i18n for component {} language {}: {}", id, language, ex.getMessage());
+            log.error("Error upserting component i18n for component {} language {}: {}", id, language,
+                    ex.getMessage());
             String msg = messageSource.getMessage("component.i18n.upsert.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

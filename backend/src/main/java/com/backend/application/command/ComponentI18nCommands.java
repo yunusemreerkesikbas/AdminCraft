@@ -2,14 +2,15 @@ package com.backend.application.command;
 
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class ComponentI18nCommands {
 
     public record UpsertComponentI18nCommand(
         Long componentId,
         Language language,
-        JsonNode baseLocalizedData,
+        String title,
+        String subtitle,
+        String description,
         ComponentStatus status
     ) {}
 

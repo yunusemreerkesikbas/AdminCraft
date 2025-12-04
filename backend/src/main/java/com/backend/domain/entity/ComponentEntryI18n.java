@@ -57,12 +57,12 @@ public class ComponentEntryI18n extends BaseI18nEntity {
     private LocalDateTime publishedAt;
 
     public void publish() {
-        this.status = ComponentStatus.ACTIVE;
+        this.status = ComponentStatus.PUBLISHED;
         this.publishedAt = LocalDateTime.now();
     }
 
     public void unpublish() {
-        if (this.status == ComponentStatus.ACTIVE) {
+        if (this.status == ComponentStatus.PUBLISHED) {
             this.status = ComponentStatus.DRAFT;
             this.publishedAt = null;
         }

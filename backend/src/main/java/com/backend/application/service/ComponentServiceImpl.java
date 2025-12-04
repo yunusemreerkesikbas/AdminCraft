@@ -33,7 +33,6 @@ public class ComponentServiceImpl implements ComponentService {
 
         Component component = new Component();
         component.setComponentTypeId(command.componentTypeId());
-        component.setCode(command.code());
         component.setName(command.name());
         component.setBaseData(command.baseData());
         component.setStatus(command.status() != null ? command.status() : ComponentStatus.DRAFT);
@@ -115,7 +114,6 @@ public class ComponentServiceImpl implements ComponentService {
         componentTypeService.getComponentTypeById(new GetComponentTypeByIdQuery(command.componentTypeId()));
 
         component.setComponentTypeId(command.componentTypeId());
-        component.setCode(command.code());
         component.setName(command.name());
         component.setBaseData(command.baseData());
         if (command.status() != null) {

@@ -41,9 +41,8 @@ class ComponentServiceImplTest {
     component1.setUuid("uuid-1");
     component1.setUid("cmsitem_1");
     component1.setComponentTypeId(10L);
-    component1.setCode("header-main");
     component1.setName("Main Header");
-    component1.setStatus(ComponentStatus.ACTIVE);
+    component1.setStatus(ComponentStatus.PUBLISHED);
     component1.setCreatedAt(LocalDateTime.now());
     component1.setUpdatedAt(LocalDateTime.now());
 
@@ -52,7 +51,6 @@ class ComponentServiceImplTest {
     component2.setUuid("uuid-2");
     component2.setUid("cmsitem_2");
     component2.setComponentTypeId(11L);
-    component2.setCode("footer-main");
     component2.setName("Main Footer");
     component2.setStatus(ComponentStatus.DRAFT);
     component2.setCreatedAt(LocalDateTime.now());
@@ -85,7 +83,6 @@ class ComponentServiceImplTest {
     assertThat(first.componentTypeName()).isEqualTo("Navigation");
     assertThat(first.id()).isEqualTo(1L);
     assertThat(first.name()).isEqualTo("Main Header");
-    assertThat(first.code()).isEqualTo("header-main");
     assertThat(first.componentTypeId()).isEqualTo(10L);
 
     ComponentListItemResponse second = result.get(1);

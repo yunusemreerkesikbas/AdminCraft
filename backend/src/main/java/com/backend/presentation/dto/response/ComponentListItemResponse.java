@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 public record ComponentListItemResponse(
         Long id,
-        String code,
         String name,
         Long componentTypeId,
         String componentTypeName,
@@ -19,7 +18,6 @@ public record ComponentListItemResponse(
         }
         return new ComponentListItemResponse(
                 component.getId(),
-                component.getCode(),
                 component.getName(),
                 component.getComponentTypeId(),
                 typeName,

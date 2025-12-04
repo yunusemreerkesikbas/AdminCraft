@@ -3,7 +3,6 @@ package com.backend.presentation.dto.response;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 
 public record ComponentI18nResponse(
@@ -12,9 +11,10 @@ public record ComponentI18nResponse(
     String uid,
     Long componentId,
     Language language,
-    JsonNode baseLocalizedData,
+    String title,
+    String subtitle,
+    String description,
     ComponentStatus status,
-    LocalDateTime publishedAt,
     LocalDateTime updatedAt
 ) {
     public static ComponentI18nResponse from(ComponentI18n entity) {
@@ -27,9 +27,10 @@ public record ComponentI18nResponse(
             entity.getUid(),
             entity.getComponentId(),
             entity.getLanguage(),
-            entity.getBaseLocalizedData(),
+            entity.getTitle(),
+            entity.getSubtitle(),
+            entity.getDescription(),
             entity.getStatus(),
-            entity.getPublishedAt(),
             entity.getUpdatedAt()
         );
     }

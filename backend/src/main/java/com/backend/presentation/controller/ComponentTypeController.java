@@ -1,28 +1,41 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.command.ComponentTypeCommands.*;
-import com.backend.application.query.ComponentTypeQueries.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.backend.application.command.ComponentTypeCommands.CreateComponentTypeCommand;
+import com.backend.application.command.ComponentTypeCommands.DeleteComponentTypeCommand;
+import com.backend.application.command.ComponentTypeCommands.UpdateComponentTypeCommand;
+import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQuery;
+import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.service.ComponentTypeService;
 import com.backend.domain.entity.ComponentType;
 import com.backend.presentation.dto.request.ComponentTypeCreateRequest;
 import com.backend.presentation.dto.response.ComponentTypeResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
-import com.fasterxml.jackson.databind.JsonNode;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/components/types")
@@ -43,10 +56,8 @@ public class ComponentTypeController {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
 
             CreateComponentTypeCommand command = new CreateComponentTypeCommand(
-                    request.code(),
                     request.name(),
                     request.category(),
-                    request.icon(),
                     userId);
 
             ComponentType result = componentTypeService.createComponentType(command);
@@ -113,10 +124,8 @@ public class ComponentTypeController {
 
             UpdateComponentTypeCommand command = new UpdateComponentTypeCommand(
                     id,
-                    request.code(),
                     request.name(),
                     request.category(),
-                    request.icon(),
                     userId);
 
             ComponentType result = componentTypeService.updateComponentType(command);
