@@ -1,18 +1,20 @@
 package com.backend.application.service;
 
-import com.backend.domain.entity.ComponentEntryI18n;
-import com.backend.domain.enums.Language;
-import com.backend.domain.repository.ComponentEntryI18nRepository;
-import com.backend.domain.repository.ComponentEntryRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Map;
+
 import org.owasp.encoder.Encode;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
+import com.backend.domain.entity.ComponentEntryI18n;
+import com.backend.domain.enums.Language;
+import com.backend.domain.repository.ComponentEntryI18nRepository;
+import com.backend.domain.repository.ComponentEntryRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +43,6 @@ public class ComponentEntryI18nServiceImpl implements ComponentEntryI18nService 
 
         entryI18n.setTitle(sanitizeString((String) data.get("title")));
         entryI18n.setDescription(sanitizeHtml((String) data.get("description")));
-        entryI18n.setImageUrl(sanitizeUrl((String) data.get("imageUrl")));
-        entryI18n.setButtonText(sanitizeString((String) data.get("buttonText")));
-        entryI18n.setButtonUrl(sanitizeUrl((String) data.get("buttonUrl")));
 
         ComponentEntryI18n saved = entryI18nRepository.save(entryI18n);
 
@@ -77,21 +76,24 @@ public class ComponentEntryI18nServiceImpl implements ComponentEntryI18nService 
     }
 
     private boolean isBaseField(String key) {
-        return List.of("title", "description", "imageUrl", "buttonText", "buttonUrl", "status").contains(key);
+        return List.of("title", "description", "status").contains(key);
     }
 
     protected String sanitizeString(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         return Encode.forHtml(value);
     }
 
     protected String sanitizeHtml(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         return Encode.forHtmlContent(value);
     }
 
     protected String sanitizeUrl(String value) {
-        if (value == null) return null;
+        if (value == null)
+            return null;
         return Encode.forUriComponent(value);
     }
 
@@ -140,6 +142,3 @@ public class ComponentEntryI18nServiceImpl implements ComponentEntryI18nService 
         log.info("Deleted entry i18n for entry {} and language {}", entryId, language);
     }
 }
-
-
-

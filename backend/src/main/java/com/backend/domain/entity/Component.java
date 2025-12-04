@@ -1,9 +1,14 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.ComponentStatus;
-import com.backend.infrastructure.persistence.converter.JsonNodeConverter;
-import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -34,9 +39,15 @@ public class Component extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Convert(converter = JsonNodeConverter.class)
-    @Column(name = "base_data", columnDefinition = "JSON")
-    private JsonNode baseData;
+    @Column(name = "display_order")
+    private Integer displayOrder = 0;
+
+    @Column(name = "is_visible")
+    private Boolean isVisible = true;
+
+    @Size(max = 500)
+    @Column(name = "style_classes", length = 500)
+    private String styleClasses;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
