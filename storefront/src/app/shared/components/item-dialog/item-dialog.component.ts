@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signa
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ItemFormBuilderService } from '../../services/item-form-builder.service';
@@ -19,6 +20,7 @@ import { DialogFieldComponent } from './dialog-field/dialog-field.component';
     MatDialogModule,
     MatButtonModule,
     MatTabsModule,
+    MatIconModule,
     TranslocoPipe,
     DialogFieldComponent
   ],

@@ -70,11 +70,18 @@ export class ComponentEditDialogComponent {
     i18nForms: { [key: string]: FormGroup } = {};
     
     statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
+    componentTypeOptions: { value: any; label: string }[] = [];
 
     constructor(
         @Inject(MAT_DIALOG_DATA) public data: ComponentEditDialogData
     ) {
         this.languages = data.languages || ['en', 'tr'];
+
+        this.componentTypeOptions = (data.componentTypes || []).map(type => ({
+            value: type.id,
+            label: type.name
+        }));
+
         this.generalForm = this.#formBuilder.group({
             name: [data.component?.name || '', Validators.required],
             componentTypeId: [

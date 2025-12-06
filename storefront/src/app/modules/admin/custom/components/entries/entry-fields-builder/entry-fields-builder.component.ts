@@ -43,7 +43,9 @@ export class EntryFieldsBuilderComponent implements OnInit {
     displayedColumns = ['fieldKey', 'fieldType', 'isRequired'];
 
     ngOnInit(): void {
-        this.loadFields();
+        setTimeout(() => {
+            this.loadFields();
+        });
     }
 
     loadFields(): void {

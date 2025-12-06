@@ -1,4 +1,8 @@
-<mat-form-field class="w-full" [class]="styleClasses" [subscriptSizing]="'dynamic'">
+<mat-form-field
+    class="w-full"
+    [class]="styleClasses"
+    [subscriptSizing]="'dynamic'"
+>
     @if (label) {
         <mat-label>{{ label }}</mat-label>
     }
@@ -14,7 +18,7 @@
         }
         @for (o of options; track o) {
             <mat-option [value]="o.value" [disabled]="o.disabled">
-                {{ o.label }}
+                {{ o.label || (o.labelKey | transloco) }}
             </mat-option>
         }
     </mat-select>
@@ -22,5 +26,3 @@
         <mat-hint>{{ hint }}</mat-hint>
     }
 </mat-form-field>
-
-

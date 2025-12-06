@@ -18,16 +18,19 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 
+import { TranslocoPipe } from '@jsverse/transloco';
+
 export interface SpaSelectOption<T = any> {
     value: T;
-    label: string;
+    label?: string;
+    labelKey?: string;
     disabled?: boolean;
 }
 
 @Component({
     selector: 'spa-select',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatSelectModule],
+    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatSelectModule, TranslocoPipe],
     templateUrl: './spa-select.component.html',
     styleUrls: ['./spa-select.component.scss'],
     encapsulation: ViewEncapsulation.None,

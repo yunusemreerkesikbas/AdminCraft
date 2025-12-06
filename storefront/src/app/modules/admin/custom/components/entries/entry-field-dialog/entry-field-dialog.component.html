@@ -1,135 +1,162 @@
-<h2 mat-dialog-title>
-    {{ 'admin.components.entryFields.addField' | transloco }}
-</h2>
+<div
+    class="bg-card flex max-h-screen flex-col overflow-hidden rounded-2xl shadow-2xl dark:bg-slate-900"
+>
+    <!-- Header -->
+    <div
+        class="flex items-center justify-between border-b bg-slate-50 px-8 py-5 dark:border-slate-800 dark:bg-slate-900/50"
+    >
+        <div class="flex items-center gap-3">
+            <div
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/20"
+            >
+                <mat-icon class="icon-size-6">add</mat-icon>
+            </div>
+            <div>
+                <h2
+                    class="text-xl font-semibold leading-none text-slate-800 dark:text-slate-100"
+                >
+                    {{ 'admin.components.entryFields.addField' | transloco }}
+                </h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {{ 'admin.components.entryFields.types.text' | transloco }}
+                </p>
+            </div>
+        </div>
+        <button mat-icon-button (click)="cancel()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
 
-<mat-dialog-content>
-    <fuse-card class="field-form-card" [@fadeIn]>
-        <form [formGroup]="fieldForm" class="field-form">
-            <div class="basic-section">
-                <h4 class="section-title">
-                    <mat-icon>info</mat-icon>
+    <!-- Content -->
+    <div class="flex-auto overflow-y-auto p-8">
+        <form [formGroup]="fieldForm" class="flex flex-col gap-6">
+            <!-- Basic Info Section -->
+            <div class="flex flex-col gap-5">
+                <h3
+                    class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
                     {{ 'admin.components.entryFields.basicInfo' | transloco }}
-                </h4>
+                </h3>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.components.entryFields.fieldKey' | transloco
-                    }}</mat-label>
-                    <input
-                        matInput
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <spa-input
+                        class="w-full"
                         formControlName="fieldKey"
-                        placeholder="camelCaseField"
-                    />
-                    <mat-icon matPrefix>key</mat-icon>
-                    @if (fieldForm.get('fieldKey')?.hasError('required')) {
-                        <mat-error>{{
-                            'admin.validation.required' | transloco
-                        }}</mat-error>
-                    }
-                    @if (fieldForm.get('fieldKey')?.hasError('pattern')) {
-                        <mat-error>{{
-                            'admin.components.entryFields.invalidFieldKey' | transloco
-                        }}</mat-error>
-                    }
-                </mat-form-field>
+                        [label]="
+                            'admin.components.entryFields.fieldKey' | transloco
+                        "
+                        placeholder="e.g. userFullName"
+                        [hint]="
+                            'admin.components.entryFields.invalidFieldKey'
+                                | transloco
+                        "
+                    ></spa-input>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>{{
-                        'admin.components.entryFields.fieldType' | transloco
-                    }}</mat-label>
-                    <mat-select formControlName="fieldType">
-                        @for (option of fieldTypeOptions; track option.value) {
-                            <mat-option [value]="option.value">
-                                <mat-icon>
-                                    {{
-                                        option.value === 'text' ? 'text_fields' :
-                                        option.value === 'textarea' ? 'subject' :
-                                        option.value === 'number' ? 'pin' :
-                                        'toggle_on'
-                                    }}
-                                </mat-icon>
-                                {{ option.labelKey | transloco }}
-                            </mat-option>
-                        }
-                    </mat-select>
-                    <mat-icon matPrefix>category</mat-icon>
-                </mat-form-field>
+                    <spa-select
+                        class="w-full"
+                        formControlName="fieldType"
+                        [label]="
+                            'admin.components.entryFields.fieldType' | transloco
+                        "
+                        [options]="fieldTypeOptions"
+                    ></spa-select>
+                </div>
 
-                <mat-checkbox formControlName="isRequired" class="required-checkbox">
-                    <mat-icon>{{fieldForm.get('isRequired')?.value ? 'check_circle' : 'radio_button_unchecked'}}</mat-icon>
-                    {{ 'admin.components.entryFields.required' | transloco }}
-                </mat-checkbox>
+                <spa-checkbox
+                    formControlName="isRequired"
+                    [label]="
+                        'admin.components.entryFields.required' | transloco
+                    "
+                ></spa-checkbox>
             </div>
 
+            <!-- Conditional Constraints -->
             @if (showMaxLength()) {
-                <fuse-card class="constraints-card" [@expandCollapse]>
-                    <div class="constraints-section">
-                        <h4 class="section-title">
-                            <mat-icon>rule</mat-icon>
-                            {{ 'admin.components.entryFields.textConstraints' | transloco }}
-                        </h4>
-
-                        <mat-form-field appearance="outline">
-                            <mat-label>{{
-                                'admin.components.entryFields.maxLength' | transloco
-                            }}</mat-label>
-                            <input
-                                matInput
-                                type="number"
-                                formControlName="maxLength"
-                                min="1"
-                                max="5000"
-                            />
-                            <mat-icon matPrefix>straighten</mat-icon>
-                            <mat-hint>{{ 'admin.components.entryFields.maxLengthHint' | transloco }}</mat-hint>
-                        </mat-form-field>
+                <div
+                    class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
+                    [@expandCollapse]
+                >
+                    <div
+                        class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                    >
+                        <mat-icon class="icon-size-5">rule</mat-icon>
+                        {{
+                            'admin.components.entryFields.textConstraints'
+                                | transloco
+                        }}
                     </div>
-                </fuse-card>
+
+                    <spa-input
+                        class="w-full md:w-1/2"
+                        formControlName="maxLength"
+                        type="number"
+                        [label]="
+                            'admin.components.entryFields.maxLength' | transloco
+                        "
+                        [hint]="
+                            'admin.components.entryFields.maxLengthHint'
+                                | transloco
+                        "
+                    ></spa-input>
+                </div>
             }
 
             @if (showMinMax()) {
-                <fuse-card class="constraints-card" [@expandCollapse]>
-                    <div class="constraints-section">
-                        <h4 class="section-title">
-                            <mat-icon>rule</mat-icon>
-                            {{ 'admin.components.entryFields.numberConstraints' | transloco }}
-                        </h4>
-
-                        <div class="constraints-row">
-                            <mat-form-field appearance="outline">
-                                <mat-label>{{
-                                    'admin.components.entryFields.minValue' | transloco
-                                }}</mat-label>
-                                <input matInput type="number" formControlName="minValue" />
-                                <mat-icon matPrefix>arrow_downward</mat-icon>
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline">
-                                <mat-label>{{
-                                    'admin.components.entryFields.maxValue' | transloco
-                                }}</mat-label>
-                                <input matInput type="number" formControlName="maxValue" />
-                                <mat-icon matPrefix>arrow_upward</mat-icon>
-                            </mat-form-field>
-                        </div>
+                <div
+                    class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
+                    [@expandCollapse]
+                >
+                    <div
+                        class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                    >
+                        <mat-icon class="icon-size-5">rule</mat-icon>
+                        {{
+                            'admin.components.entryFields.numberConstraints'
+                                | transloco
+                        }}
                     </div>
-                </fuse-card>
+
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <spa-input
+                            class="w-full"
+                            formControlName="minValue"
+                            type="number"
+                            [label]="
+                                'admin.components.entryFields.minValue'
+                                    | transloco
+                            "
+                        ></spa-input>
+
+                        <spa-input
+                            class="w-full"
+                            formControlName="maxValue"
+                            type="number"
+                            [label]="
+                                'admin.components.entryFields.maxValue'
+                                    | transloco
+                            "
+                        ></spa-input>
+                    </div>
+                </div>
             }
         </form>
-    </fuse-card>
-</mat-dialog-content>
+    </div>
 
-<mat-dialog-actions align="end">
-    <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
-        {{ 'admin.dialog.actions.cancel' | transloco }}
-    </button>
-    <button
-        mat-raised-button
-        color="primary"
-        (click)="save()"
-        [disabled]="fieldForm.invalid || isSubmitting()"
+    <!-- Footer -->
+    <div
+        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-8 py-5 dark:border-slate-800 dark:bg-slate-900/50"
     >
-        <mat-icon>save</mat-icon>
-        {{ 'admin.dialog.actions.save' | transloco }}
-    </button>
-</mat-dialog-actions>
+        <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
+            {{ 'admin.dialog.actions.cancel' | transloco }}
+        </button>
+        <button
+            mat-flat-button
+            color="primary"
+            (click)="save()"
+            [disabled]="fieldForm.invalid || isSubmitting()"
+        >
+            <mat-icon class="mr-2 icon-size-5">save</mat-icon>
+            {{ 'admin.dialog.actions.save' | transloco }}
+        </button>
+    </div>
+</div>

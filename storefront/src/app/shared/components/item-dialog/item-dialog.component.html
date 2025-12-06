@@ -1,18 +1,51 @@
-<div class="spa-item-dialog">
-    <h2 mat-dialog-title>
-        {{
-            (options.mode === 'create'
-                ? 'admin.dialog.title.create'
-                : 'admin.dialog.title.edit'
-            ) | transloco
-        }}:
-        {{ options.titleKey | transloco }}
-    </h2>
+<div class="bg-card flex flex-col">
+    <!-- Header -->
+    <div class="bg-card flex items-center justify-between border-b px-6 py-4">
+        <div class="flex items-center gap-3">
+            <div
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+                <mat-icon class="icon-size-6">{{
+                    options.mode === 'create' ? 'add' : 'edit'
+                }}</mat-icon>
+            </div>
+            <div class="flex flex-col">
+                <h2 class="text-lg font-semibold leading-none">
+                    {{
+                        (options.mode === 'create'
+                            ? 'admin.dialog.title.create'
+                            : 'admin.dialog.title.edit'
+                        ) | transloco
+                    }}
+                </h2>
+                <span class="text-secondary mt-0.5 text-sm">
+                    {{ options.titleKey | transloco }}
+                </span>
+            </div>
+        </div>
+        <button mat-icon-button (click)="cancel()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
 
-    <mat-dialog-content>
-        <mat-tab-group>
-            <mat-tab [label]="'admin.dialog.tabs.general' | transloco">
-                <div class="tab-content">
+    <!-- Content -->
+    <div class="flex-auto overflow-y-auto">
+        <mat-tab-group
+            class="component-tabs"
+            animationDuration="0ms"
+            mat-stretch-tabs="false"
+        >
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5">settings</mat-icon>
+                        <span>{{
+                            'admin.dialog.tabs.general' | transloco
+                        }}</span>
+                    </div>
+                </ng-template>
+
+                <div class="flex flex-col gap-5 p-6 sm:p-8">
                     @for (field of generalFields; track field.key) {
                         <spa-dialog-field
                             [field]="field"
@@ -24,43 +57,51 @@
             </mat-tab>
 
             @for (lang of languages; track lang) {
-                <mat-tab
-                    [label]="'admin.dialog.tabs.languages.' + lang | transloco"
-                >
-                    <div class="tab-content">
+                <mat-tab>
+                    <ng-template mat-tab-label>
+                        <div class="flex items-center gap-2">
+                            <mat-icon class="icon-size-5">translate</mat-icon>
+                            <span class="uppercase">{{ lang }}</span>
+                        </div>
+                    </ng-template>
+
+                    <div class="p-6 sm:p-8">
                         @if (getLanguageForm(lang); as langForm) {
-                            @for (field of i18nFields; track field.key) {
-                                <spa-dialog-field
-                                    [field]="field"
-                                    [form]="langForm"
-                                    [options]="field.transformedOptions || []"
-                                />
-                            }
+                            <div class="flex flex-col gap-5">
+                                @for (field of i18nFields; track field.key) {
+                                    <spa-dialog-field
+                                        [field]="field"
+                                        [form]="langForm"
+                                        [options]="
+                                            field.transformedOptions || []
+                                        "
+                                    />
+                                }
+                            </div>
                         }
                     </div>
                 </mat-tab>
             }
         </mat-tab-group>
-    </mat-dialog-content>
+    </div>
 
-    <mat-dialog-actions>
-        <button
-            mat-button
-            type="button"
-            (click)="cancel()"
-            class="cancel-button"
-        >
+    <!-- Footer -->
+    <div
+        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-6 py-4 dark:bg-slate-900/20"
+    >
+        <button mat-button (click)="cancel()">
             {{ 'admin.dialog.actions.cancel' | transloco }}
         </button>
         <button
-            mat-raised-button
+            mat-flat-button
             color="primary"
-            type="button"
-            class="save-button"
-            [disabled]="isSubmitting()"
             (click)="save()"
+            [disabled]="isSubmitting()"
         >
+            @if (isSubmitting()) {
+                <mat-icon class="mr-2 animate-spin">sync</mat-icon>
+            }
             {{ 'admin.dialog.actions.save' | transloco }}
         </button>
-    </mat-dialog-actions>
+    </div>
 </div>

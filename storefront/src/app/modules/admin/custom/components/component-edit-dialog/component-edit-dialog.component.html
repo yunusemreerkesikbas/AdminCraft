@@ -61,7 +61,11 @@
                                 [label]="
                                     'admin.components.fields.type' | transloco
                                 "
-                                [options]="[]"
+                                [options]="componentTypeOptions"
+                                [placeholder]="
+                                    'admin.common.placeholders.selectType'
+                                        | transloco
+                                "
                                 [required]="true"
                             ></spa-select>
 
@@ -71,6 +75,10 @@
                                     'admin.common.fields.status' | transloco
                                 "
                                 [options]="statusOptions"
+                                [placeholder]="
+                                    'admin.common.placeholders.selectStatus'
+                                        | transloco
+                                "
                                 [required]="true"
                             ></spa-select>
                         </div>

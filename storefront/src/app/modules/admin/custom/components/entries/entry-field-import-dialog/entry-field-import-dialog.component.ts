@@ -3,11 +3,11 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BaseDialogComponent } from '@shared/components/base-dialog';
+import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take, takeUntil } from 'rxjs';
 import { CreateEntryFieldRequest, ImportResultResponse } from '../../models/component-entry.types';
@@ -29,11 +29,11 @@ interface DialogData extends BaseDialogData {
         CommonModule,
         ReactiveFormsModule,
         MatDialogModule,
-        MatFormFieldModule,
-        MatInputModule,
         MatTableModule,
         MatButtonModule,
-        TranslocoModule
+        MatIconModule,
+        TranslocoModule,
+        SpaTextareaComponent
     ]
 })
 export class EntryFieldImportDialogComponent extends BaseDialogComponent<boolean, DialogData> {

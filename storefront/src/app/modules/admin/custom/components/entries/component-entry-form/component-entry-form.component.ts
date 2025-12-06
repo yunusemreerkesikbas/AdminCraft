@@ -84,7 +84,9 @@ export class ComponentEntryFormComponent implements OnInit {
         this.#buildI18nForms();
 
         if (this.data.componentTypeId) {
-            this.#loadFieldDefinitions();
+            setTimeout(() => {
+                this.#loadFieldDefinitions();
+            });
         }
     }
 
