@@ -1,26 +1,31 @@
-<div class="bg-card flex h-full flex-col overflow-hidden rounded-2xl border">
+<div
+    class="bg-card flex h-full flex-col overflow-hidden rounded-2xl border dark:border-slate-800"
+>
     <!-- Header -->
     <div
-        class="flex items-center justify-between border-b bg-slate-50/50 px-6 py-4 dark:bg-slate-900/20"
+        class="flex items-center justify-between border-b bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50"
     >
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
             <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/20"
             >
                 <mat-icon class="icon-size-6">extension</mat-icon>
             </div>
-            <div class="flex flex-col">
-                <h3 class="text-lg font-semibold leading-none">
+            <div>
+                <h2
+                    class="text-base font-medium leading-none text-slate-900 dark:text-slate-100"
+                >
                     {{ 'admin.components.entryFields.title' | transloco }}
-                </h3>
-                <p class="text-secondary mt-1 text-sm">
+                </h2>
+                <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
                     {{ 'admin.components.entryFields.subtitle' | transloco }}
                 </p>
             </div>
         </div>
+
         <div class="flex items-center gap-2">
             <button mat-button (click)="openImportDialog()">
-                <mat-icon class="mr-2">upload_file</mat-icon>
+                <mat-icon class="mr-2 icon-size-5">upload_file</mat-icon>
                 {{ 'admin.components.entryFields.import' | transloco }}
             </button>
             <button
@@ -28,7 +33,7 @@
                 (click)="exportFields()"
                 [disabled]="fields().length === 0"
             >
-                <mat-icon class="mr-2">download</mat-icon>
+                <mat-icon class="mr-2 icon-size-5">download</mat-icon>
                 {{ 'admin.components.entryFields.export' | transloco }}
             </button>
             <button
@@ -36,23 +41,26 @@
                 color="primary"
                 (click)="openAddFieldDialog()"
             >
-                <mat-icon class="mr-2">add</mat-icon>
+                <mat-icon class="mr-2 icon-size-5">add</mat-icon>
                 {{ 'admin.components.entryFields.addField' | transloco }}
             </button>
         </div>
     </div>
 
     <!-- Content -->
-    <div class="bg-card flex-auto overflow-auto">
+    <div class="flex-auto overflow-auto">
         @if (isLoading()) {
-            <div class="flex flex-col items-center justify-center py-12">
+            <div class="flex flex-col items-center justify-center p-12">
                 <mat-spinner diameter="40"></mat-spinner>
-                <p class="text-secondary mt-4">
+                <div
+                    class="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400"
+                >
                     {{ 'admin.common.loading' | transloco }}
-                </p>
+                </div>
             </div>
         } @else if (fields().length === 0) {
             <spa-empty-state
+                class="flex-auto"
                 icon="extension"
                 [title]="'admin.components.entryFields.noFields' | transloco"
                 [description]="
@@ -64,105 +72,124 @@
                     color="primary"
                     (click)="openAddFieldDialog()"
                 >
-                    <mat-icon class="mr-2">add</mat-icon>
+                    <mat-icon class="mr-2 icon-size-5">add</mat-icon>
                     {{ 'admin.components.entryFields.addFirst' | transloco }}
                 </button>
             </spa-empty-state>
         } @else {
-            <table mat-table [dataSource]="fields()" class="w-full">
-                <!-- Field Key Column -->
-                <ng-container matColumnDef="fieldKey">
-                    <th mat-header-cell *matHeaderCellDef class="pl-6">
-                        {{
-                            'admin.components.entryFields.fieldKey' | transloco
-                        }}
-                    </th>
-                    <td mat-cell *matCellDef="let field" class="pl-6">
-                        <code
-                            class="rounded bg-slate-100 px-2 py-1 font-mono text-sm dark:bg-slate-800"
-                        >
-                            {{ field.fieldKey }}
-                        </code>
-                    </td>
-                </ng-container>
-
-                <!-- Field Type Column -->
-                <ng-container matColumnDef="fieldType">
-                    <th mat-header-cell *matHeaderCellDef>
-                        {{
-                            'admin.components.entryFields.fieldType' | transloco
-                        }}
-                    </th>
-                    <td mat-cell *matCellDef="let field">
-                        <span
-                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide"
-                            [ngClass]="{
-                                'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300':
-                                    field.fieldType === 'text',
-                                'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300':
-                                    field.fieldType === 'textarea',
-                                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300':
-                                    field.fieldType === 'number',
-                                'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300':
-                                    field.fieldType === 'boolean',
-                            }"
+            <div class="w-full">
+                <table
+                    mat-table
+                    [dataSource]="fields()"
+                    class="w-full bg-transparent"
+                >
+                    <!-- Field Key Column -->
+                    <ng-container matColumnDef="fieldKey">
+                        <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            class="pl-6 text-sm font-medium text-slate-500 dark:text-slate-400"
                         >
                             {{
-                                'admin.components.entryFields.types.' +
-                                    field.fieldType | transloco
+                                'admin.components.entryFields.fieldKey'
+                                    | transloco
                             }}
-                        </span>
-                    </td>
-                </ng-container>
+                        </th>
+                        <td mat-cell *matCellDef="let field" class="pl-6">
+                            <span
+                                class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                            >
+                                {{ field.fieldKey }}
+                            </span>
+                        </td>
+                    </ng-container>
 
-                <!-- Required Column -->
-                <ng-container matColumnDef="isRequired">
-                    <th
-                        mat-header-cell
-                        *matHeaderCellDef
-                        class="w-24 pr-6 text-center"
-                    >
+                    <!-- Field Type Column -->
+                    <ng-container matColumnDef="fieldType">
+                        <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            class="text-sm font-medium text-slate-500 dark:text-slate-400"
+                        >
+                            {{
+                                'admin.components.entryFields.fieldType'
+                                    | transloco
+                            }}
+                        </th>
+                        <td mat-cell *matCellDef="let field">
+                            <span
+                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                [ngClass]="{
+                                    'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400':
+                                        field.fieldType === 'text',
+                                    'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400':
+                                        field.fieldType === 'textarea',
+                                    'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400':
+                                        field.fieldType === 'number',
+                                    'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400':
+                                        field.fieldType === 'boolean',
+                                }"
+                            >
+                                {{
+                                    'admin.components.entryFields.types.' +
+                                        field.fieldType | transloco
+                                }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Required Column -->
+                    <ng-container matColumnDef="isRequired">
+                        <th
+                            mat-header-cell
+                            *matHeaderCellDef
+                            class="pr-6 text-center text-sm font-medium text-slate-500 dark:text-slate-400"
+                        >
+                            {{
+                                'admin.components.entryFields.required'
+                                    | transloco
+                            }}
+                        </th>
+                        <td
+                            mat-cell
+                            *matCellDef="let field"
+                            class="pr-6 text-center"
+                        >
+                            @if (field.isRequired) {
+                                <mat-icon class="text-emerald-500 icon-size-5"
+                                    >check_circle</mat-icon
+                                >
+                            } @else {
+                                <div
+                                    class="mx-auto h-1.5 w-1.5 rounded-full bg-slate-200 dark:bg-slate-700"
+                                ></div>
+                            }
+                        </td>
+                    </ng-container>
+
+                    <tr
+                        mat-header-row
+                        *matHeaderRowDef="displayedColumns; sticky: true"
+                        class="h-11 bg-slate-50/50 dark:bg-slate-900/20"
+                    ></tr>
+                    <tr
+                        mat-row
+                        *matRowDef="let row; columns: displayedColumns"
+                        class="h-12 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/10"
+                    ></tr>
+                </table>
+
+                <div
+                    class="flex items-center gap-3 border-t bg-slate-50 px-6 py-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/20 dark:text-slate-400"
+                >
+                    <mat-icon class="text-slate-400 icon-size-4">info</mat-icon>
+                    <span>
                         {{
-                            'admin.components.entryFields.required' | transloco
+                            'admin.components.entryFields.readOnlyNote'
+                                | transloco
                         }}
-                    </th>
-                    <td
-                        mat-cell
-                        *matCellDef="let field"
-                        class="pr-6 text-center"
-                    >
-                        @if (field.isRequired) {
-                            <mat-icon class="text-green-500 icon-size-5"
-                                >check_circle</mat-icon
-                            >
-                        } @else {
-                            <mat-icon
-                                class="text-slate-300 icon-size-5 dark:text-slate-600"
-                                >remove</mat-icon
-                            >
-                        }
-                    </td>
-                </ng-container>
-
-                <tr
-                    mat-header-row
-                    *matHeaderRowDef="displayedColumns; sticky: true"
-                    class="h-12 bg-slate-50 dark:bg-slate-900/20"
-                ></tr>
-                <tr
-                    mat-row
-                    *matRowDef="let row; columns: displayedColumns"
-                    class="h-14 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/10"
-                ></tr>
-            </table>
-
-            <div
-                class="flex items-center gap-2 border-t border-blue-100 bg-blue-50 p-4 text-sm text-blue-600 dark:border-blue-900/20 dark:bg-blue-900/10 dark:text-blue-400"
-            >
-                <mat-icon class="icon-size-5">info</mat-icon>
-                <span>{{
-                    'admin.components.entryFields.readOnlyNote' | transloco
-                }}</span>
+                    </span>
+                </div>
             </div>
         }
     </div>

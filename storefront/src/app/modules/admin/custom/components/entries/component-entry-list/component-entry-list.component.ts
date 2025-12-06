@@ -46,6 +46,12 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     @Input({ required: true }) componentTypeId!: number;
     @Input() languages: string[] = ['tr', 'en'];
 
+    override ngOnInit(): void {
+        setTimeout(() => {
+            super.ngOnInit();
+        });
+    }
+
     protected override fetchItems() {
         return this.service.listByComponentId(this.componentId);
     }

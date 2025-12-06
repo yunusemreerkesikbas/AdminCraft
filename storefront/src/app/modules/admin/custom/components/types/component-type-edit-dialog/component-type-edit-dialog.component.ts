@@ -8,15 +8,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BaseCrudDialogComponent } from '@shared/components/base-crud-dialog';
 import { CrudDialogData } from '@shared/components/base-dialog';
-import { FuseCardComponent } from '@fuse/components/card';
-import { fuseAnimations } from '@fuse/animations';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { EntryFieldsBuilderComponent } from '../../entries/entry-fields-builder/entry-fields-builder.component';
 import { COMPONENT_CATEGORIES } from '../../models/component-categories.constants';
 import { ComponentTypeDto, UpdateComponentTypeRequest } from '../../models/component-library.types';
-import { ComponentLibraryService } from '../../services/component-library.service';
+import { ComponentTypeService } from '../../services/component-type.service';
 
 interface DialogData extends CrudDialogData<ComponentTypeDto> {
     type: ComponentTypeDto;
@@ -41,11 +42,12 @@ interface DialogData extends CrudDialogData<ComponentTypeDto> {
         MatButtonModule,
         TranslocoModule,
         EntryFieldsBuilderComponent,
-        FuseCardComponent
+        SpaInputComponent,
+        SpaSelectComponent
     ]
 })
 export class ComponentTypeEditDialogComponent extends BaseCrudDialogComponent<ComponentTypeDto, never, UpdateComponentTypeRequest> {
-    protected override service: any = inject(ComponentLibraryService);
+    protected override service = inject(ComponentTypeService);
     protected override form!: FormGroup;
     protected override readonly data!: DialogData;
 
@@ -55,8 +57,7 @@ export class ComponentTypeEditDialogComponent extends BaseCrudDialogComponent<Co
         const typeData = this.data.type;
         this.form = this.fb.group({
             name: [typeData.name, Validators.required],
-            category: [typeData.category || null],
-            icon: [typeData.icon || null]
+            category: [typeData.category || null]
         });
     }
 
@@ -68,8 +69,7 @@ export class ComponentTypeEditDialogComponent extends BaseCrudDialogComponent<Co
         const formValue = this.form.value;
         return {
             name: formValue.name!,
-            category: formValue.category || undefined,
-            icon: formValue.icon || undefined
+            category: formValue.category || undefined
         };
     }
 

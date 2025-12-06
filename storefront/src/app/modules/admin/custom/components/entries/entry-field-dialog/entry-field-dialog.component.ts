@@ -2,16 +2,14 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BaseDialogComponent } from '@shared/components/base-dialog';
-import { FuseCardComponent } from '@fuse/components/card';
-import { fuseAnimations } from '@fuse/animations';
+import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
+import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 
 @Component({
     selector: 'spa-entry-field-dialog',
@@ -24,14 +22,12 @@ import { fuseAnimations } from '@fuse/animations';
         CommonModule,
         ReactiveFormsModule,
         MatDialogModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatInputModule,
-        MatSelectModule,
-        MatCheckboxModule,
         MatButtonModule,
+        MatIconModule,
         TranslocoModule,
-        FuseCardComponent
+        SpaInputComponent,
+        SpaSelectComponent,
+        SpaCheckboxComponent
     ]
 })
 export class EntryFieldDialogComponent extends BaseDialogComponent {

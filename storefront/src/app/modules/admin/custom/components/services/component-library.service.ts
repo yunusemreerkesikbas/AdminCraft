@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
 import {
-    ComponentDto,
     ComponentDetailDto,
+    ComponentDto,
     ComponentI18nDto,
     ComponentI18nRequest,
     ComponentTypeDto,
@@ -79,3 +79,5 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
         return this.customDelete<void>('componentTypeById', { id });
     }
 }
+
+

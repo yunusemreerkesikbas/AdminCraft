@@ -28,14 +28,7 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
     };
 
     override create(data: CreateEntryRequest): Observable<ComponentEntry> {
-        if (!data.componentId) {
-            throw new Error('componentId is required for creating an entry');
-        }
         return this.customPost<ComponentEntry>('componentEntriesCreate', data, { componentId: data.componentId });
-    }
-
-    override list(): Observable<ComponentEntry[]> {
-        throw new Error('Use listByComponentId() instead of list() for component entries');
     }
 
     listByComponentId(componentId: number): Observable<ComponentEntry[]> {

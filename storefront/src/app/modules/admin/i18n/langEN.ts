@@ -27,6 +27,7 @@ export const langEN = {
                 parentCategory: 'Parent Category',
             },
             noRecords: 'No records',
+            none: 'None',
             status: {
                 active: 'Active',
                 inactive: 'Inactive',
@@ -206,6 +207,10 @@ export const langEN = {
                     label: 'Leave',
                 },
             },
+        },
+        placeholders: {
+            selectType: 'Select Type',
+            selectStatus: 'Select Status'
         },
         dialog: {
             title: {
@@ -483,7 +488,8 @@ export const langEN = {
                 styleClasses: 'CSS Classes',
             },
             hints: {
-                imageUrl: 'Enter full URL for image (e.g., https://example.com/image.jpg)'
+                imageUrl: 'Enter full URL for image (e.g., https://example.com/image.jpg)',
+                styleClasses: 'Ex: col-span-12 md:col-span-6',
             },
             buttonStyles: {
                 primary: 'Primary',
@@ -533,6 +539,8 @@ export const langEN = {
             },
             types: {
                 title: 'Component Types',
+                entryFieldsTitle: 'Entry Fields',
+                count: '{{count}} types',
                 create: 'Create New Type',
                 edit: 'Edit Type',
                 noTypes: 'No types yet',
@@ -559,6 +567,8 @@ export const langEN = {
             },
             entryFields: {
                 title: 'Entry Fields',
+                subtitle: 'These fields will be populated when creating the component',
+                noFieldsDesc: 'No entry fields defined for this component type yet. You can add new fields using the "Add Field" button.',
                 addField: 'Add Field',
                 addFirst: 'Add First Field',
                 noFields: 'No entry fields defined yet',
@@ -601,6 +611,7 @@ export const langEN = {
             },
             entries: {
                 title: 'Component Entries',
+                basicInfo: 'Basic Info',
                 create: 'Create New Entry',
                 edit: 'Edit Entry',
                 noEntries: 'No entries yet',

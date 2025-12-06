@@ -27,6 +27,7 @@ export const langTR = {
                 parentCategory: 'Üst Kategori',
             },
             noRecords: 'Kayıt bulunamadı',
+            none: 'Yok',
             status: {
                 active: 'Aktif',
                 inactive: 'Pasif',
@@ -206,6 +207,10 @@ export const langTR = {
                     label: 'Ayrıl',
                 },
             },
+        },
+        placeholders: {
+            selectType: 'Tür Seçiniz',
+            selectStatus: 'Durum Seçiniz'
         },
         dialog: {
             title: {
@@ -483,7 +488,8 @@ export const langTR = {
                 styleClasses: 'CSS Sınıfları',
             },
             hints: {
-                imageUrl: 'Görsel için tam URL girin (örn: https://example.com/image.jpg)'
+                imageUrl: 'Görsel için tam URL girin (örn: https://example.com/image.jpg)',
+                styleClasses: 'Örn: col-span-12 md:col-span-6',
             },
             buttonStyles: {
                 primary: 'Birincil',
@@ -533,6 +539,8 @@ export const langTR = {
             },
             types: {
                 title: 'Bileşen Türleri',
+                entryFieldsTitle: 'Öğe Alanları',
+                count: '{{count}} tür',
                 create: 'Yeni Tür Oluştur',
                 edit: 'Tür Düzenle',
                 noTypes: 'Henüz tür bulunmuyor',
@@ -559,6 +567,8 @@ export const langTR = {
             },
             entryFields: {
                 title: 'Öğe Alanları',
+                subtitle: 'Bu alanlar bileşen oluşturulurken doldurulacaktır',
+                noFieldsDesc: 'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
                 addField: 'Alan Ekle',
                 addFirst: 'İlk Alanı Ekle',
                 noFields: 'Henüz öğe alanı tanımlanmadı',
@@ -601,6 +611,7 @@ export const langTR = {
             },
             entries: {
                 title: 'Bileşen Öğeleri',
+                basicInfo: 'Temel Bilgiler',
                 create: 'Yeni Öğe Oluştur',
                 edit: 'Öğe Düzenle',
                 noEntries: 'Henüz öğe bulunmuyor',

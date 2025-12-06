@@ -5,6 +5,7 @@ import com.backend.domain.enums.ComponentStatus;
 
 public record ComponentListItemResponse(
         Long id,
+        String uid,
         String name,
         Long componentTypeId,
         String componentTypeName,
@@ -16,6 +17,7 @@ public record ComponentListItemResponse(
         }
         return new ComponentListItemResponse(
                 component.getId(),
+                component.getUid(),
                 component.getName(),
                 component.getComponentTypeId(),
                 typeName,

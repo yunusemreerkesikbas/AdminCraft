@@ -6,13 +6,13 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { NotificationService } from '@shared/notifications/notification.service';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
 import { ComponentTypeFormData } from '../models/component-form.types';
-import { ComponentTypeDto, CreateComponentTypeRequest, UpdateComponentTypeRequest } from '../models/component-library.types';
+import { ComponentTypeDto, CreateComponentTypeRequest } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 import { ComponentTypeEditDialogComponent } from './component-type-edit-dialog/component-type-edit-dialog.component';
@@ -52,14 +52,17 @@ export class ComponentTypesManagerComponent implements OnInit {
         if (!term) return this.types();
 
         return this.types().filter(t =>
-            t.name.toLowerCase().includes(term) ||
-            t.code.toLowerCase().includes(term) ||
-            (t.category && t.category.toLowerCase().includes(term))
+            (t.name?.toLowerCase()?.includes(term)) ||
+            (t.code?.toLowerCase()?.includes(term)) ||
+            (t.category?.toLowerCase()?.includes(term))
         );
     });
 
     ngOnInit(): void {
-        this.loadTypes();
+        // Defer loading to avoid ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
+            this.loadTypes();
+        });
     }
 
     loadTypes(): void {
