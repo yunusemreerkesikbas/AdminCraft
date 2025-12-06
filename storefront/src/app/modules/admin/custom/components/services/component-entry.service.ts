@@ -31,6 +31,14 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
         return this.customPost<ComponentEntry>('componentEntriesCreate', data, { componentId: data.componentId });
     }
 
+    override update(entryId: number, data: UpdateEntryRequest): Observable<ComponentEntry> {
+        return this.customPut<ComponentEntry>('componentEntryUpdate', data, { entryId });
+    }
+
+    override delete(entryId: number): Observable<void> {
+        return this.customDelete<void>('componentEntryDelete', { entryId });
+    }
+
     listByComponentId(componentId: number): Observable<ComponentEntry[]> {
         return this.customGet<ComponentEntry[]>('componentEntriesByComponent', { componentId });
     }
