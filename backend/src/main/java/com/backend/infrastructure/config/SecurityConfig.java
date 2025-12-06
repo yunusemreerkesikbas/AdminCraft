@@ -1,6 +1,7 @@
 package com.backend.infrastructure.config;
 
-import com.backend.infrastructure.security.JwtAuthenticationFilter;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,12 +12,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.backend.infrastructure.tenant.TenantFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.backend.infrastructure.security.JwtAuthenticationFilter;
+import com.backend.infrastructure.tenant.TenantFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -45,6 +46,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/actuator/**").permitAll() // Actuator endpoints for
                                                                                              // monitoring
                                                 .requestMatchers("/public/**").permitAll() // Public API endpoints
+                                                .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
                                                 .requestMatchers("/swagger-ui/**").permitAll() // Swagger documentation
                                                 .requestMatchers("/v3/api-docs/**").permitAll() // OpenAPI documentation
                                                 .requestMatchers("/favicon.ico").permitAll() // Favicon

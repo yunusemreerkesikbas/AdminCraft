@@ -1,12 +1,8 @@
 package com.backend.infrastructure.tenant;
 
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.UUID;
+
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,8 +10,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.UUID;
+import com.backend.infrastructure.persistence.platform.entity.Tenant;
+import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -29,8 +31,8 @@ public class TenantFilter extends OncePerRequestFilter {
   private final MultiTenantConnectionProvider connectionProvider;
 
   public TenantFilter(TenantContext tenantContext,
-                     TenantPlatformRepository tenantRepository,
-                     MultiTenantConnectionProvider connectionProvider) {
+      TenantPlatformRepository tenantRepository,
+      MultiTenantConnectionProvider connectionProvider) {
     this.tenantContext = tenantContext;
     this.tenantRepository = tenantRepository;
     this.connectionProvider = connectionProvider;
@@ -147,6 +149,7 @@ public class TenantFilter extends OncePerRequestFilter {
         path.startsWith("/api/platform") ||
         path.startsWith("/api/modules/catalog") ||
         path.startsWith("/api/provisioning") ||
+        path.startsWith("/api/cms") ||
         path.startsWith("/api/tenants");
   }
 }

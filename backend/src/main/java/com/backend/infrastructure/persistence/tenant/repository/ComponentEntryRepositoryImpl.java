@@ -45,4 +45,10 @@ public class ComponentEntryRepositoryImpl implements ComponentEntryRepository {
     public boolean existsByUid(String uid) {
         return jpaRepository.existsByUid(uid);
     }
+
+    @Override
+    public List<ComponentEntry> findByComponentIdAndStatusOrderBySortOrder(Long componentId,
+            com.backend.domain.enums.ComponentStatus status) {
+        return jpaRepository.findByComponentIdAndStatusOrderBySortOrderAsc(componentId, status);
+    }
 }
