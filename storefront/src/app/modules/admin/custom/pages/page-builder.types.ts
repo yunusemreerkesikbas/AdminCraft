@@ -1,4 +1,5 @@
-export type Language = 'TR' | 'EN' | 'ES' | 'RU' | 'AR';
+import { Language } from '@shared/types/common.types';
+export { Language };
 export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
 
 export interface PageDto {
