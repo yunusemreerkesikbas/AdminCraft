@@ -95,7 +95,11 @@ export const SPA_ENDPOINTS_CONFIG = {
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',
     provisioningJob: 'provisioning/jobs/${jobId}',
-    provisioningJobByUuid: 'provisioning/jobs/${jobUuid}'
+    provisioningJobByUuid: 'provisioning/jobs/${jobUuid}',
+
+    // ----- CMS DELIVERY API (PUBLIC) -----
+    cmsComponent: 'cms/components/${uid}',
+    cmsComponentsBatch: 'cms/components'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;
