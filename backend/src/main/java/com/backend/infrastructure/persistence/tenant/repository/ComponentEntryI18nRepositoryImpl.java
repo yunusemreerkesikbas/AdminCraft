@@ -46,4 +46,9 @@ public class ComponentEntryI18nRepositoryImpl implements ComponentEntryI18nRepos
     public boolean existsByUid(String uid) {
         return jpaRepository.existsByUid(uid);
     }
+
+    @Override
+    public List<ComponentEntryI18n> findByEntryIdInAndLanguage(List<Long> entryIds, Language language) {
+        return jpaRepository.findByEntryIdInAndLanguage(entryIds, language);
+    }
 }

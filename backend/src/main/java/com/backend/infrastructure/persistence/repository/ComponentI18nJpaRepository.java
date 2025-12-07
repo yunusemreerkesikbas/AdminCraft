@@ -16,4 +16,5 @@ interface ComponentI18nJpaRepository extends JpaRepository<ComponentI18n, Long> 
     List<ComponentI18n> findByStatus(ComponentStatus status);
     List<ComponentI18n> findByLanguageAndStatus(Language language, ComponentStatus status);
     boolean existsByUid(String uid);
+    List<ComponentI18n> findByComponentIdInAndLanguage(List<Long> componentIds, Language language);
 }

@@ -10,5 +10,6 @@ public interface JpaComponentEntryI18nRepository extends JpaRepository<Component
     Optional<ComponentEntryI18n> findByEntryIdAndLanguage(Long entryId, Language language);
     List<ComponentEntryI18n> findByEntryId(Long entryId);
     boolean existsByUid(String uid);
+    List<ComponentEntryI18n> findByEntryIdInAndLanguage(List<Long> entryIds, Language language);
 }
 

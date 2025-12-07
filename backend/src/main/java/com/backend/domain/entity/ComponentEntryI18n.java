@@ -52,6 +52,9 @@ public class ComponentEntryI18n extends BaseI18nEntity {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
+    @Column(name = "custom_data", columnDefinition = "JSON")
+    private String customData;
+
     public void publish() {
         this.status = ComponentStatus.PUBLISHED;
         this.publishedAt = LocalDateTime.now();
