@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response.delivery;
+package com.backend.application.dto.delivery;
 
 import java.util.Map;
 

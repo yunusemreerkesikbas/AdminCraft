@@ -68,5 +68,10 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public List<Object[]> findAllWithTypeNamesAndEntryCount() {
         return jpaRepository.findAllWithTypeNamesAndEntryCount();
     }
+
+    @Override
+    public List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status) {
+        return jpaRepository.findByUidInAndStatus(uids, status);
+    }
 }
 

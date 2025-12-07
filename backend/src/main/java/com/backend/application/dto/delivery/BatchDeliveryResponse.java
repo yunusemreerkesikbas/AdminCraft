@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response.delivery;
+package com.backend.application.dto.delivery;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +9,7 @@ import lombok.Builder;
 public record BatchDeliveryResponse(
     Map<String, ComponentDeliveryResponse> data,
     BatchMeta meta) {
+
   @Builder
   public record BatchMeta(
       int requested,

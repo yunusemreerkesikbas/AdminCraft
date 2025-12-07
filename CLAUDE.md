@@ -75,10 +75,18 @@ docker compose up -d
 
 ### Clean Architecture
 
-**Domain**: Entities (BaseEntity, BaseI18nEntity), Repositories  
-**Application**: Commands/Queries (NOT Presentation DTOs), Services, Response DTOs  
-**Infrastructure**: Repos impl, Config, Multi-tenancy  
-**Presentation**: Controllers (map Request DTOs → Commands/Queries)
+**Layer Responsibilities:**
+
+- **Domain**: Entities (BaseEntity, BaseI18nEntity), Repository interfaces, Enums
+- **Application**: Services, Commands/Queries, Use Cases (business logic orchestration)
+- **Infrastructure**: Repository implementations, Config, Multi-tenancy (TenantFilter, TenantContext)
+- **Presentation**: Controllers, Request DTOs, Response DTOs
+
+**Dependency Rule:**
+
+- Presentation → Application → Domain ← Infrastructure
+- Domain has NO dependencies on other layers
+- Application layer should NOT import from Infrastructure or Presentation
 
 **i18n Pattern:**
 
@@ -182,7 +190,16 @@ export class SpaPageListComponent extends BaseCrudListComponent<Page> {
 - JPQL parameterized (no string concat except CREATE DATABASE)
 - Never log sensitive data (passwords, tokens, PII)
 - Validate tenant active before routing
-- Rate limiting (5 req/min on provisioning)
+- Rate limiting:
+  - Provisioning: 5 req/min per tenant
+  - CMS Delivery: 100 req/min per tenant
+
+**Public API (CMS Delivery):**
+
+- Endpoints: `/api/cms/components/{uid}`, `/api/cms/components?uids=`
+- Tenant resolution via `X-Tenant-ID` or `X-Tenant-Subdomain` headers
+- TenantFilter handles validation (not whitelisted)
+- No authentication required, rate limited
 
 ### Gotchas
 

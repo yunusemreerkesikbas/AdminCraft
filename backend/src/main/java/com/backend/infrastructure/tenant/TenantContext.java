@@ -2,8 +2,10 @@ package com.backend.infrastructure.tenant;
 
 import org.springframework.stereotype.Component;
 
+import com.backend.domain.port.TenantContextPort;
+
 @Component
-public class TenantContext {
+public class TenantContext implements TenantContextPort {
 
   private static final ThreadLocal<String> currentTenantId = new ThreadLocal<>();
   private static final ThreadLocal<String> currentTenantDbName = new ThreadLocal<>();
@@ -12,6 +14,7 @@ public class TenantContext {
     currentTenantId.set(tenantId);
   }
 
+  @Override
   public String getTenantId() {
     return currentTenantId.get();
   }
@@ -20,6 +23,7 @@ public class TenantContext {
     currentTenantDbName.set(dbName);
   }
 
+  @Override
   public String getTenantDbName() {
     return currentTenantDbName.get();
   }

@@ -15,4 +15,7 @@ public interface JpaComponentEntryRepository extends JpaRepository<ComponentEntr
             com.backend.domain.enums.ComponentStatus status);
 
     boolean existsByUid(String uid);
+
+    List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrderAsc(List<Long> componentIds,
+            com.backend.domain.enums.ComponentStatus status);
 }

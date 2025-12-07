@@ -40,4 +40,6 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
     @Query("SELECT c FROM Component c WHERE c.id = :id")
     Optional<Component> findByIdOptimized(@Param("id") Long id);
+
+    List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 }

@@ -1189,6 +1189,267 @@
 				},
                 
 			]
+		},
+		{
+			"name": "🧩 Component Library (Admin)",
+			"item": [
+				{
+					"name": "Component Types - List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/components/types"
+					}
+				},
+				{
+					"name": "Component Types - Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Footer\",\n  \"category\": \"navigation\"\n}"
+						},
+						"url": "{{baseUrl}}/api/components/types"
+					}
+				},
+				{
+					"name": "Components - List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/components"
+					}
+				},
+				{
+					"name": "Components - Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"componentTypeId\": 1,\n  \"name\": \"Main Footer\",\n  \"styleClasses\": \"dark-theme\",\n  \"isVisible\": true,\n  \"status\": \"PUBLISHED\"\n}"
+						},
+						"url": "{{baseUrl}}/api/components"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.uid) {",
+									"        pm.environment.set('componentUid', responseJson.data.uid);",
+									"        pm.environment.set('componentId', responseJson.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Components - Get by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/components/{{componentId}}"
+					}
+				},
+				{
+					"name": "Components - Get with Translations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/components/{{componentId}}?include=translations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "components", "{{componentId}}"],
+							"query": [{ "key": "include", "value": "translations" }]
+						}
+					}
+				},
+				{
+					"name": "Components - Update i18n (TR)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Ana Footer\",\n  \"subtitle\": \"Telif Hakkı 2024\",\n  \"description\": \"Site alt bilgi alanı\"\n}"
+						},
+						"url": "{{baseUrl}}/api/components/{{componentId}}/i18n/TR"
+					}
+				},
+				{
+					"name": "Components - Update i18n (EN)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "en" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Main Footer\",\n  \"subtitle\": \"Copyright 2024\",\n  \"description\": \"Site footer area\"\n}"
+						},
+						"url": "{{baseUrl}}/api/components/{{componentId}}/i18n/EN"
+					}
+				},
+				{
+					"name": "Component Entries - List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/components/{{componentId}}/entries"
+					}
+				},
+				{
+					"name": "Component Entries - Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{authToken}}" },
+							{ "key": "X-Tenant-ID", "value": "{{currentTenantId}}" },
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sortOrder\": 1,\n  \"isVisible\": true,\n  \"styleClasses\": \"highlight\",\n  \"status\": \"PUBLISHED\"\n}"
+						},
+						"url": "{{baseUrl}}/api/components/{{componentId}}/entries"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data && responseJson.data.id) {",
+									"        pm.environment.set('entryId', responseJson.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🌐 CMS Delivery API (Public)",
+			"item": [
+				{
+					"name": "Get Component by UID (TR)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cms/components/{{componentUid}}?lang=TR",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cms", "components", "{{componentUid}}"],
+							"query": [{ "key": "lang", "value": "TR" }]
+						}
+					}
+				},
+				{
+					"name": "Get Component by UID (EN)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept-Language", "value": "en" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cms/components/{{componentUid}}?lang=EN",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cms", "components", "{{componentUid}}"],
+							"query": [{ "key": "lang", "value": "EN" }]
+						}
+					}
+				},
+				{
+					"name": "Get Component - Default Language",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/cms/components/{{componentUid}}"
+					}
+				},
+				{
+					"name": "Batch Get Components",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/cms/components?uids={{componentUid}},other-uid&lang=TR",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cms", "components"],
+							"query": [
+								{ "key": "uids", "value": "{{componentUid}},other-uid" },
+								{ "key": "lang", "value": "TR" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Component - 404 Test",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept-Language", "value": "tr" }
+						],
+						"url": "{{baseUrl}}/api/cms/components/invalid-uid-does-not-exist"
+					}
+				}
+			]
 		}
 	],
 	"event": [
@@ -1277,6 +1538,21 @@
 		},
 		{
 			"key": "mediaId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "componentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "componentUid",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "entryId",
 			"value": "1",
 			"type": "string"
 		}

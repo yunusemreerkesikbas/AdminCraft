@@ -11,24 +11,24 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.delivery.BatchDeliveryResponse;
+import com.backend.application.dto.delivery.ComponentDeliveryResponse;
+import com.backend.application.dto.delivery.EntryDeliveryResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import com.backend.infrastructure.tenant.TenantContext;
-import com.backend.presentation.dto.response.delivery.BatchDeliveryResponse;
-import com.backend.presentation.dto.response.delivery.ComponentDeliveryResponse;
-import com.backend.presentation.dto.response.delivery.EntryDeliveryResponse;
+import com.backend.domain.repository.TenantRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,8 +50,8 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   private final ComponentI18nRepository componentI18nRepository;
   private final ComponentEntryRepository componentEntryRepository;
   private final ComponentEntryI18nRepository componentEntryI18nRepository;
-  private final TenantContext tenantContext;
-  private final TenantPlatformRepository tenantPlatformRepository;
+  private final TenantContextPort tenantContext;
+  private final TenantRepository tenantRepository;
   private final ObjectMapper objectMapper;
 
   @Override
@@ -79,16 +79,72 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
         ? uids.subList(0, MAX_BATCH_SIZE)
         : uids;
 
+    List<Component> components = componentRepository.findByUidInAndStatus(limitedUids, ComponentStatus.PUBLISHED);
+    Map<String, Component> componentMap = components.stream()
+        .collect(java.util.stream.Collectors.toMap(Component::getUid, c -> c));
+    List<Long> componentIds = components.stream()
+        .map(Component::getId)
+        .toList();
+    Map<Long, ComponentI18n> componentI18nMap = componentI18nRepository
+        .findByComponentIdInAndLanguage(componentIds, resolvedLang)
+        .stream()
+        .collect(java.util.stream.Collectors.toMap(ComponentI18n::getComponentId, i -> i));
+    List<ComponentEntry> allEntries = componentEntryRepository
+        .findByComponentIdInAndStatusOrderBySortOrder(componentIds, ComponentStatus.PUBLISHED);
+    Map<Long, List<ComponentEntry>> entriesByComponentId = allEntries.stream()
+        .collect(java.util.stream.Collectors.groupingBy(ComponentEntry::getComponentId));
+    List<Long> entryIds = allEntries.stream()
+        .map(ComponentEntry::getId)
+        .toList();
+
+    Map<Long, ComponentEntryI18n> entryI18nMap = componentEntryI18nRepository
+        .findByEntryIdInAndLanguage(entryIds, resolvedLang)
+        .stream()
+        .collect(java.util.stream.Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
+
+    java.util.Set<Long> typeIds = components.stream()
+        .map(Component::getComponentTypeId)
+        .filter(id -> id != null)
+        .collect(java.util.stream.Collectors.toSet());
+    Map<Long, ComponentType> typeMap = typeIds.stream()
+        .map(componentTypeRepository::findById)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(java.util.stream.Collectors.toMap(ComponentType::getId, t -> t));
+
     Map<String, ComponentDeliveryResponse> data = new LinkedHashMap<>();
     List<String> notFound = new ArrayList<>();
 
     for (String uid : limitedUids) {
-      Optional<ComponentDeliveryResponse> response = getComponentByUid(uid, resolvedLang);
-      if (response.isPresent()) {
-        data.put(uid, response.get());
-      } else {
+      Component component = componentMap.get(uid);
+      if (component == null) {
         notFound.add(uid);
+        continue;
       }
+
+      ComponentI18n i18n = componentI18nMap.get(component.getId());
+      ComponentType type = component.getComponentTypeId() != null
+          ? typeMap.get(component.getComponentTypeId())
+          : null;
+      List<ComponentEntry> entries = entriesByComponentId.getOrDefault(component.getId(), List.of());
+
+      List<EntryDeliveryResponse> entryResponses = entries.stream()
+          .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId())))
+          .toList();
+
+      ComponentDeliveryResponse response = ComponentDeliveryResponse.builder()
+          .uid(component.getUid())
+          .type(type != null ? type.getName() : null)
+          .category(type != null ? type.getCategory() : null)
+          .title(i18n != null ? i18n.getTitle() : null)
+          .subtitle(i18n != null ? i18n.getSubtitle() : null)
+          .description(i18n != null ? i18n.getDescription() : null)
+          .isVisible(component.getIsVisible())
+          .styleClasses(component.getStyleClasses())
+          .entries(entryResponses)
+          .build();
+
+      data.put(uid, response);
     }
 
     return BatchDeliveryResponse.builder()
@@ -101,6 +157,27 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
         .build();
   }
 
+  /**
+   * Optimized entry response builder using pre-fetched i18n data.
+   */
+  private EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n) {
+    Map<String, Object> customFields = new HashMap<>();
+    if (i18n != null && i18n.getCustomData() != null) {
+      customFields.putAll(parseCustomData(i18n.getCustomData()));
+    }
+    customFields.keySet().removeAll(RESERVED_FIELDS);
+
+    return EntryDeliveryResponse.builder()
+        .uid(entry.getUid())
+        .order(entry.getSortOrder())
+        .title(i18n != null ? i18n.getTitle() : null)
+        .description(i18n != null ? i18n.getDescription() : null)
+        .isVisible(entry.getIsVisible())
+        .styleClasses(entry.getStyleClasses())
+        .customFields(customFields.isEmpty() ? null : customFields)
+        .build();
+  }
+
   @Override
   public Language getDefaultLanguage() {
     String tenantIdStr = tenantContext.getTenantId();
@@ -108,12 +185,15 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
       return Language.TR;
     }
 
-    Long tenantId = Long.parseLong(tenantIdStr);
-    return tenantPlatformRepository.findById(tenantId)
-        .map(Tenant::getDefaultLanguage)
-        .map(Language::fromCode)
-        .flatMap(opt -> opt)
-        .orElse(Language.TR);
+    try {
+      Long tenantId = Long.parseLong(tenantIdStr);
+      return tenantRepository.findById(tenantId)
+          .map(Tenant::getDefaultLanguage)
+          .orElse(Language.TR);
+    } catch (NumberFormatException e) {
+      log.warn("Invalid tenant ID format: {}", tenantIdStr);
+      return Language.TR;
+    }
   }
 
   private ComponentDeliveryResponse buildDeliveryResponse(Component component, Language lang) {

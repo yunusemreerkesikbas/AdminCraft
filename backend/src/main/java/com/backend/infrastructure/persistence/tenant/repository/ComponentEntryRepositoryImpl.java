@@ -51,4 +51,10 @@ public class ComponentEntryRepositoryImpl implements ComponentEntryRepository {
             com.backend.domain.enums.ComponentStatus status) {
         return jpaRepository.findByComponentIdAndStatusOrderBySortOrderAsc(componentId, status);
     }
+
+    @Override
+    public List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrder(List<Long> componentIds,
+            com.backend.domain.enums.ComponentStatus status) {
+        return jpaRepository.findByComponentIdInAndStatusOrderBySortOrderAsc(componentIds, status);
+    }
 }

@@ -20,4 +20,7 @@ public interface ComponentEntryRepository {
     void delete(ComponentEntry entry);
 
     boolean existsByUid(String uid);
+
+    List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrder(List<Long> componentIds,
+            com.backend.domain.enums.ComponentStatus status);
 }

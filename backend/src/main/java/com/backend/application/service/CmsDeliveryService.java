@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.response.delivery.BatchDeliveryResponse;
-import com.backend.presentation.dto.response.delivery.ComponentDeliveryResponse;
+import com.backend.application.dto.delivery.BatchDeliveryResponse;
+import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 
 public interface CmsDeliveryService {
 
