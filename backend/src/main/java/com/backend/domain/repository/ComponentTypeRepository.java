@@ -16,6 +16,8 @@ public interface ComponentTypeRepository {
 
     List<ComponentType> findByCategory(String category);
 
+    List<ComponentType> findByIdIn(List<Long> ids);
+
     ComponentType save(ComponentType entity);
 
     void delete(ComponentType entity);

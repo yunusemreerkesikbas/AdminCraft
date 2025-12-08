@@ -1,15 +1,16 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.PageI18n;
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.PageStatus;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.PageI18n;
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.PageStatus;
 
 @Repository
 public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
@@ -48,4 +49,6 @@ public interface PageI18nRepository extends JpaRepository<PageI18n, Long> {
         List<PageI18n> findReadyForPublication();
 
         long countByLanguageAndStatus(Language language, PageStatus status);
+
+        List<PageI18n> findByPageIdInAndLanguage(List<Long> pageIds, Language language);
 }

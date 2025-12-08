@@ -14,5 +14,7 @@ interface ComponentTypeJpaRepository extends JpaRepository<ComponentType, Long> 
 
     List<ComponentType> findByCategory(String category);
 
+    List<ComponentType> findByIdIn(List<Long> ids);
+
     boolean existsByUid(String uid);
 }

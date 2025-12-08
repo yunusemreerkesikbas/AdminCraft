@@ -1,12 +1,13 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.Page;
-import com.backend.domain.enums.PageStatus;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.Page;
+import com.backend.domain.enums.PageStatus;
 
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long> {
@@ -22,4 +23,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     List<Page> findAllByOrderBySortOrderAsc();
 
     boolean existsByUid(String uid);
+
+    List<Page> findByUidIn(List<String> uids);
 }

@@ -43,6 +43,12 @@ public class Page extends BaseEntity {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
+    @Column(name = "robot_tag", length = 50)
+    private String robotTag = "INDEX_FOLLOW";
+
+    @Column(name = "template_uid", length = 50)
+    private String templateUid;
+
     public void validateEditAuthorization(Long userId, Long userTenantId) {
     }
 }
