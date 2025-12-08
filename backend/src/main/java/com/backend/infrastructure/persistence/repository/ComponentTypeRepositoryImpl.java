@@ -42,6 +42,11 @@ public class ComponentTypeRepositoryImpl implements ComponentTypeRepository {
     }
 
     @Override
+    public List<ComponentType> findByIdIn(List<Long> ids) {
+        return jpaRepository.findByIdIn(ids);
+    }
+
+    @Override
     public ComponentType save(ComponentType entity) {
         return jpaRepository.save(entity);
     }

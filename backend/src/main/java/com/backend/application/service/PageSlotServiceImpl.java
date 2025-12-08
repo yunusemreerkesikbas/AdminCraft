@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
+import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
+import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.PageSlot;
@@ -18,7 +21,6 @@ import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.SlotComponentRepository;
-import com.backend.presentation.dto.request.CreatePageSlotRequest;
 import com.backend.presentation.dto.response.PageSlotResponse;
 import com.backend.presentation.dto.response.SlotComponentResponse;
 
@@ -38,29 +40,36 @@ public class PageSlotServiceImpl implements PageSlotService {
   private final ComponentTypeRepository componentTypeRepository;
 
   @Override
-  public PageSlotResponse createSlot(Long pageId, CreatePageSlotRequest request) {
-    if (pageId != null) {
-      pageRepository.findById(pageId)
-          .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageId));
+  public PageSlotResponse createSlot(Long pageId, CreatePageSlotCommand command) {
+    boolean isShared = Boolean.TRUE.equals(command.isShared());
+    Long effectivePageId = isShared ? null : pageId;
+
+    if (effectivePageId != null) {
+      pageRepository.findById(effectivePageId)
+          .orElseThrow(() -> new IllegalArgumentException("Page not found: " + effectivePageId));
     }
-    if (pageSlotRepository.existsByPageIdAndSlotName(pageId, request.getSlotName())) {
+
+    if (isShared) {
+      pageSlotRepository.findSharedSlotBySlotName(command.slotName())
+          .ifPresent(existing -> {
+            throw new IllegalArgumentException(
+                "Shared slot with name '" + command.slotName() + "' already exists");
+          });
+    } else if (pageSlotRepository.existsByPageIdAndSlotName(effectivePageId, command.slotName())) {
       throw new IllegalArgumentException(
-          "Slot with name '" + request.getSlotName() + "' already exists for this page");
+          "Slot with name '" + command.slotName() + "' already exists for this page");
     }
 
     PageSlot slot = new PageSlot();
-    slot.setPageId(pageId);
-    slot.setSlotName(request.getSlotName());
-    slot.setPosition(request.getPosition());
-    slot.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
+    slot.setPageId(effectivePageId);
+    slot.setSlotName(command.slotName());
+    slot.setPosition(command.position());
+    slot.setSortOrder(command.sortOrder() != null ? command.sortOrder() : 0);
     slot.setIsActive(true);
-    slot.setIsShared(request.getIsShared() != null ? request.getIsShared() : false);
-    if (Boolean.TRUE.equals(slot.getIsShared())) {
-      slot.setPageId(null);
-    }
+    slot.setIsShared(isShared);
 
     PageSlot savedSlot = pageSlotRepository.save(slot);
-    log.info("Created slot '{}' for page {}", request.getSlotName(), pageId);
+    log.info("Created slot '{}' for page {}", command.slotName(), effectivePageId);
 
     return mapToResponse(savedSlot, List.of());
   }
@@ -97,11 +106,11 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   @Override
-  public void addComponentToSlot(Long pageId, String slotName, Long componentId) {
+  public void addComponentToSlot(Long pageId, String slotName, AddComponentToSlotCommand command) {
     PageSlot slot = findSlot(pageId, slotName);
-    componentRepository.findById(componentId)
-        .orElseThrow(() -> new IllegalArgumentException("Component not found: " + componentId));
-    if (slotComponentRepository.existsBySlotIdAndComponentId(slot.getId(), componentId)) {
+    componentRepository.findById(command.componentId())
+        .orElseThrow(() -> new IllegalArgumentException("Component not found: " + command.componentId()));
+    if (slotComponentRepository.existsBySlotIdAndComponentId(slot.getId(), command.componentId())) {
       throw new IllegalArgumentException("Component already exists in this slot");
     }
     int nextSortOrder = slotComponentRepository.findMaxSortOrderBySlotId(slot.getId())
@@ -109,12 +118,12 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     SlotComponent slotComponent = new SlotComponent();
     slotComponent.setSlotId(slot.getId());
-    slotComponent.setComponentId(componentId);
+    slotComponent.setComponentId(command.componentId());
     slotComponent.setSortOrder(nextSortOrder);
     slotComponent.setIsVisible(true);
 
     slotComponentRepository.save(slotComponent);
-    log.info("Added component {} to slot '{}' in page {}", componentId, slotName, pageId);
+    log.info("Added component {} to slot '{}' in page {}", command.componentId(), slotName, pageId);
   }
 
   @Override
@@ -131,7 +140,7 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   @Override
-  public void reorderComponents(Long pageId, String slotName, List<Long> componentIds) {
+  public void reorderComponents(Long pageId, String slotName, ReorderSlotComponentsCommand command) {
     PageSlot slot = findSlot(pageId, slotName);
 
     List<SlotComponent> slotComponents = slotComponentRepository
@@ -140,8 +149,8 @@ public class PageSlotServiceImpl implements PageSlotService {
     Map<Long, SlotComponent> componentMap = slotComponents.stream()
         .collect(Collectors.toMap(SlotComponent::getComponentId, sc -> sc));
     List<SlotComponent> updatedComponents = new ArrayList<>();
-    for (int i = 0; i < componentIds.size(); i++) {
-      Long componentId = componentIds.get(i);
+    for (int i = 0; i < command.componentIds().size(); i++) {
+      Long componentId = command.componentIds().get(i);
       SlotComponent sc = componentMap.get(componentId);
       if (sc != null) {
         sc.setSortOrder(i);
@@ -151,7 +160,7 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     slotComponentRepository.saveAll(updatedComponents);
     log.info("Reordered {} components in slot '{}' for page {}",
-        componentIds.size(), slotName, pageId);
+        command.componentIds().size(), slotName, pageId);
   }
 
   private PageSlot findSlot(Long pageId, String slotName) {
@@ -192,10 +201,7 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     Map<Long, ComponentType> typeMap = typeIds.isEmpty()
         ? Map.of()
-        : typeIds.stream()
-            .map(componentTypeRepository::findById)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
+        : componentTypeRepository.findByIdIn(typeIds).stream()
             .collect(Collectors.toMap(ComponentType::getId, t -> t));
     return slots.stream()
         .map(slot -> {

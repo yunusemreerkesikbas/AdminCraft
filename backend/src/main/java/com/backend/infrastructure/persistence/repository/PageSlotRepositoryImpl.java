@@ -42,6 +42,11 @@ public class PageSlotRepositoryImpl implements PageSlotRepository {
   }
 
   @Override
+  public Optional<PageSlot> findSharedSlotBySlotName(String slotName) {
+    return jpaRepository.findSharedSlotBySlotName(slotName);
+  }
+
+  @Override
   public PageSlot save(PageSlot pageSlot) {
     return jpaRepository.save(pageSlot);
   }
@@ -54,9 +59,5 @@ public class PageSlotRepositoryImpl implements PageSlotRepository {
   @Override
   public boolean existsByPageIdAndSlotName(Long pageId, String slotName) {
     return jpaRepository.existsByPageIdAndSlotName(pageId, slotName);
-  }
-
-  public List<PageSlot> findActiveSlotsByPageIdIncludingShared(Long pageId) {
-    return jpaRepository.findActiveSlotsByPageIdIncludingShared(pageId);
   }
 }

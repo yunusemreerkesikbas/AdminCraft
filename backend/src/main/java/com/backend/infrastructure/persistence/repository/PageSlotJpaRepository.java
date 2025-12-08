@@ -17,11 +17,11 @@ interface PageSlotJpaRepository extends JpaRepository<PageSlot, Long> {
 
   Optional<PageSlot> findByPageIdAndSlotName(Long pageId, String slotName);
 
+  @Query("SELECT ps FROM PageSlot ps WHERE ps.pageId IS NULL AND ps.slotName = :slotName")
+  Optional<PageSlot> findSharedSlotBySlotName(@Param("slotName") String slotName);
+
   @Query("SELECT ps FROM PageSlot ps WHERE ps.pageId IS NULL AND ps.isShared = true ORDER BY ps.sortOrder")
   List<PageSlot> findSharedSlots();
 
   boolean existsByPageIdAndSlotName(Long pageId, String slotName);
-
-  @Query("SELECT ps FROM PageSlot ps WHERE (ps.pageId = :pageId OR (ps.pageId IS NULL AND ps.isShared = true)) AND ps.isActive = true ORDER BY ps.sortOrder")
-  List<PageSlot> findActiveSlotsByPageIdIncludingShared(@Param("pageId") Long pageId);
 }

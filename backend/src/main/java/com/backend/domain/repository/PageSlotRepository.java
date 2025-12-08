@@ -17,6 +17,8 @@ public interface PageSlotRepository {
 
   Optional<PageSlot> findByPageIdAndSlotName(Long pageId, String slotName);
 
+  Optional<PageSlot> findSharedSlotBySlotName(String slotName);
+
   PageSlot save(PageSlot pageSlot);
 
   void delete(PageSlot pageSlot);

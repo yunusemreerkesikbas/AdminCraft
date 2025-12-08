@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
+import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
+import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
 import com.backend.application.service.PageSlotService;
 import com.backend.presentation.dto.request.AddComponentToSlotRequest;
 import com.backend.presentation.dto.request.CreatePageSlotRequest;
@@ -27,12 +30,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/pages")
 @RequiredArgsConstructor
-@Slf4j
 @Validated
 @PreAuthorize("hasRole('TENANT_ADMIN')")
 public class PageSlotController {
@@ -42,89 +43,45 @@ public class PageSlotController {
   @GetMapping("/{pageId}/slots")
   public ResponseEntity<ApiResponse<List<PageSlotResponse>>> getSlots(
       @PathVariable @NotNull @Min(1) Long pageId) {
-    try {
-      List<PageSlotResponse> slots = pageSlotService.getSlotsByPageId(pageId);
-      return ResponseEntity.ok(ApiResponse.success(slots));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Error getting slots for page {}: {}", pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error getting slots for page {}: {}", pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to get slots"));
-    }
+    List<PageSlotResponse> slots = pageSlotService.getSlotsByPageId(pageId);
+    return ResponseEntity.ok(ApiResponse.success(slots));
   }
 
   @PostMapping("/{pageId}/slots")
   public ResponseEntity<ApiResponse<PageSlotResponse>> createSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
       @Valid @RequestBody CreatePageSlotRequest request) {
-    try {
-      PageSlotResponse slot = pageSlotService.createSlot(pageId, request);
-      log.info("Created slot '{}' for page {}", request.getSlotName(), pageId);
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(ApiResponse.success("Slot created successfully", slot));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Validation error creating slot for page {}: {}", pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error creating slot for page {}: {}", pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to create slot"));
-    }
+    CreatePageSlotCommand command = mapToCommand(request);
+    PageSlotResponse slot = pageSlotService.createSlot(pageId, command);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.success("Slot created successfully", slot));
   }
 
   @PostMapping("/shared/slots")
   public ResponseEntity<ApiResponse<PageSlotResponse>> createSharedSlot(
       @Valid @RequestBody CreatePageSlotRequest request) {
-    try {
-      request.setIsShared(true);
-      PageSlotResponse slot = pageSlotService.createSlot(null, request);
-      log.info("Created shared slot '{}'", request.getSlotName());
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(ApiResponse.success("Shared slot created successfully", slot));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Validation error creating shared slot: {}", ex.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error creating shared slot: {}", ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to create shared slot"));
-    }
+    CreatePageSlotCommand command = new CreatePageSlotCommand(
+        request.getSlotName(),
+        request.getPosition(),
+        request.getSortOrder(),
+        true);
+    PageSlotResponse slot = pageSlotService.createSlot(null, command);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.success("Shared slot created successfully", slot));
   }
 
   @GetMapping("/shared/slots")
   public ResponseEntity<ApiResponse<List<PageSlotResponse>>> getSharedSlots() {
-    try {
-      List<PageSlotResponse> slots = pageSlotService.getSharedSlots();
-      return ResponseEntity.ok(ApiResponse.success(slots));
-    } catch (Exception ex) {
-      log.error("Error getting shared slots: {}", ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to get shared slots"));
-    }
+    List<PageSlotResponse> slots = pageSlotService.getSharedSlots();
+    return ResponseEntity.ok(ApiResponse.success(slots));
   }
 
   @DeleteMapping("/{pageId}/slots/{slotName}")
   public ResponseEntity<ApiResponse<Void>> deleteSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotBlank String slotName) {
-    try {
-      pageSlotService.deleteSlot(pageId, slotName);
-      log.info("Deleted slot '{}' from page {}", slotName, pageId);
-      return ResponseEntity.ok(ApiResponse.success("Slot deleted successfully", null));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Error deleting slot '{}' from page {}: {}", slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error deleting slot '{}' from page {}: {}", slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to delete slot"));
-    }
+    pageSlotService.deleteSlot(pageId, slotName);
+    return ResponseEntity.ok(ApiResponse.success("Slot deleted successfully", null));
   }
 
   @PostMapping("/{pageId}/slots/{slotName}/components")
@@ -132,22 +89,9 @@ public class PageSlotController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotBlank String slotName,
       @Valid @RequestBody AddComponentToSlotRequest request) {
-    try {
-      pageSlotService.addComponentToSlot(pageId, slotName, request.getComponentId());
-      log.info("Added component {} to slot '{}' in page {}",
-          request.getComponentId(), slotName, pageId);
-      return ResponseEntity.ok(ApiResponse.success("Component added to slot", null));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Error adding component to slot '{}' in page {}: {}",
-          slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error adding component to slot '{}' in page {}: {}",
-          slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to add component to slot"));
-    }
+    AddComponentToSlotCommand command = new AddComponentToSlotCommand(request.getComponentId());
+    pageSlotService.addComponentToSlot(pageId, slotName, command);
+    return ResponseEntity.ok(ApiResponse.success("Component added to slot", null));
   }
 
   @DeleteMapping("/{pageId}/slots/{slotName}/components/{componentId}")
@@ -155,22 +99,8 @@ public class PageSlotController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotBlank String slotName,
       @PathVariable @NotNull @Min(1) Long componentId) {
-    try {
-      pageSlotService.removeComponentFromSlot(pageId, slotName, componentId);
-      log.info("Removed component {} from slot '{}' in page {}",
-          componentId, slotName, pageId);
-      return ResponseEntity.ok(ApiResponse.success("Component removed from slot", null));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Error removing component {} from slot '{}' in page {}: {}",
-          componentId, slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error removing component {} from slot '{}' in page {}: {}",
-          componentId, slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to remove component from slot"));
-    }
+    pageSlotService.removeComponentFromSlot(pageId, slotName, componentId);
+    return ResponseEntity.ok(ApiResponse.success("Component removed from slot", null));
   }
 
   @PutMapping("/{pageId}/slots/{slotName}/reorder")
@@ -178,20 +108,16 @@ public class PageSlotController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotBlank String slotName,
       @Valid @RequestBody ReorderSlotComponentsRequest request) {
-    try {
-      pageSlotService.reorderComponents(pageId, slotName, request.getComponentIds());
-      log.info("Reordered components in slot '{}' for page {}", slotName, pageId);
-      return ResponseEntity.ok(ApiResponse.success("Components reordered", null));
-    } catch (IllegalArgumentException ex) {
-      log.warn("Error reordering components in slot '{}' for page {}: {}",
-          slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(ex.getMessage()));
-    } catch (Exception ex) {
-      log.error("Error reordering components in slot '{}' for page {}: {}",
-          slotName, pageId, ex.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error("Failed to reorder components"));
-    }
+    ReorderSlotComponentsCommand command = new ReorderSlotComponentsCommand(request.getComponentIds());
+    pageSlotService.reorderComponents(pageId, slotName, command);
+    return ResponseEntity.ok(ApiResponse.success("Components reordered", null));
+  }
+
+  private CreatePageSlotCommand mapToCommand(CreatePageSlotRequest request) {
+    return new CreatePageSlotCommand(
+        request.getSlotName(),
+        request.getPosition(),
+        request.getSortOrder(),
+        request.getIsShared());
   }
 }

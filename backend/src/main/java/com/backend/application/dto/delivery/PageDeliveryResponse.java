@@ -1,5 +1,6 @@
 package com.backend.application.dto.delivery;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.Builder;
@@ -16,6 +17,5 @@ public record PageDeliveryResponse(
     String urlPath,
     String featuredImage,
     String styleClasses,
-
-    Map<String, java.util.List<ComponentDeliveryResponse>> slots) {
+    Map<String, List<ComponentDeliveryResponse>> slots) {
 }
