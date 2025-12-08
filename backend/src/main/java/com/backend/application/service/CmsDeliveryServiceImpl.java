@@ -12,13 +12,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
+import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
+import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.entity.Page;
+import com.backend.domain.entity.PageI18n;
+import com.backend.domain.entity.PageSlot;
+import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
@@ -28,6 +34,10 @@ import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
+import com.backend.domain.repository.PageI18nRepository;
+import com.backend.domain.repository.PageRepository;
+import com.backend.domain.repository.PageSlotRepository;
+import com.backend.domain.repository.SlotComponentRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +63,10 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   private final TenantContextPort tenantContext;
   private final TenantRepository tenantRepository;
   private final ObjectMapper objectMapper;
+  private final PageRepository pageRepository;
+  private final PageI18nRepository pageI18nRepository;
+  private final PageSlotRepository pageSlotRepository;
+  private final SlotComponentRepository slotComponentRepository;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -157,9 +171,6 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
         .build();
   }
 
-  /**
-   * Optimized entry response builder using pre-fetched i18n data.
-   */
   private EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n) {
     Map<String, Object> customFields = new HashMap<>();
     if (i18n != null && i18n.getCustomData() != null) {
@@ -259,5 +270,236 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
       log.warn("Failed to parse custom_data JSON: {}", e.getMessage());
       return new HashMap<>();
     }
+  }
+
+  @Override
+  public Optional<PageDeliveryResponse> getPageByUid(String uid, Language lang) {
+    Language resolvedLang = lang != null ? lang : getDefaultLanguage();
+
+    Optional<Page> pageOpt = pageRepository.findByUid(uid);
+    if (pageOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Page page = pageOpt.get();
+    return Optional.of(buildPageDeliveryResponse(page, resolvedLang));
+  }
+
+  @Override
+  public BatchPageDeliveryResponse getPagesByUids(List<String> uids, Language lang) {
+    Language resolvedLang = lang != null ? lang : getDefaultLanguage();
+
+    List<String> limitedUids = uids.size() > MAX_BATCH_SIZE
+        ? uids.subList(0, MAX_BATCH_SIZE)
+        : uids;
+
+    List<Page> pages = pageRepository.findByUidIn(limitedUids);
+    Map<String, Page> pageMap = pages.stream()
+        .collect(java.util.stream.Collectors.toMap(Page::getUid, p -> p));
+
+    List<Long> pageIds = pages.stream().map(Page::getId).toList();
+
+    Map<Long, PageI18n> pageI18nMap = pageI18nRepository
+        .findByPageIdInAndLanguage(pageIds, resolvedLang)
+        .stream()
+        .collect(java.util.stream.Collectors.toMap(PageI18n::getPageId, i -> i));
+
+    List<PageSlot> allSlots = new ArrayList<>();
+    for (Long pageId : pageIds) {
+      allSlots.addAll(pageSlotRepository.findByPageId(pageId));
+    }
+    List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
+    allSlots.addAll(sharedSlots);
+
+    List<Long> slotIds = allSlots.stream().map(PageSlot::getId).distinct().toList();
+
+    List<SlotComponent> allSlotComponents = slotComponentRepository.findBySlotIdIn(slotIds);
+    Map<Long, List<SlotComponent>> componentsBySlotId = allSlotComponents.stream()
+        .collect(java.util.stream.Collectors.groupingBy(SlotComponent::getSlotId));
+
+    List<Long> allComponentIds = allSlotComponents.stream()
+        .map(SlotComponent::getComponentId)
+        .distinct()
+        .toList();
+
+    Map<Long, Component> componentMap = allComponentIds.isEmpty()
+        ? Map.of()
+        : componentRepository.findByIdIn(allComponentIds).stream()
+            .filter(c -> c.getStatus() == ComponentStatus.PUBLISHED)
+            .collect(java.util.stream.Collectors.toMap(Component::getId, c -> c));
+
+    List<Long> publishedComponentIds = componentMap.keySet().stream().toList();
+
+    Map<Long, ComponentI18n> componentI18nMap = publishedComponentIds.isEmpty()
+        ? Map.of()
+        : componentI18nRepository.findByComponentIdInAndLanguage(publishedComponentIds, resolvedLang)
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(ComponentI18n::getComponentId, i -> i));
+
+    java.util.Set<Long> typeIds = componentMap.values().stream()
+        .map(Component::getComponentTypeId)
+        .filter(id -> id != null)
+        .collect(java.util.stream.Collectors.toSet());
+
+    Map<Long, ComponentType> typeMap = typeIds.stream()
+        .map(componentTypeRepository::findById)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(java.util.stream.Collectors.toMap(ComponentType::getId, t -> t));
+
+    Map<Long, List<ComponentEntry>> entriesByComponentId = publishedComponentIds.isEmpty()
+        ? Map.of()
+        : componentEntryRepository
+            .findByComponentIdInAndStatusOrderBySortOrder(publishedComponentIds, ComponentStatus.PUBLISHED)
+            .stream()
+            .collect(java.util.stream.Collectors.groupingBy(ComponentEntry::getComponentId));
+
+    List<Long> entryIds = entriesByComponentId.values().stream()
+        .flatMap(List::stream)
+        .map(ComponentEntry::getId)
+        .toList();
+
+    Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
+        ? Map.of()
+        : componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, resolvedLang)
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
+
+    Map<Long, List<PageSlot>> slotsByPageId = allSlots.stream()
+        .filter(s -> s.getPageId() != null)
+        .collect(java.util.stream.Collectors.groupingBy(PageSlot::getPageId));
+
+    Map<String, PageDeliveryResponse> data = new LinkedHashMap<>();
+    List<String> notFound = new ArrayList<>();
+
+    for (String pageUid : limitedUids) {
+      Page page = pageMap.get(pageUid);
+      if (page == null) {
+        notFound.add(pageUid);
+        continue;
+      }
+
+      PageI18n i18n = pageI18nMap.get(page.getId());
+
+      List<PageSlot> pageSlots = new ArrayList<>(sharedSlots);
+      pageSlots.addAll(slotsByPageId.getOrDefault(page.getId(), List.of()));
+
+      Map<String, List<ComponentDeliveryResponse>> slotsMap = new LinkedHashMap<>();
+      for (PageSlot slot : pageSlots) {
+        if (!Boolean.TRUE.equals(slot.getIsActive())) {
+          continue;
+        }
+
+        List<SlotComponent> slotComps = componentsBySlotId.getOrDefault(slot.getId(), List.of());
+        List<ComponentDeliveryResponse> compResponses = slotComps.stream()
+            .sorted((a, b) -> Integer.compare(
+                a.getSortOrder() != null ? a.getSortOrder() : 0,
+                b.getSortOrder() != null ? b.getSortOrder() : 0))
+            .filter(sc -> componentMap.containsKey(sc.getComponentId()))
+            .map(sc -> {
+              Component comp = componentMap.get(sc.getComponentId());
+              ComponentI18n compI18n = componentI18nMap.get(comp.getId());
+              ComponentType type = comp.getComponentTypeId() != null
+                  ? typeMap.get(comp.getComponentTypeId())
+                  : null;
+
+              List<ComponentEntry> entries = entriesByComponentId.getOrDefault(comp.getId(), List.of());
+              List<EntryDeliveryResponse> entryResponses = entries.stream()
+                  .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId())))
+                  .toList();
+
+              return ComponentDeliveryResponse.builder()
+                  .uid(comp.getUid())
+                  .type(type != null ? type.getName() : null)
+                  .category(type != null ? type.getCategory() : null)
+                  .title(compI18n != null ? compI18n.getTitle() : null)
+                  .subtitle(compI18n != null ? compI18n.getSubtitle() : null)
+                  .description(compI18n != null ? compI18n.getDescription() : null)
+                  .isVisible(comp.getIsVisible())
+                  .styleClasses(comp.getStyleClasses())
+                  .entries(entryResponses)
+                  .build();
+            })
+            .toList();
+
+        if (!compResponses.isEmpty()) {
+          slotsMap.put(slot.getSlotName(), compResponses);
+        }
+      }
+
+      PageDeliveryResponse response = PageDeliveryResponse.builder()
+          .uid(page.getUid())
+          .title(i18n != null ? i18n.getTitle() : null)
+          .subtitle(i18n != null ? i18n.getSubtitle() : null)
+          .description(i18n != null ? i18n.getDescription() : null)
+          .metaTitle(i18n != null ? i18n.getMetaTitle() : null)
+          .metaDescription(i18n != null ? i18n.getMetaDescription() : null)
+          .robotTag(page.getRobotTag())
+          .urlPath(i18n != null ? i18n.getUrlPath() : null)
+          .featuredImage(page.getFeaturedImage())
+          .styleClasses(page.getStyleClasses())
+          .slots(slotsMap)
+          .build();
+
+      data.put(pageUid, response);
+    }
+
+    return BatchPageDeliveryResponse.builder()
+        .data(data)
+        .meta(BatchPageDeliveryResponse.BatchMeta.builder()
+            .requested(limitedUids.size())
+            .found(data.size())
+            .notFound(notFound)
+            .build())
+        .build();
+  }
+
+  private PageDeliveryResponse buildPageDeliveryResponse(Page page, Language lang) {
+    Optional<PageI18n> i18nOpt = pageI18nRepository.findByPageIdAndLanguage(page.getId(), lang);
+
+    List<PageSlot> pageSlots = pageSlotRepository.findByPageId(page.getId());
+    List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
+
+    List<PageSlot> allSlots = new ArrayList<>(sharedSlots);
+    allSlots.addAll(pageSlots);
+
+    Map<String, List<ComponentDeliveryResponse>> slotsMap = new LinkedHashMap<>();
+
+    for (PageSlot slot : allSlots) {
+      if (!Boolean.TRUE.equals(slot.getIsActive())) {
+        continue;
+      }
+
+      List<SlotComponent> slotComponents = slotComponentRepository.findBySlotIdOrderBySortOrder(slot.getId());
+      List<ComponentDeliveryResponse> componentResponses = new ArrayList<>();
+
+      for (SlotComponent sc : slotComponents) {
+        Optional<Component> compOpt = componentRepository.findById(sc.getComponentId());
+        if (compOpt.isEmpty() || compOpt.get().getStatus() != ComponentStatus.PUBLISHED) {
+          continue;
+        }
+        componentResponses.add(buildDeliveryResponse(compOpt.get(), lang));
+      }
+
+      if (!componentResponses.isEmpty()) {
+        slotsMap.put(slot.getSlotName(), componentResponses);
+      }
+    }
+
+    PageI18n i18n = i18nOpt.orElse(null);
+
+    return PageDeliveryResponse.builder()
+        .uid(page.getUid())
+        .title(i18n != null ? i18n.getTitle() : null)
+        .subtitle(i18n != null ? i18n.getSubtitle() : null)
+        .description(i18n != null ? i18n.getDescription() : null)
+        .metaTitle(i18n != null ? i18n.getMetaTitle() : null)
+        .metaDescription(i18n != null ? i18n.getMetaDescription() : null)
+        .robotTag(page.getRobotTag())
+        .urlPath(i18n != null ? i18n.getUrlPath() : null)
+        .featuredImage(page.getFeaturedImage())
+        .styleClasses(page.getStyleClasses())
+        .slots(slotsMap)
+        .build();
   }
 }

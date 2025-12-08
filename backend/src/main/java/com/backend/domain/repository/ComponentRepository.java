@@ -1,9 +1,10 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.Component;
-import com.backend.domain.enums.ComponentStatus;
 import java.util.List;
 import java.util.Optional;
+
+import com.backend.domain.entity.Component;
+import com.backend.domain.enums.ComponentStatus;
 
 public interface ComponentRepository {
     Optional<Component> findById(Long id);
@@ -29,4 +30,6 @@ public interface ComponentRepository {
     List<Object[]> findAllWithTypeNamesAndEntryCount();
 
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
+
+    List<Component> findByIdIn(List<Long> ids);
 }

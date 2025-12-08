@@ -42,4 +42,6 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     Optional<Component> findByIdOptimized(@Param("id") Long id);
 
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
+
+    List<Component> findByIdIn(List<Long> ids);
 }

@@ -1,12 +1,15 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.repository.ComponentRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -73,5 +76,9 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status) {
         return jpaRepository.findByUidInAndStatus(uids, status);
     }
-}
 
+    @Override
+    public List<Component> findByIdIn(List<Long> ids) {
+        return jpaRepository.findByIdIn(ids);
+    }
+}

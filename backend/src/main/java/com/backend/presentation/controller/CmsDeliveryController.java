@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.application.dto.delivery.BatchDeliveryResponse;
+import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
+import com.backend.application.dto.delivery.ComponentDeliveryResponse;
+import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.service.CmsDeliveryService;
 import com.backend.domain.enums.Language;
 import com.backend.infrastructure.tenant.TenantContext;
-import com.backend.application.dto.delivery.BatchDeliveryResponse;
-import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.shared.common.ApiResponse;
 import com.google.common.util.concurrent.RateLimiter;
 
@@ -93,6 +95,58 @@ public class CmsDeliveryController {
 
     return ResponseEntity.ok(
         ApiResponse.success(messageSource.getMessage("cms.components.found", null, locale), response));
+  }
+
+  @GetMapping("/pages/{uid}")
+  public ResponseEntity<ApiResponse<PageDeliveryResponse>> getPageByUid(
+      @PathVariable String uid,
+      @RequestParam(required = false) Language lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
+
+    Locale locale = Locale.forLanguageTag(acceptLanguage);
+    ResponseEntity<ApiResponse<PageDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
+    if (rateLimitResponse != null) {
+      return rateLimitResponse;
+    }
+
+    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
+    log.debug("CMS Delivery: Fetching page uid={}, lang={}", uid, resolvedLang);
+
+    return cmsDeliveryService.getPageByUid(uid, resolvedLang)
+        .map(response -> ResponseEntity.ok(
+            ApiResponse.success("Page found", response)))
+        .orElseGet(() -> ResponseEntity.ok(
+            ApiResponse.error("Page not found")));
+  }
+
+  @GetMapping("/pages")
+  public ResponseEntity<ApiResponse<BatchPageDeliveryResponse>> getPagesByUids(
+      @RequestParam List<String> uids,
+      @RequestParam(required = false) Language lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
+
+    Locale locale = Locale.forLanguageTag(acceptLanguage);
+    ResponseEntity<ApiResponse<BatchPageDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
+    if (rateLimitResponse != null) {
+      return rateLimitResponse;
+    }
+
+    if (uids == null || uids.isEmpty()) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.error("UIDs parameter is required"));
+    }
+
+    if (uids.size() > MAX_BATCH_SIZE) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.error("Maximum " + MAX_BATCH_SIZE + " UIDs allowed"));
+    }
+
+    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
+    log.debug("CMS Delivery: Fetching {} pages, lang={}", uids.size(), resolvedLang);
+
+    BatchPageDeliveryResponse response = cmsDeliveryService.getPagesByUids(uids, resolvedLang);
+
+    return ResponseEntity.ok(ApiResponse.success("Pages found", response));
   }
 
   private <T> ResponseEntity<ApiResponse<T>> checkRateLimit(Locale locale) {
