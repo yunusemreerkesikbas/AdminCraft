@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
+import com.backend.application.dto.slot.PageSlotDto;
+import com.backend.application.dto.slot.SlotComponentDto;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.PageSlot;
@@ -21,8 +23,6 @@ import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.SlotComponentRepository;
-import com.backend.presentation.dto.response.PageSlotResponse;
-import com.backend.presentation.dto.response.SlotComponentResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class PageSlotServiceImpl implements PageSlotService {
   private final ComponentTypeRepository componentTypeRepository;
 
   @Override
-  public PageSlotResponse createSlot(Long pageId, CreatePageSlotCommand command) {
+  public PageSlotDto createSlot(Long pageId, CreatePageSlotCommand command) {
     boolean isShared = Boolean.TRUE.equals(command.isShared());
     Long effectivePageId = isShared ? null : pageId;
 
@@ -71,12 +71,12 @@ public class PageSlotServiceImpl implements PageSlotService {
     PageSlot savedSlot = pageSlotRepository.save(slot);
     log.info("Created slot '{}' for page {}", command.slotName(), effectivePageId);
 
-    return mapToResponse(savedSlot, List.of());
+    return mapToDto(savedSlot, List.of());
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<PageSlotResponse> getSlotsByPageId(Long pageId) {
+  public List<PageSlotDto> getSlotsByPageId(Long pageId) {
     List<PageSlot> pageSlots = pageSlotRepository.findByPageId(pageId);
 
     List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
@@ -85,14 +85,14 @@ public class PageSlotServiceImpl implements PageSlotService {
     allSlots.addAll(sharedSlots);
     allSlots.addAll(pageSlots);
 
-    return mapSlotsToResponses(allSlots);
+    return mapSlotsToDtos(allSlots);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public List<PageSlotResponse> getSharedSlots() {
+  public List<PageSlotDto> getSharedSlots() {
     List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
-    return mapSlotsToResponses(sharedSlots);
+    return mapSlotsToDtos(sharedSlots);
   }
 
   @Override
@@ -173,7 +173,7 @@ public class PageSlotServiceImpl implements PageSlotService {
             "Slot '" + slotName + "' not found for page " + pageId));
   }
 
-  private List<PageSlotResponse> mapSlotsToResponses(List<PageSlot> slots) {
+  private List<PageSlotDto> mapSlotsToDtos(List<PageSlot> slots) {
     if (slots.isEmpty()) {
       return List.of();
     }
@@ -207,19 +207,19 @@ public class PageSlotServiceImpl implements PageSlotService {
         .map(slot -> {
           List<SlotComponent> slotComponents = componentsBySlotId
               .getOrDefault(slot.getId(), List.of());
-          List<SlotComponentResponse> componentResponses = slotComponents.stream()
+          List<SlotComponentDto> componentDtos = slotComponents.stream()
               .sorted((a, b) -> Integer.compare(
                   a.getSortOrder() != null ? a.getSortOrder() : 0,
                   b.getSortOrder() != null ? b.getSortOrder() : 0))
-              .map(sc -> mapToComponentResponse(sc, componentMap, typeMap))
+              .map(sc -> mapToComponentDto(sc, componentMap, typeMap))
               .toList();
-          return mapToResponse(slot, componentResponses);
+          return mapToDto(slot, componentDtos);
         })
         .toList();
   }
 
-  private PageSlotResponse mapToResponse(PageSlot slot, List<SlotComponentResponse> components) {
-    return PageSlotResponse.builder()
+  private PageSlotDto mapToDto(PageSlot slot, List<SlotComponentDto> components) {
+    return PageSlotDto.builder()
         .id(slot.getId())
         .uid(slot.getUid())
         .slotName(slot.getSlotName())
@@ -233,7 +233,7 @@ public class PageSlotServiceImpl implements PageSlotService {
         .build();
   }
 
-  private SlotComponentResponse mapToComponentResponse(
+  private SlotComponentDto mapToComponentDto(
       SlotComponent sc,
       Map<Long, Component> componentMap,
       Map<Long, ComponentType> typeMap) {
@@ -248,7 +248,7 @@ public class PageSlotServiceImpl implements PageSlotService {
       }
     }
 
-    return SlotComponentResponse.builder()
+    return SlotComponentDto.builder()
         .id(sc.getId())
         .componentId(sc.getComponentId())
         .componentUid(component != null ? component.getUid() : null)

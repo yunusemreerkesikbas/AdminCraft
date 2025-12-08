@@ -304,6 +304,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
     for (PageSlot slot : slots) {
       List<SlotComponent> slotComps = componentsBySlotId.getOrDefault(slot.getId(), List.of());
       List<ComponentDeliveryResponse> compResponses = slotComps.stream()
+          .filter(sc -> Boolean.TRUE.equals(sc.getIsVisible()))
           .sorted((a, b) -> Integer.compare(
               a.getSortOrder() != null ? a.getSortOrder() : 0,
               b.getSortOrder() != null ? b.getSortOrder() : 0))

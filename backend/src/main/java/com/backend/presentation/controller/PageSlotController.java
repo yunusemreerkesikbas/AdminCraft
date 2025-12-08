@@ -18,11 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
+import com.backend.application.dto.slot.PageSlotDto;
+import com.backend.application.dto.slot.SlotComponentDto;
 import com.backend.application.service.PageSlotService;
 import com.backend.presentation.dto.request.AddComponentToSlotRequest;
 import com.backend.presentation.dto.request.CreatePageSlotRequest;
 import com.backend.presentation.dto.request.ReorderSlotComponentsRequest;
 import com.backend.presentation.dto.response.PageSlotResponse;
+import com.backend.presentation.dto.response.SlotComponentResponse;
 import com.backend.shared.common.ApiResponse;
 
 import jakarta.validation.Valid;
@@ -43,8 +46,8 @@ public class PageSlotController {
   @GetMapping("/{pageId}/slots")
   public ResponseEntity<ApiResponse<List<PageSlotResponse>>> getSlots(
       @PathVariable @NotNull @Min(1) Long pageId) {
-    List<PageSlotResponse> slots = pageSlotService.getSlotsByPageId(pageId);
-    return ResponseEntity.ok(ApiResponse.success(slots));
+    List<PageSlotDto> slots = pageSlotService.getSlotsByPageId(pageId);
+    return ResponseEntity.ok(ApiResponse.success(mapToResponses(slots)));
   }
 
   @PostMapping("/{pageId}/slots")
@@ -52,9 +55,9 @@ public class PageSlotController {
       @PathVariable @NotNull @Min(1) Long pageId,
       @Valid @RequestBody CreatePageSlotRequest request) {
     CreatePageSlotCommand command = mapToCommand(request);
-    PageSlotResponse slot = pageSlotService.createSlot(pageId, command);
+    PageSlotDto slot = pageSlotService.createSlot(pageId, command);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Slot created successfully", slot));
+        .body(ApiResponse.success("Slot created successfully", mapToResponse(slot)));
   }
 
   @PostMapping("/shared/slots")
@@ -65,15 +68,15 @@ public class PageSlotController {
         request.getPosition(),
         request.getSortOrder(),
         true);
-    PageSlotResponse slot = pageSlotService.createSlot(null, command);
+    PageSlotDto slot = pageSlotService.createSlot(null, command);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Shared slot created successfully", slot));
+        .body(ApiResponse.success("Shared slot created successfully", mapToResponse(slot)));
   }
 
   @GetMapping("/shared/slots")
   public ResponseEntity<ApiResponse<List<PageSlotResponse>>> getSharedSlots() {
-    List<PageSlotResponse> slots = pageSlotService.getSharedSlots();
-    return ResponseEntity.ok(ApiResponse.success(slots));
+    List<PageSlotDto> slots = pageSlotService.getSharedSlots();
+    return ResponseEntity.ok(ApiResponse.success(mapToResponses(slots)));
   }
 
   @DeleteMapping("/{pageId}/slots/{slotName}")
@@ -119,5 +122,43 @@ public class PageSlotController {
         request.getPosition(),
         request.getSortOrder(),
         request.getIsShared());
+  }
+
+  private List<PageSlotResponse> mapToResponses(List<PageSlotDto> dtos) {
+    return dtos.stream().map(this::mapToResponse).toList();
+  }
+
+  private PageSlotResponse mapToResponse(PageSlotDto dto) {
+    return PageSlotResponse.builder()
+        .id(dto.id())
+        .uid(dto.uid())
+        .slotName(dto.slotName())
+        .position(dto.position())
+        .sortOrder(dto.sortOrder())
+        .isActive(dto.isActive())
+        .isShared(dto.isShared())
+        .createdAt(dto.createdAt())
+        .updatedAt(dto.updatedAt())
+        .components(mapComponentsToResponses(dto.components()))
+        .build();
+  }
+
+  private List<SlotComponentResponse> mapComponentsToResponses(List<SlotComponentDto> dtos) {
+    if (dtos == null) {
+      return List.of();
+    }
+    return dtos.stream().map(this::mapComponentToResponse).toList();
+  }
+
+  private SlotComponentResponse mapComponentToResponse(SlotComponentDto dto) {
+    return SlotComponentResponse.builder()
+        .id(dto.id())
+        .componentId(dto.componentId())
+        .componentUid(dto.componentUid())
+        .componentName(dto.componentName())
+        .componentTypeName(dto.componentTypeName())
+        .sortOrder(dto.sortOrder())
+        .isVisible(dto.isVisible())
+        .build();
   }
 }
