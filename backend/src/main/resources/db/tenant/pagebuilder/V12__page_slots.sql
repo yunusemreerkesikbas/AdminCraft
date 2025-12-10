@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS page_slots (
     is_shared BOOLEAN DEFAULT FALSE COMMENT 'Explicit shared flag for global slots',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NULL COMMENT 'User ID who created this record',
+    updated_by BIGINT NULL COMMENT 'User ID who last updated this record',
 
     INDEX idx_page_slots_page (page_id),
     INDEX idx_page_slots_shared (is_shared),

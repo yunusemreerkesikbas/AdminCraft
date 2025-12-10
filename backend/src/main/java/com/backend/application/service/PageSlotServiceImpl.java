@@ -96,6 +96,7 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   @Override
+  @Transactional
   public void deleteSlot(Long pageId, String slotName) {
     PageSlot slot = pageSlotRepository.findByPageIdAndSlotName(pageId, slotName)
         .orElseThrow(() -> new IllegalArgumentException(
