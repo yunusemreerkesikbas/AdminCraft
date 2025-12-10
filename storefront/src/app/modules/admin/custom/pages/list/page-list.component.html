@@ -69,6 +69,18 @@
                                 </button>
                                 <button
                                     mat-icon-button
+                                    (click)="manageSlots(p)"
+                                    [title]="
+                                        'admin.pageBuilder.actions.manageSlots'
+                                            | transloco
+                                    "
+                                >
+                                    <mat-icon
+                                        svgIcon="heroicons_outline:squares-2x2"
+                                    ></mat-icon>
+                                </button>
+                                <button
+                                    mat-icon-button
                                     color="warn"
                                     (click)="deletePage(p)"
                                     [title]="

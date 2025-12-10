@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
@@ -18,6 +19,7 @@ import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageList
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { PageFormMapperService } from '../services/page-form-mapper.service';
 import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
+import { PageSlotDialogComponent } from '../slots/dialog/page-slot-dialog.component';
 
 @Component({
   selector: 'spa-page-list',
@@ -28,6 +30,8 @@ import { PageSchemaBuilderService } from '../services/page-schema-builder.servic
   imports: [
     CommonModule,
     MatButtonModule,
+    MatButtonModule,
+    MatDialogModule,
     MatIconModule,
     TranslocoModule,
     AdminPageHeaderComponent,
@@ -61,6 +65,8 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   #errorHandler = inject(ErrorHandlingService);
   #schemaBuilder = inject(PageSchemaBuilderService);
   #formMapper = inject(PageFormMapperService);
+  protected dialog = inject(MatDialog);
+
 
   tenantId = 1;
   subdomain = '';
@@ -271,6 +277,16 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         const msg = this.#errorHandler.handleError(error);
         this.#notify.alert(msg);
       }
+    });
+  }
+
+  manageSlots(page: PageListDto): void {
+    this.dialog.open(PageSlotDialogComponent, {
+      data: { pageId: page.id },
+      width: '900px',
+      maxWidth: '95vw',
+      height: '80vh',
+      panelClass: 'spa-dialog-panel'
     });
   }
 

@@ -1,30 +1,32 @@
 <div class="flex min-w-0 flex-auto flex-col">
     <!-- Header -->
-    <admin-page-header
-        [title]="'admin.components.title'"
-        [showCreateButton]="true"
-        [createButtonText]="'admin.common.create'"
-        [isLoading]="store.isLoading()"
-        (createClick)="createComponent()"
-    >
-        <div actions class="flex items-center gap-2">
-            <button
-                mat-icon-button
-                (click)="loadItems()"
-                [matTooltip]="'admin.common.refresh' | transloco"
-            >
-                <mat-icon>refresh</mat-icon>
-            </button>
-            <button
-                mat-stroked-button
-                (click)="openTypesManager()"
-                class="hidden sm:inline-flex"
-            >
-                <mat-icon class="mr-2 icon-size-5">settings</mat-icon>
-                {{ 'admin.components.manageTypes' | transloco }}
-            </button>
-        </div>
-    </admin-page-header>
+    @if (mode === 'admin') {
+        <admin-page-header
+            [title]="'admin.components.title'"
+            [showCreateButton]="true"
+            [createButtonText]="'admin.common.create'"
+            [isLoading]="store.isLoading()"
+            (createClick)="createComponent()"
+        >
+            <div actions class="flex items-center gap-2">
+                <button
+                    mat-icon-button
+                    (click)="loadItems()"
+                    [matTooltip]="'admin.common.refresh' | transloco"
+                >
+                    <mat-icon>refresh</mat-icon>
+                </button>
+                <button
+                    mat-stroked-button
+                    (click)="openTypesManager()"
+                    class="hidden sm:inline-flex"
+                >
+                    <mat-icon class="mr-2 icon-size-5">settings</mat-icon>
+                    {{ 'admin.components.manageTypes' | transloco }}
+                </button>
+            </div>
+        </admin-page-header>
+    }
 
     <!-- Main Content -->
     <div class="flex-auto p-6 sm:p-10">
@@ -111,36 +113,53 @@
                             <div
                                 class="flex items-center gap-2 self-start sm:self-center"
                             >
-                                <button
-                                    mat-icon-button
-                                    [matMenuTriggerFor]="menu"
-                                    aria-label="Actions"
-                                >
-                                    <mat-icon>more_vert</mat-icon>
-                                </button>
-                                <mat-menu #menu="matMenu">
+                                @if (mode === 'picker') {
                                     <button
-                                        mat-menu-item
-                                        (click)="editComponent(component.id)"
+                                        mat-stroked-button
+                                        color="primary"
+                                        (click)="
+                                            componentSelected.emit(component)
+                                        "
                                     >
-                                        <mat-icon>edit</mat-icon>
-                                        <span>{{
-                                            'admin.common.edit' | transloco
-                                        }}</span>
+                                        {{ 'admin.common.select' | transloco }}
                                     </button>
+                                } @else {
                                     <button
-                                        mat-menu-item
-                                        class="text-red-600"
-                                        (click)="deleteComponent(component.id)"
+                                        mat-icon-button
+                                        [matMenuTriggerFor]="menu"
+                                        aria-label="Actions"
                                     >
-                                        <mat-icon class="text-red-600"
-                                            >delete</mat-icon
+                                        <mat-icon>more_vert</mat-icon>
+                                    </button>
+                                    <mat-menu #menu="matMenu">
+                                        <button
+                                            mat-menu-item
+                                            (click)="
+                                                editComponent(component.id)
+                                            "
                                         >
-                                        <span>{{
-                                            'admin.common.delete' | transloco
-                                        }}</span>
-                                    </button>
-                                </mat-menu>
+                                            <mat-icon>edit</mat-icon>
+                                            <span>{{
+                                                'admin.common.edit' | transloco
+                                            }}</span>
+                                        </button>
+                                        <button
+                                            mat-menu-item
+                                            class="text-red-600"
+                                            (click)="
+                                                deleteComponent(component.id)
+                                            "
+                                        >
+                                            <mat-icon class="text-red-600"
+                                                >delete</mat-icon
+                                            >
+                                            <span>{{
+                                                'admin.common.delete'
+                                                    | transloco
+                                            }}</span>
+                                        </button>
+                                    </mat-menu>
+                                }
                             </div>
                         </div>
                     }

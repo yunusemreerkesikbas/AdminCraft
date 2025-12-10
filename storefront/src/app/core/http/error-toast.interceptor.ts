@@ -5,8 +5,8 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { NotificationService } from 'app/shared/notifications/notification.service';
 import { DeduplicationService } from 'app/shared/notifications/deduplication.service';
+import { NotificationService } from 'app/shared/notifications/notification.service';
 import { NotificationOptions } from 'app/shared/notifications/notification.types';
 import { Observable, catchError, throwError } from 'rxjs';
 
@@ -78,7 +78,9 @@ export const errorToastInterceptor = (
 function hasValidationBody(error: HttpErrorResponse): boolean {
   const body = error.error as any;
   if (!body) return false;
-  return Boolean(body.errors || body.fieldErrors || body.validationErrors);
+  // Check for validation errors OR custom error message from backend
+  // Backend returns: { result: "ERROR", message: "...", code: 400 }
+  return Boolean(body.errors || body.fieldErrors || body.validationErrors || body.message);
 }
 
 function sanitizeUrl(url: string): string {
