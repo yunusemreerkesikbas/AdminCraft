@@ -1,0 +1,20 @@
+<div class="flex h-full max-h-[90vh] flex-col">
+    <div class="flex items-center justify-between p-6 pb-2">
+        <h2 class="text-2xl font-semibold tracking-tight">
+            {{ 'admin.pageSlots.title' | transloco }}
+        </h2>
+        <button mat-icon-button (click)="close()">
+            <mat-icon svgIcon="heroicons_outline:x-mark"></mat-icon>
+        </button>
+    </div>
+
+    <div class="flex-auto overflow-hidden p-6 pt-2">
+        <spa-page-slot-list [pageId]="data.pageId"></spa-page-slot-list>
+    </div>
+
+    <div class="border-t bg-gray-50 p-6 pt-2 text-right dark:bg-gray-900">
+        <button mat-stroked-button (click)="close()">
+            {{ 'admin.common.close' | transloco }}
+        </button>
+    </div>
+</div>

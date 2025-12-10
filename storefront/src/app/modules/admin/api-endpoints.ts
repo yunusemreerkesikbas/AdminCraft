@@ -61,6 +61,13 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageCategoryWithTranslations: 'page-categories/${id}?include=translations',
     pageCategoryI18n: 'page-categories/${categoryId}/i18n/${language}',
 
+    // ----- PAGE BUILDER: SLOTS -----
+    pageSlots: 'pages/${id}/slots',
+    pageSlot: 'pages/${id}/slots/${slotName}',
+    pageSlotComponents: 'pages/${id}/slots/${slotName}/components',
+    pageSlotComponent: 'pages/${id}/slots/${slotName}/components/${componentId}',
+    pageSlotComponentsReorder: 'pages/${id}/slots/${slotName}/reorder',
+
     // ----- COMPONENT LIBRARY: TYPES -----
     componentTypes: 'components/types',
     componentTypeById: 'components/types/${id}',
@@ -99,7 +106,9 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- CMS DELIVERY API (PUBLIC) -----
     cmsComponent: 'cms/components/${uid}',
-    cmsComponentsBatch: 'cms/components'
+    cmsComponentsBatch: 'cms/components',
+    cmsPage: 'cms/pages/${uid}',
+    cmsPagesBatch: 'cms/pages'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

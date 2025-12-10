@@ -1,0 +1,24 @@
+.slot-card {
+    @apply mb-4 border rounded-lg overflow-hidden transition-all duration-200;
+}
+.slot-header {
+    @apply flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 border-b cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+.component-list {
+    @apply min-h-[50px] p-2 space-y-2;
+}
+.component-item {
+    @apply flex items-center justify-between p-3 bg-white dark:bg-gray-900 border rounded shadow-sm hover:shadow transition-shadow cursor-move;
+}
+.cdk-drag-preview {
+    @apply shadow-xl rounded-lg opacity-80;
+}
+.cdk-drag-placeholder {
+    @apply opacity-50 border-2 border-dashed border-gray-300;
+}
+.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+.component-list.cdk-drop-list-dragging .component-item:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

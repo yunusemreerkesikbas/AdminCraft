@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnInit, Output, signal, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -59,6 +59,9 @@ const DIALOG_CONFIG = {
     animations: fuseAnimations,
 })
 export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit {
+    @Input() mode: 'admin' | 'picker' = 'admin';
+    @Output() componentSelected = new EventEmitter<ComponentDto>();
+
     #dialog = inject(MatDialog);
     #transloco = inject(TranslocoService);
     #notify = inject(NotificationService);
