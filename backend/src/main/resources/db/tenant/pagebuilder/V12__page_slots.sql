@@ -1,9 +1,8 @@
 -- Content Slot System for Page-Component Integration
 -- Sprint 26: SAP Commerce Cloud patterns
 
--- Page Slots table
--- Shared slots have page_id = NULL (global slots like Header, Footer)
-CREATE TABLE page_slots (
+-- Page Slots table (Idempotent)
+CREATE TABLE IF NOT EXISTS page_slots (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE COMMENT 'Server-generated UUID',
     uid VARCHAR(50) NOT NULL UNIQUE COMMENT 'Human-readable stable identifier',
@@ -23,9 +22,8 @@ CREATE TABLE page_slots (
     FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Slot Components junction table
--- Links components to slots with ordering
-CREATE TABLE slot_components (
+-- Slot Components junction table (Idempotent)
+CREATE TABLE IF NOT EXISTS slot_components (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     slot_id BIGINT NOT NULL,
     component_id BIGINT NOT NULL,
@@ -41,6 +39,31 @@ CREATE TABLE slot_components (
     FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- SEO fields for Page entity (Sprint 27 preparation)
-ALTER TABLE pages ADD COLUMN robot_tag VARCHAR(50) DEFAULT 'INDEX_FOLLOW' COMMENT 'Meta robots directive';
-ALTER TABLE pages ADD COLUMN template_uid VARCHAR(50) NULL COMMENT 'Future: PageTemplate reference';
+-- SEO fields for Page entity (Idempotent via Procedure)
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
+DELIMITER //
+CREATE PROCEDURE AddColumnIfNotExists(
+    IN dbName VARCHAR(100),
+    IN tableName VARCHAR(100),
+    IN colName VARCHAR(100),
+    IN colDef TEXT
+)
+BEGIN
+    IF (SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = dbName
+        AND TABLE_NAME = tableName
+        AND COLUMN_NAME = colName) = 0 THEN
+
+        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
+        PREPARE stmt FROM @ddl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
+
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'robot_tag', "VARCHAR(50) DEFAULT 'INDEX_FOLLOW' COMMENT 'Meta robots directive'");
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'template_uid', "VARCHAR(50) NULL COMMENT 'Future: PageTemplate reference'");
+
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
+

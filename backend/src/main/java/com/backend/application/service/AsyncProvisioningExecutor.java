@@ -1,5 +1,17 @@
 package com.backend.application.service;
 
+import java.sql.Connection;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.Tenant;
 import com.backend.infrastructure.persistence.platform.entity.TenantModule;
@@ -8,28 +20,18 @@ import com.backend.infrastructure.persistence.platform.repository.TenantModuleRe
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
-import org.flywaydb.core.Flyway;
-import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@lombok.RequiredArgsConstructor
 public class AsyncProvisioningExecutor {
 
   private final TenantPlatformRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
+  private final TenantMigrationService tenantMigrationService;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -42,14 +44,6 @@ public class AsyncProvisioningExecutor {
 
   @Value("${spring.datasource.tenant.password}")
   private String dbPassword;
-
-  public AsyncProvisioningExecutor(TenantPlatformRepository tenantRepository,
-      ProvisioningJobRepository jobRepository,
-      TenantModuleRepository tenantModuleRepository) {
-    this.tenantRepository = tenantRepository;
-    this.jobRepository = jobRepository;
-    this.tenantModuleRepository = tenantModuleRepository;
-  }
 
   @Async
   public void executeProvisioning(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
@@ -67,7 +61,7 @@ public class AsyncProvisioningExecutor {
       createDatabaseIfNotExists(tenant.getDatabaseName());
 
       updateJobProgress(jobId, 60);
-      runMigrations(tenant.getDatabaseName(), modules);
+      tenantMigrationService.migrateTenant(tenant.getDatabaseName(), modules);
 
       updateJobProgress(jobId, 90);
       insertTenantModules(tenant.getId(), modules);
@@ -117,50 +111,6 @@ public class AsyncProvisioningExecutor {
       log.error("Failed to create database: {}", dbName, e);
       throw new RuntimeException("Database creation failed", e);
     }
-  }
-
-  private void runMigrations(String dbName, List<String> modules) {
-    log.info("Running Flyway migrations for {} with modules: {}", dbName, modules);
-
-    DataSource tenantDs = createTenantDataSource(dbName);
-
-    List<String> modulesToMigrate = new ArrayList<>();
-    modulesToMigrate.add("core");
-    modulesToMigrate.addAll(modules.stream().filter(m -> !"core".equals(m)).toList());
-
-    for (String module : modulesToMigrate) {
-      String location = "classpath:db/tenant/" + module;
-      String historyTable = "flyway_" + module + "_history";
-
-      log.debug("Running Flyway for module: {} (location: {}, table: {})", module, location, historyTable);
-
-      Flyway flyway = Flyway.configure()
-          .dataSource(tenantDs)
-          .locations(location)
-          .table(historyTable)
-          .baselineOnMigrate(true)
-          .baselineVersion("0")
-          .outOfOrder(false)
-          .validateOnMigrate(true)
-          .load();
-
-      flyway.migrate();
-      log.info("Migration completed for module: {}", module);
-    }
-
-    log.info("All migrations completed for {}", dbName);
-  }
-
-  private DataSource createTenantDataSource(String dbName) {
-    HikariConfig config = new HikariConfig();
-    config.setJdbcUrl(String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true",
-        dbHost, dbPort, dbName));
-    config.setUsername(dbUsername);
-    config.setPassword(dbPassword);
-    config.setMaximumPoolSize(2);
-
-    return new HikariDataSource(config);
   }
 
   @Transactional("platformTransactionManager")
