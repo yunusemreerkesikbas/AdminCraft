@@ -34,6 +34,9 @@ class AsyncProvisioningExecutorTest {
         @Mock
         private TenantModuleRepository tenantModuleRepository;
 
+        @Mock
+        private TenantMigrationService tenantMigrationService;
+
         @Captor
         private ArgumentCaptor<List<TenantModule>> tenantModulesCaptor;
 
@@ -46,7 +49,8 @@ class AsyncProvisioningExecutorTest {
                 executor = new AsyncProvisioningExecutor(
                                 tenantRepository,
                                 jobRepository,
-                                tenantModuleRepository);
+                                tenantModuleRepository,
+                                tenantMigrationService);
 
                 // Set test database connection properties
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");
