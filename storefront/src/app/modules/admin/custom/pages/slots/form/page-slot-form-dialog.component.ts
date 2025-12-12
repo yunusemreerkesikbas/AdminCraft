@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent, SpaSelectComponent, SpaSelectOption, SpaToggleComponent } from '@shared/components/custom-ui';
+import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaFormDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
+import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 import { SLOT_POSITION_OPTIONS, SlotPosition } from '@shared/types/common.types';
 import { CreatePageSlotRequest, PageSlotResponse, UpdatePageSlotRequest } from '../page-slot.types';
 
-export interface PageSlotFormDialogData {
+export interface PageSlotFormDialogData extends SpaFormDialogData<PageSlotResponse> {
     pageId: number;
-    slot?: PageSlotResponse; // For edit mode - now uses full response type
+    slot?: PageSlotResponse;
 }
 
 export interface PageSlotFormDialogResult {
@@ -28,88 +28,74 @@ export interface PageSlotFormDialogResult {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
         TranslocoModule,
         SpaInputComponent,
         SpaSelectComponent,
-        SpaToggleComponent
+        SpaToggleComponent,
+        SpaDialogHeaderComponent,
+        SpaDialogContentComponent,
+        SpaDialogFooterComponent
     ]
 })
-export class PageSlotFormDialogComponent {
-    form: FormGroup;
-    positionOptions: SpaSelectOption<SlotPosition>[];
-    isEditMode: boolean;
+export class PageSlotFormDialogComponent extends SpaFormDialog<PageSlotFormDialogResult, PageSlotFormDialogData> {
+    readonly #translocoService = inject(TranslocoService);
+    
+    protected form: FormGroup;
+    readonly positionOptions: SpaSelectOption<SlotPosition>[];
 
-    constructor(
-        private fb: FormBuilder,
-        private dialogRef: MatDialogRef<PageSlotFormDialogComponent>,
-        private translocoService: TranslocoService,
-        @Inject(MAT_DIALOG_DATA) public data: PageSlotFormDialogData
-    ) {
-        this.isEditMode = !!data.slot?.id;
+    readonly dialogTitle = computed(() => {
+        return this.isEditMode()
+            ? this.#translocoService.translate('admin.pageSlots.editTitle')
+            : this.#translocoService.translate('admin.pageSlots.createTitle');
+    });
 
-        // Convert SLOT_POSITION_OPTIONS to SpaSelectOption format
+    readonly submitButtonLabel = computed(() => {
+        return this.isEditMode()
+            ? this.#translocoService.translate('admin.common.actions.update')
+            : this.#translocoService.translate('admin.common.actions.create');
+    });
+
+    constructor() {
+        super();
+        
         this.positionOptions = SLOT_POSITION_OPTIONS.map(opt => ({
             value: opt.value,
             label: opt.label
         }));
 
+        const slot = this.data?.slot;
         this.form = this.fb.group({
-            uid: [data.slot?.uid || '', [Validators.maxLength(50)]],
-            slotName: [data.slot?.slotName || '', [Validators.required, Validators.maxLength(50)]],
-            position: [data.slot?.position || SlotPosition.CENTER, Validators.required],
-            isActive: [data.slot?.isActive ?? true],
-            isShared: [data.slot?.isShared ?? false]
+            uid: [slot?.uid || '', [Validators.maxLength(50)]],
+            slotName: [slot?.slotName || '', [Validators.required, Validators.maxLength(50)]],
+            position: [slot?.position || SlotPosition.CENTER, Validators.required],
+            isActive: [slot?.isActive ?? true],
+            isShared: [slot?.isShared ?? false]
         });
     }
 
-    get dialogTitle(): string {
-        return this.isEditMode
-            ? this.translocoService.translate('admin.pageSlots.editTitle')
-            : this.translocoService.translate('admin.pageSlots.createTitle');
-    }
-
-    get submitButtonText(): string {
-        return this.isEditMode
-            ? this.translocoService.translate('admin.common.actions.update')
-            : this.translocoService.translate('admin.common.actions.create');
-    }
-
-    close(): void {
-        this.dialogRef.close();
-    }
-
-    submit(): void {
-        if (this.form.valid) {
-            const formValue = this.form.value;
-
-            if (this.isEditMode) {
-                const result: PageSlotFormDialogResult = {
-                    isEdit: true,
-                    data: {
-                        uid: formValue.uid?.trim() || undefined,
-                        slotName: formValue.slotName.trim(),
-                        position: formValue.position,
-                        isActive: formValue.isActive,
-                        isShared: formValue.isShared
-                    } as UpdatePageSlotRequest
-                };
-                this.dialogRef.close(result);
-            } else {
-                const result: PageSlotFormDialogResult = {
-                    isEdit: false,
-                    data: {
-                        uid: formValue.uid?.trim() || undefined,
-                        slotName: formValue.slotName.trim(),
-                        position: formValue.position,
-                        isActive: formValue.isActive,
-                        isShared: formValue.isShared
-                    } as CreatePageSlotRequest
-                };
-                this.dialogRef.close(result);
-            }
+    override ngOnInit(): void {
+        if (this.data?.slot) {
+            this.form.patchValue(this.data.slot);
         }
+    }
+
+    save(): void {
+        if (this.form.invalid) return;
+
+        const formValue = this.form.value;
+        const payload = {
+            uid: formValue.uid?.trim() || undefined,
+            slotName: formValue.slotName.trim(),
+            position: formValue.position,
+            isActive: formValue.isActive,
+            isShared: formValue.isShared
+        };
+
+        const result: PageSlotFormDialogResult = {
+            isEdit: this.isEditMode(),
+            data: payload
+        };
+
+        this.close(result);
     }
 }

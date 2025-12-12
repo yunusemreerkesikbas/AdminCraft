@@ -1,24 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
+import { SpaDialogComponent } from 'app/shared/components/spa-dialog';
 import { forkJoin, take } from 'rxjs';
 import { ComponentEntry, CreateEntryRequest, EntryFieldDefinition, EntryI18nDto, EntryI18nRequest, UpdateEntryRequest } from '../../models/component-entry.types';
 import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
 
-interface DialogData {
+interface ComponentEntryFormData {
     mode: 'create' | 'edit';
     componentId: number;
     componentTypeId?: number;
@@ -38,51 +40,42 @@ interface DialogData {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatDialogModule,
         MatTabsModule,
         MatIconModule,
         MatButtonModule,
+        MatProgressSpinnerModule,
         TranslocoModule,
         SpaInputComponent,
         SpaSelectComponent,
         SpaTextareaComponent,
-        SpaCheckboxComponent
+        SpaCheckboxComponent,
+        SpaDialogComponent
     ]
 })
-export class ComponentEntryFormComponent implements OnInit {
-    #dialogRef = inject(MatDialogRef<ComponentEntryFormComponent>);
-    #fb = inject(FormBuilder);
+export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean, ComponentEntryFormData> {
+    override data = inject<ComponentEntryFormData>(MAT_DIALOG_DATA);
+    
     #entryService = inject(ComponentEntryService);
     #fieldService = inject(EntryFieldService);
-    #notify = inject(NotificationService);
     #transloco = inject(TranslocoService);
     #langCtx = inject(LanguageContextService);
-    data = inject<DialogData>(MAT_DIALOG_DATA);
 
-    mode: 'create' | 'edit' = 'create';
-    languages = computed(() => this.#langCtx.supportedLanguages());
-    activeTab = 0;
-
-    generalForm!: FormGroup;
-    i18nForms: Record<string, FormGroup> = {};
+    override languages = this.#langCtx.supportedLanguages();
     
     fieldDefinitions = signal<EntryFieldDefinition[]>([]);
     isLoading = signal<boolean>(false);
-    isSaving = signal<boolean>(false);
     
     canSave = computed(() => 
-        this.generalForm.valid && 
-        !this.isSaving() && 
+        this.generalForm?.valid && 
+        !this.isSubmitting() && 
         !this.isLoading()
     );
 
     statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
 
-    ngOnInit(): void {
-        this.mode = this.data.mode;
-        this.#buildGeneralForm();
-        this.#buildI18nForms();
-
+    override ngOnInit(): void {
+        super.ngOnInit();
+        
         if (this.data.componentTypeId) {
             setTimeout(() => {
                 this.#loadFieldDefinitions();
@@ -90,11 +83,18 @@ export class ComponentEntryFormComponent implements OnInit {
         }
     }
 
-    #buildGeneralForm(): void {
-        this.generalForm = this.#fb.group({
+    protected buildGeneralForm(): FormGroup {
+        return this.fb.group({
             isVisible: [this.data.entry?.isVisible ?? true],
             styleClasses: [this.data.entry?.styleClasses || ''],
             status: [this.data.entry?.status ?? 'DRAFT', Validators.required]
+        });
+    }
+
+    protected buildI18nForm(lang: string): FormGroup {
+        return this.fb.group({
+            title: [this.data.translations?.[lang]?.title || ''],
+            description: [this.data.translations?.[lang]?.description || '']
         });
     }
 
@@ -110,25 +110,14 @@ export class ComponentEntryFormComponent implements OnInit {
                     this.isLoading.set(false);
                 },
                 error: () => {
-                    this.#notify.alert('admin.components.entries.loadFieldsFailed');
+                    this.notify.alert('admin.components.entries.loadFieldsFailed');
                     this.isLoading.set(false);
                 }
             });
     }
 
-    #buildI18nForms(): void {
-        this.languages().forEach(lang => {
-            const formGroup = this.#fb.group({
-                title: [this.data.translations?.[lang]?.title || ''],
-                description: [this.data.translations?.[lang]?.description || '']
-            });
-
-            this.i18nForms[lang] = formGroup;
-        });
-    }
-
     #addDynamicFieldsToForms(): void {
-        this.languages().forEach(lang => {
+        this.languages.forEach(lang => {
             const formGroup = this.i18nForms[lang];
             if (!formGroup) return;
 
@@ -166,10 +155,6 @@ export class ComponentEntryFormComponent implements OnInit {
         }
     }
 
-    protected getFieldLabel(fieldKey: string): string {
-        return `admin.components.entryFields.custom.${fieldKey}`;
-    }
-
     protected getFieldLabelWithFallback(fieldKey: string): string {
         const i18nKey = `admin.components.entryFields.custom.${fieldKey}`;
         const translation = this.#transloco.translate(i18nKey);
@@ -190,17 +175,17 @@ export class ComponentEntryFormComponent implements OnInit {
 
     save(): void {
         if (this.generalForm.invalid) {
-            this.#notify.warning('admin.validation.generalFormInvalid');
+            this.notify.warning('admin.validation.generalFormInvalid');
             return;
         }
 
         const hasInvalidI18n = Object.values(this.i18nForms).some(form => form.invalid);
         if (hasInvalidI18n) {
-            this.#notify.warning('admin.validation.i18nFormsInvalid');
+            this.notify.warning('admin.validation.i18nFormsInvalid');
             return;
         }
 
-        this.isSaving.set(true);
+        this.setSubmitting(true);
 
         if (this.data.mode === 'create') {
             this.#createEntry();
@@ -224,8 +209,8 @@ export class ComponentEntryFormComponent implements OnInit {
                     this.#saveI18nData(entry.id);
                 },
                 error: () => {
-                    this.isSaving.set(false);
-                    this.#notify.alert('admin.components.entries.createFailed');
+                    this.setSubmitting(false);
+                    this.notify.alert('admin.components.entries.createFailed');
                 }
             });
     }
@@ -244,14 +229,14 @@ export class ComponentEntryFormComponent implements OnInit {
                     this.#saveI18nData(this.data.entry!.id);
                 },
                 error: () => {
-                    this.isSaving.set(false);
-                    this.#notify.alert('admin.components.entries.updateFailed');
+                    this.setSubmitting(false);
+                    this.notify.alert('admin.components.entries.updateFailed');
                 }
             });
     }
 
     #saveI18nData(entryId: number): void {
-        const i18nRequests = this.languages().map(lang => {
+        const i18nRequests = this.languages.map(lang => {
             const formData = this.i18nForms[lang].value;
             const baseFields = ['title', 'description'];
 
@@ -275,27 +260,18 @@ export class ComponentEntryFormComponent implements OnInit {
             .pipe(take(1))
             .subscribe({
                 next: () => {
-                    this.isSaving.set(false);
-                    this.#notify.success(
+                    this.setSubmitting(false);
+                    this.notify.success(
                         this.data.mode === 'create' 
                             ? 'admin.components.entries.createSuccess' 
                             : 'admin.components.entries.updateSuccess'
                     );
-                    this.#dialogRef.close(true);
+                    this.close(true);
                 },
                 error: () => {
-                    this.isSaving.set(false);
-                    this.#notify.alert('admin.components.entries.saveI18nFailed');
+                    this.setSubmitting(false);
+                    this.notify.alert('admin.components.entries.saveI18nFailed');
                 }
             });
     }
-
-    cancel(): void {
-        this.#dialogRef.close();
-    }
-
-    getFieldLabelKey(fieldKey: string): string {
-        return `admin.components.entryFields.custom.${fieldKey}`;
-    }
 }
-

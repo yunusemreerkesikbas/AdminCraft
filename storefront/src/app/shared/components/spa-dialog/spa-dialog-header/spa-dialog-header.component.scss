@@ -1,0 +1,30 @@
+.spa-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--fuse-border);
+    background: var(--fuse-card);
+
+    &__title-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    &__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.75rem;
+        margin: 0;
+    }
+
+    &__subtitle {
+        font-size: 0.875rem;
+        color: var(--fuse-text-secondary);
+    }
+
+    &__close {
+        margin-left: auto;
+    }
+}

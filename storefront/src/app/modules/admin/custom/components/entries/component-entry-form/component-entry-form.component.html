@@ -1,283 +1,239 @@
-<div class="bg-card flex max-h-[90vh] flex-col">
-    <!-- Header -->
-    <div class="bg-card flex items-center justify-between border-b px-6 py-4">
-        <div class="flex items-center gap-3">
-            <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
-            >
-                <mat-icon class="icon-size-6">{{
-                    mode === 'create' ? 'add_circle' : 'edit'
-                }}</mat-icon>
-            </div>
-            <div class="flex flex-col">
-                <h2 class="text-lg font-semibold leading-none">
-                    {{
-                        (mode === 'create'
-                            ? 'admin.components.entries.create'
-                            : 'admin.components.entries.edit'
-                        ) | transloco
-                    }}
-                </h2>
-            </div>
+<spa-dialog
+    [title]="
+        (mode() === 'create'
+            ? 'admin.components.entries.create'
+            : 'admin.components.entries.edit'
+        ) | transloco
+    "
+    contentType="tabbed"
+    [submitLabel]="
+        (mode() === 'create'
+            ? 'admin.dialog.actions.create'
+            : 'admin.dialog.actions.save'
+        ) | transloco
+    "
+    [isSubmitting]="isSubmitting()"
+    [submitDisabled]="!canSave()"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
+    @if (isLoading()) {
+        <div class="flex flex-col items-center justify-center py-12">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p class="text-secondary mt-4">
+                {{ 'admin.common.loading' | transloco }}
+            </p>
         </div>
-        <button mat-icon-button (click)="cancel()">
-            <mat-icon>close</mat-icon>
-        </button>
-    </div>
+    } @else {
+        <mat-tab-group
+            [(selectedIndex)]="activeTab"
+            class="component-tabs"
+            animationDuration="0ms"
+            mat-stretch-tabs="false"
+        >
+            <!-- General Tab -->
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5">settings</mat-icon>
+                        <span>{{
+                            'admin.components.entries.tabs.general' | transloco
+                        }}</span>
+                    </div>
+                </ng-template>
 
-    <!-- Content -->
-    <div class="flex-auto overflow-y-auto">
-        @if (isLoading()) {
-            <div class="flex flex-col items-center justify-center py-12">
-                <mat-spinner diameter="40"></mat-spinner>
-                <p class="text-secondary mt-4">
-                    {{ 'admin.common.loading' | transloco }}
-                </p>
-            </div>
-        } @else {
-            <mat-tab-group
-                [(selectedIndex)]="activeTab"
-                class="component-tabs"
-                animationDuration="0ms"
-                mat-stretch-tabs="false"
-            >
-                <!-- General Tab -->
+                <div class="p-6 sm:p-8">
+                    <form [formGroup]="generalForm" class="flex flex-col gap-6">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            @if (mode() === 'edit') {
+                                <spa-select
+                                    formControlName="status"
+                                    [label]="
+                                        'admin.common.fields.status' | transloco
+                                    "
+                                    [options]="statusOptions"
+                                    [required]="true"
+                                ></spa-select>
+                            }
+
+                            <spa-input
+                                class="sm:col-span-2"
+                                formControlName="styleClasses"
+                                [label]="
+                                    'admin.components.fields.styleClasses'
+                                        | transloco
+                                "
+                                [hint]="
+                                    'admin.components.hints.styleClasses'
+                                        | transloco
+                                "
+                                placeholder="e.g. bg-primary text-white"
+                            ></spa-input>
+
+                            <spa-checkbox
+                                formControlName="isVisible"
+                                [label]="
+                                    'admin.components.fields.isVisible'
+                                        | transloco
+                                "
+                                styleClasses="boxed"
+                            ></spa-checkbox>
+                        </div>
+                    </form>
+                </div>
+            </mat-tab>
+
+            <!-- Language Tabs -->
+            @for (lang of languages; track lang) {
                 <mat-tab>
                     <ng-template mat-tab-label>
                         <div class="flex items-center gap-2">
-                            <mat-icon class="icon-size-5">settings</mat-icon>
-                            <span>{{
-                                'admin.components.entries.tabs.general'
-                                    | transloco
-                            }}</span>
+                            <mat-icon class="icon-size-5">translate</mat-icon>
+                            <span class="uppercase">{{ lang }}</span>
                         </div>
                     </ng-template>
 
                     <div class="p-6 sm:p-8">
                         <form
-                            [formGroup]="generalForm"
+                            [formGroup]="i18nForms[lang]"
                             class="flex flex-col gap-6"
                         >
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                @if (mode === 'edit') {
-                                    <spa-select
-                                        formControlName="status"
+                            <!-- Basic Info -->
+                            <div
+                                class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+                            >
+                                <div
+                                    class="text-secondary mb-4 flex items-center gap-2"
+                                >
+                                    <mat-icon class="icon-size-5"
+                                        >info</mat-icon
+                                    >
+                                    <span
+                                        class="text-sm font-medium uppercase tracking-wide"
+                                    >
+                                        {{
+                                            'admin.components.entries.basicInfo'
+                                                | transloco
+                                        }}
+                                        ({{ lang | uppercase }})
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-col gap-4">
+                                    <spa-input
+                                        formControlName="title"
                                         [label]="
-                                            'admin.common.fields.status'
+                                            'admin.components.entries.fields.title'
                                                 | transloco
                                         "
-                                        [options]="statusOptions"
-                                        [required]="true"
-                                    ></spa-select>
-                                }
+                                    ></spa-input>
 
-                                <spa-input
-                                    class="sm:col-span-2"
-                                    formControlName="styleClasses"
-                                    [label]="
-                                        'admin.components.fields.styleClasses'
-                                            | transloco
-                                    "
-                                    [hint]="
-                                        'admin.components.hints.styleClasses'
-                                            | transloco
-                                    "
-                                    placeholder="e.g. bg-primary text-white"
-                                ></spa-input>
-
-                                <spa-checkbox
-                                    formControlName="isVisible"
-                                    [label]="
-                                        'admin.components.fields.isVisible'
-                                            | transloco
-                                    "
-                                    styleClasses="boxed"
-                                ></spa-checkbox>
+                                    <spa-textarea
+                                        formControlName="description"
+                                        [label]="
+                                            'admin.components.entries.fields.description'
+                                                | transloco
+                                        "
+                                        [rows]="4"
+                                    ></spa-textarea>
+                                </div>
                             </div>
-                        </form>
-                    </div>
-                </mat-tab>
 
-                <!-- Language Tabs -->
-                @for (lang of languages(); track lang) {
-                    <mat-tab>
-                        <ng-template mat-tab-label>
-                            <div class="flex items-center gap-2">
-                                <mat-icon class="icon-size-5"
-                                    >translate</mat-icon
-                                >
-                                <span class="uppercase">{{ lang }}</span>
-                            </div>
-                        </ng-template>
-
-                        <div class="p-6 sm:p-8">
-                            <form
-                                [formGroup]="i18nForms[lang]"
-                                class="flex flex-col gap-6"
-                            >
-                                <!-- Basic Info -->
+                            <!-- Custom Fields -->
+                            @if (fieldDefinitions().length > 0) {
                                 <div
                                     class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
                                 >
                                     <div
-                                        class="text-secondary mb-4 flex items-center gap-2"
+                                        class="text-secondary mb-4 flex items-center justify-between"
                                     >
-                                        <mat-icon class="icon-size-5"
-                                            >info</mat-icon
-                                        >
+                                        <div class="flex items-center gap-2">
+                                            <mat-icon class="icon-size-5"
+                                                >extension</mat-icon
+                                            >
+                                            <span
+                                                class="text-sm font-medium uppercase tracking-wide"
+                                            >
+                                                {{
+                                                    'admin.components.entries.customFields'
+                                                        | transloco
+                                                }}
+                                            </span>
+                                        </div>
                                         <span
-                                            class="text-sm font-medium uppercase tracking-wide"
+                                            class="rounded bg-slate-200 px-2 py-0.5 font-mono text-xs dark:bg-slate-700"
                                         >
-                                            {{
-                                                'admin.components.entries.basicInfo'
-                                                    | transloco
-                                            }}
-                                            ({{ lang | uppercase }})
+                                            {{ fieldDefinitions().length }}
                                         </span>
                                     </div>
 
-                                    <div class="flex flex-col gap-4">
-                                        <spa-input
-                                            formControlName="title"
-                                            [label]="
-                                                'admin.components.entries.fields.title'
-                                                    | transloco
-                                            "
-                                        ></spa-input>
-
-                                        <spa-textarea
-                                            formControlName="description"
-                                            [label]="
-                                                'admin.components.entries.fields.description'
-                                                    | transloco
-                                            "
-                                            [rows]="4"
-                                        ></spa-textarea>
-                                    </div>
-                                </div>
-
-                                <!-- Custom Fields -->
-                                @if (fieldDefinitions().length > 0) {
-                                    <div
-                                        class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
-                                    >
-                                        <div
-                                            class="text-secondary mb-4 flex items-center justify-between"
-                                        >
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <mat-icon class="icon-size-5"
-                                                    >extension</mat-icon
-                                                >
-                                                <span
-                                                    class="text-sm font-medium uppercase tracking-wide"
-                                                >
-                                                    {{
-                                                        'admin.components.entries.customFields'
-                                                            | transloco
-                                                    }}
-                                                </span>
-                                            </div>
-                                            <span
-                                                class="rounded bg-slate-200 px-2 py-0.5 font-mono text-xs dark:bg-slate-700"
-                                            >
-                                                {{ fieldDefinitions().length }}
-                                            </span>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 gap-4">
-                                            @for (
-                                                field of fieldDefinitions();
-                                                track field.fieldKey
-                                            ) {
-                                                @switch (field.fieldType) {
-                                                    @case ('text') {
-                                                        <spa-input
-                                                            [formControlName]="
+                                    <div class="grid grid-cols-1 gap-4">
+                                        @for (
+                                            field of fieldDefinitions();
+                                            track field.fieldKey
+                                        ) {
+                                            @switch (field.fieldType) {
+                                                @case ('text') {
+                                                    <spa-input
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        [label]="
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            "
-                                                            [label]="
-                                                                getFieldLabelWithFallback(
-                                                                    field.fieldKey
-                                                                )
-                                                            "
-                                                        ></spa-input>
-                                                    }
-                                                    @case ('textarea') {
-                                                        <spa-textarea
-                                                            [formControlName]="
+                                                            )
+                                                        "
+                                                    ></spa-input>
+                                                }
+                                                @case ('textarea') {
+                                                    <spa-textarea
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        [label]="
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            "
-                                                            [label]="
-                                                                getFieldLabelWithFallback(
-                                                                    field.fieldKey
-                                                                )
-                                                            "
-                                                            [rows]="3"
-                                                        ></spa-textarea>
-                                                    }
-                                                    @case ('number') {
-                                                        <spa-input
-                                                            [formControlName]="
+                                                            )
+                                                        "
+                                                        [rows]="3"
+                                                    ></spa-textarea>
+                                                }
+                                                @case ('number') {
+                                                    <spa-input
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        [label]="
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            "
-                                                            [label]="
-                                                                getFieldLabelWithFallback(
-                                                                    field.fieldKey
-                                                                )
-                                                            "
-                                                            type="number"
-                                                        ></spa-input>
-                                                    }
-                                                    @case ('boolean') {
-                                                        <spa-checkbox
-                                                            [formControlName]="
+                                                            )
+                                                        "
+                                                        type="number"
+                                                    ></spa-input>
+                                                }
+                                                @case ('boolean') {
+                                                    <spa-checkbox
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        [label]="
+                                                            getFieldLabelWithFallback(
                                                                 field.fieldKey
-                                                            "
-                                                            [label]="
-                                                                getFieldLabelWithFallback(
-                                                                    field.fieldKey
-                                                                )
-                                                            "
-                                                            styleClasses="boxed"
-                                                        ></spa-checkbox>
-                                                    }
+                                                            )
+                                                        "
+                                                        styleClasses="boxed"
+                                                    ></spa-checkbox>
                                                 }
                                             }
-                                        </div>
+                                        }
                                     </div>
-                                }
-                            </form>
-                        </div>
-                    </mat-tab>
-                }
-            </mat-tab-group>
-        }
-    </div>
-
-    <!-- Footer -->
-    <div
-        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-6 py-4 dark:bg-slate-900/20"
-    >
-        <button mat-button (click)="cancel()">
-            {{ 'admin.dialog.actions.cancel' | transloco }}
-        </button>
-        <button
-            mat-flat-button
-            color="primary"
-            (click)="save()"
-            [disabled]="!canSave() || isSaving()"
-        >
-            @if (isSaving()) {
-                <mat-icon class="mr-2 animate-spin">sync</mat-icon>
+                                </div>
+                            }
+                        </form>
+                    </div>
+                </mat-tab>
             }
-            {{
-                (mode === 'create'
-                    ? 'admin.dialog.actions.create'
-                    : 'admin.dialog.actions.save'
-                ) | transloco
-            }}
-        </button>
-    </div>
-</div>
+        </mat-tab-group>
+    }
+</spa-dialog>

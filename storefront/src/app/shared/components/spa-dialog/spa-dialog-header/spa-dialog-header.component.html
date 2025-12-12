@@ -1,0 +1,17 @@
+<div class="spa-dialog-header">
+    <div class="spa-dialog-header__title-container">
+        <h2 class="spa-dialog-header__title">{{ title }}</h2>
+        @if (subtitle) {
+            <span class="spa-dialog-header__subtitle">{{ subtitle }}</span>
+        }
+    </div>
+    @if (showCloseButton) {
+        <button
+            mat-icon-button
+            class="spa-dialog-header__close"
+            (click)="closeClicked.emit()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    }
+</div>

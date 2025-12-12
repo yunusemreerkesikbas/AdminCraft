@@ -1,162 +1,129 @@
-<div
-    class="bg-card flex max-h-screen flex-col overflow-hidden rounded-2xl shadow-2xl dark:bg-slate-900"
+<spa-dialog-header
+    [title]="'admin.components.entryFields.addField' | transloco"
+    [subtitle]="'admin.components.entryFields.types.text' | transloco"
+    (closeClicked)="cancel()"
 >
-    <!-- Header -->
-    <div
-        class="flex items-center justify-between border-b bg-slate-50 px-8 py-5 dark:border-slate-800 dark:bg-slate-900/50"
-    >
-        <div class="flex items-center gap-3">
-            <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/20"
-            >
-                <mat-icon class="icon-size-6">add</mat-icon>
-            </div>
-            <div>
-                <h2
-                    class="text-xl font-semibold leading-none text-slate-800 dark:text-slate-100"
-                >
-                    {{ 'admin.components.entryFields.addField' | transloco }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    {{ 'admin.components.entryFields.types.text' | transloco }}
-                </p>
-            </div>
-        </div>
-        <button mat-icon-button (click)="cancel()">
-            <mat-icon>close</mat-icon>
-        </button>
-    </div>
+</spa-dialog-header>
 
-    <!-- Content -->
-    <div class="flex-auto overflow-y-auto p-8">
-        <form [formGroup]="fieldForm" class="flex flex-col gap-6">
-            <!-- Basic Info Section -->
-            <div class="flex flex-col gap-5">
-                <h3
-                    class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+<spa-dialog-content type="form">
+    <form [formGroup]="form" class="flex flex-col gap-6">
+        <div class="flex flex-col gap-5">
+            <h3
+                class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+            >
+                {{ 'admin.components.entryFields.basicInfo' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <spa-input
+                    class="w-full"
+                    formControlName="fieldKey"
+                    [label]="
+                        'admin.components.entryFields.fieldKey' | transloco
+                    "
+                    placeholder="e.g. userFullName"
+                    [hint]="
+                        'admin.components.entryFields.invalidFieldKey'
+                            | transloco
+                    "
                 >
-                    {{ 'admin.components.entryFields.basicInfo' | transloco }}
-                </h3>
+                </spa-input>
+
+                <spa-select
+                    class="w-full"
+                    formControlName="fieldType"
+                    [label]="
+                        'admin.components.entryFields.fieldType' | transloco
+                    "
+                    [options]="fieldTypeOptions"
+                >
+                </spa-select>
+            </div>
+
+            <spa-checkbox
+                formControlName="isRequired"
+                [label]="'admin.components.entryFields.required' | transloco"
+            >
+            </spa-checkbox>
+        </div>
+
+        @if (showMaxLength()) {
+            <div
+                class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
+                [@expandCollapse]
+            >
+                <div
+                    class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                    <mat-icon class="icon-size-5">rule</mat-icon>
+                    {{
+                        'admin.components.entryFields.textConstraints'
+                            | transloco
+                    }}
+                </div>
+
+                <spa-input
+                    class="w-full md:w-1/2"
+                    formControlName="maxLength"
+                    type="number"
+                    [label]="
+                        'admin.components.entryFields.maxLength' | transloco
+                    "
+                    [hint]="
+                        'admin.components.entryFields.maxLengthHint' | transloco
+                    "
+                >
+                </spa-input>
+            </div>
+        }
+
+        @if (showMinMax()) {
+            <div
+                class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
+                [@expandCollapse]
+            >
+                <div
+                    class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                    <mat-icon class="icon-size-5">rule</mat-icon>
+                    {{
+                        'admin.components.entryFields.numberConstraints'
+                            | transloco
+                    }}
+                </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <spa-input
                         class="w-full"
-                        formControlName="fieldKey"
-                        [label]="
-                            'admin.components.entryFields.fieldKey' | transloco
-                        "
-                        placeholder="e.g. userFullName"
-                        [hint]="
-                            'admin.components.entryFields.invalidFieldKey'
-                                | transloco
-                        "
-                    ></spa-input>
-
-                    <spa-select
-                        class="w-full"
-                        formControlName="fieldType"
-                        [label]="
-                            'admin.components.entryFields.fieldType' | transloco
-                        "
-                        [options]="fieldTypeOptions"
-                    ></spa-select>
-                </div>
-
-                <spa-checkbox
-                    formControlName="isRequired"
-                    [label]="
-                        'admin.components.entryFields.required' | transloco
-                    "
-                ></spa-checkbox>
-            </div>
-
-            <!-- Conditional Constraints -->
-            @if (showMaxLength()) {
-                <div
-                    class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
-                    [@expandCollapse]
-                >
-                    <div
-                        class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                    >
-                        <mat-icon class="icon-size-5">rule</mat-icon>
-                        {{
-                            'admin.components.entryFields.textConstraints'
-                                | transloco
-                        }}
-                    </div>
-
-                    <spa-input
-                        class="w-full md:w-1/2"
-                        formControlName="maxLength"
+                        formControlName="minValue"
                         type="number"
                         [label]="
-                            'admin.components.entryFields.maxLength' | transloco
+                            'admin.components.entryFields.minValue' | transloco
                         "
-                        [hint]="
-                            'admin.components.entryFields.maxLengthHint'
-                                | transloco
-                        "
-                    ></spa-input>
-                </div>
-            }
-
-            @if (showMinMax()) {
-                <div
-                    class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
-                    [@expandCollapse]
-                >
-                    <div
-                        class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                     >
-                        <mat-icon class="icon-size-5">rule</mat-icon>
-                        {{
-                            'admin.components.entryFields.numberConstraints'
-                                | transloco
-                        }}
-                    </div>
+                    </spa-input>
 
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        <spa-input
-                            class="w-full"
-                            formControlName="minValue"
-                            type="number"
-                            [label]="
-                                'admin.components.entryFields.minValue'
-                                    | transloco
-                            "
-                        ></spa-input>
-
-                        <spa-input
-                            class="w-full"
-                            formControlName="maxValue"
-                            type="number"
-                            [label]="
-                                'admin.components.entryFields.maxValue'
-                                    | transloco
-                            "
-                        ></spa-input>
-                    </div>
+                    <spa-input
+                        class="w-full"
+                        formControlName="maxValue"
+                        type="number"
+                        [label]="
+                            'admin.components.entryFields.maxValue' | transloco
+                        "
+                    >
+                    </spa-input>
                 </div>
-            }
-        </form>
-    </div>
+            </div>
+        }
+    </form>
+</spa-dialog-content>
 
-    <!-- Footer -->
-    <div
-        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-8 py-5 dark:border-slate-800 dark:bg-slate-900/50"
-    >
-        <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
-            {{ 'admin.dialog.actions.cancel' | transloco }}
-        </button>
-        <button
-            mat-flat-button
-            color="primary"
-            (click)="save()"
-            [disabled]="fieldForm.invalid || isSubmitting()"
-        >
-            <mat-icon class="mr-2 icon-size-5">save</mat-icon>
-            {{ 'admin.dialog.actions.save' | transloco }}
-        </button>
-    </div>
-</div>
+<spa-dialog-footer
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>
