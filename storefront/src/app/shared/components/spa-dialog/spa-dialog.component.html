@@ -1,0 +1,29 @@
+<div class="spa-dialog" [class]="'spa-dialog--' + size">
+    <spa-dialog-header
+        [title]="title"
+        [subtitle]="subtitle"
+        [showCloseButton]="showCloseButton"
+        (closeClicked)="closed.emit()"
+    >
+    </spa-dialog-header>
+
+    <spa-dialog-content [type]="contentType">
+        <ng-content></ng-content>
+    </spa-dialog-content>
+
+    @if (showFooter) {
+        <spa-dialog-footer
+            [showCancel]="showCancel"
+            [showSubmit]="showSubmit"
+            [cancelLabel]="cancelLabel"
+            [submitLabel]="submitLabel"
+            [submitDisabled]="submitDisabled"
+            [isSubmitting]="isSubmitting"
+            (cancelClicked)="cancelled.emit()"
+            (submitClicked)="submitted.emit()"
+        >
+            <ng-content select="[footerStart]" footerStart></ng-content>
+            <ng-content select="[footerEnd]" footerEnd></ng-content>
+        </spa-dialog-footer>
+    }
+</div>

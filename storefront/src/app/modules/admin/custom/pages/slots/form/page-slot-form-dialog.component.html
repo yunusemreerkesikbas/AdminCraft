@@ -1,58 +1,50 @@
-<div class="spa-dialog-header">
-    <h2 mat-dialog-title>{{ dialogTitle }}</h2>
-    <button mat-icon-button (click)="close()">
-        <mat-icon svgIcon="heroicons_outline:x-mark"></mat-icon>
-    </button>
-</div>
+<spa-dialog-header [title]="dialogTitle()" (closeClicked)="cancel()">
+</spa-dialog-header>
 
-<mat-dialog-content>
+<spa-dialog-content type="form">
     <form [formGroup]="form" class="flex flex-col gap-4">
-        <!-- UID Field -->
         <spa-input
             formControlName="uid"
             [label]="'admin.pageSlots.uid' | transloco"
             placeholder="e.g. cmsitem_12345678"
-        ></spa-input>
+        >
+        </spa-input>
 
-        <!-- Slot Name -->
         <spa-input
             formControlName="slotName"
             [label]="'admin.pageSlots.slotName' | transloco"
             placeholder="e.g. Header, MainContent, Footer"
-        ></spa-input>
+        >
+        </spa-input>
 
-        <!-- Position -->
         <spa-select
             formControlName="position"
             [label]="'admin.pageSlots.position' | transloco"
             [options]="positionOptions"
-        ></spa-select>
+        >
+        </spa-select>
 
-        <!-- Toggle Fields Row -->
         <div class="flex flex-row gap-6 py-2">
             <spa-toggle
                 formControlName="isActive"
                 [label]="'admin.pageSlots.isActive' | transloco"
-            ></spa-toggle>
+            >
+            </spa-toggle>
 
             <spa-toggle
                 formControlName="isShared"
                 [label]="'admin.pageSlots.isShared' | transloco"
-            ></spa-toggle>
+            >
+            </spa-toggle>
         </div>
     </form>
-</mat-dialog-content>
+</spa-dialog-content>
 
-<mat-dialog-actions align="end">
-    <button mat-button (click)="close()">
-        {{ 'admin.common.cancel' | transloco }}
-    </button>
-    <button
-        mat-flat-button
-        color="primary"
-        (click)="submit()"
-        [disabled]="form.invalid"
-    >
-        {{ submitButtonText }}
-    </button>
-</mat-dialog-actions>
+<spa-dialog-footer
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    [submitLabel]="submitButtonLabel()"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

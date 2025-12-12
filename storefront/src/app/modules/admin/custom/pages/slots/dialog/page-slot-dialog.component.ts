@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
+import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogBase } from '@shared/components/spa-dialog-base';
+import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { PageSlotListComponent } from '../list/page-slot-list.component';
+
+export interface PageSlotDialogData extends SpaDialogData {
+    pageId: number;
+}
 
 @Component({
     selector: 'spa-page-slot-dialog',
@@ -13,20 +17,12 @@ import { PageSlotListComponent } from '../list/page-slot-list.component';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
         PageSlotListComponent,
-        TranslocoModule
+        TranslocoModule,
+        SpaDialogHeaderComponent,
+        SpaDialogContentComponent,
+        SpaDialogFooterComponent
     ]
 })
-export class PageSlotDialogComponent {
-    constructor(
-        public dialogRef: MatDialogRef<PageSlotDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { pageId: number }
-    ) {}
-
-    close(): void {
-        this.dialogRef.close();
-    }
+export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogData> {
 }

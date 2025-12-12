@@ -1,119 +1,87 @@
-<div class="bg-card flex max-h-[90vh] min-w-[600px] flex-col">
-    <!-- Header -->
-    <div class="bg-card flex items-center justify-between border-b px-6 py-4">
-        <div class="flex items-center gap-3">
-            <div
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
-            >
-                <mat-icon class="icon-size-6">edit</mat-icon>
-            </div>
-            <div class="flex flex-col">
-                <h2 class="text-lg font-semibold leading-none">
-                    {{ 'admin.components.types.edit' | transloco }}
-                </h2>
-                <span class="text-secondary mt-0.5 text-sm">
-                    {{ data.type.code }}
-                </span>
-            </div>
-        </div>
-        <button mat-icon-button (click)="cancel()">
-            <mat-icon>close</mat-icon>
-        </button>
-    </div>
+<spa-dialog-header
+    [title]="'admin.components.types.edit' | transloco"
+    [subtitle]="data.type.code"
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
 
-    <!-- Content -->
-    <div class="flex-auto overflow-y-auto">
-        <mat-tab-group
-            class="component-tabs"
-            animationDuration="0ms"
-            mat-stretch-tabs="false"
-            [(selectedIndex)]="activeTab"
-        >
-            <mat-tab
-                [label]="'admin.components.types.tabs.general' | transloco"
-            >
-                <div class="py-6 sm:py-8">
-                    <!-- Read-only Info -->
-                    <div
-                        class="mb-6 flex items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3 dark:bg-slate-900/50"
-                    >
-                        <mat-icon class="text-secondary">fingerprint</mat-icon>
-                        <div class="flex flex-col">
-                            <span
-                                class="text-secondary text-xs font-medium uppercase tracking-wider"
-                                >{{
-                                    'admin.common.fields.code' | transloco
-                                }}</span
-                            >
-                            <span class="font-mono font-medium">{{
-                                data.type.code
-                            }}</span>
-                        </div>
-                    </div>
-
-                    <form
-                        [formGroup]="form"
-                        class="grid grid-cols-1 gap-6 sm:grid-cols-2"
-                    >
-                        <spa-input
-                            class="w-full sm:col-span-2"
-                            formControlName="name"
-                            [label]="'admin.common.fields.name' | transloco"
-                        ></spa-input>
-
-                        <spa-select
-                            class="w-full"
-                            formControlName="category"
-                            [label]="
-                                'admin.components.fields.category' | transloco
-                            "
-                            [options]="categoryOptions"
-                            [placeholder]="'admin.common.none' | transloco"
-                        ></spa-select>
-                    </form>
-                </div>
-            </mat-tab>
-
-            <mat-tab
-                [label]="'admin.components.types.tabs.entryFields' | transloco"
-            >
-                <div class="flex flex-col p-6 sm:p-8">
-                    <div class="mb-6 flex items-center gap-2">
-                        <div
-                            class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary"
-                        >
-                            <mat-icon class="icon-size-5">extension</mat-icon>
-                        </div>
-                        <h3 class="text-lg font-semibold">
-                            {{
-                                'admin.components.types.entryFieldsTitle'
-                                    | transloco
-                            }}
-                        </h3>
-                    </div>
-                    <spa-entry-fields-builder
-                        [componentTypeId]="data.type.id"
-                    />
-                </div>
-            </mat-tab>
-        </mat-tab-group>
-    </div>
-
-    <!-- Footer -->
-    <div
-        class="flex items-center justify-end gap-3 border-t bg-slate-50 px-6 py-4 dark:bg-slate-900/20"
+<spa-dialog-content type="tabbed">
+    <mat-tab-group
+        class="component-tabs"
+        animationDuration="0ms"
+        mat-stretch-tabs="false"
+        [(selectedIndex)]="activeTab"
     >
-        <button mat-button (click)="cancel()" [disabled]="isSubmitting()">
-            {{ 'admin.dialog.actions.cancel' | transloco }}
-        </button>
-        <button
-            mat-flat-button
-            color="primary"
-            (click)="save()"
-            [disabled]="form.invalid || isSubmitting()"
+        <mat-tab [label]="'admin.components.types.tabs.general' | transloco">
+            <div class="py-6 sm:py-8">
+                <div
+                    class="mb-6 flex items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3 dark:bg-slate-900/50"
+                >
+                    <mat-icon class="text-secondary">fingerprint</mat-icon>
+                    <div class="flex flex-col">
+                        <span
+                            class="text-secondary text-xs font-medium uppercase tracking-wider"
+                        >
+                            {{ 'admin.common.fields.code' | transloco }}
+                        </span>
+                        <span class="font-mono font-medium">{{
+                            data.type.code
+                        }}</span>
+                    </div>
+                </div>
+
+                <form
+                    [formGroup]="form"
+                    class="grid grid-cols-1 gap-6 sm:grid-cols-2"
+                >
+                    <spa-input
+                        class="w-full sm:col-span-2"
+                        formControlName="name"
+                        [label]="'admin.common.fields.name' | transloco"
+                    >
+                    </spa-input>
+
+                    <spa-select
+                        class="w-full"
+                        formControlName="category"
+                        [label]="'admin.components.fields.category' | transloco"
+                        [options]="categoryOptions"
+                        [placeholder]="'admin.common.none' | transloco"
+                    >
+                    </spa-select>
+                </form>
+            </div>
+        </mat-tab>
+
+        <mat-tab
+            [label]="'admin.components.types.tabs.entryFields' | transloco"
         >
-            <mat-icon class="mr-2">save</mat-icon>
-            {{ 'admin.dialog.actions.save' | transloco }}
-        </button>
-    </div>
-</div>
+            <div class="flex flex-col p-6 sm:p-8">
+                <div class="mb-6 flex items-center gap-2">
+                    <div
+                        class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary"
+                    >
+                        <mat-icon class="icon-size-5">extension</mat-icon>
+                    </div>
+                    <h3 class="text-lg font-semibold">
+                        {{
+                            'admin.components.types.entryFieldsTitle'
+                                | transloco
+                        }}
+                    </h3>
+                </div>
+                <spa-entry-fields-builder [componentTypeId]="data.type.id" />
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

@@ -1,21 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@jsverse/transloco';
-import { BaseDialogComponent } from '@shared/components/base-dialog';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
+import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
+import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take, takeUntil } from 'rxjs';
 import { CreateEntryFieldRequest, ImportResultResponse } from '../../models/component-entry.types';
 import { EntryFieldService } from '../../services/entry-field.service';
 
-import { BaseDialogData } from '@shared/components/base-dialog';
-
-interface DialogData extends BaseDialogData {
+interface DialogData extends SpaDialogData {
     componentTypeId: number;
 }
 
@@ -28,20 +27,21 @@ interface DialogData extends BaseDialogData {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatDialogModule,
         MatTableModule,
         MatButtonModule,
         MatIconModule,
         TranslocoModule,
-        SpaTextareaComponent
+        SpaTextareaComponent,
+        SpaDialogHeaderComponent,
+        SpaDialogContentComponent,
+        SpaDialogFooterComponent
     ]
 })
-export class EntryFieldImportDialogComponent extends BaseDialogComponent<boolean, DialogData> {
-    #fb = inject(FormBuilder);
-    #service = inject(EntryFieldService);
-    #notify = inject(NotificationService);
+export class EntryFieldImportDialogComponent extends SpaFormDialog<boolean, DialogData> {
+    readonly #service = inject(EntryFieldService);
+    readonly #notifyService = inject(NotificationService);
 
-    importForm = this.#fb.group({
+    protected form = this.fb.group({
         jsonInput: ['', Validators.required]
     });
 
@@ -52,7 +52,7 @@ export class EntryFieldImportDialogComponent extends BaseDialogComponent<boolean
     displayedColumns = ['fieldKey', 'fieldType', 'isRequired'];
 
     parseJson(): void {
-        const jsonInput = this.importForm.get('jsonInput')?.value;
+        const jsonInput = this.form.get('jsonInput')?.value;
         if (!jsonInput) {
             this.validationErrors.set(['JSON input is required']);
             return;
@@ -102,14 +102,10 @@ export class EntryFieldImportDialogComponent extends BaseDialogComponent<boolean
         }
     }
 
-    submit(): void {
-        this.onSave();
-    }
-
-    protected onSave(): void {
+    save(): void {
         const fields = this.parsedFields();
         if (fields.length === 0) {
-            this.#notify.warning('admin.components.entryFields.noFieldsToImport');
+            this.#notifyService.warning('admin.components.entryFields.noFieldsToImport');
             return;
         }
 
@@ -122,17 +118,16 @@ export class EntryFieldImportDialogComponent extends BaseDialogComponent<boolean
                     this.importResult.set(result);
 
                     if (result.failedCount === 0) {
-                        this.#notify.success('admin.components.entryFields.importSuccess');
+                        this.#notifyService.success('admin.components.entryFields.importSuccess');
                         this.close(true);
                     } else {
-                        this.#notify.warning('admin.components.entryFields.importPartialSuccess');
+                        this.#notifyService.warning('admin.components.entryFields.importPartialSuccess');
                     }
                 },
                 error: () => {
                     this.setSubmitting(false);
-                    this.#notify.alert('admin.components.entryFields.importFailed');
+                    this.#notifyService.alert('admin.components.entryFields.importFailed');
                 }
             });
     }
 }
-

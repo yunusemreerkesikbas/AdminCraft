@@ -1,0 +1,28 @@
+<div class="spa-dialog-footer">
+    <ng-content select="[footerStart]"></ng-content>
+    <div class="spa-dialog-footer__actions">
+        @if (showCancel) {
+            <button
+                mat-button
+                (click)="cancelClicked.emit()"
+                [disabled]="isSubmitting"
+            >
+                {{ cancelLabel | transloco }}
+            </button>
+        }
+        @if (showSubmit) {
+            <button
+                mat-flat-button
+                color="primary"
+                (click)="submitClicked.emit()"
+                [disabled]="submitDisabled || isSubmitting"
+            >
+                @if (isSubmitting) {
+                    <mat-spinner diameter="18" class="mr-2"></mat-spinner>
+                }
+                {{ submitLabel | transloco }}
+            </button>
+        }
+        <ng-content select="[footerEnd]"></ng-content>
+    </div>
+</div>

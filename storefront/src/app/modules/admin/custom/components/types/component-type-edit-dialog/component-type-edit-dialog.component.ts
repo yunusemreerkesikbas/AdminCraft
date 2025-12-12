@@ -1,25 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
-import { BaseCrudDialogComponent } from '@shared/components/base-crud-dialog';
-import { CrudDialogData } from '@shared/components/base-dialog';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
+import { SpaFormDialog } from '@shared/components/spa-form-dialog';
+import { take, takeUntil } from 'rxjs';
 import { EntryFieldsBuilderComponent } from '../../entries/entry-fields-builder/entry-fields-builder.component';
 import { COMPONENT_CATEGORIES } from '../../models/component-categories.constants';
 import { ComponentTypeDto, UpdateComponentTypeRequest } from '../../models/component-library.types';
 import { ComponentTypeService } from '../../services/component-type.service';
 
-interface DialogData extends CrudDialogData<ComponentTypeDto> {
+interface DialogData extends SpaDialogData {
     type: ComponentTypeDto;
 }
 
@@ -33,28 +31,26 @@ interface DialogData extends CrudDialogData<ComponentTypeDto> {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatDialogModule,
         MatTabsModule,
-        MatFormFieldModule,
         MatIconModule,
-        MatInputModule,
-        MatSelectModule,
         MatButtonModule,
         TranslocoModule,
         EntryFieldsBuilderComponent,
         SpaInputComponent,
-        SpaSelectComponent
+        SpaSelectComponent,
+        SpaDialogHeaderComponent,
+        SpaDialogContentComponent,
+        SpaDialogFooterComponent
     ]
 })
-export class ComponentTypeEditDialogComponent extends BaseCrudDialogComponent<ComponentTypeDto, never, UpdateComponentTypeRequest> {
-    protected override service = inject(ComponentTypeService);
-    protected override form!: FormGroup;
-    protected override readonly data!: DialogData;
+export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTypeDto, DialogData> implements OnInit {
+    readonly #service = inject(ComponentTypeService);
 
+    protected form!: FormGroup;
     categoryOptions = COMPONENT_CATEGORIES;
 
     override ngOnInit(): void {
-        const typeData = this.data.type;
+        const typeData = this.data!.type;
         this.form = this.fb.group({
             name: [typeData.name, Validators.required],
             category: [typeData.category || null]
@@ -62,24 +58,27 @@ export class ComponentTypeEditDialogComponent extends BaseCrudDialogComponent<Co
     }
 
     save(): void {
-        this.onSave();
-    }
+        if (this.form.invalid) return;
+        if (this.isSubmitting()) return;
 
-    protected buildPayload(): UpdateComponentTypeRequest {
-        const formValue = this.form.value;
-        return {
-            name: formValue.name!,
-            category: formValue.category || undefined
+        const payload: UpdateComponentTypeRequest = {
+            name: this.form.value.name!,
+            category: this.form.value.category || undefined
         };
-    }
 
-    protected override onSaveSuccess(result: ComponentTypeDto): void {
-        this.notify.success('admin.components.types.success.updated');
-        this.close(result);
-    }
-
-    protected override onSaveError(error: any): void {
-        this.notify.alert('admin.components.types.errors.updateFailed');
+        this.setSubmitting(true);
+        this.#service.update(this.data!.type.id, payload)
+            .pipe(take(1), takeUntil(this.destroy$))
+            .subscribe({
+                next: (result) => {
+                    this.setSubmitting(false);
+                    this.notify.success('admin.components.types.success.updated');
+                    this.close(result);
+                },
+                error: () => {
+                    this.setSubmitting(false);
+                    this.notify.alert('admin.components.types.errors.updateFailed');
+                }
+            });
     }
 }
-
