@@ -18,7 +18,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "pages", indexes = {
         @Index(columnList = "status", name = "idx_page_status"),
         @Index(columnList = "category_id", name = "idx_page_category"),
-        @Index(columnList = "sort_order", name = "idx_page_sort")
+        @Index(columnList = "sort_order", name = "idx_page_sort"),
+        @Index(columnList = "template_id", name = "idx_page_template")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +29,9 @@ public class Page extends BaseEntity {
 
     @Column(name = "category_id")
     private Long categoryId;
+
+    @Column(name = "template_id")
+    private Long templateId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -45,9 +49,6 @@ public class Page extends BaseEntity {
 
     @Column(name = "robot_tag", length = 50)
     private String robotTag = "INDEX_FOLLOW";
-
-    @Column(name = "template_uid", length = 50)
-    private String templateUid;
 
     public void validateEditAuthorization(Long userId, Long userTenantId) {
     }
