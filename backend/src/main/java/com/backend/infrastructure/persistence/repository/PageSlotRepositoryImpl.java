@@ -52,6 +52,11 @@ public class PageSlotRepositoryImpl implements PageSlotRepository {
   }
 
   @Override
+  public List<PageSlot> saveAll(List<PageSlot> pageSlots) {
+    return jpaRepository.saveAll(pageSlots);
+  }
+
+  @Override
   public void delete(PageSlot pageSlot) {
     jpaRepository.delete(pageSlot);
   }

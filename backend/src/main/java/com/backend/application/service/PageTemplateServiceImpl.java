@@ -1,6 +1,9 @@
 package com.backend.application.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +18,7 @@ import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.TemplateSlot;
+import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.PageTemplateRepository;
@@ -56,7 +60,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   public PageTemplateDto getById(Long id) {
     return pageTemplateRepository.findById(id)
         .map(pageTemplateMapper::toDto)
-        .orElseThrow(() -> new IllegalArgumentException("Template not found: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
   }
 
   @Override
@@ -81,7 +85,11 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   @Override
   public PageTemplateDto update(Long id, UpdatePageTemplateCommand command) {
     PageTemplate template = pageTemplateRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Template not found: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
+
+    if (Boolean.TRUE.equals(template.getIsSystem())) {
+      throw new IllegalArgumentException("Cannot modify system template: " + template.getName());
+    }
 
     if (command.name() != null) {
       template.setName(command.name());
@@ -102,7 +110,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   @Override
   public void delete(Long id) {
     PageTemplate template = pageTemplateRepository.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Template not found: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
 
     if (Boolean.TRUE.equals(template.getIsSystem())) {
       throw new IllegalArgumentException("Cannot delete system template: " + template.getName());
@@ -115,7 +123,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   @Override
   public TemplateSlotDto addSlot(Long templateId, CreateTemplateSlotCommand command) {
     PageTemplate template = pageTemplateRepository.findById(templateId)
-        .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", templateId));
 
     if (templateSlotRepository.existsByTemplateIdAndSlotName(templateId, command.slotName())) {
       throw new IllegalArgumentException(
@@ -149,8 +157,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   @Override
   public void removeSlot(Long templateId, String slotName) {
     TemplateSlot slot = templateSlotRepository.findByTemplateIdAndSlotName(templateId, slotName)
-        .orElseThrow(() -> new IllegalArgumentException(
-            "Slot '" + slotName + "' not found in template"));
+        .orElseThrow(() -> new EntityNotFoundException("TemplateSlot", slotName));
 
     templateSlotRepository.delete(slot);
     log.info("Removed slot '{}' from template {}", slotName, templateId);
@@ -159,7 +166,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   @Override
   public void assignTemplateToPage(Long pageId, Long templateId) {
     Page page = pageRepository.findById(pageId)
-        .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageId));
+        .orElseThrow(() -> new EntityNotFoundException("Page", pageId));
 
     if (templateId == null) {
       page.setTemplateId(null);
@@ -169,14 +176,22 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     }
 
     PageTemplate template = pageTemplateRepository.findById(templateId)
-        .orElseThrow(() -> new IllegalArgumentException("Template not found: " + templateId));
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", templateId));
 
     page.setTemplateId(templateId);
     pageRepository.save(page);
 
+    // Get existing slot names in one query to avoid N+1
+    Set<String> existingSlotNames = pageSlotRepository.findByPageId(pageId).stream()
+        .map(PageSlot::getSlotName)
+        .collect(Collectors.toSet());
+
+    // Get template slots and filter to only create missing ones
     List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(templateId);
+    List<PageSlot> newSlots = new ArrayList<>();
+
     for (TemplateSlot templateSlot : templateSlots) {
-      if (!pageSlotRepository.existsByPageIdAndSlotName(pageId, templateSlot.getSlotName())) {
+      if (!existingSlotNames.contains(templateSlot.getSlotName())) {
         PageSlot pageSlot = new PageSlot();
         pageSlot.setPageId(pageId);
         pageSlot.setSlotName(templateSlot.getSlotName());
@@ -184,13 +199,17 @@ public class PageTemplateServiceImpl implements PageTemplateService {
         pageSlot.setSortOrder(templateSlot.getSortOrder());
         pageSlot.setIsActive(true);
         pageSlot.setIsShared(false);
-
-        pageSlotRepository.save(pageSlot);
-        log.debug("Created page slot '{}' for page {}", templateSlot.getSlotName(), pageId);
+        newSlots.add(pageSlot);
       }
     }
 
+    // Batch save all new slots
+    if (!newSlots.isEmpty()) {
+      pageSlotRepository.saveAll(newSlots);
+      log.debug("Created {} page slots for page {}", newSlots.size(), pageId);
+    }
+
     log.info("Assigned template '{}' to page {} and created {} slots",
-        template.getName(), pageId, templateSlots.size());
+        template.getName(), pageId, newSlots.size());
   }
 }

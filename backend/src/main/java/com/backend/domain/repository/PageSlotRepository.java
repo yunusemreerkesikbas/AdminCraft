@@ -21,6 +21,8 @@ public interface PageSlotRepository {
 
   PageSlot save(PageSlot pageSlot);
 
+  List<PageSlot> saveAll(List<PageSlot> pageSlots);
+
   void delete(PageSlot pageSlot);
 
   boolean existsByPageIdAndSlotName(Long pageId, String slotName);
