@@ -1,0 +1,28 @@
+package com.backend.infrastructure.persistence.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.backend.domain.entity.PageTemplate;
+
+interface PageTemplateJpaRepository extends JpaRepository<PageTemplate, Long> {
+
+  Optional<PageTemplate> findByUid(String uid);
+
+  @EntityGraph(attributePaths = { "slots" })
+  Optional<PageTemplate> findWithSlotsById(Long id);
+
+  @EntityGraph(attributePaths = { "slots" })
+  Optional<PageTemplate> findWithSlotsByUid(String uid);
+
+  @EntityGraph(attributePaths = { "slots" })
+  List<PageTemplate> findByIsActiveTrueOrderByNameAsc();
+
+  @EntityGraph(attributePaths = { "slots" })
+  List<PageTemplate> findAllByOrderByNameAsc();
+
+  boolean existsByUid(String uid);
+}
