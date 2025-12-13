@@ -33,114 +33,12 @@ CREATE TABLE IF NOT EXISTS template_slots (
     updated_by BIGINT NULL,
     UNIQUE KEY uk_template_slot (template_id, slot_name),
     INDEX idx_template_slot_template (template_id),
+    INDEX idx_template_slot_sort_order (sort_order),
     FOREIGN KEY (template_id) REFERENCES page_templates(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
-DELIMITER //
-CREATE PROCEDURE AddColumnIfNotExists(
-    IN dbName VARCHAR(100),
-    IN tableName VARCHAR(100),
-    IN colName VARCHAR(100),
-    IN colDef TEXT
-)
-BEGIN
-    IF (SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = dbName
-        AND TABLE_NAME = tableName
-        AND COLUMN_NAME = colName) = 0 THEN
-
-        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
-        PREPARE stmt FROM @ddl;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END //
-DELIMITER ;
-
-DROP PROCEDURE IF EXISTS DropColumnIfExists;
-DELIMITER //
-CREATE PROCEDURE DropColumnIfExists(
-    IN dbName VARCHAR(100),
-    IN tableName VARCHAR(100),
-    IN colName VARCHAR(100)
-)
-BEGIN
-    IF (SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = dbName
-        AND TABLE_NAME = tableName
-        AND COLUMN_NAME = colName) = 1 THEN
-
-        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' DROP COLUMN ', colName);
-        PREPARE stmt FROM @ddl;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END //
-DELIMITER ;
-
-DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
-DELIMITER //
-CREATE PROCEDURE AddIndexIfNotExists(
-    IN dbName VARCHAR(100),
-    IN tableName VARCHAR(100),
-    IN indexName VARCHAR(100),
-    IN indexDef TEXT
-)
-BEGIN
-    IF (SELECT count(*) FROM INFORMATION_SCHEMA.STATISTICS
-        WHERE TABLE_SCHEMA = dbName
-        AND TABLE_NAME = tableName
-        AND INDEX_NAME = indexName) = 0 THEN
-
-        SET @ddl = CONCAT('CREATE INDEX ', indexName, ' ON ', tableName, ' (', indexDef, ')');
-        PREPARE stmt FROM @ddl;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END //
-DELIMITER ;
-
-DROP PROCEDURE IF EXISTS AddForeignKeyIfNotExists;
-DELIMITER //
-CREATE PROCEDURE AddForeignKeyIfNotExists(
-    IN dbName VARCHAR(100),
-    IN tableName VARCHAR(100),
-    IN constraintName VARCHAR(100),
-    IN fkDef TEXT
-)
-BEGIN
-    IF (SELECT count(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-        WHERE CONSTRAINT_SCHEMA = dbName
-        AND TABLE_NAME = tableName
-        AND CONSTRAINT_NAME = constraintName
-        AND CONSTRAINT_TYPE = 'FOREIGN KEY') = 0 THEN
-
-        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD CONSTRAINT ', constraintName, ' ', fkDef);
-        PREPARE stmt FROM @ddl;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END //
-DELIMITER ;
-
-CALL AddColumnIfNotExists(DATABASE(), 'page_templates', 'created_by', 'BIGINT NULL');
-CALL AddColumnIfNotExists(DATABASE(), 'page_templates', 'updated_by', 'BIGINT NULL');
-CALL DropColumnIfExists(DATABASE(), 'page_templates', 'preview_image');
-
-CALL AddColumnIfNotExists(DATABASE(), 'template_slots', 'uid', 'VARCHAR(50) NOT NULL UNIQUE AFTER uuid');
-CALL AddColumnIfNotExists(DATABASE(), 'template_slots', 'updated_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
-CALL AddColumnIfNotExists(DATABASE(), 'template_slots', 'created_by', 'BIGINT NULL');
-CALL AddColumnIfNotExists(DATABASE(), 'template_slots', 'updated_by', 'BIGINT NULL');
-
-CALL AddColumnIfNotExists(DATABASE(), 'pages', 'template_id', 'BIGINT NULL AFTER category_id');
-CALL AddIndexIfNotExists(DATABASE(), 'pages', 'idx_page_template', 'template_id');
-CALL AddForeignKeyIfNotExists(DATABASE(), 'pages', 'fk_page_template',
-    'FOREIGN KEY (template_id) REFERENCES page_templates(id) ON DELETE SET NULL');
-
-CALL DropColumnIfExists(DATABASE(), 'pages', 'template_uid');
-
-DROP PROCEDURE IF EXISTS AddForeignKeyIfNotExists;
-DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
-DROP PROCEDURE IF EXISTS DropColumnIfExists;
-DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
+-- Add template_id reference to pages table
+ALTER TABLE pages ADD COLUMN template_id BIGINT NULL AFTER category_id;
+CREATE INDEX idx_page_template ON pages (template_id);
+ALTER TABLE pages ADD CONSTRAINT fk_page_template
+    FOREIGN KEY (template_id) REFERENCES page_templates(id) ON DELETE SET NULL;
