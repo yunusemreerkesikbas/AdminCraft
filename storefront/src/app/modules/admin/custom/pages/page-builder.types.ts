@@ -8,6 +8,7 @@ export interface PageDto {
   uid: string;
   tenantId: number;
   categoryId?: number | null;
+  templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
@@ -43,6 +44,7 @@ export interface PageListDto {
   uid: string;
   tenantId: number;
   categoryId?: number | null;
+  templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
@@ -60,6 +62,7 @@ export interface PageDetailDto {
   uid: string;
   tenantId: number;
   categoryId?: number | null;
+  templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
@@ -77,6 +80,7 @@ export interface PageDetailDto {
 
 export interface CreatePageRequest {
   categoryId?: number | null;
+  templateId?: number | null;
   status?: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;
@@ -86,6 +90,7 @@ export interface CreatePageRequest {
 export interface UpdatePageRequest {
   id: number;
   categoryId?: number | null;
+  templateId?: number | null;
   status?: PageStatus;
   featuredImage?: string | null;
   styleClasses?: string | null;

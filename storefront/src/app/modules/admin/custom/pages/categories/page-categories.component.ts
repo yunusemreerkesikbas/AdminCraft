@@ -23,7 +23,6 @@ import {
   UpsertCategoryI18nRequest
 } from '../page-builder.types';
 import { CategorySchemaBuilderService } from '../services/category-schema-builder.service';
-import { ErrorHandlingService } from '../services/error-handling.service';
 
 @Component({
   selector: 'spa-page-categories',
@@ -64,7 +63,6 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
   #pageBuilderService = inject(PageBuilderService);
   #tenantCtx = inject(TenantContextService);
   #tenantsSvc = inject(TenantsService);
-  #errorHandler = inject(ErrorHandlingService);
   #dialog = inject(ItemDialogService);
   #schema = inject(CategorySchemaBuilderService);
 
@@ -141,8 +139,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
   }
 
   protected override onLoadError(error: any): void {
-    const msg = this.#errorHandler.handleError(error);
-    this.#notify.alert(msg);
+    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
   }
 
   loadCategories(): void {
@@ -211,8 +208,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
               this.#saveI18nForCategory(created.id, result, true);
             },
             error: (error) => {
-              const msg = this.#errorHandler.handleError(error);
-              this.#notify.alert(msg);
+              this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
             },
           });
       });
@@ -241,8 +237,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
         },
         error: (error) => {
           this.store.setLoading(false);
-          const msg = this.#errorHandler.handleError(error);
-          this.#notify.alert(msg);
+          this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
         },
       });
   }
@@ -301,8 +296,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
               this.#saveI18nForCategory(detail.id, result, false);
             },
             error: (error) => {
-              const msg = this.#errorHandler.handleError(error);
-              this.#notify.alert(msg);
+              this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
             },
           });
       });
@@ -344,8 +338,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
           this.loadCategories();
         },
         error: (error) => {
-          const msg = this.#errorHandler.handleError(error);
-          this.#notify.alert(msg);
+          this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
         },
       });
   }
@@ -362,8 +355,7 @@ export class PageCategoriesComponent extends BaseCrudListComponent<PageCategoryL
   }
 
   protected override onDeleteError(error: any): void {
-    const msg = this.#errorHandler.handleError(error);
-    this.#notify.alert(msg);
+    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
   }
 
   getParentCategoryName(parentId: number): string {

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GeneralFieldConfig, ItemDialogSchema, LangFieldConfig } from '@shared/types/item-dialog.types';
+import { PageTemplate } from '../../templates/page-template.types';
 import { PageCategoryDto } from '../page-builder.types';
 
 @Injectable({
@@ -7,12 +8,12 @@ import { PageCategoryDto } from '../page-builder.types';
 })
 export class PageSchemaBuilderService {
 
-  buildPageCreateSchema(categories: PageCategoryDto[]): ItemDialogSchema {
-    return this.#buildBaseSchema(categories);
+  buildPageCreateSchema(categories: PageCategoryDto[], templates: PageTemplate[] = []): ItemDialogSchema {
+    return this.#buildBaseSchema(categories, templates);
   }
 
-  buildPageEditSchema(categories: PageCategoryDto[]): ItemDialogSchema {
-    return this.#buildBaseSchema(categories);
+  buildPageEditSchema(categories: PageCategoryDto[], templates: PageTemplate[] = []): ItemDialogSchema {
+    return this.#buildBaseSchema(categories, templates);
   }
 
   transformCategoryOptions(categories: PageCategoryDto[]): ReadonlyArray<{ value: number; label: string }> {
@@ -22,15 +23,28 @@ export class PageSchemaBuilderService {
     }));
   }
 
-  #buildBaseSchema(categories: PageCategoryDto[]): ItemDialogSchema {
+  transformTemplateOptions(templates: PageTemplate[]): ReadonlyArray<{ value: number; label: string }> {
+    return templates.map(template => ({
+      value: template.id,
+      label: template.name
+    }));
+  }
+
+  #buildBaseSchema(categories: PageCategoryDto[], templates: PageTemplate[]): ItemDialogSchema {
     return {
-      general: this.#buildGeneralFields(categories),
+      general: this.#buildGeneralFields(categories, templates),
       i18n: this.#buildI18nFields()
     };
   }
 
-  #buildGeneralFields(categories: PageCategoryDto[]): ReadonlyArray<GeneralFieldConfig> {
+  #buildGeneralFields(categories: PageCategoryDto[], templates: PageTemplate[]): ReadonlyArray<GeneralFieldConfig> {
     return [
+      {
+        key: 'templateId',
+        type: 'select',
+        labelKey: 'admin.common.fields.template',
+        options: this.transformTemplateOptions(templates)
+      },
       {
         key: 'categoryId',
         type: 'select',

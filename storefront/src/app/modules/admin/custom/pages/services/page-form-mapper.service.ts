@@ -7,6 +7,7 @@ export class PageFormMapperService {
   toCreatePageRequest(result: CreatePageFormData): CreatePageRequest {
     return {
       categoryId: (result as any).categoryId ?? null,
+      templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
       sortOrder: Number((result as any).sortOrder ?? 0),
       styleClasses: (result as any).styleClasses ?? null,
@@ -18,6 +19,7 @@ export class PageFormMapperService {
     return {
       id: pageId,
       categoryId: (result as any).categoryId ?? null,
+      templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
       sortOrder: Number((result as any).sortOrder ?? 0),
       styleClasses: (result as any).styleClasses ?? null,
