@@ -33,7 +33,10 @@
       "Bash(powershell -Command \"Invoke-WebRequest -Uri http://localhost:8080/actuator/health -UseBasicParsing | Select-Object -ExpandProperty Content\")",
       "Bash(powershell -Command \"Invoke-WebRequest -Uri http://localhost:8080/api/actuator/health -UseBasicParsing | Select-Object -ExpandProperty Content\")",
       "Bash(powershell -Command \"try { $response = Invoke-WebRequest -Uri ''http://democompany.localhost:4200/api/components'' -UseBasicParsing; $response.Content } catch { $_Exception.Message }\")",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -3 {}')",
+      "Bash(xargs -I {} bash -c 'echo \"\"\"\"=== {} ===\"\"\"\" && cat {}')",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],

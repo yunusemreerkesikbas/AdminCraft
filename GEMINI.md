@@ -101,7 +101,7 @@ docker compose up -d
 **Active Modules (5):**
 
 - `core` (required): users, roles, sites
-- `pagebuilder`: pages + page_categories (mandatory)
+- `pagebuilder`: pages
 - `site_settings`: global/i18n config
 - `media`: media files with i18n
 - `component_library`: reusable UI components with i18n
@@ -117,7 +117,6 @@ When adding new module:
 
 **Rules:**
 
-- page_categories NOT shown in provision dialog (part of pagebuilder)
 - Navigation shows when required module enabled
 - All modules type: 'core' (no b2c/b2b grouping)
 

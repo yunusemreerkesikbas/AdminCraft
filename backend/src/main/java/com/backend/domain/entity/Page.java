@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "pages", indexes = {
         @Index(columnList = "status", name = "idx_page_status"),
-        @Index(columnList = "category_id", name = "idx_page_category"),
         @Index(columnList = "sort_order", name = "idx_page_sort"),
         @Index(columnList = "template_id", name = "idx_page_template")
 })
@@ -26,9 +25,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Page extends BaseEntity {
-
-    @Column(name = "category_id")
-    private Long categoryId;
 
     @Column(name = "template_id")
     private Long templateId;

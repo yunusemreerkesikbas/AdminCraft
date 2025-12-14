@@ -55,12 +55,6 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageI18n: 'pages/${pageId}/i18n/${language}',
     pageI18nPublish: 'pages/${pageId}/publish/${language}',
 
-    // ----- PAGE BUILDER: CATEGORIES -----
-    pageCategories: 'page-categories',
-    pageCategoryById: 'page-categories/${id}',
-    pageCategoryWithTranslations: 'page-categories/${id}?include=translations',
-    pageCategoryI18n: 'page-categories/${categoryId}/i18n/${language}',
-
     // ----- PAGE BUILDER: SLOTS -----
     pageSlots: 'pages/${id}/slots',
     pageSlot: 'pages/${id}/slots/${slotName}',

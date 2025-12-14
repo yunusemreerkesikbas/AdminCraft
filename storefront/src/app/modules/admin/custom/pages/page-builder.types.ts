@@ -7,7 +7,6 @@ export interface PageDto {
   uuid: string;
   uid: string;
   tenantId: number;
-  categoryId?: number | null;
   templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
@@ -43,7 +42,6 @@ export interface PageListDto {
   uuid: string;
   uid: string;
   tenantId: number;
-  categoryId?: number | null;
   templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
@@ -61,7 +59,6 @@ export interface PageDetailDto {
   uuid: string;
   uid: string;
   tenantId: number;
-  categoryId?: number | null;
   templateId?: number | null;
   status: PageStatus;
   featuredImage?: string | null;
@@ -79,7 +76,6 @@ export interface PageDetailDto {
 }
 
 export interface CreatePageRequest {
-  categoryId?: number | null;
   templateId?: number | null;
   status?: PageStatus;
   featuredImage?: string | null;
@@ -89,7 +85,6 @@ export interface CreatePageRequest {
 
 export interface UpdatePageRequest {
   id: number;
-  categoryId?: number | null;
   templateId?: number | null;
   status?: PageStatus;
   featuredImage?: string | null;
@@ -113,81 +108,6 @@ export interface PageI18nRequest {
 export interface PublishPageI18nRequest {
   scheduledAt?: string | null;
 }
-
-export interface PageCategoryListDto {
-  id: number;
-  uuid: string;
-  uid: string;
-  parentId?: number | null;
-  active: boolean;
-  styleClasses?: string | null;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-  translations: {
-    [key in Language]?: boolean;
-  };
-}
-
-export interface PageCategoryI18nDto {
-  id: number;
-  uuid: string;
-  uid: string;
-  language: Language;
-  url?: string | null;
-  title?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  active: boolean;
-  updatedAt: string;
-  fallbackLanguage: boolean;
-}
-
-export interface PageCategoryDetailDto {
-  id: number;
-  uuid: string;
-  uid: string;
-  parentId?: number | null;
-  active: boolean;
-  styleClasses?: string | null;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-  translations: {
-    [key in Language]?: PageCategoryI18nDto;
-  };
-  metadata: {
-    translationCount: number;
-    publishedTranslationCount: number;
-  };
-}
-
-export interface CreateCategoryRequest {
-  uid?: string | null;
-  parentId?: number | null;
-  active?: boolean;
-  styleClasses?: string | null;
-  sortOrder?: number;
-}
-
-export interface UpdateCategoryRequest {
-  parentId?: number | null;
-  active?: boolean;
-  styleClasses?: string | null;
-  sortOrder?: number;
-}
-
-export interface UpsertCategoryI18nRequest {
-  url?: string | null;
-  title?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  active?: boolean;
-}
-
-export type PageCategoryDto = PageCategoryListDto;
-
-// Removed Move/Reorder and Sections/Blocks types per refactor
 
 // API Response types
 export interface ApiResponse<T> {

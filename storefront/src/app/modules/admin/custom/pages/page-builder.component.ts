@@ -9,7 +9,7 @@ import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Observable, Subject, forkJoin, take } from 'rxjs';
 import { CreatePageFormData, PageI18nFormData } from './models/page-form.types';
 import { PageBuilderService } from './page-builder.service';
-import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest } from './page-builder.types';
+import { CreatePageRequest, Language, PageI18nRequest } from './page-builder.types';
 import { PageSchemaBuilderService } from './services/page-schema-builder.service';
 
 @Component({
@@ -34,7 +34,6 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
   #schemaBuilder = inject(PageSchemaBuilderService);
 
   isLoading = false;
-  #cachedCategories: PageCategoryDto[] = [];
 
   get #supportedLanguages(): string[] {
     return this.#languageContext.supportedLanguages();
@@ -54,11 +53,8 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
       this.#notificationService.warning('admin.pageBuilder.errors.noTenant');
       return;
     }
-    if (this.#cachedCategories.length === 0) {
-      this.#loadCategories();
-    }
 
-    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
+    const schema = this.#schemaBuilder.buildPageCreateSchema();
     const initial: CreatePageFormData = {
       status: 'DRAFT',
       sortOrder: 0
@@ -86,7 +82,6 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
 
       try {
         const generalReq: CreatePageRequest = {
-          categoryId: result.categoryId || null,
           status: result.status || 'DRAFT',
           sortOrder: result.sortOrder || 0,
           styleClasses: result.styleClasses || null,
@@ -144,17 +139,6 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
         });
       } catch (err) {
         this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
-      }
-    });
-  }
-
-  #loadCategories(): void {
-    this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({
-      next: (categories) => {
-        this.#cachedCategories = categories;
-      },
-      error: () => {
-        this.#cachedCategories = [];
       }
     });
   }

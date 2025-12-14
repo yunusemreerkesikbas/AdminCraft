@@ -6,7 +6,6 @@ import { CreatePageRequest, Language, PageI18nRequest, PageStatus, UpdatePageReq
 export class PageFormMapperService {
   toCreatePageRequest(result: CreatePageFormData): CreatePageRequest {
     return {
-      categoryId: (result as any).categoryId ?? null,
       templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
       sortOrder: Number((result as any).sortOrder ?? 0),
@@ -18,7 +17,6 @@ export class PageFormMapperService {
   toUpdatePageRequest(pageId: number, result: CreatePageFormData, featuredImage: string | null | undefined): UpdatePageRequest {
     return {
       id: pageId,
-      categoryId: (result as any).categoryId ?? null,
       templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
       sortOrder: Number((result as any).sortOrder ?? 0),

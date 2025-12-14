@@ -75,7 +75,7 @@ public class PageI18n extends BaseI18nEntity {
 **Commands/Queries:**
 
 ```java
-public record CreatePageCommand(String uid, Long categoryId, String styleClasses) {}
+public record CreatePageCommand(String uid, String styleClasses) {}
 public record PageDetailQuery(Long id, boolean includeTranslations) {}
 ```
 

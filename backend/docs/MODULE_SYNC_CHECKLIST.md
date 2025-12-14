@@ -5,6 +5,7 @@ When adding a new module to AdminCraft, update these files in order:
 ## Backend
 
 ### 1. Database Seed
+
 **File:** `backend/src/main/resources/db/platform/R__seed_modules.sql`
 
 ```sql
@@ -21,6 +22,7 @@ VALUES (
 ```
 
 ### 2. Enum
+
 **File:** `backend/src/main/java/com/backend/domain/enums/ModuleCode.java`
 
 ```java
@@ -31,6 +33,7 @@ public enum ModuleCode {
 ```
 
 ### 3. Migration
+
 **File:** `backend/src/main/resources/db/tenant/new_module/V1__baseline.sql`
 
 ```sql
@@ -43,6 +46,7 @@ CREATE TABLE new_module_data (
 ## Frontend
 
 ### 4. Navigation Constant
+
 **File:** `storefront/src/app/core/navigation/navigation-modules.constants.ts`
 
 ```typescript
@@ -53,11 +57,13 @@ export const NAVIGATION_MODULES = {
 ```
 
 ### 5. Module Guard (Optional)
+
 **File:** `storefront/src/app/core/auth/guards/module.guard.ts`
 
 Only if you need custom display name in error messages.
 
 ### 6. Navigation Items (If Needed)
+
 **File:** `storefront/src/app/shared/navigation/navigation-data.constants.ts`
 
 ```typescript
@@ -82,8 +88,6 @@ Only if you need custom display name in error messages.
 
 ## Notes
 
-- `page_categories` is NOT a standalone module (part of pagebuilder)
 - All modules have type: `'core'`
 - Core module deps: `NULL`, others: `'["core"]'`
 - Module codes: lowercase with underscores
-

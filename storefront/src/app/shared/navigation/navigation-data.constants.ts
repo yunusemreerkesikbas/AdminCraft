@@ -55,15 +55,6 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {
-                id: 'apps.custom.pagebuilder.categories',
-                title: 'Page Categories',
-                type: 'basic',
-                icon: 'heroicons_outline:folder',
-                link: 'pages/categories',
-                requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
-                excludedRoles: ['SUPER_ADMIN'],
-            },
-            {
                 id: 'apps.custom.pagebuilder.templates',
                 title: 'Page Templates',
                 type: 'basic',

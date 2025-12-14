@@ -33,7 +33,6 @@ public class PageServiceImpl implements PageService {
         Page page = new Page();
         page.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
         page.setUid(generateUniqueUidForPage());
-        page.setCategoryId(request.categoryId());
         page.setTemplateId(request.templateId());
         page.setStatus(request.status() != null ? request.status() : PageStatus.DRAFT);
         page.setFeaturedImage(request.featuredImage());
@@ -96,8 +95,6 @@ public class PageServiceImpl implements PageService {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
 
-        if (request.categoryId() != null)
-            page.setCategoryId(request.categoryId());
         // templateId can be set to null intentionally (to clear template)
         page.setTemplateId(request.templateId());
         if (request.status() != null)

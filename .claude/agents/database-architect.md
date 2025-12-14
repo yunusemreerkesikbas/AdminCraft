@@ -33,7 +33,6 @@ Data plane, per-tenant isolation:
 
 - `users` - Tenant users (TENANT_ADMIN, EDITOR, VIEWER)
 - `pages` + `page_i18n` - CMS pages with i18n
-- `page_categories` + `page_category_i18n` - Categories
 - `site_settings` - Tenant-specific config
 
 ## Entity Patterns
@@ -77,8 +76,6 @@ public abstract class BaseEntity {
     @Index(columnList = "sort_order", name = "idx_page_sort")
 })
 public class Page extends BaseEntity {
-    @Column(name = "category_id")
-    private Long categoryId;
 
     @Enumerated(EnumType.STRING)
     private PageStatus status = PageStatus.DRAFT;

@@ -132,7 +132,7 @@ class AsyncProvisioningExecutorTest {
         @Test
         void shouldPreserveModuleOrderInList() {
                 // Given
-                List<String> modules = Arrays.asList("core", "pagebuilder", "site_settings", "page_categories");
+                List<String> modules = Arrays.asList("core", "pagebuilder", "site_settings");
 
                 // When
                 List<TenantModule> tenantModules = modules.stream()
@@ -148,6 +148,5 @@ class AsyncProvisioningExecutorTest {
                 assertThat(tenantModules.get(0).getModuleCode()).isEqualTo("core");
                 assertThat(tenantModules.get(1).getModuleCode()).isEqualTo("pagebuilder");
                 assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("site_settings");
-                assertThat(tenantModules.get(3).getModuleCode()).isEqualTo("page_categories");
         }
 }

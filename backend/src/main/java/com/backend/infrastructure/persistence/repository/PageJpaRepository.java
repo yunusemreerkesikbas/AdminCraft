@@ -17,7 +17,5 @@ public interface PageJpaRepository extends JpaRepository<Page, Long> {
 
   List<Page> findByStatus(PageStatus status);
 
-  List<Page> findByCategoryId(Long categoryId);
-
   boolean existsByUid(String uid);
 }

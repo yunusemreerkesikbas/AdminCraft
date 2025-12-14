@@ -68,6 +68,7 @@ docker compose up -d
   - **V6+**: Reserved for future modules
 
 **When adding a new tenant module:**
+
 1. Check the latest version across ALL modules in `db/tenant/`
 2. Start new module at next available version (e.g., V6, V7, ...)
 3. Use descriptive names: `V6__new_module_baseline.sql`
@@ -100,7 +101,7 @@ docker compose up -d
 **Active Modules (5):**
 
 - `core` (required): users, roles, sites
-- `pagebuilder`: pages + page_categories (mandatory)
+- `pagebuilder`: pages
 - `site_settings`: global/i18n config
 - `media`: media files with i18n
 - `component_library`: reusable UI components with i18n
@@ -108,6 +109,7 @@ docker compose up -d
 **Manual Sync Process:**
 
 When adding new module:
+
 1. `db/platform/R__seed_modules.sql` → INSERT
 2. `domain/enums/ModuleCode.java` → Enum entry
 3. `core/navigation/navigation-modules.constants.ts` → Constant
@@ -115,7 +117,6 @@ When adding new module:
 
 **Rules:**
 
-- page_categories NOT shown in provision dialog (part of pagebuilder)
 - Navigation shows when required module enabled
 - All modules type: 'core' (no b2c/b2b grouping)
 
