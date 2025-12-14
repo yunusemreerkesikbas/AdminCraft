@@ -2,20 +2,14 @@ import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable, Subject } from 'rxjs';
 import {
-  CreateCategoryRequest,
   CreatePageRequest,
   Language,
-  PageCategoryDetailDto,
-  PageCategoryI18nDto,
-  PageCategoryListDto,
   PageDetailDto,
   PageI18nDto,
   PageI18nRequest,
   PageListDto,
   PublishPageI18nRequest,
-  UpdateCategoryRequest,
-  UpdatePageRequest,
-  UpsertCategoryI18nRequest
+  UpdatePageRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
@@ -73,34 +67,6 @@ export class PageBuilderService extends CrudHttpService<PageListDto, CreatePageR
 
   publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<PageI18nDto> {
     return this.customPost<PageI18nDto>('pageI18nPublish', req || {}, { pageId, language });
-  }
-
-  listCategories(): Observable<PageCategoryListDto[]> {
-    return this.customGet<PageCategoryListDto[]>('pageCategories');
-  }
-
-  getCategoryDetail(id: number): Observable<PageCategoryDetailDto> {
-    return this.customGet<PageCategoryDetailDto>('pageCategoryWithTranslations', { id });
-  }
-
-  createCategory(req: CreateCategoryRequest): Observable<PageCategoryDetailDto> {
-    return this.customPost<PageCategoryDetailDto>('pageCategories', req);
-  }
-
-  updateCategory(id: number, req: UpdateCategoryRequest): Observable<PageCategoryDetailDto> {
-    return this.customPut<PageCategoryDetailDto>('pageCategoryById', req, { id });
-  }
-
-  deleteCategory(id: number): Observable<void> {
-    return this.customDelete<void>('pageCategoryById', { id });
-  }
-
-  getCategoryI18n(categoryId: number, language: Language): Observable<PageCategoryI18nDto> {
-    return this.customGet<PageCategoryI18nDto>('pageCategoryI18n', { categoryId, language });
-  }
-
-  upsertCategoryI18n(categoryId: number, language: Language, req: UpsertCategoryI18nRequest): Observable<PageCategoryI18nDto> {
-    return this.customPut<PageCategoryI18nDto>('pageCategoryI18n', req, { categoryId, language });
   }
 }
 

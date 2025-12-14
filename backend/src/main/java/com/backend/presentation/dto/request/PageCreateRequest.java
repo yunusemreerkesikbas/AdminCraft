@@ -5,8 +5,6 @@ import com.backend.domain.enums.PageStatus;
 import jakarta.validation.constraints.Size;
 
 public record PageCreateRequest(
-        Long categoryId,
-
         Long templateId,
 
         PageStatus status,

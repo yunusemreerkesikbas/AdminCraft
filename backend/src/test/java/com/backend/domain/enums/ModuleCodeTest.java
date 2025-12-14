@@ -72,7 +72,6 @@ class ModuleCodeTest {
     void shouldInvalidateInvalidCodes() {
         assertThat(ModuleCode.isValidCode("invalid")).isFalse();
         assertThat(ModuleCode.isValidCode("unknown_module")).isFalse();
-        assertThat(ModuleCode.isValidCode("page_categories")).isFalse();
         assertThat(ModuleCode.isValidCode("")).isFalse();
     }
 

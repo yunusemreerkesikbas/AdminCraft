@@ -12,7 +12,6 @@ public record UpdatePageRequest(
         @NotBlank @Size(max = 200) String title,
         @NotBlank @Size(max = 200) @Pattern(regexp = "[a-z0-9-]+", message = "validation.slug.pattern") String slug,
         @NotNull Language language,
-        Long categoryId,
         @Size(max = 60) String metaTitle,
         @Size(max = 160) String metaDescription,
         @Size(max = 255) @Pattern(regexp = "https?://.+", message = "validation.url.invalid") String canonicalUrl,

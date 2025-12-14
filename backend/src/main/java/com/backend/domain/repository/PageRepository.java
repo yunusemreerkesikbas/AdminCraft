@@ -18,8 +18,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 
     List<Page> findByStatus(PageStatus status);
 
-    List<Page> findByCategoryId(Long categoryId);
-
     List<Page> findAllByOrderBySortOrderAsc();
 
     boolean existsByUid(String uid);

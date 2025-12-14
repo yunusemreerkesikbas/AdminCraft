@@ -20,9 +20,6 @@
                         class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
                     >
                         <div>{{ 'admin.common.grid.uid' | transloco }}</div>
-                        <div class="hidden md:block">
-                            {{ 'admin.common.grid.category' | transloco }}
-                        </div>
                         <div class="hidden sm:block">
                             {{ 'admin.common.grid.status' | transloco }}
                         </div>
@@ -38,14 +35,6 @@
                             <div class="truncate font-medium">
                                 {{ p.uid }}
                             </div>
-                            <div class="hidden truncate md:block">
-                                @if (p.categoryId) {
-                                    Category {{ p.categoryId }}
-                                } @else {
-                                    -
-                                }
-                            </div>
-
                             <div class="hidden sm:block">
                                 <span
                                     class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium"

@@ -16,7 +16,7 @@ import { PageTemplateService } from '../../templates/page-template.service';
 import { PageTemplate } from '../../templates/page-template.types';
 import { CreatePageFormData, EditPageFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
-import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
+import { CreatePageRequest, Language, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
 import { PageFormMapperService } from '../services/page-form-mapper.service';
 import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
 import { PageSlotDialogComponent } from '../slots/dialog/page-slot-dialog.component';
@@ -39,14 +39,14 @@ import { PageSlotDialogComponent } from '../slots/dialog/page-slot-dialog.compon
   styles: [
     `
         .inventory-grid {
-            grid-template-columns: auto 180px 80px 120px 160px;
+            grid-template-columns: auto 80px 160px;
 
             @screen md {
-                grid-template-columns: auto 220px 100px 140px 180px;
+                grid-template-columns: auto 100px 180px;
             }
 
             @screen lg {
-                grid-template-columns: auto 260px 120px 160px 200px;
+                grid-template-columns: auto 120px 200px;
             }
         }
     `,
@@ -69,7 +69,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
 
   tenantId = 1;
   subdomain = '';
-  #cachedCategories: PageCategoryDto[] = [];
   #cachedTemplates: PageTemplate[] = [];
 
   #getSupportedLanguages(): string[] {
@@ -86,7 +85,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       this.subdomain = storedSub;
     }
 
-    this.#loadCategories();
     this.#loadTemplates();
 
     this.#tenantContext.tenant$
@@ -99,7 +97,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         this.tenantId = nextId;
         this.subdomain = nextSub;
         if (changed) {
-          this.#loadCategories();
           this.#loadTemplates();
           this.loadItems();
         }
@@ -145,7 +142,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   }
 
   createPage(): void {
-    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories, this.#cachedTemplates);
+    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedTemplates);
     const initial: CreatePageFormData = {
       status: 'DRAFT',
       sortOrder: 0,
@@ -210,9 +207,8 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   editPage(page: PageListDto): void {
     this.#pageBuilderService.getPageDetail(page.id).pipe(take(1)).subscribe({
       next: (pageDetail) => {
-        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedCategories, this.#cachedTemplates);
+        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedTemplates);
         const initial: EditPageFormData = {
-          categoryId: pageDetail.categoryId,
           templateId: pageDetail.templateId,
           status: pageDetail.status,
           sortOrder: pageDetail.sortOrder,
@@ -299,17 +295,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
 
   protected override onDeleteError(error: any): void {
     this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
-  }
-
-  #loadCategories(): void {
-    this.#pageBuilderService.listCategories().pipe(take(1)).subscribe({
-      next: (categories) => {
-        this.#cachedCategories = categories;
-      },
-      error: () => {
-        this.#cachedCategories = [];
-      }
-    });
   }
 
   #loadTemplates(): void {

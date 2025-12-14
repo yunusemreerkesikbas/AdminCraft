@@ -283,7 +283,7 @@
 						},
 						"url": "{{baseUrl}}/api/tenants/1"
 					}
-				},
+				}
                 
                 
                 
@@ -1026,7 +1026,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": 1,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
+							"raw": "{\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
 						},
 						"url": "{{baseUrl}}/api/pages"
 					}
@@ -1041,7 +1041,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"id\": 1,\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal - Güncellendi\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"categoryId\": 1,\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
+							"raw": "{\n  \"id\": 1,\n  \"tenantId\": 1,\n  \"title\": \"Kurumsal - Güncellendi\",\n  \"slug\": \"kurumsal\",\n  \"language\": \"TR\",\n  \"metaTitle\": \"Kurumsal - Demo Şirketi\",\n  \"metaDescription\": \"Kurumsal bilgiler\",\n  \"canonicalUrl\": \"https://demo.com/kurumsal\"\n}"
 						},
 						"url": "{{baseUrl}}/api/pages"
 					}
@@ -1186,7 +1186,7 @@
 						"header": [ { "key": "Accept-Language", "value": "tr" } ],
 						"url": "{{baseUrl}}/api/page-categories/1"
 					}
-				},
+				}
                 
 			]
 		},
