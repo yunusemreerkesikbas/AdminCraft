@@ -1,25 +1,20 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.domain.entity.Page;
-import com.backend.domain.entity.PageI18n;
-import com.backend.domain.enums.PageStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Lightweight DTO for page listing with translation summary.
- * The translations map contains language codes as keys and publication status
- * as values.
- * Example: {"TR": true, "EN": false} means TR translation is published, EN is
- * not.
- */
+import com.backend.domain.entity.Page;
+import com.backend.domain.entity.PageI18n;
+import com.backend.domain.enums.PageStatus;
+
 public record PageListResponse(
         Long id,
         String uuid,
         String uid,
         Long categoryId,
+        Long templateId,
         PageStatus status,
         String featuredImage,
         String styleClasses,
@@ -28,13 +23,6 @@ public record PageListResponse(
         LocalDateTime updatedAt,
         Map<String, Boolean> translations) {
 
-    /**
-     * Creates PageListResponse from Page entity and its translations.
-     * 
-     * @param page         The page entity
-     * @param pageI18nList List of translations for this page
-     * @return PageListResponse with translation publication status
-     */
     public static PageListResponse from(Page page, List<PageI18n> pageI18nList) {
         if (page == null) {
             throw new IllegalArgumentException("Page entity cannot be null");
@@ -53,6 +41,7 @@ public record PageListResponse(
                 page.getUuid(),
                 page.getUid(),
                 page.getCategoryId(),
+                page.getTemplateId(),
                 page.getStatus(),
                 page.getFeaturedImage(),
                 page.getStyleClasses(),

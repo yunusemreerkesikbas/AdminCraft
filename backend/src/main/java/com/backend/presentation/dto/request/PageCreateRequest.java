@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 public record PageCreateRequest(
         Long categoryId,
 
+        Long templateId,
+
         PageStatus status,
 
         @Size(max = 500, message = "validation.featured.image.size") String featuredImage,
