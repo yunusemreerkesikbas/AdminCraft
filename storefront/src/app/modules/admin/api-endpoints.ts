@@ -67,6 +67,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageSlotComponents: 'pages/${id}/slots/${slotName}/components',
     pageSlotComponent: 'pages/${id}/slots/${slotName}/components/${componentId}',
     pageSlotComponentsReorder: 'pages/${id}/slots/${slotName}/reorder',
+    sharedSlots: 'pages/shared/slots',
 
     // ----- COMPONENT LIBRARY: TYPES -----
     componentTypes: 'components/types',
@@ -108,7 +109,16 @@ export const SPA_ENDPOINTS_CONFIG = {
     cmsComponent: 'cms/components/${uid}',
     cmsComponentsBatch: 'cms/components',
     cmsPage: 'cms/pages/${uid}',
-    cmsPagesBatch: 'cms/pages'
+    cmsPagesBatch: 'cms/pages',
+
+    // ----- PAGE TEMPLATES -----
+    pageTemplates: 'page-templates',
+    pageTemplatesActive: 'page-templates/active',
+    pageTemplateById: 'page-templates/${id}',
+    pageTemplateSlots: 'page-templates/${id}/slots',
+    pageTemplateSlot: 'page-templates/${id}/slots/${slotName}',
+    pageTemplateSlotsReorder: 'page-templates/${id}/slots/reorder',
+    pageTemplateAssign: 'page-templates/${id}/assign/${pageId}'
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

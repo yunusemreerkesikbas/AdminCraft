@@ -125,6 +125,7 @@ export const langEN = {
             delete: 'Delete',
             search: 'Search',
             create: 'Create',
+            save: 'Save',
             fields: {
                 uid: 'UID',
                 name: 'Name',
@@ -159,6 +160,7 @@ export const langEN = {
                 isVisible: 'Is Visible',
                 styleClasses: 'Style Classes',
                 order: 'Order',
+                active: 'Active',
             },
             target: {
                 self: 'Same Tab',
@@ -376,6 +378,46 @@ export const langEN = {
             reorderError: 'Failed to reorder components',
             loadSlotsFailed: 'Failed to load slots',
             comingSoon: 'Coming soon',
+        },
+        pageTemplates: {
+            title: 'Page Templates',
+            description: 'Manage page templates and their slots',
+            dialog: {
+                create: 'Create Page Template',
+                edit: 'Edit Page Template',
+            },
+            slots: {
+                title: 'Template Slots',
+                add: 'Add Slot',
+                empty: 'No slots defined. Add slots to define content areas.',
+                columns: {
+                    name: 'Slot Name',
+                    position: 'Position',
+                    order: 'Order',
+                },
+                none: 'No slots',
+            },
+            status: {
+                active: 'Active',
+                inactive: 'Inactive',
+                system: 'System',
+            },
+            actions: {
+                create: 'Create Template',
+                createFirst: 'Create First Template',
+            },
+            messages: {
+                noTemplates: 'No page templates found.',
+                createSuccess: 'Page template created successfully',
+                createPartial: 'Page template created. Some slots could not be added.',
+                createFailed: 'Failed to create page template',
+                updateSuccess: 'Page template updated successfully',
+                updateFailed: 'Failed to update page template',
+                deleteSuccess: 'Page template deleted successfully',
+                deleteFailed: 'Failed to delete page template',
+                loadFailed: 'Failed to load page templates',
+            },
+            confirmDelete: 'Are you sure you want to delete "{{name}}"?',
         },
         media: {
             title: 'Media Management',

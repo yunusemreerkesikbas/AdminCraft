@@ -77,14 +77,11 @@ export class PageSlotService {
     }
 
     getSharedSlots(): Observable<PageSlotResponse[]> {
-        // Shared slots endpoints might differ, assuming they are filtered query or specific endpoint
-        // For now, let's assume we use a specific pageId 'shared' or a query param. 
-        // Based on backend walkthrough, it seems shared slots are just slots with page_id=NULL.
-        // But the API might need a specific endpoint to list them specifically if not attached to a page.
-        // Let's assume there is an endpoint or we filter. The sprint plan mentions:
-        // /api/pages/{id}/slots 
-        // Logic: Shared slots logic is handled in backend service. 
-        // getSlots(pageId) should return both page-specific AND shared slots (merged).
-        return new Observable(sub => sub.next([])); // Placeholder if needed explicitly
+        return this.#api
+            .get<ApiResponse<PageSlotResponse[]>>('sharedSlots')
+            .pipe(
+                take(1),
+                map(response => response.data)
+            );
     }
 }

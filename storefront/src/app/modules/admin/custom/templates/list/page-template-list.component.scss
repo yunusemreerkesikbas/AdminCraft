@@ -1,0 +1,29 @@
+:host {
+    display: block;
+}
+
+.mat-mdc-table {
+    width: 100%;
+
+    .mat-mdc-header-cell {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .mat-mdc-row {
+        &:hover {
+            background-color: var(--hover-bg);
+        }
+    }
+}
+
+.slots-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    mat-chip-option {
+        font-size: 11px;
+        min-height: 24px;
+    }
+}

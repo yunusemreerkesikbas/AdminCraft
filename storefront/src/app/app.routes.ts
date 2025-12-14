@@ -117,6 +117,12 @@ export const appRoutes: Route[] = [
                 data: { requiredModule: 'component_library' },
                 loadChildren: () => import('app/modules/admin/custom/components/component-library.routes')
             },
+            {
+                path: 'page-templates',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'pagebuilder' },
+                loadComponent: () => import('app/modules/admin/custom/templates/list/page-template-list.component').then(m => m.PageTemplateListComponent)
+            },
 
             // Pages
             {path: 'pages', children: [

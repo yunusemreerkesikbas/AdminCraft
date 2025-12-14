@@ -125,6 +125,7 @@ export const langTR = {
             delete: 'Sil',
             search: 'Ara',
             create: 'Oluştur',
+            save: 'Kaydet',
             fields: {
                 uid: 'UID',
                 name: 'Ad',
@@ -159,6 +160,7 @@ export const langTR = {
                 isVisible: 'Görünür mü',
                 styleClasses: 'Stil Sınıfları',
                 order: 'Sıra',
+                active: 'Aktif',
             },
             target: {
                 self: 'Aynı Sekmede',
@@ -376,6 +378,46 @@ export const langTR = {
             reorderError: 'Bileşen sıralaması değiştirilemedi',
             loadSlotsFailed: 'Slotlar yüklenemedi',
             comingSoon: 'Yakında',
+        },
+        pageTemplates: {
+            title: 'Sayfa Şablonları',
+            description: 'Sayfa şablonlarını ve slotlarını yönetin',
+            dialog: {
+                create: 'Sayfa Şablonu Oluştur',
+                edit: 'Sayfa Şablonu Düzenle',
+            },
+            slots: {
+                title: 'Şablon Slotları',
+                add: 'Slot Ekle',
+                empty: 'Henüz slot tanımlanmadı. İçerik alanları için slot ekleyin.',
+                columns: {
+                    name: 'Slot Adı',
+                    position: 'Pozisyon',
+                    order: 'Sıra',
+                },
+                none: 'Slot yok',
+            },
+            status: {
+                active: 'Aktif',
+                inactive: 'Pasif',
+                system: 'Sistem',
+            },
+            actions: {
+                create: 'Şablon Oluştur',
+                createFirst: 'İlk Şablonu Oluştur',
+            },
+            messages: {
+                noTemplates: 'Sayfa şablonu bulunamadı.',
+                createSuccess: 'Sayfa şablonu başarıyla oluşturuldu',
+                createPartial: 'Sayfa şablonu oluşturuldu. Bazı slotlar eklenemedi.',
+                createFailed: 'Sayfa şablonu oluşturulamadı',
+                updateSuccess: 'Sayfa şablonu başarıyla güncellendi',
+                updateFailed: 'Sayfa şablonu güncellenemedi',
+                deleteSuccess: 'Sayfa şablonu başarıyla silindi',
+                deleteFailed: 'Sayfa şablonu silinemedi',
+                loadFailed: 'Sayfa şablonları yüklenemedi',
+            },
+            confirmDelete: '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
         },
         media: {
             title: 'Medya Yönetimi',

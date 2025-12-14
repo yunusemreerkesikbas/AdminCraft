@@ -1,0 +1,143 @@
+<spa-dialog-header
+    [title]="
+        isCreateMode()
+            ? ('admin.pageTemplates.dialog.create' | transloco)
+            : ('admin.pageTemplates.dialog.edit' | transloco)
+    "
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content type="form">
+    <form [formGroup]="form" class="flex flex-col gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <spa-input
+                [label]="'admin.common.fields.name' | transloco"
+                placeholder="Homepage Template"
+                formControlName="name"
+            />
+
+            <spa-input
+                [label]="'admin.common.fields.uid' | transloco"
+                placeholder="homepage-template"
+                formControlName="uid"
+            />
+        </div>
+
+        <spa-textarea
+            [label]="'admin.common.fields.description' | transloco"
+            placeholder="Describe the template purpose"
+            formControlName="description"
+            [rows]="2"
+        />
+
+        <spa-toggle
+            [label]="'admin.common.fields.active' | transloco"
+            formControlName="isActive"
+        />
+        <div class="mt-6 border-t pt-4">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-lg font-medium">
+                    {{ 'admin.pageTemplates.slots.title' | transloco }}
+                </h3>
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="addSlot()"
+                    [disabled]="isSubmitting()"
+                >
+                    <mat-icon class="mr-2 icon-size-5">add</mat-icon>
+                    {{ 'admin.pageTemplates.slots.add' | transloco }}
+                </button>
+            </div>
+
+            @if (slotsSig().length > 0) {
+                <div
+                    cdkDropList
+                    class="flex flex-col gap-2"
+                    (cdkDropListDropped)="drop($event)"
+                >
+                    @for (slot of slotsSig(); track slot; let i = $index) {
+                        <div
+                            class="bg-card flex items-center gap-4 rounded-lg border p-3 shadow-sm"
+                            cdkDrag
+                        >
+                            <div class="cdk-drag-handle" cdkDragHandle>
+                                <mat-icon
+                                    svgIcon="heroicons_outline:bars-2"
+                                ></mat-icon>
+                            </div>
+
+                            <div
+                                class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2"
+                            >
+                                <spa-select
+                                    [label]="
+                                        'admin.pageTemplates.slots.columns.name'
+                                            | transloco
+                                    "
+                                    [(ngModel)]="slot.slotName"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    [options]="availableSlotsSig()"
+                                    [placeholder]="'Select Slot'"
+                                />
+
+                                <spa-select
+                                    [label]="
+                                        'admin.pageTemplates.slots.columns.position'
+                                            | transloco
+                                    "
+                                    [(ngModel)]="slot.position"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    [options]="slotPositionOptions"
+                                />
+                            </div>
+
+                            <button
+                                mat-icon-button
+                                color="warn"
+                                type="button"
+                                (click)="removeSlot(i)"
+                                [disabled]="isSubmitting()"
+                            >
+                                <mat-icon
+                                    svgIcon="heroicons_outline:trash"
+                                ></mat-icon>
+                            </button>
+
+                            <div *cdkDragPreview class="cdk-drag-preview">
+                                {{ slot.slotName || 'New Slot' }}
+                            </div>
+                            <div *cdkDragPlaceholder class="opacity-0"></div>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <div
+                    class="text-secondary flex flex-col items-center justify-center rounded-lg border border-dashed bg-gray-50 py-8 dark:bg-transparent"
+                >
+                    <mat-icon
+                        class="mb-2 icon-size-8"
+                        svgIcon="heroicons_outline:squares-plus"
+                    ></mat-icon>
+                    <div class="text-sm font-medium">
+                        {{ 'admin.pageTemplates.slots.empty' | transloco }}
+                    </div>
+                </div>
+            }
+        </div>
+    </form>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="
+        isCreateMode()
+            ? ('admin.common.create' | transloco)
+            : ('admin.common.save' | transloco)
+    "
+    [submitDisabled]="!form.valid"
+    [isSubmitting]="isSubmitting()"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

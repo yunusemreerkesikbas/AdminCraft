@@ -1,0 +1,171 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
+    <!-- Header -->
+    <admin-page-header
+        [title]="'admin.pageTemplates.title'"
+        [subtitle]="'admin.pageTemplates.description'"
+        [showCreateButton]="true"
+        [isLoading]="store.isLoading()"
+        [createButtonText]="'admin.pageTemplates.actions.create' | transloco"
+        (createClick)="createTemplate()"
+    ></admin-page-header>
+
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            @if (filtered().length > 0) {
+                <div class="grid">
+                    <!-- Header -->
+                    <div
+                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                    >
+                        <div>{{ 'admin.common.fields.name' | transloco }}</div>
+                        <div class="hidden md:block">
+                            {{ 'admin.common.fields.description' | transloco }}
+                        </div>
+                        <div class="hidden sm:block">
+                            {{ 'admin.pageTemplates.slots.title' | transloco }}
+                        </div>
+                        <div>
+                            {{ 'admin.common.fields.status' | transloco }}
+                        </div>
+                        <div class="text-right">
+                            {{ 'admin.common.grid.actions' | transloco }}
+                        </div>
+                    </div>
+
+                    <!-- Rows -->
+                    @for (t of filtered(); track t.id) {
+                        <div
+                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                        >
+                            <!-- Name & UID -->
+                            <div class="flex min-w-0 flex-col">
+                                <span class="truncate font-medium">{{
+                                    t.name
+                                }}</span>
+                                <span class="text-secondary truncate text-sm">{{
+                                    t.uid
+                                }}</span>
+                            </div>
+
+                            <!-- Description -->
+                            <div
+                                class="text-secondary hidden truncate text-sm md:block"
+                            >
+                                {{ t.description || '-' }}
+                            </div>
+
+                            <!-- Slots -->
+                            <div class="hidden sm:block">
+                                <div class="flex flex-wrap gap-1">
+                                    @for (slot of t.slots; track slot.id) {
+                                        <div
+                                            class="text-secondary rounded bg-gray-100 px-1.5 py-0.5 text-xs"
+                                        >
+                                            {{ slot.slotName }}
+                                        </div>
+                                    }
+                                    @if (!t.slots?.length) {
+                                        <span class="text-hint text-xs">-</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div>
+                                @if (t.isSystem) {
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
+                                    >
+                                        {{
+                                            'admin.pageTemplates.status.system'
+                                                | transloco
+                                        }}
+                                    </span>
+                                } @else if (t.isActive) {
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
+                                    >
+                                        {{
+                                            'admin.pageTemplates.status.active'
+                                                | transloco
+                                        }}
+                                    </span>
+                                } @else {
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                                    >
+                                        {{
+                                            'admin.pageTemplates.status.inactive'
+                                                | transloco
+                                        }}
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex justify-end gap-2">
+                                <button
+                                    mat-icon-button
+                                    (click)="editTemplate(t)"
+                                    [matTooltip]="
+                                        'admin.common.edit' | transloco
+                                    "
+                                >
+                                    <mat-icon
+                                        svgIcon="heroicons_outline:pencil"
+                                    ></mat-icon>
+                                </button>
+                                @if (!t.isSystem) {
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="deleteTemplate(t)"
+                                        [matTooltip]="
+                                            'admin.common.delete' | transloco
+                                        "
+                                    >
+                                        <mat-icon
+                                            svgIcon="heroicons_outline:trash"
+                                        ></mat-icon>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <div
+                    class="flex flex-auto flex-col items-center justify-center p-6 sm:p-10"
+                >
+                    <mat-icon
+                        class="text-hint icon-size-24"
+                        svgIcon="heroicons_outline:document-plus"
+                    ></mat-icon>
+                    <div
+                        class="text-secondary mt-2 text-2xl font-semibold tracking-tight"
+                    >
+                        {{
+                            'admin.pageTemplates.messages.noTemplates'
+                                | transloco
+                        }}
+                    </div>
+                    <button
+                        mat-flat-button
+                        color="primary"
+                        class="mt-6"
+                        (click)="createTemplate()"
+                    >
+                        {{
+                            'admin.pageTemplates.actions.createFirst'
+                                | transloco
+                        }}
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
