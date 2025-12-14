@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
@@ -13,10 +12,11 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { Observable, forkJoin, take, takeUntil } from 'rxjs';
+import { PageTemplateService } from '../../templates/page-template.service';
+import { PageTemplate } from '../../templates/page-template.types';
 import { CreatePageFormData, EditPageFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, Language, PageCategoryDto, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
-import { ErrorHandlingService } from '../services/error-handling.service';
 import { PageFormMapperService } from '../services/page-form-mapper.service';
 import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
 import { PageSlotDialogComponent } from '../slots/dialog/page-slot-dialog.component';
@@ -61,18 +61,18 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   #pageBuilderService = inject(PageBuilderService);
   #tenantContext = inject(TenantContextService);
   #languageContext = inject(LanguageContextService);
-  #router = inject(Router);
-  #errorHandler = inject(ErrorHandlingService);
   #schemaBuilder = inject(PageSchemaBuilderService);
   #formMapper = inject(PageFormMapperService);
+  #templateService = inject(PageTemplateService);
   protected dialog = inject(MatDialog);
 
 
   tenantId = 1;
   subdomain = '';
   #cachedCategories: PageCategoryDto[] = [];
+  #cachedTemplates: PageTemplate[] = [];
 
-  get #supportedLanguages(): string[] {
+  #getSupportedLanguages(): string[] {
     return this.#languageContext.supportedLanguages();
   }
 
@@ -86,6 +86,8 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       this.subdomain = storedSub;
     }
 
+    this.#loadCategories();
+    this.#loadTemplates();
 
     this.#tenantContext.tenant$
       .pipe(takeUntil(this.destroy$))
@@ -98,6 +100,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         this.subdomain = nextSub;
         if (changed) {
           this.#loadCategories();
+          this.#loadTemplates();
           this.loadItems();
         }
       });
@@ -122,9 +125,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   }
 
   protected override onLoadError(error: any): void {
-    const errorMessage = this.#errorHandler.handleError(error);
-    this.#errorHandler.logError(error, 'Loading pages');
-    this.#notify.alert(errorMessage);
+    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
   }
 
   onSearchChange(q: string): void {
@@ -144,13 +145,14 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   }
 
   createPage(): void {
-    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories);
+    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedCategories, this.#cachedTemplates);
     const initial: CreatePageFormData = {
       status: 'DRAFT',
-      sortOrder: 0
+      sortOrder: 0,
+      templateId: null
     };
 
-    this.#supportedLanguages.forEach(lang => {
+    this.#getSupportedLanguages().forEach(lang => {
       initial[lang] = {};
     });
 
@@ -158,7 +160,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       titleKey: 'admin.dialog.title.create',
       mode: 'create',
       schema,
-      languages: this.#supportedLanguages,
+      languages: this.#getSupportedLanguages(),
       initial,
       modalData: {
         disableClose: true,
@@ -175,7 +177,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
 
         this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
           next: (createdPage) => {
-            const mapped = this.#formMapper.toI18nRequests(this.#supportedLanguages, result, 'DRAFT');
+            const mapped = this.#formMapper.toI18nRequests(this.#getSupportedLanguages(), result, 'DRAFT');
             const i18nUpdates: Observable<PageI18nRequest>[] = mapped.map(m =>
               this.#pageBuilderService.updatePageI18n(createdPage.id, m.lang, m.req)
             );
@@ -187,8 +189,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
                   this.load();
                 },
                 error: (err) => {
-                  const msg = this.#errorHandler.handleError(err);
-                  this.#notify.alert(msg);
+                  this.#notify.alert(err?.error?.message || 'admin.common.errors.server');
                 }
               });
             } else {
@@ -197,8 +198,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
             }
           },
           error: (error) => {
-            const msg = this.#errorHandler.handleError(error);
-            this.#notify.alert(msg);
+            this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
           }
         });
       } catch (err) {
@@ -210,15 +210,16 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   editPage(page: PageListDto): void {
     this.#pageBuilderService.getPageDetail(page.id).pipe(take(1)).subscribe({
       next: (pageDetail) => {
-        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedCategories);
+        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedCategories, this.#cachedTemplates);
         const initial: EditPageFormData = {
           categoryId: pageDetail.categoryId,
+          templateId: pageDetail.templateId,
           status: pageDetail.status,
           sortOrder: pageDetail.sortOrder,
           styleClasses: pageDetail.styleClasses
         };
 
-        this.#supportedLanguages.forEach(lang => {
+        this.#getSupportedLanguages().forEach(lang => {
           const langKey = lang.toUpperCase() as Language;
           const translation = pageDetail.translations[langKey];
           initial[lang] = {
@@ -235,7 +236,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
           titleKey: 'admin.dialog.title.edit',
           mode: 'edit',
           schema,
-          languages: this.#supportedLanguages,
+          languages: this.#getSupportedLanguages(),
           initial,
           id: page.id,
           modalData: {
@@ -255,7 +256,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
               this.#pageBuilderService.updatePage(page.id, updatePageReq)
             ];
 
-            const mapped = this.#formMapper.toI18nRequests(this.#supportedLanguages, result, 'DRAFT');
+            const mapped = this.#formMapper.toI18nRequests(this.#getSupportedLanguages(), result, 'DRAFT');
             mapped.forEach(m => updates.push(this.#pageBuilderService.updatePageI18n(page.id, m.lang, m.req)));
 
             forkJoin(updates).pipe(take(1)).subscribe({
@@ -264,8 +265,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
                 this.load();
               },
               error: (err) => {
-                const msg = this.#errorHandler.handleError(err);
-                this.#notify.alert(msg);
+                this.#notify.alert(err?.error?.message || 'admin.common.errors.server');
               }
             });
           } catch (err) {
@@ -274,8 +274,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         });
       },
       error: (error) => {
-        const msg = this.#errorHandler.handleError(error);
-        this.#notify.alert(msg);
+        this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
       }
     });
   }
@@ -299,8 +298,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
   }
 
   protected override onDeleteError(error: any): void {
-    const msg = this.#errorHandler.handleError(error);
-    this.#notify.alert(msg);
+    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
   }
 
   #loadCategories(): void {
@@ -310,6 +308,17 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
       },
       error: () => {
         this.#cachedCategories = [];
+      }
+    });
+  }
+
+  #loadTemplates(): void {
+    this.#templateService.getActive().pipe(take(1)).subscribe({
+      next: (templates) => {
+        this.#cachedTemplates = templates;
+      },
+      error: () => {
+        this.#cachedTemplates = [];
       }
     });
   }

@@ -143,6 +143,7 @@ export const langTR = {
                 title: 'Başlık',
                 type: 'Tür',
                 category: 'Kategori',
+                template: 'Şablon',
                 slug: 'Slug',
                 language: 'Dil',
                 priority: 'Öncelik',
@@ -160,6 +161,7 @@ export const langTR = {
                 isVisible: 'Görünür mü',
                 styleClasses: 'Stil Sınıfları',
                 order: 'Sıra',
+                sortOrder: 'Sıralama',
                 active: 'Aktif',
             },
             target: {

@@ -11,6 +11,7 @@ export interface PageI18nFormData {
 
 export interface CreatePageFormData {
   categoryId?: number | null;
+  templateId?: number | null;
   status?: PageStatus;
   sortOrder?: number;
   styleClasses?: string | null;

@@ -142,6 +142,7 @@ export const langEN = {
                 title: 'Title',
                 type: 'Type',
                 category: 'Category',
+                template: 'Template',
                 slug: 'Slug',
                 language: 'Language',
                 priority: 'Priority',
@@ -160,6 +161,7 @@ export const langEN = {
                 isVisible: 'Is Visible',
                 styleClasses: 'Style Classes',
                 order: 'Order',
+                sortOrder: 'Sort Order',
                 active: 'Active',
             },
             target: {
