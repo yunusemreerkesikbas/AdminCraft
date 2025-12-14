@@ -1,24 +1,21 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.domain.entity.Page;
-import com.backend.domain.entity.PageI18n;
-import com.backend.domain.enums.PageStatus;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Detailed page response with all translations.
- * Used when client needs full page data including all language versions.
- */
+import com.backend.domain.entity.Page;
+import com.backend.domain.entity.PageI18n;
+import com.backend.domain.enums.PageStatus;
+
 public record PageDetailResponse(
                 Long id,
                 String uuid,
                 String uid,
                 Long categoryId,
+                Long templateId,
                 PageStatus status,
                 String featuredImage,
                 String styleClasses,
@@ -54,6 +51,7 @@ public record PageDetailResponse(
                                 page.getUuid(),
                                 page.getUid(),
                                 page.getCategoryId(),
+                                page.getTemplateId(),
                                 page.getStatus(),
                                 page.getFeaturedImage(),
                                 page.getStyleClasses(),
