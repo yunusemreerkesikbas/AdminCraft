@@ -15,6 +15,8 @@ public interface TemplateSlotRepository {
 
   TemplateSlot save(TemplateSlot templateSlot);
 
+  void saveAll(List<TemplateSlot> templateSlots);
+
   void delete(TemplateSlot templateSlot);
 
   void deleteByTemplateIdAndSlotName(Long templateId, String slotName);

@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "page_templates", indexes = {
@@ -43,6 +44,7 @@ public class PageTemplate extends BaseEntity {
   @Column(name = "is_active")
   private Boolean isActive = true;
 
+  @ToString.Exclude
   @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   @OrderBy("sortOrder ASC")
   private List<TemplateSlot> slots = new ArrayList<>();

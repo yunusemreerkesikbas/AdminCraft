@@ -38,6 +38,11 @@ public class TemplateSlotRepositoryImpl implements TemplateSlotRepository {
   }
 
   @Override
+  public void saveAll(List<TemplateSlot> templateSlots) {
+    jpaRepository.saveAll(templateSlots);
+  }
+
+  @Override
   public void delete(TemplateSlot templateSlot) {
     jpaRepository.delete(templateSlot);
   }
