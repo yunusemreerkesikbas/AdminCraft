@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
+import com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
 import com.backend.application.dto.template.PageTemplateDto;
 import com.backend.application.dto.template.TemplateSlotDto;
@@ -25,6 +26,8 @@ public interface PageTemplateService {
   TemplateSlotDto addSlot(Long templateId, CreateTemplateSlotCommand command);
 
   void removeSlot(Long templateId, String slotName);
+
+  void reorderSlots(Long templateId, ReorderTemplateSlotsCommand command);
 
   void assignTemplateToPage(Long pageId, Long templateId);
 }

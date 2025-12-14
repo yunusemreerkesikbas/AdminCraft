@@ -129,6 +129,17 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success("Template assigned to page successfully", null));
   }
 
+  @PutMapping("/{id}/slots/reorder")
+  public ResponseEntity<ApiResponse<Void>> reorderSlots(
+      @PathVariable @NotNull @Min(1) Long id,
+      @Valid @RequestBody com.backend.presentation.dto.request.ReorderTemplateSlotsRequest request) {
+    com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand command = new com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand(
+        request.getSlotNames());
+
+    pageTemplateService.reorderSlots(id, command);
+    return ResponseEntity.ok(ApiResponse.success("Slots reordered successfully", null));
+  }
+
   private List<PageTemplateResponse> mapToResponses(List<PageTemplateDto> dtos) {
     return dtos.stream().map(this::mapToResponse).toList();
   }

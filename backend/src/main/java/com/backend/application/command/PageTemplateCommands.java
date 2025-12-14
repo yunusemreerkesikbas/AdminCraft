@@ -25,4 +25,8 @@ public class PageTemplateCommands {
       Integer maxComponents,
       List<String> allowedTypes) {
   }
+
+  public record ReorderTemplateSlotsCommand(
+      List<String> slotNames) {
+  }
 }

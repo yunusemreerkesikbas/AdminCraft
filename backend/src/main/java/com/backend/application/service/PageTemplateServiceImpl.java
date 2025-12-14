@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
+import com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
 import com.backend.application.dto.template.PageTemplateDto;
 import com.backend.application.dto.template.TemplateSlotDto;
@@ -211,5 +212,33 @@ public class PageTemplateServiceImpl implements PageTemplateService {
 
     log.info("Assigned template '{}' to page {} and created {} slots",
         template.getName(), pageId, newSlots.size());
+  }
+
+  @Override
+  public void reorderSlots(Long templateId, ReorderTemplateSlotsCommand command) {
+    PageTemplate template = pageTemplateRepository.findById(templateId)
+        .orElseThrow(() -> new EntityNotFoundException("PageTemplate", templateId));
+
+    if (Boolean.TRUE.equals(template.getIsSystem())) {
+      throw new IllegalArgumentException("Cannot modify system template: " + template.getName());
+    }
+
+    List<TemplateSlot> slots = templateSlotRepository.findByTemplateId(templateId);
+
+    var slotMap = slots.stream()
+        .collect(Collectors.toMap(TemplateSlot::getSlotName, s -> s));
+
+    List<TemplateSlot> updatedSlots = new ArrayList<>();
+    for (int i = 0; i < command.slotNames().size(); i++) {
+      String slotName = command.slotNames().get(i);
+      TemplateSlot slot = slotMap.get(slotName);
+      if (slot != null) {
+        slot.setSortOrder(i);
+        updatedSlots.add(slot);
+      }
+    }
+
+    templateSlotRepository.saveAll(updatedSlots);
+    log.info("Reordered {} slots for template {}", updatedSlots.size(), templateId);
   }
 }
