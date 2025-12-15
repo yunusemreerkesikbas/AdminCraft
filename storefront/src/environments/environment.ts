@@ -21,7 +21,7 @@ export const environment = {
     appName: 'AdminCraft',
     
     // Security Configuration
-    maxRetryAttempts: 3,
+    maxRetryAttempts: 0,
     tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes before expiry
 };
 

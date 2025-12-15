@@ -220,18 +220,17 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   private PageSlotDto mapToDto(PageSlot slot, List<SlotComponentDto> components) {
-    return PageSlotDto.builder()
-        .id(slot.getId())
-        .uid(slot.getUid())
-        .slotName(slot.getSlotName())
-        .position(slot.getPosition())
-        .sortOrder(slot.getSortOrder())
-        .isActive(slot.getIsActive())
-        .isShared(slot.getIsShared())
-        .createdAt(slot.getCreatedAt())
-        .updatedAt(slot.getUpdatedAt())
-        .components(components)
-        .build();
+    return new PageSlotDto(
+        slot.getId(),
+        slot.getUid(),
+        slot.getSlotName(),
+        slot.getPosition(),
+        slot.getSortOrder(),
+        slot.getIsActive(),
+        slot.getIsShared(),
+        slot.getCreatedAt(),
+        slot.getUpdatedAt(),
+        components);
   }
 
   private SlotComponentDto mapToComponentDto(
@@ -249,14 +248,13 @@ public class PageSlotServiceImpl implements PageSlotService {
       }
     }
 
-    return SlotComponentDto.builder()
-        .id(sc.getId())
-        .componentId(sc.getComponentId())
-        .componentUid(component != null ? component.getUid() : null)
-        .componentName(component != null ? component.getName() : null)
-        .componentTypeName(typeName)
-        .sortOrder(sc.getSortOrder())
-        .isVisible(sc.getIsVisible())
-        .build();
+    return new SlotComponentDto(
+        sc.getId(),
+        sc.getComponentId(),
+        component != null ? component.getUid() : null,
+        component != null ? component.getName() : null,
+        typeName,
+        sc.getSortOrder(),
+        sc.getIsVisible());
   }
 }

@@ -10,7 +10,6 @@ You are a database architect specializing in multi-tenant SaaS database design, 
 
 - **Multi-Tenancy**: Database-per-tenant (`platform_management` + `ac_tenant_{id}`)
 - **Clean Architecture**: Domain → Application → Infrastructure → Presentation
-- **i18n Pattern**: BaseEntity (language-agnostic) + BaseI18nEntity (language-specific)
 - **UUID/UID**: Every entity has `uuid` (RFC 4122) + `uid` (human-readable: "cmsitem_xxx")
 - **Flyway**: Platform auto-run, tenant programmatic
 - **HikariCP**: LRU cache (max 10 pools, 5 conn/tenant, 30min idle)
@@ -41,32 +40,6 @@ Data plane, per-tenant isolation:
 
 **File**: `backend/src/main/java/com/backend/domain/entity/BaseEntity.java`
 
-```java
-@MappedSuperclass
-public abstract class BaseEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true, length = 36)
-    private String uuid;  // Auto-generated UUID
-
-    @Column(unique = true, length = 50)
-    private String uid;   // "cmsitem_a1b2c3d4"
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Long createdBy;
-    private Long updatedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        uuid = UuidUidGenerator.generateUuid();
-        uid = UuidUidGenerator.generateUid();
-        createdAt = updatedAt = LocalDateTime.now();
-    }
-}
-```
-
 **Example**: `Page` entity
 
 ```java
@@ -77,33 +50,6 @@ public abstract class BaseEntity {
 })
 public class Page extends BaseEntity {
 
-    @Enumerated(EnumType.STRING)
-    private PageStatus status = PageStatus.DRAFT;
-
-    @Column(name = "featured_image", length = 500)
-    private String featuredImage;
-}
-```
-
-### 2. BaseI18nEntity (Language-Specific)
-
-**File**: `backend/src/main/java/com/backend/domain/entity/BaseI18nEntity.java`
-
-```java
-@MappedSuperclass
-public abstract class BaseI18nEntity {
-    @Id @GeneratedValue
-    private Long id;
-
-    @Column(unique = true)
-    private String uuid;
-    private String uid;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Language language;  // TR, EN
-
-    private LocalDateTime updatedAt;
 }
 ```
 
@@ -112,34 +58,8 @@ public abstract class BaseI18nEntity {
 ```java
 @Entity
 @Table(name = "page_i18n", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"page_id", "language"}),
-    @UniqueConstraint(columnNames = {"language", "url_path"})
 })
-public class PageI18n extends BaseI18nEntity {
-    @Column(name = "page_id", nullable = false)
-    private Long pageId;
-
-    @Size(max = 255)
-    private String urlPath;
-    private String title;
-    private String metaTitle;
-
-    @Lob
-    private String descriptionHtml;  // Sanitized
-
-    @Enumerated(EnumType.STRING)
-    private PageStatus status = PageStatus.DRAFT;
-
-    private LocalDateTime publishedAt;
-    private LocalDateTime scheduledAt;
-
-    // Domain logic
-    public void publish() {
-        if (!canBePublished()) throw new PageCannotBePublishedException();
-        this.status = PageStatus.PUBLISHED;
-        this.publishedAt = LocalDateTime.now();
-    }
-}
+public class PageI18n extends BaseI18nEntity {}
 ```
 
 ### 3. Platform Entity (Non-Tenant)
@@ -154,16 +74,16 @@ public class Tenant {
     private Long id;
 
     @Column(unique = true)
-    private String subdomain;  // democompany
+    private String subdomain;
     private String companyName;
 
     @Column(name = "database_name", unique = true)
-    private String databaseName;  // ac_tenant_1
+    private String databaseName;
 
-    private String status;  // PENDING, ACTIVE, SUSPENDED
+    private String status;
 
     @Column(columnDefinition = "JSON")
-    private String supportedLanguages;  // ["TR", "EN"]
+    private String supportedLanguages;
 
     private LocalDateTime createdAt;
 }
@@ -219,26 +139,7 @@ public class MultiTenantConnectionProvider
 
 ```java
 @Component
-public class TenantContext {
-    private static final ThreadLocal<Long> TENANT_ID = new ThreadLocal<>();
-    private static final ThreadLocal<String> TENANT_DB_NAME = new ThreadLocal<>();
-
-    public void setTenantId(Long tenantId) {
-        TENANT_ID.set(tenantId);
-        MDC.put("tenantId", String.valueOf(tenantId));
-    }
-
-    public void setTenantDbName(String dbName) {
-        TENANT_DB_NAME.set(dbName);
-        MDC.put("tenantDb", dbName);
-    }
-
-    public void clear() {
-        TENANT_ID.remove();
-        TENANT_DB_NAME.remove();
-        MDC.clear();
-    }
-}
+public class TenantContext {}
 ```
 
 ## Flyway Migrations
@@ -247,58 +148,9 @@ public class TenantContext {
 
 **Location**: `backend/src/main/resources/db/platform/`
 
-```sql
--- V1__baseline.sql
-CREATE TABLE tenants (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    subdomain VARCHAR(100) NOT NULL UNIQUE,
-    database_name VARCHAR(100) NOT NULL UNIQUE,
-    status ENUM('PENDING', 'ACTIVE', 'SUSPENDED') DEFAULT 'PENDING',
-    supported_languages JSON DEFAULT ('["TR"]'),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- R__seed_modules.sql (Repeatable)
-INSERT INTO modules_catalog (code, name, type, deps)
-VALUES ('core', 'Core System', 'core', NULL)
-ON DUPLICATE KEY UPDATE name = VALUES(name);
-```
-
 ### Tenant (Programmatic)
 
 **Location**: `backend/src/main/resources/db/tenant/{module}/`
-
-```sql
--- core/V1__baseline.sql
-CREATE TABLE users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('TENANT_ADMIN', 'EDITOR', 'VIEWER') DEFAULT 'VIEWER',
-    is_active BOOLEAN DEFAULT TRUE
-) ENGINE=InnoDB CHARSET=utf8mb4;
-
--- pagebuilder/V1__baseline.sql
-CREATE TABLE pages (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    uuid CHAR(36) NOT NULL UNIQUE,
-    uid VARCHAR(50) NOT NULL UNIQUE,
-    status ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') DEFAULT 'DRAFT',
-    sort_order INT DEFAULT 0
-) ENGINE=InnoDB CHARSET=utf8mb4;
-
-CREATE TABLE page_i18n (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    page_id BIGINT NOT NULL,
-    language ENUM('TR', 'EN') NOT NULL,
-    url_path VARCHAR(255),
-    title VARCHAR(200),
-    description_html LONGTEXT,
-    status ENUM('DRAFT', 'PUBLISHED', 'SCHEDULED') DEFAULT 'DRAFT',
-    UNIQUE KEY (page_id, language),
-    FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
-) ENGINE=InnoDB CHARSET=utf8mb4;
-```
 
 ### Provisioning Service
 
@@ -351,10 +203,7 @@ public class ProvisioningServiceImpl {
 ```java
 // backend/src/main/java/com/backend/domain/repository/PageRepository.java
 public interface PageRepository {
-    Page findById(Long id);
-    List<Page> findByStatus(PageStatus status);
-    Page save(Page page);
-    void deleteById(Long id);
+
 }
 ```
 
@@ -364,18 +213,6 @@ public interface PageRepository {
 // backend/src/main/java/com/backend/infrastructure/persistence/tenant/repository/PageRepositoryImpl.java
 @Repository
 public class PageRepositoryImpl implements PageRepository {
-    private final JpaPageRepository jpaRepository;
-
-    @Override
-    public Page findById(Long id) {
-        return jpaRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Page not found: " + id));
-    }
-
-    @Override
-    public List<Page> findByStatus(PageStatus status) {
-        return jpaRepository.findByStatus(status);
-    }
 }
 
 interface JpaPageRepository extends JpaRepository<Page, Long> {
