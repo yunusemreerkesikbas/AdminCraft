@@ -39,13 +39,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn("Illegal argument exception: {}", ex.getMessage());
-        return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        String message = getMessage(ex.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalStateException(IllegalStateException ex) {
         log.warn("Illegal state exception: {}", ex.getMessage());
-        return new ResponseEntity<>(ApiResponse.error(400, ex.getMessage()), HttpStatus.BAD_REQUEST);
+        String message = getMessage(ex.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
     }
 
     // Authentication Exceptions
