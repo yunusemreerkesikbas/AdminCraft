@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.request;
+package com.backend.application.dto.request;
 
 import com.backend.domain.enums.Language;
 import jakarta.validation.constraints.NotBlank;

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.service.TenantLanguageService;
-import com.backend.presentation.dto.request.TenantLanguagesUpdateRequest;
+import com.backend.application.dto.request.TenantLanguagesUpdateRequest;
 import com.backend.presentation.dto.response.TenantLanguagesResponse;
 import com.backend.shared.common.ApiResponse;
 
@@ -58,7 +58,8 @@ public class TenantLanguageController {
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       if (!request.isValid()) {
-        String validationError = request.getValidationErrorMessage();
+        String validationErrorKey = request.getValidationErrorMessageKey();
+        String validationError = messageSource.getMessage(validationErrorKey, null, Locale.forLanguageTag(lang));
         String message = messageSource.getMessage("tenant.languages.validation.error",
             new Object[] { validationError }, Locale.forLanguageTag(lang));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

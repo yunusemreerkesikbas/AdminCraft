@@ -2,8 +2,8 @@ package com.backend.presentation.controller;
 
 import com.backend.application.service.SiteService;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.request.CreateSiteRequest;
-import com.backend.presentation.dto.request.UpdateSiteRequest;
+import com.backend.application.dto.request.CreateSiteRequest;
+import com.backend.application.dto.request.UpdateSiteRequest;
 import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;

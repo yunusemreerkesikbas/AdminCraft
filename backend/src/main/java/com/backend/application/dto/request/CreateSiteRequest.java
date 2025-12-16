@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.request;
+package com.backend.application.dto.request;
 
 import java.util.Set;
 
