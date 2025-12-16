@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
+import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.service.CmsDeliveryService;
+import com.backend.application.service.NavigationService;
 import com.backend.domain.enums.Language;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.shared.common.ApiResponse;
@@ -39,6 +41,7 @@ public class CmsDeliveryController {
   private final ConcurrentHashMap<String, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
 
   private final CmsDeliveryService cmsDeliveryService;
+  private final NavigationService navigationService;
   private final MessageSource messageSource;
   private final TenantContext tenantContext;
 
@@ -147,6 +150,26 @@ public class CmsDeliveryController {
     BatchPageDeliveryResponse response = cmsDeliveryService.getPagesByUids(uids, resolvedLang);
 
     return ResponseEntity.ok(ApiResponse.success("Pages found", response));
+  }
+
+  @GetMapping("/navigation/{uid}")
+  public ResponseEntity<ApiResponse<NavigationDeliveryResponse>> getNavigationByUid(
+      @PathVariable String uid,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
+
+    Locale locale = Locale.forLanguageTag(acceptLanguage);
+    ResponseEntity<ApiResponse<NavigationDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
+    if (rateLimitResponse != null) {
+      return rateLimitResponse;
+    }
+
+    log.debug("CMS Delivery: Fetching navigation uid={}", uid);
+
+    return navigationService.getNavigationByUid(uid)
+        .map(response -> ResponseEntity.ok(
+            ApiResponse.success("Navigation found", response)))
+        .orElseGet(() -> ResponseEntity.ok(
+            ApiResponse.error("Navigation not found")));
   }
 
   private <T> ResponseEntity<ApiResponse<T>> checkRateLimit(Locale locale) {

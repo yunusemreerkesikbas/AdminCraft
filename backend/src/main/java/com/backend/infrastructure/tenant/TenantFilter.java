@@ -50,32 +50,8 @@ public class TenantFilter extends OncePerRequestFilter {
     MDC.put("correlationId", correlationId);
 
     String path = request.getRequestURI();
-    if (isWhitelisted(path)) {
-      if (path.startsWith("/api/tenants")) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isSuperAdmin = false;
-        if (auth != null && auth.getAuthorities() != null) {
-          for (GrantedAuthority authority : auth.getAuthorities()) {
-            if ("ROLE_SUPER_ADMIN".equals(authority.getAuthority())) {
-              isSuperAdmin = true;
-              break;
-            }
-          }
-        }
-        if (!isSuperAdmin) {
-        } else {
-          filterChain.doFilter(request, response);
-          return;
-        }
-      } else {
-        filterChain.doFilter(request, response);
-        return;
-      }
-    }
 
     try {
-      Tenant tenant = resolveTenantFromHeaders(request);
-
       Authentication auth = SecurityContextHolder.getContext().getAuthentication();
       boolean isSuperAdmin = false;
       if (auth != null && auth.getAuthorities() != null) {
@@ -87,15 +63,26 @@ public class TenantFilter extends OncePerRequestFilter {
         }
       }
 
-      if (tenant == null) {
-        if (isSuperAdmin) {
-          filterChain.doFilter(request, response);
-          return;
-        } else {
-          log.warn("Missing or invalid tenant header for request: {}", path);
-          response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+      if (isPublicNoTenantRequired(path)) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
+      if (isPlatformEndpoint(path)) {
+        if (!isSuperAdmin) {
+          response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
           return;
         }
+        filterChain.doFilter(request, response);
+        return;
+      }
+
+      Tenant tenant = resolveTenantFromHeaders(request);
+
+      if (tenant == null) {
+        log.warn("Missing or invalid tenant header for request: {}", path);
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+        return;
       }
 
       if (!"ACTIVE".equals(tenant.getStatus())) {
@@ -160,11 +147,14 @@ public class TenantFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private boolean isWhitelisted(String path) {
+  private boolean isPublicNoTenantRequired(String path) {
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
-        path.startsWith("/api/auth") ||
-        path.startsWith("/api/platform") ||
+        path.startsWith("/api/auth");
+  }
+
+  private boolean isPlatformEndpoint(String path) {
+    return path.startsWith("/api/platform") ||
         path.startsWith("/api/modules/catalog") ||
         path.startsWith("/api/provisioning") ||
         path.startsWith("/api/tenants");
