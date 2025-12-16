@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.request.PageCreateRequest;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
-import com.backend.presentation.dto.request.PageCreateRequest;
 import com.backend.presentation.dto.response.PageDetailResponse;
 import com.backend.presentation.dto.response.PageResponse;
 

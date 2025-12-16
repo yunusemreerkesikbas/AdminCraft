@@ -1,12 +1,12 @@
 package com.backend.application.service.impl;
 
 import com.backend.application.service.TenantLanguageService;
+import com.backend.application.dto.request.TenantLanguagesUpdateRequest;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
 import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.mapper.TenantLanguagesMapper;
-import com.backend.presentation.dto.request.TenantLanguagesUpdateRequest;
 import com.backend.presentation.dto.response.TenantLanguagesResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class TenantLanguageServiceImpl implements TenantLanguageService {
                 .orElseThrow(() -> new TenantNotFoundException(tenantId));
 
         if (!request.supportedLanguages().contains(request.defaultLanguage())) {
-            throw new IllegalArgumentException("Default language must be in supported languages");
+            throw new IllegalArgumentException("tenant.languages.default.not.in.supported");
         }
 
         tenant.setDefaultLanguage(request.defaultLanguage());

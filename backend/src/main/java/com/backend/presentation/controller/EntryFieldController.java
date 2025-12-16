@@ -3,7 +3,7 @@ package com.backend.presentation.controller;
 import com.backend.application.command.CreateEntryFieldCommand;
 import com.backend.application.query.GetEntryFieldsByTypeQuery;
 import com.backend.application.service.EntryFieldService;
-import com.backend.presentation.dto.request.CreateEntryFieldRequest;
+import com.backend.application.dto.request.CreateEntryFieldRequest;
 import com.backend.presentation.dto.response.EntryFieldDefinitionResponse;
 import com.backend.shared.common.ApiResponse;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;

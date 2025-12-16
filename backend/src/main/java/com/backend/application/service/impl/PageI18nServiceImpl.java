@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.request.PageI18nRequest;
+import com.backend.application.dto.request.PagePublishRequest;
 import com.backend.application.service.PageI18nService;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.Language;
@@ -15,8 +17,6 @@ import com.backend.domain.exception.PageCannotBePublishedException;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
-import com.backend.presentation.dto.request.PageI18nRequest;
-import com.backend.presentation.dto.request.PagePublishRequest;
 import com.backend.presentation.dto.response.PageI18nResponse;
 
 import lombok.RequiredArgsConstructor;

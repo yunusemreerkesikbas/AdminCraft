@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
+import com.backend.application.dto.request.ReorderRequest;
 import com.backend.application.dto.slot.PageSlotDto;
 import com.backend.application.dto.slot.SlotComponentDto;
 import com.backend.application.service.PageSlotService;
 import com.backend.presentation.dto.request.AddComponentToSlotRequest;
-import com.backend.presentation.dto.request.CreatePageSlotRequest;
-import com.backend.presentation.dto.request.ReorderSlotComponentsRequest;
+import com.backend.application.dto.request.CreatePageSlotRequest;
 import com.backend.presentation.dto.response.PageSlotResponse;
 import com.backend.presentation.dto.response.SlotComponentResponse;
 import com.backend.shared.common.ApiResponse;
@@ -110,8 +110,8 @@ public class PageSlotController {
   public ResponseEntity<ApiResponse<Void>> reorderComponents(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotBlank String slotName,
-      @Valid @RequestBody ReorderSlotComponentsRequest request) {
-    ReorderSlotComponentsCommand command = new ReorderSlotComponentsCommand(request.getComponentIds());
+      @Valid @RequestBody ReorderRequest<Long> request) {
+    ReorderSlotComponentsCommand command = new ReorderSlotComponentsCommand(request.items());
     pageSlotService.reorderComponents(pageId, slotName, command);
     return ResponseEntity.ok(ApiResponse.success("Components reordered", null));
   }

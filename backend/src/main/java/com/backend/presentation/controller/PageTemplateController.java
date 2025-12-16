@@ -21,9 +21,10 @@ import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCo
 import com.backend.application.dto.template.PageTemplateDto;
 import com.backend.application.dto.template.TemplateSlotDto;
 import com.backend.application.service.PageTemplateService;
-import com.backend.presentation.dto.request.CreatePageTemplateRequest;
-import com.backend.presentation.dto.request.CreateTemplateSlotRequest;
-import com.backend.presentation.dto.request.UpdatePageTemplateRequest;
+import com.backend.application.dto.request.CreatePageTemplateRequest;
+import com.backend.application.dto.request.CreateTemplateSlotRequest;
+import com.backend.application.dto.request.ReorderRequest;
+import com.backend.application.dto.request.UpdatePageTemplateRequest;
 import com.backend.presentation.dto.response.PageTemplateResponse;
 import com.backend.presentation.dto.response.TemplateSlotResponse;
 import com.backend.shared.common.ApiResponse;
@@ -132,9 +133,9 @@ public class PageTemplateController {
   @PutMapping("/{id}/slots/reorder")
   public ResponseEntity<ApiResponse<Void>> reorderSlots(
       @PathVariable @NotNull @Min(1) Long id,
-      @Valid @RequestBody com.backend.presentation.dto.request.ReorderTemplateSlotsRequest request) {
+      @Valid @RequestBody ReorderRequest<String> request) {
     com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand command = new com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand(
-        request.getSlotNames());
+        request.items());
 
     pageTemplateService.reorderSlots(id, command);
     return ResponseEntity.ok(ApiResponse.success("Slots reordered successfully", null));
