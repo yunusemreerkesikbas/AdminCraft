@@ -1,4 +1,3 @@
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import { SpaReorderListComponent } from '@shared/components/custom-ui/spa-reorder-list/spa-reorder-list.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
@@ -48,22 +48,22 @@ export interface PageTemplateEditDialogData {
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
         SpaDialogFooterComponent,
-        DragDropModule
+        SpaReorderListComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PageTemplateEditDialogComponent extends SpaFormDialog<boolean, PageTemplateEditDialogData> implements OnInit {
-    readonly #templateService: PageTemplateService;
-    readonly #pageSlotService: PageSlotService;
+    #templateService: PageTemplateService;
+    #pageSlotService: PageSlotService;
 
-    readonly slotPositionOptions: SpaSelectOption<string>[] = SLOT_POSITIONS.map(p => ({
+    slotPositionOptions: SpaSelectOption<string>[] = SLOT_POSITIONS.map(p => ({
         value: p.value,
         label: p.label
     }));
 
 
-    readonly slotsSig = signal<CreateTemplateSlotDto[]>([]);
-    readonly availableSlotsSig = signal<SpaSelectOption<string>[]>([]);
+    slotsSig = signal<CreateTemplateSlotDto[]>([]);
+    availableSlotsSig = signal<SpaSelectOption<string>[]>([]);
 
     protected form: FormGroup = this.fb.group({
         name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -123,15 +123,11 @@ export class PageTemplateEditDialogComponent extends SpaFormDialog<boolean, Page
         }]);
     }
 
-    protected drop(event: CdkDragDrop<CreateTemplateSlotDto[]>): void {
-        const currentSlots = [...this.slotsSig()];
-        moveItemInArray(currentSlots, event.previousIndex, event.currentIndex);
-        
-        const updatedSlots = currentSlots.map((slot, index) => ({
+    protected onSlotsReorder(reorderedSlots: CreateTemplateSlotDto[]): void {
+        const updatedSlots = reorderedSlots.map((slot, index) => ({
             ...slot,
             sortOrder: index
         }));
-        
         this.slotsSig.set(updatedSlots);
     }
 
@@ -224,7 +220,6 @@ export class PageTemplateEditDialogComponent extends SpaFormDialog<boolean, Page
                     this.close(true);
                 },
                 error: (err) => {
-                    console.error('Error updating template:', err);
                     this.notify.alert('admin.pageTemplates.messages.updateFailed');
                     this.setSubmitting(false);
                 }

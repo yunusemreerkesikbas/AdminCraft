@@ -48,12 +48,6 @@ export class PageSchemaBuilderService {
         ]
       },
       {
-        key: 'sortOrder',
-        type: 'number',
-        labelKey: 'admin.common.fields.sortOrder',
-        minValue: 0
-      },
-      {
         key: 'styleClasses',
         type: 'text',
         labelKey: 'admin.common.fields.styleClasses',
