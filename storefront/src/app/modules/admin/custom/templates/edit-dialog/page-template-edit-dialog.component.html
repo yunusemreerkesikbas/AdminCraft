@@ -52,66 +52,50 @@
             </div>
 
             @if (slotsSig().length > 0) {
-                <div
-                    cdkDropList
-                    class="flex flex-col gap-2"
-                    (cdkDropListDropped)="drop($event)"
+                <spa-reorder-list
+                    [items]="slotsSig()"
+                    [disabled]="isSubmitting()"
+                    (reorder)="onSlotsReorder($event)"
                 >
-                    @for (slot of slotsSig(); track slot; let i = $index) {
+                    <ng-template #itemTemplate let-slot let-i="index">
                         <div
-                            class="bg-card flex items-center gap-4 rounded-lg border p-3 shadow-sm"
-                            cdkDrag
+                            class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2"
                         >
-                            <div class="cdk-drag-handle" cdkDragHandle>
-                                <mat-icon
-                                    svgIcon="heroicons_outline:bars-2"
-                                ></mat-icon>
-                            </div>
+                            <spa-select
+                                [label]="
+                                    'admin.pageTemplates.slots.columns.name'
+                                        | transloco
+                                "
+                                [(ngModel)]="slot.slotName"
+                                [ngModelOptions]="{ standalone: true }"
+                                [options]="availableSlotsSig()"
+                                [placeholder]="'Select Slot'"
+                            />
 
-                            <div
-                                class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2"
-                            >
-                                <spa-select
-                                    [label]="
-                                        'admin.pageTemplates.slots.columns.name'
-                                            | transloco
-                                    "
-                                    [(ngModel)]="slot.slotName"
-                                    [ngModelOptions]="{ standalone: true }"
-                                    [options]="availableSlotsSig()"
-                                    [placeholder]="'Select Slot'"
-                                />
-
-                                <spa-select
-                                    [label]="
-                                        'admin.pageTemplates.slots.columns.position'
-                                            | transloco
-                                    "
-                                    [(ngModel)]="slot.position"
-                                    [ngModelOptions]="{ standalone: true }"
-                                    [options]="slotPositionOptions"
-                                />
-                            </div>
-
-                            <button
-                                mat-icon-button
-                                color="warn"
-                                type="button"
-                                (click)="removeSlot(i)"
-                                [disabled]="isSubmitting()"
-                            >
-                                <mat-icon
-                                    svgIcon="heroicons_outline:trash"
-                                ></mat-icon>
-                            </button>
-
-                            <div *cdkDragPreview class="cdk-drag-preview">
-                                {{ slot.slotName || 'New Slot' }}
-                            </div>
-                            <div *cdkDragPlaceholder class="opacity-0"></div>
+                            <spa-select
+                                [label]="
+                                    'admin.pageTemplates.slots.columns.position'
+                                        | transloco
+                                "
+                                [(ngModel)]="slot.position"
+                                [ngModelOptions]="{ standalone: true }"
+                                [options]="slotPositionOptions"
+                            />
                         </div>
-                    }
-                </div>
+
+                        <button
+                            mat-icon-button
+                            color="warn"
+                            type="button"
+                            (click)="removeSlot(i)"
+                            [disabled]="isSubmitting()"
+                        >
+                            <mat-icon
+                                svgIcon="heroicons_outline:trash"
+                            ></mat-icon>
+                        </button>
+                    </ng-template>
+                </spa-reorder-list>
             } @else {
                 <div
                     class="text-secondary flex flex-col items-center justify-center rounded-lg border border-dashed bg-gray-50 py-8 dark:bg-transparent"

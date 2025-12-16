@@ -1,0 +1,17 @@
+@use 'sass:color';
+
+.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+.cdk-drag-placeholder {
+    opacity: 1;
+}
+.cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 0.75rem; /* rounded-xl */
+    z-index: 999 !important;
+}
