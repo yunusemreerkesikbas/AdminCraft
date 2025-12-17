@@ -18,12 +18,12 @@ import { LanguageProvisionDialogComponent } from '@shared/components/language-pr
 import { LanguageProvisionDialogData } from '@shared/components/language-provision-dialog/language-provision.types';
 import { ModuleProvisionDialogComponent } from '@shared/components/module-provision-dialog/module-provision-dialog.component';
 import { ModuleProvisionDialogData } from '@shared/components/module-provision-dialog/module-provision.types';
+import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
+import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
-import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
-import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { TenantsService } from '../tenants.service';
 import { AdminUserResponse, CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
@@ -333,5 +333,48 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                     this.#notify.alert(message);
                 }
             });
+    }
+
+    syncMigrations(tenant: Tenant): void {
+        if (tenant.status !== 'ACTIVE') {
+            this.#notify.warning('admin.tenants.messages.syncOnlyActive');
+            return;
+        }
+
+        this.#notify.info('admin.tenants.messages.syncStarted');
+
+        this.service.syncMigrations(tenant.id)
+            .pipe(take(1))
+            .subscribe({
+                next: (job) => {
+                    this.#pollSyncJob(job.jobId);
+                },
+                error: (err) => {
+                    const message = err.error?.message || this.#transloco.translate('admin.tenants.messages.syncFailed');
+                    this.#notify.alert(message);
+                }
+            });
+    }
+
+    #pollSyncJob(jobId: number): void {
+        const pollInterval = setInterval(() => {
+            this.service.getProvisioningJobById(jobId)
+                .pipe(take(1))
+                .subscribe({
+                    next: (job) => {
+                        if (job.status === 'succeeded') {
+                            clearInterval(pollInterval);
+                            this.#notify.success('admin.tenants.messages.syncSuccess');
+                        } else if (job.status === 'failed') {
+                            clearInterval(pollInterval);
+                            this.#notify.alert(job.error || 'admin.tenants.messages.syncFailed');
+                        }
+                    },
+                    error: () => {
+                        clearInterval(pollInterval);
+                        this.#notify.alert('admin.tenants.messages.syncFailed');
+                    }
+                });
+        }, 2000);
     }
 }

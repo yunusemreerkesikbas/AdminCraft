@@ -86,6 +86,32 @@ public class AsyncProvisioningExecutor {
     }
   }
 
+  @Async
+  public void executeSyncMigrations(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
+    log.info("Async sync migrations started on thread: {}", Thread.currentThread().getName());
+    MDC.put("correlationId", correlationId);
+    MDC.put("tenantId", String.valueOf(tenant.getId()));
+    try {
+      updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
+      log.info("Starting migration sync for tenant {} with modules: {}", tenant.getId(), modules);
+      updateJobProgress(jobId, 30);
+      tenantMigrationService.migrateTenant(tenant.getDatabaseName(), modules);
+      updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
+      log.info("Migration sync completed successfully for tenant {} on thread: {}",
+          tenant.getId(), Thread.currentThread().getName());
+
+    } catch (Exception e) {
+      log.error("Migration sync failed for tenant {}", tenant.getId(), e);
+      String errorMessage = e.getMessage();
+      if (errorMessage != null && errorMessage.length() > 500) {
+        errorMessage = errorMessage.substring(0, 497) + "...";
+      }
+      updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
+    } finally {
+      MDC.clear();
+    }
+  }
+
   private void createDatabaseIfNotExists(String dbName) {
     String jdbcUrl = String.format("jdbc:mysql://%s:%s?useSSL=false&allowPublicKeyRetrieval=true",
         dbHost, dbPort);

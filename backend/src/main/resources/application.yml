@@ -12,6 +12,8 @@ app:
     refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
+  tenant:
+    auto-sync-on-startup: false # Disable for dev - use manual sync button
 
 spring:
   application:
@@ -71,7 +73,7 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate: DEBUG
   pattern:
-    console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
 ---
 spring:

@@ -7,6 +7,7 @@ import {
     CreateTenantRequest,
     ProvisionLanguagesRequest,
     ProvisioningJobDto,
+    SyncJobDto,
     Tenant,
     TenantLanguagesDto,
     UpdateTenantLanguagesRequest,
@@ -41,6 +42,10 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
         return this.customGet<ProvisioningJobDto>('provisioningJob', { jobUuid });
     }
 
+    getProvisioningJobById(jobId: number): Observable<SyncJobDto> {
+        return this.customGet<SyncJobDto>('provisioningJob', { jobId });
+    }
+
     pollProvisioningJob(jobUuid: string, intervalMs: number = 2000): Observable<ProvisioningJobDto> {
         return interval(intervalMs).pipe(
             switchMap(() => this.getProvisioningJob(jobUuid)),
@@ -62,5 +67,9 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
 
     generateAdminUser(tenantId: number): Observable<AdminUserResponse> {
         return this.customPost<AdminUserResponse>('generateAdminUser', {}, { tenantId });
+    }
+
+    syncMigrations(tenantId: number): Observable<SyncJobDto> {
+        return this.customPost<SyncJobDto>('provisioningSyncMigrations', {}, { tenantId });
     }
 }

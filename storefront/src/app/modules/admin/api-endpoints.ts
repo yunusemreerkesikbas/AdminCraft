@@ -96,6 +96,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',
+    provisioningSyncMigrations: 'provisioning/tenants/${tenantId}/sync-migrations',
     provisioningJob: 'provisioning/jobs/${jobId}',
     provisioningJobByUuid: 'provisioning/jobs/${jobUuid}',
 
