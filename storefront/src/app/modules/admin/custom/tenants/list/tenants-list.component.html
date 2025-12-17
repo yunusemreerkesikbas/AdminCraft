@@ -135,13 +135,33 @@
                                         class="h-7 min-h-7 min-w-10 px-2 leading-6"
                                         mat-stroked-button
                                         [matTooltip]="
+                                            'admin.tenants.actions.syncMigrations'
+                                                | transloco
+                                        "
+                                        [disabled]="tenant.status !== 'ACTIVE'"
+                                        (click)="syncMigrations(tenant)"
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            [svgIcon]="
+                                                'heroicons_outline:arrow-path'
+                                            "
+                                        ></mat-icon>
+                                    </button>
+                                    <button
+                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
+                                        mat-stroked-button
+                                        [matTooltip]="
                                             tenant.hasAdminUser
                                                 ? ('admin.tenants.actions.adminExists'
-                                                    | transloco)
+                                                  | transloco)
                                                 : ('admin.tenants.actions.generateAdmin'
-                                                    | transloco)
+                                                  | transloco)
                                         "
-                                        [disabled]="tenant.hasAdminUser || tenant.status !== 'ACTIVE'"
+                                        [disabled]="
+                                            tenant.hasAdminUser ||
+                                            tenant.status !== 'ACTIVE'
+                                        "
                                         (click)="generateAdminUser(tenant)"
                                     >
                                         <mat-icon

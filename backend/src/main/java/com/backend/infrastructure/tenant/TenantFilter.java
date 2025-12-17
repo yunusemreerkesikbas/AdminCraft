@@ -154,6 +154,9 @@ public class TenantFilter extends OncePerRequestFilter {
   }
 
   private boolean isPlatformEndpoint(String path) {
+    if (path.startsWith("/api/tenants/current")) {
+      return false;
+    }
     return path.startsWith("/api/platform") ||
         path.startsWith("/api/modules/catalog") ||
         path.startsWith("/api/provisioning") ||

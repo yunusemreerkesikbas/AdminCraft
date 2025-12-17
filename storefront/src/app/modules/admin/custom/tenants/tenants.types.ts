@@ -126,3 +126,20 @@ export interface AdminUserResponse {
     subdomain: string;
     loginUrl: string;
 }
+
+/**
+ * Response from sync migrations and provisioning job endpoints
+ * Uses jobId (number) and lowercase status values
+ */
+export interface SyncJobDto {
+    jobId: number;
+    tenantId: number;
+    type: string;
+    status: 'pending' | 'running' | 'succeeded' | 'failed';
+    progress: number;
+    error?: string | null;
+    createdAt: string;
+    startedAt?: string | null;
+    completedAt?: string | null;
+}
+

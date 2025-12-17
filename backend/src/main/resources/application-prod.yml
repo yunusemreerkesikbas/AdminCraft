@@ -9,8 +9,12 @@ spring:
         show_sql: false
         use_sql_comments: false
 
+app:
+  tenant:
+    auto-sync-on-startup: true # Keep enabled for production
+
 logging:
   level:
     com.backend: INFO
     org.hibernate: WARN
-    org.springframework.security: WARN 
+    org.springframework.security: WARN

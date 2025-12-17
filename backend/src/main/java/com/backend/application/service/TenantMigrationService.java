@@ -33,12 +33,12 @@ public class TenantMigrationService {
 
     try (HikariDataSource tenantDs = createTenantDataSource(dbName)) {
       List<String> modulesToMigrate = new ArrayList<>();
-      // Always include core if not present (though normally it should be)
-      if (!modules.contains("core")) {
+      if (modules.contains("core")) {
         modulesToMigrate.add("core");
       }
-      // Add other modules avoiding duplicates if core was already in list
-      modulesToMigrate.addAll(modules.stream().filter(m -> !"core".equals(m)).toList());
+      modules.stream()
+          .filter(m -> !"core".equals(m))
+          .forEach(modulesToMigrate::add);
 
       for (String module : modulesToMigrate) {
         String location = "classpath:db/tenant/" + module;
@@ -57,7 +57,12 @@ public class TenantMigrationService {
             .load();
 
         try {
-          flyway.migrate();
+          var result = flyway.migrate();
+          log.info("Migration result for module {} in {}: {} migrations executed, target version: {}",
+              module, dbName, result.migrationsExecuted, result.targetSchemaVersion);
+          if (result.migrationsExecuted > 0) {
+            result.migrations.forEach(m -> log.info("  Executed: {} - {}", m.version, m.description));
+          }
         } catch (org.flywaydb.core.api.FlywayException e) {
           log.warn("Flyway migration failed validation for module: {}. Attempting repair due to error: {}", module,
               e.getMessage());

@@ -2,6 +2,7 @@ package com.backend.infrastructure.web;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +25,17 @@ public class TenantStartupMigrator implements CommandLineRunner {
   private final TenantModuleRepository tenantModuleRepository;
   private final TenantMigrationService tenantMigrationService;
 
+  @Value("${app.tenant.auto-sync-on-startup:true}")
+  private boolean autoSyncOnStartup;
+
   @Override
   @Transactional(readOnly = true)
   public void run(String... args) throws Exception {
+    if (!autoSyncOnStartup) {
+      log.info("Tenant auto-sync on startup is disabled (app.tenant.auto-sync-on-startup=false)");
+      return;
+    }
+
     log.info("Checking for tenant database migrations...");
 
     List<Tenant> tenants = tenantRepository.findAll();
