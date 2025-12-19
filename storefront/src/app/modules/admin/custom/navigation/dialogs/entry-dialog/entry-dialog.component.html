@@ -1,0 +1,88 @@
+<spa-dialog-header
+    [title]="
+        isCreateMode()
+            ? ('admin.navigation.entries.create' | transloco)
+            : ('admin.navigation.entries.edit' | transloco)
+    "
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content type="form">
+    <form [formGroup]="form" class="flex flex-col gap-4">
+        @if (isCreateMode()) {
+            <spa-input
+                [label]="'admin.common.fields.uid' | transloco"
+                formControlName="uid"
+                [placeholder]="'main-menu-item'"
+                [hint]="'Unique identifier (lowercase, no spaces)'"
+            />
+        }
+
+        <spa-input
+            [label]="'admin.navigation.fields.linkName' | transloco"
+            formControlName="linkName"
+            [placeholder]="'Home Page'"
+        />
+
+        <spa-select
+            [label]="'admin.common.fields.type' | transloco"
+            formControlName="itemType"
+            [options]="itemTypeOptions"
+        />
+
+        @if (showUrlFieldSig()) {
+            <spa-input
+                [label]="'admin.common.fields.url' | transloco"
+                formControlName="url"
+                [placeholder]="'/my-page or https://google.com'"
+            />
+        }
+
+        @if (showItemIdFieldSig()) {
+            <spa-input
+                [label]="'admin.navigation.fields.itemId' | transloco"
+                formControlName="itemId"
+                [placeholder]="'page-uid or component-uid'"
+            />
+        }
+
+        <div class="grid grid-cols-2 gap-4">
+            <spa-select
+                [label]="'admin.common.fields.target' | transloco"
+                formControlName="target"
+                [options]="targetOptions"
+            />
+            <spa-input
+                [label]="'admin.navigation.fields.linkColor' | transloco"
+                formControlName="linkColor"
+                [placeholder]="'#FF5733'"
+                [hint]="'HEX format (#RRGGBB)'"
+            />
+        </div>
+
+        <div class="mt-2 flex gap-6">
+            <spa-toggle
+                formControlName="isExternal"
+                [label]="'admin.navigation.fields.isExternal' | transloco"
+            />
+            <spa-toggle
+                formControlName="isVisible"
+                [label]="'admin.navigation.fields.isVisible' | transloco"
+            />
+        </div>
+    </form>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="
+        isCreateMode()
+            ? ('admin.common.create' | transloco)
+            : ('admin.common.save' | transloco)
+    "
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

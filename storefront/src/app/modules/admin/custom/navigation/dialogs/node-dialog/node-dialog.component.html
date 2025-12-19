@@ -1,0 +1,58 @@
+<spa-dialog-header
+    [title]="
+        isCreateMode()
+            ? ('admin.navigation.nodes.create' | transloco)
+            : ('admin.navigation.nodes.edit' | transloco)
+    "
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content type="form">
+    <form [formGroup]="form" class="flex flex-col gap-4">
+        @if (isCreateMode()) {
+            <spa-input
+                [label]="'admin.navigation.fields.uid' | transloco"
+                formControlName="uid"
+                [placeholder]="'e.g. main-menu-electronics'"
+            />
+        }
+
+        <spa-input
+            [label]="'admin.navigation.fields.title' | transloco"
+            formControlName="title"
+            [placeholder]="'Menu Title'"
+        />
+
+        <spa-select
+            [label]="'admin.navigation.fields.position' | transloco"
+            formControlName="position"
+            [options]="positionOptions"
+        />
+
+        <div class="mt-2 flex gap-6">
+            <spa-toggle
+                formControlName="isVisible"
+                [label]="'admin.navigation.fields.isVisible' | transloco"
+            />
+
+            <spa-toggle
+                formControlName="isTab"
+                [label]="'admin.navigation.fields.isTab' | transloco"
+            />
+        </div>
+    </form>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="
+        isCreateMode()
+            ? ('admin.common.create' | transloco)
+            : ('admin.common.save' | transloco)
+    "
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

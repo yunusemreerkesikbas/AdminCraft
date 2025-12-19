@@ -65,7 +65,8 @@ export abstract class SpaFormDialog<
             },
             error: (error) => {
                 this.setSubmitting(false);
-                this.notify.alert(errorKey);
+                const errorMessage = error?.error?.message || error?.message || errorKey;
+                this.notify.alert(errorMessage);
                 this.onSaveError(error);
                 this.onError(error);
             }

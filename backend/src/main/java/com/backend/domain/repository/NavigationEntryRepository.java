@@ -24,4 +24,6 @@ public interface NavigationEntryRepository {
   void deleteById(Long id);
 
   boolean existsByUid(String uid);
+
+  int findMaxSortOrderByNodeId(Long nodeId);
 }

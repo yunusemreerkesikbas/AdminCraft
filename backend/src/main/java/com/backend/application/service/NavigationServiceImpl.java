@@ -1,16 +1,16 @@
 package com.backend.application.service;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.net.URI;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,14 +92,11 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   @Transactional
   public NavigationNodeResponse addChildNode(Long parentId, CreateNodeRequest request) {
-    NavigationNode parent = findNodeOrThrow(parentId);
+    findNodeOrThrow(parentId);
     validateUidNotExists(request.uid());
     validateMaxDepth(parentId);
 
-    int maxSortOrder = parent.getChildren().stream()
-        .mapToInt(NavigationNode::getSortOrder)
-        .max()
-        .orElse(-1);
+    int maxSortOrder = nodeRepository.findMaxChildSortOrderByParentId(parentId);
 
     NavigationNode child = new NavigationNode();
     child.setUid(request.uid());
@@ -187,14 +184,11 @@ public class NavigationServiceImpl implements NavigationService {
   @Override
   @Transactional
   public NavigationEntryResponse createEntry(CreateEntryRequest request) {
-    NavigationNode node = findNodeOrThrow(request.nodeId());
+    findNodeOrThrow(request.nodeId());
     validateEntryUidNotExists(request.uid());
     validateEntryData(request.itemType(), request.itemId(), request.url());
 
-    int maxSortOrder = node.getEntries().stream()
-        .mapToInt(NavigationEntry::getSortOrder)
-        .max()
-        .orElse(-1);
+    int maxSortOrder = entryRepository.findMaxSortOrderByNodeId(request.nodeId());
 
     NavigationEntry entry = new NavigationEntry();
     entry.setUid(request.uid());

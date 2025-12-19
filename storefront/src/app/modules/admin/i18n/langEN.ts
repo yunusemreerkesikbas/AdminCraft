@@ -29,6 +29,7 @@ export const langEN = {
             noRecords: 'No records',
             none: 'None',
             cancel: 'Cancel',
+            open: 'Open',
             close: 'Close',
             select: 'Select',
             selectComponent: 'Select Component',
@@ -443,6 +444,80 @@ export const langEN = {
             updateSuccess: 'Media file successfully updated',
             dragDropText: 'Drag files here or click to select',
         },
+        navigation: {
+            title: 'Navigation Management',
+            nodes: {
+                title: 'Nodes',
+                create: 'Create Node',
+                edit: 'Edit Node',
+                delete: 'Delete Node',
+                confirmDelete: 'Are you sure you want to delete this node? All children will be deleted as well.',
+            },
+            actions: {
+                addChild: 'Add Child',
+                addEntry: 'Add Entry',
+            },
+            entries: {
+                title: 'Entries',
+                create: 'Create Entry',
+                edit: 'Edit Entry',
+                delete: 'Delete Entry',
+                confirmDelete: 'Are you sure you want to delete this entry?',
+                newTab: 'Open in New Tab',
+            },
+            fields: {
+                title: 'Title',
+                uid: 'UID',
+                position: 'Position',
+                isVisible: 'Visible',
+                isTab: 'Is Tab',
+                url: 'URL',
+                linkName: 'Link Name',
+                linkColor: 'Link Color',
+                isExternal: 'External Link',
+                itemType: 'Item Type',
+                itemId: 'Item ID',
+                target: 'Target'
+            },
+            enums: {
+                position: {
+                    LEFT: 'Left',
+                    RIGHT: 'Right',
+                    CENTER: 'Center',
+                    BOTTOM: 'Bottom'
+                },
+                itemType: {
+                    URL: 'URL',
+                    PAGE: 'Page',
+                    CATEGORY: 'Category',
+                    PRODUCT: 'Product'
+                }
+            },
+            sections: {
+                subMenus: 'Sub Menus',
+                entries: 'Entries'
+            },
+            manager: {
+                title: 'Manage Node'
+            },
+            tabs: {
+                submenus: 'Submenus',
+                entries: 'Entries'
+            },
+            messages: {
+                nodeCreated: 'Node created successfully',
+                nodeUpdated: 'Node updated successfully',
+                nodeDeleted: 'Node deleted successfully',
+                entryCreated: 'Entry created successfully',
+                entryUpdated: 'Entry updated successfully',
+                entryDeleted: 'Entry deleted successfully',
+                reorderSuccess: 'Order updated successfully',
+                noEntries: 'No entries yet',
+                noChildren: 'No child nodes',
+                successDeleteNode: 'Node deleted successfully',
+                successDeleteEntry: 'Entry deleted successfully'
+            }
+        },
         users: {
             title: 'User Management',
             list: 'User List',
@@ -816,6 +891,13 @@ export const langEN = {
             actions: {
                 generateAdmin: 'Generate Admin User',
                 adminExists: 'Admin User Exists',
+                syncMigrations: 'Sync Database Migrations',
+            },
+            messages: {
+                syncStarted: 'Migration sync started...',
+                syncSuccess: 'Database migrations synced successfully',
+                syncFailed: 'Migration sync failed',
+                syncOnlyActive: 'Only active tenants can sync migrations',
             },
             modal: {
                 adminCreated: 'Admin User Created Successfully',

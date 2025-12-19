@@ -36,4 +36,6 @@ public interface NavigationNodeRepository {
   int calculateDepth(Long nodeId);
 
   boolean isDescendantOf(Long nodeId, Long potentialAncestorId);
+
+  int findMaxChildSortOrderByParentId(Long parentId);
 }

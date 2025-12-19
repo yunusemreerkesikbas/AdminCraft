@@ -64,6 +64,15 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {
+                id: 'apps.custom.navigation',
+                title: 'Navigasyon',
+                type: 'basic',
+                icon: 'heroicons_outline:bars-3',
+                link: 'navigation',
+                requiredModule: NAVIGATION_MODULES.CORE,
+                excludedRoles: ['SUPER_ADMIN'],
+            },
+            {
                 id: 'apps.custom.settings',
                 title: 'Site Ayarları',
                 type: 'basic',

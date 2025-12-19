@@ -32,6 +32,7 @@ import { SpaSearchInputComponent } from '../custom-ui/spa-search-input/spa-searc
 export class AdminPageHeaderComponent {
     @Input() title: string = '';
     @Input() subtitle?: string;
+    @Input() backUrl?: string | any[];
     @Input() showSearch: boolean = false;
     @Input() searchPlaceholder?: string;
     @Input() showCreateButton: boolean = false;

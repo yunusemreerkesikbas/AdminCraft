@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.NavigationEntry;
@@ -61,6 +63,12 @@ public class NavigationEntryRepositoryImpl implements NavigationEntryRepository 
   public boolean existsByUid(String uid) {
     return jpaRepository.existsByUid(uid);
   }
+
+  @Override
+  public int findMaxSortOrderByNodeId(Long nodeId) {
+    Integer result = jpaRepository.findMaxSortOrderByNodeId(nodeId);
+    return result != null ? result : -1;
+  }
 }
 
 interface NavigationEntryJpaRepository extends JpaRepository<NavigationEntry, Long> {
@@ -72,4 +80,7 @@ interface NavigationEntryJpaRepository extends JpaRepository<NavigationEntry, Lo
   List<NavigationEntry> findByNodeIdInOrderByNodeIdAscSortOrderAscIdAsc(List<Long> nodeIds);
 
   boolean existsByUid(String uid);
+
+  @Query("SELECT COALESCE(MAX(e.sortOrder), -1) FROM NavigationEntry e WHERE e.nodeId = :nodeId")
+  Integer findMaxSortOrderByNodeId(@Param("nodeId") Long nodeId);
 }
