@@ -94,6 +94,12 @@ public class NavigationNodeRepositoryImpl implements NavigationNodeRepository {
   public boolean isDescendantOf(Long nodeId, Long potentialAncestorId) {
     return jpaRepository.isDescendantOf(nodeId, potentialAncestorId);
   }
+
+  @Override
+  public int findMaxChildSortOrderByParentId(Long parentId) {
+    Integer result = jpaRepository.findMaxChildSortOrderByParentId(parentId);
+    return result != null ? result : -1;
+  }
 }
 
 interface NavigationNodeJpaRepository extends JpaRepository<NavigationNode, Long> {
@@ -160,4 +166,7 @@ interface NavigationNodeJpaRepository extends JpaRepository<NavigationNode, Long
       SELECT COUNT(*) > 0 FROM descendants WHERE id = :nodeId AND id != :ancestorId
       """, nativeQuery = true)
   boolean isDescendantOf(@Param("nodeId") Long nodeId, @Param("ancestorId") Long ancestorId);
+
+  @Query("SELECT COALESCE(MAX(n.sortOrder), -1) FROM NavigationNode n WHERE n.parentId = :parentId")
+  Integer findMaxChildSortOrderByParentId(@Param("parentId") Long parentId);
 }

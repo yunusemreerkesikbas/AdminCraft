@@ -1,0 +1,299 @@
+<spa-dialog
+    size="xl"
+    [title]="'admin.navigation.manager.title' | transloco"
+    [contentType]="'tabbed'"
+    [showFooter]="true"
+    [showSubmit]="false"
+    [cancelLabel]="'admin.common.close'"
+    (cancelled)="closeDialog()"
+>
+    <div class="flex w-full flex-col gap-4 px-6 pb-2 pt-6">
+        <div
+            class="text-secondary flex flex-wrap items-center text-sm font-medium"
+        >
+            <button
+                mat-button
+                class="h-8 min-w-0 rounded-full !px-2 text-primary hover:bg-primary-50 dark:hover:bg-primary-900/10"
+                (click)="navigateUp(null)"
+                [title]="'root'"
+            >
+                <mat-icon
+                    class="text-current icon-size-4"
+                    svgIcon="heroicons_mini:home"
+                ></mat-icon>
+            </button>
+            <mat-icon
+                class="text-tertiary mx-1 icon-size-3"
+                svgIcon="heroicons_mini:chevron-right"
+            ></mat-icon>
+
+            @for (node of breadcrumbsSig(); track node.id; let last = $last) {
+                @if (!last) {
+                    <button
+                        mat-button
+                        class="text-secondary h-8 min-w-0 rounded-full !px-3 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800"
+                        (click)="navigateUp(node)"
+                    >
+                        {{ node.title }}
+                    </button>
+                    <mat-icon
+                        class="text-tertiary mx-1 icon-size-3"
+                        svgIcon="heroicons_mini:chevron-right"
+                    ></mat-icon>
+                } @else {
+                    <span
+                        class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                    >
+                        {{ node.title }}
+                    </span>
+                }
+            }
+        </div>
+    </div>
+
+    @if (isLoadingSig()) {
+        <div class="flex h-[400px] shrink-0 items-center justify-center">
+            <mat-icon
+                class="text-secondary animate-spin icon-size-8"
+                svgIcon="heroicons_outline:arrow-path"
+            ></mat-icon>
+        </div>
+    } @else {
+        <mat-tab-group class="min-h-0 flex-auto" [animationDuration]="'0ms'">
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon
+                            class="icon-size-4"
+                            svgIcon="heroicons_mini:folder"
+                        ></mat-icon>
+                        <span>{{
+                            'admin.navigation.tabs.submenus' | transloco
+                        }}</span>
+                        <span
+                            class="rounded-full bg-primary-100 px-1.5 py-0.5 text-xs text-primary-700 dark:bg-primary-900 dark:text-primary-300"
+                        >
+                            {{ currentNodeSig()?.children?.length || 0 }}
+                        </span>
+                    </div>
+                </ng-template>
+
+                <div class="flex h-full flex-col">
+                    <div
+                        class="flex flex-none items-center justify-end border-b border-gray-100 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/10"
+                    >
+                        <button
+                            mat-flat-button
+                            color="primary"
+                            class="rounded-full"
+                            (click)="openCreateChildDialog()"
+                        >
+                            <mat-icon svgIcon="heroicons_mini:plus"></mat-icon>
+                            {{
+                                'admin.navigation.actions.addChild' | transloco
+                            }}
+                        </button>
+                    </div>
+
+                    <div class="flex-auto overflow-y-auto p-4">
+                        @if (currentNodeSig()?.children?.length) {
+                            <spa-reorder-list
+                                [items]="currentNodeSig()?.children || []"
+                                (reorder)="onReorderNodes($event)"
+                            >
+                                <ng-template #itemTemplate let-child>
+                                    <div
+                                        class="group flex w-full items-center justify-between"
+                                    >
+                                        <div
+                                            class="flex items-center gap-3 overflow-hidden"
+                                        >
+                                            <div
+                                                class="flex flex-col overflow-hidden"
+                                            >
+                                                <span
+                                                    class="truncate font-medium transition-colors group-hover:text-primary"
+                                                    >{{ child.title }}</span
+                                                >
+                                                <span
+                                                    class="text-secondary truncate text-xs"
+                                                    >{{ child.uid }}</span
+                                                >
+                                            </div>
+                                            @if (child.children?.length) {
+                                                <div
+                                                    class="rounded-full border border-primary-100 bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 dark:border-primary-900/50 dark:bg-primary-900/20 dark:text-primary-400"
+                                                >
+                                                    {{ child.children?.length }}
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div
+                                            class="flex items-center opacity-0 transition-opacity group-hover:opacity-100"
+                                        >
+                                            <button
+                                                mat-icon-button
+                                                class="mr-1 h-8 min-h-8 w-8 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/20"
+                                                (click)="
+                                                    $event.stopPropagation();
+                                                    drillDown(child)
+                                                "
+                                                [matTooltip]="
+                                                    'admin.common.open'
+                                                        | transloco
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="icon-size-4"
+                                                    svgIcon="heroicons_mini:arrow-right-circle"
+                                                ></mat-icon>
+                                            </button>
+
+                                            <button
+                                                mat-icon-button
+                                                class="text-secondary h-8 min-h-8 w-8 hover:text-primary"
+                                                (click)="
+                                                    $event.stopPropagation();
+                                                    openEditNodeDialog(child)
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="icon-size-4"
+                                                    svgIcon="heroicons_mini:pencil-square"
+                                                ></mat-icon>
+                                            </button>
+                                            <button
+                                                mat-icon-button
+                                                class="h-8 min-h-8 w-8 text-warn hover:bg-warn-50 dark:hover:bg-warn-900/10"
+                                                (click)="
+                                                    $event.stopPropagation();
+                                                    deleteNode(child)
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="icon-size-4"
+                                                    svgIcon="heroicons_mini:trash"
+                                                ></mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </ng-template>
+                            </spa-reorder-list>
+                        } @else {
+                            <spa-empty-state
+                                [icon]="'heroicons_outline:folder-open'"
+                                [message]="'admin.navigation.messages.noNodes'"
+                            ></spa-empty-state>
+                        }
+                    </div>
+                </div>
+            </mat-tab>
+
+            <!-- ENTRIES TAB -->
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon
+                            class="icon-size-4"
+                            svgIcon="heroicons_mini:link"
+                        ></mat-icon>
+                        <span>{{
+                            'admin.navigation.tabs.entries' | transloco
+                        }}</span>
+                        <span
+                            class="rounded-full bg-accent-100 px-1.5 py-0.5 text-xs text-accent-700 dark:bg-accent-900 dark:text-accent-300"
+                        >
+                            {{ currentNodeSig()?.entries?.length || 0 }}
+                        </span>
+                    </div>
+                </ng-template>
+
+                <div class="flex h-full flex-col">
+                    <!-- Sticky Toolbar -->
+                    <div
+                        class="flex flex-none items-center justify-end border-b border-gray-100 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/10"
+                    >
+                        <button
+                            mat-flat-button
+                            class="rounded-full bg-accent text-on-accent"
+                            (click)="openCreateEntryDialog()"
+                        >
+                            <mat-icon svgIcon="heroicons_mini:plus"></mat-icon>
+                            {{
+                                'admin.navigation.actions.addEntry' | transloco
+                            }}
+                        </button>
+                    </div>
+
+                    <!-- Scrollable List -->
+                    <div class="flex-auto overflow-y-auto p-4">
+                        @if (currentNodeSig()?.entries?.length) {
+                            <spa-reorder-list
+                                [items]="currentNodeSig()?.entries || []"
+                                (reorder)="onReorderEntries($event)"
+                            >
+                                <ng-template #itemTemplate let-entry>
+                                    <div
+                                        class="group flex w-full items-center justify-between"
+                                    >
+                                        <div
+                                            class="flex flex-col overflow-hidden"
+                                        >
+                                            <span
+                                                class="truncate font-medium transition-colors group-hover:text-primary"
+                                                >{{ entry.label }}</span
+                                            >
+                                            <span
+                                                class="text-secondary truncate text-xs"
+                                                >{{ entry.url }}</span
+                                            >
+                                        </div>
+
+                                        <div
+                                            class="flex items-center opacity-0 transition-opacity group-hover:opacity-100"
+                                        >
+                                            <button
+                                                mat-icon-button
+                                                class="text-secondary h-8 min-h-8 w-8 hover:text-primary"
+                                                (click)="
+                                                    $event.stopPropagation();
+                                                    openEditEntryDialog(entry)
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="icon-size-4"
+                                                    svgIcon="heroicons_mini:pencil-square"
+                                                ></mat-icon>
+                                            </button>
+                                            <button
+                                                mat-icon-button
+                                                class="h-8 min-h-8 w-8 text-warn hover:bg-warn-50 dark:hover:bg-warn-900/10"
+                                                (click)="
+                                                    $event.stopPropagation();
+                                                    deleteEntry(entry)
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="icon-size-4"
+                                                    svgIcon="heroicons_mini:trash"
+                                                ></mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </ng-template>
+                            </spa-reorder-list>
+                        } @else {
+                            <spa-empty-state
+                                [icon]="'heroicons_outline:link'"
+                                [message]="
+                                    'admin.navigation.messages.noEntries'
+                                "
+                            ></spa-empty-state>
+                        }
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    }
+</spa-dialog>

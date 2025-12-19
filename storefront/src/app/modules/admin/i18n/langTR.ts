@@ -443,6 +443,80 @@ export const langTR = {
             updateSuccess: 'Medya dosyası başarıyla güncellendi',
             dragDropText: 'Dosyaları buraya sürükleyin veya seçmek için tıklayın',
         },
+        navigation: {
+            title: 'Navigasyon Yönetimi',
+            nodes: {
+                title: 'Düğümler',
+                create: 'Düğüm Oluştur',
+                edit: 'Düğüm Düzenle',
+                delete: 'Düğüm Sil',
+                confirmDelete: 'Bu düğümü silmek istediğinize emin misiniz? Alt öğeler de silinecektir.',
+            },
+            actions: {
+                addChild: 'Alt Öğe Ekle',
+                addEntry: 'Giriş Ekle',
+            },
+            entries: {
+                title: 'Girişler',
+                create: 'Giriş Oluştur',
+                edit: 'Giriş Düzenle',
+                delete: 'Giriş Sil',
+                confirmDelete: 'Bu girişi silmek istediğinize emin misiniz?',
+                newTab: 'Yeni Sekmede Aç',
+            },
+            fields: {
+                title: 'Başlık',
+                uid: 'UID',
+                position: 'Pozisyon',
+                isVisible: 'Görünür',
+                isTab: 'Sekme mi',
+                url: 'URL',
+                linkName: 'Link Adı',
+                linkColor: 'Link Rengi',
+                isExternal: 'Harici Link',
+                itemType: 'Öğe Türü',
+                itemId: 'Öğe ID',
+                target: 'Hedef'
+            },
+            enums: {
+                position: {
+                    LEFT: 'Sol',
+                    RIGHT: 'Sağ',
+                    CENTER: 'Orta',
+                    BOTTOM: 'Alt'
+                },
+                itemType: {
+                    URL: 'URL',
+                    PAGE: 'Sayfa',
+                    CATEGORY: 'Kategori',
+                    PRODUCT: 'Ürün'
+                }
+            },
+            sections: {
+                subMenus: 'Alt Menüler',
+                entries: 'Girişler'
+            },
+            manager: {
+                title: 'Düğüm Yönetimi'
+            },
+            tabs: {
+                submenus: 'Alt Menüler',
+                entries: 'Girdiler'
+            },
+            messages: {
+                nodeCreated: 'Düğüm başarıyla oluşturuldu',
+                nodeUpdated: 'Düğüm başarıyla güncellendi',
+                nodeDeleted: 'Düğüm başarıyla silindi',
+                entryCreated: 'Giriş başarıyla oluşturuldu',
+                entryUpdated: 'Giriş başarıyla güncellendi',
+                entryDeleted: 'Giriş başarıyla silindi',
+                reorderSuccess: 'Sıralama güncellendi',
+                noEntries: 'Henüz giriş yok',
+                noChildren: 'Alt düğüm yok',
+                successDeleteNode: 'Düğüm başarıyla silindi',
+                successDeleteEntry: 'Girdi başarıyla silindi'
+            }
+        },
         users: {
             title: 'Kullanıcı Yönetimi',
             list: 'Kullanıcı Listesi',
@@ -816,6 +890,13 @@ export const langTR = {
             actions: {
                 generateAdmin: 'Admin Kullanıcı Oluştur',
                 adminExists: 'Admin Kullanıcı Mevcut',
+                syncMigrations: 'Veritabanı Migrasyonlarını Senkronize Et',
+            },
+            messages: {
+                syncStarted: 'Migrasyon senkronizasyonu başlatıldı...',
+                syncSuccess: 'Veritabanı migrasyonları başarıyla senkronize edildi',
+                syncFailed: 'Migrasyon senkronizasyonu başarısız',
+                syncOnlyActive: 'Sadece aktif tenantlar migrasyon senkronizasyonu yapabilir',
             },
             modal: {
                 adminCreated: 'Admin Kullanıcı Başarıyla Oluşturuldu',

@@ -113,7 +113,17 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageTemplateSlots: 'page-templates/${id}/slots',
     pageTemplateSlot: 'page-templates/${id}/slots/${slotName}',
     pageTemplateSlotsReorder: 'page-templates/${id}/slots/reorder',
-    pageTemplateAssign: 'page-templates/${id}/assign/${pageId}'
+    pageTemplateAssign: 'page-templates/${id}/assign/${pageId}',
+
+    // ----- NAVIGATION -----
+    navigationNodes: 'navigation/nodes',
+    navigationNodeById: 'navigation/nodes/${id}',
+    navigationNodeTree: 'navigation/nodes/${id}',
+    navigationNodeChildren: 'navigation/nodes/${id}/children',
+    navigationNodesReorder: 'navigation/nodes/${id}/reorder',
+    navigationEntries: 'navigation/entries',
+    navigationEntryById: 'navigation/entries/${id}',
+    navigationEntryReorder: 'navigation/nodes/${nodeId}/entries/reorder', 
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

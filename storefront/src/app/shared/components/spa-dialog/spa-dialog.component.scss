@@ -8,18 +8,22 @@
 
     &--sm {
         width: 400px;
+        max-width: 100%;
     }
 
     &--md {
         width: 560px;
+        max-width: 100%;
     }
 
     &--lg {
         width: 720px;
+        max-width: 100%;
     }
 
     &--xl {
         width: 900px;
         min-width: 600px;
+        max-width: 100%;
     }
 }

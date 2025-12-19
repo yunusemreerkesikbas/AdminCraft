@@ -1,0 +1,124 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
+    <admin-page-header
+        [title]="'admin.navigation.title' | transloco"
+        [subtitle]="'admin.navigation.subtitle' | transloco"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.navigation.nodes.create' | transloco"
+        (createClick)="openCreateDialog()"
+    >
+    </admin-page-header>
+
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            @if (isLoadingSig()) {
+                <div class="flex flex-col items-center justify-center p-12">
+                    <mat-progress-spinner
+                        mode="indeterminate"
+                        diameter="48"
+                    ></mat-progress-spinner>
+                </div>
+            } @else {
+                @if (rootNodesSig().length === 0) {
+                    <div class="p-8 sm:p-16">
+                        <spa-empty-state
+                            [icon]="'heroicons_outline:bars-3'"
+                            [title]="'admin.common.noRecords' | transloco"
+                            [description]="
+                                'admin.common.actions.createFirst' | transloco
+                            "
+                        >
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                class="mt-6 rounded-full"
+                                (click)="openCreateDialog()"
+                            >
+                                <mat-icon
+                                    svgIcon="heroicons_outline:plus"
+                                ></mat-icon>
+                                <span class="ml-2">{{
+                                    'admin.navigation.nodes.create' | transloco
+                                }}</span>
+                            </button>
+                        </spa-empty-state>
+                    </div>
+                } @else {
+                    <div class="grid">
+                        <div
+                            class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+                        >
+                            <div>
+                                {{ 'admin.common.grid.name' | transloco }}
+                            </div>
+                            <div class="hidden sm:block">
+                                {{ 'admin.common.grid.status' | transloco }}
+                            </div>
+                            <div class="hidden text-right sm:block">
+                                {{ 'admin.common.grid.actions' | transloco }}
+                            </div>
+                        </div>
+
+                        @for (node of rootNodesSig(); track node.id) {
+                            <div
+                                class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                            >
+                                <div class="min-w-0">
+                                    <div
+                                        class="truncate font-medium text-slate-900 dark:text-slate-100"
+                                    >
+                                        {{ node.title }}
+                                    </div>
+                                    <div
+                                        class="truncate font-mono text-xs text-slate-400"
+                                    >
+                                        {{ node.uid }}
+                                    </div>
+                                </div>
+
+                                <div class="hidden sm:block">
+                                    <span
+                                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        [ngClass]="
+                                            node.isVisible
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                        "
+                                    >
+                                        {{
+                                            node.isVisible
+                                                ? ('admin.common.status.active'
+                                                  | transloco)
+                                                : ('admin.common.status.inactive'
+                                                  | transloco)
+                                        }}
+                                    </span>
+                                </div>
+
+                                <!-- Actions -->
+                                <div
+                                    class="flex hidden items-center justify-end gap-2 sm:flex"
+                                >
+                                    <button
+                                        mat-icon-button
+                                        (click)="openNodeManager(node)"
+                                        [matTooltip]="
+                                            'admin.common.manage' | transloco
+                                        "
+                                    >
+                                        <mat-icon
+                                            svgIcon="heroicons_outline:pencil-square"
+                                        ></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

@@ -18,3 +18,17 @@ export const SLOT_POSITION_OPTIONS: { value: SlotPosition; label: string }[] = [
     { value: SlotPosition.LEFT, label: 'Left' },
     { value: SlotPosition.RIGHT, label: 'Right' }
 ];
+
+export enum NodePosition {
+    LEFT = 'LEFT',
+    RIGHT = 'RIGHT',
+    CENTER = 'CENTER',
+    BOTTOM = 'BOTTOM'
+}
+
+export const NODE_POSITION_OPTIONS = [
+    { value: NodePosition.LEFT, label: 'Left' },
+    { value: NodePosition.RIGHT, label: 'Right' },
+    { value: NodePosition.CENTER, label: 'Center' },
+    { value: NodePosition.BOTTOM, label: 'Bottom' }
+];

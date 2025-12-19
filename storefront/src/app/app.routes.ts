@@ -123,6 +123,12 @@ export const appRoutes: Route[] = [
                 data: { requiredModule: 'pagebuilder' },
                 loadComponent: () => import('app/modules/admin/custom/templates/list/page-template-list.component').then(m => m.PageTemplateListComponent)
             },
+            {
+                path: 'navigation',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'core' },
+                loadComponent: () => import('app/modules/admin/custom/navigation/list/navigation-list.component').then(m => m.NavigationListComponent)
+            },
 
             // Pages
             {path: 'pages', children: [

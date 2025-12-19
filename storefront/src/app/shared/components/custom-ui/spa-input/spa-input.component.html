@@ -1,22 +1,35 @@
-<mat-form-field [class]="fullWidth ? 'w-full ' + (styleClasses || '') : styleClasses" [subscriptSizing]="'dynamic'">
+<mat-form-field
+    [class]="fullWidth ? 'w-full ' + (styleClasses || '') : styleClasses"
+    [subscriptSizing]="'dynamic'"
+>
     @if (label) {
         <mat-label>{{ label }}</mat-label>
     }
-    <input
-        matInput
-        [type]="type"
-        [placeholder]="placeholder || ''"
-        [disabled]="disabled"
-        [value]="value ?? ''"
-        (input)="onInput($event)"
-        (blur)="onBlur()"
-        (keydown.enter)="enter.emit(value)"
-    />
+    @if (textarea) {
+        <textarea
+            matInput
+            [rows]="rows"
+            [placeholder]="placeholder || ''"
+            [disabled]="disabled"
+            [value]="value ?? ''"
+            (input)="onInput($event)"
+            (blur)="onBlur()"
+        ></textarea>
+    } @else {
+        <input
+            matInput
+            [type]="type"
+            [placeholder]="placeholder || ''"
+            [disabled]="disabled"
+            [value]="value ?? ''"
+            (input)="onInput($event)"
+            (blur)="onBlur()"
+            (keydown.enter)="enter.emit(value)"
+        />
+    }
     <ng-content select="[matSuffix]"></ng-content>
     <ng-content select="[matPrefix]"></ng-content>
     @if (hint) {
         <mat-hint>{{ hint }}</mat-hint>
     }
 </mat-form-field>
-
-
