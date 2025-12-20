@@ -1,3 +1,9 @@
+---
+name: frontend-developer
+description: Senior Angular Developer v19: SOLID, DRY, KISS, YAGNI, OWASP best practices.
+tools: Read, Write, Edit, Bash
+---
+
 # Frontend Developer - Angular 19 Multi-Tenant Clean Architecture
 
 ## Stack
@@ -10,14 +16,14 @@ Angular 19, TypeScript (strict), RxJS, Signals, Material Design
 
 ```typescript
 @Component({
-  selector: 'spa-page-list',
+  selector: "spa-page-list",
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpaPageListComponent extends BaseCrudListComponent<Page> {
   protected service = inject(PageService);
   protected store = new CrudStore<Page>();
-  
+
   protected override fetchItems() {
     return this.service.list();
   }
@@ -37,14 +43,14 @@ protected getUser(id: string): Observable<ApiResponse<User>> { ... }
 ### CrudHttpService
 
 ```typescript
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class PageService extends CrudHttpService<Page, CreateDto, UpdateDto> {
   protected endpoints: CrudEndpoints = {
-    list: 'pages',
-    getById: 'pageById',
-    create: 'pages',
-    update: 'pageById',
-    delete: 'pageById'
+    list: "pages",
+    getById: "pageById",
+    create: "pages",
+    update: "pageById",
+    delete: "pageById",
   };
 }
 ```
@@ -75,10 +81,10 @@ Hooks: `beforeLoad()`, `fetchItems()`, `onLoadSuccess()`, `onLoadError()`, `matc
 ### BaseCrudFormComponent
 
 ```typescript
-protected override beforeCreate(dto: CreateDto): CreateDto { 
+protected override beforeCreate(dto: CreateDto): CreateDto {
   return { ...dto, uid: this.generateUid() };
 }
-protected override onCreateSuccess(item: T) { 
+protected override onCreateSuccess(item: T) {
   this.router.navigate(['/pages', item.id]);
 }
 ```
@@ -90,14 +96,14 @@ Hooks: `beforeCreate()`, `beforeUpdate()`, `onCreateSuccess()`, `onUpdateSuccess
 ```typescript
 export const API_ENDPOINTS = {
   pages: {
-    base: '/pages',
+    base: "/pages",
     byId: (id: number) => `/pages/${id}`,
-    i18n: (id: number, lang: string) => `/pages/${id}/i18n/${lang}`
+    i18n: (id: number, lang: string) => `/pages/${id}/i18n/${lang}`,
   },
   provisioning: {
     start: (tenantId: number) => `/provisioning/tenants/${tenantId}/provision`,
-    jobStatus: (jobId: number) => `/provisioning/jobs/${jobId}`
-  }
+    jobStatus: (jobId: number) => `/provisioning/jobs/${jobId}`,
+  },
 } as const;
 ```
 
@@ -119,19 +125,23 @@ ngOnDestroy() { this.#subscription?.unsubscribe(); }
 ## Polling Pattern (Provisioning)
 
 ```typescript
-@Component({ selector: 'spa-provision-dialog' })
+@Component({ selector: "spa-provision-dialog" })
 export class ProvisionDialogComponent implements OnDestroy {
   protected jobStatus$ = signal<JobResponse | null>(null);
   #pollSubscription?: Subscription;
-  
+
   #startPolling(jobId: number): void {
-    this.#pollSubscription = interval(2000).pipe(
-      switchMap(() => this.service.getJobStatus(jobId)),
-      takeWhile(r => r.data.status === 'running', true)
-    ).subscribe(r => this.jobStatus$.set(r.data));
+    this.#pollSubscription = interval(2000)
+      .pipe(
+        switchMap(() => this.service.getJobStatus(jobId)),
+        takeWhile((r) => r.data.status === "running", true)
+      )
+      .subscribe((r) => this.jobStatus$.set(r.data));
   }
-  
-  ngOnDestroy() { this.#pollSubscription?.unsubscribe(); }
+
+  ngOnDestroy() {
+    this.#pollSubscription?.unsubscribe();
+  }
 }
 ```
 
@@ -141,16 +151,15 @@ export class ProvisionDialogComponent implements OnDestroy {
 
 ```typescript
 export class SpaPageFormComponent {
-  protected tabs = ['general', 'tr', 'en'];
-  protected activeTab = signal('general');
-  
+  protected tabs = ["general", "tr", "en"];
+  protected activeTab = signal("general");
+
   protected saveGeneral() {
     this.service.update(this.generalForm.value).pipe(take(1)).subscribe();
   }
-  
+
   protected saveI18n(language: string) {
-    this.service.upsertI18n(this.pageId, language, this.i18nForm.value)
-      .pipe(take(1)).subscribe();
+    this.service.upsertI18n(this.pageId, language, this.i18nForm.value).pipe(take(1)).subscribe();
   }
 }
 ```
