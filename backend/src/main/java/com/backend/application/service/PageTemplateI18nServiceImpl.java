@@ -51,6 +51,8 @@ public class PageTemplateI18nServiceImpl implements PageTemplateI18nService {
 
     if (request.name() != null) {
       i18n.setName(request.name());
+    } else if (i18n.getId() == null) {
+      throw new IllegalArgumentException("Name is required for new PageTemplateI18n");
     }
     if (request.description() != null) {
       i18n.setDescription(request.description());

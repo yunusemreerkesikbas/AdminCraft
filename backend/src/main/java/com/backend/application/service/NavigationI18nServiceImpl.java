@@ -95,6 +95,8 @@ public class NavigationI18nServiceImpl implements NavigationI18nService {
 
     if (request.linkName() != null) {
       i18n.setLinkName(request.linkName());
+    } else if (i18n.getId() == null) {
+      i18n.setLinkName("");
     }
 
     NavigationEntryI18n saved = entryI18nRepository.save(i18n);

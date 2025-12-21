@@ -11,7 +11,6 @@ import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.PageTemplateI18n;
 import com.backend.domain.entity.TemplateSlot;
 import com.backend.domain.enums.Language;
-import com.backend.domain.repository.PageTemplateI18nRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,14 +21,15 @@ public class PageTemplateMapper {
   private static final Language DEFAULT_LANGUAGE = Language.TR;
 
   private final TemplateAllowedTypesCodec allowedTypesCodec;
-  private final PageTemplateI18nRepository templateI18nRepository;
 
   public String encodeAllowedTypes(List<String> allowedTypes) {
     return allowedTypesCodec.encode(allowedTypes);
   }
 
   public PageTemplateDto toDto(PageTemplate entity) {
-    PageTemplateI18n i18n = templateI18nRepository.findByTemplateIdAndLanguage(entity.getId(), getDefaultLanguage())
+    PageTemplateI18n i18n = entity.getI18nContent().stream()
+        .filter(i -> i.getLanguage() == getDefaultLanguage())
+        .findFirst()
         .orElse(null);
 
     String name = i18n != null ? i18n.getName() : null;
