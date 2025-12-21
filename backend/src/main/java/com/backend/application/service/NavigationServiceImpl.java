@@ -25,9 +25,14 @@ import com.backend.application.dto.request.UpdateNodeRequest;
 import com.backend.application.dto.response.NavigationEntryResponse;
 import com.backend.application.dto.response.NavigationNodeResponse;
 import com.backend.domain.entity.NavigationEntry;
+import com.backend.domain.entity.NavigationEntryI18n;
 import com.backend.domain.entity.NavigationNode;
+import com.backend.domain.entity.NavigationNodeI18n;
+import com.backend.domain.enums.Language;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.NavigationEntryI18nRepository;
 import com.backend.domain.repository.NavigationEntryRepository;
+import com.backend.domain.repository.NavigationNodeI18nRepository;
 import com.backend.domain.repository.NavigationNodeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -39,9 +44,12 @@ import lombok.extern.slf4j.Slf4j;
 public class NavigationServiceImpl implements NavigationService {
 
   private static final int MAX_DEPTH = 5;
+  private static final Language DEFAULT_LANGUAGE = Language.TR;
 
   private final NavigationNodeRepository nodeRepository;
   private final NavigationEntryRepository entryRepository;
+  private final NavigationNodeI18nRepository nodeI18nRepository;
+  private final NavigationEntryI18nRepository entryI18nRepository;
 
   // ==================== Node Operations ====================
 
@@ -50,7 +58,7 @@ public class NavigationServiceImpl implements NavigationService {
   public List<NavigationNodeResponse> getRootNodes() {
     List<NavigationNode> roots = nodeRepository.findRootNodes();
     return roots.stream()
-        .map(this::mapToNodeResponse)
+        .map(this::mapToNodeResponseWithI18n)
         .toList();
   }
 
@@ -77,16 +85,20 @@ public class NavigationServiceImpl implements NavigationService {
 
     NavigationNode node = new NavigationNode();
     node.setUid(request.uid());
-    node.setTitle(request.title());
     node.setPosition(request.position());
     node.setIsVisible(request.isVisible());
     node.setIsTab(request.isTab());
     node.setSortOrder(0);
 
     NavigationNode saved = nodeRepository.save(node);
+    if (request.title() != null) {
+      NavigationNodeI18n i18n = new NavigationNodeI18n(saved.getId(), getDefaultLanguage(), request.title());
+      nodeI18nRepository.save(i18n);
+    }
+
     log.info("Created root navigation node: id={}, uid={}", saved.getId(), saved.getUid());
 
-    return mapToNodeResponse(saved);
+    return mapToNodeResponseWithI18n(saved);
   }
 
   @Override
@@ -100,7 +112,6 @@ public class NavigationServiceImpl implements NavigationService {
 
     NavigationNode child = new NavigationNode();
     child.setUid(request.uid());
-    child.setTitle(request.title());
     child.setPosition(request.position());
     child.setIsVisible(request.isVisible());
     child.setIsTab(request.isTab());
@@ -108,9 +119,15 @@ public class NavigationServiceImpl implements NavigationService {
     child.setSortOrder(maxSortOrder + 1);
 
     NavigationNode saved = nodeRepository.save(child);
+
+    if (request.title() != null) {
+      NavigationNodeI18n i18n = new NavigationNodeI18n(saved.getId(), getDefaultLanguage(), request.title());
+      nodeI18nRepository.save(i18n);
+    }
+
     log.info("Added child node: id={}, uid={}, parentId={}", saved.getId(), saved.getUid(), parentId);
 
-    return mapToNodeResponse(saved);
+    return mapToNodeResponseWithI18n(saved);
   }
 
   @Override
@@ -128,8 +145,9 @@ public class NavigationServiceImpl implements NavigationService {
       node.setParentId(request.parentId());
     }
 
+    // Update i18n title
     if (request.title() != null) {
-      node.setTitle(request.title());
+      updateNodeI18nTitle(id, request.title());
     }
     if (request.position() != null) {
       node.setPosition(request.position());
@@ -144,7 +162,20 @@ public class NavigationServiceImpl implements NavigationService {
     NavigationNode saved = nodeRepository.save(node);
     log.info("Updated navigation node: id={}, uid={}", saved.getId(), saved.getUid());
 
-    return mapToNodeResponse(saved);
+    return mapToNodeResponseWithI18n(saved);
+  }
+
+  private void updateNodeI18nTitle(Long nodeId, String title) {
+    Language lang = getDefaultLanguage();
+    NavigationNodeI18n i18n = nodeI18nRepository.findByNodeIdAndLanguage(nodeId, lang)
+        .orElseGet(() -> {
+          NavigationNodeI18n newI18n = new NavigationNodeI18n();
+          newI18n.setNodeId(nodeId);
+          newI18n.setLanguage(lang);
+          return newI18n;
+        });
+    i18n.setTitle(title);
+    nodeI18nRepository.save(i18n);
   }
 
   @Override
@@ -196,7 +227,6 @@ public class NavigationServiceImpl implements NavigationService {
     entry.setItemType(request.itemType());
     entry.setItemId(normalizeToNull(request.itemId()));
     entry.setUrl(normalizeToNull(request.url()));
-    entry.setLinkName(request.linkName());
     entry.setLinkColor(request.linkColor());
     entry.setTarget(normalizeTarget(request.target()));
     entry.setIsExternal(request.isExternal());
@@ -204,9 +234,15 @@ public class NavigationServiceImpl implements NavigationService {
     entry.setSortOrder(maxSortOrder + 1);
 
     NavigationEntry saved = entryRepository.save(entry);
+
+    if (request.linkName() != null) {
+      NavigationEntryI18n i18n = new NavigationEntryI18n(saved.getId(), getDefaultLanguage(), request.linkName());
+      entryI18nRepository.save(i18n);
+    }
+
     log.info("Created navigation entry: id={}, uid={}, nodeId={}", saved.getId(), saved.getUid(), request.nodeId());
 
-    return mapToEntryResponse(saved);
+    return mapToEntryResponseWithI18n(saved);
   }
 
   @Override
@@ -229,7 +265,7 @@ public class NavigationServiceImpl implements NavigationService {
       entry.setUrl(normalizeToNull(request.url()));
     }
     if (request.linkName() != null) {
-      entry.setLinkName(request.linkName());
+      updateEntryI18nLinkName(id, request.linkName());
     }
     if (request.linkColor() != null) {
       entry.setLinkColor(request.linkColor());
@@ -249,7 +285,20 @@ public class NavigationServiceImpl implements NavigationService {
     NavigationEntry saved = entryRepository.save(entry);
     log.info("Updated navigation entry: id={}, uid={}", saved.getId(), saved.getUid());
 
-    return mapToEntryResponse(saved);
+    return mapToEntryResponseWithI18n(saved);
+  }
+
+  private void updateEntryI18nLinkName(Long entryId, String linkName) {
+    Language lang = getDefaultLanguage();
+    NavigationEntryI18n i18n = entryI18nRepository.findByEntryIdAndLanguage(entryId, lang)
+        .orElseGet(() -> {
+          NavigationEntryI18n newI18n = new NavigationEntryI18n();
+          newI18n.setEntryId(entryId);
+          newI18n.setLanguage(lang);
+          return newI18n;
+        });
+    i18n.setLinkName(linkName);
+    entryI18nRepository.save(i18n);
   }
 
   @Override
@@ -440,12 +489,24 @@ public class NavigationServiceImpl implements NavigationService {
 
   // ==================== Mappers ====================
 
-  private NavigationNodeResponse mapToNodeResponse(NavigationNode node) {
+  private Language getDefaultLanguage() {
+    // TODO: In future, can be fetched from tenant settings
+    return DEFAULT_LANGUAGE;
+  }
+
+  private NavigationNodeResponse mapToNodeResponseWithI18n(NavigationNode node) {
+    String title = nodeI18nRepository.findByNodeIdAndLanguage(node.getId(), getDefaultLanguage())
+        .map(NavigationNodeI18n::getTitle)
+        .orElse(null);
+    return buildNodeResponse(node, title);
+  }
+
+  private NavigationNodeResponse buildNodeResponse(NavigationNode node, String title) {
     return NavigationNodeResponse.builder()
         .id(node.getId())
         .uuid(node.getUuid())
         .uid(node.getUid())
-        .title(node.getTitle())
+        .title(title)
         .parentId(node.getParentId())
         .position(node.getPosition())
         .sortOrder(node.getSortOrder())
@@ -460,8 +521,21 @@ public class NavigationServiceImpl implements NavigationService {
       List<NavigationNode> nodes,
       Map<Long, List<NavigationEntry>> entriesByNodeId) {
 
+    List<Long> nodeIds = nodes.stream().map(NavigationNode::getId).toList();
+    Map<Long, String> titlesByNodeId = nodeI18nRepository.findByNodeIdIn(nodeIds).stream()
+        .filter(i18n -> i18n.getLanguage() == getDefaultLanguage())
+        .collect(Collectors.toMap(NavigationNodeI18n::getNodeId, NavigationNodeI18n::getTitle, (a, b) -> a));
+
+    List<Long> entryIds = entriesByNodeId.values().stream()
+        .flatMap(List::stream)
+        .map(NavigationEntry::getId)
+        .toList();
+    Map<Long, String> linkNamesByEntryId = entryI18nRepository.findByEntryIdIn(entryIds).stream()
+        .filter(i18n -> i18n.getLanguage() == getDefaultLanguage())
+        .collect(Collectors.toMap(NavigationEntryI18n::getEntryId, NavigationEntryI18n::getLinkName, (a, b) -> a));
+
     Map<Long, NavigationNodeResponse> responseMap = nodes.stream()
-        .map(this::mapToNodeResponse)
+        .map(n -> buildNodeResponse(n, titlesByNodeId.get(n.getId())))
         .collect(Collectors.toMap(NavigationNodeResponse::getId, Function.identity()));
 
     nodes.forEach(node -> {
@@ -477,7 +551,9 @@ public class NavigationServiceImpl implements NavigationService {
 
     responseMap.values().forEach(r -> {
       List<NavigationEntry> entries = entriesByNodeId.getOrDefault(r.getId(), List.of());
-      r.setEntries(entries.stream().map(this::mapToEntryResponse).toList());
+      r.setEntries(entries.stream()
+          .map(e -> buildEntryResponse(e, linkNamesByEntryId.get(e.getId())))
+          .toList());
     });
 
     NavigationNodeResponse root = responseMap.get(rootId);
@@ -502,9 +578,18 @@ public class NavigationServiceImpl implements NavigationService {
       Map<Long, List<NavigationNode>> childrenByParentId,
       Map<Long, List<NavigationEntry>> entriesByNodeId) {
 
-    List<EntryDeliveryDto> entries = entriesByNodeId.getOrDefault(root.getId(), List.of()).stream()
+    String title = nodeI18nRepository.findByNodeIdAndLanguage(root.getId(), getDefaultLanguage())
+        .map(NavigationNodeI18n::getTitle)
+        .orElse(null);
+    List<NavigationEntry> nodeEntries = entriesByNodeId.getOrDefault(root.getId(), List.of());
+    List<Long> entryIds = nodeEntries.stream().map(NavigationEntry::getId).toList();
+    Map<Long, String> linkNamesByEntryId = entryI18nRepository.findByEntryIdIn(entryIds).stream()
+        .filter(i18n -> i18n.getLanguage() == getDefaultLanguage())
+        .collect(Collectors.toMap(NavigationEntryI18n::getEntryId, NavigationEntryI18n::getLinkName, (a, b) -> a));
+
+    List<EntryDeliveryDto> entries = nodeEntries.stream()
         .filter(e -> Boolean.TRUE.equals(e.getIsVisible()))
-        .map(this::mapToEntryDeliveryDto)
+        .map(e -> buildEntryDeliveryDto(e, linkNamesByEntryId.get(e.getId())))
         .toList();
 
     List<NavigationDeliveryResponse> children = childrenByParentId.getOrDefault(root.getId(), List.of()).stream()
@@ -517,7 +602,7 @@ public class NavigationServiceImpl implements NavigationService {
 
     return NavigationDeliveryResponse.builder()
         .uid(root.getUid())
-        .title(root.getTitle())
+        .title(title)
         .position(root.getPosition())
         .isTab(root.getIsTab())
         .entries(entries)
@@ -525,7 +610,14 @@ public class NavigationServiceImpl implements NavigationService {
         .build();
   }
 
-  private NavigationEntryResponse mapToEntryResponse(NavigationEntry entry) {
+  private NavigationEntryResponse mapToEntryResponseWithI18n(NavigationEntry entry) {
+    String linkName = entryI18nRepository.findByEntryIdAndLanguage(entry.getId(), getDefaultLanguage())
+        .map(NavigationEntryI18n::getLinkName)
+        .orElse(null);
+    return buildEntryResponse(entry, linkName);
+  }
+
+  private NavigationEntryResponse buildEntryResponse(NavigationEntry entry, String linkName) {
     return NavigationEntryResponse.builder()
         .id(entry.getId())
         .uuid(entry.getUuid())
@@ -534,7 +626,7 @@ public class NavigationServiceImpl implements NavigationService {
         .itemType(entry.getItemType())
         .itemId(entry.getItemId())
         .url(entry.getUrl())
-        .linkName(entry.getLinkName())
+        .linkName(linkName)
         .linkColor(entry.getLinkColor())
         .target(entry.getTarget())
         .isExternal(entry.getIsExternal())
@@ -543,13 +635,13 @@ public class NavigationServiceImpl implements NavigationService {
         .build();
   }
 
-  private EntryDeliveryDto mapToEntryDeliveryDto(NavigationEntry entry) {
+  private EntryDeliveryDto buildEntryDeliveryDto(NavigationEntry entry, String linkName) {
     return EntryDeliveryDto.builder()
         .uid(entry.getUid())
         .itemType(entry.getItemType())
         .itemId(entry.getItemId())
         .url(entry.getUrl())
-        .linkName(entry.getLinkName())
+        .linkName(linkName)
         .linkColor(entry.getLinkColor())
         .target(entry.getTarget())
         .isExternal(entry.getIsExternal())

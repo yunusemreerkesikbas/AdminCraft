@@ -18,13 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
 import com.backend.application.command.PageTemplateCommands.UpdatePageTemplateCommand;
-import com.backend.application.dto.template.PageTemplateDto;
-import com.backend.application.dto.template.TemplateSlotDto;
-import com.backend.application.service.PageTemplateService;
 import com.backend.application.dto.request.CreatePageTemplateRequest;
 import com.backend.application.dto.request.CreateTemplateSlotRequest;
+import com.backend.application.dto.request.PageTemplateI18nRequest;
 import com.backend.application.dto.request.ReorderRequest;
 import com.backend.application.dto.request.UpdatePageTemplateRequest;
+import com.backend.application.dto.response.PageTemplateI18nResponse;
+import com.backend.application.dto.template.PageTemplateDto;
+import com.backend.application.dto.template.TemplateSlotDto;
+import com.backend.application.service.PageTemplateI18nService;
+import com.backend.application.service.PageTemplateService;
+import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.response.PageTemplateResponse;
 import com.backend.presentation.dto.response.TemplateSlotResponse;
 import com.backend.shared.common.ApiResponse;
@@ -43,6 +47,7 @@ import lombok.RequiredArgsConstructor;
 public class PageTemplateController {
 
   private final PageTemplateService pageTemplateService;
+  private final PageTemplateI18nService pageTemplateI18nService;
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<PageTemplateResponse>>> getAllTemplates() {
@@ -139,6 +144,23 @@ public class PageTemplateController {
 
     pageTemplateService.reorderSlots(id, command);
     return ResponseEntity.ok(ApiResponse.success("Slots reordered successfully", null));
+  }
+
+  @GetMapping("/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<PageTemplateI18nResponse>> getTemplateI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language) {
+    PageTemplateI18nResponse response = pageTemplateI18nService.getTemplateI18n(id, language);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @PutMapping("/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<PageTemplateI18nResponse>> upsertTemplateI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language,
+      @Valid @RequestBody PageTemplateI18nRequest request) {
+    PageTemplateI18nResponse response = pageTemplateI18nService.upsertTemplateI18n(id, language, request);
+    return ResponseEntity.ok(ApiResponse.success("Template i18n updated successfully", response));
   }
 
   private List<PageTemplateResponse> mapToResponses(List<PageTemplateDto> dtos) {

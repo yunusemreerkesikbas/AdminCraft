@@ -1,7 +1,11 @@
 package com.backend.domain.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.backend.domain.enums.NavigationItemType;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,8 +14,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -27,7 +31,7 @@ import lombok.ToString;
     @Index(columnList = "sort_order", name = "idx_entry_sort")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = { "node" })
+@EqualsAndHashCode(callSuper = true, exclude = { "node", "i18nContent" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class NavigationEntry extends BaseEntity {
@@ -54,11 +58,6 @@ public class NavigationEntry extends BaseEntity {
   @Column(name = "url", length = 500)
   private String url;
 
-  @NotBlank
-  @Size(max = 200)
-  @Column(name = "link_name", nullable = false, length = 200)
-  private String linkName;
-
   @Size(max = 10)
   @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Link color must be in HEX format (#RRGGBB)")
   @Column(name = "link_color", length = 10)
@@ -76,6 +75,10 @@ public class NavigationEntry extends BaseEntity {
 
   @Column(name = "is_visible")
   private Boolean isVisible = true;
+
+  @ToString.Exclude
+  @OneToMany(mappedBy = "entry", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<NavigationEntryI18n> i18nContent = new ArrayList<>();
 
   public boolean isValid() {
     if (itemType == null) {
