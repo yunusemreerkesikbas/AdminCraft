@@ -28,12 +28,12 @@ public class PageTemplateRepositoryImpl implements PageTemplateRepository {
 
   @Override
   public List<PageTemplate> findAll() {
-    return jpaRepository.findAllByOrderByNameAsc();
+    return jpaRepository.findAllByOrderByIdDesc();
   }
 
   @Override
   public List<PageTemplate> findByIsActiveTrue() {
-    return jpaRepository.findByIsActiveTrueOrderByNameAsc();
+    return jpaRepository.findByIsActiveTrueOrderByIdDesc();
   }
 
   @Override

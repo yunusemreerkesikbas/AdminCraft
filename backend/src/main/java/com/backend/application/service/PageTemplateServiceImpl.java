@@ -18,10 +18,13 @@ import com.backend.application.mapper.PageTemplateMapper;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.PageTemplate;
+import com.backend.domain.entity.PageTemplateI18n;
 import com.backend.domain.entity.TemplateSlot;
+import com.backend.domain.enums.Language;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
+import com.backend.domain.repository.PageTemplateI18nRepository;
 import com.backend.domain.repository.PageTemplateRepository;
 import com.backend.domain.repository.TemplateSlotRepository;
 
@@ -34,10 +37,13 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class PageTemplateServiceImpl implements PageTemplateService {
 
+  private static final Language DEFAULT_LANGUAGE = Language.TR;
+
   private final PageTemplateRepository pageTemplateRepository;
   private final TemplateSlotRepository templateSlotRepository;
   private final PageRepository pageRepository;
   private final PageSlotRepository pageSlotRepository;
+  private final PageTemplateI18nRepository templateI18nRepository;
   private final PageTemplateMapper pageTemplateMapper;
 
   @Override
@@ -71,16 +77,19 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     }
 
     PageTemplate template = new PageTemplate();
-    template.setName(command.name());
     template.setUid(command.uid());
-    template.setDescription(command.description());
     template.setIsActive(command.isActive() != null ? command.isActive() : true);
     template.setIsSystem(false);
 
     PageTemplate saved = pageTemplateRepository.save(template);
-    log.info("Created page template: {} ({})", saved.getName(), saved.getUid());
 
-    return pageTemplateMapper.toDto(saved);
+    PageTemplateI18n i18n = new PageTemplateI18n(saved.getId(), getDefaultLanguage(), command.name(),
+        command.description());
+    templateI18nRepository.save(i18n);
+
+    log.info("Created page template: {} ({})", command.name(), saved.getUid());
+
+    return pageTemplateMapper.toDto(saved, command.name(), command.description());
   }
 
   @Override
@@ -89,21 +98,33 @@ public class PageTemplateServiceImpl implements PageTemplateService {
         .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
 
     if (Boolean.TRUE.equals(template.getIsSystem())) {
-      throw new IllegalArgumentException("Cannot modify system template: " + template.getName());
+      throw new IllegalArgumentException("Cannot modify system template: " + template.getUid());
     }
 
+    PageTemplateI18n i18n = templateI18nRepository.findByTemplateIdAndLanguage(id, getDefaultLanguage())
+        .orElseGet(() -> {
+          PageTemplateI18n newI18n = new PageTemplateI18n();
+          newI18n.setTemplateId(id);
+          newI18n.setLanguage(getDefaultLanguage());
+          return newI18n;
+        });
+
+    String currentName = i18n.getName();
     if (command.name() != null) {
-      template.setName(command.name());
+      i18n.setName(command.name());
+      currentName = command.name();
     }
     if (command.description() != null) {
-      template.setDescription(command.description());
+      i18n.setDescription(command.description());
     }
+    templateI18nRepository.save(i18n);
+
     if (command.isActive() != null) {
       template.setIsActive(command.isActive());
     }
 
     PageTemplate saved = pageTemplateRepository.save(template);
-    log.info("Updated page template: {} ({})", saved.getName(), saved.getUid());
+    log.info("Updated page template: {} ({})", currentName, saved.getUid());
 
     return pageTemplateMapper.toDto(saved);
   }
@@ -114,11 +135,11 @@ public class PageTemplateServiceImpl implements PageTemplateService {
         .orElseThrow(() -> new EntityNotFoundException("PageTemplate", id));
 
     if (Boolean.TRUE.equals(template.getIsSystem())) {
-      throw new IllegalArgumentException("Cannot delete system template: " + template.getName());
+      throw new IllegalArgumentException("Cannot delete system template: " + template.getUid());
     }
 
     pageTemplateRepository.deleteById(id);
-    log.info("Deleted page template: {} ({})", template.getName(), template.getUid());
+    log.info("Deleted page template: {}", template.getUid());
   }
 
   @Override
@@ -150,7 +171,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     slot.setAllowedTypes(pageTemplateMapper.encodeAllowedTypes(command.allowedTypes()));
 
     TemplateSlot saved = templateSlotRepository.save(slot);
-    log.info("Added slot '{}' to template '{}'", command.slotName(), template.getName());
+    log.info("Added slot '{}' to template '{}'", command.slotName(), template.getUid());
 
     return pageTemplateMapper.toSlotDto(saved);
   }
@@ -211,7 +232,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     }
 
     log.info("Assigned template '{}' to page {} and created {} slots",
-        template.getName(), pageId, newSlots.size());
+        template.getUid(), pageId, newSlots.size());
   }
 
   @Override
@@ -220,7 +241,7 @@ public class PageTemplateServiceImpl implements PageTemplateService {
         .orElseThrow(() -> new EntityNotFoundException("PageTemplate", templateId));
 
     if (Boolean.TRUE.equals(template.getIsSystem())) {
-      throw new IllegalArgumentException("Cannot modify system template: " + template.getName());
+      throw new IllegalArgumentException("Cannot modify system template: " + template.getUid());
     }
 
     List<TemplateSlot> slots = templateSlotRepository.findByTemplateId(templateId);
@@ -240,5 +261,10 @@ public class PageTemplateServiceImpl implements PageTemplateService {
 
     templateSlotRepository.saveAll(updatedSlots);
     log.info("Reordered {} slots for template {}", updatedSlots.size(), templateId);
+  }
+
+  private Language getDefaultLanguage() {
+    // TODO: In future, can be fetched from tenant settings
+    return DEFAULT_LANGUAGE;
   }
 }

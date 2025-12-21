@@ -12,17 +12,17 @@ interface PageTemplateJpaRepository extends JpaRepository<PageTemplate, Long> {
 
   Optional<PageTemplate> findByUid(String uid);
 
-  @EntityGraph(attributePaths = { "slots" })
+  @EntityGraph(attributePaths = { "slots", "i18nContent" })
   Optional<PageTemplate> findWithSlotsById(Long id);
 
-  @EntityGraph(attributePaths = { "slots" })
+  @EntityGraph(attributePaths = { "slots", "i18nContent" })
   Optional<PageTemplate> findWithSlotsByUid(String uid);
 
-  @EntityGraph(attributePaths = { "slots" })
-  List<PageTemplate> findByIsActiveTrueOrderByNameAsc();
+  @EntityGraph(attributePaths = { "slots", "i18nContent" })
+  List<PageTemplate> findByIsActiveTrueOrderByIdDesc();
 
-  @EntityGraph(attributePaths = { "slots" })
-  List<PageTemplate> findAllByOrderByNameAsc();
+  @EntityGraph(attributePaths = { "slots", "i18nContent" })
+  List<PageTemplate> findAllByOrderByIdDesc();
 
   boolean existsByUid(String uid);
 }

@@ -17,7 +17,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,14 +29,10 @@ import lombok.ToString;
     @Index(columnList = "sort_order", name = "idx_nav_sort")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = { "parent", "children", "entries" })
+@EqualsAndHashCode(callSuper = true, exclude = { "parent", "children", "entries", "i18nContent" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class NavigationNode extends BaseEntity {
-
-  @Size(max = 200)
-  @Column(name = "title", length = 200)
-  private String title;
 
   @Column(name = "parent_id")
   private Long parentId;
@@ -69,6 +64,10 @@ public class NavigationNode extends BaseEntity {
   @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   @OrderBy("sortOrder ASC, id ASC")
   private List<NavigationEntry> entries = new ArrayList<>();
+
+  @ToString.Exclude
+  @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<NavigationNodeI18n> i18nContent = new ArrayList<>();
 
   public boolean isRoot() {
     return parentId == null;

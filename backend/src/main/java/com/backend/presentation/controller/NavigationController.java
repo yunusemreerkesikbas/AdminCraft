@@ -17,12 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.request.CreateEntryRequest;
 import com.backend.application.dto.request.CreateNodeRequest;
+import com.backend.application.dto.request.NavigationEntryI18nRequest;
+import com.backend.application.dto.request.NavigationNodeI18nRequest;
 import com.backend.application.dto.request.ReorderRequest;
 import com.backend.application.dto.request.UpdateEntryRequest;
 import com.backend.application.dto.request.UpdateNodeRequest;
+import com.backend.application.dto.response.NavigationEntryI18nResponse;
 import com.backend.application.dto.response.NavigationEntryResponse;
+import com.backend.application.dto.response.NavigationNodeI18nResponse;
 import com.backend.application.dto.response.NavigationNodeResponse;
+import com.backend.application.service.NavigationI18nService;
 import com.backend.application.service.NavigationService;
+import com.backend.domain.enums.Language;
 import com.backend.shared.common.ApiResponse;
 
 import jakarta.validation.Valid;
@@ -38,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 public class NavigationController {
 
   private final NavigationService navigationService;
+  private final NavigationI18nService navigationI18nService;
 
   // ==================== Node Endpoints ====================
 
@@ -95,6 +102,23 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Children reordered successfully", null));
   }
 
+  @GetMapping("/nodes/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<NavigationNodeI18nResponse>> getNodeI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language) {
+    NavigationNodeI18nResponse response = navigationI18nService.getNodeI18n(id, language);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @PutMapping("/nodes/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<NavigationNodeI18nResponse>> upsertNodeI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language,
+      @Valid @RequestBody NavigationNodeI18nRequest request) {
+    NavigationNodeI18nResponse response = navigationI18nService.upsertNodeI18n(id, language, request);
+    return ResponseEntity.ok(ApiResponse.success("Node i18n updated successfully", response));
+  }
+
   // ==================== Entry Endpoints ====================
 
   @PostMapping("/entries")
@@ -126,5 +150,22 @@ public class NavigationController {
       @Valid @RequestBody ReorderRequest<Long> request) {
     navigationService.reorderEntries(id, request);
     return ResponseEntity.ok(ApiResponse.success("Entries reordered successfully", null));
+  }
+
+  @GetMapping("/entries/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<NavigationEntryI18nResponse>> getEntryI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language) {
+    NavigationEntryI18nResponse response = navigationI18nService.getEntryI18n(id, language);
+    return ResponseEntity.ok(ApiResponse.success(response));
+  }
+
+  @PutMapping("/entries/{id}/i18n/{language}")
+  public ResponseEntity<ApiResponse<NavigationEntryI18nResponse>> upsertEntryI18n(
+      @PathVariable @NotNull @Min(1) Long id,
+      @PathVariable @NotNull Language language,
+      @Valid @RequestBody NavigationEntryI18nRequest request) {
+    NavigationEntryI18nResponse response = navigationI18nService.upsertEntryI18n(id, language, request);
+    return ResponseEntity.ok(ApiResponse.success("Entry i18n updated successfully", response));
   }
 }
