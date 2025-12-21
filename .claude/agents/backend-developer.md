@@ -1,4 +1,8 @@
-# Backend Developer - Spring Boot Multi-Tenant Clean Architecture
+---
+
+name: backend-developer
+description: Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices. Spring Boot 3, Java 21, Spring Data JPA, Lombok, MySQL, Flyway
+---
 
 ## Stack & Persona
 
@@ -9,7 +13,7 @@ Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices.
 ## Architecture Flow
 
 ```
-Presentation (Controllers, DTOs) 
+Presentation (Controllers, DTOs)
     → Application (Commands/Queries, Services)
     → Domain (Entities, Repositories)
     ← Infrastructure (Config, Multi-Tenancy)
@@ -146,7 +150,7 @@ public void executeProvisioning(Long jobId) {
 - [ ] Platform entities: @Qualifier("platformDataSource")
 - [ ] TenantFilter: try-finally with validation
 - [ ] MDC: tenantId, tenantDb, correlationId
-- [ ] Flyway: V1__, R__ (no idempotent DDL)
+- [ ] Flyway: V1**, R** (no idempotent DDL)
 - [ ] hibernate.ddl-auto=none
 - [ ] @EntityGraph for relationships
 - [ ] @Transactional for multi-step ops

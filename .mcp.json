@@ -15,30 +15,38 @@
     },
     "sequential-thinking": {
       "type": "stdio",
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
     "tavily-remote-mcp": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "mcp-remote",
         "https://mcp.tavily.com/mcp/?tavilyApiKey=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"
       ]
     },
     "memory": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-memory"
       ]
     },
     "executeautomation-playwright-server": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@executeautomation/playwright-mcp-server"
       ]
