@@ -16,12 +16,14 @@ import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderCom
 import { forkJoin, take, takeUntil } from 'rxjs';
 import { NavigationNodeService } from '../../navigation-node.service';
 import {
-    CreateEntryRequest,
+    CreateEntryCompositeRequest,
+    EntryI18nRequest,
+    Language,
     NAVIGATION_ITEM_TYPE_OPTIONS,
     NavigationEntry,
     NavigationEntryI18n,
     NavigationItemType,
-    UpdateEntryRequest
+    UpdateEntryCompositeRequest
 } from '../../navigation-node.types';
 
 export interface EntryDialogData extends SpaFormDialogData<NavigationEntry> {
@@ -185,32 +187,60 @@ export class NavigationEntryDialogComponent extends SpaFormDialog<NavigationEntr
         const formData = this.form.value;
 
         if (this.isCreateMode()) {
-            this.#createEntry(formData);
+            this.#createEntryComposite(formData);
         } else {
-            this.#updateEntry(formData);
+            this.#updateEntryComposite(formData);
         }
     }
 
-    #createEntry(formData: Record<string, unknown>): void {
-        const defaultLang = this.defaultLanguage();
-        
-        const request: CreateEntryRequest = {
+    #buildTranslations(formData: Record<string, unknown>): Record<Language, EntryI18nRequest> {
+        const translations: Record<string, EntryI18nRequest> = {};
+        this.supportedLanguages().forEach(lang => {
+            const linkName = formData[`linkName_${lang.code}`] as string;
+            // Only add translation if linkName is provided and not empty
+            if (linkName && linkName.trim().length > 0) {
+                translations[lang.code] = {
+                    linkName: linkName.trim()
+                };
+            }
+        });
+        return translations as Record<Language, EntryI18nRequest>;
+    }
+
+    #createEntryComposite(formData: Record<string, unknown>): void {
+        const request: CreateEntryCompositeRequest = {
             nodeId: this.data!.nodeId!,
             uid: formData['uid'] as string,
             itemType: formData['itemType'] as NavigationItemType,
-            linkName: formData[`linkName_${defaultLang}`] as string, 
             url: (formData['url'] as string) || undefined,
             itemId: (formData['itemId'] as string) || undefined,
             linkColor: (formData['linkColor'] as string) || undefined,
             target: formData['target'] as string,
             isExternal: formData['isExternal'] as boolean,
-            isVisible: formData['isVisible'] as boolean
+            isVisible: formData['isVisible'] as boolean,
+            translations: this.#buildTranslations(formData)
         };
 
         this.setSubmitting(true);
-        this.#service.createEntry(request).pipe(take(1)).subscribe({
-            next: (createdEntry) => {
-                this.#saveOtherLanguages(createdEntry, formData);
+        this.#service.createEntryComposite(request).pipe(take(1)).subscribe({
+            next: (response) => {
+                this.notify.success('admin.navigation.messages.successCreateEntry');
+                this.setSubmitting(false);
+                const entry: NavigationEntry = {
+                    id: response.id,
+                    uid: response.uid,
+                    nodeId: response.nodeId,
+                    itemType: response.itemType,
+                    itemId: response.itemId,
+                    url: response.url,
+                    linkName: response.translations[this.defaultLanguage() as Language]?.linkName || '',
+                    linkColor: response.linkColor,
+                    target: response.target,
+                    isExternal: response.isExternal,
+                    isVisible: response.isVisible,
+                    sortOrder: response.sortOrder
+                };
+                this.close(entry);
             },
             error: () => {
                 this.notify.alert('admin.navigation.messages.errorCreateEntry');
@@ -219,96 +249,44 @@ export class NavigationEntryDialogComponent extends SpaFormDialog<NavigationEntr
         });
     }
 
-    #saveOtherLanguages(entry: NavigationEntry, formData: Record<string, unknown>): void {
-        const languages = this.supportedLanguages();
-        const defaultLang = this.defaultLanguage();
-        
-        const otherLanguages = languages.filter(l => l.code !== defaultLang);
-        
-        if (otherLanguages.length === 0) {
-            this.notify.success('admin.navigation.messages.successCreateEntry');
-            this.setSubmitting(false);
-            this.close(entry);
-            return;
-        }
-
-        const i18nRequests = otherLanguages
-            .filter(lang => !!formData[`linkName_${lang.code}`])
-            .map(lang => {
-                return this.#service.upsertEntryI18n(
-                    entry.id, 
-                    lang.code, 
-                    { linkName: formData[`linkName_${lang.code}`] as string }
-                );
-            });
-
-        if (i18nRequests.length === 0) {
-            this.notify.success('admin.navigation.messages.successCreateEntry');
-            this.setSubmitting(false);
-            this.close(entry);
-            return;
-        }
-
-        forkJoin(i18nRequests).pipe(take(1)).subscribe({
-            next: () => {
-                this.notify.success('admin.navigation.messages.successCreateEntry');
-                this.setSubmitting(false);
-                this.close(entry);
-            },
-            error: () => {
-                this.notify.alert('admin.navigation.messages.warningI18nSaveFailed');
-                this.setSubmitting(false);
-                this.close(entry);
-            }
-        });
-    }
-
-    #updateEntry(formData: Record<string, unknown>): void {
-        const defaultLang = this.defaultLanguage();
-        
-        const request: UpdateEntryRequest = {
+    #updateEntryComposite(formData: Record<string, unknown>): void {
+        const request: UpdateEntryCompositeRequest = {
             itemType: formData['itemType'] as NavigationItemType,
-            linkName: formData[`linkName_${defaultLang}`] as string,
             url: (formData['url'] as string) || undefined,
             itemId: (formData['itemId'] as string) || undefined,
             linkColor: (formData['linkColor'] as string) || undefined,
             target: formData['target'] as string,
             isExternal: formData['isExternal'] as boolean,
-            isVisible: formData['isVisible'] as boolean
+            isVisible: formData['isVisible'] as boolean,
+            translations: this.#buildTranslations(formData)
         };
 
         this.setSubmitting(true);
         const entryId = this.data!.entry!.id;
 
-        this.#service.updateEntry(entryId, request).pipe(take(1)).subscribe({
-            next: () => {
-                this.#updateI18nTranslations(entryId, formData);
+        this.#service.updateEntryComposite(entryId, request).pipe(take(1)).subscribe({
+            next: (response) => {
+                this.notify.success('admin.navigation.messages.successUpdateEntry');
+                this.setSubmitting(false);
+                const entry: NavigationEntry = {
+                    id: response.id,
+                    uid: response.uid,
+                    nodeId: response.nodeId,
+                    itemType: response.itemType,
+                    itemId: response.itemId,
+                    url: response.url,
+                    linkName: response.translations[this.defaultLanguage() as Language]?.linkName || '',
+                    linkColor: response.linkColor,
+                    target: response.target,
+                    isExternal: response.isExternal,
+                    isVisible: response.isVisible,
+                    sortOrder: response.sortOrder
+                };
+                this.close(entry);
             },
             error: () => {
                 this.notify.alert('admin.navigation.messages.errorUpdateEntry');
                 this.setSubmitting(false);
-            }
-        });
-    }
-
-    #updateI18nTranslations(entryId: number, formData: Record<string, unknown>): void {
-        const languages = this.supportedLanguages();
-        
-        const requests = languages.map(lang => {
-            const linkName = formData[`linkName_${lang.code}`] as string;
-            return this.#service.upsertEntryI18n(entryId, lang.code, { linkName: linkName || '' });
-        });
-
-        forkJoin(requests).pipe(take(1)).subscribe({
-            next: () => {
-                this.notify.success('admin.navigation.messages.successUpdateEntry');
-                this.setSubmitting(false);
-                this.close(this.data!.entry);
-            },
-            error: () => {
-                this.notify.alert('admin.navigation.messages.warningI18nSaveFailed');
-                this.setSubmitting(false);
-                this.close(this.data!.entry);
             }
         });
     }

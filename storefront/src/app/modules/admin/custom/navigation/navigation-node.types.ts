@@ -1,5 +1,6 @@
-import { NodePosition } from '@shared/types/common.types';
+import { Language, NodePosition } from '@shared/types/common.types';
 export { NodePosition };
+export type { Language };
 
 export enum NavigationItemType {
     URL = 'URL',
@@ -56,7 +57,6 @@ export interface UpdateNodeRequest {
     isTab: boolean;
 }
 
-// Matches backend: CreateEntryRequest
 export interface CreateEntryRequest {
     nodeId: number;
     uid: string;
@@ -70,7 +70,6 @@ export interface CreateEntryRequest {
     isVisible?: boolean;
 }
 
-// Matches backend: UpdateEntryRequest
 export interface UpdateEntryRequest {
     itemType?: NavigationItemType;
     itemId?: string;
@@ -111,6 +110,74 @@ export interface EntryI18nRequest {
 export interface LanguageTab {
     code: string;
     label: string;
+}
+
+export interface CreateNodeCompositeRequest {
+    uid: string;
+    position: NodePosition;
+    isVisible: boolean;
+    isTab: boolean;
+    parentId?: number | null;
+    translations: Record<Language, NodeI18nRequest>;
+}
+
+export interface UpdateNodeCompositeRequest {
+    position?: NodePosition;
+    isVisible?: boolean;
+    isTab?: boolean;
+    translations: Record<Language, NodeI18nRequest>;
+}
+
+export interface NodeCompositeResponse {
+    id: number;
+    uuid: string;
+    uid: string;
+    parentId?: number | null;
+    position: NodePosition;
+    sortOrder: number;
+    isVisible: boolean;
+    isTab: boolean;
+    translations: Record<Language, NavigationNodeI18n>;
+}
+
+export interface CreateEntryCompositeRequest {
+    nodeId: number;
+    uid: string;
+    itemType: NavigationItemType;
+    itemId?: string;
+    url?: string;
+    linkColor?: string;
+    target?: string;
+    isExternal?: boolean;
+    isVisible?: boolean;
+    translations: Record<Language, EntryI18nRequest>;
+}
+
+export interface UpdateEntryCompositeRequest {
+    itemType?: NavigationItemType;
+    itemId?: string;
+    url?: string;
+    linkColor?: string;
+    target?: string;
+    isExternal?: boolean;
+    isVisible?: boolean;
+    translations: Record<Language, EntryI18nRequest>;
+}
+
+export interface EntryCompositeResponse {
+    id: number;
+    uuid: string;
+    uid: string;
+    nodeId: number;
+    itemType: NavigationItemType;
+    itemId?: string;
+    url?: string;
+    linkColor?: string;
+    target: string;
+    isExternal: boolean;
+    sortOrder: number;
+    isVisible: boolean;
+    translations: Record<Language, NavigationEntryI18n>;
 }
 
 
