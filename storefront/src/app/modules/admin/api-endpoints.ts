@@ -18,7 +18,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     tenants: 'tenants',
     tenantById: 'tenants/${id}',
     tenantModules: 'tenants/${tenantId}/modules',
-    tenantCurrentModules: 'tenants/current/modules', // Sprint 21: TENANT_ADMIN's own modules
+    tenantCurrentModules: 'tenants/current/modules',
+    tenantCurrentDetail: 'tenants/current/detail',
     tenantLanguages: 'tenants/${tenantId}/languages',
     tenantLanguagesProvision: 'tenants/${tenantId}/languages/provision',
     generateAdminUser: 'tenants/${tenantId}/generate-admin',
@@ -121,9 +122,14 @@ export const SPA_ENDPOINTS_CONFIG = {
     navigationNodeTree: 'navigation/nodes/${id}',
     navigationNodeChildren: 'navigation/nodes/${id}/children',
     navigationNodesReorder: 'navigation/nodes/${id}/reorder',
+    navigationNodeI18n: 'navigation/nodes/${id}/i18n/${language}',
     navigationEntries: 'navigation/entries',
     navigationEntryById: 'navigation/entries/${id}',
-    navigationEntryReorder: 'navigation/nodes/${nodeId}/entries/reorder', 
+    navigationEntryReorder: 'navigation/nodes/${nodeId}/entries/reorder',
+    navigationEntryI18n: 'navigation/entries/${id}/i18n/${language}',
+
+    // ----- PAGE TEMPLATE I18N -----
+    pageTemplateI18n: 'page-templates/${id}/i18n/${language}',
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

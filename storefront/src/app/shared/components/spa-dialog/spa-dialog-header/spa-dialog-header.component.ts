@@ -15,4 +15,9 @@ export class SpaDialogHeaderComponent {
     @Input() subtitle?: string;
     @Input() showCloseButton = true;
     @Output() closeClicked = new EventEmitter<void>();
+
+    onClose(event: MouseEvent): void {
+        event.stopPropagation();
+        this.closeClicked.emit();
+    }
 }

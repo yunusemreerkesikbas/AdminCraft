@@ -8,7 +8,7 @@ import { TenantModule } from 'app/core/tenant/tenant.types';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
-import { catchError, map, Observable, of, switchMap, take, timer } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, switchMap, take, timer } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
@@ -144,9 +144,28 @@ export class TenantContextService {
         if (user.role === 'SUPER_ADMIN') {
             return this.restoreTenantSelection();
         } else if (user.role === 'TENANT_ADMIN' && user.tenantId) {
-            return this.loadCurrentUserTenantModules();
+            return forkJoin([
+                this.loadCurrentUserTenantModules(),
+                this.#loadTenantDetails()
+            ]);
         }
         return of(null);
+    }
+
+    #loadTenantDetails(): Observable<Tenant | null> {
+        return this.#apiClient.get<ApiResponse<Tenant>>('tenantCurrentDetail').pipe(
+            take(1),
+            map((response: ApiResponse<Tenant>) => {
+                if (response.data) {
+                    this.setCurrentTenant(response.data);
+                    return response.data;
+                }
+                return null;
+            }),
+            catchError(() => {
+                return of(null);
+            })
+        );
     }
 
     clearTenantSelection(): void {

@@ -1,7 +1,6 @@
 import { NodePosition } from '@shared/types/common.types';
 export { NodePosition };
 
-// Matches backend: com.backend.domain.enums.NavigationItemType
 export enum NavigationItemType {
     URL = 'URL',
     PAGE = 'PAGE',
@@ -86,4 +85,33 @@ export interface UpdateEntryRequest {
 export interface ReorderRequest {
     items: number[];
 }
+
+export interface NavigationNodeI18n {
+    id?: number;
+    nodeId: number;
+    language: string;
+    title: string;
+}
+
+export interface NavigationEntryI18n {
+    id?: number;
+    entryId: number;
+    language: string;
+    linkName: string;
+}
+
+export interface NodeI18nRequest {
+    title: string;
+}
+
+export interface EntryI18nRequest {
+    linkName: string;
+}
+
+export interface LanguageTab {
+    code: string;
+    label: string;
+}
+
+
 

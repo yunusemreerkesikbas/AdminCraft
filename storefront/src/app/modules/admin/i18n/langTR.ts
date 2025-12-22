@@ -121,6 +121,7 @@ export const langTR = {
                 unexpected: 'Beklenmeyen bir hata oluştu',
             },
             system: 'Sistem',
+            translations: 'Çeviriler',
             edit: 'Düzenle',
             delete: 'Sil',
             search: 'Ara',
@@ -478,6 +479,23 @@ export const langTR = {
                 itemId: 'Öğe ID',
                 target: 'Hedef'
             },
+            messages: {
+                successCreateNode: 'Düğüm başarıyla oluşturuldu',
+                successUpdateNode: 'Düğüm başarıyla güncellendi',
+                successDeleteNode: 'Düğüm başarıyla silindi',
+                successCreateEntry: 'Giriş başarıyla oluşturuldu',
+                successUpdateEntry: 'Giriş başarıyla güncellendi',
+                successDeleteEntry: 'Giriş başarıyla silindi',
+                errorCreateNode: 'Düğüm oluşturulurken hata oluştu',
+                errorUpdateNode: 'Düğüm güncellenirken hata oluştu',
+                errorCreateEntry: 'Giriş oluşturulurken hata oluştu',
+                errorUpdateEntry: 'Giriş güncellenirken hata oluştu',
+                warningI18nSaveFailed: 'Oluşturuldu, ancak çeviri kaydedilemedi',
+                errorLoadI18n: 'Çeviriler yüklenemedi',
+                reorderSuccess: 'Sıralama güncellendi',
+                noEntries: 'Henüz giriş yok',
+                noChildren: 'Alt düğüm yok'
+            },
             enums: {
                 position: {
                     LEFT: 'Sol',
@@ -502,19 +520,6 @@ export const langTR = {
             tabs: {
                 submenus: 'Alt Menüler',
                 entries: 'Girdiler'
-            },
-            messages: {
-                nodeCreated: 'Düğüm başarıyla oluşturuldu',
-                nodeUpdated: 'Düğüm başarıyla güncellendi',
-                nodeDeleted: 'Düğüm başarıyla silindi',
-                entryCreated: 'Giriş başarıyla oluşturuldu',
-                entryUpdated: 'Giriş başarıyla güncellendi',
-                entryDeleted: 'Giriş başarıyla silindi',
-                reorderSuccess: 'Sıralama güncellendi',
-                noEntries: 'Henüz giriş yok',
-                noChildren: 'Alt düğüm yok',
-                successDeleteNode: 'Düğüm başarıyla silindi',
-                successDeleteEntry: 'Girdi başarıyla silindi'
             }
         },
         users: {

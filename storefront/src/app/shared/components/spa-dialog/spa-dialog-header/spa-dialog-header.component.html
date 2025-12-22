@@ -8,8 +8,9 @@
     @if (showCloseButton) {
         <button
             mat-icon-button
+            type="button"
             class="spa-dialog-header__close"
-            (click)="closeClicked.emit()"
+            (click)="onClose($event)"
         >
             <mat-icon>close</mat-icon>
         </button>

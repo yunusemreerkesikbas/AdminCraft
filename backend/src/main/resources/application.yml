@@ -13,7 +13,7 @@ app:
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
   tenant:
-    auto-sync-on-startup: false # Disable for dev - use manual sync button
+    auto-sync-on-startup: true # Disable for dev - use manual sync button
 
 spring:
   application:
