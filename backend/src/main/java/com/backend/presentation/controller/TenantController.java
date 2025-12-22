@@ -1,5 +1,26 @@
 package com.backend.presentation.controller;
 
+import java.util.List;
+import java.util.Locale;
+
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.backend.application.dto.request.CreateTenantRequest;
+import com.backend.application.dto.request.UpdateTenantRequest;
 import com.backend.application.dto.response.AdminUserResponse;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.application.service.TenantService;
@@ -7,26 +28,16 @@ import com.backend.application.usecase.CreateTenantUseCase;
 import com.backend.application.usecase.GenerateTenantAdminUserUseCase;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
-import com.backend.application.dto.request.CreateTenantRequest;
-import com.backend.application.dto.request.UpdateTenantRequest;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/tenants")
@@ -159,6 +170,26 @@ public class TenantController {
                 } catch (Exception ex) {
                         log.error("Error fetching modules for current user: {}", ex.getMessage(), ex);
                         String message = messageSource.getMessage("tenant.modules.get.error",
+                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        @GetMapping("/current/detail")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        public ResponseEntity<ApiResponse<TenantDetailResponse>> getCurrentTenantDetail(
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        Long userTenantId = securityHelper.getCurrentUserTenantId();
+                        Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+                        TenantDetailResponse response = tenantService.getTenantDetailById(userTenantId,
+                                        displayLanguage);
+                        log.debug("Successfully fetched tenant detail for tenant: {}", userTenantId);
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (Exception ex) {
+                        log.error("Error fetching tenant detail for current user: {}", ex.getMessage(), ex);
+                        String message = messageSource.getMessage("tenant.detail.get.error",
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));

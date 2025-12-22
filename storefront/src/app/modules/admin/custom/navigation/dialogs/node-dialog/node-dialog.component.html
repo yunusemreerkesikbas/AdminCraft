@@ -18,12 +18,6 @@
             />
         }
 
-        <spa-input
-            [label]="'admin.navigation.fields.title' | transloco"
-            formControlName="title"
-            [placeholder]="'Menu Title'"
-        />
-
         <spa-select
             [label]="'admin.navigation.fields.position' | transloco"
             formControlName="position"
@@ -41,6 +35,29 @@
                 [label]="'admin.navigation.fields.isTab' | transloco"
             />
         </div>
+
+        <!-- i18n Tabs for title -->
+        <div class="mt-2 border-t pt-4">
+            <h4 class="mb-3 text-sm font-medium text-gray-700">
+                {{ 'admin.common.translations' | transloco }}
+            </h4>
+
+            <mat-tab-group class="translations-tabs">
+                @for (lang of supportedLanguages(); track lang.code) {
+                    <mat-tab [label]="lang.nativeName">
+                        <div class="pt-4">
+                            <spa-input
+                                [label]="
+                                    'admin.navigation.fields.title' | transloco
+                                "
+                                [formControlName]="'title_' + lang.code"
+                                [placeholder]="'Title in ' + lang.nativeName"
+                            />
+                        </div>
+                    </mat-tab>
+                }
+            </mat-tab-group>
+        </div>
     </form>
 </spa-dialog-content>
 
@@ -50,7 +67,7 @@
             ? ('admin.common.create' | transloco)
             : ('admin.common.save' | transloco)
     "
-    [submitDisabled]="form.invalid"
+    [submitDisabled]="form.invalid || isLoadingI18nSig()"
     [isSubmitting]="isSubmitting()"
     (cancelClicked)="cancel()"
     (submitClicked)="save()"

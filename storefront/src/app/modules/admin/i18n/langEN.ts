@@ -122,6 +122,7 @@ export const langEN = {
                 unexpected: 'An unexpected error occurred',
             },
             system: 'System',
+            translations: 'Translations',
             edit: 'Edit',
             delete: 'Delete',
             search: 'Search',
@@ -479,6 +480,23 @@ export const langEN = {
                 itemId: 'Item ID',
                 target: 'Target'
             },
+            messages: {
+                successCreateNode: 'Node created successfully',
+                successUpdateNode: 'Node updated successfully',
+                successDeleteNode: 'Node deleted successfully',
+                successCreateEntry: 'Entry created successfully',
+                successUpdateEntry: 'Entry updated successfully',
+                successDeleteEntry: 'Entry deleted successfully',
+                errorCreateNode: 'Failed to create node',
+                errorUpdateNode: 'Failed to update node',
+                errorCreateEntry: 'Failed to create entry',
+                errorUpdateEntry: 'Failed to update entry',
+                warningI18nSaveFailed: 'Created successfully, but translation save failed',
+                errorLoadI18n: 'Failed to load translations',
+                reorderSuccess: 'Order updated successfully',
+                noEntries: 'No entries yet',
+                noChildren: 'No child nodes'
+            },
             enums: {
                 position: {
                     LEFT: 'Left',
@@ -503,19 +521,6 @@ export const langEN = {
             tabs: {
                 submenus: 'Submenus',
                 entries: 'Entries'
-            },
-            messages: {
-                nodeCreated: 'Node created successfully',
-                nodeUpdated: 'Node updated successfully',
-                nodeDeleted: 'Node deleted successfully',
-                entryCreated: 'Entry created successfully',
-                entryUpdated: 'Entry updated successfully',
-                entryDeleted: 'Entry deleted successfully',
-                reorderSuccess: 'Order updated successfully',
-                noEntries: 'No entries yet',
-                noChildren: 'No child nodes',
-                successDeleteNode: 'Node deleted successfully',
-                successDeleteEntry: 'Entry deleted successfully'
             }
         },
         users: {

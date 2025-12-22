@@ -235,11 +235,28 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     public TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new TenantNotFoundException(id));
-        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
-        Integer modulesCount = countProvisionedModules(id);
-        return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        log.debug("Fetching tenant detail for tenant: {}", id);
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+
+        try {
+            tenantContext.clear();
+            log.debug("Cleared tenant context to access platform database for tenant: {}", id);
+
+            Tenant tenant = tenantRepository.findById(id)
+                    .orElseThrow(() -> new TenantNotFoundException(id));
+            ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
+            Integer modulesCount = countProvisionedModules(id);
+            return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            log.debug("Restored tenant context after platform database query");
+        }
     }
 
     private ProvisioningStatus calculateProvisioningStatus(Long tenantId) {

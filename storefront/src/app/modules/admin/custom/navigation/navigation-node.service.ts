@@ -1,112 +1,120 @@
-import { inject, Injectable } from '@angular/core';
-import { ApiClientService } from '@core/api/api-client.service';
-import { ApiResponse } from '@core/crud';
-import { map, Observable, take } from 'rxjs';
-import { CreateEntryRequest, CreateNodeRequest, NavigationEntry, NavigationNode, ReorderRequest, UpdateEntryRequest, UpdateNodeRequest } from './navigation-node.types';
+import { Injectable } from '@angular/core';
+import { CrudEndpoints, CrudHttpService } from '@core/crud';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import {
+    CreateEntryRequest,
+    CreateNodeRequest,
+    EntryI18nRequest,
+    NavigationEntry,
+    NavigationEntryI18n,
+    NavigationNode,
+    NavigationNodeI18n,
+    NodeI18nRequest,
+    ReorderRequest,
+    UpdateEntryRequest,
+    UpdateNodeRequest
+} from './navigation-node.types';
 
 @Injectable({ providedIn: 'root' })
-export class NavigationNodeService {
-    readonly #api = inject(ApiClientService);
+export class NavigationNodeService extends CrudHttpService<
+    NavigationNode,
+    CreateNodeRequest,
+    UpdateNodeRequest
+> {
+    protected endpoints: CrudEndpoints = {
+        list: 'navigationNodes',
+        getById: 'navigationNodeById',
+        create: 'navigationNodes',
+        update: 'navigationNodeById',
+        delete: 'navigationNodeById'
+    };
 
     getAllRoots(): Observable<NavigationNode[]> {
-        return this.#api
-            .get<ApiResponse<NavigationNode[]>>('navigationNodes')
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return this.list();
     }
 
     getTree(id: number): Observable<NavigationNode> {
-        return this.#api
-            .get<ApiResponse<NavigationNode>>('navigationNodeTree', { id })
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return this.customGet<NavigationNode>('navigationNodeTree', { id });
     }
 
-    createNode(data: CreateNodeRequest): Observable<NavigationNode> {
+    override create(data: CreateNodeRequest): Observable<NavigationNode> {
         if (data.parentId) {
-            return this.#api
-                .post<ApiResponse<NavigationNode>>('navigationNodeChildren', data, { id: data.parentId })
-                .pipe(
-                    take(1),
-                    map(response => response.data)
-                );
+            return this.customPost<NavigationNode>(
+                'navigationNodeChildren',
+                data,
+                { id: data.parentId }
+            );
         }
-
-        return this.#api
-            .post<ApiResponse<NavigationNode>>('navigationNodes', data)
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return super.create(data);
     }
-
+    
+    createNode(data: CreateNodeRequest): Observable<NavigationNode> {
+        return this.create(data);
+    }
     updateNode(id: number, data: UpdateNodeRequest): Observable<NavigationNode> {
-        return this.#api
-            .put<ApiResponse<NavigationNode>>('navigationNodeById', data, { id })
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return this.update(id, data);
     }
 
     deleteNode(id: number): Observable<void> {
-        return this.#api
-            .delete<ApiResponse<void>>('navigationNodeById', { id })
-            .pipe(
-                take(1),
-                map(() => void 0)
-            );
+        return this.delete(id);
     }
 
     reorderNodes(parentId: number, itemIds: number[]): Observable<void> {
-        return this.#api
-            .put<ApiResponse<void>>('navigationNodesReorder', { items: itemIds } as ReorderRequest, { id: parentId })
-            .pipe(
-                take(1),
-                map(() => void 0)
-            );
+        return this.customPut<void>(
+            'navigationNodesReorder',
+            { items: itemIds } as ReorderRequest,
+            { id: parentId }
+        ).pipe(map(() => undefined));
     }
 
-    // --- Entries ---
+    getNodeI18n(nodeId: number, language: string): Observable<NavigationNodeI18n> {
+        return this.customGet<NavigationNodeI18n>(
+            'navigationNodeI18n',
+            { id: nodeId, language }
+        );
+    }
+
+    upsertNodeI18n(nodeId: number, language: string, data: NodeI18nRequest): Observable<NavigationNodeI18n> {
+        return this.customPut<NavigationNodeI18n>(
+            'navigationNodeI18n',
+            data,
+            { id: nodeId, language }
+        );
+    }
 
     createEntry(data: CreateEntryRequest): Observable<NavigationEntry> {
-        return this.#api
-            .post<ApiResponse<NavigationEntry>>('navigationEntries', data)
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return this.customPost<NavigationEntry>('navigationEntries', data);
     }
 
     updateEntry(id: number, data: UpdateEntryRequest): Observable<NavigationEntry> {
-        return this.#api
-            .put<ApiResponse<NavigationEntry>>('navigationEntryById', data, { id })
-            .pipe(
-                take(1),
-                map(response => response.data)
-            );
+        return this.customPut<NavigationEntry>('navigationEntryById', data, { id });
     }
 
     deleteEntry(id: number): Observable<void> {
-        return this.#api
-            .delete<ApiResponse<void>>('navigationEntryById', { id })
-            .pipe(
-                take(1),
-                map(() => void 0)
-            );
+        return this.customDelete<void>('navigationEntryById', { id });
     }
 
     reorderEntries(nodeId: number, itemIds: number[]): Observable<void> {
-        return this.#api
-            .put<ApiResponse<void>>('navigationEntryReorder', { items: itemIds } as ReorderRequest, { nodeId })
-            .pipe(
-                take(1),
-                map(() => void 0)
-            );
+        return this.customPut<void>(
+            'navigationEntryReorder',
+            { items: itemIds } as ReorderRequest,
+            { nodeId }
+        ).pipe(map(() => undefined));
+    }
+
+    getEntryI18n(entryId: number, language: string): Observable<NavigationEntryI18n> {
+        return this.customGet<NavigationEntryI18n>(
+            'navigationEntryI18n',
+            { id: entryId, language }
+        );
+    }
+
+    upsertEntryI18n(entryId: number, language: string, data: EntryI18nRequest): Observable<NavigationEntryI18n> {
+        return this.customPut<NavigationEntryI18n>(
+            'navigationEntryI18n',
+            data,
+            { id: entryId, language }
+        );
     }
 }
-

@@ -9,7 +9,10 @@ const PLATFORM_ENDPOINTS: readonly string[] = [
   'api/common/navigation',
   'api/common/user'
 ] as const;
-const TENANT_SPECIFIC_EXCEPTIONS: readonly string[] = ['api/tenants/current/modules'] as const;
+const TENANT_SPECIFIC_EXCEPTIONS: readonly string[] = [
+  'api/tenants/current/modules',
+  'api/tenants/current/detail'
+] as const;
 
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
