@@ -12,10 +12,16 @@ import { SpaFormDialog } from '@shared/components/spa-form-dialog/spa-form-dialo
 import { SpaInputComponent, SpaSelectComponent, SpaToggleComponent } from '@shared/components/custom-ui';
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 
-import { NODE_POSITION_OPTIONS, NodePosition } from '@shared/types/common.types';
+import { Language, NODE_POSITION_OPTIONS, NodePosition } from '@shared/types/common.types';
 import { forkJoin, take } from 'rxjs';
 import { NavigationNodeService } from '../../navigation-node.service';
-import { CreateNodeRequest, NavigationNode, NavigationNodeI18n, UpdateNodeRequest } from '../../navigation-node.types';
+import {
+    CreateNodeCompositeRequest,
+    NavigationNode,
+    NavigationNodeI18n,
+    NodeI18nRequest,
+    UpdateNodeCompositeRequest
+} from '../../navigation-node.types';
 
 export interface NodeDialogData extends SpaFormDialogData<NavigationNode> {
     mode: 'create' | 'edit';
@@ -146,28 +152,50 @@ export class NavigationNodeDialogComponent extends SpaFormDialog<NavigationNode,
         const formData = this.form.value;
 
         if (this.isCreateMode()) {
-            this.#createNode(formData);
+            this.#createNodeComposite(formData);
         } else {
-            this.#updateNode(formData);
+            this.#updateNodeComposite(formData);
         }
     }
 
-    #createNode(formData: Record<string, unknown>): void {
-        const defaultLang = this.defaultLanguage();
-        
-        const request: CreateNodeRequest = {
+    #buildTranslations(formData: Record<string, unknown>): Record<Language, NodeI18nRequest> {
+        const translations: Record<string, NodeI18nRequest> = {};
+        this.supportedLanguages().forEach(lang => {
+            const title = formData[`title_${lang.code}`] as string;
+            // Only add translation if title is provided and not empty
+            if (title && title.trim().length > 0) {
+                translations[lang.code] = {
+                    title: title.trim()
+                };
+            }
+        });
+        return translations as Record<Language, NodeI18nRequest>;
+    }
+
+    #createNodeComposite(formData: Record<string, unknown>): void {
+        const request: CreateNodeCompositeRequest = {
             uid: formData['uid'] as string,
-            title: formData[`title_${defaultLang}`] as string, 
             position: formData['position'] as NodePosition,
             isVisible: formData['isVisible'] as boolean,
             isTab: formData['isTab'] as boolean,
-            parentId: this.data?.parentId
+            parentId: this.data?.parentId,
+            translations: this.#buildTranslations(formData)
         };
 
         this.setSubmitting(true);
-        this.#navigationNodeService.createNode(request).pipe(take(1)).subscribe({
-            next: (createdNode) => {
-                this.#saveOtherLanguages(createdNode, formData);
+        this.#navigationNodeService.createNodeComposite(request).pipe(take(1)).subscribe({
+            next: (response) => {
+                this.notify.success('admin.navigation.messages.successCreateNode');
+                this.setSubmitting(false);
+                const node: NavigationNode = {
+                    id: response.id,
+                    uid: response.uid,
+                    title: response.translations[this.defaultLanguage() as Language]?.title || '',
+                    position: response.position,
+                    isVisible: response.isVisible,
+                    isTab: response.isTab
+                };
+                this.close(node);
             },
             error: () => {
                 this.notify.alert('admin.navigation.messages.errorCreateNode');
@@ -176,102 +204,34 @@ export class NavigationNodeDialogComponent extends SpaFormDialog<NavigationNode,
         });
     }
 
-    #saveOtherLanguages(node: NavigationNode, formData: Record<string, unknown>): void {
-        const languages = this.supportedLanguages();
-        const defaultLang = this.defaultLanguage();
-        
-        // Filter languages that are NOT the default one (default is saved with create)
-        // OR simply upsert all to be safe? 
-        // Usually CREATE handles the default language title.
-        // We need to upsert others.
-        
-        const otherLanguages = languages.filter(l => l.code !== defaultLang);
-        
-        if (otherLanguages.length === 0) {
-            this.notify.success('admin.navigation.messages.successCreateNode');
-            this.setSubmitting(false);
-            this.close(node);
-            return;
-        }
-
-        const i18nRequests = otherLanguages
-            .filter(lang => !!formData[`title_${lang.code}`])
-            .map(lang => {
-                return this.#navigationNodeService.upsertNodeI18n(
-                    node.id, 
-                    lang.code, 
-                    { title: formData[`title_${lang.code}`] as string }
-                );
-            });
-
-        if (i18nRequests.length === 0) {
-            this.notify.success('admin.navigation.messages.successCreateNode');
-            this.setSubmitting(false);
-            this.close(node);
-            return;
-        }
-
-        forkJoin(i18nRequests).pipe(take(1)).subscribe({
-            next: () => {
-                this.notify.success('admin.navigation.messages.successCreateNode');
-                this.setSubmitting(false);
-                this.close(node);
-            },
-            error: () => {
-                this.notify.alert('admin.navigation.messages.warningI18nSaveFailed');
-                this.setSubmitting(false);
-                this.close(node);
-            }
-        });
-    }
-
-    #updateNode(formData: Record<string, unknown>): void {
-        const defaultLang = this.defaultLanguage();
-        
-        const request: UpdateNodeRequest = {
-            title: formData[`title_${defaultLang}`] as string,
+    #updateNodeComposite(formData: Record<string, unknown>): void {
+        const request: UpdateNodeCompositeRequest = {
             position: formData['position'] as NodePosition,
             isVisible: formData['isVisible'] as boolean,
-            isTab: formData['isTab'] as boolean
+            isTab: formData['isTab'] as boolean,
+            translations: this.#buildTranslations(formData)
         };
 
         this.setSubmitting(true);
         const nodeId = this.data!.node!.id;
 
-        this.#navigationNodeService.updateNode(nodeId, request).pipe(take(1)).subscribe({
-            next: () => {
-                this.#updateI18nTranslations(nodeId, formData);
+        this.#navigationNodeService.updateNodeComposite(nodeId, request).pipe(take(1)).subscribe({
+            next: (response) => {
+                this.notify.success('admin.navigation.messages.successUpdateNode');
+                this.setSubmitting(false);
+                const node: NavigationNode = {
+                    id: response.id,
+                    uid: response.uid,
+                    title: response.translations[this.defaultLanguage() as Language]?.title || '',
+                    position: response.position,
+                    isVisible: response.isVisible,
+                    isTab: response.isTab
+                };
+                this.close(node);
             },
             error: () => {
                 this.notify.alert('admin.navigation.messages.errorUpdateNode');
                 this.setSubmitting(false);
-            }
-        });
-    }
-
-    #updateI18nTranslations(nodeId: number, formData: Record<string, unknown>): void {
-        const languages = this.supportedLanguages();
-        
-        const requests = languages.map(lang => {
-            const title = formData[`title_${lang.code}`] as string;
-            // Always upsert i18n even for default language to ensure consistency if create didn't specificy it
-            // or if we want to be explicit.
-            // But usually updateNode handles default language title on the main entity.
-            // However, the backend might expect i18n update separately or syncs it.
-            // Let's safe-guard by updating i18n table for all.
-            return this.#navigationNodeService.upsertNodeI18n(nodeId, lang.code, { title: title || '' });
-        });
-
-        forkJoin(requests).pipe(take(1)).subscribe({
-            next: () => {
-                this.notify.success('admin.navigation.messages.successUpdateNode');
-                this.setSubmitting(false);
-                this.close(this.data!.node);
-            },
-            error: () => {
-                this.notify.alert('admin.navigation.messages.warningI18nSaveFailed');
-                this.setSubmitting(false);
-                this.close(this.data!.node);
             }
         });
     }

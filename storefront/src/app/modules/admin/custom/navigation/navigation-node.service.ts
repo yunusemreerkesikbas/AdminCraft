@@ -3,16 +3,22 @@ import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
+    CreateEntryCompositeRequest,
     CreateEntryRequest,
+    CreateNodeCompositeRequest,
     CreateNodeRequest,
+    EntryCompositeResponse,
     EntryI18nRequest,
     NavigationEntry,
     NavigationEntryI18n,
     NavigationNode,
     NavigationNodeI18n,
+    NodeCompositeResponse,
     NodeI18nRequest,
     ReorderRequest,
+    UpdateEntryCompositeRequest,
     UpdateEntryRequest,
+    UpdateNodeCompositeRequest,
     UpdateNodeRequest
 } from './navigation-node.types';
 
@@ -116,5 +122,21 @@ export class NavigationNodeService extends CrudHttpService<
             data,
             { id: entryId, language }
         );
+    }
+
+    createNodeComposite(data: CreateNodeCompositeRequest): Observable<NodeCompositeResponse> {
+        return this.customPost<NodeCompositeResponse>('navigationNodeComposite', data);
+    }
+
+    updateNodeComposite(id: number, data: UpdateNodeCompositeRequest): Observable<NodeCompositeResponse> {
+        return this.customPut<NodeCompositeResponse>('navigationNodeCompositeById', data, { id });
+    }
+
+    createEntryComposite(data: CreateEntryCompositeRequest): Observable<EntryCompositeResponse> {
+        return this.customPost<EntryCompositeResponse>('navigationEntryComposite', data);
+    }
+
+    updateEntryComposite(id: number, data: UpdateEntryCompositeRequest): Observable<EntryCompositeResponse> {
+        return this.customPut<EntryCompositeResponse>('navigationEntryCompositeById', data, { id });
     }
 }

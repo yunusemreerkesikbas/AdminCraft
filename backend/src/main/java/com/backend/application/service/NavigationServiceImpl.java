@@ -17,12 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse.EntryDeliveryDto;
+import com.backend.application.dto.request.CreateEntryCompositeRequest;
 import com.backend.application.dto.request.CreateEntryRequest;
+import com.backend.application.dto.request.CreateNodeCompositeRequest;
 import com.backend.application.dto.request.CreateNodeRequest;
 import com.backend.application.dto.request.ReorderRequest;
+import com.backend.application.dto.request.UpdateEntryCompositeRequest;
 import com.backend.application.dto.request.UpdateEntryRequest;
+import com.backend.application.dto.request.UpdateNodeCompositeRequest;
 import com.backend.application.dto.request.UpdateNodeRequest;
+import com.backend.application.dto.response.NavigationEntryCompositeResponse;
 import com.backend.application.dto.response.NavigationEntryResponse;
+import com.backend.application.dto.response.NavigationNodeCompositeResponse;
 import com.backend.application.dto.response.NavigationNodeResponse;
 import com.backend.domain.entity.NavigationEntry;
 import com.backend.domain.entity.NavigationEntryI18n;
@@ -50,8 +56,6 @@ public class NavigationServiceImpl implements NavigationService {
   private final NavigationEntryRepository entryRepository;
   private final NavigationNodeI18nRepository nodeI18nRepository;
   private final NavigationEntryI18nRepository entryI18nRepository;
-
-  // ==================== Node Operations ====================
 
   @Override
   @Transactional(readOnly = true)
@@ -331,6 +335,171 @@ public class NavigationServiceImpl implements NavigationService {
 
     entryRepository.saveAll(toUpdate);
     log.info("Reordered {} entries under node id={}", toUpdate.size(), nodeId);
+  }
+
+  @Override
+  @Transactional
+  public NavigationNodeCompositeResponse createNodeComposite(CreateNodeCompositeRequest request) {
+    validateUidNotExists(request.uid());
+    if (request.parentId() != null) {
+      findNodeOrThrow(request.parentId());
+      validateMaxDepth(request.parentId());
+    }
+
+    int sortOrder = 0;
+    if (request.parentId() != null) {
+      sortOrder = nodeRepository.findMaxChildSortOrderByParentId(request.parentId()) + 1;
+    }
+
+    NavigationNode node = new NavigationNode();
+    node.setUid(request.uid());
+    node.setPosition(request.position());
+    node.setIsVisible(request.isVisible());
+    node.setIsTab(request.isTab());
+    node.setParentId(request.parentId());
+    node.setSortOrder(sortOrder);
+
+    NavigationNode savedNode = nodeRepository.save(node);
+
+    List<NavigationNodeI18n> i18nList = new ArrayList<>();
+    for (var entry : request.translations().entrySet()) {
+      NavigationNodeI18n i18n = new NavigationNodeI18n();
+      i18n.setNodeId(savedNode.getId());
+      i18n.setLanguage(entry.getKey());
+      if (entry.getValue() != null && entry.getValue().title() != null) {
+        i18n.setTitle(entry.getValue().title());
+      }
+      i18nList.add(nodeI18nRepository.save(i18n));
+    }
+
+    log.info("Created navigation node with {} translations: id={}, uid={}",
+        i18nList.size(), savedNode.getId(), savedNode.getUid());
+
+    return NavigationNodeCompositeResponse.from(savedNode, i18nList);
+  }
+
+  @Override
+  @Transactional
+  public NavigationNodeCompositeResponse updateNodeComposite(Long id, UpdateNodeCompositeRequest request) {
+    NavigationNode node = findNodeOrThrow(id);
+
+    if (request.position() != null) {
+      node.setPosition(request.position());
+    }
+    if (request.isVisible() != null) {
+      node.setIsVisible(request.isVisible());
+    }
+    if (request.isTab() != null) {
+      node.setIsTab(request.isTab());
+    }
+
+    NavigationNode savedNode = nodeRepository.save(node);
+
+    List<NavigationNodeI18n> i18nList = new ArrayList<>();
+    for (var entry : request.translations().entrySet()) {
+      NavigationNodeI18n i18n = nodeI18nRepository.findByNodeIdAndLanguage(id, entry.getKey())
+          .orElseGet(() -> {
+            NavigationNodeI18n newI18n = new NavigationNodeI18n();
+            newI18n.setNodeId(id);
+            newI18n.setLanguage(entry.getKey());
+            return newI18n;
+          });
+
+      if (entry.getValue() != null && entry.getValue().title() != null) {
+        i18n.setTitle(entry.getValue().title());
+      }
+      i18nList.add(nodeI18nRepository.save(i18n));
+    }
+
+    log.info("Updated navigation node with {} translations: id={}, uid={}",
+        i18nList.size(), savedNode.getId(), savedNode.getUid());
+
+    return NavigationNodeCompositeResponse.from(savedNode, i18nList);
+  }
+
+  @Override
+  @Transactional
+  public NavigationEntryCompositeResponse createEntryComposite(CreateEntryCompositeRequest request) {
+    findNodeOrThrow(request.nodeId());
+    validateEntryUidNotExists(request.uid());
+    validateEntryData(request.itemType(), request.itemId(), request.url());
+    int maxSortOrder = entryRepository.findMaxSortOrderByNodeId(request.nodeId());
+    NavigationEntry entry = new NavigationEntry();
+    entry.setUid(request.uid());
+    entry.setNodeId(request.nodeId());
+    entry.setItemType(request.itemType());
+    entry.setItemId(normalizeToNull(request.itemId()));
+    entry.setUrl(normalizeToNull(request.url()));
+    entry.setLinkColor(request.linkColor());
+    entry.setTarget(normalizeTarget(request.target()));
+    entry.setIsExternal(request.isExternal());
+    entry.setIsVisible(request.isVisible());
+    entry.setSortOrder(maxSortOrder + 1);
+    NavigationEntry savedEntry = entryRepository.save(entry);
+    List<NavigationEntryI18n> i18nList = new ArrayList<>();
+    for (var translationEntry : request.translations().entrySet()) {
+      NavigationEntryI18n i18n = new NavigationEntryI18n();
+      i18n.setEntryId(savedEntry.getId());
+      i18n.setLanguage(translationEntry.getKey());
+      if (translationEntry.getValue() != null && translationEntry.getValue().linkName() != null) {
+        i18n.setLinkName(translationEntry.getValue().linkName());
+      }
+      i18nList.add(entryI18nRepository.save(i18n));
+    }
+    log.info("Created navigation entry with {} translations: id={}, uid={}, nodeId={}",
+        i18nList.size(), savedEntry.getId(), savedEntry.getUid(), request.nodeId());
+
+    return NavigationEntryCompositeResponse.from(savedEntry, i18nList);
+  }
+
+  @Override
+  @Transactional
+  public NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request) {
+    NavigationEntry entry = findEntryOrThrow(id);
+    if (request.itemType() != null) {
+      entry.setItemType(request.itemType());
+    }
+    if (request.itemId() != null) {
+      entry.setItemId(normalizeToNull(request.itemId()));
+    }
+    if (request.url() != null) {
+      entry.setUrl(normalizeToNull(request.url()));
+    }
+    if (request.linkColor() != null) {
+      entry.setLinkColor(request.linkColor());
+    }
+    if (request.target() != null) {
+      entry.setTarget(normalizeTarget(request.target()));
+    }
+    if (request.isExternal() != null) {
+      entry.setIsExternal(request.isExternal());
+    }
+    if (request.isVisible() != null) {
+      entry.setIsVisible(request.isVisible());
+    }
+
+    validateEntryData(entry.getItemType(), entry.getItemId(), entry.getUrl());
+
+    NavigationEntry savedEntry = entryRepository.save(entry);
+    List<NavigationEntryI18n> i18nList = new ArrayList<>();
+    for (var translationEntry : request.translations().entrySet()) {
+      NavigationEntryI18n i18n = entryI18nRepository.findByEntryIdAndLanguage(id, translationEntry.getKey())
+          .orElseGet(() -> {
+            NavigationEntryI18n newI18n = new NavigationEntryI18n();
+            newI18n.setEntryId(id);
+            newI18n.setLanguage(translationEntry.getKey());
+            return newI18n;
+          });
+
+      if (translationEntry.getValue() != null && translationEntry.getValue().linkName() != null) {
+        i18n.setLinkName(translationEntry.getValue().linkName());
+      }
+      i18nList.add(entryI18nRepository.save(i18n));
+    }
+    log.info("Updated navigation entry with {} translations: id={}, uid={}",
+        i18nList.size(), savedEntry.getId(), savedEntry.getUid());
+
+    return NavigationEntryCompositeResponse.from(savedEntry, i18nList);
   }
 
   // ==================== CMS Delivery ====================

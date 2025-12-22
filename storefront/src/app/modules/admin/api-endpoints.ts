@@ -123,10 +123,14 @@ export const SPA_ENDPOINTS_CONFIG = {
     navigationNodeChildren: 'navigation/nodes/${id}/children',
     navigationNodesReorder: 'navigation/nodes/${id}/reorder',
     navigationNodeI18n: 'navigation/nodes/${id}/i18n/${language}',
+    navigationNodeComposite: 'navigation/nodes/composite',
+    navigationNodeCompositeById: 'navigation/nodes/${id}/composite',
     navigationEntries: 'navigation/entries',
     navigationEntryById: 'navigation/entries/${id}',
     navigationEntryReorder: 'navigation/nodes/${nodeId}/entries/reorder',
     navigationEntryI18n: 'navigation/entries/${id}/i18n/${language}',
+    navigationEntryComposite: 'navigation/entries/composite',
+    navigationEntryCompositeById: 'navigation/entries/${id}/composite',
 
     // ----- PAGE TEMPLATE I18N -----
     pageTemplateI18n: 'page-templates/${id}/i18n/${language}',
