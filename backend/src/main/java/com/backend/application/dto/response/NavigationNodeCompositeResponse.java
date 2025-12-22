@@ -1,7 +1,9 @@
 package com.backend.application.dto.response;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.backend.domain.entity.NavigationNode;
@@ -28,10 +30,13 @@ public record NavigationNodeCompositeResponse(
       return null;
     }
 
-    Map<Language, NavigationNodeI18nResponse> translationsMap = i18nList.stream()
+    Map<Language, NavigationNodeI18nResponse> translationsMap = Optional.ofNullable(i18nList)
+        .orElseGet(Collections::emptyList)
+        .stream()
         .collect(Collectors.toMap(
             NavigationNodeI18n::getLanguage,
-            NavigationNodeI18nResponse::from));
+            NavigationNodeI18nResponse::from,
+            (existing, replacement) -> replacement)); // Merge: prefer latest if duplicates
 
     return NavigationNodeCompositeResponse.builder()
         .id(node.getId())
