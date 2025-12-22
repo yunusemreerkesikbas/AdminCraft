@@ -15,15 +15,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.application.dto.request.CreateEntryCompositeRequest;
 import com.backend.application.dto.request.CreateEntryRequest;
+import com.backend.application.dto.request.CreateNodeCompositeRequest;
 import com.backend.application.dto.request.CreateNodeRequest;
 import com.backend.application.dto.request.NavigationEntryI18nRequest;
 import com.backend.application.dto.request.NavigationNodeI18nRequest;
 import com.backend.application.dto.request.ReorderRequest;
+import com.backend.application.dto.request.UpdateEntryCompositeRequest;
 import com.backend.application.dto.request.UpdateEntryRequest;
+import com.backend.application.dto.request.UpdateNodeCompositeRequest;
 import com.backend.application.dto.request.UpdateNodeRequest;
+import com.backend.application.dto.response.NavigationEntryCompositeResponse;
 import com.backend.application.dto.response.NavigationEntryI18nResponse;
 import com.backend.application.dto.response.NavigationEntryResponse;
+import com.backend.application.dto.response.NavigationNodeCompositeResponse;
 import com.backend.application.dto.response.NavigationNodeI18nResponse;
 import com.backend.application.dto.response.NavigationNodeResponse;
 import com.backend.application.service.NavigationI18nService;
@@ -119,7 +125,21 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Node i18n updated successfully", response));
   }
 
-  // ==================== Entry Endpoints ====================
+  @PostMapping("/nodes/composite")
+  public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> createNodeComposite(
+      @Valid @RequestBody CreateNodeCompositeRequest request) {
+    NavigationNodeCompositeResponse response = navigationService.createNodeComposite(request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.success("Node created with translations", response));
+  }
+
+  @PutMapping("/nodes/{id}/composite")
+  public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> updateNodeComposite(
+      @PathVariable @NotNull @Min(1) Long id,
+      @Valid @RequestBody UpdateNodeCompositeRequest request) {
+    NavigationNodeCompositeResponse response = navigationService.updateNodeComposite(id, request);
+    return ResponseEntity.ok(ApiResponse.success("Node updated with translations", response));
+  }
 
   @PostMapping("/entries")
   public ResponseEntity<ApiResponse<NavigationEntryResponse>> createEntry(
@@ -167,5 +187,21 @@ public class NavigationController {
       @Valid @RequestBody NavigationEntryI18nRequest request) {
     NavigationEntryI18nResponse response = navigationI18nService.upsertEntryI18n(id, language, request);
     return ResponseEntity.ok(ApiResponse.success("Entry i18n updated successfully", response));
+  }
+
+  @PostMapping("/entries/composite")
+  public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> createEntryComposite(
+      @Valid @RequestBody CreateEntryCompositeRequest request) {
+    NavigationEntryCompositeResponse response = navigationService.createEntryComposite(request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.success("Entry created with translations", response));
+  }
+
+  @PutMapping("/entries/{id}/composite")
+  public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> updateEntryComposite(
+      @PathVariable @NotNull @Min(1) Long id,
+      @Valid @RequestBody UpdateEntryCompositeRequest request) {
+    NavigationEntryCompositeResponse response = navigationService.updateEntryComposite(id, request);
+    return ResponseEntity.ok(ApiResponse.success("Entry updated with translations", response));
   }
 }
