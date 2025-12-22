@@ -27,6 +27,14 @@ public record NavigationEntryCompositeResponse(
     Boolean isVisible,
     Map<Language, NavigationEntryI18nResponse> translations) {
 
+  /**
+   * Create a NavigationEntryCompositeResponse from a NavigationEntry and its localized entries.
+   *
+   * @param entry the source NavigationEntry; if {@code null} the method returns {@code null}
+   * @param i18nList the list of NavigationEntryI18n to include as translations (mapped by Language)
+   * @return {@code null} if {@code entry} is {@code null}, otherwise a NavigationEntryCompositeResponse
+   *         populated with fields from {@code entry} and a translations map constructed from {@code i18nList}
+   */
   public static NavigationEntryCompositeResponse from(NavigationEntry entry, List<NavigationEntryI18n> i18nList) {
     if (entry == null) {
       return null;

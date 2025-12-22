@@ -23,6 +23,13 @@ public record NavigationNodeCompositeResponse(
     Boolean isTab,
     Map<Language, NavigationNodeI18nResponse> translations) {
 
+  /**
+   * Create a composite response that combines a navigation node's core fields with its localized translations.
+   *
+   * @param node the source NavigationNode; may be null
+   * @param i18nList list of NavigationNodeI18n entries whose Language keys will map to NavigationNodeI18nResponse values
+   * @return the populated NavigationNodeCompositeResponse, or `null` if {@code node} is null
+   */
   public static NavigationNodeCompositeResponse from(NavigationNode node, List<NavigationNodeI18n> i18nList) {
     if (node == null) {
       return null;

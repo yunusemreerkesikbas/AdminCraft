@@ -57,6 +57,11 @@ public class NavigationServiceImpl implements NavigationService {
   private final NavigationNodeI18nRepository nodeI18nRepository;
   private final NavigationEntryI18nRepository entryI18nRepository;
 
+  /**
+   * Retrieve top-level navigation nodes mapped to response DTOs including localized titles.
+   *
+   * @return a list of NavigationNodeResponse representing root nodes with their title in the default language
+   */
   @Override
   @Transactional(readOnly = true)
   public List<NavigationNodeResponse> getRootNodes() {
@@ -313,6 +318,14 @@ public class NavigationServiceImpl implements NavigationService {
     log.info("Deleted navigation entry: id={}, uid={}", id, entry.getUid());
   }
 
+  /**
+   * Reorders the entries of a node to match the sequence of entry IDs in the request.
+   *
+   * Updates each entry's sortOrder to the index of its ID in request.items() and persists the changes.
+   *
+   * @param nodeId the ID of the node whose entries will be reordered
+   * @param request a reorder request containing the ordered list of entry IDs
+   */
   @Override
   @Transactional
   public void reorderEntries(Long nodeId, ReorderRequest<Long> request) {
@@ -337,6 +350,17 @@ public class NavigationServiceImpl implements NavigationService {
     log.info("Reordered {} entries under node id={}", toUpdate.size(), nodeId);
   }
 
+  /**
+   * Create a new navigation node and persist its translations.
+   *
+   * <p>Validates UID uniqueness and, if a parentId is provided, validates the parent exists
+   * and that the resulting depth does not exceed the configured maximum. Computes the node's
+   * sort order under the parent (if any), saves the node, and persists one I18n record per
+   * language from the request's translations map.</p>
+   *
+   * @param request composite request containing node properties and a map of translations
+   * @return a composite response containing the persisted node and its saved translations
+   */
   @Override
   @Transactional
   public NavigationNodeCompositeResponse createNodeComposite(CreateNodeCompositeRequest request) {
@@ -378,6 +402,16 @@ public class NavigationServiceImpl implements NavigationService {
     return NavigationNodeCompositeResponse.from(savedNode, i18nList);
   }
 
+  /**
+   * Update a navigation node's mutable fields and upsert its translations.
+   *
+   * Applies changes to position, visibility, and tab flag when present in the request,
+   * and creates or updates the node's i18n records for each provided language.
+   *
+   * @param id      the identifier of the navigation node to update
+   * @param request the update request containing optional node fields and a map of translations by language
+   * @return        a composite response containing the updated NavigationNode and the list of saved translations
+   */
   @Override
   @Transactional
   public NavigationNodeCompositeResponse updateNodeComposite(Long id, UpdateNodeCompositeRequest request) {
@@ -417,6 +451,16 @@ public class NavigationServiceImpl implements NavigationService {
     return NavigationNodeCompositeResponse.from(savedNode, i18nList);
   }
 
+  /**
+   * Creates a navigation entry under the specified node and persists its translations.
+   *
+   * Validates the target node, UID uniqueness, and entry data; sets sort order to follow existing entries;
+   * saves the entry and each provided translation record, then returns a composite response containing
+   * the persisted entry and its translations.
+   *
+   * @param request the request containing entry fields, target node id, and translations by language
+   * @return a NavigationEntryCompositeResponse containing the saved entry and its persisted translations
+   */
   @Override
   @Transactional
   public NavigationEntryCompositeResponse createEntryComposite(CreateEntryCompositeRequest request) {
@@ -452,6 +496,17 @@ public class NavigationServiceImpl implements NavigationService {
     return NavigationEntryCompositeResponse.from(savedEntry, i18nList);
   }
 
+  /**
+   * Updates fields of an existing navigation entry and upserts its translations.
+   *
+   * Applies any non-null values from the request to the entry, validates entry data,
+   * persists the entry, upserts each provided translation (creating missing i18n records),
+   * and returns the saved entry together with all persisted translation records.
+   *
+   * @param id the id of the navigation entry to update
+   * @param request the update request containing fields to change and language-keyed translations
+   * @return the updated entry and its persisted translations as a composite response
+   */
   @Override
   @Transactional
   public NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request) {
@@ -502,7 +557,16 @@ public class NavigationServiceImpl implements NavigationService {
     return NavigationEntryCompositeResponse.from(savedEntry, i18nList);
   }
 
-  // ==================== CMS Delivery ====================
+  /**
+   * Builds a delivery DTO for a navigation tree identified by the given root UID.
+   *
+   * <p>Locates the subtree for the specified root UID and, if the root exists and is visible,
+   * returns a delivery representation containing the root, its visible descendants, and their
+   * visible entries organized hierarchically.</p>
+   *
+   * @param uid the UID of the root navigation node to retrieve
+   * @return an Optional containing the assembled NavigationDeliveryResponse when the root exists and is visible, or an empty Optional otherwise
+   */
 
   @Override
   @Transactional(readOnly = true)

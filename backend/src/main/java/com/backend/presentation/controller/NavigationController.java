@@ -116,6 +116,14 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
+  /**
+   * Insert or update internationalization (i18n) data for a navigation node.
+   *
+   * @param id       the identifier of the navigation node to update (must be >= 1)
+   * @param language the language of the i18n data
+   * @param request  the i18n payload containing localized fields for the node
+   * @return         an ApiResponse wrapping the updated NavigationNodeI18nResponse
+   */
   @PutMapping("/nodes/{id}/i18n/{language}")
   public ResponseEntity<ApiResponse<NavigationNodeI18nResponse>> upsertNodeI18n(
       @PathVariable @NotNull @Min(1) Long id,
@@ -125,6 +133,12 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Node i18n updated successfully", response));
   }
 
+  /**
+   * Create a navigation node together with its translations.
+   *
+   * @param request the composite request containing node properties and their translations
+   * @return a ResponseEntity whose body is an ApiResponse containing the created NavigationNodeCompositeResponse; returns HTTP 201 Created on success
+   */
   @PostMapping("/nodes/composite")
   public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> createNodeComposite(
       @Valid @RequestBody CreateNodeCompositeRequest request) {
@@ -133,6 +147,13 @@ public class NavigationController {
         .body(ApiResponse.success("Node created with translations", response));
   }
 
+  /**
+   * Update a navigation node together with its translations.
+   *
+   * @param id      the identifier of the node to update (must be &gt;= 1)
+   * @param request the update payload containing node fields and their translations
+   * @return        an ApiResponse containing the updated NavigationNodeCompositeResponse
+   */
   @PutMapping("/nodes/{id}/composite")
   public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> updateNodeComposite(
       @PathVariable @NotNull @Min(1) Long id,
@@ -141,6 +162,12 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Node updated with translations", response));
   }
 
+  /**
+   * Create a new navigation entry from the provided request.
+   *
+   * @param request the payload describing the navigation entry to create
+   * @return a ResponseEntity containing an ApiResponse with the created NavigationEntryResponse and HTTP status 201 Created
+   */
   @PostMapping("/entries")
   public ResponseEntity<ApiResponse<NavigationEntryResponse>> createEntry(
       @Valid @RequestBody CreateEntryRequest request) {
@@ -180,6 +207,14 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
+  /**
+   * Upserts internationalized content for a navigation entry.
+   *
+   * @param id       the identifier of the navigation entry
+   * @param language the language of the i18n data to insert or update
+   * @param request  the localized fields for the entry
+   * @return an ApiResponse wrapping the saved NavigationEntryI18nResponse and a success message
+   */
   @PutMapping("/entries/{id}/i18n/{language}")
   public ResponseEntity<ApiResponse<NavigationEntryI18nResponse>> upsertEntryI18n(
       @PathVariable @NotNull @Min(1) Long id,
@@ -189,6 +224,12 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Entry i18n updated successfully", response));
   }
 
+  /**
+   * Create a navigation entry together with its translations.
+   *
+   * @param request the composite request containing entry data and its translations
+   * @return an ApiResponse containing the created NavigationEntryCompositeResponse
+   */
   @PostMapping("/entries/composite")
   public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> createEntryComposite(
       @Valid @RequestBody CreateEntryCompositeRequest request) {
@@ -197,6 +238,13 @@ public class NavigationController {
         .body(ApiResponse.success("Entry created with translations", response));
   }
 
+  /**
+   * Update a navigation entry together with its translations.
+   *
+   * @param id the identifier of the navigation entry to update; must be greater than or equal to 1
+   * @param request the update payload including translated fields for the entry
+   * @return an ApiResponse containing the updated NavigationEntryCompositeResponse with translations
+   */
   @PutMapping("/entries/{id}/composite")
   public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> updateEntryComposite(
       @PathVariable @NotNull @Min(1) Long id,
