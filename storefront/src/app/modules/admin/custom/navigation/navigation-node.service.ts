@@ -139,4 +139,12 @@ export class NavigationNodeService extends CrudHttpService<
     updateEntryComposite(id: number, data: UpdateEntryCompositeRequest): Observable<EntryCompositeResponse> {
         return this.customPut<EntryCompositeResponse>('navigationEntryCompositeById', data, { id });
     }
+
+    getNodeComposite(id: number): Observable<NodeCompositeResponse> {
+        return this.customGet<NodeCompositeResponse>('navigationNodeCompositeById', { id });
+    }
+
+    getEntryComposite(id: number): Observable<EntryCompositeResponse> {
+        return this.customGet<EntryCompositeResponse>('navigationEntryCompositeById', { id });
+    }
 }

@@ -218,6 +218,7 @@ export const langEN = {
                     label: 'Leave',
                 },
             },
+            manage: 'Manage',
         },
         placeholders: {
             selectType: 'Select Type',
@@ -457,6 +458,7 @@ export const langEN = {
             actions: {
                 addChild: 'Add Child',
                 addEntry: 'Add Entry',
+                deleteNode: 'Delete Node',
             },
             entries: {
                 title: 'Entries',

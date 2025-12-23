@@ -44,9 +44,13 @@ public interface NavigationService {
 
   NavigationNodeCompositeResponse createNodeComposite(CreateNodeCompositeRequest request);
 
+  Optional<NavigationNodeCompositeResponse> getNodeComposite(Long id);
+
   NavigationNodeCompositeResponse updateNodeComposite(Long id, UpdateNodeCompositeRequest request);
 
   NavigationEntryCompositeResponse createEntryComposite(CreateEntryCompositeRequest request);
+
+  Optional<NavigationEntryCompositeResponse> getEntryComposite(Long id);
 
   NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request);
 

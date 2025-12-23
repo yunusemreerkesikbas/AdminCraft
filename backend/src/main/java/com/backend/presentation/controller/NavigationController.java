@@ -125,6 +125,14 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Node i18n updated successfully", response));
   }
 
+  @GetMapping("/nodes/{id}/composite")
+  public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> getNodeComposite(
+      @PathVariable @NotNull @Min(1) Long id) {
+    return navigationService.getNodeComposite(id)
+        .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
+        .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation node not found")));
+  }
+
   @PostMapping("/nodes/composite")
   public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> createNodeComposite(
       @Valid @RequestBody CreateNodeCompositeRequest request) {
@@ -187,6 +195,14 @@ public class NavigationController {
       @Valid @RequestBody NavigationEntryI18nRequest request) {
     NavigationEntryI18nResponse response = navigationI18nService.upsertEntryI18n(id, language, request);
     return ResponseEntity.ok(ApiResponse.success("Entry i18n updated successfully", response));
+  }
+
+  @GetMapping("/entries/{id}/composite")
+  public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> getEntryComposite(
+      @PathVariable @NotNull @Min(1) Long id) {
+    return navigationService.getEntryComposite(id)
+        .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
+        .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation entry not found")));
   }
 
   @PostMapping("/entries/composite")
