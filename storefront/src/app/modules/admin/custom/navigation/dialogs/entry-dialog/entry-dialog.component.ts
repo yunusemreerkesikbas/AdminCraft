@@ -13,7 +13,7 @@ import { SpaFormDialog } from '@shared/components/spa-form-dialog/spa-form-dialo
 import { SpaInputComponent, SpaSelectComponent, SpaToggleComponent } from '@shared/components/custom-ui';
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 
-import { forkJoin, take, takeUntil } from 'rxjs';
+import { take, takeUntil } from 'rxjs';
 import { NavigationNodeService } from '../../navigation-node.service';
 import {
     CreateEntryCompositeRequest,
@@ -159,18 +159,16 @@ export class NavigationEntryDialogComponent extends SpaFormDialog<NavigationEntr
             return;
         }
 
-        const requests: Record<string, any> = {};
-        languages.forEach(lang => {
-            requests[lang.code] = this.#service.getEntryI18n(entryId, lang.code);
-        });
-
-        forkJoin(requests).pipe(take(1)).subscribe({
-            next: (data: any) => {
-                this.i18nDataSig.set(data);
+        this.#service.getEntryComposite(entryId).pipe(take(1)).subscribe({
+            next: (response) => {
+                const translations = response.translations;
+                this.i18nDataSig.set(translations);
+                
                 const patchObj: Record<string, any> = {};
                 languages.forEach(lang => {
-                   if (data[lang.code]) {
-                       patchObj[`linkName_${lang.code}`] = data[lang.code].linkName || '';
+                   const translation = translations[lang.code];
+                   if (translation) {
+                       patchObj[`linkName_${lang.code}`] = translation.linkName || '';
                    }
                 });
                 this.form.patchValue(patchObj);

@@ -217,6 +217,7 @@ export const langTR = {
                     label: 'Ayrıl',
                 },
             },
+            manage: 'Yönet',
         },
         placeholders: {
             selectType: 'Tür Seçiniz',
@@ -456,6 +457,7 @@ export const langTR = {
             actions: {
                 addChild: 'Alt Öğe Ekle',
                 addEntry: 'Giriş Ekle',
+                deleteNode: 'Düğüm Sil',
             },
             entries: {
                 title: 'Girişler',

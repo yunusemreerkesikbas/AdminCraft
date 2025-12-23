@@ -13,7 +13,7 @@ import { SpaInputComponent, SpaSelectComponent, SpaToggleComponent } from '@shar
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 
 import { Language, NODE_POSITION_OPTIONS, NodePosition } from '@shared/types/common.types';
-import { forkJoin, take } from 'rxjs';
+import { take } from 'rxjs';
 import { NavigationNodeService } from '../../navigation-node.service';
 import {
     CreateNodeCompositeRequest,
@@ -124,20 +124,17 @@ export class NavigationNodeDialogComponent extends SpaFormDialog<NavigationNode,
             return;
         }
 
-        const requests: Record<string, any> = {};
-        languages.forEach(lang => {
-            requests[lang.code] = this.#navigationNodeService.getNodeI18n(nodeId, lang.code);
-        });
-
-        forkJoin(requests).pipe(take(1)).subscribe({
-            next: (data: any) => {
-                this.i18nDataSig.set(data);
+        this.#navigationNodeService.getNodeComposite(nodeId).pipe(take(1)).subscribe({
+            next: (response) => {
+                this.i18nDataSig.set(response.translations);
                 const patchObj: Record<string, any> = {};
                 languages.forEach(lang => {
-                   if (data[lang.code]) {
-                       patchObj[`title_${lang.code}`] = data[lang.code].title || '';
+                   const translation = response.translations[lang.code];
+                   if (translation) {
+                       patchObj[`title_${lang.code}`] = translation.title || '';
                    }
                 });
+                
                 this.form.patchValue(patchObj);
                 this.isLoadingI18nSig.set(false);
             },

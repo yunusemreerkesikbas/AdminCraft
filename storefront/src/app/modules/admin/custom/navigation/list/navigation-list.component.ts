@@ -9,6 +9,7 @@ import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
+import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal/spa-generic-modal.component';
 import { NavigationNodeDialogComponent } from '../dialogs/node-dialog/node-dialog.component';
 import { NavigationNodeManagerDialogComponent } from '../manager/navigation-node-manager-dialog.component';
 import { NavigationNodeService } from '../navigation-node.service';
@@ -68,6 +69,31 @@ export class NavigationListComponent implements OnInit {
         });
     }
 
+    deleteNode(node: NavigationNode): void {
+        const dialogRef = this.#matDialog.open(SpaGenericModalComponent, {
+            data: {
+                title: 'admin.navigation.actions.deleteNode',
+                message: 'admin.navigation.messages.confirmDeleteNode',
+                confirmLabel: 'admin.common.delete',
+                cancelLabel: 'admin.common.cancel',
+                variant: 'confirmation',
+                type: 'error'
+            } as any
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.isLoadingSig.set(true);
+                this.#navigationNodeService.deleteNode(node.id).subscribe({
+                    next: () => {
+                        this.#loadRoots();
+                    },
+                    error: () => this.isLoadingSig.set(false)
+                });
+            }
+        });
+    }
+
     openCreateDialog(): void {
         this.#matDialog.open(NavigationNodeDialogComponent, {
             width: '700px',
@@ -76,6 +102,7 @@ export class NavigationListComponent implements OnInit {
                 parentId: null
             }
         }).afterClosed().subscribe((result) => {
+            // Only refresh if a node was created
             if (result) {
                 this.#loadRoots();
             }
@@ -87,8 +114,11 @@ export class NavigationListComponent implements OnInit {
             width: '900px',
             height: '80vh',
             data: { nodeId: node.id }
-        }).afterClosed().subscribe(() => {
-            this.#loadRoots();
+        }).afterClosed().subscribe((result) => {
+            // Only refresh if changes were made inside the manager
+            if (result) {
+                this.#loadRoots();
+            }
         });
     }
 }

@@ -338,6 +338,16 @@ public class NavigationServiceImpl implements NavigationService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public Optional<NavigationNodeCompositeResponse> getNodeComposite(Long id) {
+    return nodeRepository.findById(id)
+        .map(node -> {
+          List<NavigationNodeI18n> i18nList = nodeI18nRepository.findByNodeId(id);
+          return NavigationNodeCompositeResponse.from(node, i18nList);
+        });
+  }
+
+  @Override
   @Transactional
   public NavigationNodeCompositeResponse createNodeComposite(CreateNodeCompositeRequest request) {
     validateUidNotExists(request.uid());
@@ -450,6 +460,16 @@ public class NavigationServiceImpl implements NavigationService {
         i18nList.size(), savedEntry.getId(), savedEntry.getUid(), request.nodeId());
 
     return NavigationEntryCompositeResponse.from(savedEntry, i18nList);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<NavigationEntryCompositeResponse> getEntryComposite(Long id) {
+    return entryRepository.findById(id)
+        .map(entry -> {
+          List<NavigationEntryI18n> i18nList = entryI18nRepository.findByEntryId(id);
+          return NavigationEntryCompositeResponse.from(entry, i18nList);
+        });
   }
 
   @Override
