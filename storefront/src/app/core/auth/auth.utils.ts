@@ -5,6 +5,17 @@
 // https://github.com/auth0/angular2-jwt
 // -----------------------------------------------------------------------------------------------------
 
+export interface DecodedToken {
+    exp: number;
+    iat?: number;
+    sub?: string;
+    userId?: number;
+    tenantId?: number;
+    role?: string;
+    email?: string;
+    [key: string]: unknown;
+}
+
 export class AuthUtils {
     // -----------------------------------------------------------------------------------------------------
     // @ Public methods
@@ -88,7 +99,7 @@ export class AuthUtils {
      * @param str
      * @private
      */
-    private static _b64DecodeUnicode(str: any): string {
+    private static _b64DecodeUnicode(str: string): string {
         return decodeURIComponent(
             Array.prototype.map
                 .call(
@@ -133,7 +144,7 @@ export class AuthUtils {
      * @param token
      * @private
      */
-    private static _decodeToken(token: string): any {
+    static decodeToken(token: string): DecodedToken | null {
         // Return if there is no token
         if (!token) {
             return null;
@@ -166,16 +177,16 @@ export class AuthUtils {
      */
     private static _getTokenExpirationDate(token: string): Date | null {
         // Get the decoded token
-        const decodedToken = this._decodeToken(token);
+        const decodedToken = this.decodeToken(token);
 
         // Return if the decodedToken doesn't have an 'exp' field
-        if (!decodedToken.hasOwnProperty('exp')) {
+        if (!decodedToken || !decodedToken.hasOwnProperty('exp')) {
             return null;
         }
 
         // Convert the expiration date
         const date = new Date(0);
-        date.setUTCSeconds(decodedToken.exp);
+        date.setUTCSeconds(decodedToken!.exp);
 
         return date;
     }

@@ -1,20 +1,24 @@
 import { inject, Injectable, signal, Signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiClientService } from '@core/api/api-client.service';
+import { LoginResponse, LoginResponseData } from 'app/core/auth/auth.types';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
-import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
+import { User } from 'app/core/user/user.types';
+import { NotificationService } from 'app/shared/notifications/notification.service';
+import { catchError, Observable, of, switchMap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     #authenticatedSig = signal<boolean>(false);
-    readonly authenticated: Signal<boolean> = this.#authenticatedSig.asReadonly();
-    readonly authenticated$ = toObservable(this.#authenticatedSig);
+    readonly authenticatedSig: Signal<boolean> = this.#authenticatedSig.asReadonly();
+    readonly authenticated$: Observable<boolean> = toObservable(this.#authenticatedSig);
 
     readonly #apiClient = inject(ApiClientService);
     readonly #userService = inject(UserService);
     readonly #tenantContext = inject(TenantContextService);
+    readonly #notificationService = inject(NotificationService);
 
     #setAccessToken(token: string): void {
         localStorage.setItem('accessToken', token);
@@ -36,17 +40,18 @@ export class AuthService {
         return this.#apiClient.post('login', { password });
     }
 
-    signIn(credentials: { email: string; password: string }): Observable<any> {
+    signIn(credentials: { email: string; password: string }): Observable<boolean> {
         if (this.#authenticatedSig()) {
-            return throwError('User is already logged in.');
+            this.#notificationService.alert('User is already logged in.');
+            return of(false);
         }
-        return this.#apiClient.post('login', credentials).pipe(
-            switchMap((response: any) => {
+        return this.#apiClient.post<LoginResponse>('login', credentials).pipe(
+            switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
                     this.#setAccessToken(response.data.accessToken);
                     this.#authenticatedSig.set(true);
                     this.#storeUserAndTenantInfo(response.data);
-                    const user = {
+                    const user: User = {
                         id: response.data.userId,
                         email: response.data.email,
                         name: response.data.fullName,
@@ -57,51 +62,60 @@ export class AuthService {
                     this.#userService.setUser(user);
                     const subFromLogin: string | undefined =
                         response.data.subdomain ||
-                        response.data.tenantSubdomain;
+                        response.data.subdomain;
                     if (subFromLogin) {
                         this.#tenantContext.setSubdomain(subFromLogin);
                     }
 
                     return this.#tenantContext.initializeTenantContext(user).pipe(
-                        switchMap(() => of(response.data)),
-                        catchError(() => of(response.data))
+                        switchMap(() => {
+                            this.#notificationService.success(response.message || 'Login successful');
+                            return of(true);
+                        }),
+                        catchError(() => {
+                            this.#notificationService.success(response.message || 'Login successful'); // Still success auth-wise
+                            return of(true);
+                        })
                     );
                 } else {
-                    return throwError(response.message || 'Authentication failed');
+                    this.#notificationService.alert(response.message || 'Authentication failed');
+                    return of(false);
                 }
             }),
             catchError((error) => {
-                return throwError(
-                    error?.error?.message ||
-                    error?.message ||
-                    'Authentication failed'
-                );
+                const message = error?.error?.message || error?.message || 'Authentication failed';
+                this.#notificationService.alert(message);
+                return of(false);
             })
         );
     }
 
-    signInUsingToken(): Observable<any> {
+    signInUsingToken(): Observable<boolean> {
         try {
-            this.#authenticatedSig.set(true);
             const token = this.#getAccessToken();
             if (token) {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const user = {
-                    id: payload.userId || 0,
-                    email: payload.sub,
-                    name: payload.sub,
-                    role: payload.role,
-                    tenantId: payload.tenantId || 0,
-                    preferredLanguage: 'tr'
-                };
-                this.#userService.setUser(user);
-                return this.#tenantContext.initializeTenantContext(user).pipe(
-                    switchMap(() => of(true)),
-                    catchError(() => of(true))
-                );
+                const decoded = AuthUtils.decodeToken(token);
+                if (decoded) {
+                    this.#authenticatedSig.set(true);
+                    const user: User = {
+                        id: decoded.userId || 0,
+                        email: decoded.sub,
+                        name: decoded.sub,
+                        role: decoded.role,
+                        tenantId: decoded.tenantId || 0,
+                        preferredLanguage: (decoded['preferredLanguage'] as string) || localStorage.getItem('translocoLang') || 'tr'
+                    };
+                    this.#userService.setUser(user);
+                    return this.#tenantContext.initializeTenantContext(user).pipe(
+                        switchMap(() => of(true)),
+                        catchError(() => of(true))
+                    );
+                }
             }
-            return of(true);
+            this.#authenticatedSig.set(false);
+            return of(false);
         } catch (error) {
+            this.#authenticatedSig.set(false);
             return of(false);
         }
     }
@@ -144,7 +158,7 @@ export class AuthService {
         return this.signInUsingToken();
     }
 
-    #storeUserAndTenantInfo(data: any): void {
+    #storeUserAndTenantInfo(data: LoginResponseData): void {
         try {
             if (data.userId) {
                 localStorage.setItem('userId', data.userId.toString());
@@ -152,8 +166,8 @@ export class AuthService {
             if (data.tenantId) {
                 localStorage.setItem('tenantId', data.tenantId.toString());
             }
-            if (data.subdomain || data.tenantSubdomain) {
-                const subdomain = data.subdomain || data.tenantSubdomain;
+            if (data.subdomain) {
+                const subdomain = data.subdomain;
                 localStorage.setItem('currentTenantSubdomain', subdomain);
             }
         } catch (error) {
