@@ -87,5 +87,95 @@ export interface ComponentI18nRequest {
     title?: string;
     subtitle?: string;
     description?: string;
+    status?: ComponentStatus;
+}
+
+export type Language = 'TR' | 'EN';
+
+export interface CreateComponentCompositeRequest {
+    componentTypeId: number;
+    name: string;
+    displayOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: ComponentStatus;
+    translations: Record<Language, ComponentI18nRequest>;
+}
+
+export interface UpdateComponentCompositeRequest {
+    name?: string;
+    displayOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: ComponentStatus;
+    translations: Record<Language, ComponentI18nRequest>;
+}
+
+export interface ComponentCompositeResponse {
+    id: number;
+    uuid: string;
+    uid: string;
+    componentTypeId: number;
+    componentTypeName: string;
+    name: string;
+    displayOrder: number;
+    isVisible: boolean;
+    styleClasses?: string;
     status: ComponentStatus;
+    createdAt: string;
+    updatedAt: string;
+    translations: Record<Language, ComponentI18nDto>;
+}
+
+// ==================== Component Entry Composite Types ====================
+
+export interface ComponentEntryI18nRequest {
+    title?: string;
+    description?: string;
+    status?: ComponentStatus;
+    dynamicFields?: Record<string, any>;
+}
+
+export interface ComponentEntryI18nDto {
+    id: number;
+    uuid: string;
+    uid: string;
+    entryId: number;
+    language: string;
+    title?: string;
+    description?: string;
+    status: ComponentStatus;
+    updatedAt?: string;
+    customFields?: Record<string, any>;
+}
+
+export interface CreateComponentEntryCompositeRequest {
+    componentId: number;
+    sortOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: ComponentStatus;
+    translations: Record<Language, ComponentEntryI18nRequest>;
+}
+
+export interface UpdateComponentEntryCompositeRequest {
+    sortOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: ComponentStatus;
+    translations: Record<Language, ComponentEntryI18nRequest>;
+}
+
+export interface ComponentEntryCompositeResponse {
+    id: number;
+    uuid: string;
+    uid: string;
+    componentId: number;
+    sortOrder: number;
+    isVisible: boolean;
+    styleClasses?: string;
+    status: ComponentStatus;
+    createdAt: string;
+    updatedAt: string;
+    translations: Record<Language, ComponentEntryI18nDto>;
 }

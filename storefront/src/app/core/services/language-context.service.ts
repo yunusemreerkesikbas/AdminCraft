@@ -17,12 +17,28 @@ export class LanguageContextService {
     constructor() {
         this.#tenantContextService.tenant$.subscribe((tenant) => {
             if (tenant?.id && tenant.id !== this.#cachedTenantId) {
-                this.loadTenantLanguages(tenant.id).pipe(take(1)).subscribe();
+                if (tenant.supportedLanguages?.length) {
+                    const normalizedLanguages = tenant.supportedLanguages.map(l => l.code.toLowerCase());
+                    this.supportedLanguages.set(normalizedLanguages);
+                    this.#languagesLoaded = true;
+                    this.#cachedTenantId = tenant.id;
+                } else {
+                    this.loadTenantLanguages(tenant.id).pipe(take(1)).subscribe();
+                }
             }
         });
-        const tenantId = this.#tenantContextService.getCurrentTenantId();
-        if (tenantId && !this.#languagesLoaded) {
-            this.loadTenantLanguages(tenantId).pipe(take(1)).subscribe();
+        
+        // Initial check if tenant is already loaded
+        const currentTenant = this.#tenantContextService.tenant();
+        if (currentTenant?.id && !this.#languagesLoaded) {
+             if (currentTenant.supportedLanguages?.length) {
+                const normalizedLanguages = currentTenant.supportedLanguages.map(l => l.code.toLowerCase());
+                this.supportedLanguages.set(normalizedLanguages);
+                this.#languagesLoaded = true;
+                this.#cachedTenantId = currentTenant.id;
+             } else {
+                this.loadTenantLanguages(currentTenant.id).pipe(take(1)).subscribe();
+             }
         }
     }
 

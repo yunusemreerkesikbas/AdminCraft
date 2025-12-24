@@ -3,10 +3,13 @@ import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
 import { Observable } from 'rxjs';
 import {
     ComponentEntry,
+    ComponentEntryCompositeResponse,
     ComponentEntryDetailDto,
+    CreateComponentEntryCompositeRequest,
     CreateEntryRequest,
     EntryI18nDto,
     EntryI18nRequest,
+    UpdateComponentEntryCompositeRequest,
     UpdateEntryRequest
 } from '../models/component-entry.types';
 
@@ -57,6 +60,14 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
 
     publish(entryId: number, language: string): Observable<EntryI18nDto> {
         return this.customPost<EntryI18nDto>('componentEntryPublish', {}, { entryId, language });
+    }
+
+    createComposite(data: CreateComponentEntryCompositeRequest): Observable<ComponentEntryCompositeResponse> {
+        return this.customPost<ComponentEntryCompositeResponse>('componentEntryComposite', data);
+    }
+
+    updateComposite(id: number, data: UpdateComponentEntryCompositeRequest): Observable<ComponentEntryCompositeResponse> {
+        return this.customPut<ComponentEntryCompositeResponse>('componentEntryCompositeById', data, { id });
     }
 }
 

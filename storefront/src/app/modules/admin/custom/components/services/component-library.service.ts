@@ -2,13 +2,16 @@ import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
 import {
+    ComponentCompositeResponse,
     ComponentDetailDto,
     ComponentDto,
     ComponentI18nDto,
     ComponentI18nRequest,
     ComponentTypeDto,
+    CreateComponentCompositeRequest,
     CreateComponentRequest,
     CreateComponentTypeRequest,
+    UpdateComponentCompositeRequest,
     UpdateComponentRequest,
     UpdateComponentTypeRequest
 } from '../models/component-library.types';
@@ -77,6 +80,18 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
 
     deleteComponentType(id: number): Observable<void> {
         return this.customDelete<void>('componentTypeById', { id });
+    }
+
+    createComposite(data: CreateComponentCompositeRequest): Observable<ComponentCompositeResponse> {
+        return this.customPost<ComponentCompositeResponse>('componentComposite', data);
+    }
+
+    updateComposite(id: number, data: UpdateComponentCompositeRequest): Observable<ComponentCompositeResponse> {
+        return this.customPut<ComponentCompositeResponse>('componentCompositeById', data, { id });
+    }
+
+    getComposite(id: number): Observable<ComponentCompositeResponse> {
+        return this.customGet<ComponentCompositeResponse>('componentCompositeById', { id });
     }
 }
 
