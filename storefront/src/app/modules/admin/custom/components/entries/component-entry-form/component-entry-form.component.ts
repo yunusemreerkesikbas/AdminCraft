@@ -14,8 +14,8 @@ import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaDialogComponent } from 'app/shared/components/spa-dialog';
-import { forkJoin, take } from 'rxjs';
-import { ComponentEntry, CreateEntryRequest, EntryFieldDefinition, EntryI18nDto, EntryI18nRequest, UpdateEntryRequest } from '../../models/component-entry.types';
+import { take } from 'rxjs';
+import { ComponentEntry, EntryFieldDefinition, EntryI18nDto } from '../../models/component-entry.types';
 import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
@@ -187,91 +187,78 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
 
         this.setSubmitting(true);
 
+        const translations = this.#buildCompositeTranslations();
+
         if (this.data.mode === 'create') {
-            this.#createEntry();
+            const payload: any = { // Using any cast temporarily to match imported types if strict checks fail, but sticking to interface is better
+                componentId: this.data.componentId,
+                sortOrder: this.data.sortOrder ?? 0,
+                isVisible: this.generalForm.value.isVisible,
+                styleClasses: this.generalForm.value.styleClasses || undefined,
+                status: this.generalForm.value.status,
+                translations
+            };
+
+            this.#entryService.createComposite(payload)
+                .pipe(take(1))
+                .subscribe({
+                    next: () => {
+                        this.setSubmitting(false);
+                        this.notify.success('admin.components.entries.createSuccess');
+                        this.close(true);
+                    },
+                    error: () => {
+                        this.setSubmitting(false);
+                        this.notify.alert('admin.components.entries.createFailed');
+                    }
+                });
         } else {
-            this.#updateEntry();
+            const payload: any = {
+                sortOrder: this.data.sortOrder, // Keep existing sort order if not in form? Form doesn't have sortOrder, relying on data.
+                isVisible: this.generalForm.value.isVisible,
+                styleClasses: this.generalForm.value.styleClasses || undefined,
+                status: this.generalForm.value.status,
+                translations
+            };
+
+            this.#entryService.updateComposite(this.data.entry!.id, payload)
+                .pipe(take(1))
+                .subscribe({
+                    next: () => {
+                        this.setSubmitting(false);
+                        this.notify.success('admin.components.entries.updateSuccess');
+                        this.close(true);
+                    },
+                    error: () => {
+                        this.setSubmitting(false);
+                        this.notify.alert('admin.components.entries.updateFailed');
+                    }
+                });
         }
     }
 
-    #createEntry(): void {
-        const payload: CreateEntryRequest = {
-            componentId: this.data.componentId,
-            sortOrder: this.data.sortOrder ?? 0,
-            isVisible: this.generalForm.value.isVisible,
-            styleClasses: this.generalForm.value.styleClasses || undefined
-        };
+    #buildCompositeTranslations(): Record<string, any> {
+        const translations: Record<string, any> = {};
+        const baseFields = ['title', 'description'];
 
-        this.#entryService.create(payload)
-            .pipe(take(1))
-            .subscribe({
-                next: (entry) => {
-                    this.#saveI18nData(entry.id);
-                },
-                error: () => {
-                    this.setSubmitting(false);
-                    this.notify.alert('admin.components.entries.createFailed');
-                }
-            });
-    }
-
-    #updateEntry(): void {
-        const payload: UpdateEntryRequest = {
-            isVisible: this.generalForm.value.isVisible,
-            styleClasses: this.generalForm.value.styleClasses || undefined,
-            status: this.generalForm.value.status
-        };
-
-        this.#entryService.update(this.data.entry!.id, payload)
-            .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.#saveI18nData(this.data.entry!.id);
-                },
-                error: () => {
-                    this.setSubmitting(false);
-                    this.notify.alert('admin.components.entries.updateFailed');
-                }
-            });
-    }
-
-    #saveI18nData(entryId: number): void {
-        const i18nRequests = this.languages.map(lang => {
+        this.languages.forEach(lang => {
             const formData = this.i18nForms[lang].value;
-            const baseFields = ['title', 'description'];
-
             const dynamicFields: Record<string, any> = {};
+            
             Object.keys(formData).forEach(key => {
-                if (!baseFields.includes(key)) {
+                if (!baseFields.includes(key) && formData[key] !== null && formData[key] !== '') {
                     dynamicFields[key] = formData[key];
                 }
             });
 
-            const request: EntryI18nRequest = {
+            translations[lang] = {
                 title: formData.title || undefined,
                 description: formData.description || undefined,
-                ...dynamicFields
+                priority: ComponentStatus.ACTIVE, // Default status for translation if needed, or inferred
+                dynamicFields: Object.keys(dynamicFields).length > 0 ? dynamicFields : undefined
             };
-
-            return this.#entryService.upsertI18n(entryId, lang, request);
         });
 
-        forkJoin(i18nRequests)
-            .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.setSubmitting(false);
-                    this.notify.success(
-                        this.data.mode === 'create' 
-                            ? 'admin.components.entries.createSuccess' 
-                            : 'admin.components.entries.updateSuccess'
-                    );
-                    this.close(true);
-                },
-                error: () => {
-                    this.setSubmitting(false);
-                    this.notify.alert('admin.components.entries.saveI18nFailed');
-                }
-            });
+        return translations;
     }
 }

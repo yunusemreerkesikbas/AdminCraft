@@ -156,15 +156,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             return;
         }
 
-        const i18nInitial: Record<string, any> = {};
-        this.supportedLanguages().forEach((lang) => {
-            i18nInitial[lang] = {
-                title: '',
-                subtitle: '',
-                description: ''
-            };
-        });
-
         const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
             width: DIALOG_CONFIG.COMPONENT_FORM.width,
             maxHeight: '90vh',
@@ -177,8 +168,9 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         });
 
         dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
-            if (!result) return;
-            this.loadItems();
+            if (result) {
+                this.loadItems();
+            }
         });
     }
 
@@ -213,8 +205,8 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
         dialogRef.afterClosed()
             .pipe(take(1))
-            .subscribe((success) => {
-                if (success) {
+            .subscribe((result) => {
+                if (result) {
                     this.loadItems();
                 }
             });

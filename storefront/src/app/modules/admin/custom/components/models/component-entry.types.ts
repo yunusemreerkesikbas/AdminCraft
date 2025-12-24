@@ -92,3 +92,34 @@ export interface ValidationResult {
     errors?: string[];
 }
 
+export interface CreateComponentEntryCompositeRequest {
+    componentId: number;
+    sortOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    translations: Record<string, EntryI18nRequest>;
+}
+
+export interface UpdateComponentEntryCompositeRequest {
+    sortOrder?: number;
+    isVisible?: boolean;
+    styleClasses?: string;
+    status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    translations: Record<string, EntryI18nRequest>;
+}
+
+export interface ComponentEntryCompositeResponse {
+    id: number;
+    uuid: string;
+    uid: string;
+    componentId: number;
+    sortOrder: number;
+    isVisible: boolean;
+    styleClasses?: string;
+    status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    createdAt: string;
+    updatedAt: string;
+    translations: Record<string, EntryI18nDto>;
+}
+

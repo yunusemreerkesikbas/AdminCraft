@@ -75,6 +75,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentWithI18n: 'components/${id}?include=translations',
     componentI18n: 'components/${componentId}/i18n/${language}',
     componentI18nPublish: 'components/${componentId}/publish/${language}',
+    componentComposite: 'components/composite',
+    componentCompositeById: 'components/${id}/composite',
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
     componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
@@ -93,6 +95,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentEntryI18n: 'components/entries/${entryId}/i18n/${language}',
     componentEntryI18nUpsert: 'components/entries/${entryId}/i18n/${language}',
     componentEntryPublish: 'components/entries/${entryId}/publish/${language}',
+    componentEntryComposite: 'components/entries/composite',
+    componentEntryCompositeById: 'components/entries/${id}/composite',
 
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
