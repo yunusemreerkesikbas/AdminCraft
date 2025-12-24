@@ -1,9 +1,10 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.ComponentEntryI18n;
-import com.backend.domain.enums.Language;
 import java.util.List;
 import java.util.Optional;
+
+import com.backend.domain.entity.ComponentEntryI18n;
+import com.backend.domain.enums.Language;
 
 public interface ComponentEntryI18nRepository {
     ComponentEntryI18n save(ComponentEntryI18n entryI18n);
@@ -19,4 +20,6 @@ public interface ComponentEntryI18nRepository {
     boolean existsByUid(String uid);
 
     List<ComponentEntryI18n> findByEntryIdInAndLanguage(List<Long> entryIds, Language language);
+
+    List<ComponentEntryI18n> saveAll(List<ComponentEntryI18n> i18nList);
 }

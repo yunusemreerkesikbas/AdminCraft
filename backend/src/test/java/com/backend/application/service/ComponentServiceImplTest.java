@@ -18,7 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
+import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +28,15 @@ class ComponentServiceImplTest {
 
   @Mock
   private ComponentRepository componentRepository;
+
+  @Mock
+  private ComponentI18nRepository componentI18nRepository;
+
+  @Mock
+  private ComponentTypeService componentTypeService;
+
+  @Mock
+  private ComponentTypeRepository componentTypeRepository;
 
   @InjectMocks
   private ComponentServiceImpl componentService;
@@ -57,24 +68,24 @@ class ComponentServiceImplTest {
     component2.setUpdatedAt(LocalDateTime.now());
 
     mockResults = new ArrayList<>();
-    mockResults.add(new Object[] { component1, "Navigation" });
-    mockResults.add(new Object[] { component2, "Footer" });
+    mockResults.add(new Object[] { component1, "Navigation", 5L });
+    mockResults.add(new Object[] { component2, "Footer", 3L });
   }
 
   @Test
   void getAllComponentsWithTypeNames_ShouldReturnFlatDTOList() {
-    when(componentRepository.findAllWithTypeNames()).thenReturn(mockResults);
+    when(componentRepository.findAllWithTypeNamesAndEntryCount()).thenReturn(mockResults);
 
     GetAllComponentsQuery query = new GetAllComponentsQuery();
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames(query);
 
     assertThat(result).hasSize(2);
-    verify(componentRepository).findAllWithTypeNames();
+    verify(componentRepository).findAllWithTypeNamesAndEntryCount();
   }
 
   @Test
   void getAllComponentsWithTypeNames_ShouldMapComponentTypeName() {
-    when(componentRepository.findAllWithTypeNames()).thenReturn(mockResults);
+    when(componentRepository.findAllWithTypeNamesAndEntryCount()).thenReturn(mockResults);
 
     GetAllComponentsQuery query = new GetAllComponentsQuery();
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames(query);
@@ -94,8 +105,8 @@ class ComponentServiceImplTest {
   @Test
   void getAllComponentsWithTypeNames_ShouldHandleNullTypeName() {
     List<Object[]> resultsWithNull = new ArrayList<>();
-    resultsWithNull.add(new Object[] { component1, null });
-    when(componentRepository.findAllWithTypeNames()).thenReturn(resultsWithNull);
+    resultsWithNull.add(new Object[] { component1, null, 0L });
+    when(componentRepository.findAllWithTypeNamesAndEntryCount()).thenReturn(resultsWithNull);
 
     GetAllComponentsQuery query = new GetAllComponentsQuery();
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames(query);
@@ -106,18 +117,18 @@ class ComponentServiceImplTest {
 
   @Test
   void getAllComponentsWithTypeNames_ShouldReturnEmptyListWhenNoComponents() {
-    when(componentRepository.findAllWithTypeNames()).thenReturn(List.of());
+    when(componentRepository.findAllWithTypeNamesAndEntryCount()).thenReturn(List.of());
 
     GetAllComponentsQuery query = new GetAllComponentsQuery();
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames(query);
 
     assertThat(result).isEmpty();
-    verify(componentRepository).findAllWithTypeNames();
+    verify(componentRepository).findAllWithTypeNamesAndEntryCount();
   }
 
   @Test
   void getAllComponentsWithTypeNames_ShouldMaintainOrderFromRepository() {
-    when(componentRepository.findAllWithTypeNames()).thenReturn(mockResults);
+    when(componentRepository.findAllWithTypeNamesAndEntryCount()).thenReturn(mockResults);
 
     GetAllComponentsQuery query = new GetAllComponentsQuery();
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames(query);
