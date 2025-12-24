@@ -11,7 +11,6 @@ import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.response.ComponentEntryI18nResponse;
 
 import lombok.Builder;
 
@@ -26,7 +25,7 @@ public record ComponentEntryCompositeResponse(
     ComponentStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    Map<Language, ComponentEntryI18nResponse> translations) {
+    Map<Language, ComponentEntryI18nDto> translations) {
 
   public static ComponentEntryCompositeResponse from(
       ComponentEntry entry,
@@ -37,12 +36,12 @@ public record ComponentEntryCompositeResponse(
       return null;
     }
 
-    Map<Language, ComponentEntryI18nResponse> translationsMap = Optional.ofNullable(i18nList)
+    Map<Language, ComponentEntryI18nDto> translationsMap = Optional.ofNullable(i18nList)
         .orElseGet(Collections::emptyList)
         .stream()
         .collect(Collectors.toMap(
             ComponentEntryI18n::getLanguage,
-            i18n -> ComponentEntryI18nResponse.from(i18n, customDataParser.apply(i18n.getCustomData())),
+            i18n -> ComponentEntryI18nDto.from(i18n, customDataParser.apply(i18n.getCustomData())),
             (existing, replacement) -> replacement));
 
     return ComponentEntryCompositeResponse.builder()

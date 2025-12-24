@@ -10,6 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +36,8 @@ import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/components")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class ComponentEntryController {
 
         private final ComponentEntryService entryService;
@@ -200,7 +204,7 @@ public class ComponentEntryController {
         @PutMapping("/entries/{id}/composite")
         @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
         public ResponseEntity<ApiResponse<com.backend.application.dto.response.ComponentEntryCompositeResponse>> updateEntryComposite(
-                        @PathVariable Long id,
+                        @PathVariable @NotNull @Min(1) Long id,
                         @Valid @RequestBody com.backend.application.dto.request.UpdateComponentEntryCompositeRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {

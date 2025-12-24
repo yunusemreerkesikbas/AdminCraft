@@ -206,7 +206,8 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                     new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
                     });
         } catch (Exception e) {
-            log.error("Failed to parse custom data json: {}", json, e);
+            log.error("Failed to parse custom data json (length: {})",
+                    json != null ? json.length() : 0, e);
             return java.util.Collections.emptyMap();
         }
     }

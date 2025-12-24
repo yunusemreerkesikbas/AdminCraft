@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.command.ComponentCommands.CreateComponentCommand;
 import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
 import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.dto.request.ComponentI18nCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.ComponentCompositeResponse;
@@ -29,7 +30,6 @@ import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
-import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -180,7 +180,7 @@ public class ComponentServiceImpl implements ComponentService {
             i18n.setComponentId(savedComponent.getId());
             i18n.setLanguage(entry.getKey());
 
-            ComponentI18nRequest data = entry.getValue();
+            ComponentI18nCommand data = entry.getValue();
             if (data != null) {
                 i18n.setTitle(data.title());
                 i18n.setSubtitle(data.subtitle());
@@ -236,7 +236,7 @@ public class ComponentServiceImpl implements ComponentService {
                         return newI18n;
                     });
 
-            ComponentI18nRequest data = entry.getValue();
+            ComponentI18nCommand data = entry.getValue();
             if (data != null) {
                 if (data.title() != null) {
                     i18n.setTitle(data.title());
