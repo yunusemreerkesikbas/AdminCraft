@@ -26,6 +26,9 @@ import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
 import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
 import com.backend.application.command.ComponentI18nCommands.PublishComponentI18nCommand;
 import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18nCommand;
+import com.backend.application.dto.request.CreateComponentCompositeRequest;
+import com.backend.application.dto.request.UpdateComponentCompositeRequest;
+import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
 import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
 import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
@@ -300,6 +303,70 @@ public class ComponentController {
             String msg = messageSource.getMessage("component.i18n.publish.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(msg));
+        }
+    }
+
+    // ==================== Composite Endpoints ====================
+
+    @PostMapping("/composite")
+    public ResponseEntity<ApiResponse<ComponentCompositeResponse>> createComposite(
+            @Valid @RequestBody CreateComponentCompositeRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+        try {
+            ComponentCompositeResponse response = componentService.createComposite(request);
+
+            String successMessage = messageSource.getMessage("component.composite.create.success",
+                    null, Locale.forLanguageTag(lang));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(successMessage, response));
+        } catch (Exception ex) {
+            log.error("Error creating component composite: {}", ex.getMessage());
+            String msg = messageSource.getMessage("component.composite.create.error",
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(msg));
+        }
+    }
+
+    @PutMapping("/{id}/composite")
+    public ResponseEntity<ApiResponse<ComponentCompositeResponse>> updateComposite(
+            @PathVariable @NotNull @Min(1) Long id,
+            @Valid @RequestBody UpdateComponentCompositeRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+        try {
+            ComponentCompositeResponse response = componentService.updateComposite(id, request);
+
+            String successMessage = messageSource.getMessage("component.composite.update.success",
+                    null, Locale.forLanguageTag(lang));
+            return ResponseEntity.ok(ApiResponse.success(successMessage, response));
+        } catch (Exception ex) {
+            log.error("Error updating component composite {}: {}", id, ex.getMessage());
+            String msg = messageSource.getMessage("component.composite.update.error",
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(msg));
+        }
+    }
+
+    @GetMapping("/{id}/composite")
+    public ResponseEntity<ApiResponse<ComponentCompositeResponse>> getComposite(
+            @PathVariable @NotNull @Min(1) Long id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+        try {
+            return componentService.getComposite(id)
+                    .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
+                    .orElseGet(() -> {
+                        String msg = messageSource.getMessage("component.not.found",
+                                null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(ApiResponse.error(msg));
+                    });
+        } catch (Exception ex) {
+            log.error("Error getting component composite {}: {}", id, ex.getMessage());
+            String msg = messageSource.getMessage("component.composite.get.error",
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(msg));
         }
     }

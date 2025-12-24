@@ -1,21 +1,46 @@
 package com.backend.application.service;
 
-import com.backend.application.command.ComponentCommands.*;
-import com.backend.application.query.ComponentQueries.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import com.backend.application.command.ComponentCommands.CreateComponentCommand;
+import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
+import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.dto.request.CreateComponentCompositeRequest;
+import com.backend.application.dto.request.UpdateComponentCompositeRequest;
+import com.backend.application.dto.response.ComponentCompositeResponse;
+import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
+import com.backend.application.query.ComponentQueries.GetAllComponentsWithTranslationsQuery;
+import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
+import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
+import com.backend.application.query.ComponentQueries.GetComponentsByTypeIdQuery;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
-import java.util.List;
-import java.util.Map;
 
 public interface ComponentService {
     Component createComponent(CreateComponentCommand command);
+
     Component getComponentById(GetComponentByIdQuery query);
+
     Map<Component, List<ComponentI18n>> getComponentWithI18n(GetComponentWithI18nQuery query);
+
     List<Component> getAllComponents(GetAllComponentsQuery query);
+
     Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations(GetAllComponentsWithTranslationsQuery query);
+
     List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query);
+
     List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query);
+
     Component updateComponent(UpdateComponentCommand command);
+
     void deleteComponent(DeleteComponentCommand command);
+
+    ComponentCompositeResponse createComposite(CreateComponentCompositeRequest request);
+
+    ComponentCompositeResponse updateComposite(Long id, UpdateComponentCompositeRequest request);
+
+    Optional<ComponentCompositeResponse> getComposite(Long id);
 }

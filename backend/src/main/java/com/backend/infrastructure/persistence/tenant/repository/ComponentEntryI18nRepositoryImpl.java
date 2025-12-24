@@ -51,4 +51,9 @@ public class ComponentEntryI18nRepositoryImpl implements ComponentEntryI18nRepos
     public List<ComponentEntryI18n> findByEntryIdInAndLanguage(List<Long> entryIds, Language language) {
         return jpaRepository.findByEntryIdInAndLanguage(entryIds, language);
     }
+
+    @Override
+    public List<ComponentEntryI18n> saveAll(List<ComponentEntryI18n> i18nList) {
+        return jpaRepository.saveAll(i18nList);
+    }
 }

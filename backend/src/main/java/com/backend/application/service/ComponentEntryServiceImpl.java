@@ -1,19 +1,21 @@
 package com.backend.application.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final ComponentEntryRepository entryRepository;
     private final ComponentEntryI18nRepository entryI18nRepository;
     private final ComponentRepository componentRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -90,7 +93,121 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         entryRepository.delete(entry);
         log.info("Deleted entry {}", id);
     }
+
+    @Override
+    @Transactional
+    public com.backend.application.dto.response.ComponentEntryCompositeResponse createComposite(
+            com.backend.application.dto.request.CreateComponentEntryCompositeRequest request) {
+
+        componentRepository.findById(request.componentId())
+                .orElseThrow(() -> new IllegalArgumentException("Component not found: " + request.componentId()));
+
+        ComponentEntry entry = new ComponentEntry();
+        entry.setComponentId(request.componentId());
+        entry.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
+        entry.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
+        entry.setStyleClasses(request.styleClasses());
+        entry.setStatus(request.status() != null ? request.status() : com.backend.domain.enums.ComponentStatus.DRAFT);
+
+        ComponentEntry savedEntry = entryRepository.save(entry);
+
+        List<ComponentEntryI18n> i18nList = request.translations().entrySet().stream()
+                .map(e -> {
+                    ComponentEntryI18n i18n = new ComponentEntryI18n();
+                    i18n.setEntryId(savedEntry.getId());
+                    i18n.setLanguage(e.getKey());
+                    i18n.setTitle(e.getValue().title());
+                    i18n.setDescription(e.getValue().description());
+                    i18n.setStatus(e.getValue().status() != null ? e.getValue().status()
+                            : com.backend.domain.enums.ComponentStatus.DRAFT);
+
+                    if (e.getValue().dynamicFields() != null && !e.getValue().dynamicFields().isEmpty()) {
+                        try {
+                            i18n.setCustomData(objectMapper.writeValueAsString(e.getValue().dynamicFields()));
+                        } catch (Exception ex) {
+                            log.error("Failed to serialize custom fields for language {}", e.getKey(), ex);
+                            throw new RuntimeException("Failed to serialize custom fields", ex);
+                        }
+                    }
+
+                    return i18n;
+                })
+                .collect(Collectors.toList());
+
+        List<ComponentEntryI18n> savedI18n = entryI18nRepository.saveAll(i18nList);
+
+        log.info("Created entry composite: entryId={}, translations={}", savedEntry.getId(), savedI18n.size());
+
+        return com.backend.application.dto.response.ComponentEntryCompositeResponse.from(savedEntry, savedI18n,
+                this::parseCustomData);
+    }
+
+    @Override
+    @Transactional
+    public com.backend.application.dto.response.ComponentEntryCompositeResponse updateComposite(
+            Long id, com.backend.application.dto.request.UpdateComponentEntryCompositeRequest request) {
+
+        ComponentEntry entry = entryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Entry not found: " + id));
+
+        if (request.sortOrder() != null)
+            entry.setSortOrder(request.sortOrder());
+        if (request.isVisible() != null)
+            entry.setIsVisible(request.isVisible());
+        if (request.styleClasses() != null)
+            entry.setStyleClasses(request.styleClasses());
+        if (request.status() != null)
+            entry.setStatus(request.status());
+
+        ComponentEntry savedEntry = entryRepository.save(entry);
+
+        List<ComponentEntryI18n> existingI18n = entryI18nRepository.findByEntryId(id);
+        Map<com.backend.domain.enums.Language, ComponentEntryI18n> i18nMap = existingI18n.stream()
+                .collect(Collectors.toMap(ComponentEntryI18n::getLanguage, i -> i));
+
+        List<ComponentEntryI18n> updatedI18n = request.translations().entrySet().stream()
+                .map(e -> {
+                    ComponentEntryI18n i18n = i18nMap.getOrDefault(e.getKey(), new ComponentEntryI18n());
+                    if (i18n.getId() == null) {
+                        i18n.setEntryId(id);
+                        i18n.setLanguage(e.getKey());
+
+                    }
+
+                    if (e.getValue().title() != null)
+                        i18n.setTitle(e.getValue().title());
+                    i18n.setDescription(e.getValue().description());
+
+                    if (e.getValue().status() != null)
+                        i18n.setStatus(e.getValue().status());
+
+                    if (e.getValue().dynamicFields() != null) {
+                        try {
+                            i18n.setCustomData(objectMapper.writeValueAsString(e.getValue().dynamicFields()));
+                        } catch (Exception ex) {
+                            throw new RuntimeException("Failed to serialize custom fields", ex);
+                        }
+                    }
+
+                    return entryI18nRepository.save(i18n);
+                })
+                .collect(Collectors.toList());
+
+        return com.backend.application.dto.response.ComponentEntryCompositeResponse.from(savedEntry, updatedI18n,
+                this::parseCustomData);
+    }
+
+    private Map<String, Object> parseCustomData(String json) {
+        if (json == null || json.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(json,
+                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+                    });
+        } catch (Exception e) {
+            log.error("Failed to parse custom data json: {}", json, e);
+            return java.util.Collections.emptyMap();
+        }
+    }
 }
-
-
-
