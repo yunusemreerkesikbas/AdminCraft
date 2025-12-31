@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.Media;
@@ -241,9 +242,10 @@ public class MediaRepositoryImpl implements MediaRepository {
 
     @Override
     public List<Media> findLargestMedia(int limit) {
-        return jpaRepository.findAllByOrderByFileSizeDesc().stream()
-                .limit(limit)
-                .toList();
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be positive");
+        }
+        return jpaRepository.findAllByOrderByFileSizeDesc(PageRequest.of(0, limit)).getContent();
     }
 
     @Override

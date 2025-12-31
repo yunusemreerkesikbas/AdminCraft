@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,8 +33,10 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     boolean existsByFileName(String fileName);
 
     // Folder queries
+    @EntityGraph(attributePaths = { "folder", "translations" })
     List<Media> findByFolderId(Long folderId);
 
+    @EntityGraph(attributePaths = { "folder", "translations" })
     List<Media> findByFolderIsNull();
 
     long countByFolderId(Long folderId);
@@ -57,6 +62,9 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     List<Media> findByFileSizeGreaterThan(Long size);
 
     List<Media> findAllByOrderByFileSizeDesc();
+
+    // Paginated queries
+    Page<Media> findAllByOrderByFileSizeDesc(Pageable pageable);
 
     // Status queries
     List<Media> findByStatus(MediaStatus status);

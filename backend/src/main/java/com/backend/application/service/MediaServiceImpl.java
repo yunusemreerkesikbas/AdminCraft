@@ -141,8 +141,7 @@ public class MediaServiceImpl implements MediaService {
             log.info("Media deleted successfully: {}", id);
 
         } catch (IOException e) {
-            log.error("Error deleting physical file: {}", e.getMessage());
-            mediaRepository.deleteById(id);
+            log.error("Error deleting physical file for media ID {}: {}", id, e.getMessage());
             throw new RuntimeException("Failed to delete physical file", e);
         }
     }
@@ -154,7 +153,7 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] getFileContent(String fileName) {
         Media media = mediaRepository.findByFileName(fileName)
                 .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileName));

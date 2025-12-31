@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.application.service.MediaService;
 import com.backend.domain.entity.Media;
+import com.backend.presentation.dto.response.MediaResponse;
 import com.backend.shared.common.ApiResponse;
 
 import jakarta.validation.Valid;
@@ -54,7 +55,7 @@ public class MediaController {
             "video/mp4", "audio/mpeg", "audio/mp3");
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Media>> uploadFile(
+    public ResponseEntity<ApiResponse<MediaResponse>> uploadFile(
             @RequestParam("file") @Valid MultipartFile file,
             @RequestParam("uploadedBy") @NotNull @Min(1) Long uploadedBy,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -65,7 +66,7 @@ public class MediaController {
             String message = messageSource.getMessage("media.upload.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success(message, media));
+                    .body(ApiResponse.success(message, MediaResponse.from(media)));
         } catch (Exception ex) {
             log.error("Error uploading file: {}", ex.getMessage());
             String message = messageSource.getMessage("media.upload.error", new Object[] { ex.getMessage() },
@@ -76,13 +77,13 @@ public class MediaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Media>> getMediaById(
+    public ResponseEntity<ApiResponse<MediaResponse>> getMediaById(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Optional<Media> media = mediaService.findById(id);
             if (media.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success(media.get()));
+                return ResponseEntity.ok(ApiResponse.success(MediaResponse.from(media.get())));
             } else {
                 String message = messageSource.getMessage("media.not.found", new Object[] { id },
                         Locale.forLanguageTag(languageCode));
@@ -99,13 +100,13 @@ public class MediaController {
     }
 
     @GetMapping("/uid/{uid}")
-    public ResponseEntity<ApiResponse<Media>> getMediaByUid(
+    public ResponseEntity<ApiResponse<MediaResponse>> getMediaByUid(
             @PathVariable String uid,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Optional<Media> media = mediaService.findByUid(uid);
             if (media.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success(media.get()));
+                return ResponseEntity.ok(ApiResponse.success(MediaResponse.from(media.get())));
             } else {
                 String message = messageSource.getMessage("media.not.found", new Object[] { uid },
                         Locale.forLanguageTag(languageCode));
@@ -122,11 +123,14 @@ public class MediaController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Media>>> getAllMedia(
+    public ResponseEntity<ApiResponse<List<MediaResponse>>> getAllMedia(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             List<Media> mediaList = mediaService.findAll();
-            return ResponseEntity.ok(ApiResponse.success(mediaList));
+            List<MediaResponse> responseList = mediaList.stream()
+                    .map(MediaResponse::from)
+                    .toList();
+            return ResponseEntity.ok(ApiResponse.success(responseList));
         } catch (Exception ex) {
             log.error("Error getting all media: {}", ex.getMessage());
             String message = messageSource.getMessage("media.list.error", new Object[] { ex.getMessage() },
@@ -155,12 +159,15 @@ public class MediaController {
     }
 
     @GetMapping("/folder/{folderId}")
-    public ResponseEntity<ApiResponse<List<Media>>> getMediaByFolder(
+    public ResponseEntity<ApiResponse<List<MediaResponse>>> getMediaByFolder(
             @PathVariable @Valid @NotNull @Min(1) Long folderId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             List<Media> mediaList = mediaService.findByFolderId(folderId);
-            return ResponseEntity.ok(ApiResponse.success(mediaList));
+            List<MediaResponse> responseList = mediaList.stream()
+                    .map(MediaResponse::from)
+                    .toList();
+            return ResponseEntity.ok(ApiResponse.success(responseList));
         } catch (Exception ex) {
             log.error("Error getting media by folder {}: {}", folderId, ex.getMessage());
             String message = messageSource.getMessage("media.list.error", new Object[] { ex.getMessage() },
