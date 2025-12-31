@@ -1,168 +1,259 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.MediaFile;
-import com.backend.domain.repository.MediaRepository;
-import org.springframework.stereotype.Repository;
-import lombok.RequiredArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Repository;
+
+import com.backend.domain.entity.Media;
+import com.backend.domain.enums.MediaStatus;
+import com.backend.domain.enums.StorageProvider;
+import com.backend.domain.repository.MediaRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Repository
 @RequiredArgsConstructor
 public class MediaRepositoryImpl implements MediaRepository {
-    
-    private final MediaJpaRepository mediaJpaRepository;
-    
+
+    private final MediaJpaRepository jpaRepository;
+
     @Override
-    public MediaFile save(MediaFile mediaFile) {
-        return mediaJpaRepository.save(mediaFile);
+    public Media save(Media media) {
+        return jpaRepository.save(media);
     }
-    
+
     @Override
-    public Optional<MediaFile> findById(Long id) {
-        return mediaJpaRepository.findById(id);
+    public Optional<Media> findById(Long id) {
+        return jpaRepository.findById(id);
     }
-    
+
     @Override
-    public List<MediaFile> findAll() {
-        return mediaJpaRepository.findAll();
+    public Optional<Media> findByUid(String uid) {
+        return jpaRepository.findByUid(uid);
     }
-    
+
+    @Override
+    public Optional<Media> findByUuid(String uuid) {
+        return jpaRepository.findByUuid(uuid);
+    }
+
+    @Override
+    public List<Media> findAll() {
+        return jpaRepository.findAll();
+    }
+
     @Override
     public void deleteById(Long id) {
-        mediaJpaRepository.deleteById(id);
+        jpaRepository.deleteById(id);
     }
-    
+
+    @Override
+    public void delete(Media media) {
+        jpaRepository.delete(media);
+    }
+
     @Override
     public boolean existsById(Long id) {
-        return mediaJpaRepository.existsById(id);
+        return jpaRepository.existsById(id);
     }
-    
+
+    @Override
+    public boolean existsByUid(String uid) {
+        return jpaRepository.existsByUid(uid);
+    }
+
     @Override
     public long count() {
-        return mediaJpaRepository.count();
+        return jpaRepository.count();
     }
-    
-    // File identification queries
+
     @Override
-    public Optional<MediaFile> findByFileName(String fileName) {
-        return mediaJpaRepository.findByFileName(fileName);
+    public Optional<Media> findByFileName(String fileName) {
+        return jpaRepository.findByFileName(fileName);
     }
-    
+
     @Override
     public boolean existsByFileName(String fileName) {
-        return mediaJpaRepository.existsByFileName(fileName);
-    }
-    
-    @Override
-    public boolean existsByFilePath(String filePath) {
-        return mediaJpaRepository.existsByFilePath(filePath);
-    }
-    
-    // Tenant-agnostic queries (TenantContext handles routing)
-    @Override
-    public List<MediaFile> findByTenantId(Long tenantId) {
-        return mediaJpaRepository.findAll();
+        return jpaRepository.existsByFileName(fileName);
     }
 
     @Override
-    public List<MediaFile> findByTenantIdOrderByCreatedAtDesc(Long tenantId) {
-        return mediaJpaRepository.findAll();
+    public List<Media> findByFolderId(Long folderId) {
+        return jpaRepository.findByFolderId(folderId);
     }
 
     @Override
-    public long countByTenantId(Long tenantId) {
-        return mediaJpaRepository.count();
+    public List<Media> findByFolderIsNull() {
+        return jpaRepository.findByFolderIsNull();
     }
 
     @Override
-    public long sumFileSizeByTenantId(Long tenantId) {
-        return mediaJpaRepository.findAll().stream()
-            .mapToLong(MediaFile::getFileSize)
-            .sum();
+    public long countByFolderId(Long folderId) {
+        return jpaRepository.countByFolderId(folderId);
     }
-    
-    // For now, implement all other required methods with basic functionality
-    // These would need to be implemented with appropriate JPA repository methods
-    
-    @Override public List<MediaFile> findByMimeTypeStartingWith(String mimeTypePrefix) {
-        return mediaJpaRepository.findByMimeTypeStartingWith(mimeTypePrefix);
+
+    @Override
+    public List<Media> findByMimeTypeStartingWith(String mimeTypePrefix) {
+        return jpaRepository.findByMimeTypeStartingWith(mimeTypePrefix);
     }
-    @Override public List<MediaFile> findByTenantIdAndMimeTypeStartingWith(Long tenantId, String mimeTypePrefix) {
-        return mediaJpaRepository.findByMimeTypeStartingWith(mimeTypePrefix);
+
+    @Override
+    public List<Media> findByFileExtension(String extension) {
+        return jpaRepository.findByFileExtension(extension);
     }
-    @Override public List<MediaFile> findByTenantIdAndFileExtension(Long tenantId, String extension) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndFileExtensionIn(Long tenantId, List<String> extensions) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndWidthIsNotNull(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndHeightIsNotNull(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndWidthBetween(Long tenantId, Integer minWidth, Integer maxWidth) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndHeightBetween(Long tenantId, Integer minHeight, Integer maxHeight) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndHasThumbnailsTrue(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByFileSizeBetween(Long minSize, Long maxSize) { return mediaJpaRepository.findByFileSizeBetween(minSize, maxSize); }
-    @Override public List<MediaFile> findByTenantIdAndFileSizeBetween(Long tenantId, Long minSize, Long maxSize) { return mediaJpaRepository.findByFileSizeBetween(minSize, maxSize); }
-    @Override public List<MediaFile> findByTenantIdAndFileSizeGreaterThan(Long tenantId, Long size) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdOrderByFileSizeDesc(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndFolder(Long tenantId, String folder) { return mediaJpaRepository.findByFolder(folder); }
-    @Override public List<MediaFile> findByTenantIdAndCategory(Long tenantId, String category) { return mediaJpaRepository.findByCategory(category); }
-    @Override public List<MediaFile> findByTenantIdAndFolderAndCategory(Long tenantId, String folder, String category) {
-        return mediaJpaRepository.findByFolder(folder).stream()
-            .filter(m -> category.equals(m.getCategory()))
-            .toList();
+
+    @Override
+    public List<Media> findByFileExtensionIn(List<String> extensions) {
+        return jpaRepository.findByFileExtensionIn(extensions);
     }
-    @Override public List<String> findDistinctFolderByTenantId(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<String> findDistinctCategoryByTenantId(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByIsPublicTrue() { return mediaJpaRepository.findByIsPublic(true); }
-    @Override public List<MediaFile> findByTenantIdAndIsPublicTrue(Long tenantId) { return mediaJpaRepository.findByIsPublic(true); }
-    @Override public List<MediaFile> findByTenantIdAndIsPublicFalse(Long tenantId) { return mediaJpaRepository.findByIsPublic(false); }
-    @Override public List<MediaFile> findByStorageProvider(String storageProvider) { return mediaJpaRepository.findByStorageProvider(storageProvider); }
-    @Override public List<MediaFile> findByTenantIdAndStorageProvider(Long tenantId, String storageProvider) { return mediaJpaRepository.findByStorageProvider(storageProvider); }
-    @Override public List<MediaFile> findByExternalIdIsNotNull() { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndExternalIdIsNotNull(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByUploadedBy(Long userId) { return mediaJpaRepository.findByUploadedBy(userId); }
-    @Override public List<MediaFile> findByTenantIdAndUploadedBy(Long tenantId, Long userId) { return mediaJpaRepository.findByUploadedBy(userId); }
-    @Override public long countByTenantIdAndUploadedBy(Long tenantId, Long userId) {
-        return mediaJpaRepository.findByUploadedBy(userId).size();
+
+    @Override
+    public List<Media> findByWidthIsNotNull() {
+        return jpaRepository.findByWidthIsNotNull();
     }
-    @Override public List<MediaFile> findByTenantIdAndOriginalNameContainingIgnoreCase(Long tenantId, String originalName) {
-        return mediaJpaRepository.findAll().stream()
-            .filter(m -> m.getOriginalName() != null && m.getOriginalName().toLowerCase().contains(originalName.toLowerCase()))
-            .toList();
+
+    @Override
+    public List<Media> findByWidthBetween(Integer minWidth, Integer maxWidth) {
+        return jpaRepository.findByWidthBetween(minWidth, maxWidth);
     }
-    @Override public List<MediaFile> findByTenantIdAndAltTextTrContainingIgnoreCase(Long tenantId, String altText) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndAltTextEnContainingIgnoreCase(Long tenantId, String altText) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndDescriptionTrContainingIgnoreCase(Long tenantId, String description) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndDescriptionEnContainingIgnoreCase(Long tenantId, String description) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByUsageCountGreaterThan(Integer count) { return mediaJpaRepository.findByUsageCountGreaterThan(count); }
-    @Override public List<MediaFile> findByTenantIdAndUsageCountGreaterThan(Long tenantId, Integer count) { return mediaJpaRepository.findByUsageCountGreaterThan(count); }
-    @Override public List<MediaFile> findByTenantIdAndUsageCount(Long tenantId, Integer count) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdOrderByUsageCountDesc(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate) { return mediaJpaRepository.findByCreatedAtBetween(startDate, endDate); }
-    @Override public List<MediaFile> findByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate) { return mediaJpaRepository.findByCreatedAtBetween(startDate, endDate); }
-    @Override public List<MediaFile> findByLastAccessedAtBefore(LocalDateTime dateTime) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndLastAccessedAtBefore(Long tenantId, LocalDateTime dateTime) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByIsOptimizedTrue() { return mediaJpaRepository.findByIsOptimized(true); }
-    @Override public List<MediaFile> findByTenantIdAndIsOptimizedTrue(Long tenantId) { return mediaJpaRepository.findByIsOptimized(true); }
-    @Override public List<MediaFile> findByTenantIdAndIsOptimizedFalse(Long tenantId) { return mediaJpaRepository.findByIsOptimized(false); }
-    @Override public List<MediaFile> findByMetadataIsNotNull() { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByTenantIdAndMetadataIsNotNull(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findByIdIn(List<Long> ids) { return mediaJpaRepository.findByIdIn(ids); }
-    @Override public List<MediaFile> findByFileNameIn(List<String> fileNames) { return List.of(); } // Placeholder
-    @Override public void deleteByTenantId(Long tenantId) { mediaJpaRepository.deleteAll(); }
-    @Override public void deleteByUploadedBy(Long userId) { mediaJpaRepository.deleteByUploadedBy(userId); }
-    @Override public List<MediaFile> findUnusedFiles(Long tenantId) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findOrphanedFiles(Long tenantId, LocalDateTime olderThan) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findLargestFiles(Long tenantId, int limit) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findDuplicateFiles(Long tenantId) { return List.of(); } // Placeholder
-    @Override public long countByTenantIdAndMimeTypeStartingWith(Long tenantId, String mimeTypePrefix) {
-        return mediaJpaRepository.findByMimeTypeStartingWith(mimeTypePrefix).size();
+
+    @Override
+    public List<Media> findByHeightBetween(Integer minHeight, Integer maxHeight) {
+        return jpaRepository.findByHeightBetween(minHeight, maxHeight);
     }
-    @Override public long countByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate) {
-        return mediaJpaRepository.findByCreatedAtBetween(startDate, endDate).size();
+
+    @Override
+    public List<Media> findByFileSizeBetween(Long minSize, Long maxSize) {
+        return jpaRepository.findByFileSizeBetween(minSize, maxSize);
     }
-    @Override public long countByTenantIdAndStorageProvider(Long tenantId, String storageProvider) { return List.of().size(); } // Placeholder
-    @Override public List<MediaFile> findRecentlyUploaded(Long tenantId, int limit) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findMostUsed(Long tenantId, int limit) { return List.of(); } // Placeholder
-    @Override public List<MediaFile> findRecentlyAccessed(Long tenantId, int limit) { return List.of(); } // Placeholder
+
+    @Override
+    public List<Media> findByFileSizeGreaterThan(Long size) {
+        return jpaRepository.findByFileSizeGreaterThan(size);
+    }
+
+    @Override
+    public List<Media> findAllOrderByFileSizeDesc() {
+        return jpaRepository.findAllByOrderByFileSizeDesc();
+    }
+
+    @Override
+    public List<Media> findByStatus(MediaStatus status) {
+        return jpaRepository.findByStatus(status);
+    }
+
+    @Override
+    public long countByStatus(MediaStatus status) {
+        return jpaRepository.countByStatus(status);
+    }
+
+    @Override
+    public List<Media> findByIsPublicTrue() {
+        return jpaRepository.findByIsPublicTrue();
+    }
+
+    @Override
+    public List<Media> findByIsPublicFalse() {
+        return jpaRepository.findByIsPublicFalse();
+    }
+
+    @Override
+    public List<Media> findByStorageProvider(StorageProvider storageProvider) {
+        return jpaRepository.findByStorageProvider(storageProvider);
+    }
+
+    @Override
+    public List<Media> findByExternalIdIsNotNull() {
+        return jpaRepository.findByExternalIdIsNotNull();
+    }
+
+    @Override
+    public List<Media> findByUploadedBy(Long userId) {
+        return jpaRepository.findByUploadedBy(userId);
+    }
+
+    @Override
+    public long countByUploadedBy(Long userId) {
+        return jpaRepository.countByUploadedBy(userId);
+    }
+
+    @Override
+    public List<Media> findByOriginalNameContainingIgnoreCase(String originalName) {
+        return jpaRepository.findByOriginalNameContainingIgnoreCase(originalName);
+    }
+
+    @Override
+    public List<Media> findByUsageCountGreaterThan(Integer count) {
+        return jpaRepository.findByUsageCountGreaterThan(count);
+    }
+
+    @Override
+    public List<Media> findByUsageCount(Integer count) {
+        return jpaRepository.findByUsageCount(count);
+    }
+
+    @Override
+    public List<Media> findAllOrderByUsageCountDesc() {
+        return jpaRepository.findAllByOrderByUsageCountDesc();
+    }
+
+    @Override
+    public List<Media> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate) {
+        return jpaRepository.findByCreatedAtBetween(startDate, endDate);
+    }
+
+    @Override
+    public List<Media> findByLastAccessedAtBefore(LocalDateTime dateTime) {
+        return jpaRepository.findByLastAccessedAtBefore(dateTime);
+    }
+
+    @Override
+    public List<Media> findAllOrderByCreatedAtDesc() {
+        return jpaRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    public List<Media> findByIdIn(List<Long> ids) {
+        return jpaRepository.findByIdIn(ids);
+    }
+
+    @Override
+    public List<Media> findByUidIn(List<String> uids) {
+        return jpaRepository.findByUidIn(uids);
+    }
+
+    @Override
+    public List<Media> findByFileNameIn(List<String> fileNames) {
+        return jpaRepository.findByFileNameIn(fileNames);
+    }
+
+    @Override
+    public void deleteByUploadedBy(Long userId) {
+        jpaRepository.deleteByUploadedBy(userId);
+    }
+
+    @Override
+    public List<Media> findUnusedMedia() {
+        return jpaRepository.findUnusedMedia();
+    }
+
+    @Override
+    public List<Media> findLargestMedia(int limit) {
+        return jpaRepository.findAllByOrderByFileSizeDesc().stream()
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
+    public long countByMimeTypeStartingWith(String mimeTypePrefix) {
+        return jpaRepository.countByMimeTypeStartingWith(mimeTypePrefix);
+    }
+
+    @Override
+    public long sumFileSize() {
+        Long sum = jpaRepository.sumFileSize();
+        return sum != null ? sum : 0L;
+    }
 }
