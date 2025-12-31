@@ -46,16 +46,14 @@
                 <div class="p-6 sm:p-8">
                     <form [formGroup]="generalForm" class="flex flex-col gap-6">
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            @if (mode() === 'edit') {
-                                <spa-select
-                                    formControlName="status"
-                                    [label]="
-                                        'admin.common.fields.status' | transloco
-                                    "
-                                    [options]="statusOptions"
-                                    [required]="true"
-                                ></spa-select>
-                            }
+                            <spa-select
+                                formControlName="status"
+                                [label]="
+                                    'admin.common.fields.status' | transloco
+                                "
+                                [options]="statusOptions"
+                                [required]="true"
+                            ></spa-select>
 
                             <spa-input
                                 class="sm:col-span-2"

@@ -2,15 +2,28 @@ package com.backend.application.dto.delivery;
 
 import java.util.Map;
 
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
 @Builder
-public record EntryDeliveryResponse(
-    String uid,
-    Integer order,
-    String title,
-    String description,
-    Boolean isVisible,
-    String styleClasses,
-    Map<String, Object> customFields) {
+public class EntryDeliveryResponse {
+
+    private String uid;
+    private Integer order;
+    private String title;
+    private String description;
+    private Boolean isVisible;
+    private String styleClasses;
+
+    @JsonIgnore
+    private Map<String, Object> customFields;
+
+    @JsonAnyGetter
+    public Map<String, Object> getCustomFieldsFlat() {
+        return customFields;
+    }
 }

@@ -1,7 +1,8 @@
 export enum ComponentStatus {
     DRAFT = 'DRAFT',
-    ACTIVE = 'ACTIVE',
-    INACTIVE = 'INACTIVE'
+    PUBLISHED = 'PUBLISHED',
+    SCHEDULED = 'SCHEDULED',
+    ARCHIVED = 'ARCHIVED'
 }
 
 
