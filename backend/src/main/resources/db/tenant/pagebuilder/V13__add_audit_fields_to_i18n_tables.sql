@@ -9,15 +9,21 @@ CREATE PROCEDURE AddColumnIfNotExists(
     IN colDef TEXT
 )
 BEGIN
-    IF (SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS
+    -- First check if table exists
+    IF (SELECT count(*) FROM INFORMATION_SCHEMA.TABLES
         WHERE TABLE_SCHEMA = dbName
-        AND TABLE_NAME = tableName
-        AND COLUMN_NAME = colName) = 0 THEN
+        AND TABLE_NAME = tableName) > 0 THEN
+        -- Then check if column exists
+        IF (SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = dbName
+            AND TABLE_NAME = tableName
+            AND COLUMN_NAME = colName) = 0 THEN
 
-        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
-        PREPARE stmt FROM @ddl;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
+            SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
+            PREPARE stmt FROM @ddl;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
     END IF;
 END //
 DELIMITER ;
