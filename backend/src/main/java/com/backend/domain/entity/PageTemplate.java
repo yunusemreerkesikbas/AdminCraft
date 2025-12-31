@@ -1,7 +1,7 @@
 package com.backend.domain.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,9 +36,9 @@ public class PageTemplate extends BaseEntity {
   @ToString.Exclude
   @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
   @OrderBy("sortOrder ASC")
-  private List<TemplateSlot> slots = new ArrayList<>();
+  private Set<TemplateSlot> slots = new HashSet<>();
 
   @ToString.Exclude
   @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-  private List<PageTemplateI18n> i18nContent = new ArrayList<>();
+  private Set<PageTemplateI18n> i18nContent = new HashSet<>();
 }

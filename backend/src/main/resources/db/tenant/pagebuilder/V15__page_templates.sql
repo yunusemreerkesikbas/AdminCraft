@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS template_slots (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add template_id reference to pages table
-ALTER TABLE pages ADD COLUMN template_id BIGINT NULL AFTER category_id;
+ALTER TABLE pages ADD COLUMN template_id BIGINT NULL;
 CREATE INDEX idx_page_template ON pages (template_id);
 ALTER TABLE pages ADD CONSTRAINT fk_page_template
     FOREIGN KEY (template_id) REFERENCES page_templates(id) ON DELETE SET NULL;
