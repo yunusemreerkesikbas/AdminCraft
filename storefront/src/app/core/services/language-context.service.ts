@@ -9,7 +9,7 @@ import { TenantContextService } from '../tenant/tenant-context.service';
 export class LanguageContextService {
     readonly #tenantContextService = inject(TenantContextService);
     readonly #tenantsService = inject(TenantsService);
-    supportedLanguages = signal<string[]>(['tr', 'en']);
+    supportedLanguages = signal<string[]>(['TR', 'EN']);
     #languagesLoaded = false;
     #cachedTenantId: number | null = null;
     #pendingRequest$: Observable<string[]> | null = null;
@@ -18,7 +18,7 @@ export class LanguageContextService {
         this.#tenantContextService.tenant$.subscribe((tenant) => {
             if (tenant?.id && tenant.id !== this.#cachedTenantId) {
                 if (tenant.supportedLanguages?.length) {
-                    const normalizedLanguages = tenant.supportedLanguages.map(l => l.code.toLowerCase());
+                    const normalizedLanguages = tenant.supportedLanguages.map(l => l.code.toUpperCase());
                     this.supportedLanguages.set(normalizedLanguages);
                     this.#languagesLoaded = true;
                     this.#cachedTenantId = tenant.id;
@@ -32,7 +32,7 @@ export class LanguageContextService {
         const currentTenant = this.#tenantContextService.tenant();
         if (currentTenant?.id && !this.#languagesLoaded) {
              if (currentTenant.supportedLanguages?.length) {
-                const normalizedLanguages = currentTenant.supportedLanguages.map(l => l.code.toLowerCase());
+                const normalizedLanguages = currentTenant.supportedLanguages.map(l => l.code.toUpperCase());
                 this.supportedLanguages.set(normalizedLanguages);
                 this.#languagesLoaded = true;
                 this.#cachedTenantId = currentTenant.id;
@@ -54,7 +54,7 @@ export class LanguageContextService {
             map((languagesDto) => {
                 const languages = languagesDto.supportedLanguages || [];
                 const normalizedLanguages = languages.map(lang =>
-                    lang.toString().toLowerCase()
+                    lang.toString().toUpperCase()
                 );
                 this.supportedLanguages.set(normalizedLanguages);
                 this.#languagesLoaded = true;
@@ -85,13 +85,13 @@ export class LanguageContextService {
     }
 
     isLanguageSupported(language: string): boolean {
-        const normalizedLang = language.toLowerCase();
+        const normalizedLang = language.toUpperCase();
         return this.supportedLanguages().includes(normalizedLang);
     }
 
     getDefaultLanguage(): string {
         const languages = this.supportedLanguages();
-        return languages.length > 0 ? languages[0] : 'tr';
+        return languages.length > 0 ? languages[0] : 'TR';
     }
 
     reset(): void {

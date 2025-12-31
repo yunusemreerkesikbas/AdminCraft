@@ -36,7 +36,7 @@ export interface ComponentEntry {
     sortOrder: number;
     isVisible: boolean;
     styleClasses?: string;
-    status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     createdAt: string;
     updatedAt: string;
 }
@@ -62,7 +62,7 @@ export interface UpdateEntryRequest {
     sortOrder?: number;
     isVisible: boolean;
     styleClasses?: string;
-    status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
 }
 
 export interface EntryI18nDto {
@@ -71,7 +71,7 @@ export interface EntryI18nDto {
     language: 'TR' | 'EN';
     title?: string;
     description?: string;
-    status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     [key: string]: any;  // For dynamic entry fields
 }
 
@@ -97,7 +97,7 @@ export interface CreateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     translations: Record<string, EntryI18nRequest>;
 }
 
@@ -105,7 +105,7 @@ export interface UpdateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     translations: Record<string, EntryI18nRequest>;
 }
 
@@ -117,7 +117,7 @@ export interface ComponentEntryCompositeResponse {
     sortOrder: number;
     isVisible: boolean;
     styleClasses?: string;
-    status: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+    status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     createdAt: string;
     updatedAt: string;
     translations: Record<string, EntryI18nDto>;

@@ -207,9 +207,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
                         this.notify.success('admin.components.entries.createSuccess');
                         this.close(true);
                     },
-                    error: () => {
+                    error: (err) => {
                         this.setSubmitting(false);
-                        this.notify.alert('admin.components.entries.createFailed');
+                        this.notify.alert(err?.error?.message || 'admin.components.entries.createFailed');
                     }
                 });
         } else {
@@ -229,9 +229,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
                         this.notify.success('admin.components.entries.updateSuccess');
                         this.close(true);
                     },
-                    error: () => {
+                    error: (err) => {
                         this.setSubmitting(false);
-                        this.notify.alert('admin.components.entries.updateFailed');
+                        this.notify.alert(err?.error?.message || 'admin.components.entries.updateFailed');
                     }
                 });
         }
@@ -254,7 +254,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
             translations[lang] = {
                 title: formData.title || undefined,
                 description: formData.description || undefined,
-                priority: ComponentStatus.ACTIVE, // Default status for translation if needed, or inferred
+                status: this.generalForm.value.status || ComponentStatus.DRAFT,
                 dynamicFields: Object.keys(dynamicFields).length > 0 ? dynamicFields : undefined
             };
         });
