@@ -1,121 +1,129 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.MediaFile;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.backend.domain.entity.Media;
+import com.backend.domain.enums.MediaStatus;
+import com.backend.domain.enums.StorageProvider;
+
+/**
+ * Repository interface for Media entity.
+ * Refactored from legacy MediaFile repository.
+ */
 public interface MediaRepository {
-    
+
     // Basic CRUD operations
-    MediaFile save(MediaFile mediaFile);
-    Optional<MediaFile> findById(Long id);
-    List<MediaFile> findAll();
+    Media save(Media media);
+
+    Optional<Media> findById(Long id);
+
+    Optional<Media> findByUid(String uid);
+
+    Optional<Media> findByUuid(String uuid);
+
+    List<Media> findAll();
+
+    Page<Media> findAll(Pageable pageable);
+
     void deleteById(Long id);
+
+    void delete(Media media);
+
     boolean existsById(Long id);
+
+    boolean existsByUid(String uid);
+
     long count();
-    
+
     // File identification queries
-    Optional<MediaFile> findByFileName(String fileName);
+    Optional<Media> findByFileName(String fileName);
+
     boolean existsByFileName(String fileName);
-    boolean existsByFilePath(String filePath);
-    
-    // Tenant-specific queries
-    List<MediaFile> findByTenantId(Long tenantId);
-    List<MediaFile> findByTenantIdOrderByCreatedAtDesc(Long tenantId);
-    long countByTenantId(Long tenantId);
-    long sumFileSizeByTenantId(Long tenantId);
-    
+
+    // Folder queries
+    List<Media> findByFolderId(Long folderId);
+
+    List<Media> findByFolderIsNull();
+
+    long countByFolderId(Long folderId);
+
     // File type queries
-    List<MediaFile> findByMimeTypeStartingWith(String mimeTypePrefix);
-    List<MediaFile> findByTenantIdAndMimeTypeStartingWith(Long tenantId, String mimeTypePrefix);
-    List<MediaFile> findByTenantIdAndFileExtension(Long tenantId, String extension);
-    List<MediaFile> findByTenantIdAndFileExtensionIn(Long tenantId, List<String> extensions);
-    
+    List<Media> findByMimeTypeStartingWith(String mimeTypePrefix);
+
+    List<Media> findByFileExtension(String extension);
+
+    List<Media> findByFileExtensionIn(List<String> extensions);
+
     // Image-specific queries
-    List<MediaFile> findByTenantIdAndWidthIsNotNull(Long tenantId); // Images only
-    List<MediaFile> findByTenantIdAndHeightIsNotNull(Long tenantId); // Images only
-    List<MediaFile> findByTenantIdAndWidthBetween(Long tenantId, Integer minWidth, Integer maxWidth);
-    List<MediaFile> findByTenantIdAndHeightBetween(Long tenantId, Integer minHeight, Integer maxHeight);
-    List<MediaFile> findByTenantIdAndHasThumbnailsTrue(Long tenantId);
-    
+    List<Media> findByWidthIsNotNull();
+
+    List<Media> findByWidthBetween(Integer minWidth, Integer maxWidth);
+
+    List<Media> findByHeightBetween(Integer minHeight, Integer maxHeight);
+
     // File size queries
-    List<MediaFile> findByFileSizeBetween(Long minSize, Long maxSize);
-    List<MediaFile> findByTenantIdAndFileSizeBetween(Long tenantId, Long minSize, Long maxSize);
-    List<MediaFile> findByTenantIdAndFileSizeGreaterThan(Long tenantId, Long size);
-    List<MediaFile> findByTenantIdOrderByFileSizeDesc(Long tenantId);
-    
-    // Organization queries
-    List<MediaFile> findByTenantIdAndFolder(Long tenantId, String folder);
-    List<MediaFile> findByTenantIdAndCategory(Long tenantId, String category);
-    List<MediaFile> findByTenantIdAndFolderAndCategory(Long tenantId, String folder, String category);
-    List<String> findDistinctFolderByTenantId(Long tenantId);
-    List<String> findDistinctCategoryByTenantId(Long tenantId);
-    
+    List<Media> findByFileSizeBetween(Long minSize, Long maxSize);
+
+    List<Media> findByFileSizeGreaterThan(Long size);
+
+    List<Media> findAllOrderByFileSizeDesc();
+
+    // Status queries
+    List<Media> findByStatus(MediaStatus status);
+
+    long countByStatus(MediaStatus status);
+
     // Access control queries
-    List<MediaFile> findByIsPublicTrue();
-    List<MediaFile> findByTenantIdAndIsPublicTrue(Long tenantId);
-    List<MediaFile> findByTenantIdAndIsPublicFalse(Long tenantId);
-    
+    List<Media> findByIsPublicTrue();
+
+    List<Media> findByIsPublicFalse();
+
     // Storage queries
-    List<MediaFile> findByStorageProvider(String storageProvider);
-    List<MediaFile> findByTenantIdAndStorageProvider(Long tenantId, String storageProvider);
-    List<MediaFile> findByExternalIdIsNotNull();
-    List<MediaFile> findByTenantIdAndExternalIdIsNotNull(Long tenantId);
-    
+    List<Media> findByStorageProvider(StorageProvider storageProvider);
+
+    List<Media> findByExternalIdIsNotNull();
+
     // Uploader queries
-    List<MediaFile> findByUploadedBy(Long userId);
-    List<MediaFile> findByTenantIdAndUploadedBy(Long tenantId, Long userId);
-    long countByTenantIdAndUploadedBy(Long tenantId, Long userId);
-    
+    List<Media> findByUploadedBy(Long userId);
+
+    long countByUploadedBy(Long userId);
+
     // Search queries
-    List<MediaFile> findByTenantIdAndOriginalNameContainingIgnoreCase(Long tenantId, String originalName);
-    List<MediaFile> findByTenantIdAndAltTextTrContainingIgnoreCase(Long tenantId, String altText);
-    List<MediaFile> findByTenantIdAndAltTextEnContainingIgnoreCase(Long tenantId, String altText);
-    List<MediaFile> findByTenantIdAndDescriptionTrContainingIgnoreCase(Long tenantId, String description);
-    List<MediaFile> findByTenantIdAndDescriptionEnContainingIgnoreCase(Long tenantId, String description);
-    
+    List<Media> findByOriginalNameContainingIgnoreCase(String originalName);
+
     // Usage queries
-    List<MediaFile> findByUsageCountGreaterThan(Integer count);
-    List<MediaFile> findByTenantIdAndUsageCountGreaterThan(Long tenantId, Integer count);
-    List<MediaFile> findByTenantIdAndUsageCount(Long tenantId, Integer count);
-    List<MediaFile> findByTenantIdOrderByUsageCountDesc(Long tenantId);
-    
+    List<Media> findByUsageCountGreaterThan(Integer count);
+
+    List<Media> findByUsageCount(Integer count);
+
+    List<Media> findAllOrderByUsageCountDesc();
+
     // Date queries
-    List<MediaFile> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    List<MediaFile> findByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate);
-    List<MediaFile> findByLastAccessedAtBefore(LocalDateTime dateTime);
-    List<MediaFile> findByTenantIdAndLastAccessedAtBefore(Long tenantId, LocalDateTime dateTime);
-    
-    // Optimization queries
-    List<MediaFile> findByIsOptimizedTrue();
-    List<MediaFile> findByTenantIdAndIsOptimizedTrue(Long tenantId);
-    List<MediaFile> findByTenantIdAndIsOptimizedFalse(Long tenantId);
-    
-    // Metadata queries
-    List<MediaFile> findByMetadataIsNotNull();
-    List<MediaFile> findByTenantIdAndMetadataIsNotNull(Long tenantId);
-    
+    List<Media> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Media> findByLastAccessedAtBefore(LocalDateTime dateTime);
+
+    List<Media> findAllOrderByCreatedAtDesc();
+
     // Bulk operations
-    List<MediaFile> findByIdIn(List<Long> ids);
-    List<MediaFile> findByFileNameIn(List<String> fileNames);
-    void deleteByTenantId(Long tenantId);
-    void deleteByUploadedBy(Long userId);
-    
-    // Custom queries for file management
-    List<MediaFile> findUnusedFiles(Long tenantId); // Files with usage count 0
-    List<MediaFile> findOrphanedFiles(Long tenantId, LocalDateTime olderThan);
-    List<MediaFile> findLargestFiles(Long tenantId, int limit);
-    List<MediaFile> findDuplicateFiles(Long tenantId); // Files with same name/size
-    
+    List<Media> findByIdIn(List<Long> ids);
+
+    List<Media> findByUidIn(List<String> uids);
+
+    List<Media> findByFileNameIn(List<String> fileNames);
+
+    // Custom queries
+    List<Media> findUnusedMedia(); // Files with usage count 0
+
+    List<Media> findLargestMedia(int limit);
+
     // Statistics
-    long countByTenantIdAndMimeTypeStartingWith(Long tenantId, String mimeTypePrefix);
-    long countByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime startDate, LocalDateTime endDate);
-    long countByTenantIdAndStorageProvider(Long tenantId, String storageProvider);
-    
-    // Recent and popular content
-    List<MediaFile> findRecentlyUploaded(Long tenantId, int limit);
-    List<MediaFile> findMostUsed(Long tenantId, int limit);
-    List<MediaFile> findRecentlyAccessed(Long tenantId, int limit);
+    long countByMimeTypeStartingWith(String mimeTypePrefix);
+
+    long sumFileSize();
 }

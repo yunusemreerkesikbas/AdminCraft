@@ -9,9 +9,15 @@ spring:
         show_sql: false
         use_sql_comments: false
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 app:
   tenant:
-    auto-sync-on-startup: true # Keep enabled for production
+    auto-sync-on-startup: true
 
 logging:
   level:

@@ -22,7 +22,7 @@ alwaysApply: true
 
 ```
 🖥️  PRESENTATION LAYER → Controllers, DTOs, Validation, i18n
-📋 APPLICATION LAYER  → Services, Use Cases, Commands, Queries  
+📋 APPLICATION LAYER  → Services, Use Cases  
 🎯 DOMAIN LAYER       → Entities, Business Rules, Domain Logic
 🔧 INFRASTRUCTURE     → Repositories, External APIs, Database
 ```

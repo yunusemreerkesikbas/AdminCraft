@@ -156,6 +156,18 @@ admincraft:
   i18n:
     default-language: TR
     supported-languages: TR,EN
+  storage:
+    provider: local
+    base-path: ${STORAGE_PATH:uploads}
+    temp-path: ${TEMP_PATH:temp}
+    max-file-size: ${MAX_FILE_SIZE:10485760}
+    allowed-mime-types: image/jpeg,image/png,image/gif,image/webp,application/pdf,video/mp4,audio/mpeg
+    blocked-extensions: exe,bat,cmd,scr,js,vbs,ps1,sh
+    processing:
+      async-enabled: true
+      thumbnail-quality: 80
+      auto-generate-formats: THUMBNAIL,SMALL,MEDIUM
+      supported-image-types: image/jpeg,image/png,image/gif,image/webp
 
 # Resilience4j Rate Limiting Configuration
 resilience4j:

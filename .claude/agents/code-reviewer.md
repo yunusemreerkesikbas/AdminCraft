@@ -7,6 +7,7 @@ description: Use this agent when you have written or modified code and need a co
 
 name: code-reviewer
 description: Comprehensive code review for quality, security, and maintainability. Use after completing coding tasks
+
 ---
 
 # Senior Code Reviewer
@@ -32,16 +33,16 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 
 ### Database Migrations
 
-- ✅ Versioned: V1__baseline.sql
-- ✅ Repeatable: R__seed.sql (INSERT IGNORE)
+- ✅ Versioned: V1\_\_baseline.sql
+- ✅ Repeatable: R\_\_seed.sql (INSERT IGNORE)
 - ✅ NO idempotent DDL (Flyway handles it)
 - ✅ utf8mb4 / utf8mb4_unicode_ci
 - ✅ hibernate.ddl-auto=none
 
 ### Clean Architecture
 
-- ✅ Application uses Commands/Queries (NOT Presentation DTOs)
-- ✅ Controllers map DTOs → Commands/Queries
+- ✅ Application layer contains business logic (NOT Presentation DTOs)
+- ✅ Controllers return ResponseEntity<ApiResponse<T>>
 - ✅ Services return Response DTOs only
 - ✅ i18n entities: BaseI18nEntity + @ManyToOne
 - ✅ Batch loading (findByTenantIdAndEntityIdIn)

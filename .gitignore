@@ -54,3 +54,6 @@ logs/
 .DS_Store
 Thumbs.db
 storefront/nul
+
+### Claude ###
+.claude/settings.local.json

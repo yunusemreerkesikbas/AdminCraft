@@ -79,7 +79,7 @@ docker compose up -d
 **Layer Responsibilities:**
 
 - **Domain**: Entities (BaseEntity, BaseI18nEntity), Repository interfaces, Enums
-- **Application**: Services, Commands/Queries, Use Cases (business logic orchestration)
+- **Application**: Services, Use Cases (business logic orchestration)
 - **Infrastructure**: Repository implementations, Config, Multi-tenancy (TenantFilter, TenantContext)
 - **Presentation**: Controllers, Request DTOs, Response DTOs
 
@@ -172,7 +172,7 @@ export class SpaPageListComponent extends BaseCrudListComponent<Page> {
 **Backend:**
 
 - Constructor injection (no @Autowired)
-- Commands/Queries in application (NOT Presentation DTOs)
+- Application service logic (NOT Presentation DTOs)
 - Return Response DTOs only
 - @EntityGraph for relationships (avoid N+1)
 - @Transactional for multi-step ops
@@ -206,7 +206,7 @@ export class SpaPageListComponent extends BaseCrudListComponent<Page> {
 
 - Platform entities need @Qualifier("platformDataSource")
 - Tenant entities: NO tenant_id column
-- Flyway migrations: idempotent (R__) or versioned (V__)
+- Flyway migrations: idempotent (R**) or versioned (V**)
 - CREATE DATABASE: only string-concatenated SQL allowed
 - Polling: must unsubscribe in ngOnDestroy
 
@@ -222,5 +222,6 @@ curl -s http://localhost:8080/api/provisioning/modules/catalog | jq
 ```
 
 ---
+
 **Paths**: `backend/src/main/java/com/backend/`, `storefront/src/app/`, `backend/src/main/resources/db/`  
 **Docs**: `.backendrules`, `.frontendrules`, `.codereviewer`, `plans/`

@@ -1,58 +1,128 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.MediaFile;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.Media;
+import com.backend.domain.enums.MediaStatus;
+import com.backend.domain.enums.StorageProvider;
 
 @Repository
-public interface MediaJpaRepository extends JpaRepository<MediaFile, Long> {
+public interface MediaJpaRepository extends JpaRepository<Media, Long> {
 
-    // File queries
-    Optional<MediaFile> findByFileName(String fileName);
+    @Override
+    @EntityGraph(attributePaths = { "folder" })
+    Optional<Media> findById(Long id);
+
+    // UUID/UID queries
+    @EntityGraph(attributePaths = { "folder" })
+    Optional<Media> findByUid(String uid);
+
+    @EntityGraph(attributePaths = { "folder" })
+    Optional<Media> findByUuid(String uuid);
+
+    boolean existsByUid(String uid);
+
+    // File identification queries
+    @EntityGraph(attributePaths = { "folder" })
+    Optional<Media> findByFileName(String fileName);
+
     boolean existsByFileName(String fileName);
-    boolean existsByFilePath(String filePath);
 
-    // Uploader queries
-    List<MediaFile> findByUploadedBy(Long uploadedBy);
+    // Folder queries
+    @EntityGraph(attributePaths = { "folder", "translations" })
+    List<Media> findByFolderId(Long folderId);
+
+    @EntityGraph(attributePaths = { "folder", "translations" })
+    List<Media> findByFolderIsNull();
+
+    long countByFolderId(Long folderId);
 
     // File type queries
-    List<MediaFile> findByMimeType(String mimeType);
+    @Query("SELECT m FROM Media m WHERE m.mimeType LIKE CONCAT(:prefix, '%')")
+    List<Media> findByMimeTypeStartingWith(@Param("prefix") String mimeTypePrefix);
 
-    @Query("SELECT m FROM MediaFile m WHERE m.mimeType LIKE :mimeTypePrefix")
-    List<MediaFile> findByMimeTypeStartingWith(@Param("mimeTypePrefix") String mimeTypePrefix);
+    List<Media> findByFileExtension(String extension);
 
-    // Folder and category queries
-    List<MediaFile> findByFolder(String folder);
-    List<MediaFile> findByCategory(String category);
+    List<Media> findByFileExtensionIn(List<String> extensions);
+
+    // Image-specific queries
+    List<Media> findByWidthIsNotNull();
+
+    List<Media> findByWidthBetween(Integer minWidth, Integer maxWidth);
+
+    List<Media> findByHeightBetween(Integer minHeight, Integer maxHeight);
 
     // File size queries
-    List<MediaFile> findByFileSizeBetween(Long minSize, Long maxSize);
-    List<MediaFile> findByFileSizeGreaterThan(Long size);
-    List<MediaFile> findByFileSizeLessThan(Long size);
+    List<Media> findByFileSizeBetween(Long minSize, Long maxSize);
 
-    // Access and visibility queries
-    List<MediaFile> findByIsPublic(Boolean isPublic);
-    List<MediaFile> findByIsOptimized(Boolean isOptimized);
+    List<Media> findByFileSizeGreaterThan(Long size);
+
+    List<Media> findAllByOrderByFileSizeDesc();
+
+    // Paginated queries
+    Page<Media> findAllByOrderByFileSizeDesc(Pageable pageable);
+
+    // Status queries
+    List<Media> findByStatus(MediaStatus status);
+
+    long countByStatus(MediaStatus status);
+
+    // Access control queries
+    List<Media> findByIsPublicTrue();
+
+    List<Media> findByIsPublicFalse();
+
+    // Storage queries
+    List<Media> findByStorageProvider(StorageProvider storageProvider);
+
+    List<Media> findByExternalIdIsNotNull();
+
+    // Uploader queries
+    List<Media> findByUploadedBy(Long userId);
+
+    long countByUploadedBy(Long userId);
+
+    // Search queries
+    List<Media> findByOriginalNameContainingIgnoreCase(String originalName);
 
     // Usage queries
-    List<MediaFile> findByUsageCountGreaterThan(Integer usageCount);
-    List<MediaFile> findByUsageCount(Integer usageCount);
+    List<Media> findByUsageCountGreaterThan(Integer count);
 
-    // Storage provider queries
-    List<MediaFile> findByStorageProvider(String storageProvider);
-    List<MediaFile> findByExternalUrlIsNotNull();
+    List<Media> findByUsageCount(Integer count);
 
-    // Date range queries
-    List<MediaFile> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    List<MediaFile> findByLastAccessedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Media> findAllByOrderByUsageCountDesc();
+
+    // Date queries
+    List<Media> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Media> findByLastAccessedAtBefore(LocalDateTime dateTime);
+
+    List<Media> findAllByOrderByCreatedAtDesc();
 
     // Bulk operations
-    List<MediaFile> findByIdIn(List<Long> ids);
-    void deleteByUploadedBy(Long uploadedBy);
+    List<Media> findByIdIn(List<Long> ids);
+
+    List<Media> findByUidIn(List<String> uids);
+
+    List<Media> findByFileNameIn(List<String> fileNames);
+
+    // Custom queries
+    @Query("SELECT m FROM Media m WHERE m.usageCount = 0")
+    List<Media> findUnusedMedia();
+
+    @Query("SELECT SUM(m.fileSize) FROM Media m")
+    Long sumFileSize();
+
+    @Query("SELECT COUNT(m) FROM Media m WHERE m.mimeType LIKE CONCAT(:prefix, '%')")
+    long countByMimeTypeStartingWith(@Param("prefix") String mimeTypePrefix);
 }
