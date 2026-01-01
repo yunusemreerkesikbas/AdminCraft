@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.command.MediaProcessingCommands.ImageDimensions;
 import com.backend.application.command.MediaProcessingCommands.ProcessedFormat;
+import com.backend.application.config.StorageConfigProperties;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaFormat;
 import com.backend.domain.enums.CropMode;
@@ -25,7 +26,6 @@ import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
 import com.backend.domain.repository.MediaFormatRepository;
 import com.backend.domain.repository.MediaRepository;
-import com.backend.infrastructure.storage.StorageProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaFormatRepository formatRepository;
     private final MediaStorageService storageService;
     private final MediaContainerService containerService;
-    private final StorageProperties properties;
+    private final StorageConfigProperties properties;
     private final TransactionTemplate transactionTemplate;
 
     @Override

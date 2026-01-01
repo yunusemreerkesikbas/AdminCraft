@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.backend.infrastructure.storage.StorageProperties;
+import com.backend.application.config.StorageConfigProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaStorageServiceImpl implements MediaStorageService {
 
     private final StorageAdapter storageAdapter;
-    private final StorageProperties properties;
+    private final StorageConfigProperties properties;
 
     private static final Map<String, byte[]> MAGIC_BYTES = Map.of(
             "image/jpeg", new byte[] { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF },
@@ -128,17 +128,31 @@ public class MediaStorageServiceImpl implements MediaStorageService {
     }
 
     private boolean validateMagicBytes(byte[] content, String mimeType) {
-        if (mimeType == null || content == null || content.length < 4) {
-            return true; // Skip validation for unknown types
+        // Reject null or too short content
+        if (content == null || content.length < 4) {
+            log.debug("Magic bytes validation rejected: content null or too short (length: {})",
+                    content == null ? "null" : content.length);
+            return false;
+        }
+
+        // Skip validation for mime types without defined magic bytes (allow by default)
+        if (mimeType == null) {
+            log.debug("Magic bytes validation skipped: mimeType is null");
+            return true;
         }
 
         byte[] expectedBytes = MAGIC_BYTES.get(mimeType.toLowerCase());
         if (expectedBytes == null) {
-            return true; // No magic bytes defined for this type
+            // No magic bytes defined for this type - allow it (configurable allowlist for
+            // future)
+            return true;
         }
 
+        // Validate magic bytes match
         for (int i = 0; i < expectedBytes.length; i++) {
             if (content[i] != expectedBytes[i]) {
+                log.debug("Magic bytes validation failed for mimeType {}: expected {} at position {}, got {}",
+                        mimeType, expectedBytes[i], i, content[i]);
                 return false;
             }
         }

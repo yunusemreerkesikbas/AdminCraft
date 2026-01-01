@@ -11,6 +11,7 @@ import java.nio.file.StandardCopyOption;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.backend.application.config.StorageConfigProperties;
 import com.backend.application.service.StorageAdapter;
 import com.backend.domain.enums.StorageProvider;
 import com.backend.infrastructure.tenant.TenantContext;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "local", matchIfMissing = true)
 public class LocalStorageAdapter implements StorageAdapter {
 
-    private final StorageProperties properties;
+    private final StorageConfigProperties properties;
     private final TenantContext tenantContext;
 
     @Override
@@ -98,7 +99,17 @@ public class LocalStorageAdapter implements StorageAdapter {
 
     @Override
     public String getPublicUrl(String filePath) {
-        return "/api/media/files/" + Paths.get(filePath).getFileName().toString();
+        // Preserve relative path from base for proper routing
+        Path basePath = Paths.get(properties.getBasePath()).toAbsolutePath().normalize();
+        Path fullPath = Paths.get(filePath).toAbsolutePath().normalize();
+
+        if (fullPath.startsWith(basePath)) {
+            Path relativePath = basePath.relativize(fullPath);
+            return "/api/media/files/" + relativePath.toString().replace("\\", "/");
+        }
+
+        // Fallback for paths outside base (shouldn't happen in normal flow)
+        return "/api/media/files/" + fullPath.getFileName().toString();
     }
 
     @Override
@@ -108,10 +119,42 @@ public class LocalStorageAdapter implements StorageAdapter {
 
     // Path: {basePath}/{tenantId}/{subPath}/{fileName}
     private Path resolvePath(String subPath, String fileName) {
+        // Validate and sanitize fileName
+        if (fileName == null || fileName.isEmpty()) {
+            throw new StorageException("Invalid filename: null or empty");
+        }
+
+        // Extract just the filename to strip any directory segments
+        Path fileNamePath = Paths.get(fileName).getFileName();
+        if (fileNamePath == null) {
+            throw new StorageException("Invalid filename: cannot extract filename from path");
+        }
+        String sanitizedFileName = fileNamePath.toString();
+
+        // Check for null bytes and invalid characters
+        if (sanitizedFileName.contains("\0") || sanitizedFileName.contains("..")) {
+            throw new StorageException("Invalid filename: contains illegal characters");
+        }
+
         String tenantId = tenantContext.getTenantId();
         if (tenantId == null) {
             tenantId = "default";
         }
-        return Paths.get(properties.getBasePath(), tenantId, subPath, fileName);
+
+        // Sanitize subPath as well
+        String sanitizedSubPath = (subPath != null) ? subPath.replace("..", "") : "";
+
+        // Build and normalize the target path
+        Path storageRoot = Paths.get(properties.getBasePath()).toAbsolutePath().normalize();
+        Path targetPath = storageRoot.resolve(tenantId).resolve(sanitizedSubPath).resolve(sanitizedFileName)
+                .normalize();
+
+        // Validate the resolved path is still within storage root
+        if (!targetPath.startsWith(storageRoot)) {
+            log.error("Path traversal attempt detected: {} escapes root {}", targetPath, storageRoot);
+            throw new StorageException("Invalid path: path traversal detected");
+        }
+
+        return targetPath;
     }
 }

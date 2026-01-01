@@ -1,4 +1,4 @@
-package com.backend.infrastructure.storage;
+package com.backend.application.config;
 
 import java.util.Set;
 
@@ -6,9 +6,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
 
+/**
+ * Application-layer storage configuration properties.
+ * Moved from infrastructure layer for Clean Architecture compliance.
+ */
 @ConfigurationProperties(prefix = "admincraft.storage")
 @Data
-public class StorageProperties {
+public class StorageConfigProperties {
 
   private String provider = "local";
 
@@ -34,12 +38,9 @@ public class StorageProperties {
 
   @Data
   public static class Processing {
-
     private boolean asyncEnabled = true;
-
     private int thumbnailQuality = 80;
     private Set<String> autoGenerateFormats = Set.of("THUMBNAIL", "SMALL", "MEDIUM");
-
     private Set<String> supportedImageTypes = Set.of(
         "image/jpeg",
         "image/png",

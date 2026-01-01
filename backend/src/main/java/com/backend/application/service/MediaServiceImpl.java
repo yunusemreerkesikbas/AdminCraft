@@ -5,14 +5,15 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.application.command.MediaProcessingCommands.ImageDimensions;
+import com.backend.application.config.StorageConfigProperties;
 import com.backend.domain.entity.Media;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
 import com.backend.domain.repository.MediaRepository;
-import com.backend.infrastructure.storage.StorageProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,8 @@ public class MediaServiceImpl implements MediaService {
     private final MediaStorageService storageService;
     private final MediaProcessingService processingService;
     private final MediaContainerService containerService;
-    private final StorageProperties properties;
+    private final StorageConfigProperties properties;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     public Media uploadFile(MultipartFile file, Long uploadedBy) {
@@ -41,10 +43,39 @@ public class MediaServiceImpl implements MediaService {
         MediaStorageService.StoredFileResult stored = storageService.store(file, "media");
 
         try {
-            // Database Operations (Transactional)
-            Media savedMedia = saveMediaAndCreateContainer(file, uploadedBy, stored);
+            // Database Operations (Transactional via TransactionTemplate)
+            Media savedMedia = transactionTemplate.execute(status -> {
+                Media media = new Media();
+                media.setOriginalName(file.getOriginalFilename());
+                media.setFileName(stored.fileName());
+                media.setFilePath(stored.filePath());
+                media.setMimeType(stored.mimeType());
+                media.setFileSize(stored.fileSize());
+                media.setFileExtension(stored.extension());
+                media.setUploadedBy(uploadedBy);
+                media.setStorageProvider(StorageProvider.valueOf(properties.getProvider().toUpperCase()));
+                media.setIsPublic(true);
+                media.setUsageCount(0);
 
-            if (processingService.isProcessingSupported(stored.mimeType())) {
+                if (processingService.isProcessingSupported(stored.mimeType())) {
+                    media.setStatus(MediaStatus.PROCESSING);
+                    byte[] content = storageService.retrieve(stored.filePath());
+                    ImageDimensions dimensions = processingService.extractDimensions(content);
+                    if (dimensions != null) {
+                        media.setWidth(dimensions.width());
+                        media.setHeight(dimensions.height());
+                    }
+                } else {
+                    media.setStatus(MediaStatus.ACTIVE);
+                }
+
+                Media saved = mediaRepository.save(media);
+                log.info("File uploaded: {} with UID: {}", stored.fileName(), saved.getUid());
+                containerService.createForMedia(saved.getId());
+                return saved;
+            });
+
+            if (savedMedia != null && processingService.isProcessingSupported(stored.mimeType())) {
                 processingService.generateFormats(savedMedia.getId());
             }
 
@@ -54,41 +85,6 @@ public class MediaServiceImpl implements MediaService {
             storageService.delete(stored.filePath());
             throw e;
         }
-    }
-
-    @Transactional
-    protected Media saveMediaAndCreateContainer(MultipartFile file, Long uploadedBy,
-            MediaStorageService.StoredFileResult stored) {
-        Media media = new Media();
-        media.setOriginalName(file.getOriginalFilename());
-        media.setFileName(stored.fileName());
-        media.setFilePath(stored.filePath());
-        media.setMimeType(stored.mimeType());
-        media.setFileSize(stored.fileSize());
-        media.setFileExtension(stored.extension());
-        media.setUploadedBy(uploadedBy);
-        media.setStorageProvider(StorageProvider.valueOf(properties.getProvider().toUpperCase()));
-        media.setIsPublic(true);
-        media.setUsageCount(0);
-
-        if (processingService.isProcessingSupported(stored.mimeType())) {
-            media.setStatus(MediaStatus.PROCESSING);
-            byte[] content = storageService.retrieve(stored.filePath());
-            ImageDimensions dimensions = processingService.extractDimensions(content);
-            if (dimensions != null) {
-                media.setWidth(dimensions.width());
-                media.setHeight(dimensions.height());
-            }
-        } else {
-            media.setStatus(MediaStatus.ACTIVE);
-        }
-
-        Media savedMedia = mediaRepository.save(media);
-        log.info("File uploaded: {} with UID: {}", stored.fileName(), savedMedia.getUid());
-
-        containerService.createForMedia(savedMedia.getId());
-
-        return savedMedia;
     }
 
     @Override
@@ -110,6 +106,7 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    @Transactional
     public Media update(Media media) {
         log.debug("Updating media with UID: {}", media.getUid());
 
@@ -123,15 +120,26 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         log.debug("Deleting media with ID: {}", id);
 
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
 
-        storageService.delete(media.getFilePath());
+        String filePath = media.getFilePath();
+
+        // Delete DB record first (inside transaction)
         mediaRepository.deleteById(id);
-        log.info("Media deleted: {}", id);
+        log.info("Media deleted from database: {}", id);
+
+        // Delete file after DB commit (best effort)
+        try {
+            storageService.delete(filePath);
+        } catch (Exception e) {
+            log.warn("Failed to delete file {} after DB deletion: {}", filePath, e.getMessage());
+            // Consider adding to a cleanup queue for retry
+        }
     }
 
     @Override
