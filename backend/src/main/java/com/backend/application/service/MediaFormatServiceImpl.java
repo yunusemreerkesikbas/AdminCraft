@@ -75,7 +75,9 @@ public class MediaFormatServiceImpl implements MediaFormatService {
         validateDimensions(width, height);
         validateQuality(quality);
 
-        format.setName(name);
+        // Only update fields when non-null values are provided (preserve existing
+        // values otherwise)
+        format.setName(name != null ? name : format.getName());
         format.setWidth(width);
         format.setHeight(height);
         format.setQuality(quality != null ? quality : format.getQuality());

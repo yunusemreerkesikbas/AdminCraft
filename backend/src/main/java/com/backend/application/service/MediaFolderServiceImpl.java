@@ -122,13 +122,15 @@ public class MediaFolderServiceImpl implements MediaFolderService {
 
             // Prevent circular reference
             if (isDescendantOf(newParent, folder)) {
-                throw new IllegalStateException("Cannot move folder: circular reference detected. Folder id: " + folderId
-                        + ", newParentId: " + newParentId);
+                throw new IllegalStateException(
+                        "Cannot move folder: circular reference detected. Folder id: " + folderId
+                                + ", newParentId: " + newParentId);
             }
         }
 
-        // Store old path prefix for descendant updates
+        // Store old path prefix and depth for descendant updates
         String oldPathPrefix = folder.getPath();
+        int oldDepth = folder.getDepth();
 
         // Update parent and path
         folder.setParent(newParent);
@@ -139,8 +141,8 @@ public class MediaFolderServiceImpl implements MediaFolderService {
             throw new IllegalArgumentException("Target path already exists: " + folder.getPath());
         }
 
-        // Update descendant paths
-        updateDescendantPaths(folder, oldPathPrefix);
+        // Update descendant paths and depths
+        updateDescendantPaths(folder, oldPathPrefix, oldDepth);
 
         MediaFolder saved = mediaFolderRepository.save(folder);
         log.info("Moved folder id: {} from {} to {}", folderId, oldPathPrefix, saved.getPath());
@@ -224,11 +226,18 @@ public class MediaFolderServiceImpl implements MediaFolderService {
     }
 
     /**
-     * Update paths of all descendant folders after a move operation.
+     * Update paths and depths of all descendant folders after a move operation.
+     * 
+     * @param folder        the moved folder with updated path/depth
+     * @param oldPathPrefix the folder's path before the move
+     * @param oldDepth      the folder's depth before the move
      */
-    private void updateDescendantPaths(MediaFolder folder, String oldPathPrefix) {
+    private void updateDescendantPaths(MediaFolder folder, String oldPathPrefix, int oldDepth) {
         // Find all descendants by path prefix
         List<MediaFolder> descendants = mediaFolderRepository.findByPathStartingWith(oldPathPrefix);
+
+        // Calculate depth change: positive = moved deeper, negative = moved shallower
+        int depthDelta = folder.getDepth() - oldDepth;
 
         for (MediaFolder descendant : descendants) {
             if (!descendant.getId().equals(folder.getId())) {
@@ -236,12 +245,13 @@ public class MediaFolderServiceImpl implements MediaFolderService {
                 String newPath = folder.getPath() + descendant.getPath().substring(oldPathPrefix.length());
                 descendant.setPath(newPath);
 
-                // Recalculate depth
-                int newDepth = folder.getDepth() + (descendant.getDepth() - folder.getDepth());
+                // Apply depth delta to descendant
+                int newDepth = descendant.getDepth() + depthDelta;
                 descendant.setDepth(newDepth);
 
                 mediaFolderRepository.save(descendant);
-                log.debug("Updated descendant folder id: {} to path: {}", descendant.getId(), newPath);
+                log.debug("Updated descendant folder id: {} to path: {}, depth: {}",
+                        descendant.getId(), newPath, newDepth);
             }
         }
     }
