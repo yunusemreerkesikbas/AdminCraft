@@ -2,10 +2,8 @@ package com.backend.presentation.controller;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -72,7 +70,6 @@ public class CmsMediaDeliveryController {
       return rateLimitResponse;
     }
 
-    setupMdc();
     log.debug("CMS media request: uid={}, format={}", uid, format);
 
     return mediaService.findByUid(uid)
@@ -108,7 +105,6 @@ public class CmsMediaDeliveryController {
       @Parameter(description = "Comma-separated list of UIDs") @RequestParam @Size(min = 1, message = "At least one UID required") List<String> uids,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
-    setupMdc();
     Locale locale = Locale.forLanguageTag(acceptLanguage);
 
     ResponseEntity<ApiResponse<List<MediaResponse>>> rateLimitResponse = checkRateLimit(locale);
@@ -132,11 +128,6 @@ public class CmsMediaDeliveryController {
         .toList();
 
     return ResponseEntity.ok(ApiResponse.success(responses));
-  }
-
-  private void setupMdc() {
-    MDC.put("tenantId", String.valueOf(tenantContext.getTenantId()));
-    MDC.put("correlationId", UUID.randomUUID().toString().substring(0, 8));
   }
 
   private <T> ResponseEntity<ApiResponse<T>> checkRateLimit(Locale locale) {

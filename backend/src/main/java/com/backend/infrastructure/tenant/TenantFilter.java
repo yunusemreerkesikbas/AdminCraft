@@ -148,6 +148,8 @@ public class TenantFilter extends OncePerRequestFilter {
   }
 
   private boolean isPublicNoTenantRequired(String path) {
+    // NOTE: Swagger/OpenAPI accessible for development. Disable springdoc in
+    // production via config.
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
         path.startsWith("/api/auth") ||

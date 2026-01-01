@@ -57,12 +57,12 @@ public record MediaDetailResponse(
       throw new IllegalArgumentException("Media entity cannot be null");
     }
 
-    // Convert i18n list to map keyed by language code
     Map<String, MediaI18nResponse> translationsMap = i18nList != null
         ? i18nList.stream()
             .collect(Collectors.toMap(
                 i18n -> i18n.getLanguage().name(),
-                MediaI18nResponse::from))
+                MediaI18nResponse::from,
+                (existing, replacement) -> existing))
         : Map.of();
 
     return new MediaDetailResponse(
