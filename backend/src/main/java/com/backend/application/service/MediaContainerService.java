@@ -13,6 +13,13 @@ public interface MediaContainerService {
 
     Optional<MediaContainer> getByMasterMediaId(Long masterMediaId);
 
+    /**
+     * Alias for getByMasterMediaId for consistent naming.
+     */
+    default Optional<MediaContainer> findByMasterMediaId(Long masterMediaId) {
+        return getByMasterMediaId(masterMediaId);
+    }
+
     Optional<Media> getVariant(Long masterId, String formatCode);
 
     Optional<MediaContainer> findById(Long id);

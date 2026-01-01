@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.domain.entity.Media;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
@@ -24,6 +27,8 @@ public interface MediaRepository {
     Optional<Media> findByUuid(String uuid);
 
     List<Media> findAll();
+
+    Page<Media> findAll(Pageable pageable);
 
     void deleteById(Long id);
 

@@ -3,15 +3,12 @@ package com.backend.application.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.domain.entity.Media;
 
-/**
- * Media service interface for managing media files.
- * Simplified for Phase 1 - Core CRUD operations only.
- * Additional methods will be added in Phase 2.
- */
 public interface MediaService {
 
     // Basic CRUD operations
@@ -25,9 +22,28 @@ public interface MediaService {
 
     Media update(Media media);
 
+    /**
+     * Update media metadata.
+     *
+     * @param id       media ID
+     * @param folderId new folder ID (nullable)
+     * @param isPublic public access flag
+     * @param tags     tags list
+     * @return updated Media
+     */
+    Media updateMetadata(Long id, Long folderId, Boolean isPublic, List<String> tags);
+
     void delete(Long id);
 
     List<Media> findAll();
+
+    /**
+     * Find all media with pagination.
+     *
+     * @param pageable pagination parameters
+     * @return paginated media list
+     */
+    Page<Media> findAll(Pageable pageable);
 
     // File retrieval
     byte[] getFileContent(String fileName);
@@ -36,6 +52,15 @@ public interface MediaService {
 
     // Folder operations
     List<Media> findByFolderId(Long folderId);
+
+    /**
+     * Move media to a different folder.
+     *
+     * @param mediaId  media ID
+     * @param folderId target folder ID (nullable for root)
+     * @return updated Media
+     */
+    Media moveToFolder(Long mediaId, Long folderId);
 
     // Statistics
     long count();
@@ -48,4 +73,13 @@ public interface MediaService {
     boolean isFileSizeAllowed(MultipartFile file, Long maxSize);
 
     List<String> getAllowedExtensions();
+
+    /**
+     * Find media by multiple UIDs (batch query).
+     * Used by CMS delivery API for efficient batch lookups.
+     *
+     * @param uids list of media UIDs
+     * @return list of Media matching the UIDs
+     */
+    List<Media> findByUids(List<String> uids);
 }

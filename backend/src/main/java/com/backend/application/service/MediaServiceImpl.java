@@ -3,6 +3,8 @@ package com.backend.application.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -11,8 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.application.command.MediaProcessingCommands.ImageDimensions;
 import com.backend.application.config.StorageConfigProperties;
 import com.backend.domain.entity.Media;
+import com.backend.domain.entity.MediaFolder;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
+import com.backend.domain.repository.MediaFolderRepository;
 import com.backend.domain.repository.MediaRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepository;
+    private final MediaFolderRepository folderRepository;
     private final MediaStorageService storageService;
     private final MediaProcessingService processingService;
     private final MediaContainerService containerService;
@@ -39,8 +44,19 @@ public class MediaServiceImpl implements MediaService {
             throw new IllegalArgumentException(String.join(", ", validation.errors()));
         }
 
-        // I/O Operation (Outside Transaction)
+        // I/O Operation 1: Store file (Outside Transaction)
         MediaStorageService.StoredFileResult stored = storageService.store(file, "media");
+
+        // I/O Operation 2: Extract dimensions BEFORE transaction (avoid holding DB
+        // connection)
+        ImageDimensions dimensions = null;
+        boolean requiresProcessing = processingService.isProcessingSupported(stored.mimeType());
+        if (requiresProcessing) {
+            byte[] content = storageService.retrieve(stored.filePath());
+            dimensions = processingService.extractDimensions(content);
+        }
+
+        final ImageDimensions finalDimensions = dimensions;
 
         try {
             // Database Operations (Transactional via TransactionTemplate)
@@ -57,13 +73,11 @@ public class MediaServiceImpl implements MediaService {
                 media.setIsPublic(true);
                 media.setUsageCount(0);
 
-                if (processingService.isProcessingSupported(stored.mimeType())) {
+                if (requiresProcessing) {
                     media.setStatus(MediaStatus.PROCESSING);
-                    byte[] content = storageService.retrieve(stored.filePath());
-                    ImageDimensions dimensions = processingService.extractDimensions(content);
-                    if (dimensions != null) {
-                        media.setWidth(dimensions.width());
-                        media.setHeight(dimensions.height());
+                    if (finalDimensions != null) {
+                        media.setWidth(finalDimensions.width());
+                        media.setHeight(finalDimensions.height());
                     }
                 } else {
                     media.setStatus(MediaStatus.ACTIVE);
@@ -75,7 +89,7 @@ public class MediaServiceImpl implements MediaService {
                 return saved;
             });
 
-            if (savedMedia != null && processingService.isProcessingSupported(stored.mimeType())) {
+            if (savedMedia != null && requiresProcessing) {
                 processingService.generateFormats(savedMedia.getId());
             }
 
@@ -121,6 +135,38 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     @Transactional
+    public Media updateMetadata(Long id, Long folderId, Boolean isPublic, List<String> tags) {
+        log.debug("Updating media metadata for ID: {}", id);
+
+        Media media = mediaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
+
+        // Update folder if provided
+        if (folderId != null) {
+            MediaFolder folder = folderRepository.findById(folderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Folder not found with ID: " + folderId));
+            media.setFolder(folder);
+        } else {
+            media.setFolder(null);
+        }
+
+        // Update public flag if provided
+        if (isPublic != null) {
+            media.setIsPublic(isPublic);
+        }
+
+        // Update tags if provided
+        if (tags != null) {
+            media.setTags(String.join(",", tags));
+        }
+
+        Media updatedMedia = mediaRepository.save(media);
+        log.info("Media metadata updated: {}", updatedMedia.getUid());
+        return updatedMedia;
+    }
+
+    @Override
+    @Transactional
     public void delete(Long id) {
         log.debug("Deleting media with ID: {}", id);
 
@@ -149,6 +195,12 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<Media> findAll(Pageable pageable) {
+        return mediaRepository.findAll(pageable);
+    }
+
+    @Override
     @Transactional
     public byte[] getFileContent(String fileName) {
         Media media = mediaRepository.findByFileName(fileName)
@@ -170,6 +222,27 @@ public class MediaServiceImpl implements MediaService {
     @Transactional(readOnly = true)
     public List<Media> findByFolderId(Long folderId) {
         return mediaRepository.findByFolderId(folderId);
+    }
+
+    @Override
+    @Transactional
+    public Media moveToFolder(Long mediaId, Long folderId) {
+        log.debug("Moving media {} to folder {}", mediaId, folderId);
+
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + mediaId));
+
+        if (folderId != null) {
+            MediaFolder folder = folderRepository.findById(folderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Folder not found with ID: " + folderId));
+            media.setFolder(folder);
+        } else {
+            media.setFolder(null);
+        }
+
+        Media savedMedia = mediaRepository.save(media);
+        log.info("Media {} moved to folder {}", mediaId, folderId);
+        return savedMedia;
     }
 
     @Override
@@ -199,5 +272,14 @@ public class MediaServiceImpl implements MediaService {
         return properties.getAllowedMimeTypes().stream()
                 .map(mime -> mime.substring(mime.lastIndexOf('/') + 1))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Media> findByUids(List<String> uids) {
+        if (uids == null || uids.isEmpty()) {
+            return List.of();
+        }
+        return mediaRepository.findByUidIn(uids);
     }
 }

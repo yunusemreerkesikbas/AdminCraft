@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.Media;
@@ -43,6 +45,11 @@ public class MediaRepositoryImpl implements MediaRepository {
     @Override
     public List<Media> findAll() {
         return jpaRepository.findAll();
+    }
+
+    @Override
+    public Page<Media> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable);
     }
 
     @Override
