@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,8 @@ public interface MediaFormatJpaRepository extends JpaRepository<MediaFormat, Lon
   List<MediaFormat> findByIsSystemTrue();
 
   List<MediaFormat> findByIsSystemFalse();
+
+  List<MediaFormat> findByCodeIn(Collection<String> codes);
 
   boolean existsByCode(String code);
 }

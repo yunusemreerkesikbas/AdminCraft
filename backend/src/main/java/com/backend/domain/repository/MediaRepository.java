@@ -112,8 +112,6 @@ public interface MediaRepository {
 
     List<Media> findByFileNameIn(List<String> fileNames);
 
-    void deleteByUploadedBy(Long userId);
-
     // Custom queries
     List<Media> findUnusedMedia(); // Files with usage count 0
 

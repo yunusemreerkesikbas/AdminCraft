@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +50,11 @@ public class MediaFormatRepositoryImpl implements MediaFormatRepository {
   @Override
   public List<MediaFormat> findByIsSystemFalse() {
     return jpaRepository.findByIsSystemFalse();
+  }
+
+  @Override
+  public List<MediaFormat> findByCodeIn(Collection<String> codes) {
+    return jpaRepository.findByCodeIn(codes);
   }
 
   @Override

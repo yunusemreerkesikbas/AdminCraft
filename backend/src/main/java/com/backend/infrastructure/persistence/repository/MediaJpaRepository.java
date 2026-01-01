@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,14 +19,21 @@ import com.backend.domain.enums.StorageProvider;
 @Repository
 public interface MediaJpaRepository extends JpaRepository<Media, Long> {
 
+    @Override
+    @EntityGraph(attributePaths = { "folder" })
+    Optional<Media> findById(Long id);
+
     // UUID/UID queries
+    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUid(String uid);
 
+    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUuid(String uuid);
 
     boolean existsByUid(String uid);
 
     // File identification queries
+    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByFileName(String fileName);
 
     boolean existsByFileName(String fileName);
@@ -109,9 +115,6 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     List<Media> findByUidIn(List<String> uids);
 
     List<Media> findByFileNameIn(List<String> fileNames);
-
-    @Modifying
-    void deleteByUploadedBy(Long userId);
 
     // Custom queries
     @Query("SELECT m FROM Media m WHERE m.usageCount = 0")

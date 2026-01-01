@@ -231,11 +231,6 @@ public class MediaRepositoryImpl implements MediaRepository {
     }
 
     @Override
-    public void deleteByUploadedBy(Long userId) {
-        jpaRepository.deleteByUploadedBy(userId);
-    }
-
-    @Override
     public List<Media> findUnusedMedia() {
         return jpaRepository.findUnusedMedia();
     }

@@ -1,5 +1,6 @@
 package com.backend.domain.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,8 @@ public interface MediaFormatRepository {
   List<MediaFormat> findByIsSystemTrue();
 
   List<MediaFormat> findByIsSystemFalse();
+
+  List<MediaFormat> findByCodeIn(Collection<String> codes);
 
   boolean existsByCode(String code);
 
