@@ -7,7 +7,7 @@
 **Frontend:** Angular 19, TypeScript  
 **Architecture:** Clean Architecture (Presentation → Application → Domain → Infrastructure)  
 **Languages:** Turkish (tr), English (en)  
-**Deployment:** Multi-tenant SaaS platform  
+**Deployment:** Multi-tenant SaaS platform
 
 ## 🏗️ Architecture-Specific Debugging
 
@@ -15,7 +15,7 @@
 
 ```
 🖥️  PRESENTATION LAYER → Controllers, DTOs, Validation, i18n
-📋 APPLICATION LAYER  → Services, Use Cases, Commands, Queries  
+📋 APPLICATION LAYER  → Services, Use Cases
 🎯 DOMAIN LAYER       → Entities, Business Rules, Domain Logic
 🔧 INFRASTRUCTURE     → Repositories, External APIs, Database
 ```
@@ -25,7 +25,7 @@
 ```bash
 # Common Issues & Solutions
 1. Controller Validation Errors
-2. DTO Mapping Issues  
+2. DTO Mapping Issues
 3. i18n Message Resolution
 4. Request/Response Serialization
 5. API versioning conflicts
@@ -46,7 +46,7 @@
 ```bash
 # Common Issues & Solutions
 1. Service Transaction Boundaries
-2. Use Case Orchestration  
+2. Use Case Orchestration
 3. Domain Event Publishing
 4. Cross-cutting Concerns
 5. Multi-tenant Context
@@ -159,8 +159,8 @@ find src/main/resources/i18n -name "*.properties" -exec echo "Checking {}" \; -e
 
    ```typescript
    // Debug locale service
-   console.log('Current Language:', this.languageService.getLanguage());
-   console.log('Available Languages:', this.supportedLanguages);
+   console.log("Current Language:", this.languageService.getLanguage());
+   console.log("Available Languages:", this.supportedLanguages);
    ```
 
 ## 🗄️ Database Debugging
@@ -174,7 +174,7 @@ find src/main/resources/i18n -name "*.properties" -exec echo "Checking {}" \; -e
 SHOW DATABASES LIKE 'tenant_%';
 
 -- Verify tenant configuration
-SELECT id, subdomain, database_name, status, supported_languages 
+SELECT id, subdomain, database_name, status, supported_languages
 FROM platform_management.tenants;
 ```
 
@@ -182,7 +182,7 @@ FROM platform_management.tenants;
 
 ```sql
 -- Audit query to check data isolation
-SELECT 
+SELECT
     TABLE_NAME,
     COUNT(*) as record_count,
     COUNT(DISTINCT tenant_id) as tenant_count
@@ -196,13 +196,13 @@ GROUP BY TABLE_NAME;
 
 ```sql
 -- Check slow queries
-SELECT 
+SELECT
     query_time,
     lock_time,
     rows_sent,
     rows_examined,
     sql_text
-FROM mysql.slow_log 
+FROM mysql.slow_log
 WHERE start_time >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
 ORDER BY query_time DESC LIMIT 10;
 ```
@@ -217,24 +217,24 @@ ORDER BY query_time DESC LIMIT 10;
 // Service Layer Testing Example
 @ExtendWith(MockitoExtension.class)
 class TenantServiceImplTest {
-    
+
     @Mock
     private TenantRepository tenantRepository;
-    
+
     @InjectMocks
     private TenantServiceImpl tenantService;
-    
+
     @Test
     void shouldCreateTenant_WhenValidData() {
         // Given
         CreateTenantRequest request = new CreateTenantRequest(
             "test-company", "test@example.com", "Test User", "tr"
         );
-        
+
         // When & Then
         assertDoesNotThrow(() -> tenantService.createTenant(request));
     }
-    
+
     @Test
     void shouldThrowException_WhenSubdomainExists() {
         // Test exception scenarios
@@ -245,17 +245,17 @@ class TenantServiceImplTest {
 **Frontend (Jasmine + Karma):**
 
 ```typescript
-describe('LanguageService', () => {
+describe("LanguageService", () => {
   let service: LanguageService;
-  
+
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(LanguageService);
   });
-  
-  it('should switch language correctly', () => {
-    service.setLanguage('en');
-    expect(service.getLanguage()).toBe('en');
+
+  it("should switch language correctly", () => {
+    service.setLanguage("en");
+    expect(service.getLanguage()).toBe("en");
   });
 });
 ```
@@ -268,13 +268,13 @@ describe('LanguageService', () => {
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class TenantControllerIntegrationTest {
-    
+
     @Container
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
-    
+
     @Test
     void shouldCreateTenantSuccessfully() {
         // Integration test implementation
@@ -290,11 +290,11 @@ void shouldCreateContentInMultipleLanguages() {
     // Test content creation in TR
     ContentRequest trRequest = new ContentRequest("Başlık", "içerik", "tr");
     ContentResponse trResponse = contentService.createContent(trRequest);
-    
+
     // Test content creation in EN
     ContentRequest enRequest = new ContentRequest("Title", "content", "en");
     ContentResponse enResponse = contentService.createContent(enRequest);
-    
+
     // Verify translations are linked
     assertThat(trResponse.translationGroupId()).isEqualTo(enResponse.translationGroupId());
 }
@@ -312,11 +312,11 @@ SET GLOBAL slow_query_log = 'ON';
 SET GLOBAL long_query_time = 1;
 
 -- Monitor N+1 queries
-SELECT 
+SELECT
     sql_text,
     COUNT(*) as execution_count,
     AVG(query_time) as avg_query_time
-FROM mysql.slow_log 
+FROM mysql.slow_log
 WHERE sql_text LIKE '%SELECT%JOIN%'
 GROUP BY sql_text
 ORDER BY execution_count DESC;
@@ -326,7 +326,7 @@ ORDER BY execution_count DESC;
 
 ```sql
 -- Check index usage
-SELECT 
+SELECT
     object_schema,
     object_name,
     index_name,
@@ -347,7 +347,7 @@ ORDER BY sum_timer_read DESC;
 # Memory usage
 jstat -gc [PID] 5s
 
-# Thread dump analysis  
+# Thread dump analysis
 jstack [PID] > thread_dump.txt
 
 # Heap dump for memory issues
@@ -506,7 +506,7 @@ npx webpack-bundle-analyzer dist/stats.json
 
 ```javascript
 // Debug language service
-console.log('Current Language:', angular.getTestability().get('LanguageService').getLanguage());
+console.log("Current Language:", angular.getTestability().get("LanguageService").getLanguage());
 
 // Debug HTTP requests
 // Open Network tab in DevTools
@@ -518,19 +518,22 @@ console.log('Current Language:', angular.getTestability().get('LanguageService')
 ### **Backend Quality Gates**
 
 - [ ] **SOLID Principles Applied**
+
   - Single Responsibility: Each class has one reason to change
-  - Open/Closed: Open for extension, closed for modification  
+  - Open/Closed: Open for extension, closed for modification
   - Liskov Substitution: Subtypes must be substitutable
   - Interface Segregation: Clients depend only on used methods
   - Dependency Inversion: Depend on abstractions, not concretions
 
 - [ ] **Clean Architecture Compliance**
+
   - No dependency violations between layers
   - Domain layer has no external dependencies
   - Infrastructure depends on domain, not vice versa
   - Application layer orchestrates, doesn't contain business logic
 
 - [ ] **Multi-Language Support**
+
   - All user-facing messages externalized
   - Language context preserved across requests
   - Fallback language implemented
@@ -546,6 +549,7 @@ console.log('Current Language:', angular.getTestability().get('LanguageService')
 ### **Frontend Quality Gates**
 
 - [ ] **Angular Best Practices**
+
   - OnPush change detection where applicable
   - Reactive forms for complex forms
   - Lazy loading for feature modules
@@ -643,20 +647,20 @@ kubectl rollout undo deployment/admincraft-frontend
 
 ```sql
 -- Check tenant status and languages
-SELECT subdomain, status, default_language, supported_languages 
+SELECT subdomain, status, default_language, supported_languages
 FROM platform_management.tenants;
 
 -- Find content without translations
-SELECT c1.id, c1.title, c1.language 
-FROM contents c1 
-LEFT JOIN contents c2 ON c1.translation_group_id = c2.translation_group_id 
+SELECT c1.id, c1.title, c1.language
+FROM contents c1
+LEFT JOIN contents c2 ON c1.translation_group_id = c2.translation_group_id
     AND c1.language != c2.language
 WHERE c2.id IS NULL AND c1.translation_group_id IS NOT NULL;
 
 -- Monitor active sessions per language
 SELECT preferred_language, COUNT(*) as active_sessions
-FROM user_sessions 
-WHERE is_active = true 
+FROM user_sessions
+WHERE is_active = true
 GROUP BY preferred_language;
 ```
 
@@ -666,7 +670,7 @@ GROUP BY preferred_language;
 # Search for i18n issues
 grep -E "(No message found|Missing translation)" logs/application.log
 
-# Find slow database queries  
+# Find slow database queries
 grep -E "took [0-9]{3,}" logs/application.log
 
 # Check tenant context issues

@@ -14,12 +14,12 @@ Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP best practices.
 
 ```
 Presentation (Controllers, DTOs) 
-    → Application (Commands/Queries, Services)
+    → Application (Services, Use Cases)
     → Domain (Entities, Repositories)
     ← Infrastructure (Config, Multi-Tenancy)
 ```
 
-**Golden Rule**: Application layer uses Commands/Queries, NOT Presentation DTOs.
+**Golden Rule**: Application layer contains business logic, NOT Presentation DTOs.
 
 ## Multi-Tenant (Database-per-Tenant)
 
@@ -76,13 +76,6 @@ public class PageI18n extends BaseI18nEntity {
 
 ## Application Layer
 
-**Commands/Queries:**
-
-```java
-public record CreatePageCommand(String uid, String styleClasses) {}
-public record PageDetailQuery(Long id, boolean includeTranslations) {}
-```
-
 **Services:**
 
 ```java
@@ -109,7 +102,6 @@ public class PageServiceImpl implements PageService {
 @RestController
 @RequestMapping("/pages")
 public class PageController {
-    // Map Request DTOs → Commands/Queries
     // Return ResponseEntity<ApiResponse<T>>
     // Never expose tenantId in responses
     // @Valid for validation, @PreAuthorize for security
@@ -145,7 +137,7 @@ public void executeProvisioning(Long jobId) {
 
 ## Quick Checklist
 
-- [ ] Commands/Queries in application (NOT Presentation DTOs)
+- [ ] Application service logic (NOT Presentation DTOs)
 - [ ] NO tenant_id columns in tenant entities
 - [ ] Platform entities: @Qualifier("platformDataSource")
 - [ ] TenantFilter: try-finally with validation

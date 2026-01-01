@@ -39,8 +39,8 @@ Senior reviewer with expertise in Java/Spring Boot, TypeScript/Angular, security
 
 ### Clean Architecture
 
-- ✅ Application uses Commands/Queries (NOT Presentation DTOs)
-- ✅ Controllers map DTOs → Commands/Queries
+- ✅ Application layer contains business logic (NOT Presentation DTOs)
+- ✅ Controllers return ResponseEntity<ApiResponse<T>>
 - ✅ Services return Response DTOs only
 - ✅ i18n entities: BaseI18nEntity + @ManyToOne
 - ✅ Batch loading (findByTenantIdAndEntityIdIn)
