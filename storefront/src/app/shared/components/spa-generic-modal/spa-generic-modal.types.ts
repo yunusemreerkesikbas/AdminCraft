@@ -40,5 +40,6 @@ export interface CopyableField {
 export interface ModalAction {
     label: string;
     color?: 'primary' | 'accent' | 'warn';
-    handler: () => void;
+    handler?: () => void;
+    value?: any;
 }

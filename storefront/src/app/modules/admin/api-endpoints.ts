@@ -29,7 +29,25 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- MEDIA -----
     media: 'media',
     mediaById: 'media/${id}',
-    mediaUpload: 'media/upload',
+    mediaDetail: 'media/${id}/detail',
+    mediaByUid: '/media/uid/${uid}',
+    mediaUpload: '/media/upload',
+    mediaComposite: '/media/composite',
+    mediaCompositeById: '/media/${id}/composite',
+    mediaI18n: '/media/${mediaId}/i18n/${language}',
+
+    // ----- MEDIA CONTAINERS -----
+    mediaContainers: 'media/containers',
+    mediaContainerById: 'media/containers/${id}',
+    mediaContainerGenerate: 'media/containers/${id}/generate',
+
+    // ----- MEDIA FORMATS -----
+    mediaFormats: 'media/formats',
+    mediaFormatById: 'media/formats/${id}',
+
+    // ----- CMS MEDIA DELIVERY -----
+    cmsMedia: 'cms/media/${uid}',
+    cmsMediaBatch: 'cms/media',
 
     // ----- SITES -----
     sites: 'sites',

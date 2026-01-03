@@ -5,7 +5,7 @@ export interface SpaDialogData {
 
 export interface SpaFormDialogData<T = any> extends SpaDialogData {
     id?: string | number;
-    mode?: 'create' | 'edit';
+    mode?: DialogMode;
     initial?: Partial<T>;
 }
 
@@ -20,4 +20,4 @@ export interface SubmitOptions {
     closeOnSuccess?: boolean;
 }
 
-export type DialogMode = 'create' | 'edit';
+export type DialogMode = 'create' | 'edit' | 'view';
