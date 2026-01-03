@@ -61,7 +61,7 @@ public record MediaDetailResponse(
         ? i18nList.stream()
             .collect(Collectors.toMap(
                 i18n -> i18n.getLanguage().name(),
-                MediaI18nResponse::from,
+                i18n -> MediaI18nResponse.from(i18n, entity.getId()),
                 (existing, replacement) -> existing))
         : Map.of();
 

@@ -14,7 +14,21 @@ public interface MediaService {
     // Basic CRUD operations
     Media uploadFile(MultipartFile file, Long uploadedBy);
 
+    /**
+     * Upload a file with optional folder and i18n data in a single transaction.
+     *
+     * @param file         The file to upload
+     * @param uploadedBy   User ID
+     * @param folderId     Target folder ID (optional)
+     * @param translations Map of language to i18n request (optional)
+     * @return Created media
+     */
+    Media uploadComposite(MultipartFile file, Long uploadedBy, Long folderId,
+            java.util.Map<com.backend.domain.enums.Language, com.backend.presentation.dto.request.MediaI18nRequest> translations);
+
     Optional<Media> findById(Long id);
+
+    Optional<Media> findByIdWithFolder(Long id);
 
     Optional<Media> findByUid(String uid);
 

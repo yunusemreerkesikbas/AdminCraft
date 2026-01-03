@@ -47,6 +47,8 @@ public class SecurityConfig {
                                                                                              // monitoring
                                                 .requestMatchers("/public/**").permitAll() // Public API endpoints
                                                 .requestMatchers("/cms/**").permitAll() // CMS Delivery API (public)
+                                                .requestMatchers("/media/files/**").permitAll() // Media file downloads
+                                                                                                // (images)
                                                 .requestMatchers("/swagger-ui/**").permitAll() // Swagger documentation
                                                 .requestMatchers("/v3/api-docs/**").permitAll() // OpenAPI documentation
                                                 .requestMatchers("/favicon.ico").permitAll() // Favicon

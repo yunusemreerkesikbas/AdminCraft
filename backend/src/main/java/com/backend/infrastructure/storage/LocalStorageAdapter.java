@@ -136,9 +136,9 @@ public class LocalStorageAdapter implements StorageAdapter {
             throw new StorageException("Invalid filename: contains illegal characters");
         }
 
-        String tenantId = tenantContext.getTenantId();
-        if (tenantId == null) {
-            tenantId = "default";
+        String subdomain = tenantContext.getSubdomain();
+        if (subdomain == null || subdomain.isBlank()) {
+            subdomain = "default";
         }
 
         // Sanitize subPath as well
@@ -146,7 +146,7 @@ public class LocalStorageAdapter implements StorageAdapter {
 
         // Build and normalize the target path
         Path storageRoot = Paths.get(properties.getBasePath()).toAbsolutePath().normalize();
-        Path targetPath = storageRoot.resolve(tenantId).resolve(sanitizedSubPath).resolve(sanitizedFileName)
+        Path targetPath = storageRoot.resolve(subdomain).resolve(sanitizedSubPath).resolve(sanitizedFileName)
                 .normalize();
 
         // Validate the resolved path is still within storage root

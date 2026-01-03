@@ -22,6 +22,8 @@ public interface MediaRepository {
 
     Optional<Media> findById(Long id);
 
+    Optional<Media> findByIdWithFolder(Long id);
+
     Optional<Media> findByUid(String uid);
 
     Optional<Media> findByUuid(String uuid);

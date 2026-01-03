@@ -16,6 +16,10 @@ app:
     auto-sync-on-startup: true # Disable for dev - use manual sync button
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
   application:
     name: AdminCraft
 

@@ -17,7 +17,7 @@ public interface MediaContainerJpaRepository extends JpaRepository<MediaContaine
   @EntityGraph(attributePaths = { "items", "items.format", "items.media" })
   Optional<MediaContainer> findByCode(String code);
 
-  @EntityGraph(attributePaths = { "items", "items.format", "items.media" })
+  @EntityGraph(attributePaths = { "items", "items.format", "items.media", "masterMedia" })
   Optional<MediaContainer> findByMasterMediaId(Long masterMediaId);
 
   boolean existsByCode(String code);
