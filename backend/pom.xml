@@ -93,6 +93,12 @@
             <artifactId>thumbnailator</artifactId>
             <version>0.4.21</version>
         </dependency>
+        <!-- WebP Image Support -->
+        <dependency>
+            <groupId>org.sejda.webp-imageio</groupId>
+            <artifactId>webp-imageio-sejda</artifactId>
+            <version>0.1.0</version>
+        </dependency>
 
         <!-- XSS Sanitization -->
         <dependency>

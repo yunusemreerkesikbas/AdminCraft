@@ -11,6 +11,14 @@ public interface MediaContainerService {
 
     void addVariant(Long masterId, Long formatId, Long variantMediaId);
 
+    /**
+     * Remove a variant from a container.
+     *
+     * @param masterId       master media ID
+     * @param variantMediaId variant media ID to remove
+     */
+    void removeVariant(Long masterId, Long variantMediaId);
+
     Optional<MediaContainer> getByMasterMediaId(Long masterMediaId);
 
     /**

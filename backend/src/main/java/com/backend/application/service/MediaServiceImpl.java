@@ -95,14 +95,11 @@ public class MediaServiceImpl implements MediaService {
                 media.setIsPublic(true);
                 media.setUsageCount(0);
 
-                if (requiresProcessing) {
-                    media.setStatus(MediaStatus.PROCESSING);
-                    if (finalDimensions != null) {
-                        media.setWidth(finalDimensions.width());
-                        media.setHeight(finalDimensions.height());
-                    }
-                } else {
-                    media.setStatus(MediaStatus.ACTIVE);
+                // Always set to ACTIVE - format generation is now on-demand
+                media.setStatus(MediaStatus.ACTIVE);
+                if (requiresProcessing && finalDimensions != null) {
+                    media.setWidth(finalDimensions.width());
+                    media.setHeight(finalDimensions.height());
                 }
 
                 Media saved = mediaRepository.save(media);
@@ -110,10 +107,6 @@ public class MediaServiceImpl implements MediaService {
                 containerService.createForMedia(saved.getId());
                 return saved;
             });
-
-            if (savedMedia != null && requiresProcessing) {
-                processingService.generateFormats(savedMedia.getId());
-            }
 
             return savedMedia;
         } catch (Exception e) {
@@ -258,6 +251,21 @@ public class MediaServiceImpl implements MediaService {
         return properties.getAllowedMimeTypes().stream()
                 .map(mime -> mime.substring(mime.lastIndexOf('/') + 1))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void updateFocalPoint(Long id, Double x, Double y) {
+        log.debug("Updating focal point for media ID: {} to ({}, {})", id, x, y);
+
+        Media media = mediaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
+
+        media.setFocalPointX(x);
+        media.setFocalPointY(y);
+        mediaRepository.save(media);
+
+        log.info("Focal point updated for media {}: ({}, {})", media.getUid(), x, y);
     }
 
     @Override

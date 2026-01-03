@@ -1,6 +1,7 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.CropMode;
+import com.backend.domain.enums.OutputFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,10 @@ public class MediaFormat extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "crop_mode", length = 20)
   private CropMode cropMode = CropMode.FIT;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "output_format", length = 20)
+  private OutputFormat outputFormat = OutputFormat.ORIGINAL;
 
   @Column(name = "is_system")
   private Boolean isSystem = false;
