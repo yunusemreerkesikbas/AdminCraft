@@ -146,7 +146,7 @@ export const appConfig: ApplicationConfig = {
         provideAppInitializer(() => {
             const tenantContext = inject(TenantContextService);
             tenantContext.initializeFromHostname();
-            return firstValueFrom(tenantContext.restoreTenantSelection()).catch(() => null);
+            return Promise.resolve();
         }),
 
         provideAppInitializer(() => {
