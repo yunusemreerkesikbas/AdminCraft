@@ -22,8 +22,6 @@ public interface MediaRepository {
 
     Optional<Media> findById(Long id);
 
-    Optional<Media> findByIdWithFolder(Long id);
-
     Optional<Media> findByUid(String uid);
 
     Optional<Media> findByUuid(String uuid);
@@ -46,13 +44,6 @@ public interface MediaRepository {
     Optional<Media> findByFileName(String fileName);
 
     boolean existsByFileName(String fileName);
-
-    // Folder queries
-    List<Media> findByFolderId(Long folderId);
-
-    List<Media> findByFolderIsNull();
-
-    long countByFolderId(Long folderId);
 
     // File type queries
     List<Media> findByMimeTypeStartingWith(String mimeTypePrefix);

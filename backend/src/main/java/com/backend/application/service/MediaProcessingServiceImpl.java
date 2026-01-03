@@ -192,7 +192,6 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         variant.setStatus(MediaStatus.ACTIVE);
         variant.setIsPublic(master.getIsPublic());
         variant.setUploadedBy(master.getUploadedBy());
-        variant.setFolder(master.getFolder());
         variant.setUsageCount(0);
         return variant;
     }

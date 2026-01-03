@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,37 +18,17 @@ import com.backend.domain.enums.StorageProvider;
 @Repository
 public interface MediaJpaRepository extends JpaRepository<Media, Long> {
 
-    @Override
-    @EntityGraph(attributePaths = { "folder" })
-    Optional<Media> findById(Long id);
-
     // UUID/UID queries
-    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUid(String uid);
 
-    @EntityGraph(attributePaths = { "folder", "folder.parent" })
-    @Query("SELECT m FROM Media m WHERE m.id = :id")
-    Optional<Media> findByIdWithDetails(@Param("id") Long id);
-
-    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUuid(String uuid);
 
     boolean existsByUid(String uid);
 
     // File identification queries
-    @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByFileName(String fileName);
 
     boolean existsByFileName(String fileName);
-
-    // Folder queries
-    @EntityGraph(attributePaths = { "folder", "translations" })
-    List<Media> findByFolderId(Long folderId);
-
-    @EntityGraph(attributePaths = { "folder", "translations" })
-    List<Media> findByFolderIsNull();
-
-    long countByFolderId(Long folderId);
 
     // File type queries
     @Query("SELECT m FROM Media m WHERE m.mimeType LIKE CONCAT(:prefix, '%')")

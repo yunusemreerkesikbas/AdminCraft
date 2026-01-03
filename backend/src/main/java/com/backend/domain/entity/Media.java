@@ -13,8 +13,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
@@ -77,10 +75,6 @@ public class Media extends BaseEntity {
   private Integer duration; // Video duration in seconds
 
   // Organization
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "folder_id")
-  private MediaFolder folder;
-
   @Column(name = "tags", columnDefinition = "JSON")
   private String tags; // JSON array of tags
 
