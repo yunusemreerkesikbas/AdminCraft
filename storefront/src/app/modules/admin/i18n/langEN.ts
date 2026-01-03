@@ -86,6 +86,7 @@ export const langEN = {
             },
             validation: {
                 required: '{{field}} is required',
+                requiredField: 'This field is required',
                 email: 'Please enter a valid email address',
                 minLength: 'Must be at least {{count}} characters',
                 maxLength: 'Must be no more than {{count}} characters',
@@ -479,10 +480,32 @@ export const langEN = {
                 bulkDeleteSuccess: 'Selected files deleted successfully',
                 noFormats: 'No generated formats available',
                 generatedFormats: 'Generated formats (thumbnails, etc.)',
-                processingFormats: 'Processing formats... Please wait.'
+                processingFormats: 'Processing formats... Please wait.',
+                variantDeleteSuccess: 'Variant deleted'
             },
             formats: {
                 original: 'Original File'
+            },
+            focalPoint: {
+                title: 'Focal Point',
+                help: 'Click on the image to select the focal point.',
+                updateSuccess: 'Focal point updated',
+                tab: 'Tools'
+            },
+            format: {
+                generator: {
+                    title: 'Format Generator',
+                    preset: 'Preset',
+                    custom: 'Custom Size',
+                },
+                select: 'Select Format',
+                width: 'Width',
+                height: 'Height',
+                output: 'Output Format',
+                quality: 'Quality',
+                generate: 'Generate',
+                generating: 'Generating...',
+                success: 'Format generated'
             },
             dialogs: {
                 detail: {

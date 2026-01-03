@@ -84,6 +84,7 @@ export const langTR = {
             },
             validation: {
                 required: '{{field}} zorunludur',
+                requiredField: 'Bu alan zorunludur',
                 email: 'Geçerli bir e-posta adresi giriniz',
                 minLength: 'En az {{count}} karakter olmalıdır',
                 maxLength: 'En fazla {{count}} karakter olabilir',
@@ -475,10 +476,32 @@ export const langTR = {
                 bulkDeleteSuccess: 'Seçili dosyalar silindi',
                 noFormats: 'Oluşturulmuş format bulunamadı',
                 generatedFormats: 'Oluşturulan Formatlar (Küçük resim vb.)',
-                processingFormats: 'Formatlar işleniyor... Lütfen bekleyin.'
+                processingFormats: 'Formatlar işleniyor... Lütfen bekleyin.',
+                variantDeleteSuccess: 'Varyasyon silindi'
             },
             formats: {
                 original: 'Orijinal Dosya'
+            },
+            focalPoint: {
+                title: 'Odak Noktası',
+                help: 'Görselin odak noktasını seçmek için resmin üzerine tıklayın.',
+                updateSuccess: 'Odak noktası güncellendi',
+                tab: 'Araçlar'
+            },
+            format: {
+                generator: {
+                    title: 'Format Oluşturucu',
+                    preset: 'Hazır Ayar',
+                    custom: 'Özel Boyut',
+                },
+                select: 'Format Seç',
+                width: 'Genişlik',
+                height: 'Yükseklik',
+                output: 'Çıktı Formatı',
+                quality: 'Kalite',
+                generate: 'Oluştur',
+                generating: 'Oluşturuluyor...',
+                success: 'Format oluşturuldu'
             },
             dialogs: {
                 detail: {

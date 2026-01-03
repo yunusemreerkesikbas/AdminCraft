@@ -1,0 +1,65 @@
+<div class="bg-card flex h-full flex-col rounded-xl border p-6">
+    <div class="mb-4 flex items-center justify-between">
+        <div class="text-lg font-medium">
+            {{ 'admin.media.focalPoint.title' | transloco }}
+        </div>
+        <div class="flex gap-2">
+            <button
+                mat-icon-button
+                (click)="reset()"
+                [matTooltip]="'admin.common.actions.reset' | transloco"
+                [disabled]="isUpdating"
+            >
+                <mat-icon>refresh</mat-icon>
+            </button>
+            <button
+                mat-flat-button
+                color="primary"
+                (click)="saveFocalPoint()"
+                [disabled]="isUpdating"
+            >
+                @if (isUpdating) {
+                    <mat-spinner diameter="20" class="mr-2"></mat-spinner>
+                }
+                <span>{{ 'admin.common.actions.save' | transloco }}</span>
+            </button>
+        </div>
+    </div>
+
+    <div
+        class="flex min-h-0 flex-1 flex-col items-center justify-center rounded-lg border border-dashed bg-gray-50 p-4 dark:bg-gray-900"
+    >
+        <div class="focal-container shadow-lg">
+            <img
+                [src]="media.publicUrl || media.url"
+                class="focal-img"
+                #focalImg
+                (click)="onImageClick($event, focalImg)"
+                alt="Focal point picker"
+            />
+
+            <div
+                class="focal-point"
+                [style.left.%]="focalX * 100"
+                [style.top.%]="focalY * 100"
+            ></div>
+        </div>
+
+        <div class="focal-info mt-4 flex gap-4">
+            <div class="bg-card rounded border px-3 py-1">
+                <span class="font-mono text-xs"
+                    >X: {{ focalX | number: '1.2-2' }}</span
+                >
+            </div>
+            <div class="bg-card rounded border px-3 py-1">
+                <span class="font-mono text-xs"
+                    >Y: {{ focalY | number: '1.2-2' }}</span
+                >
+            </div>
+        </div>
+
+        <div class="text-secondary mt-2 max-w-md text-center text-sm">
+            {{ 'admin.media.focalPoint.help' | transloco }}
+        </div>
+    </div>
+</div>

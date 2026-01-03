@@ -4,6 +4,9 @@ import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
+    FocalPointRequest,
+    GenerateFormatRequest,
+    GenerateFormatsRequest,
     Language,
     Media,
     MediaDetailResponse,
@@ -11,6 +14,7 @@ import {
     MediaI18n,
     MediaI18nRequest,
     MediaResponse,
+    MediaVariantResponse,
     UpdateMediaCompositeRequest,
     UpdateMediaRequest
 } from './media.types';
@@ -26,14 +30,7 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         delete: 'mediaById'
     };
 
-    override list(): Observable<Media[]> {
-        return this.api.get<ApiResponse<{ content: Media[] }>>(this.endpoints.list, undefined, {
-            page: 0,
-            size: 100
-        }).pipe(
-            map((response) => response.data.content)
-        );
-    }
+
 
     upload(file: File, uploadedBy: number): Observable<Media> {
         const formData = new FormData();
@@ -82,6 +79,30 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
 
     getFormatById(id: number): Observable<MediaFormat> {
         return this.customGet<MediaFormat>('mediaFormatById', { id });
+    }
+
+    generateFormat(id: number, request: GenerateFormatRequest): Observable<MediaVariantResponse> {
+        return this.api.post<ApiResponse<MediaVariantResponse>>('mediaGenerateFormat', request, { id }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    generateFormats(id: number, request: GenerateFormatsRequest): Observable<MediaVariantResponse[]> {
+        return this.api.post<ApiResponse<MediaVariantResponse[]>>('mediaGenerateFormats', request, { id }).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    deleteVariant(mediaId: number, variantId: number): Observable<void> {
+        return this.api.delete<ApiResponse<void>>('mediaVariantDelete', { mediaId, variantId }).pipe(
+            map(() => void 0)
+        );
+    }
+
+    updateFocalPoint(id: number, request: FocalPointRequest): Observable<void> {
+        return this.api.put<ApiResponse<void>>('mediaFocalPoint', request, { id }).pipe(
+            map(() => void 0)
+        );
     }
 
     getCmsMedia(uid: string, format?: string): Observable<Media> {

@@ -223,99 +223,104 @@
                 <mat-tab
                     [label]="'admin.media.dialogs.detail.formats' | transloco"
                 >
-                    <div class="h-full overflow-y-auto p-4 md:p-6">
-                        <!-- Loading State -->
-                        @if (isLoadingDetails()) {
-                            <div
-                                class="flex flex-col items-center justify-center py-12"
+                    <div
+                        class="flex h-full flex-col overflow-hidden p-4 md:p-6"
+                    >
+                        <!-- Generator Section -->
+                        <div class="mb-6">
+                            <app-format-generator
+                                [mediaId]="media()?.id!"
+                                (generated)="reloadDetails()"
                             >
-                                <mat-spinner diameter="40" class="mb-4"></mat-spinner>
-                                <p class="text-secondary">
-                                    {{ 'admin.common.messages.loading' | transloco }}
-                                </p>
-                            </div>
-                        }
-                        <!-- Processing State -->
-                        @else if (isProcessing()) {
-                            <div
-                                class="flex flex-col items-center justify-center py-12"
-                            >
-                                <mat-spinner diameter="40" class="mb-4"></mat-spinner>
-                                <p class="text-secondary">
-                                    {{ 'admin.media.messages.processingFormats' | transloco }}
-                                </p>
-                            </div>
-                        } @else if (hasVariants()) {
-                            <div class="grid grid-cols-1 gap-4">
-                                <!-- Original -->
-                                <div
-                                    class="flex items-start gap-4 rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
-                                >
-                                    <div
-                                        class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded border bg-white dark:bg-gray-900"
-                                    >
-                                        <span
-                                            class="text-secondary text-xs font-bold"
-                                            >ORIGINAL</span
-                                        >
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-medium">
-                                            {{ 'admin.media.formats.original' | transloco }}
-                                        </div>
-                                        <div
-                                            class="text-secondary mt-1 text-xs"
-                                        >
-                                            @if (media()?.width && media()?.height) {
-                                                {{ media()?.width }}x{{ media()?.height }} •
-                                            }
-                                            {{ media()?.fileSizeFormatted }}
-                                        </div>
-                                    </div>
-                                    <a
-                                        [href]="media()?.publicUrl"
-                                        target="_blank"
-                                        mat-icon-button
-                                    >
-                                        <mat-icon class="icon-size-5"
-                                            >open_in_new</mat-icon
-                                        >
-                                    </a>
-                                </div>
+                            </app-format-generator>
+                        </div>
 
-                                <!-- Generated Variants -->
-                                @for (variant of containerVariants(); track variant.formatId) {
+                        <!-- Divider -->
+                        <div class="my-4 border-t"></div>
+
+                        <!-- List Section -->
+                        <div class="min-h-0 flex-1 overflow-y-auto">
+                            <!-- Loading State -->
+                            @if (isLoadingDetails()) {
+                                <div
+                                    class="flex flex-col items-center justify-center py-12"
+                                >
+                                    <mat-spinner
+                                        diameter="40"
+                                        class="mb-4"
+                                    ></mat-spinner>
+                                    <p class="text-secondary">
+                                        {{
+                                            'admin.common.messages.loading'
+                                                | transloco
+                                        }}
+                                    </p>
+                                </div>
+                            }
+                            <!-- Processing State -->
+                            @else if (isProcessing()) {
+                                <div
+                                    class="flex flex-col items-center justify-center py-12"
+                                >
+                                    <mat-spinner
+                                        diameter="40"
+                                        class="mb-4"
+                                    ></mat-spinner>
+                                    <p class="text-secondary">
+                                        {{
+                                            'admin.media.messages.processingFormats'
+                                                | transloco
+                                        }}
+                                    </p>
+                                </div>
+                            }
+                            <!-- List -->
+                            @else {
+                                <div class="grid grid-cols-1 gap-4">
+                                    <!-- Original -->
                                     <div
-                                        class="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                        class="flex items-start gap-4 rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
                                     >
                                         <div
-                                            class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-900"
+                                            class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded border bg-white dark:bg-gray-900"
                                         >
-                                            @if (media()?.fileType === 'image' && variant.mediaUrl) {
-                                                <img
-                                                    [src]="variant.mediaUrl"
-                                                    [alt]="variant.formatName"
-                                                    class="h-full w-full object-cover"
-                                                />
-                                            } @else {
-                                                <span
-                                                    class="text-secondary text-xs font-bold uppercase"
-                                                    >{{ variant.formatCode }}</span
-                                                >
-                                            }
+                                            <span
+                                                class="text-secondary text-xs font-bold"
+                                                >ORIGINAL</span
+                                            >
                                         </div>
                                         <div class="min-w-0 flex-1">
-                                            <div class="font-medium">
-                                                {{ variant.formatName }}
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span class="font-medium">{{
+                                                    'admin.media.formats.original'
+                                                        | transloco
+                                                }}</span>
+                                                <span
+                                                    class="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary"
+                                                    >{{
+                                                        media()?.mimeType
+                                                    }}</span
+                                                >
                                             </div>
                                             <div
                                                 class="text-secondary mt-1 text-xs"
                                             >
-                                                {{ variant.width }}x{{ variant.height }}
+                                                @if (
+                                                    media()?.width &&
+                                                    media()?.height
+                                                ) {
+                                                    {{ media()?.width }}x{{
+                                                        media()?.height
+                                                    }}
+                                                    •
+                                                }
+                                                {{ media()?.fileSizeFormatted }}
                                             </div>
                                         </div>
                                         <a
-                                            [href]="variant.mediaUrl"
+                                            [href]="media()?.publicUrl"
                                             target="_blank"
                                             mat-icon-button
                                         >
@@ -324,22 +329,132 @@
                                             >
                                         </a>
                                     </div>
-                                }
-                            </div>
-                        } @else {
-                            <div
-                                class="text-secondary flex flex-col items-center justify-center py-12 opacity-50"
-                            >
-                                <mat-icon class="mb-2 icon-size-12"
-                                    >image_not_supported</mat-icon
-                                >
-                                <p>
-                                    {{ 'admin.media.messages.noFormats' | transloco }}
-                                </p>
-                            </div>
-                        }
+
+                                    <!-- Generated Variants -->
+                                    @for (
+                                        variant of containerVariants();
+                                        track variant.id
+                                    ) {
+                                        <div
+                                            class="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                        >
+                                            <div
+                                                class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-900"
+                                            >
+                                                @if (
+                                                    media()?.fileType ===
+                                                        'image' &&
+                                                    variant.publicUrl
+                                                ) {
+                                                    <img
+                                                        [src]="
+                                                            variant.publicUrl
+                                                        "
+                                                        [alt]="
+                                                            variant.formatName
+                                                        "
+                                                        class="h-full w-full object-cover"
+                                                    />
+                                                } @else {
+                                                    <span
+                                                        class="text-secondary text-xs font-bold uppercase"
+                                                        >{{
+                                                            variant.formatCode
+                                                        }}</span
+                                                    >
+                                                }
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div
+                                                    class="flex items-center gap-2"
+                                                >
+                                                    <span class="font-medium">{{
+                                                        variant.formatName
+                                                    }}</span>
+                                                    <span
+                                                        class="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-700"
+                                                        >{{
+                                                            variant.mimeType
+                                                        }}</span
+                                                    >
+                                                </div>
+                                                <div
+                                                    class="text-secondary mt-1 text-xs"
+                                                >
+                                                    {{ variant.width }}x{{
+                                                        variant.height
+                                                    }}
+                                                    •
+                                                    {{
+                                                        variant.fileSizeFormatted
+                                                    }}
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                                            >
+                                                <a
+                                                    [href]="variant.publicUrl"
+                                                    target="_blank"
+                                                    mat-icon-button
+                                                >
+                                                    <mat-icon
+                                                        class="icon-size-5"
+                                                        >open_in_new</mat-icon
+                                                    >
+                                                </a>
+                                                <button
+                                                    mat-icon-button
+                                                    color="warn"
+                                                    (click)="
+                                                        deleteVariant(
+                                                            variant.id
+                                                        )
+                                                    "
+                                                >
+                                                    <mat-icon
+                                                        class="icon-size-5"
+                                                        >delete</mat-icon
+                                                    >
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (containerVariants().length === 0) {
+                                        <div
+                                            class="text-secondary flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-8"
+                                        >
+                                            <mat-icon
+                                                class="text-secondary/50 mb-2 icon-size-8"
+                                                >layers_clear</mat-icon
+                                            >
+                                            <p>
+                                                {{
+                                                    'admin.media.messages.noFormats'
+                                                        | transloco
+                                                }}
+                                            </p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 </mat-tab>
+
+                <!-- Tools Tab (Focal Point) -->
+                @if (media()?.fileType === 'image') {
+                    <mat-tab [label]="'admin.media.focalPoint.tab' | transloco">
+                        <div class="h-full overflow-hidden p-4 md:p-6">
+                            <app-focal-point-picker
+                                [media]="media()!"
+                                (updated)="reloadDetails()"
+                            >
+                            </app-focal-point-picker>
+                        </div>
+                    </mat-tab>
+                }
             </mat-tab-group>
         </div>
     </div>

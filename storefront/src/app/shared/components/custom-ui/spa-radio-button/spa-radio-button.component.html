@@ -10,9 +10,7 @@
             [disabled]="o.disabled"
             class="mr-4"
         >
-            {{ o.label }}
+            {{ o.label || (o.labelKey | transloco) }}
         </mat-radio-button>
     }
 </mat-radio-group>
-
-

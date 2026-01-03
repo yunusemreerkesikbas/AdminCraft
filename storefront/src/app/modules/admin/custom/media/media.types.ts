@@ -3,6 +3,14 @@ import { Language } from '@shared/types/common.types';
 
 export type { Language };
 
+export interface PaginationResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+}
+
 export enum MediaStatus {
     PROCESSING = 'PROCESSING',
     ACTIVE = 'ACTIVE',
@@ -62,6 +70,8 @@ export interface Media {
     altText?: string;
     dimensions?: string;
     publicUrl?: string;
+    focalPointX?: number;
+    focalPointY?: number;
 }
 
 export interface MediaI18n {
@@ -98,13 +108,16 @@ export interface MediaContainer {
 
 /** Media format variant - matches backend MediaContainerResponse.MediaVariantResponse */
 export interface MediaVariantResponse {
-    formatId: number;
+    id: number;
+    uid: string;
     formatCode: string;
     formatName: string;
-    mediaId: number;
-    mediaUrl: string;
     width: number;
     height: number;
+    fileSize: number;
+    fileSizeFormatted: string;
+    mimeType: string;
+    publicUrl: string;
 }
 
 export interface MediaResponse extends Media {
@@ -171,4 +184,30 @@ export interface MediaDetailDialogData extends SpaDialogData {
 export interface MediaPickerDialogData extends SpaDialogData {
     mode: 'single' | 'multiple';
     allowedTypes?: string[];
+}
+
+export enum OutputFormat {
+    ORIGINAL = 'ORIGINAL',
+    JPEG = 'JPEG',
+    PNG = 'PNG',
+    WEBP = 'WEBP'
+}
+
+export interface GenerateFormatRequest {
+    formatCode?: string;
+    outputFormat: OutputFormat;
+    width?: number;
+    height?: number;
+    quality?: number;
+    customWidth?: number;
+    customHeight?: number;
+}
+
+export interface GenerateFormatsRequest {
+    formats: GenerateFormatRequest[];
+}
+
+export interface FocalPointRequest {
+    x: number;
+    y: number;
 }
