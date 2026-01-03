@@ -38,6 +38,7 @@ import com.backend.presentation.dto.request.MediaI18nRequest;
 import com.backend.presentation.dto.request.MediaUpdateRequest;
 import com.backend.presentation.dto.response.MediaDetailResponse;
 import com.backend.presentation.dto.response.MediaI18nResponse;
+import com.backend.presentation.dto.response.MediaListResponse;
 import com.backend.presentation.dto.response.MediaResponse;
 import com.backend.shared.common.ApiResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -105,11 +106,10 @@ public class MediaController {
         }
 
         @PostMapping(value = "/composite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-        @Operation(summary = "Upload media with metadata", description = "Uploads a file, assigns it to a folder, and creates i18n entries in a single transaction.")
+        @Operation(summary = "Upload media with metadata", description = "Uploads a file and creates i18n entries in a single transaction.")
         public ResponseEntity<ApiResponse<MediaResponse>> uploadComposite(
                         @Parameter(description = "The file to upload", required = true) @RequestParam("file") @Valid MultipartFile file,
                         @Parameter(description = "ID of the user uploading the file", required = true) @RequestParam("uploadedBy") @NotNull @Min(1) Long uploadedBy,
-                        @Parameter(description = "Target folder ID") @RequestParam(value = "folderId", required = false) Long folderId,
                         @Parameter(description = "Translations JSON string") @RequestParam(value = "translations", required = false) String translationsJson,
                         @Parameter(description = "Language code for messages") @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
@@ -123,7 +123,7 @@ public class MediaController {
                                                 });
                         }
 
-                        Media media = mediaService.uploadComposite(file, uploadedBy, folderId, translations);
+                        Media media = mediaService.uploadComposite(file, uploadedBy, translations);
 
                         String message = messageSource.getMessage("media.upload.success", null,
                                         Locale.forLanguageTag(languageCode));
@@ -189,17 +189,18 @@ public class MediaController {
 
         /**
          * Get all media with optional pagination.
+         * Returns lightweight MediaListResponse for optimal performance.
          */
         @GetMapping
-        @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files.")
-        public ResponseEntity<ApiResponse<Page<MediaResponse>>> getAllMedia(
+        @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files with minimal data for grid display.")
+        public ResponseEntity<ApiResponse<Page<MediaListResponse>>> getAllMedia(
                         @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") @Min(0) int page,
                         @Parameter(description = "Page size") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
                         Page<Media> mediaPage = mediaService.findAll(pageRequest);
-                        Page<MediaResponse> responsePage = mediaPage.map(MediaResponse::from);
+                        Page<MediaListResponse> responsePage = mediaPage.map(MediaListResponse::from);
                         return ResponseEntity.ok(ApiResponse.success(responsePage));
                 } catch (Exception ex) {
                         log.error("Error getting all media: {}", ex.getMessage());
@@ -211,17 +212,16 @@ public class MediaController {
         }
 
         /**
-         * Update media metadata (folder, public flag, tags).
+         * Update media metadata (public flag, tags).
          */
         @PutMapping("/{id}")
-        @Operation(summary = "Update media metadata", description = "Updates media properties like folder, public status, and tags.")
+        @Operation(summary = "Update media metadata", description = "Updates media properties like public status and tags.")
         public ResponseEntity<ApiResponse<MediaResponse>> updateMedia(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestBody @Valid MediaUpdateRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
-                        Media media = mediaService.updateMetadata(id, request.folderId(), request.isPublic(),
-                                        request.tags());
+                        Media media = mediaService.updateMetadata(id, request.isPublic(), request.tags());
                         String message = messageSource.getMessage("media.update.success", null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.ok(ApiResponse.success(message, MediaResponse.from(media)));
@@ -258,26 +258,6 @@ public class MediaController {
                                         new Object[] { ex.getMessage() },
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                        .body(ApiResponse.error(message));
-                }
-        }
-
-        @GetMapping("/folder/{folderId}")
-        @Operation(summary = "Get media by folder", description = "Retrieves all media files within a specific folder.")
-        public ResponseEntity<ApiResponse<List<MediaResponse>>> getMediaByFolder(
-                        @PathVariable @Valid @NotNull @Min(1) Long folderId,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                try {
-                        List<Media> mediaList = mediaService.findByFolderId(folderId);
-                        List<MediaResponse> responseList = mediaList.stream()
-                                        .map(MediaResponse::from)
-                                        .toList();
-                        return ResponseEntity.ok(ApiResponse.success(responseList));
-                } catch (Exception ex) {
-                        log.error("Error getting media by folder {}: {}", folderId, ex.getMessage());
-                        String message = messageSource.getMessage("media.list.error", new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
         }
@@ -431,7 +411,7 @@ public class MediaController {
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
-                        Optional<Media> mediaOpt = mediaService.findByIdWithFolder(id);
+                        Optional<Media> mediaOpt = mediaService.findById(id);
                         if (mediaOpt.isEmpty()) {
                                 String message = messageSource.getMessage("media.not.found", new Object[] { id },
                                                 Locale.forLanguageTag(languageCode));

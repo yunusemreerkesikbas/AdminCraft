@@ -11,24 +11,20 @@ import com.backend.domain.entity.Media;
 
 public interface MediaService {
 
-    // Basic CRUD operations
     Media uploadFile(MultipartFile file, Long uploadedBy);
 
     /**
-     * Upload a file with optional folder and i18n data in a single transaction.
+     * Upload a file with optional i18n data in a single transaction.
      *
      * @param file         The file to upload
      * @param uploadedBy   User ID
-     * @param folderId     Target folder ID (optional)
      * @param translations Map of language to i18n request (optional)
      * @return Created media
      */
-    Media uploadComposite(MultipartFile file, Long uploadedBy, Long folderId,
+    Media uploadComposite(MultipartFile file, Long uploadedBy,
             java.util.Map<com.backend.domain.enums.Language, com.backend.presentation.dto.request.MediaI18nRequest> translations);
 
     Optional<Media> findById(Long id);
-
-    Optional<Media> findByIdWithFolder(Long id);
 
     Optional<Media> findByUid(String uid);
 
@@ -40,12 +36,11 @@ public interface MediaService {
      * Update media metadata.
      *
      * @param id       media ID
-     * @param folderId new folder ID (nullable)
      * @param isPublic public access flag
      * @param tags     tags list
      * @return updated Media
      */
-    Media updateMetadata(Long id, Long folderId, Boolean isPublic, List<String> tags);
+    Media updateMetadata(Long id, Boolean isPublic, List<String> tags);
 
     void delete(Long id);
 
@@ -63,18 +58,6 @@ public interface MediaService {
     byte[] getFileContent(String fileName);
 
     String getFileUrl(Long id);
-
-    // Folder operations
-    List<Media> findByFolderId(Long folderId);
-
-    /**
-     * Move media to a different folder.
-     *
-     * @param mediaId  media ID
-     * @param folderId target folder ID (nullable for root)
-     * @return updated Media
-     */
-    Media moveToFolder(Long mediaId, Long folderId);
 
     // Statistics
     long count();

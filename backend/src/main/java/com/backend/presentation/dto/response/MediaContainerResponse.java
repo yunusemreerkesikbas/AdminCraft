@@ -9,14 +9,13 @@ import com.backend.domain.entity.MediaContainerItem;
 /**
  * Response DTO for MediaContainer entity.
  * Groups master media with its format variants (SAP Hybris pattern).
+ * Note: masterMedia removed to avoid duplication - use masterMediaId reference instead.
  */
 public record MediaContainerResponse(
     Long id,
-    String uuid,
     String uid,
     String code,
     Long masterMediaId,
-    MediaResponse masterMedia,
     List<MediaVariantResponse> variants,
     LocalDateTime createdAt,
     LocalDateTime updatedAt) {
@@ -67,11 +66,9 @@ public record MediaContainerResponse(
 
     return new MediaContainerResponse(
         entity.getId(),
-        entity.getUuid(),
         entity.getUid(),
         entity.getCode(),
         entity.getMasterMedia() != null ? entity.getMasterMedia().getId() : null,
-        entity.getMasterMedia() != null ? MediaResponse.from(entity.getMasterMedia()) : null,
         variantResponses,
         entity.getCreatedAt(),
         entity.getUpdatedAt());

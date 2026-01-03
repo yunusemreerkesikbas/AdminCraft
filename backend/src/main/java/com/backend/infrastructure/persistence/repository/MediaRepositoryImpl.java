@@ -33,11 +33,6 @@ public class MediaRepositoryImpl implements MediaRepository {
     }
 
     @Override
-    public Optional<Media> findByIdWithFolder(Long id) {
-        return jpaRepository.findByIdWithDetails(id);
-    }
-
-    @Override
     public Optional<Media> findByUid(String uid) {
         return jpaRepository.findByUid(uid);
     }
@@ -90,21 +85,6 @@ public class MediaRepositoryImpl implements MediaRepository {
     @Override
     public boolean existsByFileName(String fileName) {
         return jpaRepository.existsByFileName(fileName);
-    }
-
-    @Override
-    public List<Media> findByFolderId(Long folderId) {
-        return jpaRepository.findByFolderId(folderId);
-    }
-
-    @Override
-    public List<Media> findByFolderIsNull() {
-        return jpaRepository.findByFolderIsNull();
-    }
-
-    @Override
-    public long countByFolderId(Long folderId) {
-        return jpaRepository.countByFolderId(folderId);
     }
 
     @Override

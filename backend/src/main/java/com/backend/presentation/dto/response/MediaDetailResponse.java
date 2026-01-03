@@ -13,7 +13,7 @@ import com.backend.domain.enums.StorageProvider;
 
 /**
  * Detailed response DTO for Media entity.
- * Includes folder, container (with variants), and i18n translations.
+ * Includes container (with variants) and i18n translations.
  */
 public record MediaDetailResponse(
     Long id,
@@ -28,7 +28,6 @@ public record MediaDetailResponse(
     Integer width,
     Integer height,
     String dimensions,
-    MediaFolderResponse folder,
     Boolean isPublic,
     Long uploadedBy,
     StorageProvider storageProvider,
@@ -78,7 +77,6 @@ public record MediaDetailResponse(
         entity.getWidth(),
         entity.getHeight(),
         entity.getDimensions(),
-        entity.getFolder() != null ? MediaFolderResponse.from(entity.getFolder()) : null,
         entity.getIsPublic(),
         entity.getUploadedBy(),
         entity.getStorageProvider(),

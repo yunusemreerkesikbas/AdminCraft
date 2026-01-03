@@ -14,11 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.backend.application.config.StorageConfigProperties;
 import com.backend.application.dto.ImageDimensions;
 import com.backend.domain.entity.Media;
-import com.backend.domain.entity.MediaFolder;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
-import com.backend.domain.repository.MediaFolderRepository;
 import com.backend.domain.repository.MediaRepository;
 import com.backend.presentation.dto.request.MediaI18nRequest;
 
@@ -31,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepository;
-    private final MediaFolderRepository folderRepository;
     private final MediaI18nService i18nService;
     private final MediaStorageService storageService;
     private final MediaProcessingService processingService;
@@ -40,7 +37,7 @@ public class MediaServiceImpl implements MediaService {
     private final TransactionTemplate transactionTemplate;
 
     @Override
-    public Media uploadComposite(MultipartFile file, Long uploadedBy, Long folderId,
+    public Media uploadComposite(MultipartFile file, Long uploadedBy,
             Map<Language, MediaI18nRequest> translations) {
         // 1. Upload basic file (reuses existing logic)
         Media media = uploadFile(file, uploadedBy);
@@ -48,16 +45,9 @@ public class MediaServiceImpl implements MediaService {
         return transactionTemplate.execute(status -> {
             Media currentMedia = mediaRepository.findById(media.getId()).orElseThrow();
 
-            // 2. Set Folder
-            if (folderId != null) {
-                MediaFolder folder = folderRepository.findById(folderId)
-                        .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + folderId));
-                currentMedia.setFolder(folder);
-            }
-
             Media saved = mediaRepository.save(currentMedia);
 
-            // 3. Create I18n entries
+            // 2. Create I18n entries
             if (translations != null && !translations.isEmpty()) {
                 translations.forEach((lang, req) -> {
                     i18nService.upsert(saved.getId(), lang, req.altText(), req.title(), req.description());
@@ -141,12 +131,6 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Media> findByIdWithFolder(Long id) {
-        return mediaRepository.findByIdWithFolder(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Optional<Media> findByUid(String uid) {
         return mediaRepository.findByUid(uid);
     }
@@ -173,20 +157,11 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     @Transactional
-    public Media updateMetadata(Long id, Long folderId, Boolean isPublic, List<String> tags) {
+    public Media updateMetadata(Long id, Boolean isPublic, List<String> tags) {
         log.debug("Updating media metadata for ID: {}", id);
 
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + id));
-
-        // Update folder if provided
-        if (folderId != null) {
-            MediaFolder folder = folderRepository.findById(folderId)
-                    .orElseThrow(() -> new IllegalArgumentException("Folder not found with ID: " + folderId));
-            media.setFolder(folder);
-        } else {
-            media.setFolder(null);
-        }
 
         // Update public flag if provided
         if (isPublic != null) {
@@ -254,33 +229,6 @@ public class MediaServiceImpl implements MediaService {
     @Transactional(readOnly = true)
     public String getFileUrl(Long id) {
         return "/api/media/files/" + id;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Media> findByFolderId(Long folderId) {
-        return mediaRepository.findByFolderId(folderId);
-    }
-
-    @Override
-    @Transactional
-    public Media moveToFolder(Long mediaId, Long folderId) {
-        log.debug("Moving media {} to folder {}", mediaId, folderId);
-
-        Media media = mediaRepository.findById(mediaId)
-                .orElseThrow(() -> new IllegalArgumentException("Media not found with ID: " + mediaId));
-
-        if (folderId != null) {
-            MediaFolder folder = folderRepository.findById(folderId)
-                    .orElseThrow(() -> new IllegalArgumentException("Folder not found with ID: " + folderId));
-            media.setFolder(folder);
-        } else {
-            media.setFolder(null);
-        }
-
-        Media savedMedia = mediaRepository.save(media);
-        log.info("Media {} moved to folder {}", mediaId, folderId);
-        return savedMedia;
     }
 
     @Override
