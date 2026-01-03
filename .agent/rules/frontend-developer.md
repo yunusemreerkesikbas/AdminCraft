@@ -1,45 +1,145 @@
 ---
 trigger: model_decision
-description: Frontend Developer - Angular 19 Multi-Tenant Clean Architecture Angular 19, TypeScript (strict), RxJS, Signals, Material Design
+description: Frontend Developer - Angular 19 TypeScript (strict), RxJS, Signals, Material Design
 ---
 
-# Frontend Developer - Angular 19 Multi-Tenant Clean Architecture
+# Frontend Developer — Angular 19 / TypeScript 5.6.3
 
 ## Stack
 
-Angular 19, TypeScript (strict), RxJS, Signals, Material Design
+Angular 19, TypeScript (strict), RxJS, Signals, Material Design, TailwindCSS
+
+---
 
 ## Component Architecture
 
-**Structure**: Standalone, OnPush change detection, `spa-` prefix
+**Structure**: Standalone, OnPush, `spa-` prefix
 
 ```typescript
 @Component({
   selector: "spa-page-list",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    /* ... */
+  ],
 })
-export class SpaPageListComponent extends BaseCrudListComponent<Page> {
-  protected service = inject(PageService);
-  protected store = new CrudStore<Page>();
+export class SpaPageListComponent extends BaseCrudListComponent<Page> implements OnDestroy {
+  #pageService = inject(PageService);
+  #destroy$ = new Subject<void>();
+
+  protected pageStore = inject(PageStore);
+  protected itemsSig = signal<Page[]>([]);
+  protected isLoadingSig = signal(false);
 
   protected override fetchItems() {
-    return this.service.list();
+    return this.#pageService.list();
+  }
+
+  ngOnDestroy() {
+    this.#destroy$.next();
+    this.#destroy$.complete();
   }
 }
 ```
 
-**Type Safety**: Explicit types everywhere, private with `#` syntax
+---
+
+## Naming Conventions
+
+| Element             | Convention             | Example                       |
+| ------------------- | ---------------------- | ----------------------------- |
+| Component           | PascalCase + Component | `SpaPageListComponent`        |
+| Service             | PascalCase + Service   | `PageService`, `MediaService` |
+| Interface/Type      | PascalCase             | `Page`, `MediaFormat`         |
+| Signal variable     | camelCase + Sig        | `itemsSig`, `isLoadingSig`    |
+| Observable variable | camelCase + $          | `items$`, `user$`             |
+| Private field       | #camelCase             | `#mediaService`, `#destroy$`  |
+| Protected field     | camelCase              | `pageStore`, `dialogRef`      |
+| Constant            | SCREAMING_SNAKE        | `API_ENDPOINTS`, `MAX_SIZE`   |
+| Selector            | spa-kebab-case         | `spa-page-list`               |
+| File name           | kebab-case             | `page-list.component.ts`      |
+
+---
+
+## Access Modifiers
 
 ```typescript
-private userId: string = '';
-#internalState: boolean = false;
-protected getUser(id: string): Observable<ApiResponse<User>> { ... }
+// ✅ Correct
+#privateService = inject(MediaService);      // Private (class internal)
+protected itemsSig = signal<Item[]>([]);     // Protected (template access)
+
+// ❌ Avoid
+public itemsSig = signal<Item[]>([]);        // No public unless required
+private itemsSig = signal<Item[]>([]);       // Use # instead
 ```
 
-## CRUD Base Classes (`core/crud/`)
+---
 
-### CrudHttpService
+## Angular 19 Control Flow
+
+```html
+<!-- ✅ New syntax -->
+@if (isLoadingSig()) {
+<mat-spinner />
+} @for (item of itemsSig(); track item.id) {
+<div>{{ item.title }}</div>
+} @switch (statusSig()) { @case ('loading') { <mat-spinner /> } @case ('error') { <error-message /> } @default { <content /> } }
+
+<!-- ❌ Avoid old directives -->
+<div *ngIf="...">
+  <!-- NO -->
+  <div *ngFor="..."><!-- NO --></div>
+</div>
+```
+
+---
+
+## Signals & State
+
+```typescript
+// Signals
+protected countSig = signal(0);
+protected doubledSig = computed(() => this.countSig() * 2);
+
+protected increment() {
+  this.countSig.update(v => v + 1);
+}
+
+// Input signals (Angular 19)
+protected readonly id = input.required<number>();
+protected readonly title = input<string>('');
+```
+
+---
+
+## RxJS & Subscriptions
+
+```typescript
+// ✅ One-time operation
+this.#pageService.getById(id).pipe(take(1)).subscribe(...);
+
+// ✅ Long-lived subscription
+this.#pageService.changes$
+  .pipe(takeUntil(this.#destroy$))
+  .subscribe(...);
+
+// ✅ Cleanup pattern
+#destroy$ = new Subject<void>();
+
+ngOnDestroy() {
+  this.#destroy$.next();
+  this.#destroy$.complete();
+}
+
+// ✅ Async pipe (preferred)
+protected user$ = this.#userService.getCurrentUser();
+// Template: @if (user$ | async; as user) { ... }
+```
+
+---
+
+## Service Pattern
 
 ```typescript
 @Injectable({ providedIn: "root" })
@@ -54,145 +154,130 @@ export class PageService extends CrudHttpService<Page, CreateDto, UpdateDto> {
 }
 ```
 
-Auto-unwraps `ApiResponse<T>`, provides CRUD methods.
+---
 
-### CrudStore (Signals)
-
-```typescript
-protected store = new CrudStore<Page>();
-// Signals: items(), isLoading(), error()
-
-// Template
-@if (store.isLoading()) { <mat-spinner/> }
-@for (item of store.items(); track item.id) { <div>{{ item.title }}</div> }
-```
-
-### BaseCrudListComponent
-
-```typescript
-protected override beforeLoad(): boolean { return !!this.tenantId; }
-protected override fetchItems() { return this.service.list(); }
-protected override onLoadSuccess(items: T[]) { this.store.setItems(items); }
-```
-
-Hooks: `beforeLoad()`, `fetchItems()`, `onLoadSuccess()`, `onLoadError()`, `matchesFilter()`
-
-### BaseCrudFormComponent
-
-```typescript
-protected override beforeCreate(dto: CreateDto): CreateDto {
-  return { ...dto, uid: this.generateUid() };
-}
-protected override onCreateSuccess(item: T) {
-  this.router.navigate(['/pages', item.id]);
-}
-```
-
-Hooks: `beforeCreate()`, `beforeUpdate()`, `onCreateSuccess()`, `onUpdateSuccess()`
-
-## API Integration
-
-```typescript
-export const API_ENDPOINTS = {
-  pages: {
-    base: "/pages",
-    byId: (id: number) => `/pages/${id}`,
-    i18n: (id: number, lang: string) => `/pages/${id}/i18n/${lang}`,
-  },
-  provisioning: {
-    start: (tenantId: number) => `/provisioning/tenants/${tenantId}/provision`,
-    jobStatus: (jobId: number) => `/provisioning/jobs/${jobId}`,
-  },
-} as const;
-```
-
-## RxJS & Memory Management
-
-```typescript
-// ✅ One-time ops
-this.service.getById(id).pipe(take(1)).subscribe(...);
-
-// ✅ Async pipe
-protected user$ = this.service.getCurrentUser();
-// Template: @if (user$ | async as user) { ... }
-
-// ✅ Cleanup
-#subscription?: Subscription;
-ngOnDestroy() { this.#subscription?.unsubscribe(); }
-```
-
-## Polling Pattern (Provisioning)
+## Polling Pattern
 
 ```typescript
 @Component({ selector: "spa-provision-dialog" })
 export class ProvisionDialogComponent implements OnDestroy {
-  protected jobStatus$ = signal<JobResponse | null>(null);
-  #pollSubscription?: Subscription;
+  #provisionService = inject(ProvisionService);
+  #destroy$ = new Subject<void>();
+
+  protected jobStatusSig = signal<JobResponse | null>(null);
 
   #startPolling(jobId: number): void {
-    this.#pollSubscription = interval(2000)
+    interval(2000)
       .pipe(
-        switchMap(() => this.service.getJobStatus(jobId)),
-        takeWhile((r) => r.data.status === "running", true)
+        switchMap(() => this.#provisionService.getJobStatus(jobId)),
+        takeWhile((r) => r.data.status === "running", true),
+        takeUntil(this.#destroy$)
       )
-      .subscribe((r) => this.jobStatus$.set(r.data));
+      .subscribe((r) => this.jobStatusSig.set(r.data));
   }
 
   ngOnDestroy() {
-    this.#pollSubscription?.unsubscribe();
+    this.#destroy$.next();
+    this.#destroy$.complete();
   }
 }
 ```
 
-**Template**: Progress bar + status badges + retry button on failure
+---
 
-## i18n Pattern (Language Tabs)
+## Shared UI Components (custom-ui/)
+
+Use components from **shared/components/custom-ui/** for form fields:
+
+| Component                 | Usage                        |
+| ------------------------- | ---------------------------- |
+| `SpaInputComponent`       | Text inputs, email, password |
+| `SpaTextareaComponent`    | Multi-line text              |
+| `SpaSelectComponent`      | Dropdown select              |
+| `SpaCheckboxComponent`    | Boolean checkbox             |
+| `SpaToggleComponent`      | Toggle switch                |
+| `SpaRadioButtonComponent` | Radio button group           |
+| `SpaSearchInputComponent` | Search with debounce         |
+| `SpaReorderListComponent` | Drag & drop reordering       |
 
 ```typescript
-export class SpaPageFormComponent {
-  protected tabs = ["general", "tr", "en"];
-  protected activeTab = signal("general");
+// ✅ Correct: Use shared components
+import { SpaInputComponent, SpaSelectComponent } from "@shared/components/custom-ui";
 
-  protected saveGeneral() {
-    this.service.update(this.generalForm.value).pipe(take(1)).subscribe();
-  }
+// ❌ Wrong: Create new form field components
+// Each form should use existing custom-ui components
+```
 
-  protected saveI18n(language: string) {
-    this.service.upsertI18n(this.pageId, language, this.i18nForm.value).pipe(take(1)).subscribe();
-  }
+---
+
+## Reusable Code (DRY Principle)
+
+Define repeating code blocks in global locations:
+
+| Location             | Purpose                                           |
+| -------------------- | ------------------------------------------------- |
+| `core/crud/`         | CrudHttpService, BaseCrudListComponent, CrudStore |
+| `core/services/`     | NotificationService, TenantContextService         |
+| `shared/services/`   | ItemDialogService, ConfirmDialogService           |
+| `shared/components/` | SpaGenericModalComponent, spa-empty-state         |
+| `shared/types/`      | Common interfaces, API response types             |
+| `api-endpoints.ts`   | Centralized API endpoint constants                |
+
+```typescript
+// ✅ Correct: Extend base classes
+export class PageService extends CrudHttpService<Page, CreateDto, UpdateDto> {}
+export class SpaPageListComponent extends BaseCrudListComponent<Page> {}
+
+// ✅ Correct: Use shared services
+#dialogService = inject(ItemDialogService);
+#notification = inject(NotificationService);
+
+// ❌ Wrong: Duplicate utility code in components
+// Move to shared service or helper
+```
+
+---
+
+## Business Logic Rules (CRITICAL)
+
+**All calculations and business logic must be handled by Backend!**
+
+| Frontend             | Backend                   |
+| -------------------- | ------------------------- |
+| ✅ Veri gösterimi    | ✅ Hesaplama, validasyon  |
+| ✅ UI state yönetimi | ✅ Data transformation    |
+| ✅ Form binding      | ✅ Business rules         |
+| ❌ Data manipulation | ✅ Aggregation, filtering |
+| ❌ Calculations      | ✅ Complex sorting        |
+
+```typescript
+// ❌ WRONG: Frontend calculation
+const total = items.reduce((sum, item) => sum + item.price, 0);
+const filteredItems = items.filter((item) => item.status === "ACTIVE");
+
+// ✅ CORRECT: Backend provides calculated data
+interface PageResponse {
+  items: Page[];
+  totalPrice: number; // Backend calculates
+  activeCount: number; // Backend filters and counts
 }
 ```
 
-## Signals
-
-```typescript
-protected count = signal(0);
-protected doubled = computed(() => this.count() * 2);
-protected increment() { this.count.update(v => v + 1); }
-
-// Template
-<div>Count: {{ count() }}</div>
-<button (click)="increment()">+</button>
-```
+---
 
 ## Quick Checklist
 
-- [ ] Extend CrudHttpService / BaseCrudListComponent
-- [ ] Use CrudStore for state
-- [ ] OnPush change detection
-- [ ] Explicit types, private with #
-- [ ] spa- prefix
-- [ ] take(1) or unsubscribe in ngOnDestroy
-- [ ] Polling cleaned up
-- [ ] Dialog data typed
-- [ ] API endpoints centralized
-
-defensive programming yapmayalım
-try-catch bloklarını mümkünse kullanmayalım.
-kodda yorum satırı ve console.log bırakmayalım
-access modifierda protected veya #private kullanalım. sadece gerekliyse public kullanalım.
-getter setter metodları kullanmamaya çalışalım
-subscription işlemlerinde take(1),takeUntil() ve unsubscribe yapalım.
-modern angular yöntemlerini kullanalım. change detection, control flow, signal
-DOM manipulasyonlarında WindowRef kullanalım. ör: this.windowRef.nativeWindow.localStorage
-değişken ve metod tanımlamalarında tip tanımlamalarına çok özen gösterelim
+| Category      | Rule                                       |
+| ------------- | ------------------------------------------ |
+| Components    | Standalone, OnPush, spa- prefix            |
+| Signals       | Use Sig suffix: `itemsSig`, `isLoadingSig` |
+| Private       | Use # syntax: `#service`, `#destroy$`      |
+| Subscriptions | take(1) or takeUntil(#destroy$)            |
+| Control Flow  | @if, @for, @switch (no *ngIf/*ngFor)       |
+| Types         | Explicit everywhere                        |
+| Access        | Protected by default, # for private        |
+| Form Fields   | Use custom-ui/ components                  |
+| Shared Code   | Extend base classes, use shared services   |
+| Business      | ❌ No calculations, backend provides data  |
+| Comments      | ❌ No code comments                        |
+| Console       | ❌ No console.log                          |
