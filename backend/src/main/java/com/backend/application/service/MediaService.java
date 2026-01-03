@@ -79,4 +79,13 @@ public interface MediaService {
      * @return list of Media matching the UIDs
      */
     List<Media> findByUids(List<String> uids);
+
+    /**
+     * Update focal point for smart cropping.
+     *
+     * @param id media ID
+     * @param x  horizontal focal point (0.0 = left, 1.0 = right)
+     * @param y  vertical focal point (0.0 = top, 1.0 = bottom)
+     */
+    void updateFocalPoint(Long id, Double x, Double y);
 }

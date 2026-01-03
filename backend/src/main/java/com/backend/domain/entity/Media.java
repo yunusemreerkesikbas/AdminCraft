@@ -117,6 +117,13 @@ public class Media extends BaseEntity {
   @OneToMany(mappedBy = "media", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<MediaI18n> translations = new ArrayList<>();
 
+  // Focal point for smart cropping (0.0 to 1.0)
+  @Column(name = "focal_point_x")
+  private Double focalPointX = 0.5; // 0.0 = left, 1.0 = right
+
+  @Column(name = "focal_point_y")
+  private Double focalPointY = 0.5; // 0.0 = top, 1.0 = bottom
+
   // Business methods
   public boolean isImage() {
     return mimeType != null && mimeType.startsWith("image/");

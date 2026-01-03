@@ -29,17 +29,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.application.service.MediaContainerService;
 import com.backend.application.service.MediaI18nService;
+import com.backend.application.service.MediaProcessingService;
 import com.backend.application.service.MediaService;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaContainer;
 import com.backend.domain.entity.MediaI18n;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.request.FocalPointRequest;
+import com.backend.presentation.dto.request.GenerateFormatRequest;
+import com.backend.presentation.dto.request.GenerateFormatsRequest;
 import com.backend.presentation.dto.request.MediaI18nRequest;
 import com.backend.presentation.dto.request.MediaUpdateRequest;
 import com.backend.presentation.dto.response.MediaDetailResponse;
 import com.backend.presentation.dto.response.MediaI18nResponse;
 import com.backend.presentation.dto.response.MediaListResponse;
 import com.backend.presentation.dto.response.MediaResponse;
+import com.backend.presentation.dto.response.MediaVariantResponse;
 import com.backend.shared.common.ApiResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +75,7 @@ public class MediaController {
         private final MediaService mediaService;
         private final MediaI18nService i18nService;
         private final MediaContainerService containerService;
+        private final MediaProcessingService processingService;
         private final MessageSource messageSource;
 
         private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -438,7 +444,160 @@ public class MediaController {
                 }
         }
 
+        // ========== Format Generation Operations ==========
+
+        /**
+         * Generate a single format variant for a media file.
+         * Supports both preset formats and custom dimensions.
+         */
+        @PostMapping("/{id}/generate-format")
+        @Operation(summary = "Generate format variant", description = "Generates a single format variant. Use formatCode for presets or customWidth/customHeight for custom sizes.")
+        public ResponseEntity<ApiResponse<MediaVariantResponse>> generateFormat(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestBody @Valid GenerateFormatRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        Media variant = processingService.generateSingleFormat(id, request);
+                        MediaVariantResponse response = toVariantResponse(variant, request);
+                        String message = messageSource.getMessage("media.format.generate.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(ApiResponse.success(message, response));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Format generation validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.format.generate.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error generating format for media {}: {}", id, ex.getMessage());
+                        String message = messageSource.getMessage("media.format.generate.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        /**
+         * Generate multiple format variants for a media file in batch.
+         */
+        @PostMapping("/{id}/generate-formats")
+        @Operation(summary = "Generate multiple format variants", description = "Generates multiple format variants in a single request. Max 10 formats per request.")
+        public ResponseEntity<ApiResponse<List<MediaVariantResponse>>> generateFormats(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestBody @Valid GenerateFormatsRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        List<MediaVariantResponse> responses = new java.util.ArrayList<>();
+                        for (GenerateFormatRequest formatReq : request.formats()) {
+                                Media variant = processingService.generateSingleFormat(id, formatReq);
+                                responses.add(toVariantResponse(variant, formatReq));
+                        }
+                        String message = messageSource.getMessage("media.formats.generate.success",
+                                        new Object[] { responses.size() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(ApiResponse.success(message, responses));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Batch format generation validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.format.generate.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error generating formats for media {}: {}", id, ex.getMessage());
+                        String message = messageSource.getMessage("media.format.generate.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        /**
+         * Delete a generated variant.
+         */
+        @DeleteMapping("/{mediaId}/variants/{variantId}")
+        @Operation(summary = "Delete variant", description = "Deletes a generated variant. The original media cannot be deleted via this endpoint.")
+        public ResponseEntity<ApiResponse<Void>> deleteVariant(
+                        @PathVariable @Valid @NotNull @Min(1) Long mediaId,
+                        @PathVariable @Valid @NotNull @Min(1) Long variantId,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        processingService.deleteVariant(mediaId, variantId);
+                        String message = messageSource.getMessage("media.variant.delete.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(message, null));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Variant delete validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.variant.delete.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error deleting variant {} from media {}: {}", variantId, mediaId, ex.getMessage());
+                        String message = messageSource.getMessage("media.variant.delete.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
+        /**
+         * Update focal point for smart cropping.
+         */
+        @PutMapping("/{id}/focal-point")
+        @Operation(summary = "Update focal point", description = "Sets the focal point for smart cropping. Values are normalized (0.0 to 1.0).")
+        public ResponseEntity<ApiResponse<Void>> updateFocalPoint(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestBody @Valid FocalPointRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        mediaService.updateFocalPoint(id, request.x(), request.y());
+                        String message = messageSource.getMessage("media.focalpoint.update.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(message, null));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Focal point update validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.focalpoint.update.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                } catch (Exception ex) {
+                        log.error("Error updating focal point for media {}: {}", id, ex.getMessage());
+                        String message = messageSource.getMessage("media.focalpoint.update.error",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(message));
+                }
+        }
+
         // ========== Validation ==========
+
+        private MediaVariantResponse toVariantResponse(Media variant, GenerateFormatRequest request) {
+                String formatCode = request.isPreset() ? request.formatCode()
+                                : "CUSTOM_" + variant.getWidth() + "x" + variant.getHeight();
+                String formatName = request.isPreset() ? request.formatCode()
+                                : "Custom " + variant.getWidth() + "x" + variant.getHeight();
+                return new MediaVariantResponse(
+                                variant.getId(),
+                                variant.getUid(),
+                                formatCode,
+                                formatName,
+                                variant.getWidth(),
+                                variant.getHeight(),
+                                variant.getFileSize(),
+                                variant.getFileSizeFormatted(),
+                                variant.getMimeType(),
+                                variant.getPublicUrl());
+        }
 
         private void validateFileUpload(MultipartFile file) {
                 if (file == null || file.isEmpty()) {
