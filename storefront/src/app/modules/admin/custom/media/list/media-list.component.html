@@ -1,370 +1,239 @@
-<div class="sm:absolute sm:inset-0 flex flex-col flex-auto min-w-0 sm:overflow-hidden bg-card dark:bg-transparent">
-
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
     <!-- Header -->
-    <div class="relative flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between py-8 px-6 md:px-8 border-b">
+    <div
+        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
         <!-- Loader -->
-        <div class="absolute inset-x-0 bottom-0"
-             *ngIf="isLoading">
-            <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-        </div>
+        @if (store.isLoading()) {
+            <div class="absolute inset-x-0 bottom-0">
+                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
+            </div>
+        }
         <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">{{ 'admin.media.title' | transloco }}</div>
+        <div class="text-4xl font-extrabold tracking-tight">
+            {{ 'admin.media.title' | transloco }}
+        </div>
         <!-- Actions -->
-        <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
             <!-- Search -->
-            <mat-form-field class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64">
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64"
+            >
                 <mat-icon
                     class="icon-size-5"
                     matPrefix
-                    [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                ></mat-icon>
                 <input
                     matInput
                     [formControl]="searchInputControl"
                     [autocomplete]="'off'"
-                    [placeholder]="('admin.media.searchPlaceholder' | transloco)">
+                    [placeholder]="'admin.media.searchPlaceholder' | transloco"
+                />
             </mat-form-field>
             <!-- Upload media button -->
             <button
                 class="ml-4"
                 mat-flat-button
                 [color]="'primary'"
-                (click)="showUploadForm()">
+                (click)="openUploadDialog()"
+            >
                 <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">{{ 'admin.media.upload' | transloco }}</span>
+                <span class="ml-2 mr-1">{{
+                    'admin.media.upload' | transloco
+                }}</span>
             </button>
         </div>
     </div>
 
     <!-- Main -->
     <div class="flex flex-auto overflow-hidden">
-
         <!-- Media files list -->
-        <div class="flex flex-col flex-auto sm:mb-18 overflow-hidden sm:overflow-y-auto">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
             <!-- Header -->
-            <div class="inventory-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5" matSort>
-                <div></div>
-                <div [mat-sort-header]="'originalName'" class="hidden sm:block">{{ 'admin.media.fields.name' | transloco }}</div>
-                <div [mat-sort-header]="'mimeType'" class="hidden lg:block">{{ 'admin.common.grid.type' | transloco }}</div>
-                <div [mat-sort-header]="'fileSize'" class="hidden lg:block">{{ 'admin.common.grid.size' | transloco }}</div>
-                <div [mat-sort-header]="'createdAt'" class="hidden sm:block">{{ 'admin.common.grid.uploaded' | transloco }}</div>
-                <div class="hidden sm:block">{{ 'admin.common.grid.details' | transloco }}</div>
+            <div
+                class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+            >
+                <div class="hidden sm:block">
+                    {{ 'admin.media.fields.name' | transloco }}
+                </div>
+                <div class="hidden lg:block">
+                    {{ 'admin.common.grid.type' | transloco }}
+                </div>
+                <div class="hidden lg:block">
+                    {{ 'admin.common.grid.size' | transloco }}
+                </div>
+                <div class="hidden xl:block">
+                    {{ 'admin.media.fields.dimensions' | transloco }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ 'admin.common.grid.uploaded' | transloco }}
+                </div>
+                <div class="hidden sm:block">
+                    {{ 'admin.common.grid.details' | transloco }}
+                </div>
             </div>
             <!-- Rows -->
-            <ng-container *ngIf="mediaFiles$ | async as mediaFiles">
-                <ng-container *ngFor="let mediaFile of mediaFiles; trackBy: trackByFn">
-                    <div class="inventory-grid grid items-center gap-4 py-3 px-6 md:px-8 border-b">
-
-                        <!-- Preview -->
-                        <div class="flex items-center">
-                            <div class="relative flex flex-0 items-center justify-center w-12 h-12 mr-6 rounded overflow-hidden border">
-                                <ng-container [ngSwitch]="getMediaType(mediaFile.mimeType)">
-                                    <img *ngSwitchCase="'IMAGE'" 
-                                         [src]="mediaFile.filePath" 
-                                         [alt]="mediaFile.altTextTr || mediaFile.originalName"
-                                         class="w-full h-full object-cover">
-                                    <mat-icon *ngSwitchCase="'VIDEO'" class="text-2xl">videocam</mat-icon>
-                                    <mat-icon *ngSwitchCase="'AUDIO'" class="text-2xl">audiotrack</mat-icon>
-                                    <mat-icon *ngSwitchCase="'DOCUMENT'" class="text-2xl">description</mat-icon>
-                                    <mat-icon *ngSwitchDefault class="text-2xl">insert_drive_file</mat-icon>
-                                </ng-container>
-                            </div>
+            @for (mediaFile of paginatedItemsSig(); track mediaFile.id) {
+                <div
+                    class="inventory-grid group grid items-center gap-4 border-b px-6 py-3 transition-colors hover:bg-gray-50 md:px-8 dark:hover:bg-gray-900"
+                >
+                    <!-- Preview -->
+                    <div class="flex items-center">
+                        <div
+                            class="relative mr-6 flex h-14 w-14 flex-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-800"
+                        >
+                            @switch (mediaFile.fileType) {
+                                @case ('image') {
+                                    <img
+                                        [src]="mediaFile.publicUrl"
+                                        [alt]="
+                                            mediaFile.altText ||
+                                            mediaFile.originalName
+                                        "
+                                        class="h-full w-full object-cover"
+                                    />
+                                }
+                                @case ('video') {
+                                    <mat-icon class="text-hint icon-size-8"
+                                        >videocam</mat-icon
+                                    >
+                                }
+                                @case ('audio') {
+                                    <mat-icon class="text-hint icon-size-8"
+                                        >audiotrack</mat-icon
+                                    >
+                                }
+                                @case ('document') {
+                                    <mat-icon class="text-hint icon-size-8"
+                                        >description</mat-icon
+                                    >
+                                }
+                                @default {
+                                    <mat-icon class="text-hint icon-size-8"
+                                        >insert_drive_file</mat-icon
+                                    >
+                                }
+                            }
                         </div>
 
                         <!-- File name & file name -->
                         <div class="truncate">
-                            <div class="font-medium">{{mediaFile.originalName}}</div>
-                            <div class="text-sm text-secondary">{{mediaFile.fileName}}</div>
-                        </div>
-
-                        <!-- Type -->
-                        <div class="hidden lg:block">
-                            <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                 [ngClass]="{
-                                    'bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50': getMediaType(mediaFile.mimeType) === 'IMAGE',
-                                    'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50': getMediaType(mediaFile.mimeType) === 'VIDEO',
-                                    'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50': getMediaType(mediaFile.mimeType) === 'AUDIO',
-                                    'bg-orange-100 text-orange-800 dark:bg-orange-600 dark:text-orange-50': getMediaType(mediaFile.mimeType) === 'DOCUMENT',
-                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50': getMediaType(mediaFile.mimeType) === 'OTHER'
-                                 }">
-                                {{getMediaType(mediaFile.mimeType)}}
+                            <div
+                                class="truncate font-medium"
+                                [matTooltip]="mediaFile.originalName"
+                            >
+                                {{ mediaFile.originalName }}
                             </div>
-                        </div>
-
-                        <!-- Size -->
-                        <div class="hidden lg:block text-sm text-secondary">
-                            {{formatFileSize(mediaFile.fileSize)}}
-                            <div *ngIf="mediaFile.width && mediaFile.height" class="text-xs">
-                                {{mediaFile.width}}x{{mediaFile.height}}
+                            <div
+                                class="text-secondary truncate text-sm"
+                                [matTooltip]="mediaFile.fileName"
+                            >
+                                {{ mediaFile.fileName }}
                             </div>
-                        </div>
-
-                        <!-- Uploaded -->
-                        <div class="hidden sm:block text-sm text-secondary">
-                            {{mediaFile.createdAt | date:'MMM dd, y'}}
-                            <div *ngIf="mediaFile.uploaderName" class="text-xs">
-                                by {{mediaFile.uploaderName}}
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div>
-                            <button
-                                class="min-h-7 min-w-10 h-7 px-2 leading-6"
-                                mat-stroked-button
-                                (click)="toggleDetails(mediaFile.id)">
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="selectedMediaFile?.id === mediaFile.id ? 'heroicons_solid:chevron-up' : 'heroicons_solid:chevron-down'"></mat-icon>
-                            </button>
                         </div>
                     </div>
-                    <!-- Media file details -->
-                    <div class="grid"
-                         *ngIf="selectedMediaFile?.id === mediaFile.id">
-                        <ng-container *ngTemplateOutlet="rowDetailsTemplate"></ng-container>
+
+                    <!-- Type -->
+                    <div class="hidden lg:block">
+                        <div
+                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide"
+                            [ngClass]="getMediaTypeClass(mediaFile)"
+                        >
+                            {{ mediaFile.fileType }}
+                        </div>
                     </div>
-                </ng-container>
-            </ng-container>
+
+                    <div class="text-secondary hidden text-sm lg:block">
+                        <div class="font-medium">
+                            {{ mediaFile.fileSizeFormatted }}
+                        </div>
+                    </div>
+
+                    <!-- Dimensions -->
+                    <div class="text-secondary hidden text-sm xl:block">
+                        @if (mediaFile.width && mediaFile.height) {
+                            <div class="font-medium">
+                                {{ mediaFile.width }}x{{ mediaFile.height }}
+                            </div>
+                        } @else {
+                            <div class="text-hint">-</div>
+                        }
+                    </div>
+
+                    <!-- Uploaded -->
+                    <div class="text-secondary hidden text-sm sm:block">
+                        <div>{{ mediaFile.createdAt | date: 'MMM dd, y' }}</div>
+                        @if (mediaFile.uploaderName) {
+                            <div class="text-hint text-xs">
+                                by {{ mediaFile.uploaderName }}
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Actions -->
+                    <div>
+                        <button
+                            mat-icon-button
+                            (click)="openDetailDialog(mediaFile)"
+                            [matTooltip]="
+                                'admin.common.actions.edit' | transloco
+                            "
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:pencil'"
+                            ></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            [color]="'warn'"
+                            (click)="deleteMedia(mediaFile)"
+                            [matTooltip]="
+                                'admin.common.actions.delete' | transloco
+                            "
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:trash'"
+                            ></mat-icon>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (paginatedItemsSig().length === 0) {
+                <div
+                    class="flex flex-auto flex-col items-center justify-center bg-gray-100 p-6 sm:p-10 dark:bg-transparent"
+                >
+                    <mat-icon
+                        class="text-gray-300 icon-size-24 dark:text-gray-600"
+                        [svgIcon]="'heroicons_outline:photo'"
+                    ></mat-icon>
+                    <div
+                        class="text-secondary mt-4 text-2xl font-semibold tracking-tight"
+                    >
+                        {{ 'admin.media.messages.noMediaFound' | transloco }}
+                    </div>
+                </div>
+            }
         </div>
-
-    </div>
-
-    <!-- Upload form (when no media file is selected) -->
-    <div class="grid" *ngIf="!selectedMediaFile">
-        <ng-container *ngTemplateOutlet="uploadFormTemplate"></ng-container>
     </div>
 
     <!-- Pagination -->
     <mat-paginator
-        class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
-        [ngClass]="{'pointer-events-none': isLoading}"
-        [length]="(pagination$ | async)?.length"
-        [pageIndex]="(pagination$ | async)?.page"
-        [pageSize]="(pagination$ | async)?.size"
+        class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
+        [ngClass]="{ 'pointer-events-none': store.isLoading() }"
+        [length]="totalItemsSig()"
+        [pageIndex]="pageIndexSig()"
+        [pageSize]="pageSizeSig()"
         [pageSizeOptions]="[5, 10, 25, 100]"
-        [showFirstLastButtons]="true"></mat-paginator>
-
+        [showFirstLastButtons]="true"
+        (page)="onPageChange($event)"
+    >
+    </mat-paginator>
 </div>
-
-<!-- Media file details template -->
-<ng-template #rowDetailsTemplate>
-    <div class="shadow-lg overflow-hidden">
-        <div class="flex border-b">
-
-            <!-- Selected media file form -->
-            <form
-                class="flex flex-col w-full"
-                [formGroup]="selectedMediaForm">
-
-                <div class="flex flex-col sm:flex-row p-8">
-
-                    <!-- Media preview -->
-                    <div class="flex flex-col w-full sm:w-1/3">
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <ng-container [ngSwitch]="getMediaType(selectedMediaFile.mimeType)">
-                                <img *ngSwitchCase="'IMAGE'" 
-                                     [src]="selectedMediaFile.filePath" 
-                                     [alt]="selectedMediaFile.altTextTr || selectedMediaFile.originalName"
-                                     class="w-full h-auto rounded">
-                                <video *ngSwitchCase="'VIDEO'" 
-                                       controls 
-                                       class="w-full h-auto rounded">
-                                    <source [src]="selectedMediaFile.filePath" [type]="selectedMediaFile.mimeType">
-                                </video>
-                                <audio *ngSwitchCase="'AUDIO'" 
-                                       controls 
-                                       class="w-full">
-                                    <source [src]="selectedMediaFile.filePath" [type]="selectedMediaFile.mimeType">
-                                </audio>
-                                <div *ngSwitchDefault class="flex flex-col items-center justify-center h-48 text-gray-500">
-                                    <mat-icon class="text-6xl mb-4">insert_drive_file</mat-icon>
-                                    <span>{{selectedMediaFile.originalName}}</span>
-                                </div>
-                            </ng-container>
-                        </div>
-                        
-                        <!-- File info -->
-                        <div class="mt-4 text-sm text-secondary">
-                            <div><strong>File:</strong> {{selectedMediaFile.fileName}}</div>
-                            <div><strong>Size:</strong> {{formatFileSize(selectedMediaFile.fileSize)}}</div>
-                            <div><strong>Type:</strong> {{selectedMediaFile.mimeType}}</div>
-                            <div *ngIf="selectedMediaFile.width && selectedMediaFile.height">
-                                <strong>Dimensions:</strong> {{selectedMediaFile.width}}x{{selectedMediaFile.height}}
-                            </div>
-                            <div><strong>Uploaded:</strong> {{selectedMediaFile.createdAt | date:'medium'}}</div>
-                        </div>
-                    </div>
-
-                    <!-- Media details -->
-                    <div class="flex flex-auto flex-wrap sm:pl-8">
-                        <!-- Original Name -->
-                        <div class="flex flex-col w-full">
-                            <mat-form-field class="w-full">
-                                <mat-label>Original Name</mat-label>
-                                <input
-                                    matInput
-                                    [formControlName]="'originalName'">
-                                <mat-error *ngIf="selectedMediaForm.get('originalName')?.hasError('required')">
-                                    Original name is required
-                                </mat-error>
-                            </mat-form-field>
-                        </div>
-
-                        <!-- Alt Text Turkish -->
-                        <div class="flex flex-col w-full">
-                            <mat-form-field class="w-full">
-                                <mat-label>Alt Text (Turkish)</mat-label>
-                                <textarea
-                                    matInput
-                                    [formControlName]="'altTextTr'"
-                                    [rows]="3">
-                                </textarea>
-                            </mat-form-field>
-                        </div>
-
-                        <!-- Alt Text English -->
-                        <div class="flex flex-col w-full">
-                            <mat-form-field class="w-full">
-                                <mat-label>Alt Text (English)</mat-label>
-                                <textarea
-                                    matInput
-                                    [formControlName]="'altTextEn'"
-                                    [rows]="3">
-                                </textarea>
-                            </mat-form-field>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between w-full border-t px-8 py-4">
-                    <div class="flex items-center">
-                        <div
-                            class="flex items-center mr-4"
-                            *ngIf="flashMessage">
-                            <ng-container *ngIf="flashMessage === 'success'">
-                                <mat-icon
-                                    class="text-green-500"
-                                    [svgIcon]="'heroicons_outline:check'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.common.messages.operationSuccess' | transloco }}</span>
-                            </ng-container>
-                            <ng-container *ngIf="flashMessage === 'error'">
-                                <mat-icon
-                                    class="text-red-500"
-                                    [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.common.messages.operationError' | transloco }}</span>
-                            </ng-container>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="flex items-center mr-4" *ngIf="selectedMediaFile">
-                            <button
-                                class="mr-2"
-                                mat-stroked-button
-                                [color]="'warn'"
-                                (click)="deleteSelectedMediaFile()">
-                                {{ 'admin.media.actions.delete' | transloco }}
-                            </button>
-                        </div>
-                        <button
-                            mat-flat-button
-                            [color]="'primary'"
-                            (click)="updateSelectedMediaFile()">
-                            {{ 'admin.media.actions.update' | transloco }}
-                        </button>
-                    </div>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-</ng-template>
-
-<!-- Upload form template -->
-<ng-template #uploadFormTemplate>
-    <div class="shadow-lg overflow-hidden">
-        <div class="flex border-b">
-
-            <!-- Upload form -->
-            <form
-                class="flex flex-col w-full"
-                [formGroup]="uploadForm">
-
-                <div class="flex flex-col sm:flex-row p-8">
-                    <div class="flex flex-auto flex-wrap">
-                        <!-- File upload -->
-                        <div class="flex flex-col w-full">
-                            <mat-form-field class="w-full">
-                                <mat-label>Select File</mat-label>
-                                <input
-                                    matInput
-                                    type="file"
-                                    (change)="onFileSelected($event)"
-                                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt">
-                                <mat-error *ngIf="uploadForm.get('file')?.hasError('required')">
-                                    File is required
-                                </mat-error>
-                            </mat-form-field>
-                        </div>
-
-                        <!-- Alt Text Turkish -->
-                        <div class="flex flex-col w-full lg:w-2/4">
-                            <mat-form-field class="w-full">
-                                <mat-label>Alt Text (Turkish)</mat-label>
-                                <textarea
-                                    matInput
-                                    [formControlName]="'altTextTr'"
-                                    [rows]="3">
-                                </textarea>
-                            </mat-form-field>
-                        </div>
-
-                        <!-- Alt Text English -->
-                        <div class="flex flex-col w-full lg:w-2/4 sm:pl-8">
-                            <mat-form-field class="w-full">
-                                <mat-label>Alt Text (English)</mat-label>
-                                <textarea
-                                    matInput
-                                    [formControlName]="'altTextEn'"
-                                    [rows]="3">
-                                </textarea>
-                            </mat-form-field>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between w-full border-t px-8 py-4">
-                    <div class="flex items-center">
-                        <div
-                            class="flex items-center mr-4"
-                            *ngIf="flashMessage">
-                            <ng-container *ngIf="flashMessage === 'success'">
-                                <mat-icon
-                                    class="text-green-500"
-                                    [svgIcon]="'heroicons_outline:check'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.media.messages.uploaded' | transloco }}</span>
-                            </ng-container>
-                            <ng-container *ngIf="flashMessage === 'error'">
-                                <mat-icon
-                                    class="text-red-500"
-                                    [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-                                <span class="ml-2">{{ 'admin.common.messages.operationError' | transloco }}</span>
-                            </ng-container>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <button
-                            mat-flat-button
-                            [color]="'primary'"
-                            [disabled]="!selectedFile"
-                            (click)="uploadMediaFile()">
-                            {{ 'admin.media.actions.upload' | transloco }}
-                        </button>
-                    </div>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-</ng-template>

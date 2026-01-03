@@ -1,0 +1,258 @@
+<spa-dialog-header
+    [title]="'admin.media.uploadFiles' | transloco"
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content class="h-[600px] max-h-[80vh] overflow-hidden !p-0">
+    <div class="flex h-full flex-col md:flex-row">
+        <!-- Left Panel: File Management (40%) -->
+        <div
+            class="flex w-full flex-col border-b bg-gray-50 md:w-2/5 md:border-b-0 md:border-r dark:bg-gray-800/50"
+        >
+            <!-- Drop Zone (Full height when empty, compact when files exist) -->
+            @if (selectedFilesSig().length === 0) {
+                <div
+                    class="flex flex-auto cursor-pointer flex-col items-center justify-center p-8 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    [class.bg-primary-50]="isDraggingSig()"
+                    [class.dark:bg-primary-900]="isDraggingSig()"
+                    (drop)="onDrop($event)"
+                    (dragover)="onDragOver($event)"
+                    (dragleave)="onDragLeave($event)"
+                    (click)="fileInput.click()"
+                >
+                    <input
+                        type="file"
+                        #fileInput
+                        multiple
+                        class="hidden"
+                        (change)="onFilesSelected($event)"
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    />
+                    <div
+                        class="mb-4 rounded-full bg-primary-100 p-4 dark:bg-primary-900/50"
+                    >
+                        <mat-icon
+                            class="text-primary-600 icon-size-8 dark:text-primary-400"
+                            >cloud_upload</mat-icon
+                        >
+                    </div>
+                    <p
+                        class="text-center text-lg font-medium text-gray-900 dark:text-gray-100"
+                    >
+                        {{ 'admin.media.dragDrop' | transloco }}
+                    </p>
+                    <p class="text-secondary mt-2 text-center text-sm">
+                        {{ 'admin.media.orBrowse' | transloco }}
+                    </p>
+                    <p class="text-secondary mt-4 text-center text-xs">
+                        {{ 'admin.media.maxFileSize' | transloco }}
+                    </p>
+                </div>
+            } @else {
+                <!-- Header -->
+                <div
+                    class="flex items-center justify-between border-b bg-white px-4 py-3 dark:bg-gray-900"
+                >
+                    <div class="font-medium">
+                        {{ 'admin.media.selectedFiles' | transloco }} ({{
+                            selectedFilesSig().length
+                        }})
+                    </div>
+                    <button
+                        mat-icon-button
+                        (click)="fileInput.click()"
+                        [matTooltip]="'admin.media.addMore' | transloco"
+                    >
+                        <mat-icon class="icon-size-5">add</mat-icon>
+                    </button>
+                    <!-- Hidden input for add more -->
+                    <input
+                        type="file"
+                        #fileInput
+                        multiple
+                        class="hidden"
+                        (change)="onFilesSelected($event)"
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    />
+                </div>
+
+                <!-- File List -->
+                <div class="flex-auto space-y-2 overflow-y-auto p-2">
+                    @for (
+                        file of selectedFilesSig();
+                        track file.name;
+                        let i = $index
+                    ) {
+                        <div
+                            class="group flex items-center gap-3 rounded-lg border bg-white p-3 shadow-sm dark:bg-gray-900"
+                        >
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800"
+                            >
+                                <mat-icon class="text-secondary">{{
+                                    getFileIcon(file)
+                                }}</mat-icon>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div
+                                    class="truncate text-sm font-medium"
+                                    [matTooltip]="file.name"
+                                >
+                                    {{ file.name }}
+                                </div>
+                                <div class="text-secondary text-xs">
+                                    {{ file.size | number }} bytes
+                                </div>
+                            </div>
+                            <button
+                                mat-icon-button
+                                class="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                                (click)="removeFile(i)"
+                            >
+                                <mat-icon class="text-warn-500 icon-size-4"
+                                    >close</mat-icon
+                                >
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <!-- Footer (Clear All) -->
+                <div class="border-t bg-white p-3 dark:bg-gray-900">
+                    <button
+                        mat-stroked-button
+                        color="warn"
+                        class="w-full"
+                        (click)="clearFiles()"
+                    >
+                        {{ 'admin.common.clearAll' | transloco }}
+                    </button>
+                </div>
+            }
+        </div>
+
+        <!-- Right Panel: Metadata Form (60%) -->
+        <div class="flex w-full flex-col bg-white md:w-3/5 dark:bg-gray-900">
+            <div class="flex-auto overflow-y-auto">
+                @if (selectedFilesSig().length === 0) {
+                    <div
+                        class="text-secondary flex h-full flex-col items-center justify-center opacity-50"
+                    >
+                        <mat-icon class="mb-2 icon-size-12">edit_note</mat-icon>
+                        <p>
+                            {{ 'admin.media.messages.uploadFirst' | transloco }}
+                        </p>
+                    </div>
+                } @else {
+                    <div class="p-6">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold leading-none">
+                                {{ 'admin.media.batchMetadata' | transloco }}
+                            </h3>
+                            <p class="text-secondary mt-1 text-sm">
+                                {{
+                                    'admin.media.batchMetadataDesc' | transloco
+                                }}
+                            </p>
+                        </div>
+
+                        <mat-tab-group [animationDuration]="'0ms'">
+                            @for (
+                                lang of supportedLanguages();
+                                track lang.code
+                            ) {
+                                <mat-tab [label]="lang.nativeName">
+                                    <div
+                                        class="flex flex-col gap-5 pt-6"
+                                        [formGroup]="form"
+                                    >
+                                        <spa-input
+                                            [formControlName]="
+                                                'title_' + lang.code
+                                            "
+                                            [label]="
+                                                'admin.media.fields.title'
+                                                    | transloco
+                                            "
+                                            [placeholder]="
+                                                'admin.media.fields.titlePlaceholder'
+                                                    | transloco
+                                            "
+                                        >
+                                            <mat-icon
+                                                matPrefix
+                                                class="mr-2 icon-size-5"
+                                                >title</mat-icon
+                                            >
+                                        </spa-input>
+
+                                        <spa-input
+                                            [formControlName]="
+                                                'altText_' + lang.code
+                                            "
+                                            [label]="
+                                                'admin.media.fields.altText'
+                                                    | transloco
+                                            "
+                                            [placeholder]="
+                                                'admin.media.fields.altTextPlaceholder'
+                                                    | transloco
+                                            "
+                                        >
+                                            <mat-icon
+                                                matPrefix
+                                                class="mr-2 icon-size-5"
+                                                >image</mat-icon
+                                            >
+                                        </spa-input>
+
+                                        <spa-textarea
+                                            [formControlName]="
+                                                'description_' + lang.code
+                                            "
+                                            [label]="
+                                                'admin.media.fields.description'
+                                                    | transloco
+                                            "
+                                            [placeholder]="
+                                                'admin.media.fields.descriptionPlaceholder'
+                                                    | transloco
+                                            "
+                                            [rows]="4"
+                                        >
+                                        </spa-textarea>
+                                    </div>
+                                </mat-tab>
+                            }
+                        </mat-tab-group>
+                    </div>
+                }
+            </div>
+
+            <!-- Upload Progress Overlay -->
+            @if (isUploadingSig()) {
+                <div
+                    class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm dark:bg-gray-900/90"
+                >
+                    <mat-progress-bar
+                        mode="indeterminate"
+                        class="w-64 max-w-[80%] overflow-hidden rounded-full"
+                    ></mat-progress-bar>
+                    <p class="mt-4 animate-pulse font-medium">
+                        {{ 'admin.media.uploading' | transloco }}...
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="'admin.media.upload' | transloco"
+    [submitDisabled]="!hasFilesSig() || isUploadingSig()"
+    [isSubmitting]="isSubmitting()"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

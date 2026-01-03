@@ -28,6 +28,7 @@ export const langTR = {
             },
             noRecords: 'Kayıt bulunamadı',
             none: 'Yok',
+            clearAll: 'Hepsini Temizle',
             cancel: 'İptal',
             close: 'Kapat',
             select: 'Seç',
@@ -121,12 +122,8 @@ export const langTR = {
                 unexpected: 'Beklenmeyen bir hata oluştu',
             },
             system: 'Sistem',
+            general: 'Genel',
             translations: 'Çeviriler',
-            edit: 'Düzenle',
-            delete: 'Sil',
-            search: 'Ara',
-            create: 'Oluştur',
-            save: 'Kaydet',
             fields: {
                 uid: 'UID',
                 name: 'Ad',
@@ -424,25 +421,79 @@ export const langTR = {
             confirmDelete: '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
         },
         media: {
-            title: 'Medya Yönetimi',
-            library: 'Medya Kütüphanesi',
+            title: 'Medya Kütüphanesi',
+            folders: {
+                root: 'Tüm Medyalar',
+                createSub: 'Alt Klasör Ekle',
+                createTitle: 'Klasör Oluştur',
+                editTitle: 'Klasörü Düzenle'
+            },
+            actions: {
+                upload: 'Yükle',
+                createFolder: 'Klasör Ekle',
+                gridView: 'Tablo Görünümü',
+                listView: 'Liste Görünümü',
+                openFile: 'Dosyayı Aç'
+            },
+            uploadFiles: 'Dosya Yükle',
+            dragDrop: 'Dosyaları buraya sürükleyip bırakın',
+            orBrowse: 'veya bilgisayarınızdan seçin',
+            maxFileSize: 'Maksimum dosya boyutu: 50MB',
+            batchMetadata: 'Toplu Medya Bilgileri',
+            batchMetadataDesc: 'Girdiğiniz bilgiler seçili tüm dosyalara uygulanacaktır.',
+            files: 'Dosyalar',
             upload: 'Yükle',
-            delete: 'Sil',
-            edit: 'Düzenle',
-            download: 'İndir',
-            searchPlaceholder: 'Medya dosyası ara',
+            selectedFiles: 'Seçilen Dosyalar',
             fields: {
+                originalName: 'Dosya Adı',
+                folderName: 'Klasör Adı',
+                isPublic: 'Herkese Açık',
+                altText: 'Alternatif Metin',
+                altTextPlaceholder: 'Görsel içeriğini açıklayın (SEO için önemli)',
+                title: 'Başlık',
+                titlePlaceholder: 'Görsel başlığı (opsiyonel)',
+                description: 'Açıklama',
+                descriptionPlaceholder: 'Detaylı açıklama (opsiyonel)',
                 name: 'Dosya Adı',
                 type: 'Tür',
                 size: 'Boyut',
                 uploadedAt: 'Yüklenme Tarihi',
-                altText: 'Alt Metin',
                 caption: 'Başlık',
-                folder: 'Klasör',
+                folder: 'Klasör'
             },
-            uploadSuccess: 'Medya dosyası başarıyla yüklendi',
-            deleteSuccess: 'Medya dosyası başarıyla silindi',
-            updateSuccess: 'Medya dosyası başarıyla güncellendi',
+            messages: {
+                noMediaFound: 'Bu klasörde henüz medya dosyası yok',
+                uploadFirst: 'Veri girmek için önce dosya yükleyin',
+                folderCreated: 'Klasör oluşturuldu',
+                folderUpdated: 'Klasör güncellendi',
+                folderDeleted: 'Klasör silindi',
+                folderDeleteError: 'Klasör silinemedi',
+                uploadSuccess: 'Dosyalar yüklendi',
+                updateSuccess: 'Medya güncellendi',
+                deleteSuccess: 'Dosya silindi',
+                deleteError: 'Dosya silinemedi',
+                bulkDeleteSuccess: 'Seçili dosyalar silindi',
+                noFormats: 'Oluşturulmuş format bulunamadı',
+                generatedFormats: 'Oluşturulan Formatlar (Küçük resim vb.)',
+                processingFormats: 'Formatlar işleniyor... Lütfen bekleyin.'
+            },
+            formats: {
+                original: 'Orijinal Dosya'
+            },
+            dialogs: {
+                detail: {
+                    title: 'Medya Detayı',
+                    formats: 'Formatlar'
+                },
+                folder: {
+                    createTitle: 'Klasör Oluştur',
+                    editTitle: 'Klasör Düzenle'
+                },
+                delete: {
+                    title: 'Dosyayı Sil?',
+                    confirm: 'Bu dosyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz!'
+                }
+            },
             dragDropText: 'Dosyaları buraya sürükleyin veya seçmek için tıklayın',
         },
         navigation: {

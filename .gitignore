@@ -57,3 +57,7 @@ storefront/nul
 
 ### Claude ###
 .claude/settings.local.json
+
+### Uploads ###
+backend/uploads/
+uploads/

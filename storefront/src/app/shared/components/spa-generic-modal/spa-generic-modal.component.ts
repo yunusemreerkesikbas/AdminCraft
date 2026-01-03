@@ -44,11 +44,11 @@ export class SpaGenericModalComponent<T = any> {
         );
     }
 
-    protected executeAction(action?: { handler: () => void }): void {
+    protected executeAction(action?: { handler?: () => void; value?: any }): void {
         if (action?.handler) {
             action.handler();
         }
-        this.close();
+        this.#dialogRef.close(action?.value);
     }
 
     protected close(): void {

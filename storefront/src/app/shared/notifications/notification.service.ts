@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { ActiveToast, IndividualConfig, ToastrService } from 'ngx-toastr';
 import { Subject } from 'rxjs';

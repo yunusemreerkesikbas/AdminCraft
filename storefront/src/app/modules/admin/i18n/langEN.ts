@@ -27,11 +27,13 @@ export const langEN = {
                 parentCategory: 'Parent Category',
             },
             noRecords: 'No records',
-            none: 'None',
+            save: 'Save',
             cancel: 'Cancel',
-            open: 'Open',
+            delete: 'Delete',
+            create: 'Create',
+            edit: 'Edit',
             close: 'Close',
-            select: 'Select',
+            clearAll: 'Clear All',
             selectComponent: 'Select Component',
             status: {
                 active: 'Active',
@@ -122,12 +124,8 @@ export const langEN = {
                 unexpected: 'An unexpected error occurred',
             },
             system: 'System',
+            general: 'General',
             translations: 'Translations',
-            edit: 'Edit',
-            delete: 'Delete',
-            search: 'Search',
-            create: 'Create',
-            save: 'Save',
             fields: {
                 uid: 'UID',
                 name: 'Name',
@@ -425,25 +423,81 @@ export const langEN = {
             confirmDelete: 'Are you sure you want to delete "{{name}}"?',
         },
         media: {
-            title: 'Media Management',
-            library: 'Media Library',
-            upload: 'Upload',
-            delete: 'Delete',
-            edit: 'Edit',
-            download: 'Download',
-            searchPlaceholder: 'Search media files',
+            title: 'Media Library',
+            folders: {
+                root: 'All Media',
+                createSub: 'Create Sub-folder',
+                createTitle: 'Create Folder',
+                editTitle: 'Edit Folder'
+            },
+            actions: {
+                upload: 'Upload',
+                createFolder: 'New Folder',
+                gridView: 'Grid View',
+                listView: 'List View',
+                openFile: 'Open File'
+            },
+            uploadFiles: 'Upload Files',
+            dragDrop: 'Drag and drop files here',
+            orBrowse: 'or browse your computer',
+            maxFileSize: 'Max file size: 10MB',
+            searchPlaceholder: 'Search media...',
+            addMore: 'Add More',
+            uploading: 'Uploading',
+            selectedFiles: 'Selected Files',
+            batchMetadata: 'Batch Metadata',
+            batchMetadataDesc: 'Information entered here will apply to all selected files.',
+            files: 'Files',
             fields: {
+                originalName: 'File Name',
+                folderName: 'Folder Name',
+                isPublic: 'Publicly Accessible',
+                altText: 'Alternative Text',
+                altTextPlaceholder: 'Describe the image content (important for SEO)',
+                title: 'Title',
+                titlePlaceholder: 'Image title (optional)',
+                description: 'Description',
+                descriptionPlaceholder: 'Detailed description (optional)',
                 name: 'File Name',
                 type: 'Type',
                 size: 'Size',
                 uploadedAt: 'Uploaded At',
-                altText: 'Alt Text',
                 caption: 'Caption',
-                folder: 'Folder',
+                folder: 'Folder'
             },
-            uploadSuccess: 'Media file successfully uploaded',
-            deleteSuccess: 'Media file successfully deleted',
-            updateSuccess: 'Media file successfully updated',
+            messages: {
+                noMediaFound: 'No media files found in this folder',
+                uploadFirst: 'Upload files to enter metadata',
+                folderCreated: 'Folder created successfully',
+                folderUpdated: 'Folder updated successfully',
+                folderDeleted: 'Folder deleted successfully',
+                folderDeleteError: 'Failed to delete folder',
+                uploadSuccess: 'Files uploaded successfully',
+                updateSuccess: 'Media updated successfully',
+                deleteSuccess: 'File deleted successfully',
+                deleteError: 'Failed to delete file',
+                bulkDeleteSuccess: 'Selected files deleted successfully',
+                noFormats: 'No generated formats available',
+                generatedFormats: 'Generated formats (thumbnails, etc.)',
+                processingFormats: 'Processing formats... Please wait.'
+            },
+            formats: {
+                original: 'Original File'
+            },
+            dialogs: {
+                detail: {
+                    title: 'Media Details',
+                    formats: 'Formats'
+                },
+                folder: {
+                    createTitle: 'Create Folder',
+                    editTitle: 'Edit Folder'
+                },
+                delete: {
+                    title: 'Delete Media?',
+                    confirm: 'Are you sure you want to delete this file? This action cannot be undone!'
+                }
+            },
             dragDropText: 'Drag files here or click to select',
         },
         navigation: {

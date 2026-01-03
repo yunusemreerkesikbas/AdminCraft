@@ -1,0 +1,355 @@
+<spa-dialog-header
+    [title]="'admin.media.dialogs.detail.title' | transloco"
+    (closeClicked)="close()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content class="h-[600px] max-h-[80vh] overflow-hidden !p-0">
+    <div class="flex h-full flex-col md:flex-row">
+        <!-- Left Panel: Preview & Info (35%) -->
+        <div
+            class="flex w-full flex-col overflow-y-auto border-b bg-gray-50 md:w-[35%] md:border-b-0 md:border-r dark:bg-gray-800/50"
+        >
+            <!-- Preview Area -->
+            <div
+                class="group relative flex aspect-square w-full items-center justify-center border-b bg-gray-200 dark:bg-gray-900/50"
+            >
+                <!-- Image -->
+                @if (media()?.fileType === 'image') {
+                    <img
+                        [src]="media()?.publicUrl"
+                        [alt]="media()?.altText"
+                        class="h-full w-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+                    />
+                }
+                <!-- Video -->
+                @else if (media()?.fileType === 'video') {
+                    <video
+                        [src]="media()?.publicUrl"
+                        controls
+                        class="h-full w-full object-contain p-4"
+                    ></video>
+                }
+                <!-- Audio -->
+                @else if (media()?.fileType === 'audio') {
+                    <audio
+                        [src]="media()?.publicUrl"
+                        controls
+                        class="w-full p-4"
+                    ></audio>
+                }
+                <!-- Document/Other -->
+                @else {
+                    <div
+                        class="text-secondary flex flex-col items-center justify-center"
+                    >
+                        <mat-icon class="mb-2 icon-size-20"
+                            >insert_drive_file</mat-icon
+                        >
+                        <span class="text-lg font-medium uppercase">{{
+                            media()?.fileType
+                        }}</span>
+                    </div>
+                }
+
+                <!-- Open in new tab overlay button -->
+                <a
+                    [href]="media()?.publicUrl"
+                    target="_blank"
+                    mat-icon-button
+                    class="absolute right-2 top-2 bg-white/80 text-gray-700 opacity-0 transition-opacity hover:bg-white group-hover:opacity-100 dark:bg-black/50 dark:text-white dark:hover:bg-black"
+                >
+                    <mat-icon class="icon-size-5">open_in_new</mat-icon>
+                </a>
+            </div>
+
+            <!-- Stats List -->
+            <div class="space-y-4 p-6">
+                <div class="flex flex-col gap-1">
+                    <span
+                        class="text-secondary text-xs font-semibold uppercase tracking-wider"
+                        >{{ 'admin.media.fields.type' | transloco }}</span
+                    >
+                    <div
+                        class="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100"
+                    >
+                        <span
+                            class="badge rounded bg-gray-200 px-2 py-0.5 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        >
+                            {{ media()?.fileType }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <span
+                        class="text-secondary text-xs font-semibold uppercase tracking-wider"
+                        >{{ 'admin.media.fields.size' | transloco }}</span
+                    >
+                    <span
+                        class="font-medium text-gray-900 dark:text-gray-100"
+                        >{{ media()?.fileSizeFormatted }}</span
+                    >
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <span
+                        class="text-secondary text-xs font-semibold uppercase tracking-wider"
+                        >{{ 'admin.media.fields.uploadedAt' | transloco }}</span
+                    >
+                    <span
+                        class="font-medium text-gray-900 dark:text-gray-100"
+                        >{{ media()?.createdAt | date: 'medium' }}</span
+                    >
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <span
+                        class="text-secondary text-xs font-semibold uppercase tracking-wider"
+                        >URL</span
+                    >
+                    <div
+                        class="text-secondary flex select-all items-center gap-2 truncate rounded border bg-white p-2 text-xs dark:bg-gray-900"
+                    >
+                        {{ media()?.publicUrl }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Metadata Form (65%) -->
+        <div class="flex w-full flex-col bg-white md:w-[65%] dark:bg-gray-900">
+            <mat-tab-group
+                class="h-full"
+                [selectedIndex]="activeTab"
+                (selectedIndexChange)="activeTab = $event"
+                [animationDuration]="'0ms'"
+            >
+                <!-- General Info Tab -->
+                <mat-tab [label]="'admin.common.general' | transloco">
+                    <div
+                        class="flex flex-col gap-6 p-6"
+                        [formGroup]="generalForm"
+                    >
+                        <div class="flex flex-col gap-1">
+                            <h3 class="text-lg font-semibold">
+                                {{ 'admin.common.general' | transloco }}
+                            </h3>
+                            <p class="text-secondary text-sm">
+                                Manage basic file settings.
+                            </p>
+                        </div>
+
+                        <spa-input
+                            formControlName="originalName"
+                            [label]="
+                                'admin.media.fields.originalName' | transloco
+                            "
+                        >
+                            <mat-icon matPrefix class="mr-2 icon-size-5"
+                                >edit</mat-icon
+                            >
+                        </spa-input>
+
+                        <div
+                            class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                        >
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{
+                                    'admin.media.fields.isPublic' | transloco
+                                }}</span>
+                                <span class="text-secondary text-xs"
+                                    >If unchecked, requires authentication to
+                                    view.</span
+                                >
+                            </div>
+                            <spa-toggle formControlName="isPublic"></spa-toggle>
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- i18n Tabs -->
+                @for (lang of supportedLanguages(); track lang.code) {
+                    <mat-tab [label]="lang.nativeName">
+                        <div
+                            class="flex flex-col gap-5 p-6"
+                            [formGroup]="getLanguageForm(lang.code)"
+                        >
+                            <div class="mb-2 flex flex-col gap-1">
+                                <h3 class="text-lg font-semibold">
+                                    {{ lang.nativeName }} Metadata
+                                </h3>
+                                <p class="text-secondary text-sm">
+                                    {{
+                                        'admin.media.batchMetadataDesc'
+                                            | transloco
+                                    }}
+                                </p>
+                            </div>
+
+                            <spa-input
+                                formControlName="title"
+                                [label]="'admin.media.fields.title' | transloco"
+                            >
+                                <mat-icon matPrefix class="mr-2 icon-size-5"
+                                    >title</mat-icon
+                                >
+                            </spa-input>
+
+                            <spa-input
+                                formControlName="altText"
+                                [label]="
+                                    'admin.media.fields.altText' | transloco
+                                "
+                            >
+                                <mat-icon matPrefix class="mr-2 icon-size-5"
+                                    >image</mat-icon
+                                >
+                            </spa-input>
+
+                            <spa-textarea
+                                formControlName="description"
+                                [label]="
+                                    'admin.media.fields.description' | transloco
+                                "
+                                [rows]="4"
+                            >
+                            </spa-textarea>
+                        </div>
+                    </mat-tab>
+                }
+
+                <!-- Formats Tab -->
+                <mat-tab
+                    [label]="'admin.media.dialogs.detail.formats' | transloco"
+                >
+                    <div class="h-full overflow-y-auto p-4 md:p-6">
+                        <!-- Loading State -->
+                        @if (isLoadingDetails()) {
+                            <div
+                                class="flex flex-col items-center justify-center py-12"
+                            >
+                                <mat-spinner diameter="40" class="mb-4"></mat-spinner>
+                                <p class="text-secondary">
+                                    {{ 'admin.common.messages.loading' | transloco }}
+                                </p>
+                            </div>
+                        }
+                        <!-- Processing State -->
+                        @else if (isProcessing()) {
+                            <div
+                                class="flex flex-col items-center justify-center py-12"
+                            >
+                                <mat-spinner diameter="40" class="mb-4"></mat-spinner>
+                                <p class="text-secondary">
+                                    {{ 'admin.media.messages.processingFormats' | transloco }}
+                                </p>
+                            </div>
+                        } @else if (hasVariants()) {
+                            <div class="grid grid-cols-1 gap-4">
+                                <!-- Original -->
+                                <div
+                                    class="flex items-start gap-4 rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                                >
+                                    <div
+                                        class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded border bg-white dark:bg-gray-900"
+                                    >
+                                        <span
+                                            class="text-secondary text-xs font-bold"
+                                            >ORIGINAL</span
+                                        >
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-medium">
+                                            {{ 'admin.media.formats.original' | transloco }}
+                                        </div>
+                                        <div
+                                            class="text-secondary mt-1 text-xs"
+                                        >
+                                            @if (media()?.width && media()?.height) {
+                                                {{ media()?.width }}x{{ media()?.height }} •
+                                            }
+                                            {{ media()?.fileSizeFormatted }}
+                                        </div>
+                                    </div>
+                                    <a
+                                        [href]="media()?.publicUrl"
+                                        target="_blank"
+                                        mat-icon-button
+                                    >
+                                        <mat-icon class="icon-size-5"
+                                            >open_in_new</mat-icon
+                                        >
+                                    </a>
+                                </div>
+
+                                <!-- Generated Variants -->
+                                @for (variant of containerVariants(); track variant.formatId) {
+                                    <div
+                                        class="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                    >
+                                        <div
+                                            class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-900"
+                                        >
+                                            @if (media()?.fileType === 'image' && variant.mediaUrl) {
+                                                <img
+                                                    [src]="variant.mediaUrl"
+                                                    [alt]="variant.formatName"
+                                                    class="h-full w-full object-cover"
+                                                />
+                                            } @else {
+                                                <span
+                                                    class="text-secondary text-xs font-bold uppercase"
+                                                    >{{ variant.formatCode }}</span
+                                                >
+                                            }
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-medium">
+                                                {{ variant.formatName }}
+                                            </div>
+                                            <div
+                                                class="text-secondary mt-1 text-xs"
+                                            >
+                                                {{ variant.width }}x{{ variant.height }}
+                                            </div>
+                                        </div>
+                                        <a
+                                            [href]="variant.mediaUrl"
+                                            target="_blank"
+                                            mat-icon-button
+                                        >
+                                            <mat-icon class="icon-size-5"
+                                                >open_in_new</mat-icon
+                                            >
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        } @else {
+                            <div
+                                class="text-secondary flex flex-col items-center justify-center py-12 opacity-50"
+                            >
+                                <mat-icon class="mb-2 icon-size-12"
+                                    >image_not_supported</mat-icon
+                                >
+                                <p>
+                                    {{ 'admin.media.messages.noFormats' | transloco }}
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+        </div>
+    </div>
+</spa-dialog-content>
+
+<spa-dialog-footer>
+    <button mat-button (click)="cancel()">
+        {{ 'admin.common.cancel' | transloco }}
+    </button>
+    <button mat-flat-button color="primary" (click)="save()">
+        {{ 'admin.common.save' | transloco }}
+    </button>
+</spa-dialog-footer>
