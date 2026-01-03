@@ -3,10 +3,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
+import { FuseConfirmationService } from '@fuse/services/confirmation/confirmation.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { MediaService } from '@media/media.service';
+import { MediaDetailDialogData, MediaDetailResponse, MediaStatus } from '@media/media.types';
 import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -15,9 +18,10 @@ import { SpaDialogContentComponent } from '@shared/components/spa-dialog/spa-dia
 import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dialog-footer/spa-dialog-footer.component';
 import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog/spa-localized-form-dialog.directive';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
-import { MediaService } from '../../media.service';
-import { MediaDetailDialogData, MediaDetailResponse, MediaStatus } from '../../media.types';
+import { FocalPointPickerComponent } from '../../components/focal-point-picker/focal-point-picker.component';
+import { FormatGeneratorComponent } from '../../components/format-generator/format-generator.component';
 
 @Component({
     selector: 'app-media-detail-dialog',
@@ -35,40 +39,33 @@ import { MediaDetailDialogData, MediaDetailResponse, MediaStatus } from '../../m
         SpaDialogFooterComponent,
         SpaInputComponent,
         SpaTextareaComponent,
-        SpaToggleComponent
+        SpaToggleComponent,
+        FormatGeneratorComponent,
+        FocalPointPickerComponent
     ],
     templateUrl: './media-detail-dialog.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, MediaDetailDialogData> {
 
-    protected readonly mediaService = inject(MediaService);
-    readonly #tenantContext = inject(TenantContextService);
-    protected readonly _transloco = inject(TranslocoService);
+    protected mediaService = inject(MediaService);
+    #tenantContext = inject(TenantContextService);
+    #transloco = inject(TranslocoService);
+    #notificationService = inject(NotificationService);
+    #confirmationService = inject(FuseConfirmationService);
 
-    readonly supportedLanguages = signal<LanguageResponse[]>([]);
-    readonly #mediaDetails = signal<MediaDetailResponse | null>(null);
-    readonly #isLoadingDetails = signal(true);
-
-    /** Media data - prefer loaded details, fallback to dialog data */
-    readonly media = computed(() => this.#mediaDetails() ?? this.data?.media);
-
-    /** Container variants from API response */
-    readonly containerVariants = computed(() => this.#mediaDetails()?.container?.variants ?? []);
-
-    /** Loading state for format tab */
-    readonly isLoadingDetails = computed(() => this.#isLoadingDetails());
-
-    /** Check if media is still processing - only from loaded details */
-    readonly isProcessing = computed(() => {
+    protected supportedLanguages = signal<LanguageResponse[]>([]);
+    #mediaDetails = signal<MediaDetailResponse | null>(null);
+    #isLoadingDetails = signal(true);
+    protected media = computed(() => this.#mediaDetails() ?? this.data?.media);
+    protected containerVariants = computed(() => this.#mediaDetails()?.container?.variants ?? []);
+    protected isLoadingDetails = computed(() => this.#isLoadingDetails());
+    protected isProcessing = computed(() => {
         const details = this.#mediaDetails();
-        // Only check processing status if we have loaded details
         if (!details) return false;
         return details.status === MediaStatus.PROCESSING;
     });
-
-    /** Check if has any variants */
-    readonly hasVariants = computed(() => this.containerVariants().length > 0);
+    protected hasVariants = computed(() => this.containerVariants().length > 0);
 
     override ngOnInit(): void {
         const tenant = this.#tenantContext.tenant();
@@ -111,17 +108,13 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         this.#isLoadingDetails.set(true);
         this.mediaService.getDetails(mediaId).pipe(take(1)).subscribe({
             next: (details) => {
-                // Store full details for container/variants access
                 this.#mediaDetails.set(details);
                 this.#isLoadingDetails.set(false);
-
-                // Patch General Form
                 this.generalForm.patchValue({
                     originalName: details.originalName,
                     isPublic: details.isPublic
                 });
 
-                // Patch I18n Forms
                 if (details.translations) {
                     Object.entries(details.translations).forEach(([lang, i18n]) => {
                         if (this.i18nForms[lang] && i18n) {
@@ -137,6 +130,51 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
             error: (err) => {
                 this.#isLoadingDetails.set(false);
                 this.onError(err);
+            }
+        });
+    }
+
+    reloadDetails(): void {
+        this.#loadMediaDetails();
+    }
+
+    deleteVariant(variantId: number): void {
+        const mediaId = this.data?.media?.id;
+        if (!mediaId) return;
+
+        const confirmation = this.#confirmationService.open({
+            title: 'admin.media.deleteVariant.title',
+            message: 'admin.media.deleteVariant.message',
+            icon: {
+                show: true,
+                name: 'heroicons_outline:exclamation-triangle',
+                color: 'warn'
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'admin.common.actions.delete',
+                    color: 'warn'
+                },
+                cancel: {
+                    show: true,
+                    label: 'admin.common.actions.cancel'
+                }
+            },
+            dismissible: true
+        });
+
+        confirmation.afterClosed().subscribe((result) => {
+            if (result === 'confirmed') {
+                this.mediaService.deleteVariant(mediaId, variantId)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: () => {
+                            this.#notificationService.success('media.variant.delete.success');
+                            this.reloadDetails();
+                        },
+                        error: (err) => this.onError(err)
+                    });
             }
         });
     }
@@ -162,11 +200,8 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
             translations: translations
         }).pipe(take(1)).subscribe({
             next: () => {
-                this._transloco.selectTranslate('admin.media.messages.updateSuccess').pipe(take(1)).subscribe(msg => {
-                   // success message handled by caller usually or here?
-                   // The caller (list component) shows success message usually.
-                   // But let's check recent changes. 
-                   // List component shows success message.
+                this.#transloco.selectTranslate('admin.media.messages.updateSuccess').pipe(take(1)).subscribe(msg => {
+                   this.#notificationService.success(msg);
                 });
                 this.close(true);
             },

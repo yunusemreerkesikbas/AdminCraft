@@ -16,6 +16,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent } from '@core/crud/base-crud-list.component';
+import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
@@ -67,35 +68,46 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
 })
 export class MediaListComponent extends BaseCrudListComponent<Media, FormData, UpdateMediaRequest> {
 
-    protected override readonly service = inject(MediaService);
-    protected override readonly store = inject(MediaStore);
-    private readonly _dialog = inject(MatDialog);
-    private readonly _notificationService = inject(NotificationService);
-    private readonly _confirmationService = inject(ConfirmationService);
-    protected readonly _transloco = inject(TranslocoService);
+    protected override service = inject(MediaService);
+    protected override store = inject(MediaStore);
+    #matDialog = inject(MatDialog);
+    #notificationService = inject(NotificationService);
+    #confirmationService = inject(ConfirmationService);
+    #transloco = inject(TranslocoService);
+    #tenantContext = inject(TenantContextService);
 
-    // Pagination
-    protected readonly pageSizeSig = signal(24);
-    protected readonly pageIndexSig = signal(0);
-    protected readonly searchInputControl = new FormControl('');
+    protected pageSizeSig = signal(24);
+    protected pageIndexSig = signal(0);
+    protected totalItemsSig = computed(() => this.store.page()?.totalElements ?? 0);
+    protected searchInputControl = new FormControl('');
 
 
-    protected readonly paginatedItemsSig = computed(() => {
-        const items = this.store.filteredItems(); // Use Store's filtered items which includes type filtering
-        const start = this.pageIndexSig() * this.pageSizeSig();
-        const end = start + this.pageSizeSig();
-        return items.slice(start, end);
-    });
-
-    protected readonly totalItemsSig = computed(() => this.store.filteredItems().length);
+    protected paginatedItemsSig = computed(() => this.store.filteredItems()); 
 
     protected override onInit(): void {
         this.#setupSearchDebounce();
     }
 
-    // fetchItems called by BaseCrudListComponent.loadItems()
+    protected override loadItems(): void {
+        this.store.setLoading(true);
+        this.service.listPaged({
+            page: this.pageIndexSig(),
+            size: this.pageSizeSig(),
+            sort: 'createdAt,desc'
+        }).subscribe({
+            next: (page) => {
+                this.store.setPagedItems(page);
+                this.store.setLoading(false);
+            },
+            error: (error) => {
+                this.onLoadError(error);
+                this.store.setLoading(false);
+            }
+        });
+    }
+
     protected override fetchItems(): Observable<Media[]> {
-        return this.service.list();
+        return this.service.list(); 
     }
 
     #setupSearchDebounce(): void {
@@ -114,23 +126,23 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     }
 
     openUploadDialog(): void {
-        this._dialog.open(MediaUploadDialogComponent, {
+        this.#matDialog.open(MediaUploadDialogComponent, {
             width: '700px',
             maxHeight: '90vh',
             disableClose: true,
             data: {
-                languages: ['TR', 'EN'] // This should also be dynamic or handled in dialog init which we did
+                languages: this.#tenantContext.tenant()?.supportedLanguages?.map(l => l.code) || ['EN']
             }
         }).afterClosed().pipe(take(1)).subscribe(result => {
             if (result && result.length > 0) {
                 this.loadItems();
-                this._notificationService.success('admin.media.messages.uploadSuccess');
+                this.#notificationService.success('admin.media.messages.uploadSuccess');
             }
         });
     }
 
     openDetailDialog(media: Media): void {
-        this._dialog.open(MediaDetailDialogComponent, {
+        this.#matDialog.open(MediaDetailDialogComponent, {
             width: '800px',
             data: {
                 mode: 'edit',
@@ -138,14 +150,14 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
             } as MediaDetailDialogData
         }).afterClosed().pipe(take(1)).subscribe(result => {
             if (result) {
-                this._notificationService.success('admin.media.messages.updateSuccess');
+                this.#notificationService.success('admin.media.messages.updateSuccess');
                 this.loadItems();
             }
         });
     }
 
     deleteMedia(media: Media): void {
-        const confirmation = this._confirmationService.confirm(
+        const confirmation = this.#confirmationService.confirm(
             'admin.media.dialogs.delete.title',
             'admin.media.dialogs.delete.confirm'
         );
@@ -157,16 +169,17 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     }
 
     protected override onDeleteSuccess(item: Media): void {
-        this._notificationService.success('admin.media.messages.deleteSuccess');
+        this.#notificationService.success('admin.media.messages.deleteSuccess');
     }
 
     protected override onDeleteError(error: any): void {
-         this._notificationService.alert('admin.media.messages.deleteError');
+         this.#notificationService.alert('admin.media.messages.deleteError');
     }
 
     onPageChange(event: PageEvent): void {
         this.pageIndexSig.set(event.pageIndex);
         this.pageSizeSig.set(event.pageSize);
+        this.loadItems();
     }
 
     getMediaTypeClass(media: Media): string {
@@ -177,9 +190,5 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
             case 'document': return 'bg-orange-100 text-orange-800 dark:bg-orange-600 dark:text-orange-50';
             default: return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50';
         }
-    }
-
-    trackByFn(index: number, item: Media): number {
-        return item.id;
     }
 }

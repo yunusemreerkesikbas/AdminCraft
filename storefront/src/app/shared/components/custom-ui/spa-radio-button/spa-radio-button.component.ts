@@ -12,17 +12,19 @@ import {
     ReactiveFormsModule,
 } from '@angular/forms';
 import { MatRadioModule } from '@angular/material/radio';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface SpaRadioOption<T = any> {
     value: T;
-    label: string;
+    label?: string;
+    labelKey?: string;
     disabled?: boolean;
 }
 
 @Component({
     selector: 'spa-radio-button',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, MatRadioModule],
+    imports: [CommonModule, ReactiveFormsModule, MatRadioModule, TranslocoPipe],
     templateUrl: './spa-radio-button.component.html',
     styleUrls: ['./spa-radio-button.component.scss'],
     encapsulation: ViewEncapsulation.None,

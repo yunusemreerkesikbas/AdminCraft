@@ -23,6 +23,9 @@ export const environment = {
     // Security Configuration
     maxRetryAttempts: 0,
     tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes before expiry
+    media: {
+        maxUploadSize: 52428800 // 50MB
+    }
 };
 
 

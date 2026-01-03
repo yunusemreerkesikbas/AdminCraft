@@ -1,0 +1,82 @@
+<div class="bg-card rounded-xl border p-6">
+    <div class="mb-4 text-lg font-medium">
+        {{ 'admin.media.format.generator.title' | transloco }}
+    </div>
+
+    <form
+        [formGroup]="form"
+        (ngSubmit)="generate()"
+        class="flex flex-col gap-4"
+    >
+        <spa-radio-button
+            formControlName="mode"
+            [options]="modeOptions"
+            class="mb-2 block"
+        ></spa-radio-button>
+
+        @if (form.get('mode')?.value === 'PRESET') {
+            <spa-select
+                class="w-full"
+                formControlName="formatCode"
+                [label]="'admin.media.format.select' | transloco"
+                [options]="formatOptions"
+            ></spa-select>
+        }
+
+        @if (form.get('mode')?.value === 'CUSTOM') {
+            <div class="flex gap-4">
+                <spa-input
+                    class="w-1/2"
+                    formControlName="customWidth"
+                    [label]="'admin.media.format.width' | transloco"
+                    type="number"
+                    [hint]="'px'"
+                ></spa-input>
+
+                <spa-input
+                    class="w-1/2"
+                    formControlName="customHeight"
+                    [label]="'admin.media.format.height' | transloco"
+                    type="number"
+                    [hint]="'px'"
+                ></spa-input>
+            </div>
+        }
+
+        <div class="flex gap-4">
+            <spa-select
+                class="w-1/2"
+                formControlName="outputFormat"
+                [label]="'admin.media.format.output' | transloco"
+                [options]="outputFormatOptions"
+            ></spa-select>
+
+            <spa-input
+                class="w-1/2"
+                formControlName="quality"
+                [label]="'admin.media.format.quality' | transloco"
+                type="number"
+                [hint]="'%'"
+            ></spa-input>
+        </div>
+
+        <div class="mt-2 flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                [disabled]="form.invalid || isGenerating || isLoadingFormats"
+            >
+                @if (isGenerating) {
+                    <mat-spinner diameter="20" class="mr-2"></mat-spinner>
+                    <span
+                        >{{
+                            'admin.media.format.generating' | transloco
+                        }}...</span
+                    >
+                } @else {
+                    <span>{{ 'admin.media.format.generate' | transloco }}</span>
+                }
+            </button>
+        </div>
+    </form>
+</div>

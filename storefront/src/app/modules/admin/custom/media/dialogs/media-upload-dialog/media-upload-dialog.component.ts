@@ -14,7 +14,9 @@ import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
 import { SpaDialogBase } from '@shared/components/spa-dialog-base';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { UserService } from 'app/core/user/user.service';
-import { forkJoin, take } from 'rxjs';
+import { environment } from 'environments/environment';
+import { forkJoin, of, take } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { MediaService } from '../../media.service';
 import { Language, Media, MediaI18nRequest, MediaResponse, MediaUploadDialogData } from '../../media.types';
 
@@ -41,29 +43,27 @@ import { Language, Media, MediaI18nRequest, MediaResponse, MediaUploadDialogData
 })
 export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUploadDialogData> implements OnInit {
 
-    protected readonly mediaService = inject(MediaService);
-    protected readonly userService = inject(UserService);
-    private readonly _notificationService = inject(NotificationService);
-    readonly #fb = inject(FormBuilder);
+    #mediaService = inject(MediaService);
+    #userService = inject(UserService);
+    #notificationService = inject(NotificationService);
+    #fb = inject(FormBuilder);
 
     // State
-    protected readonly selectedFilesSig = signal<File[]>([]);
-    protected readonly uploadProgressSig = signal<Map<string, number>>(new Map());
-    protected readonly uploadedMediaSig = signal<MediaResponse[]>([]);
-    protected readonly isUploadingSig = signal(false);
-    protected readonly isDraggingSig = signal(false);
+    protected selectedFilesSig = signal<File[]>([]);
+    protected uploadProgressSig = signal<Map<string, number>>(new Map());
+    protected uploadedMediaSig = signal<MediaResponse[]>([]);
+    protected isUploadingSig = signal(false);
+    protected isDraggingSig = signal(false);
 
-    readonly supportedLanguages = signal<LanguageResponse[]>([]);
-    readonly defaultLanguage = signal<string>('TR');
+    protected supportedLanguages = signal<LanguageResponse[]>([]);
+    protected defaultLanguage = signal<string>('TR');
+    protected form: FormGroup = this.#fb.group({});
 
-    // Form for i18n metadata
-    readonly form: FormGroup = this.#fb.group({});
+    #tenantContext = inject(TenantContextService);
 
-    readonly #tenantContext = inject(TenantContextService);
+    protected hasFilesSig = computed(() => this.selectedFilesSig().length > 0);
 
-    protected readonly hasFilesSig = computed(() => this.selectedFilesSig().length > 0);
-
-    protected readonly totalSizeSig = computed(() => {
+    protected totalSizeSig = computed(() => {
         const bytes = this.selectedFilesSig().reduce((acc, f) => acc + f.size, 0);
         return this.#formatFileSize(bytes);
     });
@@ -95,7 +95,7 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         }
     }
 
-    onFilesSelected(event: Event): void {
+    protected onFilesSelected(event: Event): void {
         const input = event.target as HTMLInputElement;
         if (input.files && input.files.length > 0) {
             this.addFiles(Array.from(input.files));
@@ -103,7 +103,7 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         input.value = '';
     }
 
-    onDrop(event: DragEvent): void {
+    protected onDrop(event: DragEvent): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDraggingSig.set(false);
@@ -113,32 +113,32 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         }
     }
 
-    onDragOver(event: DragEvent): void {
+    protected onDragOver(event: DragEvent): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDraggingSig.set(true);
     }
 
-    onDragLeave(event: DragEvent): void {
+    protected onDragLeave(event: DragEvent): void {
         event.preventDefault();
         event.stopPropagation();
         this.isDraggingSig.set(false);
     }
 
-    addFiles(files: File[]): void {
+    protected addFiles(files: File[]): void {
         const validFiles = files.filter(f => this.#isValidFile(f));
         this.selectedFilesSig.update(existing => [...existing, ...validFiles]);
     }
 
-    removeFile(index: number): void {
+    protected removeFile(index: number): void {
         this.selectedFilesSig.update(files => files.filter((_, i) => i !== index));
     }
 
-    clearFiles(): void {
+    protected clearFiles(): void {
         this.selectedFilesSig.set([]);
     }
 
-    getFileIcon(file: File): string {
+    protected getFileIcon(file: File): string {
         const type = file.type;
         if (type.startsWith('image/')) return 'image';
         if (type.startsWith('video/')) return 'movie';
@@ -149,7 +149,7 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         return 'insert_drive_file';
     }
 
-    save(): void {
+    protected save(): void {
         const files = this.selectedFilesSig();
         if (files.length === 0) return;
 
@@ -157,23 +157,42 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         this.setSubmitting(true);
 
         const translations = this.#buildTranslations();
-        const uploadedBy = this.userService.user()?.id;
+        const uploadedBy = this.#userService.user()?.id;
 
         if (!uploadedBy) {
-            this._notificationService.alert('User not identified');
+            this.#notificationService.alert('User not identified');
             return;
         }
 
         const uploads$ = files.map(file =>
-            this.mediaService.uploadComposite(file, uploadedBy, translations)
+            this.#mediaService.uploadComposite(file, uploadedBy, translations).pipe(
+                map(response => ({ success: true, file, data: response, error: null })),
+                catchError(err => of({ success: false, file, data: null, error: err }))
+            )
         );
 
         forkJoin(uploads$).pipe(take(1)).subscribe({
             next: (results) => {
-                this.uploadedMediaSig.set(results);
+                const successes = results.filter(r => r.success);
+                const failures = results.filter(r => !r.success);
+                if (successes.length > 0) {
+                    this.uploadedMediaSig.set(successes.map(s => s.data!));
+                    if (failures.length === 0) {
+                        this.#notificationService.success('admin.media.messages.uploadSuccess');
+                    } else {
+                        this.#notificationService.warning(`Uploaded ${successes.length} files. Failed: ${failures.length}`);
+                    }
+                }
+
+                if (failures.length > 0 && successes.length === 0) {
+                   this.#notificationService.alert('admin.media.messages.uploadError');
+                }
+
                 this.isUploadingSig.set(false);
                 this.setSubmitting(false);
-                this.close(results as Media[]);
+                if (successes.length > 0) {
+                    this.close(successes.map(s => s.data!));
+                }
             },
             error: (err) => {
                 this.isUploadingSig.set(false);
@@ -206,7 +225,7 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
     }
 
     #isValidFile(file: File): boolean {
-        const maxSize = 50 * 1024 * 1024; // 50MB
+        const maxSize = environment.media.maxUploadSize;
         if (file.size > maxSize) {
             return false;
         }

@@ -40,6 +40,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     mediaContainers: 'media/containers',
     mediaContainerById: 'media/containers/${id}',
     mediaContainerGenerate: 'media/containers/${id}/generate',
+    mediaGenerateFormat: 'media/${id}/generate-format',
+    mediaGenerateFormats: 'media/${id}/generate-formats',
+    mediaVariantDelete: 'media/${mediaId}/variants/${variantId}',
+    mediaFocalPoint: 'media/${id}/focal-point',
 
     // ----- MEDIA FORMATS -----
     mediaFormats: 'media/formats',
