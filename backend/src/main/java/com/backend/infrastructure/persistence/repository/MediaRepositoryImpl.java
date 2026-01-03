@@ -33,6 +33,11 @@ public class MediaRepositoryImpl implements MediaRepository {
     }
 
     @Override
+    public Optional<Media> findByIdWithFolder(Long id) {
+        return jpaRepository.findByIdWithDetails(id);
+    }
+
+    @Override
     public Optional<Media> findByUid(String uid) {
         return jpaRepository.findByUid(uid);
     }

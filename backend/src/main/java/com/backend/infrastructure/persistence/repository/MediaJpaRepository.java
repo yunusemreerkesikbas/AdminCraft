@@ -27,6 +27,10 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUid(String uid);
 
+    @EntityGraph(attributePaths = { "folder", "folder.parent" })
+    @Query("SELECT m FROM Media m WHERE m.id = :id")
+    Optional<Media> findByIdWithDetails(@Param("id") Long id);
+
     @EntityGraph(attributePaths = { "folder" })
     Optional<Media> findByUuid(String uuid);
 

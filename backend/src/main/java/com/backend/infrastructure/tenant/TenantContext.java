@@ -9,6 +9,7 @@ public class TenantContext implements TenantContextPort {
 
   private static final ThreadLocal<String> currentTenantId = new ThreadLocal<>();
   private static final ThreadLocal<String> currentTenantDbName = new ThreadLocal<>();
+  private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
 
   public void setTenantId(String tenantId) {
     currentTenantId.set(tenantId);
@@ -28,13 +29,22 @@ public class TenantContext implements TenantContextPort {
     return currentTenantDbName.get();
   }
 
+  public void setSubdomain(String subdomain) {
+    currentSubdomain.set(subdomain);
+  }
+
+  @Override
+  public String getSubdomain() {
+    return currentSubdomain.get();
+  }
+
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
+    currentSubdomain.remove();
   }
 
   public boolean isSet() {
     return currentTenantId.get() != null && currentTenantDbName.get() != null;
   }
 }
-

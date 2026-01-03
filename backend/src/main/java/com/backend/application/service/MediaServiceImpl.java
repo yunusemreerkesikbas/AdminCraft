@@ -1,6 +1,7 @@
 package com.backend.application.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -10,14 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.backend.application.command.MediaProcessingCommands.ImageDimensions;
 import com.backend.application.config.StorageConfigProperties;
+import com.backend.application.dto.ImageDimensions;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaFolder;
+import com.backend.domain.enums.Language;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
 import com.backend.domain.repository.MediaFolderRepository;
 import com.backend.domain.repository.MediaRepository;
+import com.backend.presentation.dto.request.MediaI18nRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +32,40 @@ public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepository;
     private final MediaFolderRepository folderRepository;
+    private final MediaI18nService i18nService;
     private final MediaStorageService storageService;
     private final MediaProcessingService processingService;
     private final MediaContainerService containerService;
     private final StorageConfigProperties properties;
     private final TransactionTemplate transactionTemplate;
+
+    @Override
+    public Media uploadComposite(MultipartFile file, Long uploadedBy, Long folderId,
+            Map<Language, MediaI18nRequest> translations) {
+        // 1. Upload basic file (reuses existing logic)
+        Media media = uploadFile(file, uploadedBy);
+
+        return transactionTemplate.execute(status -> {
+            Media currentMedia = mediaRepository.findById(media.getId()).orElseThrow();
+
+            // 2. Set Folder
+            if (folderId != null) {
+                MediaFolder folder = folderRepository.findById(folderId)
+                        .orElseThrow(() -> new IllegalArgumentException("Folder not found: " + folderId));
+                currentMedia.setFolder(folder);
+            }
+
+            Media saved = mediaRepository.save(currentMedia);
+
+            // 3. Create I18n entries
+            if (translations != null && !translations.isEmpty()) {
+                translations.forEach((lang, req) -> {
+                    i18nService.upsert(saved.getId(), lang, req.altText(), req.title(), req.description());
+                });
+            }
+            return saved;
+        });
+    }
 
     @Override
     public Media uploadFile(MultipartFile file, Long uploadedBy) {
@@ -105,6 +137,12 @@ public class MediaServiceImpl implements MediaService {
     @Transactional(readOnly = true)
     public Optional<Media> findById(Long id) {
         return mediaRepository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Media> findByIdWithFolder(Long id) {
+        return mediaRepository.findByIdWithFolder(id);
     }
 
     @Override

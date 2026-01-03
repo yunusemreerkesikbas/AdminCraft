@@ -78,6 +78,9 @@ public class TenantFilter extends OncePerRequestFilter {
       }
 
       Tenant tenant = resolveTenantFromHeaders(request);
+      if (tenant == null) {
+        tenant = resolveTenantFromHostname(request);
+      }
 
       if (tenant == null) {
         log.warn("Missing or invalid tenant header for request: {}", path);
@@ -93,11 +96,13 @@ public class TenantFilter extends OncePerRequestFilter {
 
       tenantContext.setTenantId(String.valueOf(tenant.getId()));
       tenantContext.setTenantDbName(tenant.getDatabaseName());
+      tenantContext.setSubdomain(tenant.getSubdomain());
 
       MDC.put("tenantId", String.valueOf(tenant.getId()));
       MDC.put("tenantDb", tenant.getDatabaseName());
 
-      log.debug("Tenant context set: tenantId={}, dbName={}", tenant.getId(), tenant.getDatabaseName());
+      log.debug("Tenant context set: tenantId={}, dbName={}, subdomain={}", tenant.getId(), tenant.getDatabaseName(),
+          tenant.getSubdomain());
       try {
         connectionProvider.warmUpConnectionPool(tenant.getDatabaseName());
       } catch (RuntimeException e) {
@@ -145,6 +150,76 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     return null;
+  }
+
+  private Tenant resolveTenantFromHostname(HttpServletRequest request) {
+    // Try multiple sources for hostname (Angular proxy loses original host)
+    String hostname = null;
+
+    // 1. Check X-Forwarded-Host header (reverse proxy standard)
+    String forwardedHost = request.getHeader("X-Forwarded-Host");
+    if (forwardedHost != null && !forwardedHost.isBlank()) {
+      hostname = forwardedHost.split(",")[0].trim(); // Take first if multiple
+      log.debug("Using X-Forwarded-Host: {}", hostname);
+    }
+
+    // 2. Check Origin header (browser sends this on CORS/fetch requests)
+    if (hostname == null) {
+      String origin = request.getHeader("Origin");
+      if (origin != null && !origin.isBlank()) {
+        hostname = extractHostFromUrl(origin);
+        log.debug("Using Origin header: {}", hostname);
+      }
+    }
+
+    // 3. Check Referer header (browser sends this for resource requests like
+    // images)
+    if (hostname == null) {
+      String referer = request.getHeader("Referer");
+      if (referer != null && !referer.isBlank()) {
+        hostname = extractHostFromUrl(referer);
+        log.debug("Using Referer header: {}", hostname);
+      }
+    }
+
+    // 4. Fallback to serverName
+    if (hostname == null) {
+      hostname = request.getServerName();
+    }
+
+    if (hostname == null || hostname.isBlank() || "localhost".equals(hostname)) {
+      return null;
+    }
+
+    // Extract subdomain from hostname
+    // e.g. tenant1.example.com -> tenant1
+    // e.g. tenant1.localhost -> tenant1
+    String subdomain = null;
+    int firstDot = hostname.indexOf('.');
+    if (firstDot > 0) {
+      subdomain = hostname.substring(0, firstDot);
+    }
+
+    if (subdomain != null && !subdomain.isBlank()) {
+      Tenant tenant = tenantRepository.findBySubdomain(subdomain.toLowerCase()).orElse(null);
+      if (tenant != null) {
+        log.debug("Tenant resolved by hostname: {} -> {}", hostname, subdomain);
+        return tenant;
+      }
+    }
+    return null;
+  }
+
+  private String extractHostFromUrl(String url) {
+    if (url == null || url.isBlank()) {
+      return null;
+    }
+    try {
+      return new java.net.URI(url).getHost();
+    } catch (Exception e) {
+      log.warn("Failed to extract host from URL: {}", url);
+      return null;
+    }
   }
 
   private boolean isPublicNoTenantRequired(String path) {

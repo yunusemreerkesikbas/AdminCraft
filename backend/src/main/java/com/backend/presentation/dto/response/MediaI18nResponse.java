@@ -44,4 +44,29 @@ public record MediaI18nResponse(
         entity.getCreatedAt(),
         entity.getUpdatedAt());
   }
+
+  /**
+   * Creates a MediaI18nResponse from a MediaI18n entity with explicit mediaId.
+   * Prevents LazyInitializationException by avoiding entity.getMedia() access.
+   *
+   * @param entity  the MediaI18n entity
+   * @param mediaId the media ID
+   * @return MediaI18nResponse DTO
+   */
+  public static MediaI18nResponse from(MediaI18n entity, Long mediaId) {
+    if (entity == null) {
+      throw new IllegalArgumentException("MediaI18n entity cannot be null");
+    }
+    return new MediaI18nResponse(
+        entity.getId(),
+        entity.getUuid(),
+        entity.getUid(),
+        mediaId,
+        entity.getLanguage(),
+        entity.getAltText(),
+        entity.getTitle(),
+        entity.getDescription(),
+        entity.getCreatedAt(),
+        entity.getUpdatedAt());
+  }
 }

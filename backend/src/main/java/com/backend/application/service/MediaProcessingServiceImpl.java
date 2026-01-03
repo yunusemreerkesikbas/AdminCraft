@@ -16,9 +16,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.backend.application.command.MediaProcessingCommands.ImageDimensions;
-import com.backend.application.command.MediaProcessingCommands.ProcessedFormat;
 import com.backend.application.config.StorageConfigProperties;
+import com.backend.application.dto.ImageDimensions;
+import com.backend.application.dto.ProcessedFormat;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaFormat;
 import com.backend.domain.enums.CropMode;
