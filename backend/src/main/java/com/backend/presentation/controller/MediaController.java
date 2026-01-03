@@ -1,5 +1,6 @@
 package com.backend.presentation.controller;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -10,6 +11,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -290,7 +292,9 @@ public class MediaController {
                                 }
                         }
 
+                        // Cache for 30 days - media files are immutable (UUID-named)
                         return ResponseEntity.ok()
+                                        .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
                                         .contentType(mediaType)
                                         .body(content);
                 } catch (Exception ex) {

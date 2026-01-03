@@ -207,13 +207,10 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public byte[] getFileContent(String fileName) {
         Media media = mediaRepository.findByFileName(fileName)
                 .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileName));
-
-        media.recordAccess();
-        mediaRepository.save(media);
 
         return storageService.retrieve(media.getFilePath());
     }
