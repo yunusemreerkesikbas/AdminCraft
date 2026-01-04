@@ -161,10 +161,7 @@ public class ComponentServiceImpl implements ComponentService {
         Component component = componentRepository.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
 
-        // Cleanup media links before deletion
-        componentMediaLinkRepository.deleteByComponentId(command.id());
-        log.info("Deleted media links for component {}", command.id());
-
+        // Component deletion will cascade to media links via ON DELETE CASCADE
         componentRepository.delete(component);
     }
 

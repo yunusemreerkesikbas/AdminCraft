@@ -45,6 +45,11 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
       throw new IllegalArgumentException("Responsive media set with code already exists: " + request.code());
     }
 
+    // Validate at least one media is provided
+    if (request.desktopMediaId() == null && request.mobileMediaId() == null) {
+      throw new IllegalArgumentException("At least one media (desktop or mobile) must be provided");
+    }
+
     ResponsiveMediaSet entity = new ResponsiveMediaSet();
     entity.setCode(request.code());
 
@@ -114,6 +119,11 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
       entity.setMobileMedia(mobileMedia);
     } else {
       entity.setMobileMedia(null);
+    }
+
+    // Validate at least one media remains after update
+    if (entity.getDesktopMedia() == null && entity.getMobileMedia() == null) {
+      throw new IllegalArgumentException("At least one media (desktop or mobile) must be assigned");
     }
 
     ResponsiveMediaSet saved = repository.save(entity);
