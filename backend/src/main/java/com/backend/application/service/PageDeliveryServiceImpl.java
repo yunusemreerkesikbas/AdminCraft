@@ -26,6 +26,7 @@ import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.entity.PageSlot;
+import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
@@ -37,6 +38,7 @@ import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.domain.repository.SlotComponentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -61,6 +63,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
   private final ComponentI18nRepository componentI18nRepository;
   private final ComponentEntryRepository componentEntryRepository;
   private final ComponentEntryI18nRepository componentEntryI18nRepository;
+  private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
   private final ResponsiveMediaService responsiveMediaService;
   private final MediaFieldExpander mediaFieldExpander;
 
@@ -135,6 +138,18 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         : componentTypeRepository.findByIdIn(typeIds).stream()
             .collect(Collectors.toMap(ComponentType::getId, t -> t));
 
+
+    // Batch fetch responsive media sets with eagerly loaded media and translations
+    List<Long> responsiveMediaIds = componentMap.values().stream()
+        .map(Component::getResponsiveMedia)
+        .filter(r -> r != null)
+        .map(ResponsiveMediaSet::getId)
+        .distinct()
+        .toList();
+    Map<Long, ResponsiveMediaSet> responsiveMediaMap = responsiveMediaIds.isEmpty()
+        ? Map.of()
+        : responsiveMediaSetRepository.findByIdInWithMedia(responsiveMediaIds).stream()
+            .collect(Collectors.toMap(ResponsiveMediaSet::getId, r -> r));
     Map<Long, List<ComponentEntry>> entriesByComponentId = publishedComponentIds.isEmpty()
         ? Map.of()
         : componentEntryRepository
@@ -173,8 +188,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       pageSlots.addAll(slotsByPageId.getOrDefault(page.getId(), List.of()));
 
       Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-          pageSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId,
-          entryI18nMap, lang);
+          pageSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, responsiveMediaMap,
+          entriesByComponentId, entryI18nMap, lang);
 
       PageDeliveryResponse response = PageDeliveryResponse.builder()
           .uid(page.getUid())
@@ -266,6 +281,18 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         .map(ComponentEntry::getId)
         .toList();
 
+
+    // Batch fetch responsive media sets with eagerly loaded media and translations
+    List<Long> responsiveMediaIds = componentMap.values().stream()
+        .map(Component::getResponsiveMedia)
+        .filter(r -> r != null)
+        .map(ResponsiveMediaSet::getId)
+        .distinct()
+        .toList();
+    Map<Long, ResponsiveMediaSet> responsiveMediaMap = responsiveMediaIds.isEmpty()
+        ? Map.of()
+        : responsiveMediaSetRepository.findByIdInWithMedia(responsiveMediaIds).stream()
+            .collect(Collectors.toMap(ResponsiveMediaSet::getId, r -> r));
     Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
         ? Map.of()
         : componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, lang)
@@ -273,8 +300,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
             .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
 
     Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-        activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId,
-        entryI18nMap, lang);
+        activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, responsiveMediaMap,
+        entriesByComponentId, entryI18nMap, lang);
 
     PageI18n i18n = i18nOpt.orElse(null);
 
@@ -299,6 +326,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       Map<Long, Component> componentMap,
       Map<Long, ComponentI18n> componentI18nMap,
       Map<Long, ComponentType> typeMap,
+      Map<Long, ResponsiveMediaSet> responsiveMediaMap,
       Map<Long, List<ComponentEntry>> entriesByComponentId,
       Map<Long, ComponentEntryI18n> entryI18nMap,
       Language lang) {
@@ -313,8 +341,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
               a.getSortOrder() != null ? a.getSortOrder() : 0,
               b.getSortOrder() != null ? b.getSortOrder() : 0))
           .filter(sc -> componentMap.containsKey(sc.getComponentId()))
-          .map(sc -> buildComponentResponse(sc, componentMap, componentI18nMap, typeMap, entriesByComponentId,
-              entryI18nMap, lang))
+          .map(sc -> buildComponentResponse(sc, componentMap, componentI18nMap, typeMap, responsiveMediaMap,
+              entriesByComponentId, entryI18nMap, lang))
           .toList();
 
       if (!compResponses.isEmpty()) {
@@ -330,6 +358,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       Map<Long, Component> componentMap,
       Map<Long, ComponentI18n> componentI18nMap,
       Map<Long, ComponentType> typeMap,
+      Map<Long, ResponsiveMediaSet> responsiveMediaMap,
       Map<Long, List<ComponentEntry>> entriesByComponentId,
       Map<Long, ComponentEntryI18n> entryI18nMap,
       Language lang) {
@@ -346,10 +375,13 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
             comp.getComponentTypeId(), lang))
         .toList();
 
-    // Build responsive media for component
+    // Build responsive media for component using the pre-fetched map
     ResponsiveMediaDeliveryResponse responsive = null;
-    if (comp.getResponsiveMedia() != null) {
-      responsive = responsiveMediaService.toDeliveryResponse(comp.getResponsiveMedia(), lang);
+    ResponsiveMediaSet responsiveMedia = comp.getResponsiveMedia() != null
+        ? responsiveMediaMap.get(comp.getResponsiveMedia().getId())
+        : null;
+    if (responsiveMedia != null) {
+      responsive = responsiveMediaService.toDeliveryResponse(responsiveMedia, lang);
     }
 
     return ComponentDeliveryResponse.builder()

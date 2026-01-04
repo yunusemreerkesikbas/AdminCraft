@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
  * Link Types:
  * - RESPONSIVE_DESKTOP: Component/Entry desktop image
  * - RESPONSIVE_MOBILE: Component/Entry mobile image
- * - ENTRY_MEDIA: Legacy single media in entry (deprecated)
+ * - ENTRY_MEDIA: Single media in entry field (legacy support)
  */
 @Entity
 @Table(name = "component_media_links", indexes = {

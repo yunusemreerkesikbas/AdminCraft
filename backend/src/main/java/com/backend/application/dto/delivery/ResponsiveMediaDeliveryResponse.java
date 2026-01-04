@@ -24,6 +24,7 @@ public class ResponsiveMediaDeliveryResponse {
    */
   @Getter
   @Builder
+  @lombok.ToString
   public static class MediaDelivery {
     private String uid;
     private String mime;

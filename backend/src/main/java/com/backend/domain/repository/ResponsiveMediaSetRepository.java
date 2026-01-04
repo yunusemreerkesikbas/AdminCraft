@@ -44,4 +44,10 @@ public interface ResponsiveMediaSetRepository {
    * Used for optimized N+1 query prevention in delivery services.
    */
   List<ResponsiveMediaSet> findByIdIn(java.util.Collection<Long> ids);
+
+  /**
+   * Batch fetch responsive sets with eagerly loaded media and translations.
+   * Prevents N+1 queries in delivery services.
+   */
+  List<ResponsiveMediaSet> findByIdInWithMedia(java.util.Collection<Long> ids);
 }
