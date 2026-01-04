@@ -1,6 +1,5 @@
 package com.backend.application.util;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,8 @@ public class MediaFieldExpander {
     private final ObjectMapper objectMapper;
 
     /**
-     * Expands MEDIA type fields from ID to full ResponsiveMediaDeliveryResponse objects.
+     * Expands MEDIA type fields from ID to full ResponsiveMediaDeliveryResponse
+     * objects.
      * Uses batch fetching to prevent N+1 queries.
      *
      * @param customFields    The custom fields map from entry i18n
@@ -48,13 +48,15 @@ public class MediaFieldExpander {
      * @param lang            The language for i18n content
      * @return Map with MEDIA fields expanded to full response objects
      */
-    public Map<String, Object> expandMediaFields(Map<String, Object> customFields, Long componentTypeId, Language lang) {
+    public Map<String, Object> expandMediaFields(Map<String, Object> customFields, Long componentTypeId,
+            Language lang) {
         if (customFields == null || customFields.isEmpty() || componentTypeId == null) {
             return customFields != null ? customFields : new HashMap<>();
         }
 
         // Get field definitions to identify MEDIA type fields
-        List<EntryFieldDefinition> fieldDefinitions = entryFieldDefinitionRepository.findByComponentTypeId(componentTypeId);
+        List<EntryFieldDefinition> fieldDefinitions = entryFieldDefinitionRepository
+                .findByComponentTypeId(componentTypeId);
 
         Set<String> mediaFieldKeys = fieldDefinitions.stream()
                 .filter(f -> f.getFieldType() == EntryFieldType.MEDIA)
@@ -96,7 +98,8 @@ public class MediaFieldExpander {
                 if (responsiveMediaId != null) {
                     ResponsiveMediaSet mediaSet = mediaSetMap.get(responsiveMediaId);
                     if (mediaSet != null) {
-                        ResponsiveMediaDeliveryResponse expanded = responsiveMediaService.toDeliveryResponse(mediaSet, lang);
+                        ResponsiveMediaDeliveryResponse expanded = responsiveMediaService.toDeliveryResponse(mediaSet,
+                                lang);
                         expandedFields.put(fieldKey, expanded);
                     }
                 }
@@ -127,7 +130,8 @@ public class MediaFieldExpander {
         }
 
         // Get field definitions once for all entries
-        List<EntryFieldDefinition> fieldDefinitions = entryFieldDefinitionRepository.findByComponentTypeId(componentTypeId);
+        List<EntryFieldDefinition> fieldDefinitions = entryFieldDefinitionRepository
+                .findByComponentTypeId(componentTypeId);
 
         Set<String> mediaFieldKeys = fieldDefinitions.stream()
                 .filter(f -> f.getFieldType() == EntryFieldType.MEDIA)
@@ -180,7 +184,8 @@ public class MediaFieldExpander {
                         expandedFields.put(fieldKey, deliveryResponseMap.get(responsiveMediaId));
                     }
                 } catch (Exception e) {
-                    log.warn("Failed to expand MEDIA field '{}' for entry {}: {}", fieldKey, entry.getKey(), e.getMessage());
+                    log.warn("Failed to expand MEDIA field '{}' for entry {}: {}", fieldKey, entry.getKey(),
+                            e.getMessage());
                 }
             }
 
@@ -213,7 +218,7 @@ public class MediaFieldExpander {
     /**
      * Parses custom data JSON string to Map.
      */
-    private Map<String, Object> parseCustomData(String customDataJson) {
+    public Map<String, Object> parseCustomData(String customDataJson) {
         if (customDataJson == null || customDataJson.isBlank()) {
             return new HashMap<>();
         }

@@ -507,10 +507,25 @@ export const langEN = {
                 generating: 'Generating...',
                 success: 'Format generated'
             },
+            responsive: {
+                background: 'Background Media',
+                desktop: 'Desktop Image',
+                mobile: 'Mobile Image',
+                desktopHint: 'Main image for large screens',
+                mobileHint: 'Optional image for small screens',
+            },
+            picker: {
+                desktopPlaceholder: 'Select Desktop Media',
+                mobilePlaceholder: 'Select Mobile Media'
+            },
             dialogs: {
                 detail: {
                     title: 'Media Details',
-                    formats: 'Formats'
+                    formats: 'Formats',
+                    linkedComponents: 'Linked Components'
+                },
+                messages: {
+                    noLinkedComponents: 'No linked components found'
                 },
                 folder: {
                     createTitle: 'Create Folder',

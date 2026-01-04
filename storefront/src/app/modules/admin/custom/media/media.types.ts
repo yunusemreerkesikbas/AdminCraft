@@ -211,3 +211,30 @@ export interface FocalPointRequest {
     x: number;
     y: number;
 }
+
+export interface MediaSummary {
+    id: number;
+    uid: string;
+    url: string;
+    publicUrl?: string; // Frontend helper
+    altText?: string;
+    width?: number;
+    height?: number;
+    mimeType?: string;
+    originalName?: string;
+}
+
+export interface ResponsiveMediaResponse {
+    id: number;
+    uid: string;
+    code: string;
+    desktopMedia: MediaSummary;
+    mobileMedia: MediaSummary;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface ResponsiveMediaRequest {
+    desktopMediaId: number;
+    mobileMediaId: number;
+}

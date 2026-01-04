@@ -44,7 +44,8 @@ export class EntryFieldDialogComponent extends SpaFormDialog implements OnInit {
         { value: 'text', labelKey: 'admin.components.entryFields.types.text' },
         { value: 'textarea', labelKey: 'admin.components.entryFields.types.textarea' },
         { value: 'number', labelKey: 'admin.components.entryFields.types.number' },
-        { value: 'boolean', labelKey: 'admin.components.entryFields.types.boolean' }
+        { value: 'boolean', labelKey: 'admin.components.entryFields.types.boolean' },
+        { value: 'media', labelKey: 'admin.components.entryFields.types.media' }
     ];
 
     readonly #selectedFieldType = signal<string>('text');

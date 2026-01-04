@@ -15,6 +15,8 @@ import {
     MediaI18nRequest,
     MediaResponse,
     MediaVariantResponse,
+    ResponsiveMediaRequest,
+    ResponsiveMediaResponse,
     UpdateMediaCompositeRequest,
     UpdateMediaRequest
 } from './media.types';
@@ -110,5 +112,21 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         return this.api.getPublic<ApiResponse<Media>>('cmsMedia', { uid }, queryParams).pipe(
             map((response) => response.data)
         );
+    }
+
+    createResponsiveMedia(request: ResponsiveMediaRequest): Observable<ResponsiveMediaResponse> {
+        return this.api.post<ApiResponse<ResponsiveMediaResponse>>('responsiveMedia', request).pipe(
+            map(response => response.data)
+        );
+    }
+
+    updateResponsiveMedia(id: number, request: ResponsiveMediaRequest): Observable<ResponsiveMediaResponse> {
+        return this.api.put<ApiResponse<ResponsiveMediaResponse>>('responsiveMediaById', request, { id }).pipe(
+            map(response => response.data)
+        );
+    }
+
+    getLinkedComponents(mediaId: number): Observable<number[]> {
+        return this.customGet<number[]>('linkedComponents', { mediaId });
     }
 }

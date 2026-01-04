@@ -5,6 +5,7 @@ import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
@@ -13,7 +14,9 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { take } from 'rxjs';
+import { map, Observable, of, switchMap, take } from 'rxjs';
+import { SpaResponsiveMediaPickerComponent } from '../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
+import { MediaService } from '../../media/media.service';
 import { ComponentEntryListComponent } from '../entries/component-entry-list/component-entry-list.component';
 import { ComponentDetailDto, ComponentStatus, ComponentTypeDto, CreateComponentCompositeRequest, UpdateComponentCompositeRequest } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
@@ -43,7 +46,8 @@ export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<Comp
         ComponentEntryListComponent,
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogFooterComponent,
+        SpaResponsiveMediaPickerComponent
     ],
     templateUrl: './component-edit-dialog.component.html',
     styleUrls: ['./component-edit-dialog.component.scss'],
@@ -53,7 +57,9 @@ export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<Comp
 export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, ComponentEditDialogData> {
     readonly #translocoService = inject(TranslocoService);
     readonly #componentService = inject(ComponentLibraryService);
+    readonly #mediaService = inject(MediaService);
     readonly #notify = inject(NotificationService);
+    readonly #tenantContext = inject(TenantContextService);
 
     statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
     componentTypeOptions: { value: any; label: string }[] = [];
@@ -65,22 +71,40 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
 
     constructor() {
         super();
-        this.languages = this.data?.languages || ['en', 'tr'];
         this.componentTypeOptions = (this.data?.componentTypes || []).map(type => ({
             value: type.id,
             label: type.name
         }));
     }
 
+    override ngOnInit(): void {
+        const tenant = this.#tenantContext.tenant();
+        if (this.data?.languages?.length) {
+             this.languages = this.data.languages;
+        } else if (tenant?.supportedLanguages) {
+             this.languages = tenant.supportedLanguages.map(l => l.code);
+        } else {
+             this.languages = ['en'];
+        }
+        super.ngOnInit();
+    }
+
     protected buildGeneralForm(): FormGroup {
         const component = this.data?.component;
+        const responsiveMedia = component?.responsiveMedia;
+        const responsiveValue = responsiveMedia ? {
+            desktop: responsiveMedia.desktopMedia,
+            mobile: responsiveMedia.mobileMedia
+        } : null;
+
         return this.fb.group({
             name: [component?.name || '', Validators.required],
             componentTypeId: [component?.componentTypeId || '', Validators.required],
             status: [component?.status, Validators.required],
             isVisible: [component?.isVisible ?? true],
             styleClasses: [component?.styleClasses || ''],
-            displayOrder: [component?.displayOrder || 0]
+            displayOrder: [component?.displayOrder || 0],
+            responsiveMedia: [responsiveValue]
         });
     }
 
@@ -125,7 +149,10 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         };
 
         this.#componentService.createComposite(request)
-            .pipe(take(1))
+            .pipe(
+                switchMap(response => this.#handleResponsiveMedia(response.id).pipe(map(() => response))),
+                take(1)
+            )
             .subscribe({
                 next: (response) => {
                     this.#notify.success('admin.components.success.created');
@@ -153,7 +180,10 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         };
 
         this.#componentService.updateComposite(this.data.component.id, request)
-            .pipe(take(1))
+            .pipe(
+                switchMap(response => this.#handleResponsiveMedia(response.id).pipe(map(() => response))),
+                take(1)
+            )
             .subscribe({
                 next: (response) => {
                     this.#notify.success('admin.components.success.updated');
@@ -190,5 +220,36 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         });
 
         return translations;
+    }
+
+    #handleResponsiveMedia(componentId: number): Observable<any> {
+        const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
+        const currentSetId = this.data.component?.responsiveMedia?.id;
+
+        const desktopMediaId = responsiveValue?.desktop?.id;
+        const mobileMediaId = responsiveValue?.mobile?.id;
+
+        if (!desktopMediaId && !mobileMediaId) {
+            if (currentSetId) {
+                return this.#componentService.assignResponsiveMedia(componentId, null);
+            }
+            return of(null);
+        }
+
+        const responsiveMediaRequest = {
+            desktopMediaId: desktopMediaId,
+            mobileMediaId: mobileMediaId,
+            code: `responsive_${componentId}_${Date.now()}`
+        };
+
+        if (currentSetId) {
+            return this.#mediaService.updateResponsiveMedia(currentSetId, responsiveMediaRequest).pipe(
+                map(() => null)
+            );
+        } else {
+            return this.#mediaService.createResponsiveMedia(responsiveMediaRequest).pipe(
+                switchMap(set => this.#componentService.assignResponsiveMedia(componentId, set.id))
+            );
+        }
     }
 }

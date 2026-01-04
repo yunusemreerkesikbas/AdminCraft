@@ -1,0 +1,64 @@
+<div class="w-full">
+    @if (label) {
+        <label
+            class="mb-2 block text-sm font-medium leading-5 text-gray-700 dark:text-gray-200"
+        >
+            {{ label }}
+            @if (required) {
+                <span class="text-red-500">*</span>
+            }
+        </label>
+    }
+
+    @if (value()) {
+        <div
+            class="group relative h-40 w-full overflow-hidden rounded-md border bg-gray-100 dark:bg-gray-800"
+        >
+            <img
+                [src]="value()?.publicUrl || value()?.url"
+                [alt]="value()?.altText || 'Media'"
+                class="object-contain h-full w-full"
+            />
+            <!-- Overlay Actions -->
+            <div
+                class="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+                <button
+                    mat-fab
+                    class="scale-75"
+                    (click)="openPicker()"
+                    [matTooltip]="'admin.common.actions.edit' | transloco"
+                >
+                    <mat-icon [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                </button>
+                <button
+                    mat-fab
+                    color="warn"
+                    class="scale-75"
+                    (click)="remove()"
+                    [matTooltip]="'admin.common.actions.remove' | transloco"
+                >
+                    <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                </button>
+            </div>
+        </div>
+    } @else {
+        <div
+            class="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            (click)="openPicker()"
+        >
+            <mat-icon
+                class="text-gray-400 icon-size-8"
+                [svgIcon]="'heroicons_outline:photo'"
+            ></mat-icon>
+            <span
+                class="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
+                {{
+                    placeholder ||
+                        ('admin.media.picker.placeholder' | transloco)
+                }}
+            </span>
+        </div>
+    }
+</div>

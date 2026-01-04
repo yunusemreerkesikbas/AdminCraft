@@ -1,3 +1,6 @@
+import { Language } from '@shared/types/common.types';
+import { ResponsiveMediaResponse } from '../../media/media.types';
+
 export enum ComponentStatus {
     DRAFT = 'DRAFT',
     PUBLISHED = 'PUBLISHED',
@@ -15,6 +18,7 @@ export interface ComponentTypeDto {
     isSystem: boolean;
     createdAt: string;
 }
+
 
 export interface CreateComponentTypeRequest {
     code: string;
@@ -42,6 +46,7 @@ export interface ComponentDto {
     status: ComponentStatus;
     createdAt: string;
     updatedAt?: string;
+    responsiveMedia?: ResponsiveMediaResponse;
 }
 
 export interface ComponentDetailDto extends ComponentDto {
@@ -91,7 +96,6 @@ export interface ComponentI18nRequest {
     status?: ComponentStatus;
 }
 
-export type Language = 'TR' | 'EN';
 
 export interface CreateComponentCompositeRequest {
     componentTypeId: number;
@@ -125,6 +129,7 @@ export interface ComponentCompositeResponse {
     status: ComponentStatus;
     createdAt: string;
     updatedAt: string;
+    responsiveMedia?: ResponsiveMediaResponse;
     translations: Record<Language, ComponentI18nDto>;
 }
 
