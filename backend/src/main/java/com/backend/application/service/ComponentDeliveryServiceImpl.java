@@ -22,6 +22,7 @@ import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
@@ -29,6 +30,7 @@ import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   private final ComponentI18nRepository componentI18nRepository;
   private final ComponentEntryRepository componentEntryRepository;
   private final ComponentEntryI18nRepository componentEntryI18nRepository;
+  private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
   private final ResponsiveMediaService responsiveMediaService;
   private final MediaFieldExpander mediaFieldExpander;
 
@@ -105,6 +108,18 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         : componentTypeRepository.findByIdIn(typeIds).stream()
             .collect(Collectors.toMap(ComponentType::getId, t -> t));
 
+    // Batch fetch responsive media sets with eagerly loaded media and translations
+    List<Long> responsiveMediaIds = components.stream()
+        .map(Component::getResponsiveMedia)
+        .filter(r -> r != null)
+        .map(ResponsiveMediaSet::getId)
+        .distinct()
+        .toList();
+    Map<Long, ResponsiveMediaSet> responsiveMediaMap = responsiveMediaIds.isEmpty()
+        ? Map.of()
+        : responsiveMediaSetRepository.findByIdInWithMedia(responsiveMediaIds).stream()
+            .collect(Collectors.toMap(ResponsiveMediaSet::getId, r -> r));
+
     Map<String, ComponentDeliveryResponse> data = new LinkedHashMap<>();
     List<String> notFound = new ArrayList<>();
 
@@ -126,10 +141,13 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
               component.getComponentTypeId(), lang))
           .toList();
 
-      // Build responsive media for component
+      // Build responsive media for component using the pre-fetched map
       ResponsiveMediaDeliveryResponse responsive = null;
-      if (component.getResponsiveMedia() != null) {
-        responsive = responsiveMediaService.toDeliveryResponse(component.getResponsiveMedia(), lang);
+      ResponsiveMediaSet responsiveMedia = component.getResponsiveMedia() != null
+          ? responsiveMediaMap.get(component.getResponsiveMedia().getId())
+          : null;
+      if (responsiveMedia != null) {
+        responsive = responsiveMediaService.toDeliveryResponse(responsiveMedia, lang);
       }
 
       ComponentDeliveryResponse response = ComponentDeliveryResponse.builder()

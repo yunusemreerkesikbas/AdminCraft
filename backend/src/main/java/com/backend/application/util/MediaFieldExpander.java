@@ -193,7 +193,7 @@ public class MediaFieldExpander {
     /**
      * Converts various numeric types to Long.
      */
-    public Long convertToLong(Object value) {
+    private Long convertToLong(Object value) {
         if (value instanceof Long l) {
             return l;
         } else if (value instanceof Integer i) {
@@ -213,7 +213,7 @@ public class MediaFieldExpander {
     /**
      * Parses custom data JSON string to Map.
      */
-    public Map<String, Object> parseCustomData(String customDataJson) {
+    private Map<String, Object> parseCustomData(String customDataJson) {
         if (customDataJson == null || customDataJson.isBlank()) {
             return new HashMap<>();
         }
