@@ -76,4 +76,12 @@ public class ResponsiveMediaSetRepositoryImpl implements ResponsiveMediaSetRepos
     }
     return jpaRepository.findByIdIn(ids);
   }
+
+  @Override
+  public List<ResponsiveMediaSet> findByIdInWithMedia(java.util.Collection<Long> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return List.of();
+    }
+    return jpaRepository.findByIdInWithMedia(ids);
+  }
 }
