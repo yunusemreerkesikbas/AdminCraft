@@ -16,6 +16,8 @@ import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
+import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
+import com.backend.application.util.MediaFieldExpander;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
@@ -36,8 +38,6 @@ import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.SlotComponentRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +61,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
   private final ComponentI18nRepository componentI18nRepository;
   private final ComponentEntryRepository componentEntryRepository;
   private final ComponentEntryI18nRepository componentEntryI18nRepository;
-  private final ObjectMapper objectMapper;
+  private final ResponsiveMediaService responsiveMediaService;
+  private final MediaFieldExpander mediaFieldExpander;
 
   @Override
   public Optional<PageDeliveryResponse> getPageByUid(String uid, Language lang) {
@@ -172,7 +173,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       pageSlots.addAll(slotsByPageId.getOrDefault(page.getId(), List.of()));
 
       Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-          pageSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId, entryI18nMap);
+          pageSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId,
+          entryI18nMap, lang);
 
       PageDeliveryResponse response = PageDeliveryResponse.builder()
           .uid(page.getUid())
@@ -271,7 +273,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
             .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
 
     Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-        activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId, entryI18nMap);
+        activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap, entriesByComponentId,
+        entryI18nMap, lang);
 
     PageI18n i18n = i18nOpt.orElse(null);
 
@@ -297,7 +300,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       Map<Long, ComponentI18n> componentI18nMap,
       Map<Long, ComponentType> typeMap,
       Map<Long, List<ComponentEntry>> entriesByComponentId,
-      Map<Long, ComponentEntryI18n> entryI18nMap) {
+      Map<Long, ComponentEntryI18n> entryI18nMap,
+      Language lang) {
 
     Map<String, List<ComponentDeliveryResponse>> slotsMap = new LinkedHashMap<>();
 
@@ -310,7 +314,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
               b.getSortOrder() != null ? b.getSortOrder() : 0))
           .filter(sc -> componentMap.containsKey(sc.getComponentId()))
           .map(sc -> buildComponentResponse(sc, componentMap, componentI18nMap, typeMap, entriesByComponentId,
-              entryI18nMap))
+              entryI18nMap, lang))
           .toList();
 
       if (!compResponses.isEmpty()) {
@@ -327,7 +331,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
       Map<Long, ComponentI18n> componentI18nMap,
       Map<Long, ComponentType> typeMap,
       Map<Long, List<ComponentEntry>> entriesByComponentId,
-      Map<Long, ComponentEntryI18n> entryI18nMap) {
+      Map<Long, ComponentEntryI18n> entryI18nMap,
+      Language lang) {
 
     Component comp = componentMap.get(sc.getComponentId());
     ComponentI18n compI18n = componentI18nMap.get(comp.getId());
@@ -337,8 +342,15 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
     List<ComponentEntry> entries = entriesByComponentId.getOrDefault(comp.getId(), List.of());
     List<EntryDeliveryResponse> entryResponses = entries.stream()
-        .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId())))
+        .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId()),
+            comp.getComponentTypeId(), lang))
         .toList();
+
+    // Build responsive media for component
+    ResponsiveMediaDeliveryResponse responsive = null;
+    if (comp.getResponsiveMedia() != null) {
+      responsive = responsiveMediaService.toDeliveryResponse(comp.getResponsiveMedia(), lang);
+    }
 
     return ComponentDeliveryResponse.builder()
         .uid(comp.getUid())
@@ -349,16 +361,23 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         .description(compI18n != null ? compI18n.getDescription() : null)
         .isVisible(comp.getIsVisible())
         .styleClasses(comp.getStyleClasses())
+        .responsive(responsive)
         .entries(entryResponses)
         .build();
   }
 
-  private EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n) {
+  private EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n,
+      Long componentTypeId, Language lang) {
     Map<String, Object> customFields = new HashMap<>();
     if (i18n != null && i18n.getCustomData() != null) {
-      customFields.putAll(parseCustomData(i18n.getCustomData()));
+      customFields.putAll(mediaFieldExpander.parseCustomData(i18n.getCustomData()));
     }
     customFields.keySet().removeAll(RESERVED_FIELDS);
+
+    // Expand MEDIA fields to full responsive media objects
+    if (!customFields.isEmpty() && componentTypeId != null) {
+      customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
+    }
 
     return EntryDeliveryResponse.builder()
         .uid(entry.getUid())
@@ -369,19 +388,5 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         .styleClasses(entry.getStyleClasses())
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
-  }
-
-  private Map<String, Object> parseCustomData(String customDataJson) {
-    if (customDataJson == null || customDataJson.isBlank()) {
-      return new HashMap<>();
-    }
-
-    try {
-      return objectMapper.readValue(customDataJson, new TypeReference<Map<String, Object>>() {
-      });
-    } catch (Exception e) {
-      log.warn("Failed to parse custom_data JSON: {}", e.getMessage());
-      return new HashMap<>();
-    }
   }
 }

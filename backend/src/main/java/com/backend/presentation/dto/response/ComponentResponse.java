@@ -2,6 +2,7 @@ package com.backend.presentation.dto.response;
 
 import java.time.LocalDateTime;
 
+import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
 
@@ -15,6 +16,7 @@ public record ComponentResponse(
         Boolean isVisible,
         String styleClasses,
         ComponentStatus status,
+        ResponsiveMediaResponse responsiveMedia,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
     public static ComponentResponse from(Component entity) {
@@ -31,6 +33,7 @@ public record ComponentResponse(
                 entity.getIsVisible(),
                 entity.getStyleClasses(),
                 entity.getStatus(),
+                entity.getResponsiveMedia() != null ? ResponsiveMediaResponse.from(entity.getResponsiveMedia()) : null,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

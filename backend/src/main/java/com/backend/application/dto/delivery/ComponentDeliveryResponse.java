@@ -14,5 +14,6 @@ public record ComponentDeliveryResponse(
     String description,
     Boolean isVisible,
     String styleClasses,
+    ResponsiveMediaDeliveryResponse responsive,
     List<EntryDeliveryResponse> entries) {
 }

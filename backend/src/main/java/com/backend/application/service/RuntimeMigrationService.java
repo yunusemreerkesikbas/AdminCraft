@@ -115,6 +115,7 @@ public class RuntimeMigrationService {
             case TEXTAREA -> "TEXT";
             case NUMBER -> "DECIMAL(10,2)";
             case BOOLEAN -> "BOOLEAN";
+            case MEDIA -> "BIGINT"; // Stores ResponsiveMediaSet ID
         };
     }
 

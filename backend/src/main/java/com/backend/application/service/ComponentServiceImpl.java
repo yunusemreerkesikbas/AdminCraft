@@ -26,10 +26,14 @@ import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQu
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ComponentI18nRepository;
+import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -44,6 +48,8 @@ public class ComponentServiceImpl implements ComponentService {
     private final ComponentI18nRepository componentI18nRepository;
     private final ComponentTypeService componentTypeService;
     private final ComponentTypeRepository componentTypeRepository;
+    private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
+    private final ComponentMediaLinkRepository componentMediaLinkRepository;
 
     @Override
     @Transactional
@@ -154,6 +160,11 @@ public class ComponentServiceImpl implements ComponentService {
     public void deleteComponent(DeleteComponentCommand command) {
         Component component = componentRepository.findById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
+
+        // Cleanup media links before deletion
+        componentMediaLinkRepository.deleteByComponentId(command.id());
+        log.info("Deleted media links for component {}", command.id());
+
         componentRepository.delete(component);
     }
 
@@ -273,6 +284,25 @@ public class ComponentServiceImpl implements ComponentService {
 
                     return ComponentCompositeResponse.from(component, typeName, i18nList);
                 });
+    }
+
+    @Override
+    @Transactional
+    public Component assignResponsiveMedia(Long componentId, Long responsiveMediaId) {
+        Component component = componentRepository.findById(componentId)
+                .orElseThrow(() -> new EntityNotFoundException("Component", componentId));
+
+        if (responsiveMediaId != null) {
+            ResponsiveMediaSet responsiveMedia = responsiveMediaSetRepository.findById(responsiveMediaId)
+                    .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", responsiveMediaId));
+            component.setResponsiveMedia(responsiveMedia);
+            log.info("Assigned responsive media {} to component {}", responsiveMediaId, componentId);
+        } else {
+            component.setResponsiveMedia(null);
+            log.info("Removed responsive media from component {}", componentId);
+        }
+
+        return componentRepository.save(component);
     }
 
 }

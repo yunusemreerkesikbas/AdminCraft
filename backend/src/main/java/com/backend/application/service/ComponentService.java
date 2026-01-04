@@ -43,4 +43,13 @@ public interface ComponentService {
     ComponentCompositeResponse updateComposite(Long id, UpdateComponentCompositeRequest request);
 
     Optional<ComponentCompositeResponse> getComposite(Long id);
+
+    /**
+     * Assign or update responsive media (Desktop/Mobile images) for a component.
+     * 
+     * @param componentId       Component ID
+     * @param responsiveMediaId ResponsiveMediaSet ID (null to remove)
+     * @return Updated component
+     */
+    Component assignResponsiveMedia(Long componentId, Long responsiveMediaId);
 }
