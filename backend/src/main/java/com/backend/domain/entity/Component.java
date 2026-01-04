@@ -6,7 +6,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
@@ -22,7 +25,8 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(columnNames = { "uid" }, name = "uk_component_uid")
 }, indexes = {
         @Index(columnList = "component_type_id", name = "idx_component_type"),
-        @Index(columnList = "status", name = "idx_component_status")
+        @Index(columnList = "status", name = "idx_component_status"),
+        @Index(columnList = "responsive_id", name = "idx_component_responsive")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -53,4 +57,12 @@ public class Component extends BaseEntity {
     @Column(nullable = false, length = 20)
     @NotNull
     private ComponentStatus status = ComponentStatus.DRAFT;
+
+    /**
+     * Responsive media set for component-level Desktop/Mobile images.
+     * Used for component backgrounds, hero images, etc.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsive_id")
+    private ResponsiveMediaSet responsiveMedia;
 }

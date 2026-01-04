@@ -1,25 +1,41 @@
 package com.backend.shared.common;
 
-import com.backend.domain.exception.*;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import com.backend.domain.exception.ContentCannotBePublishedException;
+import com.backend.domain.exception.DuplicateEntityException;
+import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.exception.InvalidCredentialsException;
+import com.backend.domain.exception.InvalidTokenException;
+import com.backend.domain.exception.MediaExceptions.ContainerNotFoundException;
+import com.backend.domain.exception.MediaExceptions.InvalidFileException;
+import com.backend.domain.exception.MediaExceptions.MediaNotFoundException;
+import com.backend.domain.exception.MediaExceptions.MediaProcessingException;
+import com.backend.domain.exception.MediaExceptions.UnsupportedFormatException;
+import com.backend.domain.exception.SiteNotFoundException;
+import com.backend.domain.exception.TenantCannotBeActivatedException;
+import com.backend.domain.exception.TenantNotFoundException;
+import com.backend.domain.exception.UserAccountDisabledException;
+import com.backend.domain.exception.UserNotFoundException;
+
 import jakarta.validation.ConstraintViolationException;
-import java.util.HashMap;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice
@@ -166,6 +182,50 @@ public class GlobalExceptionHandler {
         String message = getMessage("file.upload.size.exceeded");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // Media Exceptions
+    @ExceptionHandler(MediaNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleMediaNotFound(MediaNotFoundException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Media not found: {}", correlationId, ex.getMessage());
+        ApiResponse<?> response = new ApiResponse<>("ERROR", ex.getMessage(), null);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidFile(InvalidFileException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Invalid file: {}", correlationId, ex.getMessage());
+        String message = getMessage("media.file.invalid");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MediaProcessingException.class)
+    public ResponseEntity<ApiResponse<?>> handleMediaProcessing(MediaProcessingException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.error("[{}] Media processing error: ", correlationId, ex);
+        String message = getMessage("media.processing.error");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(UnsupportedFormatException.class)
+    public ResponseEntity<ApiResponse<?>> handleUnsupportedFormat(UnsupportedFormatException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Unsupported format: {}", correlationId, ex.getMessage());
+        String message = getMessage("media.format.unsupported");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ContainerNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleContainerNotFound(ContainerNotFoundException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Container not found: {}", correlationId, ex.getMessage());
+        ApiResponse<?> response = new ApiResponse<>("ERROR", ex.getMessage(), null);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     // Validation Exceptions

@@ -7,7 +7,8 @@ public enum EntryFieldType {
   TEXT,
   TEXTAREA,
   NUMBER,
-  BOOLEAN;
+  BOOLEAN,
+  MEDIA;
 
   @JsonValue
   public String toValue() {

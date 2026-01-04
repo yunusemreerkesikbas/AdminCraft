@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
+import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
+import com.backend.application.util.MediaFieldExpander;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
@@ -27,8 +29,6 @@ import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,8 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   private final ComponentI18nRepository componentI18nRepository;
   private final ComponentEntryRepository componentEntryRepository;
   private final ComponentEntryI18nRepository componentEntryI18nRepository;
-  private final ObjectMapper objectMapper;
+  private final ResponsiveMediaService responsiveMediaService;
+  private final MediaFieldExpander mediaFieldExpander;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -121,8 +122,15 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       List<ComponentEntry> entries = entriesByComponentId.getOrDefault(component.getId(), List.of());
 
       List<EntryDeliveryResponse> entryResponses = entries.stream()
-          .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId())))
+          .map(entry -> buildEntryResponseOptimized(entry, entryI18nMap.get(entry.getId()),
+              component.getComponentTypeId(), lang))
           .toList();
+
+      // Build responsive media for component
+      ResponsiveMediaDeliveryResponse responsive = null;
+      if (component.getResponsiveMedia() != null) {
+        responsive = responsiveMediaService.toDeliveryResponse(component.getResponsiveMedia(), lang);
+      }
 
       ComponentDeliveryResponse response = ComponentDeliveryResponse.builder()
           .uid(component.getUid())
@@ -133,6 +141,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .description(i18n != null ? i18n.getDescription() : null)
           .isVisible(component.getIsVisible())
           .styleClasses(component.getStyleClasses())
+          .responsive(responsive)
           .entries(entryResponses)
           .build();
 
@@ -149,12 +158,18 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .build();
   }
 
-  EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n) {
+  EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n,
+      Long componentTypeId, Language lang) {
     Map<String, Object> customFields = new HashMap<>();
     if (i18n != null && i18n.getCustomData() != null) {
-      customFields.putAll(parseCustomData(i18n.getCustomData()));
+      customFields.putAll(mediaFieldExpander.parseCustomData(i18n.getCustomData()));
     }
     customFields.keySet().removeAll(RESERVED_FIELDS);
+
+    // Expand MEDIA fields to full responsive media objects
+    if (!customFields.isEmpty() && componentTypeId != null) {
+      customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
+    }
 
     return EntryDeliveryResponse.builder()
         .uid(entry.getUid())
@@ -165,20 +180,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .styleClasses(entry.getStyleClasses())
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
-  }
-
-  Map<String, Object> parseCustomData(String customDataJson) {
-    if (customDataJson == null || customDataJson.isBlank()) {
-      return new HashMap<>();
-    }
-
-    try {
-      return objectMapper.readValue(customDataJson, new TypeReference<Map<String, Object>>() {
-      });
-    } catch (Exception e) {
-      log.warn("Failed to parse custom_data JSON: {}", e.getMessage());
-      return new HashMap<>();
-    }
   }
 
   private ComponentDeliveryResponse buildDeliveryResponse(Component component, Language lang) {
@@ -192,8 +193,14 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .findByComponentIdAndStatusOrderBySortOrder(component.getId(), ComponentStatus.PUBLISHED);
 
     List<EntryDeliveryResponse> entryResponses = entries.stream()
-        .map(entry -> buildEntryResponse(entry, lang))
+        .map(entry -> buildEntryResponse(entry, component.getComponentTypeId(), lang))
         .toList();
+
+    // Build responsive media for component
+    ResponsiveMediaDeliveryResponse responsive = null;
+    if (component.getResponsiveMedia() != null) {
+      responsive = responsiveMediaService.toDeliveryResponse(component.getResponsiveMedia(), lang);
+    }
 
     return ComponentDeliveryResponse.builder()
         .uid(component.getUid())
@@ -204,22 +211,29 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentI18n::getDescription).orElse(null))
         .isVisible(component.getIsVisible())
         .styleClasses(component.getStyleClasses())
+        .responsive(responsive)
         .entries(entryResponses)
         .build();
   }
 
-  private EntryDeliveryResponse buildEntryResponse(ComponentEntry entry, Language lang) {
+  private EntryDeliveryResponse buildEntryResponse(ComponentEntry entry, Long componentTypeId, Language lang) {
     Optional<ComponentEntryI18n> i18nOpt = componentEntryI18nRepository
         .findByEntryIdAndLanguage(entry.getId(), lang);
 
     Map<String, Object> customFields = new HashMap<>();
     i18nOpt.ifPresent(i18n -> {
       if (i18n.getCustomData() != null) {
-        customFields.putAll(parseCustomData(i18n.getCustomData()));
+        customFields.putAll(mediaFieldExpander.parseCustomData(i18n.getCustomData()));
       }
     });
 
     customFields.keySet().removeAll(RESERVED_FIELDS);
+
+    // Expand MEDIA fields to full responsive media objects
+    Map<String, Object> expandedFields = customFields;
+    if (!customFields.isEmpty() && componentTypeId != null) {
+      expandedFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
+    }
 
     return EntryDeliveryResponse.builder()
         .uid(entry.getUid())
@@ -228,7 +242,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentEntryI18n::getDescription).orElse(null))
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
-        .customFields(customFields.isEmpty() ? null : customFields)
+        .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
   }
 }
