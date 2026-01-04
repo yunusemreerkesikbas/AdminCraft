@@ -44,6 +44,13 @@ export const SPA_ENDPOINTS_CONFIG = {
     mediaGenerateFormats: 'media/${id}/generate-formats',
     mediaVariantDelete: 'media/${mediaId}/variants/${variantId}',
     mediaFocalPoint: 'media/${id}/focal-point',
+    
+    // ----- RESPONSIVE MEDIA -----
+    responsiveMedia: 'responsive-media',
+    responsiveMediaById: 'responsive-media/${id}',
+    responsiveMediaByCode: 'responsive-media/code/${code}',
+    componentResponsiveMedia: 'components/${id}/responsive-media',
+    linkedComponents: 'responsive-media/media/${mediaId}/linked-components',
 
     // ----- MEDIA FORMATS -----
     mediaFormats: 'media/formats',

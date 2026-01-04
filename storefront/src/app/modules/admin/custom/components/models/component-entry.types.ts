@@ -2,7 +2,7 @@ export interface EntryFieldDefinition {
     id?: number;
     componentTypeId: number;
     fieldKey: string;
-    fieldType: 'text' | 'textarea' | 'number' | 'boolean';
+    fieldType: 'text' | 'textarea' | 'number' | 'boolean' | 'media';
     isRequired: boolean;
     maxLength?: number;
     minValue?: number;
@@ -11,7 +11,7 @@ export interface EntryFieldDefinition {
 
 export interface CreateEntryFieldRequest {
     fieldKey: string;
-    fieldType: 'text' | 'textarea' | 'number' | 'boolean';
+    fieldType: 'text' | 'textarea' | 'number' | 'boolean' | 'media';
     isRequired: boolean;
     maxLength?: number;
     minValue?: number;

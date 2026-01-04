@@ -223,6 +223,21 @@
                                                         styleClasses="boxed"
                                                     ></spa-checkbox>
                                                 }
+                                                @case ('media') {
+                                                    <spa-media-picker
+                                                        [formControlName]="
+                                                            field.fieldKey
+                                                        "
+                                                        [label]="
+                                                            getFieldLabelWithFallback(
+                                                                field.fieldKey
+                                                            )
+                                                        "
+                                                        [required]="
+                                                            field.isRequired
+                                                        "
+                                                    ></spa-media-picker>
+                                                }
                                             }
                                         }
                                     </div>

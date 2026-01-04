@@ -92,6 +92,22 @@
             </div>
         </mat-tab>
 
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <div class="flex items-center gap-2">
+                    <mat-icon class="icon-size-5">image</mat-icon>
+                    <span>{{ 'admin.media.title' | transloco }}</span>
+                </div>
+            </ng-template>
+            <div class="p-6 sm:p-8">
+                <form [formGroup]="generalForm">
+                    <spa-responsive-media-picker
+                        formControlName="responsiveMedia"
+                    ></spa-responsive-media-picker>
+                </form>
+            </div>
+        </mat-tab>
+
         @for (lang of languages; track lang) {
             <mat-tab>
                 <ng-template mat-tab-label>

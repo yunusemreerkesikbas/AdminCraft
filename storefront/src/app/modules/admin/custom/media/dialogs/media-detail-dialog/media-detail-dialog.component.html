@@ -443,6 +443,93 @@
                     </div>
                 </mat-tab>
 
+                <!-- Linked Components Tab -->
+                <mat-tab
+                    [label]="
+                        'admin.media.dialogs.detail.linkedComponents'
+                            | transloco
+                    "
+                >
+                    <div class="flex h-full flex-col p-4 md:p-6">
+                        <!-- Loading -->
+                        @if (isLoadingLinkedComponentsSig()) {
+                            <div
+                                class="flex flex-col items-center justify-center py-12"
+                            >
+                                <mat-spinner
+                                    diameter="40"
+                                    class="mb-4"
+                                ></mat-spinner>
+                                <p class="text-secondary">
+                                    {{
+                                        'admin.common.messages.loading'
+                                            | transloco
+                                    }}
+                                </p>
+                            </div>
+                        } @else {
+                            <div class="flex flex-col gap-4 overflow-y-auto">
+                                @for (
+                                    component of linkedComponentsSig();
+                                    track component.id
+                                ) {
+                                    <div
+                                        class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                                    >
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="flex h-10 w-10 items-center justify-center rounded bg-white dark:bg-gray-900"
+                                            >
+                                                <mat-icon>{{
+                                                    component.icon ||
+                                                        'extension'
+                                                }}</mat-icon>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="font-medium">{{
+                                                    component.title
+                                                }}</span>
+                                                <span
+                                                    class="text-secondary text-xs"
+                                                    >{{ component.category }} •
+                                                    {{ component.type }}</span
+                                                >
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            mat-icon-button
+                                            (click)="openComponent(component)"
+                                            [matTooltip]="
+                                                'admin.common.actions.edit'
+                                                    | transloco
+                                            "
+                                        >
+                                            <mat-icon>edit</mat-icon>
+                                        </button>
+                                    </div>
+                                }
+
+                                @if (linkedComponentsSig().length === 0) {
+                                    <div
+                                        class="text-secondary flex flex-col items-center justify-center py-12"
+                                    >
+                                        <mat-icon class="mb-4 icon-size-12"
+                                            >link_off</mat-icon
+                                        >
+                                        <p>
+                                            {{
+                                                'admin.media.dialogs.messages.noLinkedComponents'
+                                                    | transloco
+                                            }}
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </mat-tab>
+
                 <!-- Tools Tab (Focal Point) -->
                 @if (media()?.fileType === 'image') {
                     <mat-tab [label]="'admin.media.focalPoint.tab' | transloco">

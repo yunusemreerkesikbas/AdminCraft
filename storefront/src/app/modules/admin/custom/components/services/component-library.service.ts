@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
+import { ApiResponse } from '@core/crud/api.types';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
     ComponentCompositeResponse,
     ComponentDetailDto,
@@ -92,6 +94,16 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
 
     getComposite(id: number): Observable<ComponentCompositeResponse> {
         return this.customGet<ComponentCompositeResponse>('componentCompositeById', { id });
+    }
+
+    assignResponsiveMedia(id: number, responsiveMediaId: number | null): Observable<ComponentDto> {
+        const queryParams: Record<string, string | number> = {};
+        if (responsiveMediaId) {
+            queryParams['responsiveMediaId'] = responsiveMediaId;
+        }
+        return this.api.patch<ApiResponse<ComponentDto>>('componentResponsiveMedia', {}, { id }, queryParams).pipe(
+            map(response => response.data)
+        );
     }
 }
 

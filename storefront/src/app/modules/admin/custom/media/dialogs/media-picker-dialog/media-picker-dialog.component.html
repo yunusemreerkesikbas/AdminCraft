@@ -1,0 +1,16 @@
+<div class="bg-card flex h-full flex-col overflow-hidden">
+    <div class="flex items-center justify-between border-b px-6 py-4">
+        <h2 class="text-lg font-medium">
+            {{ 'admin.media.picker.title' | transloco }}
+        </h2>
+        <button mat-icon-button (click)="close()">
+            <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+    </div>
+    <div class="relative flex-auto overflow-hidden">
+        <app-media-list
+            [selectionMode]="true"
+            (onMediaSelect)="select($event)"
+        ></app-media-list>
+    </div>
+</div>

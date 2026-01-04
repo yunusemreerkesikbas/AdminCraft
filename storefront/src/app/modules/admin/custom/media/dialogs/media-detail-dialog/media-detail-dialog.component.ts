@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -19,7 +20,10 @@ import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dial
 import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog/spa-localized-form-dialog.directive';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { take } from 'rxjs';
+import { forkJoin, take } from 'rxjs';
+import { ComponentEditDialogComponent } from '../../../components/component-edit-dialog/component-edit-dialog.component';
+import { ComponentDto } from '../../../components/models/component-library.types';
+import { ComponentLibraryService } from '../../../components/services/component-library.service';
 import { FocalPointPickerComponent } from '../../components/focal-point-picker/focal-point-picker.component';
 import { FormatGeneratorComponent } from '../../components/format-generator/format-generator.component';
 
@@ -66,6 +70,10 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         return details.status === MediaStatus.PROCESSING;
     });
     protected hasVariants = computed(() => this.containerVariants().length > 0);
+    #componentService = inject(ComponentLibraryService);
+    #matDialog = inject(MatDialog);
+    protected linkedComponentsSig = signal<ComponentDto[]>([]);
+    protected isLoadingLinkedComponentsSig = signal(false);
 
     override ngOnInit(): void {
         const tenant = this.#tenantContext.tenant();
@@ -73,7 +81,7 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
             this.supportedLanguages.set(tenant.supportedLanguages);
             this.languages = tenant.supportedLanguages.map(l => l.code);
         } else {
-            this.languages = ['EN'];
+            this.languages = ['en'];
         }
         super.ngOnInit();
     }
@@ -96,6 +104,7 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
     protected override initializeForm(): void {
         super.initializeForm();
         this.#loadMediaDetails();
+        this.#loadLinkedComponents();
     }
 
     #loadMediaDetails(): void {
@@ -134,8 +143,47 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         });
     }
 
+    #loadLinkedComponents(): void {
+        const mediaId = this.data?.media?.id;
+        if (!mediaId) return;
+
+        this.isLoadingLinkedComponentsSig.set(true);
+        this.mediaService.getLinkedComponents(mediaId).pipe(take(1)).subscribe({
+            next: (ids) => {
+                if (ids.length === 0) {
+                    this.linkedComponentsSig.set([]);
+                    this.isLoadingLinkedComponentsSig.set(false);
+                    return;
+                }
+                
+                forkJoin(ids.map(id => this.#componentService.getComponentById(id))).pipe(take(1)).subscribe({
+                    next: (components) => {
+                        this.linkedComponentsSig.set(components);
+                        this.isLoadingLinkedComponentsSig.set(false);
+                    },
+                    error: () => this.isLoadingLinkedComponentsSig.set(false)
+                });
+            },
+            error: () => this.isLoadingLinkedComponentsSig.set(false)
+        });
+    }
+
     reloadDetails(): void {
         this.#loadMediaDetails();
+        this.#loadLinkedComponents();
+    }
+
+    openComponent(component: ComponentDto): void {
+        this.#matDialog.open(ComponentEditDialogComponent, {
+            data: {
+                component: component,
+                mode: 'edit',
+                languages: this.supportedLanguages().map(l => l.code)
+            },
+            disableClose: true,
+            autoFocus: false,
+            maxHeight: '90vh'
+        });
     }
 
     deleteVariant(variantId: number): void {

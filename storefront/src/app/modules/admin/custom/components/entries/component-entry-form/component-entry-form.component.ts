@@ -151,6 +151,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         switch (fieldType) {
             case 'boolean': return false;
             case 'number': return null;
+            case 'media': return null;
             default: return '';
         }
     }

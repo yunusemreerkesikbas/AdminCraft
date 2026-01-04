@@ -3,7 +3,10 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    EventEmitter,
     inject,
+    Input,
+    Output,
     signal
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -67,6 +70,9 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MediaListComponent extends BaseCrudListComponent<Media, FormData, UpdateMediaRequest> {
+
+    @Input() selectionMode = false;
+    @Output() onMediaSelect = new EventEmitter<Media>();
 
     protected override service = inject(MediaService);
     protected override store = inject(MediaStore);
@@ -142,6 +148,11 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     }
 
     openDetailDialog(media: Media): void {
+        if (this.selectionMode) {
+            this.selectMedia(media);
+            return;
+        }
+
         this.#matDialog.open(MediaDetailDialogComponent, {
             width: '800px',
             data: {
@@ -154,6 +165,10 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
                 this.loadItems();
             }
         });
+    }
+
+    selectMedia(media: Media): void {
+        this.onMediaSelect.emit(media);
     }
 
     deleteMedia(media: Media): void {

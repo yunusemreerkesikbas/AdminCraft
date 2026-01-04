@@ -503,10 +503,25 @@ export const langTR = {
                 generating: 'Oluşturuluyor...',
                 success: 'Format oluşturuldu'
             },
+            responsive: {
+                background: 'Arkaplan Medyası',
+                desktop: 'Masaüstü Görseli',
+                mobile: 'Mobil Görseli',
+                desktopHint: 'Geniş ekranlar için ana görsel',
+                mobileHint: 'Küçük ekranlar için opsiyonel görsel',
+            },
+            picker: {
+                desktopPlaceholder: 'Masaüstü Medyası Seç',
+                mobilePlaceholder: 'Mobil Medya Seç'
+            },
             dialogs: {
                 detail: {
                     title: 'Medya Detayı',
-                    formats: 'Formatlar'
+                    formats: 'Formatlar',
+                    linkedComponents: 'Bağlı Bileşenler'
+                },
+                messages: {
+                    noLinkedComponents: 'Bağlı bileşen bulunamadı'
                 },
                 folder: {
                     createTitle: 'Klasör Oluştur',
