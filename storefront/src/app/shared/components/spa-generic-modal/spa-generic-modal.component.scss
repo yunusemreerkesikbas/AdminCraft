@@ -1,202 +1,108 @@
-// Type-based title styling
-.modal-success-title {
+// Header / Title
+.modal-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--fuse-accent);
-    margin-bottom: 1rem;
+    justify-content: center;
+    padding-top: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
 
-    mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
+    .modal-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 64px;
+        margin-bottom: 0.5rem;
+        
+        &.icon-warning { color: var(--fuse-warn); }
+        &.icon-info { color: var(--fuse-primary); }
+        &.icon-success { color: var(--fuse-accent); }
+        &.icon-error { color: var(--fuse-warn); }
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-align: center;
+        margin: 0;
+        line-height: 1.4;
+        color: var(--fuse-text-default);
     }
 }
 
-.modal-error-title {
+// Content
+.modal-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--fuse-warn);
-    margin-bottom: 1rem;
-
-    mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
-    }
+    text-align: center;
+    padding: 0 1.5rem 1.5rem 1.5rem;
 }
 
-.modal-warning-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--fuse-warn);
-    margin-bottom: 1rem;
-
-    mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
-    }
-}
-
-.modal-info-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--fuse-primary);
-    margin-bottom: 1rem;
-
-    mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
-    }
-}
-
-// Info Box Section
-.info-box {
-    padding: 1rem;
-    background: rgba(var(--fuse-primary-rgb), 0.08);
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
+// Alert Box (Refactored to minimal text)
+.alert-box {
+    text-align: center;
+    color: var(--fuse-text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
 
     strong {
-        color: var(--fuse-primary);
-        margin-right: 0.5rem;
+        display: block;
+        color: var(--fuse-text-default);
+        margin-bottom: 0.25rem;
     }
 }
 
-// Divider
-mat-divider {
-    margin: 1.5rem 0;
+// Info & Copyable styling (kept but modernized)
+.info-box {
+    text-align: left;
+    background: rgba(var(--fuse-primary-rgb), 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    width: 100%;
+    margin-bottom: 1rem;
 }
 
-// Copyable Fields Section
 .copyable-fields-section {
-    padding: 0.5rem 0;
-
-    .section-title {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        color: rgba(var(--fuse-foreground-rgb), 0.87);
-    }
+    width: 100%;
+    text-align: left;
 }
 
 .copyable-field {
+    // Kept for backward compatibility if needed, though HTML uses tailwind classes now for this section
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 0.75rem;
-    background: rgba(var(--fuse-foreground-rgb), 0.04);
-    transition: background-color 0.2s ease;
-
-    &:hover {
-        background: rgba(var(--fuse-foreground-rgb), 0.06);
-    }
-
-    mat-icon:first-child {
-        flex-shrink: 0;
-    }
 }
 
-.field-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-}
-
-.field-label {
-    font-size: 0.75rem;
-    color: rgba(var(--fuse-foreground-rgb), 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
-
-.field-value {
-    font-family: 'Roboto Mono', 'Courier New', monospace;
-    font-size: 0.95rem;
-    background: rgba(var(--fuse-foreground-rgb), 0.08);
-    padding: 0.75rem;
-    border-radius: 6px;
-    word-break: break-all;
-    border: 1px solid rgba(var(--fuse-foreground-rgb), 0.12);
-    display: block;
-
-    &.password {
-        letter-spacing: 0.1rem;
-        font-weight: 600;
-        color: var(--fuse-accent);
-    }
-}
-
-.field-link {
-    color: var(--fuse-primary);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    word-break: break-all;
-
-    &:hover {
-        text-decoration: underline;
-    }
-}
-
-.copy-button {
-    flex-shrink: 0;
-
-    mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-    }
-}
-
-// Alert Box Section
-.alert-box {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 1.5rem;
-
-    mat-icon {
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    &.alert-warning {
-        background: rgba(var(--fuse-warn-rgb), 0.08);
-        border-left: 4px solid var(--fuse-warn);
-    }
-
-    &.alert-info {
-        background: rgba(var(--fuse-primary-rgb), 0.08);
-        border-left: 4px solid var(--fuse-primary);
-    }
-}
-
-.alert-text {
-    flex: 1;
-    font-size: 0.875rem;
-    line-height: 1.5;
-
-    strong {
-        display: block;
-        margin-bottom: 0.25rem;
-    }
-}
-
-// Dialog Actions
+// Actions
 mat-dialog-actions {
-    padding: 1rem 1.5rem;
-    margin: 0;
+    justify-content: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
+
+    button {
+        min-width: 100px;
+        border-radius: 999px;
+        text-transform: capitalize;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        
+        &.mat-mdc-raised-button, &.mat-mdc-flat-button {
+            box-shadow: none;
+            &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        }
+
+        &.mat-mdc-button {
+             color: var(--fuse-text-secondary);
+             &:hover {
+                 background-color: rgba(var(--fuse-on-surface-rgb), 0.05);
+                 color: var(--fuse-text-default);
+             }
+        }
+    }
 }

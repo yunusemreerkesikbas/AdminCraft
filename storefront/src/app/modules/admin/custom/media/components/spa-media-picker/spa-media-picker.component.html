@@ -12,48 +12,80 @@
 
     @if (value()) {
         <div
-            class="group relative h-40 w-full overflow-hidden rounded-md border bg-gray-100 dark:bg-gray-800"
+            class="group relative flex w-full items-center gap-3 rounded-md border bg-white p-2 pl-3 dark:bg-gray-800"
         >
-            <img
-                [src]="value()?.publicUrl || value()?.url"
-                [alt]="value()?.altText || 'Media'"
-                class="object-contain h-full w-full"
-            />
-            <!-- Overlay Actions -->
             <div
-                class="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+                class="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-100 dark:bg-gray-900"
             >
+                @if (value()?.fileType === 'image') {
+                    <img
+                        [src]="value()?.publicUrl || value()?.url"
+                        [alt]="value()?.altText || 'Media'"
+                        class="h-full w-full object-cover"
+                    />
+                } @else {
+                    <mat-icon
+                        class="text-secondary icon-size-5"
+                        [svgIcon]="
+                            value()?.fileType === 'video'
+                                ? 'heroicons_outline:film'
+                                : value()?.fileType === 'audio'
+                                  ? 'heroicons_outline:musical-note'
+                                  : 'heroicons_outline:document'
+                        "
+                    ></mat-icon>
+                }
+            </div>
+
+            <!-- Info -->
+            <div class="flex min-w-0 flex-1 flex-col truncate">
+                <span class="truncate text-sm font-medium leading-tight">
+                    {{ value()?.originalName || value()?.title || 'Media' }}
+                </span>
+                <span class="text-secondary truncate text-xs">{{
+                    value()?.fileSizeFormatted
+                }}</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-1">
                 <button
-                    mat-fab
-                    class="scale-75"
+                    mat-icon-button
+                    type="button"
+                    class="h-8 w-8"
                     (click)="openPicker()"
                     [matTooltip]="'admin.common.actions.edit' | transloco"
                 >
-                    <mat-icon [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    <mat-icon
+                        class="icon-size-4"
+                        [svgIcon]="'heroicons_outline:pencil'"
+                    ></mat-icon>
                 </button>
                 <button
-                    mat-fab
+                    mat-icon-button
+                    type="button"
                     color="warn"
-                    class="scale-75"
+                    class="h-8 w-8"
                     (click)="remove()"
                     [matTooltip]="'admin.common.actions.remove' | transloco"
                 >
-                    <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <mat-icon
+                        class="icon-size-4"
+                        [svgIcon]="'heroicons_outline:trash'"
+                    ></mat-icon>
                 </button>
             </div>
         </div>
     } @else {
         <div
-            class="flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-300 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            class="flex h-14 w-full cursor-pointer flex-row items-center gap-2 rounded-md border-2 border-dashed border-gray-300 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
             (click)="openPicker()"
         >
             <mat-icon
-                class="text-gray-400 icon-size-8"
+                class="text-gray-400 icon-size-5"
                 [svgIcon]="'heroicons_outline:photo'"
             ></mat-icon>
-            <span
-                class="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400"
-            >
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
                 {{
                     placeholder ||
                         ('admin.media.picker.placeholder' | transloco)

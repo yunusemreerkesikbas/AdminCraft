@@ -154,7 +154,7 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
         }
 
         this.#matDialog.open(MediaDetailDialogComponent, {
-            width: '800px',
+            width: '900px',
             data: {
                 mode: 'edit',
                 media

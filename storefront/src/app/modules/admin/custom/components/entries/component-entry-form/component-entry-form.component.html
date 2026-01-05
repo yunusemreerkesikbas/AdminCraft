@@ -98,24 +98,22 @@
                             class="flex flex-col gap-6"
                         >
                             <!-- Basic Info -->
-                            <div
-                                class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
-                            >
+                            <div class="flex flex-col gap-6">
                                 <div
-                                    class="text-secondary mb-4 flex items-center gap-2"
+                                    class="text-secondary flex items-center gap-2 border-b pb-2 dark:border-gray-700"
                                 >
                                     <mat-icon class="icon-size-5"
                                         >info</mat-icon
                                     >
-                                    <span
-                                        class="text-sm font-medium uppercase tracking-wide"
+                                    <h3
+                                        class="text-lg font-medium leading-none tracking-tight"
                                     >
                                         {{
                                             'admin.components.entries.basicInfo'
                                                 | transloco
                                         }}
                                         ({{ lang | uppercase }})
-                                    </span>
+                                    </h3>
                                 </div>
 
                                 <div class="flex flex-col gap-4">
@@ -140,27 +138,25 @@
 
                             <!-- Custom Fields -->
                             @if (fieldDefinitions().length > 0) {
-                                <div
-                                    class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
-                                >
+                                <div class="flex flex-col gap-6">
                                     <div
-                                        class="text-secondary mb-4 flex items-center justify-between"
+                                        class="text-secondary flex items-center justify-between border-b pb-2 dark:border-gray-700"
                                     >
                                         <div class="flex items-center gap-2">
                                             <mat-icon class="icon-size-5"
                                                 >extension</mat-icon
                                             >
-                                            <span
-                                                class="text-sm font-medium uppercase tracking-wide"
+                                            <h3
+                                                class="text-lg font-medium leading-none tracking-tight"
                                             >
                                                 {{
                                                     'admin.components.entries.customFields'
                                                         | transloco
                                                 }}
-                                            </span>
+                                            </h3>
                                         </div>
                                         <span
-                                            class="rounded bg-slate-200 px-2 py-0.5 font-mono text-xs dark:bg-slate-700"
+                                            class="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                                         >
                                             {{ fieldDefinitions().length }}
                                         </span>

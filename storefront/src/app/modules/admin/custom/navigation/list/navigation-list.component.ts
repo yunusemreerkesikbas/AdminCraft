@@ -74,10 +74,12 @@ export class NavigationListComponent implements OnInit {
             data: {
                 title: 'admin.navigation.actions.deleteNode',
                 message: 'admin.navigation.messages.confirmDeleteNode',
-                confirmLabel: 'admin.common.delete',
-                cancelLabel: 'admin.common.cancel',
                 variant: 'confirmation',
-                type: 'error'
+                type: 'error',
+                actions: [
+                    { label: 'admin.common.cancel', value: false },
+                    { label: 'admin.common.delete', value: true, color: 'warn' }
+                ]
             } as any
         });
 
