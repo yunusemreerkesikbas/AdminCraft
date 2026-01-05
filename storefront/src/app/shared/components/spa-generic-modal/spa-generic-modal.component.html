@@ -1,94 +1,98 @@
-<h2 mat-dialog-title [ngClass]="modalClass + '-title'">
-    @if (config.icon) {
-        <mat-icon>{{ config.icon }}</mat-icon>
+<!-- Minimal Header with Icon & Title -->
+<div class="modal-header">
+    @if (config.icon && !config.hideIcon) {
+        <mat-icon [class]="'modal-icon icon-' + (config.type || 'info')">
+            {{ config.icon }}
+        </mat-icon>
     }
-    {{ config.title }}
-</h2>
+    <h2 class="modal-title">{{ config.title }}</h2>
+</div>
 
-<mat-dialog-content>
+<!-- Centered Content -->
+<mat-dialog-content class="modal-content">
     @for (section of config.sections; track $index) {
-        <!-- Info Box Section -->
+        <!-- Clean Text Section (formerly Alert Box) -->
+        @if (section.type === 'alert-box') {
+            <div class="alert-box">
+                @if (section.title) {
+                    <strong>{{ section.title }}</strong>
+                }
+                @if (section.content) {
+                    {{ section.content }}
+                }
+            </div>
+        }
+
+        <!-- Info Box (Retained for detailed info) -->
         @if (section.type === 'info-box') {
             <div class="info-box">
                 @if (section.title) {
                     <strong>{{ section.title }}</strong>
                 }
                 @if (section.content) {
-                    <span>{{ section.content }}</span>
+                    <div>{{ section.content }}</div>
                 }
             </div>
         }
 
-        <!-- Copyable Fields Section -->
+        <!-- Copyable Fields (Retained structure) -->
         @if (section.type === 'copyable-fields') {
             <div class="copyable-fields-section">
                 @if (section.title) {
-                    <h3 class="section-title">{{ section.title }}</h3>
+                    <h3 class="mb-2 font-semibold">{{ section.title }}</h3>
                 }
                 @for (field of section.fields; track field.label) {
-                    <div class="copyable-field">
-                        <mat-icon color="primary">{{ field.icon }}</mat-icon>
-                        <div class="field-content">
-                            <span class="field-label">{{ field.label }}:</span>
-                            @if (field.type === 'link') {
-                                <a [href]="field.value"
-                                   target="_blank"
-                                   class="field-link">{{ field.value }}</a>
-                            } @else {
-                                <code [class]="'field-value' + (field.type === 'password' ? ' password' : '')">
-                                    {{ field.value }}
-                                </code>
-                            }
+                    <div
+                        class="mb-2 flex items-center justify-between rounded border bg-gray-50 p-2 dark:bg-gray-800"
+                    >
+                        <div class="flex flex-col overflow-hidden">
+                            <span
+                                class="text-secondary text-xs font-bold uppercase"
+                                >{{ field.label }}</span
+                            >
+                            <span class="truncate font-mono text-sm">{{
+                                field.value
+                            }}</span>
                         </div>
-                        <button mat-icon-button
-                                (click)="copyToClipboard(field.value, field.label)"
-                                matTooltip="Copy to clipboard"
-                                class="copy-button">
-                            <mat-icon>content_copy</mat-icon>
+                        <button
+                            mat-icon-button
+                            (click)="copyToClipboard(field.value, field.label)"
+                        >
+                            <mat-icon class="icon-size-4"
+                                >content_copy</mat-icon
+                            >
                         </button>
                     </div>
                 }
             </div>
         }
-
-        <!-- Alert Box Section -->
-        @if (section.type === 'alert-box') {
-            <div [class]="'alert-box alert-' + (section.alertType || 'info')">
-                <mat-icon [color]="section.alertType === 'warning' ? 'warn' : 'primary'">
-                    {{ section.alertType === 'warning' ? 'warning' : 'info' }}
-                </mat-icon>
-                <div class="alert-text">
-                    @if (section.title) {
-                        <strong>{{ section.title }}</strong>
-                    }
-                    @if (section.content) {
-                        <span>{{ section.content }}</span>
-                    }
-                </div>
-            </div>
-        }
-
-        <!-- Divider between sections (except last) -->
-        @if ($index < config.sections.length - 1) {
-            <mat-divider></mat-divider>
-        }
     }
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<!-- Centered Actions -->
+<mat-dialog-actions>
     @if (config.actions && config.actions.length > 0) {
         @for (action of config.actions; track action.label) {
-            <button mat-raised-button
-                    [color]="action.color || 'primary'"
-                    (click)="executeAction(action)">
-                {{ action.label }}
-            </button>
+            @if (action.color) {
+                <button
+                    mat-flat-button
+                    [color]="action.color"
+                    class="px-6"
+                    (click)="executeAction(action)"
+                >
+                    {{ action.label }}
+                </button>
+            } @else {
+                <button
+                    mat-button
+                    class="text-secondary px-6"
+                    (click)="executeAction(action)"
+                >
+                    {{ action.label }}
+                </button>
+            }
         }
     } @else {
-        <button mat-raised-button
-                color="primary"
-                (click)="close()">
-            Close
-        </button>
+        <button mat-button (click)="close()">Close</button>
     }
 </mat-dialog-actions>

@@ -15,6 +15,7 @@ export interface ModalConfig<T = any> {
     variant?: ModalVariant;
     title: string;
     icon?: string;
+    hideIcon?: boolean;
     data: T;
     sections: ModalSection[];
     actions?: ModalAction[];

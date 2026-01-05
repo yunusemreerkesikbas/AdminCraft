@@ -4,11 +4,11 @@
 >
 </spa-dialog-header>
 
-<spa-dialog-content class="h-[600px] max-h-[80vh] overflow-hidden !p-0">
+<spa-dialog-content class="h-[600px] max-h-[80vh] !p-0">
     <div class="flex h-full flex-col md:flex-row">
         <!-- Left Panel: Preview & Info (35%) -->
         <div
-            class="flex w-full flex-col overflow-y-auto border-b bg-gray-50 md:w-[35%] md:border-b-0 md:border-r dark:bg-gray-800/50"
+            class="flex w-full flex-col bg-gray-50 md:w-[35%] md:border-b-0 md:border-r dark:bg-gray-800/50"
         >
             <!-- Preview Area -->
             <div
@@ -120,50 +120,173 @@
         <!-- Right Panel: Metadata Form (65%) -->
         <div class="flex w-full flex-col bg-white md:w-[65%] dark:bg-gray-900">
             <mat-tab-group
-                class="h-full"
+                class="min-h-0 flex-auto"
                 [selectedIndex]="activeTab"
                 (selectedIndexChange)="activeTab = $event"
                 [animationDuration]="'0ms'"
+                class="h-full min-h-0 flex-auto"
             >
                 <!-- General Info Tab -->
                 <mat-tab [label]="'admin.common.general' | transloco">
-                    <div
-                        class="flex flex-col gap-6 p-6"
-                        [formGroup]="generalForm"
-                    >
-                        <div class="flex flex-col gap-1">
-                            <h3 class="text-lg font-semibold">
-                                {{ 'admin.common.general' | transloco }}
-                            </h3>
-                            <p class="text-secondary text-sm">
-                                Manage basic file settings.
-                            </p>
+                    <div class="h-full overflow-y-auto p-6">
+                        <!-- General Form -->
+                        <div
+                            class="mb-8 flex flex-col gap-6"
+                            [formGroup]="generalForm"
+                        >
+                            <div class="flex flex-col gap-1">
+                                <h3 class="text-lg font-semibold">
+                                    {{ 'admin.common.general' | transloco }}
+                                </h3>
+                                <p class="text-secondary text-sm">
+                                    Manage basic file settings.
+                                </p>
+                            </div>
+
+                            <spa-input
+                                class="w-full"
+                                formControlName="originalName"
+                                [label]="
+                                    'admin.media.fields.originalName'
+                                        | transloco
+                                "
+                            >
+                                <mat-icon matPrefix class="mr-2 icon-size-5"
+                                    >edit</mat-icon
+                                >
+                            </spa-input>
+
+                            <div
+                                class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                            >
+                                <div class="flex flex-col">
+                                    <span class="font-medium">{{
+                                        'admin.media.fields.isPublic'
+                                            | transloco
+                                    }}</span>
+                                    <span class="text-secondary text-xs"
+                                        >If unchecked, requires authentication
+                                        to view.</span
+                                    >
+                                </div>
+                                <spa-toggle
+                                    formControlName="isPublic"
+                                ></spa-toggle>
+                            </div>
                         </div>
 
-                        <spa-input
-                            formControlName="originalName"
-                            [label]="
-                                'admin.media.fields.originalName' | transloco
-                            "
-                        >
-                            <mat-icon matPrefix class="mr-2 icon-size-5"
-                                >edit</mat-icon
-                            >
-                        </spa-input>
-
-                        <div
-                            class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
-                        >
-                            <div class="flex flex-col">
-                                <span class="font-medium">{{
-                                    'admin.media.fields.isPublic' | transloco
-                                }}</span>
-                                <span class="text-secondary text-xs"
-                                    >If unchecked, requires authentication to
-                                    view.</span
-                                >
+                        <!-- Linked Components Section -->
+                        <div class="flex flex-col gap-4">
+                            <div class="flex flex-col gap-1">
+                                <h3 class="text-lg font-semibold">
+                                    {{
+                                        'admin.media.dialogs.detail.linkedComponents'
+                                            | transloco
+                                    }}
+                                </h3>
+                                <p class="text-secondary text-sm">
+                                    Components using this media.
+                                </p>
                             </div>
-                            <spa-toggle formControlName="isPublic"></spa-toggle>
+
+                            <div class="rounded-lg border p-4">
+                                @if (isLoadingLinkedComponentsSig()) {
+                                    <div
+                                        class="flex flex-col items-center justify-center py-8"
+                                    >
+                                        <mat-spinner
+                                            diameter="32"
+                                            class="mb-4"
+                                        ></mat-spinner>
+                                        <p class="text-secondary text-sm">
+                                            {{
+                                                'admin.common.messages.loading'
+                                                    | transloco
+                                            }}
+                                        </p>
+                                    </div>
+                                } @else {
+                                    <div class="flex flex-col gap-3">
+                                        @for (
+                                            component of linkedComponentsSig();
+                                            track component.id
+                                        ) {
+                                            <div
+                                                class="flex items-center justify-between rounded bg-gray-50 p-3 dark:bg-gray-800/50"
+                                            >
+                                                <div
+                                                    class="flex items-center gap-3"
+                                                >
+                                                    <div
+                                                        class="flex h-8 w-8 items-center justify-center rounded bg-white dark:bg-gray-900"
+                                                    >
+                                                        <mat-icon
+                                                            class="icon-size-4"
+                                                            >{{
+                                                                component.icon ||
+                                                                    'extension'
+                                                            }}</mat-icon
+                                                        >
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-sm font-medium"
+                                                            >{{
+                                                                component.title
+                                                            }}</span
+                                                        >
+                                                        <span
+                                                            class="text-secondary text-xs"
+                                                            >{{
+                                                                component.category
+                                                            }}
+                                                            •
+                                                            {{
+                                                                component.type
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    mat-icon-button
+                                                    (click)="
+                                                        openComponent(component)
+                                                    "
+                                                    [matTooltip]="
+                                                        'admin.common.actions.edit'
+                                                            | transloco
+                                                    "
+                                                >
+                                                    <mat-icon
+                                                        class="icon-size-5"
+                                                        >edit</mat-icon
+                                                    >
+                                                </button>
+                                            </div>
+                                        }
+
+                                        @if (
+                                            linkedComponentsSig().length === 0
+                                        ) {
+                                            <div
+                                                class="text-secondary flex flex-col items-center justify-center py-8"
+                                            >
+                                                <mat-icon
+                                                    class="mb-2 icon-size-8"
+                                                    >link_off</mat-icon
+                                                >
+                                                <p class="text-sm">
+                                                    {{
+                                                        'admin.media.dialogs.messages.noLinkedComponents'
+                                                            | transloco
+                                                    }}
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </mat-tab>
@@ -172,7 +295,7 @@
                 @for (lang of supportedLanguages(); track lang.code) {
                     <mat-tab [label]="lang.nativeName">
                         <div
-                            class="flex flex-col gap-5 p-6"
+                            class="flex h-full flex-col gap-5 overflow-y-auto p-6"
                             [formGroup]="getLanguageForm(lang.code)"
                         >
                             <div class="mb-2 flex flex-col gap-1">
@@ -188,6 +311,7 @@
                             </div>
 
                             <spa-input
+                                class="w-full"
                                 formControlName="title"
                                 [label]="'admin.media.fields.title' | transloco"
                             >
@@ -197,6 +321,7 @@
                             </spa-input>
 
                             <spa-input
+                                class="w-full"
                                 formControlName="altText"
                                 [label]="
                                     'admin.media.fields.altText' | transloco
@@ -208,6 +333,7 @@
                             </spa-input>
 
                             <spa-textarea
+                                class="w-full"
                                 formControlName="description"
                                 [label]="
                                     'admin.media.fields.description' | transloco
@@ -227,7 +353,7 @@
                         class="flex h-full flex-col overflow-hidden p-4 md:p-6"
                     >
                         <!-- Generator Section -->
-                        <div class="mb-6">
+                        <div class="mb-2">
                             <app-format-generator
                                 [mediaId]="media()?.id!"
                                 (generated)="reloadDetails()"
@@ -443,93 +569,6 @@
                     </div>
                 </mat-tab>
 
-                <!-- Linked Components Tab -->
-                <mat-tab
-                    [label]="
-                        'admin.media.dialogs.detail.linkedComponents'
-                            | transloco
-                    "
-                >
-                    <div class="flex h-full flex-col p-4 md:p-6">
-                        <!-- Loading -->
-                        @if (isLoadingLinkedComponentsSig()) {
-                            <div
-                                class="flex flex-col items-center justify-center py-12"
-                            >
-                                <mat-spinner
-                                    diameter="40"
-                                    class="mb-4"
-                                ></mat-spinner>
-                                <p class="text-secondary">
-                                    {{
-                                        'admin.common.messages.loading'
-                                            | transloco
-                                    }}
-                                </p>
-                            </div>
-                        } @else {
-                            <div class="flex flex-col gap-4 overflow-y-auto">
-                                @for (
-                                    component of linkedComponentsSig();
-                                    track component.id
-                                ) {
-                                    <div
-                                        class="flex items-center justify-between rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
-                                    >
-                                        <div class="flex items-center gap-4">
-                                            <div
-                                                class="flex h-10 w-10 items-center justify-center rounded bg-white dark:bg-gray-900"
-                                            >
-                                                <mat-icon>{{
-                                                    component.icon ||
-                                                        'extension'
-                                                }}</mat-icon>
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="font-medium">{{
-                                                    component.title
-                                                }}</span>
-                                                <span
-                                                    class="text-secondary text-xs"
-                                                    >{{ component.category }} •
-                                                    {{ component.type }}</span
-                                                >
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            mat-icon-button
-                                            (click)="openComponent(component)"
-                                            [matTooltip]="
-                                                'admin.common.actions.edit'
-                                                    | transloco
-                                            "
-                                        >
-                                            <mat-icon>edit</mat-icon>
-                                        </button>
-                                    </div>
-                                }
-
-                                @if (linkedComponentsSig().length === 0) {
-                                    <div
-                                        class="text-secondary flex flex-col items-center justify-center py-12"
-                                    >
-                                        <mat-icon class="mb-4 icon-size-12"
-                                            >link_off</mat-icon
-                                        >
-                                        <p>
-                                            {{
-                                                'admin.media.dialogs.messages.noLinkedComponents'
-                                                    | transloco
-                                            }}
-                                        </p>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                </mat-tab>
-
                 <!-- Tools Tab (Focal Point) -->
                 @if (media()?.fileType === 'image') {
                     <mat-tab [label]="'admin.media.focalPoint.tab' | transloco">
@@ -547,7 +586,7 @@
     </div>
 </spa-dialog-content>
 
-<spa-dialog-footer>
+<spa-dialog-footer class="relative z-50">
     <button mat-button (click)="cancel()">
         {{ 'admin.common.cancel' | transloco }}
     </button>
