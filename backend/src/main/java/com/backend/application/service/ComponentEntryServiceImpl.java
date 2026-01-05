@@ -8,11 +8,14 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.response.ComponentEntryCompositeResponse;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
+import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final ComponentEntryRepository entryRepository;
     private final ComponentEntryI18nRepository entryI18nRepository;
     private final ComponentRepository componentRepository;
+    private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Override
@@ -108,6 +112,12 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         entry.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
         entry.setStyleClasses(request.styleClasses());
         entry.setStatus(request.status() != null ? request.status() : com.backend.domain.enums.ComponentStatus.DRAFT);
+        if (request.responsiveMediaId() != null) {
+            ResponsiveMediaSet mediaSet = responsiveMediaSetRepository.findById(request.responsiveMediaId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "ResponsiveMediaSet not found: " + request.responsiveMediaId()));
+            entry.setResponsiveMedia(mediaSet);
+        }
 
         ComponentEntry savedEntry = entryRepository.save(entry);
 
@@ -159,6 +169,13 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         if (request.status() != null)
             entry.setStatus(request.status());
 
+        if (request.responsiveMediaId() != null) {
+            ResponsiveMediaSet mediaSet = responsiveMediaSetRepository.findById(request.responsiveMediaId())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "ResponsiveMediaSet not found: " + request.responsiveMediaId()));
+            entry.setResponsiveMedia(mediaSet);
+        }
+
         ComponentEntry savedEntry = entryRepository.save(entry);
 
         List<ComponentEntryI18n> existingI18n = entryI18nRepository.findByEntryId(id);
@@ -194,6 +211,18 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                 .collect(Collectors.toList());
 
         return com.backend.application.dto.response.ComponentEntryCompositeResponse.from(savedEntry, updatedI18n,
+                this::parseCustomData);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.backend.application.dto.response.ComponentEntryCompositeResponse getEntryWithTranslations(Long id) {
+        ComponentEntry entry = entryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Entry not found: " + id));
+
+        List<ComponentEntryI18n> i18nList = entryI18nRepository.findByEntryId(id);
+
+        return ComponentEntryCompositeResponse.from(entry, i18nList,
                 this::parseCustomData);
     }
 

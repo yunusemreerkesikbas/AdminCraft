@@ -226,8 +226,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
-        const desktopMediaId = responsiveValue?.desktop?.id;
-        const mobileMediaId = responsiveValue?.mobile?.id;
+        // Handle both formats: number (ID) or object (Media)
+        const desktopMediaId = typeof responsiveValue?.desktop === 'number'
+            ? responsiveValue.desktop
+            : responsiveValue?.desktop?.id;
+        const mobileMediaId = typeof responsiveValue?.mobile === 'number'
+            ? responsiveValue.mobile
+            : responsiveValue?.mobile?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             if (currentSetId) {

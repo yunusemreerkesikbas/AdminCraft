@@ -299,7 +299,12 @@ public class ComponentServiceImpl implements ComponentService {
             log.info("Removed responsive media from component {}", componentId);
         }
 
-        return componentRepository.save(component);
+        Component saved = componentRepository.save(component);
+        if (saved.getResponsiveMedia() != null) {
+            org.hibernate.Hibernate.initialize(saved.getResponsiveMedia());
+        }
+
+        return saved;
     }
 
 }

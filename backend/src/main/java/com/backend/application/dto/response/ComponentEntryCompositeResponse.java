@@ -23,6 +23,7 @@ public record ComponentEntryCompositeResponse(
     Boolean isVisible,
     String styleClasses,
     ComponentStatus status,
+    ResponsiveMediaResponse responsiveMedia,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
     Map<Language, ComponentEntryI18nDto> translations) {
@@ -52,6 +53,8 @@ public record ComponentEntryCompositeResponse(
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
         .status(entry.getStatus())
+        .responsiveMedia(
+            entry.getResponsiveMedia() != null ? ResponsiveMediaResponse.from(entry.getResponsiveMedia()) : null)
         .createdAt(entry.getCreatedAt())
         .updatedAt(entry.getUpdatedAt())
         .translations(translationsMap)

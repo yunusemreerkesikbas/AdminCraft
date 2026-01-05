@@ -37,8 +37,29 @@ export interface ComponentEntry {
     isVisible: boolean;
     styleClasses?: string;
     status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+    responsiveMedia?: ResponsiveMediaDto;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface ResponsiveMediaDto {
+    id: number;
+    uuid?: string;
+    uid?: string;
+    code?: string;
+    desktopMedia?: MediaSummaryDto;
+    mobileMedia?: MediaSummaryDto;
+}
+
+export interface MediaSummaryDto {
+    id: number;
+    uid?: string;
+    fileName?: string;
+    originalName?: string;
+    mimeType?: string;
+    publicUrl?: string;
+    width?: number;
+    height?: number;
 }
 
 export interface ComponentEntryDetailDto extends ComponentEntry {
@@ -98,6 +119,7 @@ export interface CreateComponentEntryCompositeRequest {
     isVisible?: boolean;
     styleClasses?: string;
     status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+    responsiveMediaId?: number;
     translations: Record<string, EntryI18nRequest>;
 }
 
@@ -106,6 +128,7 @@ export interface UpdateComponentEntryCompositeRequest {
     isVisible?: boolean;
     styleClasses?: string;
     status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+    responsiveMediaId?: number;
     translations: Record<string, EntryI18nRequest>;
 }
 
@@ -118,6 +141,7 @@ export interface ComponentEntryCompositeResponse {
     isVisible: boolean;
     styleClasses?: string;
     status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+    responsiveMedia?: ResponsiveMediaDto;
     createdAt: string;
     updatedAt: string;
     translations: Record<string, EntryI18nDto>;

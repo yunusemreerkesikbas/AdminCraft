@@ -3,6 +3,7 @@ package com.backend.presentation.dto.response;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
 
@@ -19,6 +20,7 @@ public record ComponentDetailResponse(
         ComponentStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
+        ResponsiveMediaResponse responsiveMedia,
         Map<String, ComponentI18nResponse> translations,
         Metadata metadata) {
 
@@ -30,6 +32,10 @@ public record ComponentDetailResponse(
             String componentTypeName,
             Map<String, ComponentI18nResponse> translations,
             Metadata metadata) {
+
+        ResponsiveMediaResponse responsiveMediaDto = component.getResponsiveMedia() != null
+                ? ResponsiveMediaResponse.from(component.getResponsiveMedia())
+                : null;
 
         return new ComponentDetailResponse(
                 component.getId(),
@@ -44,6 +50,7 @@ public record ComponentDetailResponse(
                 component.getStatus(),
                 component.getCreatedAt(),
                 component.getUpdatedAt(),
+                responsiveMediaDto,
                 translations,
                 metadata);
     }
