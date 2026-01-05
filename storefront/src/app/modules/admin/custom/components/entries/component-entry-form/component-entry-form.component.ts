@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,12 +13,16 @@ import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkb
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogComponent } from 'app/shared/components/spa-dialog';
-import { take } from 'rxjs';
+import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from 'app/shared/components/spa-dialog';
+import { map, Observable, of, switchMap, take } from 'rxjs';
+import { SpaMediaPickerComponent } from '../../../media/components/spa-media-picker/spa-media-picker.component';
+import { SpaResponsiveMediaPickerComponent } from '../../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
+import { MediaService } from '../../../media/media.service';
 import { ComponentEntry, EntryFieldDefinition, EntryI18nDto } from '../../models/component-entry.types';
 import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
+
 
 interface ComponentEntryFormData {
     mode: 'create' | 'edit';
@@ -45,11 +49,16 @@ interface ComponentEntryFormData {
         MatButtonModule,
         MatProgressSpinnerModule,
         TranslocoModule,
+        UpperCasePipe,
         SpaInputComponent,
         SpaSelectComponent,
         SpaTextareaComponent,
         SpaCheckboxComponent,
-        SpaDialogComponent
+        SpaDialogHeaderComponent,
+        SpaDialogContentComponent,
+        SpaDialogFooterComponent,
+        SpaMediaPickerComponent,
+        SpaResponsiveMediaPickerComponent
     ]
 })
 export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean, ComponentEntryFormData> {
@@ -57,6 +66,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     
     #entryService = inject(ComponentEntryService);
     #fieldService = inject(EntryFieldService);
+    #mediaService = inject(MediaService);
     #transloco = inject(TranslocoService);
     #langCtx = inject(LanguageContextService);
 
@@ -87,8 +97,50 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         return this.fb.group({
             isVisible: [this.data.entry?.isVisible ?? true],
             styleClasses: [this.data.entry?.styleClasses || ''],
-            status: [this.data.entry?.status ?? 'DRAFT', Validators.required]
+            status: [this.data.entry?.status ?? 'DRAFT', Validators.required],
+            responsiveMedia: [this.#buildResponsiveMediaValue()]
         });
+    }
+
+    #buildResponsiveMediaValue(): { desktop: any; mobile: any } | null {
+        const responsive = this.data.entry?.responsiveMedia;
+        if (!responsive) return null;
+        return {
+            desktop: responsive.desktopMedia || null,
+            mobile: responsive.mobileMedia || null
+        };
+    }
+
+    #resolveResponsiveMediaId(): Observable<number | undefined> {
+        const mediaValue = this.generalForm.value.responsiveMedia;
+        const currentSetId = this.data.entry?.responsiveMedia?.id;
+
+        const desktopMediaId = typeof mediaValue?.desktop === 'number'
+            ? mediaValue.desktop
+            : mediaValue?.desktop?.id;
+        const mobileMediaId = typeof mediaValue?.mobile === 'number'
+            ? mediaValue.mobile
+            : mediaValue?.mobile?.id;
+
+        if (!desktopMediaId && !mobileMediaId) {
+            return of(undefined);
+        }
+
+        const request = {
+            desktopMediaId,
+            mobileMediaId,
+            code: `responsive_entry_${this.data.componentId}_${Date.now()}`
+        };
+
+        if (currentSetId) {
+            return this.#mediaService.updateResponsiveMedia(currentSetId, request).pipe(
+                map(() => currentSetId)
+            );
+        } else {
+            return this.#mediaService.createResponsiveMedia(request).pipe(
+                map(set => set.id)
+            );
+        }
     }
 
     protected buildI18nForm(lang: string): FormGroup {
@@ -132,7 +184,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         const validators = [];
         if (field.isRequired) validators.push(Validators.required);
 
-        const initialValue = this.data.translations?.[language]?.[field.fieldKey] ?? this.#getDefaultValue(field.fieldType);
+        const initialValue = this.data.translations?.[language]?.customFields?.[field.fieldKey] ?? this.#getDefaultValue(field.fieldType);
 
         switch (field.fieldType) {
             case 'text':
@@ -190,52 +242,49 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
 
         const translations = this.#buildCompositeTranslations();
 
-        if (this.data.mode === 'create') {
-            const payload: any = { // Using any cast temporarily to match imported types if strict checks fail, but sticking to interface is better
-                componentId: this.data.componentId,
-                sortOrder: this.data.sortOrder ?? 0,
-                isVisible: this.generalForm.value.isVisible,
-                styleClasses: this.generalForm.value.styleClasses || undefined,
-                status: this.generalForm.value.status,
-                translations
-            };
-
-            this.#entryService.createComposite(payload)
-                .pipe(take(1))
-                .subscribe({
-                    next: () => {
-                        this.setSubmitting(false);
-                        this.notify.success('admin.components.entries.createSuccess');
-                        this.close(true);
-                    },
-                    error: (err) => {
-                        this.setSubmitting(false);
-                        this.notify.alert(err?.error?.message || 'admin.components.entries.createFailed');
-                    }
-                });
-        } else {
-            const payload: any = {
-                sortOrder: this.data.sortOrder, // Keep existing sort order if not in form? Form doesn't have sortOrder, relying on data.
-                isVisible: this.generalForm.value.isVisible,
-                styleClasses: this.generalForm.value.styleClasses || undefined,
-                status: this.generalForm.value.status,
-                translations
-            };
-
-            this.#entryService.updateComposite(this.data.entry!.id, payload)
-                .pipe(take(1))
-                .subscribe({
-                    next: () => {
-                        this.setSubmitting(false);
-                        this.notify.success('admin.components.entries.updateSuccess');
-                        this.close(true);
-                    },
-                    error: (err) => {
-                        this.setSubmitting(false);
-                        this.notify.alert(err?.error?.message || 'admin.components.entries.updateFailed');
-                    }
-                });
-        }
+        this.#resolveResponsiveMediaId().pipe(
+            switchMap(responsiveMediaId => {
+                if (this.data.mode === 'create') {
+                    const payload: any = {
+                        componentId: this.data.componentId,
+                        sortOrder: this.data.sortOrder ?? 0,
+                        isVisible: this.generalForm.value.isVisible,
+                        styleClasses: this.generalForm.value.styleClasses || undefined,
+                        status: this.generalForm.value.status,
+                        responsiveMediaId,
+                        translations
+                    };
+                    return this.#entryService.createComposite(payload);
+                } else {
+                    const payload: any = {
+                        sortOrder: this.data.sortOrder,
+                        isVisible: this.generalForm.value.isVisible,
+                        styleClasses: this.generalForm.value.styleClasses || undefined,
+                        status: this.generalForm.value.status,
+                        responsiveMediaId,
+                        translations
+                    };
+                    return this.#entryService.updateComposite(this.data.entry!.id, payload);
+                }
+            }),
+            take(1)
+        ).subscribe({
+            next: () => {
+                this.setSubmitting(false);
+                const msgKey = this.data.mode === 'create' 
+                    ? 'admin.components.entries.createSuccess' 
+                    : 'admin.components.entries.updateSuccess';
+                this.notify.success(msgKey);
+                this.close(true);
+            },
+            error: (err) => {
+                this.setSubmitting(false);
+                const msgKey = this.data.mode === 'create'
+                    ? 'admin.components.entries.createFailed'
+                    : 'admin.components.entries.updateFailed';
+                this.notify.alert(err?.error?.message || msgKey);
+            }
+        });
     }
 
     #buildCompositeTranslations(): Record<string, any> {

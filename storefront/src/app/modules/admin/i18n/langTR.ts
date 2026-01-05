@@ -930,8 +930,8 @@ export const langTR = {
                     items: 'Öğeler',
                 },
                 fields: {
-                    title: 'Başlık',
-                    description: 'Açıklama',
+                    title: 'Title',
+                    description: 'Description',
                     imageUrl: 'Görsel URL',
                     buttonText: 'Buton Metni',
                     buttonUrl: 'Buton URL',

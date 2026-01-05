@@ -61,8 +61,9 @@ public class Component extends BaseEntity {
     /**
      * Responsive media set for component-level Desktop/Mobile images.
      * Used for component backgrounds, hero images, etc.
+     * EAGER fetch to prevent LazyInitializationException in DTO mappings.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "responsive_id")
     private ResponsiveMediaSet responsiveMedia;
 }

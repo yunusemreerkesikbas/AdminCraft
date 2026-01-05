@@ -109,14 +109,20 @@ public class ComponentEntryController {
 
         @GetMapping("/entries/{id}")
         @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR', 'VIEWER')")
-        public ResponseEntity<ApiResponse<ComponentEntryResponse>> getEntry(
+        public ResponseEntity<ApiResponse<?>> getEntry(
                         @PathVariable Long id,
+                        @org.springframework.web.bind.annotation.RequestParam(required = false) String include,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
-                        ComponentEntry entry = entryService.getEntryById(id);
-
                         String successMessage = messageSource.getMessage("component.entry.get.success",
                                         null, Locale.forLanguageTag(lang));
+
+                        if ("translations".equalsIgnoreCase(include)) {
+                                var composite = entryService.getEntryWithTranslations(id);
+                                return ResponseEntity.ok(ApiResponse.success(successMessage, composite));
+                        }
+
+                        ComponentEntry entry = entryService.getEntryById(id);
                         return ResponseEntity
                                         .ok(ApiResponse.success(successMessage, ComponentEntryResponse.from(entry)));
                 } catch (Exception ex) {

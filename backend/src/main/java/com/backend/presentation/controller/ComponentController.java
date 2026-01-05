@@ -42,7 +42,6 @@ import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.request.AssignResponsiveMediaRequest;
 import com.backend.presentation.dto.request.ComponentCreateRequest;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
@@ -378,9 +377,9 @@ public class ComponentController {
         @PatchMapping("/{id}/responsive-media")
         public ResponseEntity<ApiResponse<ComponentResponse>> assignResponsiveMedia(
                         @PathVariable @NotNull @Min(1) Long id,
-                        @Valid @RequestBody AssignResponsiveMediaRequest request,
+                        @RequestParam(required = false) Long responsiveMediaId,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-                Component result = componentService.assignResponsiveMedia(id, request.responsiveMediaId());
+                Component result = componentService.assignResponsiveMedia(id, responsiveMediaId);
                 ComponentResponse response = ComponentResponse.from(result);
 
                 String successMessage = messageSource.getMessage("component.responsive.assign.success",

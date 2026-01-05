@@ -25,4 +25,6 @@ public interface ComponentEntryService {
     ComponentEntryCompositeResponse createComposite(CreateComponentEntryCompositeRequest request);
 
     ComponentEntryCompositeResponse updateComposite(Long id, UpdateComponentEntryCompositeRequest request);
+
+    ComponentEntryCompositeResponse getEntryWithTranslations(Long id);
 }

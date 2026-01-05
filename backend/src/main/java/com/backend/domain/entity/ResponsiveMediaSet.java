@@ -38,11 +38,11 @@ public class ResponsiveMediaSet extends BaseEntity {
   @Column(nullable = false, length = 100, unique = true)
   private String code;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "desktop_media_id")
   private Media desktopMedia;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "mobile_media_id")
   private Media mobileMedia;
 

@@ -1,23 +1,15 @@
-<spa-dialog
+<spa-dialog-header
     [title]="
         (mode() === 'create'
             ? 'admin.components.entries.create'
             : 'admin.components.entries.edit'
         ) | transloco
     "
-    contentType="tabbed"
-    [submitLabel]="
-        (mode() === 'create'
-            ? 'admin.dialog.actions.create'
-            : 'admin.dialog.actions.save'
-        ) | transloco
-    "
-    [isSubmitting]="isSubmitting()"
-    [submitDisabled]="!canSave()"
-    (closed)="cancel()"
-    (cancelled)="cancel()"
-    (submitted)="save()"
+    (closeClicked)="cancel()"
 >
+</spa-dialog-header>
+
+<spa-dialog-content type="tabbed">
     @if (isLoading()) {
         <div class="flex flex-col items-center justify-center py-12">
             <mat-spinner diameter="40"></mat-spinner>
@@ -82,6 +74,23 @@
                 </div>
             </mat-tab>
 
+            <!-- Media Tab -->
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5">image</mat-icon>
+                        <span>{{ 'admin.media.title' | transloco }}</span>
+                    </div>
+                </ng-template>
+                <div class="p-6 sm:p-8">
+                    <form [formGroup]="generalForm">
+                        <spa-responsive-media-picker
+                            formControlName="responsiveMedia"
+                        ></spa-responsive-media-picker>
+                    </form>
+                </div>
+            </mat-tab>
+
             <!-- Language Tabs -->
             @for (lang of languages; track lang) {
                 <mat-tab>
@@ -98,28 +107,34 @@
                             class="flex flex-col gap-6"
                         >
                             <!-- Basic Info -->
-                            <div class="flex flex-col gap-6">
+                            <div
+                                class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+                            >
                                 <div
-                                    class="text-secondary flex items-center gap-2 border-b pb-2 dark:border-gray-700"
+                                    class="text-secondary mb-4 flex items-center gap-2"
                                 >
                                     <mat-icon class="icon-size-5"
                                         >info</mat-icon
                                     >
-                                    <h3
-                                        class="text-lg font-medium leading-none tracking-tight"
+                                    <span
+                                        class="text-sm font-medium uppercase tracking-wide"
                                     >
                                         {{
                                             'admin.components.entries.basicInfo'
                                                 | transloco
                                         }}
                                         ({{ lang | uppercase }})
-                                    </h3>
+                                    </span>
                                 </div>
 
                                 <div class="flex flex-col gap-4">
                                     <spa-input
                                         formControlName="title"
                                         [label]="
+                                            'admin.components.entries.fields.title'
+                                                | transloco
+                                        "
+                                        [placeholder]="
                                             'admin.components.entries.fields.title'
                                                 | transloco
                                         "
@@ -131,6 +146,10 @@
                                             'admin.components.entries.fields.description'
                                                 | transloco
                                         "
+                                        [placeholder]="
+                                            'admin.components.entries.fields.description'
+                                                | transloco
+                                        "
                                         [rows]="4"
                                     ></spa-textarea>
                                 </div>
@@ -138,22 +157,24 @@
 
                             <!-- Custom Fields -->
                             @if (fieldDefinitions().length > 0) {
-                                <div class="flex flex-col gap-6">
+                                <div
+                                    class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+                                >
                                     <div
-                                        class="text-secondary flex items-center justify-between border-b pb-2 dark:border-gray-700"
+                                        class="text-secondary mb-4 flex items-center justify-between"
                                     >
                                         <div class="flex items-center gap-2">
                                             <mat-icon class="icon-size-5"
                                                 >extension</mat-icon
                                             >
-                                            <h3
-                                                class="text-lg font-medium leading-none tracking-tight"
+                                            <span
+                                                class="text-sm font-medium uppercase tracking-wide"
                                             >
                                                 {{
                                                     'admin.components.entries.customFields'
                                                         | transloco
                                                 }}
-                                            </h3>
+                                            </span>
                                         </div>
                                         <span
                                             class="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400"
@@ -178,6 +199,11 @@
                                                                 field.fieldKey
                                                             )
                                                         "
+                                                        [placeholder]="
+                                                            getFieldLabelWithFallback(
+                                                                field.fieldKey
+                                                            )
+                                                        "
                                                     ></spa-input>
                                                 }
                                                 @case ('textarea') {
@@ -186,6 +212,11 @@
                                                             field.fieldKey
                                                         "
                                                         [label]="
+                                                            getFieldLabelWithFallback(
+                                                                field.fieldKey
+                                                            )
+                                                        "
+                                                        [placeholder]="
                                                             getFieldLabelWithFallback(
                                                                 field.fieldKey
                                                             )
@@ -199,6 +230,11 @@
                                                             field.fieldKey
                                                         "
                                                         [label]="
+                                                            getFieldLabelWithFallback(
+                                                                field.fieldKey
+                                                            )
+                                                        "
+                                                        [placeholder]="
                                                             getFieldLabelWithFallback(
                                                                 field.fieldKey
                                                             )
@@ -245,4 +281,19 @@
             }
         </mat-tab-group>
     }
-</spa-dialog>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitDisabled]="!canSave()"
+    [isSubmitting]="isSubmitting()"
+    [submitLabel]="
+        (mode() === 'create'
+            ? 'admin.dialog.actions.create'
+            : 'admin.dialog.actions.save'
+        ) | transloco
+    "
+    cancelLabel="admin.dialog.actions.close"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>

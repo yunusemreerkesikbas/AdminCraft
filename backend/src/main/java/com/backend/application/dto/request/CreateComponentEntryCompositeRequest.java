@@ -18,6 +18,7 @@ public record CreateComponentEntryCompositeRequest(
     Boolean isVisible,
     String styleClasses,
     ComponentStatus status,
+    Long responsiveMediaId,
 
     @NotEmpty(message = "At least one translation is required") @Valid Map<Language, EntryI18nRequest> translations) {
 }
