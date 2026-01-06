@@ -3,12 +3,10 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
-import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
+import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal/spa-generic-modal.component';
 import { NavigationNodeDialogComponent } from '../dialogs/node-dialog/node-dialog.component';
 import { NavigationNodeManagerDialogComponent } from '../manager/navigation-node-manager-dialog.component';
@@ -24,28 +22,11 @@ import { NavigationNode } from '../navigation-node.types';
         RouterModule,
         MatButtonModule,
         MatIconModule,
-        MatProgressSpinnerModule,
-        MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaEmptyStateComponent
+        SpaAdminGridComponent
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    styles: [
-        `
-            .inventory-grid {
-                grid-template-columns: auto 80px 100px;
-
-                @screen md {
-                    grid-template-columns: auto 100px 150px;
-                }
-
-                @screen lg {
-                    grid-template-columns: auto 120px 200px;
-                }
-            }
-        `
-    ]
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavigationListComponent implements OnInit {
     #navigationNodeService = inject(NavigationNodeService);
@@ -53,6 +34,41 @@ export class NavigationListComponent implements OnInit {
 
     protected rootNodesSig = signal<NavigationNode[]>([]);
     protected isLoadingSig = signal<boolean>(true);
+
+    protected columns: GridColumn<NavigationNode>[] = [
+        {
+            key: 'title',
+            label: 'admin.common.grid.name',
+            type: 'text',
+            width: 'auto',
+            getSecondaryValue: (node) => {
+                const childCount = node.children?.length;
+                return childCount ? `${node.uid} (${childCount} submenu)` : node.uid;
+            }
+        },
+        {
+            key: 'status',
+            label: 'admin.common.grid.status',
+            type: 'status',
+            getValue: (node) => node.isVisible ? 'ACTIVE' : 'INACTIVE',
+            width: '120px',
+            hideOn: 'sm'
+        }
+    ];
+
+    protected actions: GridAction<NavigationNode>[] = [
+        {
+            icon: 'heroicons_outline:pencil-square',
+            label: 'admin.common.manage',
+            action: 'manage'
+        },
+        {
+            icon: 'heroicons_outline:trash',
+            label: 'admin.common.delete',
+            action: 'delete',
+            color: 'warn'
+        }
+    ];
 
     ngOnInit(): void {
         this.#loadRoots();
@@ -68,6 +84,19 @@ export class NavigationListComponent implements OnInit {
             error: () => this.isLoadingSig.set(false)
         });
     }
+
+    protected onGridAction(event: { action: string; item: NavigationNode }): void {
+        switch (event.action) {
+            case 'manage':
+                this.openNodeManager(event.item);
+                break;
+            case 'delete':
+                this.deleteNode(event.item);
+                break;
+        }
+    }
+
+
 
     deleteNode(node: NavigationNode): void {
         const dialogRef = this.#matDialog.open(SpaGenericModalComponent, {
@@ -104,7 +133,6 @@ export class NavigationListComponent implements OnInit {
                 parentId: null
             }
         }).afterClosed().subscribe((result) => {
-            // Only refresh if a node was created
             if (result) {
                 this.#loadRoots();
             }
@@ -117,12 +145,9 @@ export class NavigationListComponent implements OnInit {
             height: '80vh',
             data: { nodeId: node.id }
         }).afterClosed().subscribe((result) => {
-            // Only refresh if changes were made inside the manager
             if (result) {
                 this.#loadRoots();
             }
         });
     }
 }
-
-

@@ -6,197 +6,123 @@
 </spa-dialog-header>
 
 <spa-dialog-content type="tabbed">
-    <mat-tab-group
-        [(selectedIndex)]="activeTab"
-        class="component-tabs"
-        animationDuration="0ms"
-        mat-stretch-tabs="false"
+    <spa-tab-container
+        [tabs]="tabs"
+        [(activeTabIndex)]="activeTab"
     >
-        <mat-tab>
-            <ng-template mat-tab-label>
-                <div class="flex items-center gap-2">
-                    <mat-icon class="icon-size-5">settings</mat-icon>
-                    <span>{{
-                        'admin.components.entries.tabs.general' | transloco
-                    }}</span>
+        <ng-template spaTabContent="general">
+            <form [formGroup]="generalForm" class="flex flex-col gap-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <spa-input
+                        class="sm:col-span-2"
+                        formControlName="name"
+                        [label]="'admin.common.fields.name' | transloco"
+                        [required]="true"
+                    >
+                    </spa-input>
+
+                    <spa-select
+                        formControlName="componentTypeId"
+                        [label]="'admin.components.fields.type' | transloco"
+                        [options]="componentTypeOptions"
+                        [placeholder]="'admin.common.placeholders.selectType' | transloco"
+                        [required]="true"
+                    >
+                    </spa-select>
+
+                    <spa-select
+                        formControlName="status"
+                        [label]="'admin.common.fields.status' | transloco"
+                        [options]="statusOptions"
+                        [placeholder]="'admin.common.placeholders.selectStatus' | transloco"
+                        [required]="true"
+                    >
+                    </spa-select>
                 </div>
-            </ng-template>
 
-            <div class="p-6 sm:p-8">
-                <form [formGroup]="generalForm" class="flex flex-col gap-6">
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <spa-input
-                            class="sm:col-span-2"
-                            formControlName="name"
-                            [label]="'admin.common.fields.name' | transloco"
-                            [required]="true"
-                        >
-                        </spa-input>
+                <div class="my-2 w-full border-t"></div>
 
-                        <spa-select
-                            formControlName="componentTypeId"
-                            [label]="'admin.components.fields.type' | transloco"
-                            [options]="componentTypeOptions"
-                            [placeholder]="
-                                'admin.common.placeholders.selectType'
-                                    | transloco
-                            "
-                            [required]="true"
-                        >
-                        </spa-select>
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-secondary text-base font-medium">
+                        Appearance
+                    </h3>
 
-                        <spa-select
-                            formControlName="status"
-                            [label]="'admin.common.fields.status' | transloco"
-                            [options]="statusOptions"
-                            [placeholder]="
-                                'admin.common.placeholders.selectStatus'
-                                    | transloco
-                            "
-                            [required]="true"
-                        >
-                        </spa-select>
-                    </div>
+                    <spa-input
+                        formControlName="styleClasses"
+                        [label]="'admin.components.fields.styleClasses' | transloco"
+                        [hint]="'admin.components.hints.styleClasses' | transloco"
+                        placeholder="e.g. bg-primary text-white"
+                    >
+                    </spa-input>
 
-                    <div class="my-2 w-full border-t"></div>
-
-                    <div class="flex flex-col gap-4">
-                        <h3 class="text-secondary text-base font-medium">
-                            Appearance
-                        </h3>
-
-                        <spa-input
-                            formControlName="styleClasses"
-                            [label]="
-                                'admin.components.fields.styleClasses'
-                                    | transloco
-                            "
-                            [hint]="
-                                'admin.components.hints.styleClasses'
-                                    | transloco
-                            "
-                            placeholder="e.g. bg-primary text-white"
-                        >
-                        </spa-input>
-
-                        <spa-checkbox
-                            formControlName="isVisible"
-                            [label]="
-                                'admin.components.fields.isVisible' | transloco
-                            "
-                            styleClasses="boxed"
-                        >
-                        </spa-checkbox>
-                    </div>
-                </form>
-            </div>
-        </mat-tab>
-
-        <mat-tab>
-            <ng-template mat-tab-label>
-                <div class="flex items-center gap-2">
-                    <mat-icon class="icon-size-5">image</mat-icon>
-                    <span>{{ 'admin.media.title' | transloco }}</span>
+                    <spa-checkbox
+                        formControlName="isVisible"
+                        [label]="'admin.components.fields.isVisible' | transloco"
+                        styleClasses="boxed"
+                    >
+                    </spa-checkbox>
                 </div>
-            </ng-template>
-            <div class="p-6 sm:p-8">
-                <form [formGroup]="generalForm">
-                    <spa-responsive-media-picker
-                        formControlName="responsiveMedia"
-                    ></spa-responsive-media-picker>
-                </form>
-            </div>
-        </mat-tab>
+            </form>
+        </ng-template>
+
+        <ng-template spaTabContent="media">
+            <form [formGroup]="generalForm">
+                <spa-responsive-media-picker
+                    formControlName="responsiveMedia"
+                ></spa-responsive-media-picker>
+            </form>
+        </ng-template>
 
         @for (lang of languages; track lang) {
-            <mat-tab>
-                <ng-template mat-tab-label>
-                    <div class="flex items-center gap-2">
-                        <mat-icon class="icon-size-5">translate</mat-icon>
-                        <span class="uppercase">{{ lang }}</span>
-                    </div>
-                </ng-template>
-
-                <div class="p-6 sm:p-8">
-                    <form
-                        [formGroup]="i18nForms[lang]"
-                        class="flex flex-col gap-6"
+            <ng-template [spaTabContent]="'lang-' + lang">
+                <form [formGroup]="i18nForms[lang]" class="flex flex-col gap-6">
+                    <div
+                        class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
                     >
-                        <div
-                            class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
-                        >
-                            <div
-                                class="text-secondary mb-4 flex items-center gap-2"
-                            >
-                                <mat-icon class="icon-size-5">info</mat-icon>
-                                <span
-                                    class="text-sm font-medium uppercase tracking-wide"
-                                >
-                                    {{
-                                        'admin.components.entries.basicInfo'
-                                            | transloco
-                                    }}
-                                    ({{ lang | uppercase }})
-                                </span>
-                            </div>
-
-                            <div class="flex flex-col gap-4">
-                                <spa-input
-                                    formControlName="title"
-                                    [label]="
-                                        'admin.components.fields.title'
-                                            | transloco
-                                    "
-                                >
-                                </spa-input>
-
-                                <spa-input
-                                    formControlName="subtitle"
-                                    [label]="
-                                        'admin.components.fields.subtitle'
-                                            | transloco
-                                    "
-                                >
-                                </spa-input>
-
-                                <spa-textarea
-                                    formControlName="description"
-                                    [label]="
-                                        'admin.components.fields.description'
-                                            | transloco
-                                    "
-                                    [rows]="4"
-                                >
-                                </spa-textarea>
-                            </div>
+                        <div class="text-secondary mb-4 flex items-center gap-2">
+                            <mat-icon class="icon-size-5">info</mat-icon>
+                            <span class="text-sm font-medium uppercase tracking-wide">
+                                {{ 'admin.components.entries.basicInfo' | transloco }}
+                                ({{ lang | uppercase }})
+                            </span>
                         </div>
-                    </form>
-                </div>
-            </mat-tab>
+
+                        <div class="flex flex-col gap-4">
+                            <spa-input
+                                formControlName="title"
+                                [label]="'admin.components.fields.title' | transloco"
+                            >
+                            </spa-input>
+
+                            <spa-input
+                                formControlName="subtitle"
+                                [label]="'admin.components.fields.subtitle' | transloco"
+                            >
+                            </spa-input>
+
+                            <spa-textarea
+                                formControlName="description"
+                                [label]="'admin.components.fields.description' | transloco"
+                                [rows]="4"
+                            >
+                            </spa-textarea>
+                        </div>
+                    </div>
+                </form>
+            </ng-template>
         }
 
         @if (data.component) {
-            <mat-tab>
-                <ng-template mat-tab-label>
-                    <div class="flex items-center gap-2">
-                        <mat-icon class="icon-size-5">list</mat-icon>
-                        <span>{{
-                            'admin.components.entries.tabs.items' | transloco
-                        }}</span>
-                    </div>
-                </ng-template>
-
-                <div class="p-6">
-                    <spa-component-entry-list
-                        [componentId]="data.component.id"
-                        [componentTypeId]="data.component.componentTypeId"
-                        [languages]="languages"
-                    >
-                    </spa-component-entry-list>
-                </div>
-            </mat-tab>
+            <ng-template spaTabContent="entries">
+                <spa-component-entry-list
+                    [componentId]="data.component.id"
+                    [componentTypeId]="data.component.componentTypeId"
+                    [languages]="languages"
+                >
+                </spa-component-entry-list>
+            </ng-template>
         }
-    </mat-tab-group>
+    </spa-tab-container>
 </spa-dialog-content>
 
 <spa-dialog-footer

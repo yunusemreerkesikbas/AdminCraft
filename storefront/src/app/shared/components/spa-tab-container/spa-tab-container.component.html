@@ -1,0 +1,23 @@
+<mat-tab-group
+    [selectedIndex]="activeTabIndex"
+    [animationDuration]="animationDuration"
+    [mat-stretch-tabs]="stretchTabs"
+    (selectedIndexChange)="onTabChange($event)"
+>
+    @for (tab of visibleTabs(); track tab.id) {
+        <mat-tab [disabled]="tab.disabled">
+            <ng-template mat-tab-label>
+                <div class="flex items-center gap-2">
+                    <mat-icon class="icon-size-5">{{ tab.icon }}</mat-icon>
+                    <span>{{ tab.label | transloco }}</span>
+                </div>
+            </ng-template>
+
+            <div class="spa-tab-content p-6 sm:p-8">
+                @if (getTabContent(tab.id); as template) {
+                    <ng-container [ngTemplateOutlet]="template"></ng-container>
+                }
+            </div>
+        </mat-tab>
+    }
+</mat-tab-group>

@@ -1,310 +1,290 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewChild } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
+import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { Observable, forkJoin, take, takeUntil } from 'rxjs';
-import { PageTemplateService } from '../../templates/page-template.service';
-import { PageTemplate } from '../../templates/page-template.types';
-import { CreatePageFormData, EditPageFormData } from '../models/page-form.types';
+import { debounceTime, forkJoin, Observable, take, takeUntil } from 'rxjs';
+import { CreatePageFormData, PageI18nFormData } from '../models/page-form.types';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, Language, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
-import { PageFormMapperService } from '../services/page-form-mapper.service';
 import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
-import { PageSlotDialogComponent } from '../slots/dialog/page-slot-dialog.component';
 
 @Component({
-  selector: 'spa-page-list',
-  templateUrl: './page-list.component.html',
-  styleUrls: [],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatIconModule,
-    TranslocoModule,
-    AdminPageHeaderComponent,
-  ],
-  styles: [
-    `
-        .inventory-grid {
-            grid-template-columns: auto 80px 160px;
-
-            @screen md {
-                grid-template-columns: auto 100px 180px;
-            }
-
-            @screen lg {
-                grid-template-columns: auto 120px 200px;
-            }
-        }
-    `,
-],
+    selector: 'spa-page-list',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatButtonModule,
+        MatIconModule,
+        MatInputModule,
+        MatPaginatorModule,
+        MatTooltipModule,
+        TranslocoModule,
+        AdminPageHeaderComponent,
+        SpaAdminGridComponent,
+        SpaStatusBadgeComponent
+    ],
+    templateUrl: './page-list.component.html',
+    styles: [],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PageListComponent extends BaseCrudListComponent<PageListDto, CreatePageRequest, UpdatePageRequest> {
-  protected service = inject(PageBuilderService);
-  protected store = new CrudStore<PageListDto>();
 
-  #notify = inject(NotificationService);
-  #itemDialogService = inject(ItemDialogService);
-  #pageBuilderService = inject(PageBuilderService);
-  #tenantContext = inject(TenantContextService);
-  #languageContext = inject(LanguageContextService);
-  #schemaBuilder = inject(PageSchemaBuilderService);
-  #formMapper = inject(PageFormMapperService);
-  #templateService = inject(PageTemplateService);
-  protected dialog = inject(MatDialog);
+    protected override service = inject(PageBuilderService);
+    protected override store = new CrudStore<PageListDto>();
+    #router = inject(Router);
+    #notificationService = inject(NotificationService);
+    #confirmationService = inject(ConfirmationService);
 
+    #itemDialogService = inject(ItemDialogService);
+    #schemaBuilder = inject(PageSchemaBuilderService);
+    #tenantContext = inject(TenantContextService);
+    #languageContext = inject(LanguageContextService);
 
-  tenantId = 1;
-  subdomain = '';
-  #cachedTemplates: PageTemplate[] = [];
-
-  #getSupportedLanguages(): string[] {
-    return this.#languageContext.supportedLanguages();
-  }
-
-  protected override onInit(): void {
-    const storedId = this.#tenantContext.getCurrentTenantId();
-    const storedSub = this.#tenantContext.getCurrentSubdomain();
-    if (storedId) {
-      this.tenantId = storedId;
-    }
-    if (storedSub) {
-      this.subdomain = storedSub;
-    }
-
-    this.#loadTemplates();
-
-    this.#tenantContext.tenant$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((t) => {
-        if (!t) return;
-        const nextId = t.id;
-        const nextSub = t.subdomain;
-        const changed = nextId !== this.tenantId || nextSub !== this.subdomain;
-        this.tenantId = nextId;
-        this.subdomain = nextSub;
-        if (changed) {
-          this.#loadTemplates();
-          this.loadItems();
-        }
-      });
-
-    this.#pageBuilderService.createRequested$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.createPage();
-      });
-  }
-
-  protected override beforeLoad(): boolean {
-    if (!this.tenantId) {
-      this.#notify.warning('admin.pageBuilder.errors.noTenant');
-      return false;
-    }
-    return true;
-  }
-
-  protected override fetchItems(): Observable<PageListDto[]> {
-    return this.#pageBuilderService.listPages();
-  }
-
-  protected override onLoadError(error: any): void {
-    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
-  }
-
-  onSearchChange(q: string): void {
-    super.onSearchChange(q);
-  }
-
-  load(): void {
-    this.loadItems();
-  }
-
-  refresh(): void {
-    this.loadItems();
-  }
-
-  create(): void {
-    this.createPage();
-  }
-
-  createPage(): void {
-    const schema = this.#schemaBuilder.buildPageCreateSchema(this.#cachedTemplates);
-    const initial: CreatePageFormData = {
-      status: 'DRAFT',
-      sortOrder: 0,
-      templateId: null
-    };
-
-    this.#getSupportedLanguages().forEach(lang => {
-      initial[lang] = {};
+    protected pageSizeSig = signal(24);
+    protected pageIndexSig = signal(0);
+    protected searchInputControl = new FormControl('');
+    
+    // Derived signals for local pagination
+    protected totalItemsSig = computed(() => this.filtered().length);
+    protected paginatedItemsSig = computed(() => {
+        const items = this.filtered();
+        const startIndex = this.pageIndexSig() * this.pageSizeSig();
+        const endIndex = startIndex + this.pageSizeSig();
+        return items.slice(startIndex, endIndex);
     });
 
-    const options: ItemDialogOptions<CreatePageFormData> = {
-      titleKey: 'admin.dialog.title.create',
-      mode: 'create',
-      schema,
-      languages: this.#getSupportedLanguages(),
-      initial,
-      modalData: {
-        disableClose: true,
-        width: '720px',
-        height: '80vh'
-      }
-    };
+    protected columns: GridColumn<PageListDto>[] = [];
+    protected actions: GridAction<PageListDto>[] = [];
+    
+    @ViewChild('statusTemplate', { static: true }) statusTemplate!: TemplateRef<any>;
 
-    this.#itemDialogService.open(options).pipe(take(1)).subscribe(result => {
-      if (!result) return;
+    get #supportedLanguages(): string[] {
+        return this.#languageContext.supportedLanguages();
+    }
 
-      try {
-        const generalReq: CreatePageRequest = this.#formMapper.toCreatePageRequest(result);
+    protected override onInit(): void {
+        this.#setupSearchDebounce();
+        this.#initGridConfig();
+    }
 
-        this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
-          next: (createdPage) => {
-            const mapped = this.#formMapper.toI18nRequests(this.#getSupportedLanguages(), result, 'DRAFT');
-            const i18nUpdates: Observable<PageI18nRequest>[] = mapped.map(m =>
-              this.#pageBuilderService.updatePageI18n(createdPage.id, m.lang, m.req)
-            );
-
-            if (i18nUpdates.length > 0) {
-              forkJoin(i18nUpdates).pipe(take(1)).subscribe({
-                next: () => {
-                  this.#notify.success('admin.pageBuilder.messages.pageCreated');
-                  this.load();
-                },
-                error: (err) => {
-                  this.#notify.alert(err?.error?.message || 'admin.common.errors.server');
-                }
-              });
-            } else {
-              this.#notify.success('admin.pageBuilder.messages.pageCreated');
-              this.load();
+    #initGridConfig(): void {
+        this.columns = [
+            {
+                key: 'uid',
+                label: 'admin.pages.fields.uid',
+                type: 'text',
+                width: '1fr'
+            },
+            {
+                key: 'status',
+                label: 'admin.common.grid.status',
+                type: 'custom',
+                template: this.statusTemplate,
+                width: '120px',
+                hideOn: 'sm'
             }
-          },
-          error: (error) => {
-            this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
-          }
-        });
-      } catch (err) {
-        this.#notify.alert('admin.pageBuilder.errors.creationFailed');
-      }
-    });
-  }
+        ];
 
-  editPage(page: PageListDto): void {
-    this.#pageBuilderService.getPageDetail(page.id).pipe(take(1)).subscribe({
-      next: (pageDetail) => {
-        const schema = this.#schemaBuilder.buildPageEditSchema(this.#cachedTemplates);
-        const initial: EditPageFormData = {
-          templateId: pageDetail.templateId,
-          status: pageDetail.status,
-          sortOrder: pageDetail.sortOrder,
-          styleClasses: pageDetail.styleClasses
+        this.actions = [
+            {
+                icon: 'heroicons_outline:pencil-square',
+                label: 'admin.common.actions.edit',
+                action: 'edit'
+            },
+            {
+                icon: 'heroicons_outline:view-columns',
+                label: 'admin.pages.actions.slots',
+                action: 'slots'
+            },
+            {
+                icon: 'heroicons_outline:trash',
+                label: 'admin.common.actions.delete',
+                action: 'delete',
+                color: 'warn'
+            }
+        ];
+    }
+
+    protected override loadItems(): void {
+        // Use BaseCrudList logic: fetchItems() -> store.setItems()
+        super.loadItems();
+    }
+
+    protected override fetchItems(): Observable<PageListDto[]> {
+        return this.service.listPages();
+    }
+
+    #setupSearchDebounce(): void {
+        this.searchInputControl.valueChanges.pipe(
+            debounceTime(300),
+            takeUntil(this.destroy$)
+        ).subscribe(query => {
+            this.onSearchChange(query || '');
+        });
+    }
+
+    protected override onSearchChange(query: string): void {
+        super.onSearchChange(query);
+        this.pageIndexSig.set(0);
+    }
+
+    createPage(): void {
+        const tenantId = this.#tenantContext.getCurrentTenantId();
+        if (!tenantId) {
+            this.#notificationService.warning('admin.pageBuilder.errors.noTenant');
+            return;
+        }
+
+        const schema = this.#schemaBuilder.buildPageCreateSchema();
+        const initial: CreatePageFormData = {
+            status: 'DRAFT',
+            sortOrder: 0
         };
 
-        this.#getSupportedLanguages().forEach(lang => {
-          const langKey = lang.toUpperCase() as Language;
-          const translation = pageDetail.translations[langKey];
-          initial[lang] = {
-            urlPath: translation?.urlPath || '',
-            title: translation?.title || '',
-            subtitle: translation?.subtitle || '',
-            metaTitle: translation?.metaTitle || '',
-            metaDescription: translation?.metaDescription || '',
-            description: translation?.description || ''
-          };
+        this.#supportedLanguages.forEach(lang => {
+            initial[lang] = {};
         });
 
-        const options: ItemDialogOptions<EditPageFormData, number> = {
-          titleKey: 'admin.dialog.title.edit',
-          mode: 'edit',
-          schema,
-          languages: this.#getSupportedLanguages(),
-          initial,
-          id: page.id,
-          modalData: {
-            disableClose: true,
-            width: '720px',
-            height: '80vh'
-          }
+        const options: ItemDialogOptions<CreatePageFormData> = {
+            titleKey: 'admin.dialog.title.create',
+            mode: 'create',
+            schema,
+            languages: this.#supportedLanguages,
+            initial,
+            modalData: {
+                disableClose: true,
+                width: '720px',
+                height: '80vh'
+            }
         };
 
         this.#itemDialogService.open(options).pipe(take(1)).subscribe(result => {
-          if (!result) return;
+            if (!result) return;
 
-          try {
-            const updatePageReq: UpdatePageRequest = this.#formMapper.toUpdatePageRequest(page.id, result, pageDetail.featuredImage);
+            try {
+                const generalReq: CreatePageRequest = {
+                    status: result.status || 'DRAFT',
+                    sortOrder: result.sortOrder || 0,
+                    styleClasses: result.styleClasses || null,
+                    featuredImage: null
+                };
 
-            const updates: Observable<UpdatePageRequest | PageI18nRequest>[] = [
-              this.#pageBuilderService.updatePage(page.id, updatePageReq)
-            ];
+                this.service.createPage(generalReq).pipe(take(1)).subscribe({
+                    next: (createdPage) => {
+                        const i18nUpdates: Observable<PageI18nRequest>[] = [];
 
-            const mapped = this.#formMapper.toI18nRequests(this.#getSupportedLanguages(), result, 'DRAFT');
-            mapped.forEach(m => updates.push(this.#pageBuilderService.updatePageI18n(page.id, m.lang, m.req)));
+                        this.#supportedLanguages.forEach(lang => {
+                            const langData = result[lang] as PageI18nFormData | undefined;
+                            const hasContent = langData && (
+                                langData.urlPath ||
+                                langData.title ||
+                                langData.subtitle ||
+                                langData.metaTitle ||
+                                langData.metaDescription ||
+                                langData.description
+                            );
 
-            forkJoin(updates).pipe(take(1)).subscribe({
-              next: () => {
-                this.#notify.success('admin.pageBuilder.messages.pageUpdated');
-                this.load();
-              },
-              error: (err) => {
-                this.#notify.alert(err?.error?.message || 'admin.common.errors.server');
-              }
-            });
-          } catch (err) {
-            this.#notify.alert('admin.pageBuilder.errors.updateFailed');
-          }
+                            if (hasContent && langData) {
+                                const i18nReq: PageI18nRequest = {
+                                    language: lang.toUpperCase() as Language,
+                                    urlPath: langData.urlPath || null,
+                                    title: langData.title || null,
+                                    subtitle: langData.subtitle || null,
+                                    metaTitle: langData.metaTitle || null,
+                                    metaDescription: langData.metaDescription || null,
+                                    description: langData.description || null,
+                                    status: result.status || 'DRAFT'
+                                };
+                                i18nUpdates.push(this.service.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
+                            }
+                        });
+
+                        const handleSuccess = () => {
+                            this.#notificationService.success('admin.pageBuilder.messages.pageCreated');
+                            this.loadItems();
+                        };
+
+                        if (i18nUpdates.length > 0) {
+                            forkJoin(i18nUpdates).pipe(take(1)).subscribe({
+                                next: handleSuccess,
+                                error: (err) => {
+                                    this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+                                    this.loadItems();
+                                }
+                            });
+                        } else {
+                            handleSuccess();
+                        }
+                    },
+                    error: (error) => {
+                        this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+                    }
+                });
+            } catch (err) {
+                this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+            }
         });
-      },
-      error: (error) => {
-        this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
-      }
-    });
-  }
+    }
 
-  manageSlots(page: PageListDto): void {
-    this.dialog.open(PageSlotDialogComponent, {
-      data: { pageId: page.id },
-      width: '900px',
-      maxWidth: '95vw',
-      height: '80vh',
-      panelClass: 'spa-dialog-panel'
-    });
-  }
+    deletePage(page: PageListDto): void {
+        const confirmation = this.#confirmationService.confirm(
+            'admin.pages.dialogs.delete.title',
+            'admin.pages.dialogs.delete.confirm'
+        );
+        confirmation.pipe(takeUntil(this.destroy$)).subscribe((result) => {
+            if (result) {
+                this.deleteItem(page);
+            }
+        });
+    }
 
-  deletePage(page: PageListDto): void {
-    this.deleteItem(page);
-  }
+    protected onGridAction(event: GridActionEvent<PageListDto>): void {
+        const { action, item } = event;
+        switch (action) {
+            case 'edit':
+                this.#router.navigate(['/admin/pages', item.uid]);
+                break;
+            case 'slots':
+                this.#router.navigate(['/admin/pages', item.uid, 'slots']);
+                break;
+            case 'delete':
+                this.deletePage(item);
+                break;
+        }
+    }
 
-  protected override onDeleteSuccess(item: PageListDto): void {
-    this.#notify.success('admin.common.messages.operationSuccess');
-  }
+    protected override onDeleteSuccess(item: PageListDto): void {
+        this.#notificationService.success('admin.common.messages.operationSuccess');
+    }
 
-  protected override onDeleteError(error: any): void {
-    this.#notify.alert(error?.error?.message || 'admin.common.errors.server');
-  }
+    protected override onDeleteError(error: any): void {
+         this.#notificationService.alert('admin.common.errors.server');
+    }
 
-  #loadTemplates(): void {
-    this.#templateService.getActive().pipe(take(1)).subscribe({
-      next: (templates) => {
-        this.#cachedTemplates = templates;
-      },
-      error: () => {
-        this.#cachedTemplates = [];
-      }
-    });
-  }
+    onPageChange(event: PageEvent): void {
+        this.pageIndexSig.set(event.pageIndex);
+        this.pageSizeSig.set(event.pageSize);
+        this.loadItems();
+    }
+
+    // TrackByFn removed
+
 }

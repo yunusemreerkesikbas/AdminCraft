@@ -1,0 +1,11 @@
+spa-admin-grid {
+    display: block;
+
+    .spa-grid-row {
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            @apply bg-slate-50 dark:bg-slate-800/50;
+        }
+    }
+}

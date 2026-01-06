@@ -2,22 +2,8 @@
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
     <!-- Header -->
-    <div
-        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
-    >
-        <!-- Loader -->
-        @if (store.isLoading()) {
-            <div class="absolute inset-x-0 bottom-0">
-                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-            </div>
-        }
-        <!-- Title -->
-        <div class="text-4xl font-extrabold tracking-tight">
-            {{ 'admin.media.title' | transloco }}
-        </div>
-        <!-- Actions -->
-        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <!-- Search -->
+    <admin-page-header [title]="'admin.media.title' | transloco">
+        <ng-container actions>
             <mat-form-field
                 class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64"
             >
@@ -33,7 +19,7 @@
                     [placeholder]="'admin.media.searchPlaceholder' | transloco"
                 />
             </mat-form-field>
-            <!-- Upload media button -->
+
             <button
                 class="ml-4"
                 mat-flat-button
@@ -45,8 +31,8 @@
                     'admin.media.upload' | transloco
                 }}</span>
             </button>
-        </div>
-    </div>
+        </ng-container>
+    </admin-page-header>
 
     <!-- Main -->
     <div class="flex flex-auto overflow-hidden">
@@ -54,199 +40,102 @@
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            <!-- Header -->
-            <div
-                class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'heroicons_outline:photo'"
+                [emptyTitle]="'admin.media.list.empty'"
+                [emptyDescription]="'admin.media.list.emptyDescription'"
+                (actionClick)="onGridAction($event)"
             >
-                <div class="hidden sm:block">
-                    {{ 'admin.media.fields.name' | transloco }}
-                </div>
-                <div class="hidden lg:block">
-                    {{ 'admin.common.grid.type' | transloco }}
-                </div>
-                <div class="hidden lg:block">
-                    {{ 'admin.common.grid.size' | transloco }}
-                </div>
-                <div class="hidden xl:block">
-                    {{ 'admin.media.fields.dimensions' | transloco }}
-                </div>
-                <div class="hidden sm:block">
-                    {{ 'admin.common.grid.uploaded' | transloco }}
-                </div>
-                <div class="hidden sm:block">
-                    {{ 'admin.common.grid.details' | transloco }}
-                </div>
-            </div>
-            <!-- Rows -->
-            @for (mediaFile of paginatedItemsSig(); track mediaFile.id) {
-                <div
-                    class="inventory-grid group grid items-center gap-4 border-b px-6 py-3 transition-colors hover:bg-gray-50 md:px-8 dark:hover:bg-gray-900"
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    class="mt-6 rounded-full"
+                    (click)="openUploadDialog()"
                 >
-                    <!-- Preview -->
-                    <div class="flex items-center">
-                        <div
-                            class="relative mr-6 flex h-14 w-14 flex-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-800"
-                        >
-                            @switch (mediaFile.fileType) {
-                                @case ('image') {
-                                    <img
-                                        [src]="mediaFile.publicUrl"
-                                        [alt]="
-                                            mediaFile.altText ||
-                                            mediaFile.originalName
-                                        "
-                                        class="h-full w-full object-cover"
-                                    />
-                                }
-                                @case ('video') {
-                                    <mat-icon class="text-hint icon-size-8"
-                                        >videocam</mat-icon
-                                    >
-                                }
-                                @case ('audio') {
-                                    <mat-icon class="text-hint icon-size-8"
-                                        >audiotrack</mat-icon
-                                    >
-                                }
-                                @case ('document') {
-                                    <mat-icon class="text-hint icon-size-8"
-                                        >description</mat-icon
-                                    >
-                                }
-                                @default {
-                                    <mat-icon class="text-hint icon-size-8"
-                                        >insert_drive_file</mat-icon
-                                    >
-                                }
-                            }
-                        </div>
+                    <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                    <span class="ml-2">{{
+                        'admin.media.actions.upload' | transloco
+                    }}</span>
+                </button>
+            </spa-admin-grid>
 
-                        <!-- File name & file name -->
-                        <div class="truncate">
-                            <div
-                                class="truncate font-medium"
-                                [matTooltip]="mediaFile.originalName"
-                            >
-                                {{ mediaFile.originalName }}
-                            </div>
-                            <div
-                                class="text-secondary truncate text-sm"
-                                [matTooltip]="mediaFile.fileName"
-                            >
-                                {{ mediaFile.fileName }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Type -->
-                    <div class="hidden lg:block">
-                        <div
-                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide"
-                            [ngClass]="getMediaTypeClass(mediaFile)"
-                        >
-                            {{ mediaFile.fileType }}
-                        </div>
-                    </div>
-
-                    <div class="text-secondary hidden text-sm lg:block">
-                        <div class="font-medium">
-                            {{ mediaFile.fileSizeFormatted }}
-                        </div>
-                    </div>
-
-                    <!-- Dimensions -->
-                    <div class="text-secondary hidden text-sm xl:block">
-                        @if (mediaFile.width && mediaFile.height) {
-                            <div class="font-medium">
-                                {{ mediaFile.width }}x{{ mediaFile.height }}
-                            </div>
-                        } @else {
-                            <div class="text-hint">-</div>
-                        }
-                    </div>
-
-                    <!-- Uploaded -->
-                    <div class="text-secondary hidden text-sm sm:block">
-                        <div>{{ mediaFile.createdAt | date: 'MMM dd, y' }}</div>
-                        @if (mediaFile.uploaderName) {
-                            <div class="text-hint text-xs">
-                                by {{ mediaFile.uploaderName }}
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Actions -->
-                    <div>
-                        @if (!selectionMode) {
-                            <button
-                                mat-icon-button
-                                (click)="openDetailDialog(mediaFile)"
-                                [matTooltip]="
-                                    'admin.common.actions.edit' | transloco
-                                "
-                            >
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="'heroicons_solid:pencil'"
-                                ></mat-icon>
-                            </button>
-                            <button
-                                mat-icon-button
-                                [color]="'warn'"
-                                (click)="deleteMedia(mediaFile)"
-                                [matTooltip]="
-                                    'admin.common.actions.delete' | transloco
-                                "
-                            >
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="'heroicons_solid:trash'"
-                                ></mat-icon>
-                            </button>
-                        } @else {
-                            <button
-                                mat-icon-button
-                                [color]="'primary'"
-                                (click)="selectMedia(mediaFile)"
-                            >
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="'heroicons_outline:plus-circle'"
-                                ></mat-icon>
-                            </button>
-                        }
-                    </div>
-                </div>
-            }
-
-            @if (paginatedItemsSig().length === 0) {
+            <ng-template #previewTemplate let-item>
                 <div
-                    class="flex flex-auto flex-col items-center justify-center bg-gray-100 p-6 sm:p-10 dark:bg-transparent"
+                    class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded border bg-gray-50 dark:bg-gray-800"
                 >
-                    <mat-icon
-                        class="text-gray-300 icon-size-24 dark:text-gray-600"
-                        [svgIcon]="'heroicons_outline:photo'"
-                    ></mat-icon>
-                    <div
-                        class="text-secondary mt-4 text-2xl font-semibold tracking-tight"
+                    <ng-container
+                        *ngIf="item.fileType === 'image'; else iconHandler"
                     >
-                        {{ 'admin.media.messages.noMediaFound' | transloco }}
+                        <img
+                            class="h-full w-full object-cover"
+                            [src]="item.publicUrl"
+                            [alt]="item.altText || item.fileName"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                        />
+                        <div
+                            class="absolute inset-0 flex hidden items-center justify-center bg-gray-100 dark:bg-gray-700"
+                        >
+                            <mat-icon
+                                class="text-secondary icon-size-8"
+                                svgIcon="heroicons_outline:photo"
+                            ></mat-icon>
+                        </div>
+                    </ng-container>
+                    <ng-template #iconHandler>
+                        <div
+                            class="flex h-full w-full items-center justify-center"
+                        >
+                            <mat-icon
+                                class="icon-size-8"
+                                [ngClass]="getMediaTypeClass(item)"
+                                [svgIcon]="
+                                    item.fileType === 'video'
+                                        ? 'heroicons_outline:film'
+                                        : item.fileType === 'audio'
+                                          ? 'heroicons_outline:musical-note'
+                                          : 'heroicons_outline:document-text'
+                                "
+                            >
+                            </mat-icon>
+                        </div>
+                    </ng-template>
+                </div>
+            </ng-template>
+
+            <ng-template #nameTemplate let-item>
+                <div class="min-w-0">
+                    <div
+                        class="truncate font-medium"
+                        [matTooltip]="item.altText || item.originalName"
+                    >
+                        {{ item.altText || item.originalName }}
+                    </div>
+                    <div
+                        class="text-secondary truncate text-sm"
+                        [matTooltip]="item.fileName"
+                    >
+                        {{ item.fileName }}
                     </div>
                 </div>
-            }
+            </ng-template>
+
+            <!-- Pagination -->
+            <mat-paginator
+                class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
+                [ngClass]="{ 'pointer-events-none': store.isLoading() }"
+                [length]="totalItemsSig()"
+                [pageIndex]="pageIndexSig()"
+                [pageSize]="pageSizeSig()"
+                [pageSizeOptions]="[5, 10, 25, 100]"
+                [showFirstLastButtons]="true"
+                (page)="onPageChange($event)"
+            >
+            </mat-paginator>
         </div>
     </div>
-
-    <!-- Pagination -->
-    <mat-paginator
-        class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
-        [ngClass]="{ 'pointer-events-none': store.isLoading() }"
-        [length]="totalItemsSig()"
-        [pageIndex]="pageIndexSig()"
-        [pageSize]="pageSizeSig()"
-        [pageSizeOptions]="[5, 10, 25, 100]"
-        [showFirstLastButtons]="true"
-        (page)="onPageChange($event)"
-    >
-    </mat-paginator>
 </div>

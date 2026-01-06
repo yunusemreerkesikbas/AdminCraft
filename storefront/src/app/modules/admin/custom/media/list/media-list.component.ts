@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -6,8 +6,11 @@ import {
     EventEmitter,
     inject,
     Input,
+    OnInit,
     Output,
-    signal
+    signal,
+    TemplateRef,
+    ViewChild
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +24,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent } from '@core/crud/base-crud-list.component';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { debounceTime, Observable, take, takeUntil } from 'rxjs';
@@ -37,7 +42,6 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
-        DatePipe,
         MatButtonModule,
         MatIconModule,
         MatFormFieldModule,
@@ -45,34 +49,21 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
         MatPaginatorModule,
         MatProgressBarModule,
         MatTooltipModule,
-        TranslocoModule
+        TranslocoModule,
+        AdminPageHeaderComponent,
+        SpaAdminGridComponent
     ],
     templateUrl: './media-list.component.html',
-    styles: [
-    `
-        .inventory-grid {
-            grid-template-columns: minmax(200px, 2fr) 96px;
-
-            @screen md {
-                grid-template-columns: minmax(200px, 2fr) 112px;
-            }
-
-            @screen lg {
-                grid-template-columns: minmax(240px, 3fr) 120px 140px 140px 96px;
-            }
-
-            @screen xl {
-                grid-template-columns: minmax(240px, 3fr) 120px 140px 120px 140px 96px;
-            }
-        }
-    `,
-    ],
+    styles: [],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MediaListComponent extends BaseCrudListComponent<Media, FormData, UpdateMediaRequest> {
+export class MediaListComponent extends BaseCrudListComponent<Media, FormData, UpdateMediaRequest> implements OnInit {
 
     @Input() selectionMode = false;
     @Output() onMediaSelect = new EventEmitter<Media>();
+
+    @ViewChild('previewTemplate', { static: true }) previewTemplate!: TemplateRef<any>;
+    @ViewChild('nameTemplate', { static: true }) nameTemplate!: TemplateRef<any>;
 
     protected override service = inject(MediaService);
     protected override store = inject(MediaStore);
@@ -86,12 +77,87 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     protected pageIndexSig = signal(0);
     protected totalItemsSig = computed(() => this.store.page()?.totalElements ?? 0);
     protected searchInputControl = new FormControl('');
+    protected paginatedItemsSig = computed(() => this.store.filteredItems());
 
-
-    protected paginatedItemsSig = computed(() => this.store.filteredItems()); 
+    protected columns: GridColumn<Media>[] = [];
+    protected actions: GridAction<Media>[] = [];
 
     protected override onInit(): void {
         this.#setupSearchDebounce();
+        this.#initGridConfig();
+    }
+
+    #initGridConfig(): void {
+        this.columns = [
+            {
+                key: 'preview',
+                label: '',
+                type: 'custom',
+                width: '80px',
+                template: this.previewTemplate
+            },
+            {
+                key: 'name',
+                label: 'admin.media.fields.name',
+                type: 'custom',
+                width: '1fr',
+                template: this.nameTemplate
+            },
+            {
+                key: 'fileType',
+                label: 'admin.common.grid.type',
+                type: 'text',
+                width: '100px',
+                hideOn: 'sm',
+                getValue: (item) => item.fileType.toUpperCase() // Or use badge if preferred
+            },
+            {
+                key: 'fileSizeFormatted',
+                label: 'admin.common.grid.size',
+                type: 'text',
+                width: '100px',
+                hideOn: 'sm'
+            },
+            {
+                key: 'dimensions',
+                label: 'admin.media.fields.dimensions',
+                type: 'text',
+                width: '120px',
+                hideOn: 'lg',
+                getValue: (item) => item.width && item.height ? `${item.width}x${item.height}` : '-'
+            },
+            {
+                key: 'createdAt',
+                label: 'admin.common.grid.uploaded',
+                type: 'date',
+                width: '120px',
+                hideOn: 'sm',
+                getSecondaryValue: (item) => item.uploaderName ? `by ${item.uploaderName}` : ''
+            }
+        ];
+
+        this.actions = [
+            {
+                icon: 'heroicons_outline:pencil-square',
+                label: 'admin.common.actions.edit',
+                action: 'edit',
+                show: () => !this.selectionMode
+            },
+            {
+                icon: 'heroicons_outline:trash',
+                label: 'admin.common.actions.delete',
+                action: 'delete',
+                color: 'warn',
+                show: () => !this.selectionMode
+            },
+            {
+                icon: 'heroicons_outline:plus-circle',
+                label: 'admin.common.actions.select',
+                action: 'select',
+                color: 'primary',
+                show: () => this.selectionMode
+            }
+        ];
     }
 
     protected override loadItems(): void {
@@ -113,7 +179,7 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     }
 
     protected override fetchItems(): Observable<Media[]> {
-        return this.service.list(); 
+        return this.service.list();
     }
 
     #setupSearchDebounce(): void {
@@ -183,6 +249,21 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
         });
     }
 
+    protected onGridAction(event: GridActionEvent<Media>): void {
+        const { action, item } = event;
+        switch (action) {
+            case 'edit':
+                this.openDetailDialog(item);
+                break;
+            case 'delete':
+                this.deleteMedia(item);
+                break;
+            case 'select':
+                this.selectMedia(item);
+                break;
+        }
+    }
+
     protected override onDeleteSuccess(item: Media): void {
         this.#notificationService.success('admin.media.messages.deleteSuccess');
     }
@@ -196,6 +277,9 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
         this.pageSizeSig.set(event.pageSize);
         this.loadItems();
     }
+
+    // TrackByFn removed
+
 
     getMediaTypeClass(media: Media): string {
         switch (media.fileType) {

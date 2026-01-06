@@ -4,7 +4,6 @@ import { ChangeDetectionStrategy, Component, inject, ViewEncapsulation } from '@
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
@@ -13,6 +12,7 @@ import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
+import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { map, Observable, of, switchMap, take } from 'rxjs';
 import { SpaResponsiveMediaPickerComponent } from '../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
@@ -36,7 +36,6 @@ export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<Comp
         ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
-        MatTabsModule,
         TranslocoModule,
         UpperCasePipe,
         SpaInputComponent,
@@ -47,7 +46,9 @@ export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<Comp
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
         SpaDialogFooterComponent,
-        SpaResponsiveMediaPickerComponent
+        SpaResponsiveMediaPickerComponent,
+        SpaTabContainerComponent,
+        SpaTabContentDirective
     ],
     templateUrl: './component-edit-dialog.component.html',
     styleUrls: ['./component-edit-dialog.component.scss'],
@@ -77,14 +78,32 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         }));
     }
 
+    get tabs(): TabDefinition[] {
+        const baseTabs: TabDefinition[] = [
+            { id: 'general', label: 'admin.components.entries.tabs.general', icon: 'settings' },
+            { id: 'media', label: 'admin.media.title', icon: 'image' },
+            ...this.languages.map(lang => ({
+                id: 'lang-' + lang,
+                label: lang.toUpperCase(),
+                icon: 'translate'
+            }))
+        ];
+
+        if (this.data?.component) {
+            baseTabs.push({ id: 'entries', label: 'admin.components.entries.tabs.items', icon: 'list' });
+        }
+
+        return baseTabs;
+    }
+
     override ngOnInit(): void {
         const tenant = this.#tenantContext.tenant();
         if (this.data?.languages?.length) {
-             this.languages = this.data.languages;
+            this.languages = this.data.languages;
         } else if (tenant?.supportedLanguages) {
-             this.languages = tenant.supportedLanguages.map(l => l.code);
+            this.languages = tenant.supportedLanguages.map(l => l.code);
         } else {
-             this.languages = ['en'];
+            this.languages = ['en'];
         }
         super.ngOnInit();
     }
@@ -121,10 +140,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         if (this.generalForm.invalid) return;
 
         const translations = this.#buildTranslations();
-        
-        if (Object.keys(translations).length === 0) {
-            // Logic to warn or validate could go here
-        }
 
         this.setSubmitting(true);
 
@@ -226,7 +241,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
-        // Handle both formats: number (ID) or object (Media)
         const desktopMediaId = typeof responsiveValue?.desktop === 'number'
             ? responsiveValue.desktop
             : responsiveValue?.desktop?.id;

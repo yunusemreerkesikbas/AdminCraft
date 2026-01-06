@@ -1,5 +1,6 @@
-<div class="flex min-w-0 flex-auto flex-col">
-    <!-- Header -->
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
     @if (mode === 'admin') {
         <admin-page-header
             [title]="'admin.components.title'"
@@ -28,161 +29,105 @@
         </admin-page-header>
     }
 
-    <!-- Main Content -->
-    <div class="flex-auto p-6 sm:p-10">
-        <div class="mx-auto max-w-screen-xl">
-            <!-- Filters -->
-            <div class="mb-8 flex flex-col items-end gap-4 sm:flex-row">
-                <spa-search-input
-                    class="flex-auto"
-                    [placeholder]="'admin.common.search' | transloco"
-                    [ngModel]="searchTerm()"
-                    (ngModelChange)="onSearchChange($event)"
-                ></spa-search-input>
+    <div class="flex flex-auto overflow-hidden">
+        <div
+            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
+        >
+            <div class="flex-auto">
+                <div class="">
+                    <div class="mb-8 flex flex-col items-end gap-4 sm:flex-row">
+                        <spa-search-input
+                            class="flex-auto"
+                            [placeholder]="'admin.common.search' | transloco"
+                            [ngModel]="searchTerm()"
+                            (ngModelChange)="onSearchChange($event)"
+                        ></spa-search-input>
 
-                <div class="flex gap-4">
-                    <spa-select
-                        class="w-full sm:w-48"
-                        [label]="'admin.components.filters.type' | transloco"
-                        [options]="typeOptions()"
-                        (changed)="onTypeFilterChange($event)"
-                    ></spa-select>
+                        <div class="flex gap-4">
+                            <spa-select
+                                class="w-full sm:w-48"
+                                [label]="
+                                    'admin.components.filters.type' | transloco
+                                "
+                                [options]="typeOptions()"
+                                (changed)="onTypeFilterChange($event)"
+                            ></spa-select>
 
-                    <spa-select
-                        class="w-full sm:w-48"
-                        [label]="'admin.components.filters.status' | transloco"
-                        [options]="statusOptions"
-                        (changed)="onStatusFilterChange($event)"
-                    ></spa-select>
+                            <spa-select
+                                class="w-full sm:w-48"
+                                [label]="
+                                    'admin.components.filters.status'
+                                        | transloco
+                                "
+                                [options]="statusOptions"
+                                (changed)="onStatusFilterChange($event)"
+                            ></spa-select>
+                        </div>
+                    </div>
+
+                    <spa-admin-grid
+                        [items]="filteredComponents()"
+                        [columns]="columns"
+                        [actions]="mode === 'admin' ? actions : []"
+                        [actionsTemplate]="
+                            mode === 'picker'
+                                ? pickerActionsTemplate
+                                : undefined
+                        "
+                        [isLoading]="store.isLoading()"
+                        [emptyIcon]="'layers'"
+                        [emptyTitle]="'admin.components.noComponents'"
+                        [emptyDescription]="'admin.components.createFirstHint'"
+                        (actionClick)="onGridAction($event)"
+                    >
+                        <button
+                            emptyAction
+                            mat-flat-button
+                            color="primary"
+                            (click)="createComponent()"
+                            [disabled]="!canCreateComponent()"
+                        >
+                            <mat-icon>add</mat-icon>
+                            {{ 'admin.common.create' | transloco }}
+                        </button>
+                    </spa-admin-grid>
                 </div>
             </div>
-
-            <!-- List -->
-            @if (filteredComponents().length > 0) {
-                <div class="grid grid-cols-1 gap-4">
-                    @for (
-                        component of filteredComponents();
-                        track component.id
-                    ) {
-                        <div
-                            class="bg-card flex flex-col justify-between gap-4 rounded-lg border p-4 transition-shadow duration-200 hover:shadow-md sm:flex-row sm:items-center"
-                            [@fadeInBottom]
-                        >
-                            <!-- Component Info -->
-                            <div
-                                class="flex min-w-0 flex-auto items-start gap-4"
-                            >
-                                <div class="flex min-w-0 flex-col gap-1">
-                                    <div class="flex items-center gap-3">
-                                        <h3
-                                            class="truncate text-lg font-semibold leading-none"
-                                        >
-                                            {{ component.name }}
-                                        </h3>
-                                        <spa-status-badge
-                                            [status]="component.status"
-                                            size="sm"
-                                        ></spa-status-badge>
-                                    </div>
-
-                                    <div
-                                        class="text-secondary mt-1 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
-                                    >
-                                        <div class="flex items-center gap-1.5">
-                                            <span
-                                                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800"
-                                            >
-                                                {{ component.uid }}
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5">
-                                            <mat-icon
-                                                class="text-hint icon-size-4"
-                                                >category</mat-icon
-                                            >
-                                            <span>{{
-                                                component.componentTypeName ||
-                                                    '-'
-                                            }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div
-                                class="flex items-center gap-2 self-start sm:self-center"
-                            >
-                                @if (mode === 'picker') {
-                                    <button
-                                        mat-stroked-button
-                                        color="primary"
-                                        (click)="
-                                            componentSelected.emit(component)
-                                        "
-                                    >
-                                        {{ 'admin.common.select' | transloco }}
-                                    </button>
-                                } @else {
-                                    <button
-                                        mat-icon-button
-                                        [matMenuTriggerFor]="menu"
-                                        aria-label="Actions"
-                                    >
-                                        <mat-icon>more_vert</mat-icon>
-                                    </button>
-                                    <mat-menu #menu="matMenu">
-                                        <button
-                                            mat-menu-item
-                                            (click)="
-                                                editComponent(component.id)
-                                            "
-                                        >
-                                            <mat-icon>edit</mat-icon>
-                                            <span>{{
-                                                'admin.common.edit' | transloco
-                                            }}</span>
-                                        </button>
-                                        <button
-                                            mat-menu-item
-                                            class="text-red-600"
-                                            (click)="
-                                                deleteComponent(component.id)
-                                            "
-                                        >
-                                            <mat-icon class="text-red-600"
-                                                >delete</mat-icon
-                                            >
-                                            <span>{{
-                                                'admin.common.delete'
-                                                    | transloco
-                                            }}</span>
-                                        </button>
-                                    </mat-menu>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
-            } @else {
-                <spa-empty-state
-                    icon="layers"
-                    [title]="'admin.components.noComponents' | transloco"
-                    [description]="
-                        'admin.components.createFirstHint' | transloco
-                    "
-                >
-                    <button
-                        mat-flat-button
-                        color="primary"
-                        (click)="createComponent()"
-                        [disabled]="!canCreateComponent()"
-                    >
-                        <mat-icon>add</mat-icon>
-                        {{ 'admin.common.create' | transloco }}
-                    </button>
-                </spa-empty-state>
-            }
         </div>
     </div>
 </div>
+
+<ng-template #infoTemplate let-component>
+    <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex items-center gap-3">
+            <h3 class="truncate text-base font-semibold leading-none">
+                {{ component.name }}
+            </h3>
+            <spa-status-badge
+                class="sm:hidden"
+                [status]="component.status"
+                size="sm"
+            ></spa-status-badge>
+        </div>
+        <div class="text-secondary flex items-center gap-2 text-sm">
+            <span
+                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800"
+            >
+                {{ component.uid }}
+            </span>
+            <span class="sm:hidden">{{
+                component.componentTypeName || '-'
+            }}</span>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #pickerActionsTemplate let-component>
+    <button
+        mat-stroked-button
+        color="primary"
+        (click)="selectComponent(component)"
+    >
+        {{ 'admin.common.select' | transloco }}
+    </button>
+</ng-template>

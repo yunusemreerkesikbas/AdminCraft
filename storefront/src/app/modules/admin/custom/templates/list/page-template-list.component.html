@@ -1,171 +1,108 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    <!-- Header -->
     <admin-page-header
-        [title]="'admin.pageTemplates.title'"
-        [subtitle]="'admin.pageTemplates.description'"
-        [showCreateButton]="true"
-        [isLoading]="store.isLoading()"
-        [createButtonText]="'admin.pageTemplates.actions.create' | transloco"
-        (createClick)="createTemplate()"
-    ></admin-page-header>
+        [title]="'admin.pageTemplates.title' | transloco"
+        [subtitle]="'admin.pageTemplates.description' | transloco"
+    >
+        <ng-container actions>
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64"
+            >
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                ></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'admin.common.searchPlaceholder' | transloco"
+                />
+            </mat-form-field>
+            <button mat-flat-button color="primary" (click)="createTemplate()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span class="ml-2">{{
+                    'admin.pageTemplates.actions.create' | transloco
+                }}</span>
+            </button>
+        </ng-container>
+    </admin-page-header>
 
     <div class="flex flex-auto overflow-hidden">
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            @if (filtered().length > 0) {
-                <div class="grid">
-                    <!-- Header -->
-                    <div
-                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
-                    >
-                        <div>{{ 'admin.common.fields.name' | transloco }}</div>
-                        <div class="hidden md:block">
-                            {{ 'admin.common.fields.description' | transloco }}
-                        </div>
-                        <div class="hidden sm:block">
-                            {{ 'admin.pageTemplates.slots.title' | transloco }}
-                        </div>
-                        <div>
-                            {{ 'admin.common.fields.status' | transloco }}
-                        </div>
-                        <div class="text-right">
-                            {{ 'admin.common.grid.actions' | transloco }}
-                        </div>
-                    </div>
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                (actionClick)="onGridAction($event)"
+                [emptyIcon]="'heroicons_outline:document-plus'"
+                [emptyTitle]="'admin.pageTemplates.messages.noTemplates'"
+                [emptyDescription]="'admin.pageTemplates.actions.createFirst'"
+            >
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createTemplate()"
+                >
+                    <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                    <span class="ml-2">{{
+                        'admin.pageTemplates.actions.createFirst' | transloco
+                    }}</span>
+                </button>
+            </spa-admin-grid>
 
-                    <!-- Rows -->
-                    @for (t of filtered(); track t.id) {
+            <!-- Templates for Custom Columns -->
+            <ng-template #slotsTemplate let-item>
+                <div class="flex flex-wrap gap-1">
+                    @for (slot of item.slots; track slot.id) {
                         <div
-                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                            class="text-secondary rounded bg-gray-100 px-1.5 py-0.5 text-xs dark:bg-gray-700"
                         >
-                            <!-- Name & UID -->
-                            <div class="flex min-w-0 flex-col">
-                                <span class="truncate font-medium">{{
-                                    t.name
-                                }}</span>
-                                <span class="text-secondary truncate text-sm">{{
-                                    t.uid
-                                }}</span>
-                            </div>
-
-                            <!-- Description -->
-                            <div
-                                class="text-secondary hidden truncate text-sm md:block"
-                            >
-                                {{ t.description || '-' }}
-                            </div>
-
-                            <!-- Slots -->
-                            <div class="hidden sm:block">
-                                <div class="flex flex-wrap gap-1">
-                                    @for (slot of t.slots; track slot.id) {
-                                        <div
-                                            class="text-secondary rounded bg-gray-100 px-1.5 py-0.5 text-xs"
-                                        >
-                                            {{ slot.slotName }}
-                                        </div>
-                                    }
-                                    @if (!t.slots?.length) {
-                                        <span class="text-hint text-xs">-</span>
-                                    }
-                                </div>
-                            </div>
-
-                            <!-- Status -->
-                            <div>
-                                @if (t.isSystem) {
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
-                                    >
-                                        {{
-                                            'admin.pageTemplates.status.system'
-                                                | transloco
-                                        }}
-                                    </span>
-                                } @else if (t.isActive) {
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
-                                    >
-                                        {{
-                                            'admin.pageTemplates.status.active'
-                                                | transloco
-                                        }}
-                                    </span>
-                                } @else {
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                                    >
-                                        {{
-                                            'admin.pageTemplates.status.inactive'
-                                                | transloco
-                                        }}
-                                    </span>
-                                }
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="flex justify-end gap-2">
-                                <button
-                                    mat-icon-button
-                                    (click)="editTemplate(t)"
-                                    [matTooltip]="
-                                        'admin.common.edit' | transloco
-                                    "
-                                >
-                                    <mat-icon
-                                        svgIcon="heroicons_outline:pencil"
-                                    ></mat-icon>
-                                </button>
-                                @if (!t.isSystem) {
-                                    <button
-                                        mat-icon-button
-                                        color="warn"
-                                        (click)="deleteTemplate(t)"
-                                        [matTooltip]="
-                                            'admin.common.delete' | transloco
-                                        "
-                                    >
-                                        <mat-icon
-                                            svgIcon="heroicons_outline:trash"
-                                        ></mat-icon>
-                                    </button>
-                                }
-                            </div>
+                            {{ slot.slotName }}
                         </div>
                     }
+                    @if (!item.slots?.length) {
+                        <span class="text-hint text-xs">-</span>
+                    }
                 </div>
-            } @else {
-                <div
-                    class="flex flex-auto flex-col items-center justify-center p-6 sm:p-10"
-                >
-                    <mat-icon
-                        class="text-hint icon-size-24"
-                        svgIcon="heroicons_outline:document-plus"
-                    ></mat-icon>
-                    <div
-                        class="text-secondary mt-2 text-2xl font-semibold tracking-tight"
+            </ng-template>
+
+            <ng-template #statusTemplate let-item>
+                @if (item.isSystem) {
+                    <span
+                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-100"
                     >
-                        {{
-                            'admin.pageTemplates.messages.noTemplates'
-                                | transloco
-                        }}
-                    </div>
-                    <button
-                        mat-flat-button
-                        color="primary"
-                        class="mt-6"
-                        (click)="createTemplate()"
+                        {{ 'admin.pageTemplates.status.system' | transloco }}
+                    </span>
+                } @else if (item.isActive) {
+                    <span
+                        class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-100"
                     >
-                        {{
-                            'admin.pageTemplates.actions.createFirst'
-                                | transloco
-                        }}
-                    </button>
-                </div>
-            }
+                        {{ 'admin.pageTemplates.status.active' | transloco }}
+                    </span>
+                } @else {
+                    <span
+                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                    >
+                        {{ 'admin.pageTemplates.status.inactive' | transloco }}
+                    </span>
+                }
+            </ng-template>
+
+            <mat-paginator
+                class="border-t bg-gray-50 dark:bg-transparent"
+                [length]="totalItemsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                (page)="onPageChange($event)"
+            ></mat-paginator>
         </div>
     </div>
 </div>

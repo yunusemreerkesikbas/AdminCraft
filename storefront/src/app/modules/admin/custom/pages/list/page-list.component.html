@@ -1,97 +1,74 @@
 <div
     class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
-    <!-- Header -->
-    <admin-page-header
-        [title]="'admin.pageBuilder.title'"
-        [showSearch]="true"
-        [showCreateButton]="true"
-        [isLoading]="store.isLoading()"
-        (createClick)="create()"
-    ></admin-page-header>
+    <admin-page-header [title]="'admin.pages.title' | transloco">
+        <ng-container actions>
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64"
+            >
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                ></mat-icon>
+                <input
+                    matInput
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="'admin.common.searchPlaceholder' | transloco"
+                />
+            </mat-form-field>
+            <button mat-flat-button [color]="'primary'" (click)="createPage()">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">{{
+                    'admin.pages.actions.create' | transloco
+                }}</span>
+            </button>
+        </ng-container>
+    </admin-page-header>
 
     <div class="flex flex-auto overflow-hidden">
         <div
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
-            @if (filtered().length > 0) {
-                <div class="grid">
-                    <div
-                        class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
-                    >
-                        <div>{{ 'admin.common.grid.uid' | transloco }}</div>
-                        <div class="hidden sm:block">
-                            {{ 'admin.common.grid.status' | transloco }}
-                        </div>
-                        <div class="hidden text-right sm:block">
-                            {{ 'admin.common.grid.actions' | transloco }}
-                        </div>
-                    </div>
-
-                    @for (p of filtered(); track p.id) {
-                        <div
-                            class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
-                        >
-                            <div class="truncate font-medium">
-                                {{ p.uid }}
-                            </div>
-                            <div class="hidden sm:block">
-                                <span
-                                    class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium"
-                                >
-                                    {{ p.status }}
-                                </span>
-                            </div>
-                            <div
-                                class="flex hidden items-center justify-end gap-2 sm:flex"
-                            >
-                                <button
-                                    mat-icon-button
-                                    (click)="editPage(p)"
-                                    [title]="
-                                        'admin.common.actions.edit' | transloco
-                                    "
-                                >
-                                    <mat-icon
-                                        svgIcon="heroicons_outline:pencil"
-                                    ></mat-icon>
-                                </button>
-                                <button
-                                    mat-icon-button
-                                    (click)="manageSlots(p)"
-                                    [title]="
-                                        'admin.pageBuilder.actions.manageSlots'
-                                            | transloco
-                                    "
-                                >
-                                    <mat-icon
-                                        svgIcon="heroicons_outline:squares-2x2"
-                                    ></mat-icon>
-                                </button>
-                                <button
-                                    mat-icon-button
-                                    color="warn"
-                                    (click)="deletePage(p)"
-                                    [title]="
-                                        'admin.common.actions.delete'
-                                            | transloco
-                                    "
-                                >
-                                    <mat-icon
-                                        svgIcon="heroicons_outline:trash"
-                                    ></mat-icon>
-                                </button>
-                            </div>
-                        </div>
-                    }
-                </div>
-            } @else {
-                <div
-                    class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'heroicons_outline:document-text'"
+                [emptyTitle]="'admin.pages.list.empty.title'"
+                [emptyDescription]="'admin.pages.list.empty.description'"
+                (actionClick)="onGridAction($event)"
+            >
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createPage()"
                 >
-                    {{ 'admin.common.noRecords' | transloco }}
-                </div>
-            }
+                    <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                    <span class="ml-2">{{
+                        'admin.pages.actions.create' | transloco
+                    }}</span>
+                </button>
+            </spa-admin-grid>
+
+            <ng-template #statusTemplate let-item>
+                <spa-status-badge
+                    [status]="item.status"
+                    size="sm"
+                ></spa-status-badge>
+            </ng-template>
+
+            <mat-paginator
+                [length]="totalItemsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                [pageSizeOptions]="[10, 24, 50, 100]"
+                (page)="onPageChange($event)"
+                class="border-t bg-gray-50 dark:bg-transparent"
+            ></mat-paginator>
         </div>
     </div>
 </div>
