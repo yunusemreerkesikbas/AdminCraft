@@ -5,10 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTabsModule } from '@angular/material/tabs';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
+import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
@@ -22,7 +22,6 @@ import { ComponentEntry, EntryFieldDefinition, EntryI18nDto } from '../../models
 import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
-
 
 interface ComponentEntryFormData {
     mode: 'create' | 'edit';
@@ -44,7 +43,6 @@ interface ComponentEntryFormData {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatTabsModule,
         MatIconModule,
         MatButtonModule,
         MatProgressSpinnerModule,
@@ -58,12 +56,14 @@ interface ComponentEntryFormData {
         SpaDialogContentComponent,
         SpaDialogFooterComponent,
         SpaMediaPickerComponent,
-        SpaResponsiveMediaPickerComponent
+        SpaResponsiveMediaPickerComponent,
+        SpaTabContainerComponent,
+        SpaTabContentDirective
     ]
 })
 export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean, ComponentEntryFormData> {
     override data = inject<ComponentEntryFormData>(MAT_DIALOG_DATA);
-    
+
     #entryService = inject(ComponentEntryService);
     #fieldService = inject(EntryFieldService);
     #mediaService = inject(MediaService);
@@ -71,21 +71,33 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     #langCtx = inject(LanguageContextService);
 
     override languages = this.#langCtx.supportedLanguages();
-    
+
     fieldDefinitions = signal<EntryFieldDefinition[]>([]);
     isLoading = signal<boolean>(false);
-    
-    canSave = computed(() => 
-        this.generalForm?.valid && 
-        !this.isSubmitting() && 
+
+    canSave = computed(() =>
+        this.generalForm?.valid &&
+        !this.isSubmitting() &&
         !this.isLoading()
     );
 
     statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
 
+    get tabs(): TabDefinition[] {
+        return [
+            { id: 'general', label: 'admin.components.entries.tabs.general', icon: 'settings' },
+            { id: 'media', label: 'admin.media.title', icon: 'image' },
+            ...this.languages.map(lang => ({
+                id: 'lang-' + lang,
+                label: lang.toUpperCase(),
+                icon: 'translate'
+            }))
+        ];
+    }
+
     override ngOnInit(): void {
         super.ngOnInit();
-        
+
         if (this.data.componentTypeId) {
             setTimeout(() => {
                 this.#loadFieldDefinitions();
@@ -152,7 +164,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
 
     #loadFieldDefinitions(): void {
         this.isLoading.set(true);
-        
+
         this.#fieldService.getFields(this.data.componentTypeId!)
             .pipe(take(1))
             .subscribe({
@@ -211,11 +223,11 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     protected getFieldLabelWithFallback(fieldKey: string): string {
         const i18nKey = `admin.components.entryFields.custom.${fieldKey}`;
         const translation = this.#transloco.translate(i18nKey);
-        
+
         if (translation !== i18nKey) {
             return translation;
         }
-        
+
         return this.#humanizeFieldKey(fieldKey);
     }
 
@@ -271,8 +283,8 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         ).subscribe({
             next: () => {
                 this.setSubmitting(false);
-                const msgKey = this.data.mode === 'create' 
-                    ? 'admin.components.entries.createSuccess' 
+                const msgKey = this.data.mode === 'create'
+                    ? 'admin.components.entries.createSuccess'
                     : 'admin.components.entries.updateSuccess';
                 this.notify.success(msgKey);
                 this.close(true);
@@ -294,7 +306,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         this.languages.forEach(lang => {
             const formData = this.i18nForms[lang].value;
             const dynamicFields: Record<string, any> = {};
-            
+
             Object.keys(formData).forEach(key => {
                 if (!baseFields.includes(key) && formData[key] !== null && formData[key] !== '') {
                     dynamicFields[key] = formData[key];

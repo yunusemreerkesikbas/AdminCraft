@@ -1,18 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnInit, Output, signal, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnInit, Output, signal, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
-import { SpaEmptyStateComponent } from 'app/shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
 import { SpaSearchInputComponent } from 'app/shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaStatusBadgeComponent } from 'app/shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
@@ -43,24 +41,25 @@ const DIALOG_CONFIG = {
         FormsModule,
         MatButtonModule,
         MatIconModule,
-        MatMenuModule,
         MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
         SpaSearchInputComponent,
         SpaSelectComponent,
         SpaStatusBadgeComponent,
-        SpaEmptyStateComponent,
+        SpaAdminGridComponent
     ],
     templateUrl: './component-list.component.html',
     styleUrls: ['./component-list.component.scss'],
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: fuseAnimations,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit {
     @Input() mode: 'admin' | 'picker' = 'admin';
     @Output() componentSelected = new EventEmitter<ComponentDto>();
+
+    @ViewChild('infoTemplate', { static: true }) infoTemplate!: TemplateRef<any>;
+    @ViewChild('pickerActionsTemplate', { static: true }) pickerActionsTemplate!: TemplateRef<any>;
 
     #dialog = inject(MatDialog);
     #transloco = inject(TranslocoService);
@@ -74,6 +73,14 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     protected selectedStatus = signal<ComponentStatus | null>(null);
     protected supportedLanguages = computed(() => this.#languageContext.supportedLanguages());
     protected searchTerm = signal<string>('');
+
+    protected columns: GridColumn<ComponentDto>[] = [];
+
+    protected actions: GridAction<ComponentDto>[] = [
+        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' },
+        { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
+    ];
+
     protected typeOptions = computed(() => {
         return this.componentTypes().map(type => ({
             value: type.id,
@@ -95,12 +102,37 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             return matchesSearch && matchesType && matchesStatus;
         });
     });
+
     protected readonly statusOptions = [
         { value: 'ALL', label: 'ALL' },
         ...Object.values(ComponentStatus).map(s => ({ value: s, label: s }))
     ];
 
     override ngOnInit(): void {
+        this.columns = [
+            {
+                key: 'info',
+                label: 'admin.common.grid.name',
+                type: 'custom',
+                template: this.infoTemplate,
+                width: '1fr'
+            },
+            {
+                key: 'componentTypeName',
+                label: 'admin.components.filters.type',
+                type: 'badge',
+                hideOn: 'sm',
+                width: '150px'
+            },
+            {
+                key: 'status',
+                label: 'admin.common.grid.status',
+                type: 'status',
+                hideOn: 'sm',
+                width: '120px'
+            }
+        ];
+
         super.ngOnInit();
         this.#loadComponentTypes();
     }
@@ -128,6 +160,19 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     protected override onLoadError(error: any): void {
         this.#notify.alert('admin.components.errors.loadFailed');
     }
+
+    protected onGridAction(event: { action: string; item: ComponentDto }): void {
+        switch (event.action) {
+            case 'edit':
+                this.editComponent(event.item.id);
+                break;
+            case 'delete':
+                this.deleteComponent(event.item.id);
+                break;
+        }
+    }
+
+
 
     onTypeFilterChange(typeId: number | null): void {
         this.selectedTypeId.set(typeId);
@@ -238,5 +283,9 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         dialogRef.afterClosed().pipe(take(1)).subscribe(() => {
             this.#loadComponentTypes();
         });
+    }
+
+    selectComponent(component: ComponentDto): void {
+        this.componentSelected.emit(component);
     }
 }

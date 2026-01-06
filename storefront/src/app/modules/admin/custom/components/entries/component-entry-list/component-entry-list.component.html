@@ -9,88 +9,52 @@
         </button>
     </div>
 
-    @if (store.isLoading()) {
-        <div class="flex flex-col items-center justify-center py-12">
-            <mat-spinner diameter="40"></mat-spinner>
-            <p class="text-secondary mt-4">
-                {{ 'admin.common.loading' | transloco }}
-            </p>
-        </div>
-    } @else if (store.items().length === 0) {
-        <spa-empty-state
-            [title]="'admin.components.entries.noEntries' | transloco"
-            [description]="'admin.components.entries.noEntriesDesc' | transloco"
-            icon="inbox"
+    <spa-admin-grid
+        [items]="store.items()"
+        [columns]="columns"
+        [actions]="actions"
+        [isLoading]="store.isLoading()"
+        [emptyIcon]="'inbox'"
+        [emptyTitle]="'admin.components.entries.noEntries'"
+        [emptyDescription]="'admin.components.entries.noEntriesDesc'"
+        (actionClick)="onGridAction($event)"
+    >
+        <button
+            emptyAction
+            mat-stroked-button
+            color="primary"
+            (click)="createEntry()"
         >
-            <button mat-stroked-button color="primary" (click)="createEntry()">
-                <mat-icon>add</mat-icon>
-                {{ 'admin.components.entries.addEntry' | transloco }}
-            </button>
-        </spa-empty-state>
-    } @else {
-        <div class="flex flex-col gap-2">
-            @for (entry of store.items(); track entry.id) {
-                <div
-                    class="bg-card flex flex-col justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-hover sm:flex-row sm:items-center"
-                    [@fadeInBottom]
+            <mat-icon>add</mat-icon>
+            {{ 'admin.components.entries.addEntry' | transloco }}
+        </button>
+    </spa-admin-grid>
+</div>
+
+<ng-template #infoTemplate let-entry let-value="value">
+    <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex items-center gap-3">
+            <span
+                class="text-secondary rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium dark:bg-slate-800"
+            >
+                {{ entry.uid }}
+            </span>
+            <spa-status-badge
+                [status]="entry.status"
+                size="sm"
+            ></spa-status-badge>
+            @if (!entry.isVisible) {
+                <mat-icon
+                    class="text-hint icon-size-4"
+                    [matTooltip]="'admin.components.entries.hidden' | transloco"
+                    >visibility_off</mat-icon
                 >
-                    <!-- Entry Info -->
-                    <div class="flex min-w-0 flex-col gap-1">
-                        <div class="flex items-center gap-3">
-                            <span
-                                class="text-secondary rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium dark:bg-slate-800"
-                            >
-                                {{ entry.uid }}
-                            </span>
-                            <spa-status-badge
-                                [status]="entry.status"
-                                size="sm"
-                            ></spa-status-badge>
-
-                            @if (!entry.isVisible) {
-                                <mat-icon
-                                    class="text-hint icon-size-4"
-                                    [matTooltip]="
-                                        'admin.components.entries.hidden'
-                                            | transloco
-                                    "
-                                    >visibility_off</mat-icon
-                                >
-                            }
-                        </div>
-
-                        <!-- Translation Preview (if available) -->
-                        @if (entry.translations && entry.translations['en']) {
-                            <span class="truncate text-sm font-medium">
-                                {{ entry.translations['en'].title || '-' }}
-                            </span>
-                        }
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
-                        <button
-                            mat-icon-button
-                            (click)="editEntry(entry.id)"
-                            [matTooltip]="
-                                'admin.common.actions.edit' | transloco
-                            "
-                        >
-                            <mat-icon>edit</mat-icon>
-                        </button>
-                        <button
-                            mat-icon-button
-                            color="warn"
-                            (click)="deleteEntry(entry)"
-                            [matTooltip]="
-                                'admin.common.actions.delete' | transloco
-                            "
-                        >
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    </div>
-                </div>
             }
         </div>
-    }
-</div>
+        @if (entry.translations && entry.translations['en']) {
+            <span class="truncate text-sm font-medium">
+                {{ entry.translations['en'].title || '-' }}
+            </span>
+        }
+    </div>
+</ng-template>

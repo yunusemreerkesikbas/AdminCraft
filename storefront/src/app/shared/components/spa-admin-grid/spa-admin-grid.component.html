@@ -1,0 +1,130 @@
+@if (isLoading) {
+    <div class="flex flex-col items-center justify-center p-12">
+        <mat-progress-spinner
+            mode="indeterminate"
+            diameter="48"
+        ></mat-progress-spinner>
+    </div>
+} @else if (items.length === 0) {
+    <div class="p-8 sm:p-16">
+        <spa-empty-state
+            [icon]="emptyIcon"
+            [title]="emptyTitle | transloco"
+            [description]="emptyDescription | transloco"
+        >
+            <ng-content select="[emptyAction]"></ng-content>
+        </spa-empty-state>
+    </div>
+} @else {
+    <div class="grid">
+        <div
+            class="spa-grid-header text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
+            [style.grid-template-columns]="gridTemplateColumns()"
+        >
+            @for (col of visibleColumns(); track col.key) {
+                <div [class]="col.cssClass">
+                    {{ col.label | transloco }}
+                </div>
+            }
+            <div class="text-right">
+                {{ 'admin.common.grid.actions' | transloco }}
+            </div>
+        </div>
+
+        @for (item of items; track $any(item).id || $index) {
+            <div
+                class="spa-grid-row grid items-center gap-4 border-b px-6 py-3 md:px-8"
+                [style.grid-template-columns]="gridTemplateColumns()"
+                (click)="onRowClick(item)"
+            >
+                @for (col of visibleColumns(); track col.key) {
+                    <div class="min-w-0" [class]="col.cssClass">
+                        @switch (col.type) {
+                            @case ('text') {
+                                <div
+                                    class="truncate font-medium text-slate-900 dark:text-slate-100"
+                                >
+                                    {{ getCellValue(item, col) }}
+                                </div>
+                                @if (
+                                    getSecondaryValue(item, col);
+                                    as secondary
+                                ) {
+                                    <div
+                                        class="truncate font-mono text-xs text-slate-400"
+                                    >
+                                        {{ secondary }}
+                                    </div>
+                                }
+                            }
+                            @case ('status') {
+                                <spa-status-badge
+                                    [status]="getCellValue(item, col)"
+                                    size="sm"
+                                ></spa-status-badge>
+                            }
+                            @case ('badge') {
+                                <span
+                                    class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                >
+                                    {{ getCellValue(item, col) }}
+                                </span>
+                            }
+                            @case ('date') {
+                                <span class="text-sm text-slate-500">
+                                    {{
+                                        getCellValue(item, col)
+                                            | date: 'mediumDate'
+                                    }}
+                                </span>
+                            }
+                            @case ('custom') {
+                                @if (col.template) {
+                                    <ng-container
+                                        [ngTemplateOutlet]="col.template"
+                                        [ngTemplateOutletContext]="{
+                                            $implicit: item,
+                                            column: col,
+                                            value: getCellValue(item, col),
+                                        }"
+                                    ></ng-container>
+                                }
+                            }
+                        }
+                    </div>
+                }
+
+                <div class="flex items-center justify-end gap-2">
+                    @if (actionsTemplate) {
+                        <ng-container
+                            [ngTemplateOutlet]="actionsTemplate"
+                            [ngTemplateOutletContext]="{ $implicit: item }"
+                        ></ng-container>
+                    } @else {
+                        @for (
+                            action of getVisibleActions(item);
+                            track action.action
+                        ) {
+                            <button
+                                mat-icon-button
+                                [color]="action.color"
+                                [matTooltip]="action.label | transloco"
+                                (click)="
+                                    onActionClick(action.action, item, $event)
+                                "
+                            >
+                                @if (isHeroIcon(action.icon)) {
+                                    <mat-icon
+                                        [svgIcon]="action.icon"
+                                    ></mat-icon>
+                                } @else {
+                                    <mat-icon>{{ action.icon }}</mat-icon>
+                                }
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
