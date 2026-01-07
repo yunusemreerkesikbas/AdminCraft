@@ -76,7 +76,14 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     long countByUploadedBy(Long userId);
 
     // Search queries
-    List<Media> findByOriginalNameContainingIgnoreCase(String originalName);
+    /**
+     * Paginated search across originalName and mimeType fields.
+     * Supports dynamic sorting and pagination.
+     */
+    @Query("SELECT m FROM Media m WHERE " +
+            "LOWER(m.originalName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(m.mimeType) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Media> searchByQuery(@Param("query") String query, Pageable pageable);
 
     // Usage queries
     List<Media> findByUsageCountGreaterThan(Integer count);

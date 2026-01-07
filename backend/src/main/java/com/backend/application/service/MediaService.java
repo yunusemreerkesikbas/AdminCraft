@@ -54,6 +54,16 @@ public interface MediaService {
      */
     Page<Media> findAll(Pageable pageable);
 
+    /**
+     * Search media with pagination.
+     * Searches across originalName and mimeType fields.
+     *
+     * @param pageable    pagination parameters
+     * @param searchQuery optional search query (min 2 chars)
+     * @return paginated, filtered media list
+     */
+    Page<Media> search(Pageable pageable, String searchQuery);
+
     // File retrieval
     byte[] getFileContent(String fileName);
 

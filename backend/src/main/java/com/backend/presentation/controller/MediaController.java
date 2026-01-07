@@ -47,7 +47,11 @@ import com.backend.presentation.dto.response.MediaI18nResponse;
 import com.backend.presentation.dto.response.MediaListResponse;
 import com.backend.presentation.dto.response.MediaResponse;
 import com.backend.presentation.dto.response.MediaVariantResponse;
+import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -196,20 +200,47 @@ public class MediaController {
         }
 
         /**
-         * Get all media with optional pagination.
-         * Returns lightweight MediaListResponse for optimal performance.
+         * Get all media with optional pagination, sorting, and search.
+         * Returns lightweight MediaListResponse with sortConfig for dynamic sort UI.
          */
         @GetMapping
-        @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files with minimal data for grid display.")
-        public ResponseEntity<ApiResponse<Page<MediaListResponse>>> getAllMedia(
+        @Operation(summary = "List all media", description = "Retrieves a paginated list of all media files with minimal data for grid display. Supports search across originalName and mimeType.")
+        public ResponseEntity<ApiResponse<PageableResponse<MediaListResponse>>> getAllMedia(
                         @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") @Min(0) int page,
                         @Parameter(description = "Page size") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+                        @Parameter(description = "Sort field and direction (e.g., createdAt,desc)") @RequestParam(required = false) String sort,
+                        @Parameter(description = "Search query (min 2 chars, searches originalName and mimeType)") @RequestParam(required = false) String search,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
-                        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-                        Page<Media> mediaPage = mediaService.findAll(pageRequest);
-                        Page<MediaListResponse> responsePage = mediaPage.map(MediaListResponse::from);
-                        return ResponseEntity.ok(ApiResponse.success(responsePage));
+                        // Parse and validate sort parameter
+                        String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
+                                        SortableFieldsConfig.MEDIA_DEFAULT_SORT);
+                        Sort sortObj = SortParseUtil.parse(effectiveSort, SortableFieldsConfig.MEDIA_ALLOWED_FIELDS,
+                                        SortableFieldsConfig.MEDIA_DEFAULT_SORT);
+
+                        PageRequest pageRequest = PageRequest.of(page, size, sortObj);
+
+                        // Use search method (handles null/short queries internally)
+                        Page<Media> mediaPage = mediaService.search(pageRequest, search);
+
+                        // Map to response DTOs
+                        List<MediaListResponse> content = mediaPage.getContent().stream()
+                                        .map(MediaListResponse::from)
+                                        .toList();
+
+                        // Build sortConfig
+                        SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.MEDIA_SORT_OPTIONS);
+
+                        PageableResponse<MediaListResponse> response = PageableResponse.fromMapped(mediaPage, content,
+                                        sortConfig);
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Invalid sort parameter: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.sort.invalid",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error getting all media: {}", ex.getMessage());
                         String message = messageSource.getMessage("media.list.error", new Object[] { ex.getMessage() },

@@ -208,6 +208,16 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<Media> search(Pageable pageable, String searchQuery) {
+        // If search query is null/empty or less than 2 chars, return all
+        if (searchQuery == null || searchQuery.trim().length() < 2) {
+            return mediaRepository.findAll(pageable);
+        }
+        return mediaRepository.searchByQuery(searchQuery.trim(), pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public byte[] getFileContent(String fileName) {
         Media media = mediaRepository.findByFileName(fileName)
                 .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileName));

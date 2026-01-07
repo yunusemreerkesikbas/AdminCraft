@@ -217,6 +217,14 @@ export const langTR = {
             },
             manage: 'Yönet',
         },
+        sort: {
+            newest: 'En Yeni',
+            oldest: 'En Eski',
+            nameAsc: 'Ad (A-Z)',
+            nameDesc: 'Ad (Z-A)',
+            sizeAsc: 'Boyut (Küçükten)',
+            sizeDesc: 'Boyut (Büyükten)',
+        },
         placeholders: {
             selectType: 'Tür Seçiniz',
             selectStatus: 'Durum Seçiniz'
