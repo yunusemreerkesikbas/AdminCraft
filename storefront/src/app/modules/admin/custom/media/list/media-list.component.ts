@@ -8,7 +8,6 @@ import {
     Input,
     OnInit,
     Output,
-    signal,
     TemplateRef,
     ViewChild
 } from '@angular/core';
@@ -20,15 +19,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BaseCrudListComponent } from '@core/crud/base-crud-list.component';
+import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
-import { debounceTime, Observable, take, takeUntil } from 'rxjs';
+import { take, takeUntil } from 'rxjs';
 import { MediaDetailDialogComponent } from '../dialogs/media-detail-dialog/media-detail-dialog.component';
 import { MediaUploadDialogComponent } from '../dialogs/media-upload-dialog/media-upload-dialog.component';
 import { MediaService } from '../media.service';
@@ -51,13 +51,14 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
         MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaAdminGridComponent
+        SpaAdminGridComponent,
+        MatSelectModule
     ],
     templateUrl: './media-list.component.html',
     styles: [],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MediaListComponent extends BaseCrudListComponent<Media, FormData, UpdateMediaRequest> implements OnInit {
+export class MediaListComponent extends BasePaginatedListComponent<Media, FormData, UpdateMediaRequest> implements OnInit {
 
     @Input() selectionMode = false;
     @Output() onMediaSelect = new EventEmitter<Media>();
@@ -70,14 +71,13 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
     #matDialog = inject(MatDialog);
     #notificationService = inject(NotificationService);
     #confirmationService = inject(ConfirmationService);
-    #transloco = inject(TranslocoService);
     #tenantContext = inject(TenantContextService);
 
-    protected pageSizeSig = signal(24);
-    protected pageIndexSig = signal(0);
-    protected totalItemsSig = computed(() => this.store.page()?.totalElements ?? 0);
+    protected override readonly defaultSort = 'createdAt,desc';
+    protected override readonly defaultPageSize = 24;
+
     protected searchInputControl = new FormControl('');
-    protected paginatedItemsSig = computed(() => this.store.filteredItems());
+    protected paginatedItemsSig = computed(() => this.store.items());
 
     protected columns: GridColumn<Media>[] = [];
     protected actions: GridAction<Media>[] = [];
@@ -160,41 +160,13 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
         ];
     }
 
-    protected override loadItems(): void {
-        this.store.setLoading(true);
-        this.service.listPaged({
-            page: this.pageIndexSig(),
-            size: this.pageSizeSig(),
-            sort: 'createdAt,desc'
-        }).subscribe({
-            next: (page) => {
-                this.store.setPagedItems(page);
-                this.store.setLoading(false);
-            },
-            error: (error) => {
-                this.onLoadError(error);
-                this.store.setLoading(false);
-            }
-        });
-    }
-
-    protected override fetchItems(): Observable<Media[]> {
-        return this.service.list();
-    }
-
     #setupSearchDebounce(): void {
         this.searchInputControl.valueChanges.pipe(
-            debounceTime(300),
             takeUntil(this.destroy$)
         ).subscribe(query => {
-            this.onSearchChange(query || '');
+            this.onSearchInput(query || '');
+            this.store.setSearchQuery(query || '');
         });
-    }
-
-    protected override onSearchChange(query: string): void {
-        super.onSearchChange(query);
-        this.store.setSearchQuery(query);
-        this.pageIndexSig.set(0);
     }
 
     openUploadDialog(): void {
@@ -272,14 +244,13 @@ export class MediaListComponent extends BaseCrudListComponent<Media, FormData, U
          this.#notificationService.alert('admin.media.messages.deleteError');
     }
 
-    onPageChange(event: PageEvent): void {
-        this.pageIndexSig.set(event.pageIndex);
-        this.pageSizeSig.set(event.pageSize);
-        this.loadItems();
+    override onPageChange(event: PageEvent): void {
+        super.onPageChange(event);
     }
 
-    // TrackByFn removed
-
+    onSortDropdownChange(sortCode: string): void {
+        this.onSortChange(sortCode);
+    }
 
     getMediaTypeClass(media: Media): string {
         switch (media.fileType) {

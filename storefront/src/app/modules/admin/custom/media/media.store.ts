@@ -16,23 +16,6 @@ export class MediaStore extends CrudStore<Media> {
     readonly selectedItemsSig = signal<Media[]>([]);
     readonly selectionModeSig = signal(false);
 
-    readonly filteredItems = computed(() => {
-        let items = this.items();
-        const query = this.searchQuerySig().toLowerCase();
-        const type = this.typeFilterSig();
-
-        if (query) {
-            items = items.filter(m =>
-                m.originalName.toLowerCase().includes(query) ||
-                m.fileName.toLowerCase().includes(query)
-            );
-        }
-        if (type) {
-            items = items.filter(m => m.fileType === type);
-        }
-        return items;
-    });
-
     readonly hasSelection = computed(() => this.selectedItemsSig().length > 0);
     readonly selectionCount = computed(() => this.selectedItemsSig().length);
 
@@ -46,15 +29,14 @@ export class MediaStore extends CrudStore<Media> {
     }
 
     selectAll(): void {
-        this.selectedItemsSig.set([...this.filteredItems()]);
+        // Select all currently loaded items (server already filtered)
+        this.selectedItemsSig.set([...this.items()]);
     }
 
     clearSelection(): void {
         this.selectedItemsSig.set([]);
         this.selectionModeSig.set(false);
     }
-
-
 
     isSelected(media: Media): boolean {
         return this.selectedItemsSig().some(m => m.id === media.id);

@@ -4,7 +4,6 @@ import { EndpointKey } from '@modules/admin/api-endpoints';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiResponse, CrudEntity, Page, PageRequest, SearchRequest } from './api.types';
-import { QueryUtil } from './query.util';
 
 export interface CrudEndpoints {
   list: EndpointKey;
@@ -24,7 +23,7 @@ export abstract class CrudHttpService<
   protected abstract endpoints: CrudEndpoints;
 
   list(pageRequest?: PageRequest): Observable<T[]> {
-    const queryParams = pageRequest ? QueryUtil.toHttpParams(QueryUtil.buildPageQuery(pageRequest)) : undefined;
+    const queryParams = pageRequest ? this.#buildQueryParams(pageRequest) : undefined;
     
     return this.api.get<ApiResponse<T[]>>(
       this.endpoints.list,
@@ -35,37 +34,31 @@ export abstract class CrudHttpService<
     );
   }
 
-  listPaged(pageRequest: PageRequest): Observable<Page<T>> {
-    const queryParams = QueryUtil.toHttpParams(QueryUtil.buildPageQuery(pageRequest));
-    
+  listPaged(request: SearchRequest): Observable<Page<T>> {
     return this.api.get<ApiResponse<Page<T>>>(
       this.endpoints.list,
       undefined,
-      queryParams
+      this.#buildQueryParams(request)
     ).pipe(
       map((response) => response.data)
     );
   }
 
   search(searchRequest: SearchRequest): Observable<T[]> {
-    const queryParams = QueryUtil.toHttpParams(QueryUtil.buildSearchQuery(searchRequest));
-    
     return this.api.get<ApiResponse<T[]>>(
       this.endpoints.list,
       undefined,
-      queryParams
+      this.#buildQueryParams(searchRequest)
     ).pipe(
       map((response) => response.data || [])
     );
   }
 
   searchPaged(searchRequest: SearchRequest): Observable<Page<T>> {
-    const queryParams = QueryUtil.toHttpParams(QueryUtil.buildSearchQuery(searchRequest));
-    
     return this.api.get<ApiResponse<Page<T>>>(
       this.endpoints.list,
       undefined,
-      queryParams
+      this.#buildQueryParams(searchRequest)
     ).pipe(
       map((response) => response.data)
     );
@@ -145,6 +138,18 @@ export abstract class CrudHttpService<
     return this.api.delete<ApiResponse<R>>(endpoint, params).pipe(
       map((response) => response.data)
     );
+  }
+
+  /** Builds query params from PageRequest or SearchRequest */
+  #buildQueryParams(request: PageRequest | SearchRequest): Record<string, any> {
+    const params: Record<string, any> = {};
+    
+    if (request.page != null) params.page = request.page;
+    if (request.size != null) params.size = request.size;
+    if (request.sort) params.sort = request.sort;
+    if ('search' in request && request.search) params.search = request.search;
+    
+    return params;
   }
 }
 

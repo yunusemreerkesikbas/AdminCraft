@@ -219,6 +219,14 @@ export const langEN = {
             },
             manage: 'Manage',
         },
+        sort: {
+            newest: 'Newest First',
+            oldest: 'Oldest First',
+            nameAsc: 'Name (A-Z)',
+            nameDesc: 'Name (Z-A)',
+            sizeAsc: 'Size (Smallest)',
+            sizeDesc: 'Size (Largest)',
+        },
         placeholders: {
             selectType: 'Select Type',
             selectStatus: 'Select Status'

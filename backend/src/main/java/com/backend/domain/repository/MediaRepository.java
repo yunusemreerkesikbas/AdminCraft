@@ -87,7 +87,10 @@ public interface MediaRepository {
     long countByUploadedBy(Long userId);
 
     // Search queries
-    List<Media> findByOriginalNameContainingIgnoreCase(String originalName);
+    /**
+     * Paginated search across multiple fields (originalName, mimeType).
+     */
+    Page<Media> searchByQuery(String query, Pageable pageable);
 
     // Usage queries
     List<Media> findByUsageCountGreaterThan(Integer count);

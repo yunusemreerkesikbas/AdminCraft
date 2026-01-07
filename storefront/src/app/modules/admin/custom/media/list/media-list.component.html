@@ -20,6 +20,27 @@
                 />
             </mat-form-field>
 
+            <!-- Sort Dropdown -->
+            @if (availableSortsSig().length > 0) {
+                <mat-form-field
+                    class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded ml-4 min-w-40"
+                >
+                    <mat-select
+                        [value]="sortCodeSig()"
+                        (selectionChange)="onSortDropdownChange($event.value)"
+                    >
+                        @for (
+                            option of availableSortsSig();
+                            track option.code
+                        ) {
+                            <mat-option [value]="option.code">
+                                {{ option.labelKey | transloco }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            }
+
             <button
                 class="ml-4"
                 mat-flat-button
@@ -128,7 +149,7 @@
             <mat-paginator
                 class="z-10 border-b bg-gray-50 sm:absolute sm:inset-x-0 sm:bottom-0 sm:border-b-0 sm:border-t dark:bg-transparent"
                 [ngClass]="{ 'pointer-events-none': store.isLoading() }"
-                [length]="totalItemsSig()"
+                [length]="totalElementsSig()"
                 [pageIndex]="pageIndexSig()"
                 [pageSize]="pageSizeSig()"
                 [pageSizeOptions]="[5, 10, 25, 100]"

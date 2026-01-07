@@ -16,6 +16,28 @@ export interface Page<T> {
   numberOfElements: number;
   empty: boolean;
 }
+export interface SortOption {
+  code: string;
+  labelKey: string;
+  isDefault?: boolean;
+}
+
+export interface CurrentSort {
+  field: string;
+  direction: 'asc' | 'desc';
+  code: string;
+}
+
+export interface SortConfig {
+  currentSort: CurrentSort | null;
+  availableSorts: SortOption[];
+}
+export interface PageWithSort<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  sortConfig?: SortConfig;
+}
 
 export interface PageRequest {
   page?: number;
@@ -36,8 +58,3 @@ export interface CrudOptions {
   endpoint: string;
   unwrapData?: boolean;
 }
-
-export interface QueryParams {
-  [key: string]: string | number | boolean | undefined;
-}
-

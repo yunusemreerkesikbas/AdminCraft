@@ -1,5 +1,5 @@
 import { computed, signal, Signal, WritableSignal } from '@angular/core';
-import { CrudEntity, Page } from './api.types';
+import { CrudEntity, Page, PageWithSort, SortConfig } from './api.types';
 
 export interface CrudState<T extends CrudEntity> {
   items: T[];
@@ -7,6 +7,7 @@ export interface CrudState<T extends CrudEntity> {
   isLoading: boolean;
   error: string | null;
   page: PageState | null;
+  sortConfig: SortConfig | null;
 }
 
 export interface PageState {
@@ -24,6 +25,7 @@ export class CrudStore<T extends CrudEntity> {
   readonly isLoading: Signal<boolean>;
   readonly error: Signal<string | null>;
   readonly page: Signal<PageState | null>;
+  readonly sortConfig: Signal<SortConfig | null>;
   readonly hasItems: Signal<boolean>;
   readonly isEmpty: Signal<boolean>;
   readonly totalElements: Signal<number>;
@@ -35,6 +37,7 @@ export class CrudStore<T extends CrudEntity> {
       isLoading: false,
       error: null,
       page: null,
+      sortConfig: null,
       ...initialState,
     });
 
@@ -43,6 +46,7 @@ export class CrudStore<T extends CrudEntity> {
     this.isLoading = computed(() => this.#state().isLoading);
     this.error = computed(() => this.#state().error);
     this.page = computed(() => this.#state().page);
+    this.sortConfig = computed(() => this.#state().sortConfig);
     this.hasItems = computed(() => this.#state().items.length > 0);
     this.isEmpty = computed(() => this.#state().items.length === 0);
     this.totalElements = computed(() => this.#state().page?.totalElements || this.#state().items.length);
@@ -66,6 +70,22 @@ export class CrudStore<T extends CrudEntity> {
         totalElements: page.totalElements,
         totalPages: page.totalPages,
       },
+      error: null,
+    }));
+  }
+
+  /** Sets paged items with sortConfig for dynamic sorting */
+  setPagedItemsWithSort(page: PageWithSort<T>, currentPage: number, currentSize: number): void {
+    this.#state.update(state => ({
+      ...state,
+      items: page.content,
+      page: {
+        number: currentPage,
+        size: currentSize,
+        totalElements: page.totalElements,
+        totalPages: page.totalPages,
+      },
+      sortConfig: page.sortConfig || null,
       error: null,
     }));
   }
@@ -126,6 +146,7 @@ export class CrudStore<T extends CrudEntity> {
       isLoading: false,
       error: null,
       page: null,
+      sortConfig: null,
     });
   }
 

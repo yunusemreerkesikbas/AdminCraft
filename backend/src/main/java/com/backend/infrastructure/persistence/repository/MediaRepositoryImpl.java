@@ -173,8 +173,8 @@ public class MediaRepositoryImpl implements MediaRepository {
     }
 
     @Override
-    public List<Media> findByOriginalNameContainingIgnoreCase(String originalName) {
-        return jpaRepository.findByOriginalNameContainingIgnoreCase(originalName);
+    public Page<Media> searchByQuery(String query, Pageable pageable) {
+        return jpaRepository.searchByQuery(query, pageable);
     }
 
     @Override
