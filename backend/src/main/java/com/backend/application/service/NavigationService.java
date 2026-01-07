@@ -1,7 +1,9 @@
 package com.backend.application.service;
 
-import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.request.CreateEntryCompositeRequest;
@@ -20,7 +22,14 @@ import com.backend.application.dto.response.NavigationNodeResponse;
 
 public interface NavigationService {
 
-  List<NavigationNodeResponse> getRootNodes();
+  /**
+   * Search root nodes with pagination support.
+   * 
+   * @param pageable    pagination parameters
+   * @param searchQuery optional search query (min 2 chars)
+   * @return paginated root nodes
+   */
+  Page<NavigationNodeResponse> searchRootNodes(Pageable pageable, String searchQuery);
 
   Optional<NavigationNodeResponse> getNodeById(Long id);
 

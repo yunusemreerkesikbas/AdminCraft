@@ -26,6 +26,8 @@
         <!-- Search -->
         @if (showSearch) {
             <spa-search-input
+                [ngModel]="null"
+                (ngModelChange)="onSearch($event)"
                 [placeholder]="
                     searchPlaceholder
                         ? (searchPlaceholder | transloco)

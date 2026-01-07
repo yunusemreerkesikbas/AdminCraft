@@ -8,6 +8,26 @@
         [createButtonText]="'admin.navigation.nodes.create' | transloco"
         (createClick)="openCreateDialog()"
     >
+        <ng-container actions>
+            <!-- Search -->
+            <div class="mr-4">
+                <spa-search-input
+                    [formControl]="searchInputControl"
+                    [placeholder]="'admin.common.actions.search' | transloco"
+                    [styleClasses]="'fuse-mat-no-subscript'"
+                ></spa-search-input>
+            </div>
+
+            <!-- Sort Dropdown -->
+            @if (availableSortsSig().length > 0) {
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            }
+        </ng-container>
     </admin-page-header>
 
     <div class="flex flex-auto overflow-hidden">
@@ -15,10 +35,10 @@
             class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
         >
             <spa-admin-grid
-                [items]="rootNodesSig()"
+                [items]="paginatedItemsSig()"
                 [columns]="columns"
                 [actions]="actions"
-                [isLoading]="isLoadingSig()"
+                [isLoading]="store.isLoading()"
                 [emptyIcon]="'heroicons_outline:bars-3'"
                 [emptyTitle]="'admin.common.noRecords'"
                 [emptyDescription]="'admin.common.actions.createFirst'"
@@ -37,6 +57,18 @@
                     }}</span>
                 </button>
             </spa-admin-grid>
+
+            <!-- Paginator -->
+
+            @if (totalElementsSig() > 0) {
+                <spa-admin-paginator
+                    [length]="totalElementsSig()"
+                    [pageSize]="pageSizeSig()"
+                    [pageIndex]="pageIndexSig()"
+                    (pageCallback)="onPageChange($event)"
+                >
+                </spa-admin-paginator>
+            }
         </div>
     </div>
 </div>

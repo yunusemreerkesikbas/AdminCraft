@@ -224,6 +224,12 @@ export const langTR = {
             nameDesc: 'Ad (Z-A)',
             sizeAsc: 'Boyut (Küçükten)',
             sizeDesc: 'Boyut (Büyükten)',
+            titleAsc: 'Başlık (A-Z)',
+            titleDesc: 'Başlık (Z-A)',
+            uidAsc: 'UID (A-Z)',
+            uidDesc: 'UID (Z-A)',
+            orderAsc: 'Sıra (Artan)',
+            orderDesc: 'Sıra (Azalan)',
         },
         placeholders: {
             selectType: 'Tür Seçiniz',
@@ -544,6 +550,7 @@ export const langTR = {
         },
         navigation: {
             title: 'Navigasyon Yönetimi',
+            subtitle: 'Site navigasyon menülerini ve yapısını yönetin',
             nodes: {
                 title: 'Düğümler',
                 create: 'Düğüm Oluştur',

@@ -226,6 +226,12 @@ export const langEN = {
             nameDesc: 'Name (Z-A)',
             sizeAsc: 'Size (Smallest)',
             sizeDesc: 'Size (Largest)',
+            titleAsc: 'Title (A-Z)',
+            titleDesc: 'Title (Z-A)',
+            uidAsc: 'UID (A-Z)',
+            uidDesc: 'UID (Z-A)',
+            orderAsc: 'Sort Order (Low-High)',
+            orderDesc: 'Sort Order (High-Low)',
         },
         placeholders: {
             selectType: 'Select Type',
@@ -548,6 +554,7 @@ export const langEN = {
         },
         navigation: {
             title: 'Navigation Management',
+            subtitle: 'Manage your site navigation menus and structure',
             nodes: {
                 title: 'Nodes',
                 create: 'Create Node',

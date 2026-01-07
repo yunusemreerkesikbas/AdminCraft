@@ -1,0 +1,9 @@
+@if (availableSorts().length > 0) {
+    <spa-select
+        class="ml-4 min-w-40"
+        [options]="selectOptions()"
+        [value]="sortCode()"
+        (changed)="onSelectionChange($event)"
+    >
+    </spa-select>
+}

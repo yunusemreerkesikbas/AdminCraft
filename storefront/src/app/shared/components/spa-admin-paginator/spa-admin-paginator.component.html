@@ -1,0 +1,11 @@
+<div class="bg-card sticky bottom-0 z-10 w-full border-t">
+    <mat-paginator
+        [length]="length"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
+        [showFirstLastButtons]="showFirstLastButtons"
+        (page)="onPageChange($event)"
+    >
+    </mat-paginator>
+</div>

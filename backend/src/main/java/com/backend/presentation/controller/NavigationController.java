@@ -1,7 +1,11 @@
 package com.backend.presentation.controller;
 
-import java.util.List;
+import java.util.Locale;
 
+import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,7 +16,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.request.CreateEntryCompositeRequest;
@@ -35,9 +41,14 @@ import com.backend.application.dto.response.NavigationNodeResponse;
 import com.backend.application.service.NavigationI18nService;
 import com.backend.application.service.NavigationService;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -52,12 +63,45 @@ public class NavigationController {
   private final NavigationService navigationService;
   private final NavigationI18nService navigationI18nService;
 
+  private final MessageSource messageSource;
+
   // ==================== Node Endpoints ====================
 
   @GetMapping("/nodes")
-  public ResponseEntity<ApiResponse<List<NavigationNodeResponse>>> getRootNodes() {
-    List<NavigationNodeResponse> nodes = navigationService.getRootNodes();
-    return ResponseEntity.ok(ApiResponse.success(nodes));
+  public ResponseEntity<ApiResponse<PageableResponse<NavigationNodeResponse>>> getRootNodes(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+      @RequestParam(required = false) String sort,
+      @RequestParam(required = false) String search,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+
+    try {
+      String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
+          SortableFieldsConfig.NAVIGATION_NODE_DEFAULT_SORT);
+      Sort sortObj = SortParseUtil.parse(effectiveSort, SortableFieldsConfig.NAVIGATION_NODE_ALLOWED_FIELDS,
+          SortableFieldsConfig.NAVIGATION_NODE_DEFAULT_SORT);
+
+      PageRequest pageRequest = PageRequest.of(page, size, sortObj);
+      Page<NavigationNodeResponse> nodes = navigationService.searchRootNodes(pageRequest, search);
+
+      SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.NAVIGATION_NODE_SORT_OPTIONS);
+
+
+      PageableResponse<NavigationNodeResponse> response = PageableResponse.from(nodes, sortConfig);
+
+      return ResponseEntity.ok(ApiResponse.success(response));
+    } catch (IllegalArgumentException ex) {
+      String message = messageSource.getMessage("navigation.sort.invalid",
+          new Object[] { ex.getMessage() },
+          Locale.forLanguageTag(languageCode));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(message));
+    } catch (Exception ex) {
+      String message = messageSource.getMessage("navigation.list.error", new Object[] { ex.getMessage() },
+          Locale.forLanguageTag(languageCode));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(ApiResponse.error(message));
+    }
   }
 
   @GetMapping("/nodes/{id}")

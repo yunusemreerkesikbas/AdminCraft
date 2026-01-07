@@ -3,11 +3,16 @@ package com.backend.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.domain.entity.NavigationNode;
 
 public interface NavigationNodeRepository {
 
-  List<NavigationNode> findRootNodes();
+  Page<NavigationNode> findRootNodesPaged(Pageable pageable);
+
+  Page<NavigationNode> searchRootNodesByQuery(String query, Pageable pageable);
 
   Optional<NavigationNode> findById(Long id);
 

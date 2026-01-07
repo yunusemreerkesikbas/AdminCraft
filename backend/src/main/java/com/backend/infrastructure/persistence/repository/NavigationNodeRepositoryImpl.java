@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,11 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class NavigationNodeRepositoryImpl implements NavigationNodeRepository {
 
   private final NavigationNodeJpaRepository jpaRepository;
-
-  @Override
-  public List<NavigationNode> findRootNodes() {
-    return jpaRepository.findByParentIdIsNullOrderBySortOrderAscIdAsc();
-  }
 
   @Override
   public Optional<NavigationNode> findById(Long id) {
@@ -100,11 +97,19 @@ public class NavigationNodeRepositoryImpl implements NavigationNodeRepository {
     Integer result = jpaRepository.findMaxChildSortOrderByParentId(parentId);
     return result != null ? result : -1;
   }
+
+  @Override
+  public Page<NavigationNode> findRootNodesPaged(Pageable pageable) {
+    return jpaRepository.findByParentIdIsNull(pageable);
+  }
+
+  @Override
+  public Page<NavigationNode> searchRootNodesByQuery(String query, Pageable pageable) {
+    return jpaRepository.searchRootNodesByQuery(query, pageable);
+  }
 }
 
 interface NavigationNodeJpaRepository extends JpaRepository<NavigationNode, Long> {
-
-  List<NavigationNode> findByParentIdIsNullOrderBySortOrderAscIdAsc();
 
   List<NavigationNode> findByParentIdOrderBySortOrderAscIdAsc(Long parentId);
 
@@ -169,4 +174,21 @@ interface NavigationNodeJpaRepository extends JpaRepository<NavigationNode, Long
 
   @Query("SELECT COALESCE(MAX(n.sortOrder), -1) FROM NavigationNode n WHERE n.parentId = :parentId")
   Integer findMaxChildSortOrderByParentId(@Param("parentId") Long parentId);
+
+  // Pagination methods for root nodes list
+  Page<NavigationNode> findByParentIdIsNull(Pageable pageable);
+
+  /**
+   * Paginated search across root nodes (parent_id IS NULL).
+   * Searches uid field and i18n title via LEFT JOIN.
+   * <p>
+   * The {@code query} parameter must contain at least 2 characters; shorter queries
+   * are rejected by the service layer before invoking this repository method.
+   */
+  @Query("SELECT DISTINCT n FROM NavigationNode n " +
+      "LEFT JOIN n.i18nContent i18n " +
+      "WHERE n.parentId IS NULL AND (" +
+      "LOWER(n.uid) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+      "LOWER(i18n.title) LIKE LOWER(CONCAT('%', :query, '%')))")
+  Page<NavigationNode> searchRootNodesByQuery(@Param("query") String query, Pageable pageable);
 }

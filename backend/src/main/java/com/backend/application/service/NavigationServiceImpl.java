@@ -12,6 +12,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,11 +61,17 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<NavigationNodeResponse> getRootNodes() {
-    List<NavigationNode> roots = nodeRepository.findRootNodes();
-    return roots.stream()
-        .map(this::mapToNodeResponseWithI18n)
-        .toList();
+  public Page<NavigationNodeResponse> searchRootNodes(Pageable pageable, String searchQuery) {
+    Page<NavigationNode> nodes;
+
+    // Min 2 chars required for search (consistent with Sprint 38 Media pattern)
+    if (searchQuery == null || searchQuery.trim().length() < 2) {
+      nodes = nodeRepository.findRootNodesPaged(pageable);
+    } else {
+      nodes = nodeRepository.searchRootNodesByQuery(searchQuery.trim(), pageable);
+    }
+
+    return nodes.map(this::mapToNodeResponseWithI18n);
   }
 
   @Override
