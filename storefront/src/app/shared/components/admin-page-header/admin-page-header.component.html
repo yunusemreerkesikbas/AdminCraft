@@ -6,23 +6,36 @@
         </div>
     }
 
-    <!-- Title and Subtitle -->
-    <div>
-        <div class="text-2xl font-semibold">
-            {{ title | transloco }}
-        </div>
-        @if (subtitle) {
-            <div class="text-secondary mt-1 text-sm">
-                {{ subtitle | transloco }}
+    <!-- Left Section: Title, Subtitle, and Create Button -->
+    <div class="flex items-center gap-4">
+        <div>
+            <div class="text-2xl font-semibold">
+                {{ title | transloco }}
             </div>
+            @if (subtitle) {
+                <div class="text-secondary mt-1 text-sm">
+                    {{ subtitle | transloco }}
+                </div>
+            }
+        </div>
+
+        <!-- Create Button (Moved to Left) -->
+        @if (showCreateButton) {
+            <button mat-flat-button color="primary" (click)="onCreateClick()">
+                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
+                <span class="ml-2">{{
+                    createButtonText
+                        ? (createButtonText | transloco)
+                        : ('admin.common.actions.create' | transloco)
+                }}</span>
+            </button>
         }
+
+        <ng-content select="[after-create]"></ng-content>
     </div>
 
-    <!-- Actions -->
+    <!-- Right Section: Search and Actions -->
     <div class="flex items-center gap-2">
-        <!-- Custom Actions Slot -->
-        <ng-content select="[actions]"></ng-content>
-
         <!-- Search -->
         @if (showSearch) {
             <spa-search-input
@@ -36,16 +49,7 @@
             ></spa-search-input>
         }
 
-        <!-- Create Button -->
-        @if (showCreateButton) {
-            <button mat-flat-button color="primary" (click)="onCreateClick()">
-                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
-                <span class="ml-2">{{
-                    createButtonText
-                        ? (createButtonText | transloco)
-                        : ('admin.common.actions.create' | transloco)
-                }}</span>
-            </button>
-        }
+        <!-- Custom Actions Slot (e.g., Sort Dropdown) -->
+        <ng-content select="[actions]"></ng-content>
     </div>
 </div>

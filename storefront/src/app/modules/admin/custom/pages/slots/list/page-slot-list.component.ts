@@ -8,6 +8,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
 import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -32,7 +33,8 @@ import { CreatePageSlotRequest, PageSlotResponse, UpdatePageSlotRequest } from '
         MatChipsModule,
         MatProgressSpinnerModule,
         TranslocoModule,
-        MatDialogModule
+        MatDialogModule,
+        AdminPageHeaderComponent
     ]
 })
 export class PageSlotListComponent implements OnInit {

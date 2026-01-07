@@ -9,7 +9,6 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
-import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
@@ -32,7 +31,6 @@ import { NavigationStore } from '../navigation.store';
         SpaAdminGridComponent,
         SpaAdminPaginatorComponent,
         SpaAdminSortDropdownComponent,
-        SpaSearchInputComponent,
         MatPaginatorModule,
         MatButtonModule,
         MatIconModule,

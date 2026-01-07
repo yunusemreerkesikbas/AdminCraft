@@ -4,36 +4,18 @@
     <admin-page-header
         [title]="'admin.pageTemplates.title' | transloco"
         [subtitle]="'admin.pageTemplates.description' | transloco"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.pageTemplates.actions.create'"
+        (createClick)="createTemplate()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.searchPlaceholder'"
+        (search)="searchInputControl.setValue($event)"
     >
-        <ng-container actions>
-            <mat-form-field
-                class="fuse-mat-dense fuse-mat-no-subscript fuse-mat-rounded min-w-64"
-            >
-                <mat-icon
-                    class="icon-size-5"
-                    matPrefix
-                    [svgIcon]="'heroicons_solid:magnifying-glass'"
-                ></mat-icon>
-                <input
-                    matInput
-                    [formControl]="searchInputControl"
-                    [autocomplete]="'off'"
-                    [placeholder]="'admin.common.searchPlaceholder' | transloco"
-                />
-            </mat-form-field>
-            <button mat-flat-button color="primary" (click)="createTemplate()">
-                <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
-                <span class="ml-2">{{
-                    'admin.pageTemplates.actions.create' | transloco
-                }}</span>
-            </button>
-        </ng-container>
+        <ng-container actions> </ng-container>
     </admin-page-header>
 
-    <div class="flex flex-auto overflow-hidden">
-        <div
-            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
-        >
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
             <spa-admin-grid
                 [items]="paginatedItemsSig()"
                 [columns]="columns"
@@ -94,15 +76,15 @@
                     </span>
                 }
             </ng-template>
-
-            <mat-paginator
-                class="border-t bg-gray-50 dark:bg-transparent"
-                [length]="totalItemsSig()"
-                [pageSize]="pageSizeSig()"
-                [pageIndex]="pageIndexSig()"
-                [pageSizeOptions]="[10, 20, 50, 100]"
-                (page)="onPageChange($event)"
-            ></mat-paginator>
         </div>
+
+        <spa-admin-paginator
+            class="z-10 flex-none"
+            [length]="totalItemsSig()"
+            [pageSize]="pageSizeSig()"
+            [pageIndex]="pageIndexSig()"
+            [pageSizeOptions]="[10, 20, 50, 100]"
+            (pageCallback)="onPageChange($event)"
+        ></spa-admin-paginator>
     </div>
 </div>

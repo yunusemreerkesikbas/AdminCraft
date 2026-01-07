@@ -5,19 +5,13 @@
         [title]="'admin.navigation.title' | transloco"
         [subtitle]="'admin.navigation.subtitle' | transloco"
         [showCreateButton]="true"
-        [createButtonText]="'admin.navigation.nodes.create' | transloco"
+        [createButtonText]="'admin.navigation.nodes.create'"
         (createClick)="openCreateDialog()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.actions.search'"
+        (search)="searchInputControl.setValue($event)"
     >
         <ng-container actions>
-            <!-- Search -->
-            <div class="mr-4">
-                <spa-search-input
-                    [formControl]="searchInputControl"
-                    [placeholder]="'admin.common.actions.search' | transloco"
-                    [styleClasses]="'fuse-mat-no-subscript'"
-                ></spa-search-input>
-            </div>
-
             <!-- Sort Dropdown -->
             @if (availableSortsSig().length > 0) {
                 <spa-admin-sort-dropdown
@@ -30,10 +24,8 @@
         </ng-container>
     </admin-page-header>
 
-    <div class="flex flex-auto overflow-hidden">
-        <div
-            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
-        >
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
             <spa-admin-grid
                 [items]="paginatedItemsSig()"
                 [columns]="columns"
@@ -57,18 +49,18 @@
                     }}</span>
                 </button>
             </spa-admin-grid>
-
-            <!-- Paginator -->
-
-            @if (totalElementsSig() > 0) {
-                <spa-admin-paginator
-                    [length]="totalElementsSig()"
-                    [pageSize]="pageSizeSig()"
-                    [pageIndex]="pageIndexSig()"
-                    (pageCallback)="onPageChange($event)"
-                >
-                </spa-admin-paginator>
-            }
         </div>
+
+        <!-- Paginator -->
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
     </div>
 </div>

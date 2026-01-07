@@ -123,14 +123,6 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 hideOn: 'sm'
             },
             {
-                key: 'dimensions',
-                label: 'admin.media.fields.dimensions',
-                type: 'text',
-                width: '120px',
-                hideOn: 'lg',
-                getValue: (item) => item.width && item.height ? `${item.width}x${item.height}` : '-'
-            },
-            {
                 key: 'createdAt',
                 label: 'admin.common.grid.uploaded',
                 type: 'date',

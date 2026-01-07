@@ -11,15 +11,11 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
-import { SpaSearchInputComponent } from 'app/shared/components/custom-ui/spa-search-input/spa-search-input.component';
-import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaStatusBadgeComponent } from 'app/shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { take } from 'rxjs';
 import { ComponentEditDialogComponent } from '../component-edit-dialog/component-edit-dialog.component';
 import {
     ComponentDetailDto,
     ComponentDto,
-    ComponentStatus,
     ComponentTypeDto,
     CreateComponentRequest,
     UpdateComponentRequest
@@ -44,9 +40,6 @@ const DIALOG_CONFIG = {
         MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaSearchInputComponent,
-        SpaSelectComponent,
-        SpaStatusBadgeComponent,
         SpaAdminGridComponent
     ],
     templateUrl: './component-list.component.html',
@@ -69,8 +62,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     protected store = inject(ComponentStore);
     protected componentTypes = signal<ComponentTypeDto[]>([]);
     protected typesLoading = signal<boolean>(false);
-    protected selectedTypeId = signal<number | null>(null);
-    protected selectedStatus = signal<ComponentStatus | null>(null);
     protected supportedLanguages = computed(() => this.#languageContext.supportedLanguages());
     protected searchTerm = signal<string>('');
 
@@ -81,32 +72,15 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
     ];
 
-    protected typeOptions = computed(() => {
-        return this.componentTypes().map(type => ({
-            value: type.id,
-            label: type.name
-        }));
-    });
-
     protected filteredComponents = computed(() => {
         const items = this.store.items();
         const term = this.searchTerm().toLowerCase();
-        const typeId = this.selectedTypeId();
-        const status = this.selectedStatus();
 
         return items.filter(item => {
             const matchesSearch = !term || item.name.toLowerCase().includes(term) || item.uid.toLowerCase().includes(term);
-            const matchesType = !typeId || item.componentTypeId === typeId;
-            const matchesStatus = !status || (status as any) === 'ALL' || item.status === status;
-
-            return matchesSearch && matchesType && matchesStatus;
+            return matchesSearch;
         });
     });
-
-    protected readonly statusOptions = [
-        { value: 'ALL', label: 'ALL' },
-        ...Object.values(ComponentStatus).map(s => ({ value: s, label: s }))
-    ];
 
     override ngOnInit(): void {
         this.columns = [
@@ -174,13 +148,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
 
 
 
-    onTypeFilterChange(typeId: number | null): void {
-        this.selectedTypeId.set(typeId);
-    }
-
-    onStatusFilterChange(status: ComponentStatus | null): void {
-        this.selectedStatus.set(status);
-    }
 
     protected override onSearchChange(term: string): void {
         this.searchTerm.set(term);

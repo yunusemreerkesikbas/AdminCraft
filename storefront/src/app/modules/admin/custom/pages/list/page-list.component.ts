@@ -14,6 +14,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { ItemDialogService } from '@shared/services/item-dialog.service';
@@ -39,7 +40,8 @@ import { PageSchemaBuilderService } from '../services/page-schema-builder.servic
         TranslocoModule,
         AdminPageHeaderComponent,
         SpaAdminGridComponent,
-        SpaStatusBadgeComponent
+        SpaStatusBadgeComponent,
+        SpaAdminPaginatorComponent
     ],
     templateUrl: './page-list.component.html',
     styles: [],
@@ -284,7 +286,4 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         this.pageSizeSig.set(event.pageSize);
         this.loadItems();
     }
-
-    // TrackByFn removed
-
 }

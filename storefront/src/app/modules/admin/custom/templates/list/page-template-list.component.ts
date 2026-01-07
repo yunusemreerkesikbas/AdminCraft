@@ -12,6 +12,7 @@ import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { debounceTime, Observable, take, takeUntil } from 'rxjs';
 import { PageTemplateEditDialogComponent } from '../edit-dialog/page-template-edit-dialog.component';
@@ -34,7 +35,8 @@ import { PageTemplate } from '../page-template.types';
     MatTooltipModule,
     TranslocoModule,
     AdminPageHeaderComponent,
-    SpaAdminGridComponent
+    SpaAdminGridComponent,
+    SpaAdminPaginatorComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -113,13 +115,6 @@ export class PageTemplateListComponent extends BaseCrudListComponent<PageTemplat
             type: 'custom',
             template: this.slotsTemplate,
             hideOn: 'sm'
-        },
-        {
-            key: 'status',
-            label: 'admin.common.fields.status',
-            type: 'custom',
-            template: this.statusTemplate,
-            width: '120px'
         }
       ];
 
