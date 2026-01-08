@@ -1,18 +1,25 @@
 package com.backend.infrastructure.tenant;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
+
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -22,7 +29,7 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
   private static final int MAX_POOLS = 10;
   private static final int MAX_POOL_SIZE_PER_TENANT = 5;
-  private static final long IDLE_EVICT_MILLIS = 30 * 60 * 1000;
+  private static final long IDLE_EVICT_MINUTES = 30;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -36,24 +43,33 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
   @Value("${spring.datasource.tenant.password}")
   private String dbPassword;
 
-  private final Map<String, DataSource> tenantDataSources = new LinkedHashMap<String, DataSource>(MAX_POOLS, 0.75f,
-      true) {
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<String, DataSource> eldest) {
-      if (size() > MAX_POOLS) {
-        log.info("LRU eviction: closing datasource for {}", eldest.getKey());
-        closeDataSource(eldest.getValue());
-        return true;
-      }
-      return false;
-    }
-  };
+  private volatile DataSource defaultDataSource;
+
+  private final LoadingCache<String, DataSource> tenantDataSources = CacheBuilder.newBuilder()
+      .maximumSize(MAX_POOLS)
+      .expireAfterAccess(IDLE_EVICT_MINUTES, TimeUnit.MINUTES)
+      .removalListener((RemovalListener<String, DataSource>) notification -> {
+        log.info("LRU eviction: closing datasource for {} (cause: {})",
+            notification.getKey(), notification.getCause());
+        closeDataSource(notification.getValue());
+      })
+      .build(new CacheLoader<>() {
+        @Override
+        public DataSource load(String dbName) {
+          return createDataSource(dbName);
+        }
+      });
 
   @Override
   protected DataSource selectAnyDataSource() {
-    return tenantDataSources.values().stream()
-        .findFirst()
-        .orElseGet(() -> createDefaultDataSource());
+    if (defaultDataSource == null) {
+      synchronized (this) {
+        if (defaultDataSource == null) {
+          defaultDataSource = createDefaultDataSource();
+        }
+      }
+    }
+    return defaultDataSource;
   }
 
   private DataSource createDefaultDataSource() {
@@ -73,7 +89,12 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
 
   @Override
   protected DataSource selectDataSource(String tenantIdentifier) {
-    return tenantDataSources.computeIfAbsent(tenantIdentifier, this::createDataSource);
+    try {
+      return tenantDataSources.get(tenantIdentifier);
+    } catch (ExecutionException e) {
+      log.error("Failed to get/create datasource for tenant: {}", tenantIdentifier, e);
+      throw new RuntimeException("Failed to get datasource for tenant: " + tenantIdentifier, e.getCause());
+    }
   }
 
   private DataSource createDataSource(String dbName) {
@@ -88,11 +109,11 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
     config.setMaximumPoolSize(MAX_POOL_SIZE_PER_TENANT);
-    config.setMinimumIdle(1); // Eager initialization: at least 1 connection ready immediately
-    config.setIdleTimeout(IDLE_EVICT_MILLIS);
-    config.setConnectionTimeout(60000); // 60s - increased for cold start tenant pool initialization
-    config.setValidationTimeout(5000); // 5s - connection validation timeout
-    config.setInitializationFailTimeout(-1); // Wait indefinitely for pool initialization (important for eager init)
+    config.setMinimumIdle(1);
+    config.setIdleTimeout(TimeUnit.MINUTES.toMillis(IDLE_EVICT_MINUTES));
+    config.setConnectionTimeout(60000);
+    config.setValidationTimeout(5000);
+    config.setInitializationFailTimeout(-1);
     config.setLeakDetectionThreshold(10000);
     config.setPoolName("TenantPool-" + dbName);
 
@@ -113,7 +134,7 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
           statement.execute("SELECT 1");
           log.info("Connection pool pre-warmed successfully for tenant DB: {} (attempt {}/{})",
               tenantDbName, attempt, maxAttempts);
-          return; // Success, exit method
+          return;
         }
       } catch (SQLException e) {
         if (attempt == maxAttempts) {
@@ -136,20 +157,8 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
   }
 
   private void closeDataSource(DataSource dataSource) {
-    if (dataSource instanceof HikariDataSource) {
-      ((HikariDataSource) dataSource).close();
+    if (dataSource instanceof HikariDataSource hikari) {
+      hikari.close();
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
