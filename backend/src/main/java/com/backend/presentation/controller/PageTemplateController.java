@@ -1,7 +1,12 @@
 package com.backend.presentation.controller;
 
 import java.util.List;
+import java.util.Locale;
 
+import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,7 +17,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
@@ -30,10 +37,15 @@ import com.backend.application.service.PageTemplateI18nService;
 import com.backend.application.service.PageTemplateService;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.response.PageTemplateResponse;
+import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.TemplateSlotResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -48,11 +60,45 @@ public class PageTemplateController {
 
   private final PageTemplateService pageTemplateService;
   private final PageTemplateI18nService pageTemplateI18nService;
+  private final MessageSource messageSource;
 
   @GetMapping
-  public ResponseEntity<ApiResponse<List<PageTemplateResponse>>> getAllTemplates() {
-    List<PageTemplateDto> templates = pageTemplateService.getAll();
-    return ResponseEntity.ok(ApiResponse.success(mapToResponses(templates)));
+  public ResponseEntity<ApiResponse<PageableResponse<PageTemplateResponse>>> getAllTemplates(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+      @RequestParam(required = false) String sort,
+      @RequestParam(required = false) String search,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+    try {
+      String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
+          SortableFieldsConfig.PAGE_TEMPLATE_DEFAULT_SORT);
+      Sort sortObj = SortParseUtil.parse(effectiveSort, SortableFieldsConfig.PAGE_TEMPLATE_ALLOWED_FIELDS,
+          SortableFieldsConfig.PAGE_TEMPLATE_DEFAULT_SORT);
+
+      PageRequest pageRequest = PageRequest.of(page, size, sortObj);
+      Page<PageTemplateDto> templatesPage = pageTemplateService.getTemplates(pageRequest, search);
+
+      List<PageTemplateResponse> content = templatesPage.getContent().stream()
+          .map(this::mapToResponse)
+          .toList();
+
+      SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.PAGE_TEMPLATE_SORT_OPTIONS);
+      PageableResponse<PageTemplateResponse> response = PageableResponse.fromMapped(templatesPage, content, sortConfig);
+
+      return ResponseEntity.ok(ApiResponse.success(response));
+    } catch (IllegalArgumentException ex) {
+      String message = messageSource.getMessage("pageTemplate.sort.invalid",
+          new Object[] { ex.getMessage() },
+          Locale.forLanguageTag(languageCode));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(message));
+    } catch (Exception ex) {
+      String message = messageSource.getMessage("pageTemplate.list.error",
+          new Object[] { ex.getMessage() },
+          Locale.forLanguageTag(languageCode));
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(ApiResponse.error(message));
+    }
   }
 
   @GetMapping("/active")

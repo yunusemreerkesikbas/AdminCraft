@@ -54,6 +54,10 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor {
 
     @Output() changed = new EventEmitter<T | null>();
 
+    @Input('value') set setValue(val: T | null) {
+        this.writeValue(val);
+    }
+
     value: T | null = null;
     disabled = false;
 

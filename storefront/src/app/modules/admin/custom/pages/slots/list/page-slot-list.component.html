@@ -1,11 +1,11 @@
 <div class="flex h-full flex-col overflow-hidden">
-    <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-xl font-semibold">Page Slots</h2>
-        <button mat-flat-button color="primary" (click)="addSlot()">
-            <mat-icon svgIcon="heroicons_outline:plus" class="mr-2"></mat-icon>
-            Add Slot
-        </button>
-    </div>
+    <admin-page-header
+        [title]="'Page Slots'"
+        [showCreateButton]="true"
+        [createButtonText]="'Add Slot'"
+        (createClick)="addSlot()"
+    >
+    </admin-page-header>
 
     @if (isLoading$ | async) {
         <div class="flex items-center justify-center p-8">

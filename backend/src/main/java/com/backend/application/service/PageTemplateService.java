@@ -2,6 +2,9 @@ package com.backend.application.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.application.command.PageTemplateCommands.CreatePageTemplateCommand;
 import com.backend.application.command.PageTemplateCommands.CreateTemplateSlotCommand;
 import com.backend.application.command.PageTemplateCommands.ReorderTemplateSlotsCommand;
@@ -12,6 +15,8 @@ import com.backend.application.dto.template.TemplateSlotDto;
 public interface PageTemplateService {
 
   List<PageTemplateDto> getAll();
+
+  Page<PageTemplateDto> getTemplates(Pageable pageable, String search);
 
   List<PageTemplateDto> getActiveTemplates();
 

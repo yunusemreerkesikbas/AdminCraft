@@ -26,6 +26,8 @@ export const langTR = {
                 parent: 'Üst',
                 parentCategory: 'Üst Kategori',
             },
+            searchPlaceholder: 'Ara...',
+            sort: 'Sırala',
             noRecords: 'Kayıt bulunamadı',
             none: 'Yok',
             clearAll: 'Hepsini Temizle',
@@ -224,6 +226,12 @@ export const langTR = {
             nameDesc: 'Ad (Z-A)',
             sizeAsc: 'Boyut (Küçükten)',
             sizeDesc: 'Boyut (Büyükten)',
+            titleAsc: 'Başlık (A-Z)',
+            titleDesc: 'Başlık (Z-A)',
+            uidAsc: 'UID (A-Z)',
+            uidDesc: 'UID (Z-A)',
+            orderAsc: 'Sıra (Artan)',
+            orderDesc: 'Sıra (Azalan)',
         },
         placeholders: {
             selectType: 'Tür Seçiniz',
@@ -292,6 +300,18 @@ export const langTR = {
             deleteSuccess: 'İçerik başarıyla silindi',
             publishSuccess: 'İçerik başarıyla yayınlandı',
             unpublishSuccess: 'İçerik yayından kaldırıldı',
+        },
+        pages: {
+            title: 'Sayfalar',
+            list: {
+                empty: {
+                    title: 'Sayfa bulunamadı',
+                    description: 'Henüz herhangi bir sayfa oluşturulmamış.'
+                }
+            },
+            actions: {
+                create: 'Sayfa Oluştur'
+            }
         },
         pageBuilder: {
             title: 'Sayfa Oluşturucu',
@@ -437,6 +457,11 @@ export const langTR = {
                 createTitle: 'Klasör Oluştur',
                 editTitle: 'Klasörü Düzenle'
             },
+            list: {
+                empty: 'Medya bulunamadı',
+                emptyDescription: 'Henüz herhangi bir medya dosyası yüklenmemiş.'
+            },
+            upload: 'Medya Yükle',
             actions: {
                 upload: 'Yükle',
                 createFolder: 'Klasör Ekle',
@@ -451,7 +476,6 @@ export const langTR = {
             batchMetadata: 'Toplu Medya Bilgileri',
             batchMetadataDesc: 'Girdiğiniz bilgiler seçili tüm dosyalara uygulanacaktır.',
             files: 'Dosyalar',
-            upload: 'Yükle',
             selectedFiles: 'Seçilen Dosyalar',
             fields: {
                 originalName: 'Dosya Adı',
@@ -544,6 +568,7 @@ export const langTR = {
         },
         navigation: {
             title: 'Navigasyon Yönetimi',
+            subtitle: 'Site navigasyon menülerini ve yapısını yönetin',
             nodes: {
                 title: 'Düğümler',
                 create: 'Düğüm Oluştur',

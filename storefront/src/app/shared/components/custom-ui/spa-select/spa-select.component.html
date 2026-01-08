@@ -10,6 +10,7 @@
         [disabled]="disabled"
         [value]="value"
         [multiple]="multiple"
+        [placeholder]="placeholder || ''"
         (selectionChange)="onSelectionChange($event.value)"
         (closed)="touched()"
     >

@@ -6,35 +6,20 @@
         </div>
     }
 
-    <!-- Title and Subtitle -->
-    <div>
-        <div class="text-2xl font-semibold">
-            {{ title | transloco }}
-        </div>
-        @if (subtitle) {
-            <div class="text-secondary mt-1 text-sm">
-                {{ subtitle | transloco }}
+    <!-- Left Section: Title, Subtitle, and Create Button -->
+    <div class="flex items-center gap-4">
+        <div>
+            <div class="text-2xl font-semibold">
+                {{ title | transloco }}
             </div>
-        }
-    </div>
+            @if (subtitle) {
+                <div class="text-secondary mt-1 text-sm">
+                    {{ subtitle | transloco }}
+                </div>
+            }
+        </div>
 
-    <!-- Actions -->
-    <div class="flex items-center gap-2">
-        <!-- Custom Actions Slot -->
-        <ng-content select="[actions]"></ng-content>
-
-        <!-- Search -->
-        @if (showSearch) {
-            <spa-search-input
-                [placeholder]="
-                    searchPlaceholder
-                        ? (searchPlaceholder | transloco)
-                        : ('admin.content.searchPlaceholder' | transloco)
-                "
-            ></spa-search-input>
-        }
-
-        <!-- Create Button -->
+        <!-- Create Button (Moved to Left) -->
         @if (showCreateButton) {
             <button mat-flat-button color="primary" (click)="onCreateClick()">
                 <mat-icon svgIcon="heroicons_outline:plus"></mat-icon>
@@ -45,5 +30,26 @@
                 }}</span>
             </button>
         }
+
+        <ng-content select="[after-create]"></ng-content>
+    </div>
+
+    <!-- Right Section: Search and Actions -->
+    <div class="flex items-center gap-2">
+        <!-- Search -->
+        @if (showSearch) {
+            <spa-search-input
+                [ngModel]="null"
+                (ngModelChange)="onSearch($event)"
+                [placeholder]="
+                    searchPlaceholder
+                        ? (searchPlaceholder | transloco)
+                        : ('admin.content.searchPlaceholder' | transloco)
+                "
+            ></spa-search-input>
+        }
+
+        <!-- Custom Actions Slot (e.g., Sort Dropdown) -->
+        <ng-content select="[actions]"></ng-content>
     </div>
 </div>

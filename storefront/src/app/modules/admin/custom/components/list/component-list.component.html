@@ -8,6 +8,9 @@
             [createButtonText]="'admin.common.create'"
             [isLoading]="store.isLoading()"
             (createClick)="createComponent()"
+            [showSearch]="true"
+            [searchPlaceholder]="'admin.common.search'"
+            (search)="onSearchChange($event)"
         >
             <div actions class="flex items-center gap-2">
                 <button
@@ -17,15 +20,17 @@
                 >
                     <mat-icon>refresh</mat-icon>
                 </button>
-                <button
-                    mat-stroked-button
-                    (click)="openTypesManager()"
-                    class="hidden sm:inline-flex"
-                >
-                    <mat-icon class="mr-2 icon-size-5">settings</mat-icon>
-                    {{ 'admin.components.manageTypes' | transloco }}
-                </button>
             </div>
+
+            <button
+                after-create
+                mat-stroked-button
+                (click)="openTypesManager()"
+                class="hidden sm:inline-flex"
+            >
+                <mat-icon class="mr-2 icon-size-5">settings</mat-icon>
+                {{ 'admin.components.manageTypes' | transloco }}
+            </button>
         </admin-page-header>
     }
 
@@ -35,36 +40,6 @@
         >
             <div class="flex-auto">
                 <div class="">
-                    <div class="mb-8 flex flex-col items-end gap-4 sm:flex-row">
-                        <spa-search-input
-                            class="flex-auto"
-                            [placeholder]="'admin.common.search' | transloco"
-                            [ngModel]="searchTerm()"
-                            (ngModelChange)="onSearchChange($event)"
-                        ></spa-search-input>
-
-                        <div class="flex gap-4">
-                            <spa-select
-                                class="w-full sm:w-48"
-                                [label]="
-                                    'admin.components.filters.type' | transloco
-                                "
-                                [options]="typeOptions()"
-                                (changed)="onTypeFilterChange($event)"
-                            ></spa-select>
-
-                            <spa-select
-                                class="w-full sm:w-48"
-                                [label]="
-                                    'admin.components.filters.status'
-                                        | transloco
-                                "
-                                [options]="statusOptions"
-                                (changed)="onStatusFilterChange($event)"
-                            ></spa-select>
-                        </div>
-                    </div>
-
                     <spa-admin-grid
                         [items]="filteredComponents()"
                         [columns]="columns"

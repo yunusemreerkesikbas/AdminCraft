@@ -26,6 +26,8 @@ export const langEN = {
                 parent: 'Parent',
                 parentCategory: 'Parent Category',
             },
+            searchPlaceholder: 'Search...',
+            sort: 'Sort',
             noRecords: 'No records',
             save: 'Save',
             cancel: 'Cancel',
@@ -226,6 +228,12 @@ export const langEN = {
             nameDesc: 'Name (Z-A)',
             sizeAsc: 'Size (Smallest)',
             sizeDesc: 'Size (Largest)',
+            titleAsc: 'Title (A-Z)',
+            titleDesc: 'Title (Z-A)',
+            uidAsc: 'UID (A-Z)',
+            uidDesc: 'UID (Z-A)',
+            orderAsc: 'Sort Order (Low-High)',
+            orderDesc: 'Sort Order (High-Low)',
         },
         placeholders: {
             selectType: 'Select Type',
@@ -294,6 +302,18 @@ export const langEN = {
             deleteSuccess: 'Content successfully deleted',
             publishSuccess: 'Content successfully published',
             unpublishSuccess: 'Content successfully unpublished',
+        },
+        pages: {
+            title: 'Pages',
+            list: {
+                empty: {
+                    title: 'No pages found',
+                    description: 'No pages have been created yet.'
+                }
+            },
+            actions: {
+                create: 'Create Page'
+            }
         },
         pageBuilder: {
             title: 'Page Builder',
@@ -439,6 +459,11 @@ export const langEN = {
                 createTitle: 'Create Folder',
                 editTitle: 'Edit Folder'
             },
+            list: {
+                empty: 'No media found',
+                emptyDescription: 'No media files have been uploaded yet.'
+            },
+            upload: 'Upload Media',
             actions: {
                 upload: 'Upload',
                 createFolder: 'New Folder',
@@ -548,6 +573,7 @@ export const langEN = {
         },
         navigation: {
             title: 'Navigation Management',
+            subtitle: 'Manage your site navigation menus and structure',
             nodes: {
                 title: 'Nodes',
                 create: 'Create Node',

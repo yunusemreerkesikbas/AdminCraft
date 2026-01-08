@@ -1,17 +1,24 @@
+
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule } from '@angular/router';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
+import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal/spa-generic-modal.component';
+import { takeUntil } from 'rxjs';
 import { NavigationNodeDialogComponent } from '../dialogs/node-dialog/node-dialog.component';
 import { NavigationNodeManagerDialogComponent } from '../manager/navigation-node-manager-dialog.component';
 import { NavigationNodeService } from '../navigation-node.service';
-import { NavigationNode } from '../navigation-node.types';
+import { CreateNodeRequest, NavigationNode, UpdateNodeRequest } from '../navigation-node.types';
+import { NavigationStore } from '../navigation.store';
 
 @Component({
     selector: 'app-navigation-list',
@@ -19,21 +26,33 @@ import { NavigationNode } from '../navigation-node.types';
     standalone: true,
     imports: [
         CommonModule,
-        RouterModule,
-        MatButtonModule,
-        MatIconModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaAdminGridComponent
+        SpaAdminGridComponent,
+        SpaAdminPaginatorComponent,
+        SpaAdminSortDropdownComponent,
+        MatPaginatorModule,
+        MatButtonModule,
+        MatIconModule,
+        FormsModule,
+        ReactiveFormsModule
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NavigationListComponent implements OnInit {
-    #navigationNodeService = inject(NavigationNodeService);
+export class NavigationListComponent extends BasePaginatedListComponent<
+    NavigationNode,
+    CreateNodeRequest,
+    UpdateNodeRequest
+> implements OnInit {
+    protected override service = inject(NavigationNodeService);
+    protected override store = inject(NavigationStore);
+    protected override readonly defaultSort = 'createdAt,desc';
+    protected override readonly defaultPageSize = 20;
+
     #matDialog = inject(MatDialog);
 
-    protected rootNodesSig = signal<NavigationNode[]>([]);
-    protected isLoadingSig = signal<boolean>(true);
+    protected searchInputControl = new FormControl('');
+    protected paginatedItemsSig = computed(() => this.store.items());
 
     protected columns: GridColumn<NavigationNode>[] = [
         {
@@ -56,6 +75,19 @@ export class NavigationListComponent implements OnInit {
         }
     ];
 
+    protected override onInit(): void {
+        this.#setupSearchDebounce();
+    }
+
+    #setupSearchDebounce(): void {
+        this.searchInputControl.valueChanges.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(query => {
+            this.onSearchInput(query || '');
+
+        });
+    }
+
     protected actions: GridAction<NavigationNode>[] = [
         {
             icon: 'heroicons_outline:pencil-square',
@@ -70,35 +102,18 @@ export class NavigationListComponent implements OnInit {
         }
     ];
 
-    ngOnInit(): void {
-        this.#loadRoots();
-    }
-
-    #loadRoots(): void {
-        this.isLoadingSig.set(true);
-        this.#navigationNodeService.getAllRoots().subscribe({
-            next: (nodes) => {
-                this.rootNodesSig.set(nodes);
-                this.isLoadingSig.set(false);
-            },
-            error: () => this.isLoadingSig.set(false)
-        });
-    }
-
     protected onGridAction(event: { action: string; item: NavigationNode }): void {
         switch (event.action) {
             case 'manage':
                 this.openNodeManager(event.item);
                 break;
             case 'delete':
-                this.deleteNode(event.item);
+                this.#confirmDelete(event.item);
                 break;
         }
     }
 
-
-
-    deleteNode(node: NavigationNode): void {
+    #confirmDelete(node: NavigationNode): void {
         const dialogRef = this.#matDialog.open(SpaGenericModalComponent, {
             data: {
                 title: 'admin.navigation.actions.deleteNode',
@@ -114,15 +129,14 @@ export class NavigationListComponent implements OnInit {
 
         dialogRef.afterClosed().subscribe((result) => {
             if (result) {
-                this.isLoadingSig.set(true);
-                this.#navigationNodeService.deleteNode(node.id).subscribe({
-                    next: () => {
-                        this.#loadRoots();
-                    },
-                    error: () => this.isLoadingSig.set(false)
-                });
+                this.deleteItem(node);
             }
         });
+    }
+
+    protected override onDeleteSuccess(item: NavigationNode): void {
+        // Notification handled by base class, just refresh list
+        this.loadItems();
     }
 
     openCreateDialog(): void {
@@ -134,7 +148,7 @@ export class NavigationListComponent implements OnInit {
             }
         }).afterClosed().subscribe((result) => {
             if (result) {
-                this.#loadRoots();
+                this.loadItems();
             }
         });
     }
@@ -146,7 +160,7 @@ export class NavigationListComponent implements OnInit {
             data: { nodeId: node.id }
         }).afterClosed().subscribe((result) => {
             if (result) {
-                this.#loadRoots();
+                this.loadItems();
             }
         });
     }

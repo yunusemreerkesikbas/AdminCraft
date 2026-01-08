@@ -36,9 +36,7 @@ export class NavigationNodeService extends CrudHttpService<
         delete: 'navigationNodeById'
     };
 
-    getAllRoots(): Observable<NavigationNode[]> {
-        return this.list();
-    }
+
 
     getTree(id: number): Observable<NavigationNode> {
         return this.customGet<NavigationNode>('navigationNodeTree', { id });

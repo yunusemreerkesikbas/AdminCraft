@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.PageTemplate;
@@ -29,6 +31,14 @@ public class PageTemplateRepositoryImpl implements PageTemplateRepository {
   @Override
   public List<PageTemplate> findAll() {
     return jpaRepository.findAllByOrderByIdDesc();
+  }
+
+  @Override
+  public Page<PageTemplate> findAll(Pageable pageable, String search) {
+    if (search != null && !search.isBlank()) {
+      return jpaRepository.searchByQuery(search.trim(), pageable);
+    }
+    return jpaRepository.findAll(pageable);
   }
 
   @Override

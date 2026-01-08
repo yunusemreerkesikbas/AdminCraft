@@ -14,22 +14,4 @@ VALUES
 ON DUPLICATE KEY UPDATE name = VALUES(name), width = VALUES(width), height = VALUES(height);
 
 -- Root folder
-INSERT INTO media_folders (uuid, uid, code, name, path, depth)
-VALUES (UUID(), 'mediafolder_root', 'root', 'Root', '/', 0)
-ON DUPLICATE KEY UPDATE name = VALUES(name);
 
--- Default subfolders
-INSERT INTO media_folders (uuid, uid, code, name, parent_id, path, depth)
-SELECT UUID(), 'mediafolder_images', 'images', 'Images', id, '/images/', 1
-FROM media_folders WHERE code = 'root'
-ON DUPLICATE KEY UPDATE name = VALUES(name);
-
-INSERT INTO media_folders (uuid, uid, code, name, parent_id, path, depth)
-SELECT UUID(), 'mediafolder_documents', 'documents', 'Documents', id, '/documents/', 1
-FROM media_folders WHERE code = 'root'
-ON DUPLICATE KEY UPDATE name = VALUES(name);
-
-INSERT INTO media_folders (uuid, uid, code, name, parent_id, path, depth)
-SELECT UUID(), 'mediafolder_videos', 'videos', 'Videos', id, '/videos/', 1
-FROM media_folders WHERE code = 'root'
-ON DUPLICATE KEY UPDATE name = VALUES(name);

@@ -26,6 +26,8 @@ import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
+import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take, takeUntil } from 'rxjs';
@@ -52,6 +54,8 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
         TranslocoModule,
         AdminPageHeaderComponent,
         SpaAdminGridComponent,
+        SpaAdminPaginatorComponent,
+        SpaAdminSortDropdownComponent,
         MatSelectModule
     ],
     templateUrl: './media-list.component.html',
@@ -117,14 +121,6 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 type: 'text',
                 width: '100px',
                 hideOn: 'sm'
-            },
-            {
-                key: 'dimensions',
-                label: 'admin.media.fields.dimensions',
-                type: 'text',
-                width: '120px',
-                hideOn: 'lg',
-                getValue: (item) => item.width && item.height ? `${item.width}x${item.height}` : '-'
             },
             {
                 key: 'createdAt',
