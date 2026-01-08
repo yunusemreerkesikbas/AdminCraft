@@ -170,6 +170,7 @@ public class TenantServiceImpl implements TenantService {
         log.debug("Fetching modules for tenant: {}", tenantId);
         String savedTenantId = tenantContext.getTenantId();
         String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
 
         try {
             tenantContext.clear();
@@ -197,6 +198,9 @@ public class TenantServiceImpl implements TenantService {
             }
             if (savedTenantDbName != null) {
                 tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
             }
             log.debug("Restored tenant context after platform database query");
         }
@@ -238,6 +242,7 @@ public class TenantServiceImpl implements TenantService {
         log.debug("Fetching tenant detail for tenant: {}", id);
         String savedTenantId = tenantContext.getTenantId();
         String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
 
         try {
             tenantContext.clear();
@@ -254,6 +259,9 @@ public class TenantServiceImpl implements TenantService {
             }
             if (savedTenantDbName != null) {
                 tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
             }
             log.debug("Restored tenant context after platform database query");
         }
