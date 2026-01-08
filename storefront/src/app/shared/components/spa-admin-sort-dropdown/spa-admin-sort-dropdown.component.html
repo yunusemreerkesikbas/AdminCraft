@@ -1,6 +1,6 @@
 @if (availableSorts().length > 0) {
     <spa-select
-        class="ml-4 min-w-40"
+        class="ml-4 block w-[200px] min-w-[200px]"
         [options]="selectOptions()"
         [value]="sortCode()"
         (changed)="onSelectionChange($event)"

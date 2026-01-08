@@ -1,3 +1,5 @@
-/* custom styles can be added here when needed */
-
-
+:host {
+    display: inline-block;
+    width: 100%;
+    vertical-align: middle;
+}

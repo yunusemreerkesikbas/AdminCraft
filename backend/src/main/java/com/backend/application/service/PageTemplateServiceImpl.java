@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,17 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     return pageTemplateRepository.findAll().stream()
         .map(pageTemplateMapper::toDto)
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public org.springframework.data.domain.Page<PageTemplateDto> getTemplates(Pageable pageable, String search) {
+    if (search == null || search.trim().length() < 2) {
+      return pageTemplateRepository.findAll(pageable, null)
+          .map(pageTemplateMapper::toDto);
+    }
+    return pageTemplateRepository.findAll(pageable, search.trim())
+        .map(pageTemplateMapper::toDto);
   }
 
   @Override

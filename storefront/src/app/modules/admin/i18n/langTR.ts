@@ -26,6 +26,8 @@ export const langTR = {
                 parent: 'Üst',
                 parentCategory: 'Üst Kategori',
             },
+            searchPlaceholder: 'Ara...',
+            sort: 'Sırala',
             noRecords: 'Kayıt bulunamadı',
             none: 'Yok',
             clearAll: 'Hepsini Temizle',
@@ -299,6 +301,18 @@ export const langTR = {
             publishSuccess: 'İçerik başarıyla yayınlandı',
             unpublishSuccess: 'İçerik yayından kaldırıldı',
         },
+        pages: {
+            title: 'Sayfalar',
+            list: {
+                empty: {
+                    title: 'Sayfa bulunamadı',
+                    description: 'Henüz herhangi bir sayfa oluşturulmamış.'
+                }
+            },
+            actions: {
+                create: 'Sayfa Oluştur'
+            }
+        },
         pageBuilder: {
             title: 'Sayfa Oluşturucu',
             pages: 'Sayfalar',
@@ -443,6 +457,11 @@ export const langTR = {
                 createTitle: 'Klasör Oluştur',
                 editTitle: 'Klasörü Düzenle'
             },
+            list: {
+                empty: 'Medya bulunamadı',
+                emptyDescription: 'Henüz herhangi bir medya dosyası yüklenmemiş.'
+            },
+            upload: 'Medya Yükle',
             actions: {
                 upload: 'Yükle',
                 createFolder: 'Klasör Ekle',
@@ -457,7 +476,6 @@ export const langTR = {
             batchMetadata: 'Toplu Medya Bilgileri',
             batchMetadataDesc: 'Girdiğiniz bilgiler seçili tüm dosyalara uygulanacaktır.',
             files: 'Dosyalar',
-            upload: 'Yükle',
             selectedFiles: 'Seçilen Dosyalar',
             fields: {
                 originalName: 'Dosya Adı',

@@ -11,7 +11,13 @@
         [searchPlaceholder]="'admin.common.searchPlaceholder'"
         (search)="searchInputControl.setValue($event)"
     >
-        <ng-container actions> </ng-container>
+        <ng-container actions>
+            <spa-admin-sort-dropdown
+                [availableSorts]="availableSortsSig()"
+                [sortCode]="sortCodeSig()"
+                (sortChange)="onSortDropdownChange($event)"
+            ></spa-admin-sort-dropdown>
+        </ng-container>
     </admin-page-header>
 
     <div class="flex flex-auto flex-col overflow-hidden">
@@ -80,10 +86,10 @@
 
         <spa-admin-paginator
             class="z-10 flex-none"
-            [length]="totalItemsSig()"
+            [length]="totalElementsSig()"
             [pageSize]="pageSizeSig()"
             [pageIndex]="pageIndexSig()"
-            [pageSizeOptions]="[10, 20, 50, 100]"
+            [pageSizeOptions]="[5, 10, 20, 50]"
             (pageCallback)="onPageChange($event)"
         ></spa-admin-paginator>
     </div>

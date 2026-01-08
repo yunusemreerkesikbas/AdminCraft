@@ -1,4 +1,5 @@
 import { Component, computed, EventEmitter, input, Output } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { SpaSelectComponent, SpaSelectOption } from '../custom-ui/spa-select/spa-select.component';
 
 export interface SortOption {
@@ -9,7 +10,7 @@ export interface SortOption {
 @Component({
   selector: 'spa-admin-sort-dropdown',
   standalone: true,
-  imports: [SpaSelectComponent],
+  imports: [SpaSelectComponent, TranslocoModule],
   templateUrl: './spa-admin-sort-dropdown.component.html',
   styleUrl: './spa-admin-sort-dropdown.component.scss'
 })

@@ -26,6 +26,8 @@ export const langEN = {
                 parent: 'Parent',
                 parentCategory: 'Parent Category',
             },
+            searchPlaceholder: 'Search...',
+            sort: 'Sort',
             noRecords: 'No records',
             save: 'Save',
             cancel: 'Cancel',
@@ -301,6 +303,18 @@ export const langEN = {
             publishSuccess: 'Content successfully published',
             unpublishSuccess: 'Content successfully unpublished',
         },
+        pages: {
+            title: 'Pages',
+            list: {
+                empty: {
+                    title: 'No pages found',
+                    description: 'No pages have been created yet.'
+                }
+            },
+            actions: {
+                create: 'Create Page'
+            }
+        },
         pageBuilder: {
             title: 'Page Builder',
             pages: 'Pages',
@@ -445,6 +459,11 @@ export const langEN = {
                 createTitle: 'Create Folder',
                 editTitle: 'Edit Folder'
             },
+            list: {
+                empty: 'No media found',
+                emptyDescription: 'No media files have been uploaded yet.'
+            },
+            upload: 'Upload Media',
             actions: {
                 upload: 'Upload',
                 createFolder: 'New Folder',
