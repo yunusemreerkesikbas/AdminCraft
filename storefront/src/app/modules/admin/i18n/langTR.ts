@@ -150,6 +150,7 @@ export const langTR = {
                 priority: 'Öncelik',
                 notes: 'Notlar',
                 urlPath: 'URL Yolu',
+                canonicalUrl: 'Kanonik URL',
                 subtitle: 'Alt Başlık',
                 metaTitle: 'Meta Başlık',
                 metaDescription: 'Meta Açıklama',
@@ -310,7 +311,52 @@ export const langTR = {
                 }
             },
             actions: {
-                create: 'Sayfa Oluştur'
+                create: 'Sayfa Oluştur',
+                slots: 'Slotları Yönet'
+            },
+            tabs: {
+                general: 'Genel'
+            },
+            fields: {
+                uid: 'UID',
+                sortOrder: 'Sıralama',
+                featuredImage: 'Öne Çıkan Görsel',
+                styleClasses: 'CSS Sınıfları',
+                urlPath: 'URL Yolu',
+                canonicalUrl: 'Kanonik URL',
+                robotTag: 'Robot Etiketi',
+                title: 'Başlık',
+                subtitle: 'Alt Başlık',
+                metaTitle: 'Meta Başlık',
+                metaDescription: 'Meta Açıklama',
+                description: 'Açıklama'
+            },
+            hints: {
+                featuredImage: 'Sayfanın ana görseli',
+                styleClasses: 'Örn: bg-dark text-white',
+                urlPath: 'Örn: hakkimizda veya iletisim',
+                canonicalUrl: 'Örn: hakkimizda veya iletisim',
+                metaTitle: 'Arama motoru sonuçlarında görünecek başlık',
+                metaDescription: 'Arama motoru sonuçlarında görünecek açıklama'
+            },
+            appearance: 'Görünüm',
+            basicInfo: 'Temel Bilgiler',
+            seoInfo: 'SEO Bilgileri',
+            dialogs: {
+                delete: {
+                    title: 'Sayfayı Sil',
+                    confirm: 'Bu sayfayı silmek istediğinize emin misiniz?'
+                }
+            },
+            success: {
+                created: 'Sayfa başarıyla oluşturuldu',
+                updated: 'Sayfa başarıyla güncellendi',
+                deleted: 'Sayfa başarıyla silindi'
+            },
+            errors: {
+                createFailed: 'Sayfa oluşturulamadı',
+                updateFailed: 'Sayfa güncellenemedi',
+                loadFailed: 'Sayfa yüklenemedi'
             }
         },
         pageBuilder: {

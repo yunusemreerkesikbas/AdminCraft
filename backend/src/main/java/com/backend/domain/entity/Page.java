@@ -1,6 +1,9 @@
 package com.backend.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.RobotTag;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +20,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "pages", indexes = {
         @Index(columnList = "status", name = "idx_page_status"),
-        @Index(columnList = "sort_order", name = "idx_page_sort"),
         @Index(columnList = "template_id", name = "idx_page_template")
 })
 @Data
@@ -34,17 +36,18 @@ public class Page extends BaseEntity {
     @NotNull
     private PageStatus status = PageStatus.DRAFT;
 
-    @Column(name = "featured_image", length = 500)
-    private String featuredImage;
-
     @Column(name = "style_classes", length = 255)
     private String styleClasses;
 
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
-
+    @Enumerated(EnumType.STRING)
     @Column(name = "robot_tag", length = 50)
-    private String robotTag = "INDEX_FOLLOW";
+    private RobotTag robotTag = RobotTag.INDEX_FOLLOW;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
 
     public void validateEditAuthorization(Long userId, Long userTenantId) {
     }

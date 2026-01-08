@@ -1,31 +1,44 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.service.PageI18nService;
-import com.backend.application.service.PageService;
-import com.backend.application.dto.request.PageCreateRequest;
-import com.backend.application.dto.request.PageI18nRequest;
-import com.backend.application.dto.request.PagePublishRequest;
-import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.response.PageI18nResponse;
-import com.backend.presentation.dto.response.PageResponse;
-import com.backend.presentation.dto.response.PageListResponse;
-import com.backend.presentation.dto.response.PageDetailResponse;
-import com.backend.shared.common.ApiResponse;
-import com.backend.shared.common.SecurityUtil;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.Locale;
+
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Locale;
+import com.backend.application.dto.request.CreatePageCompositeRequest;
+import com.backend.application.dto.request.PageCreateRequest;
+import com.backend.application.dto.request.PageI18nRequest;
+import com.backend.application.dto.request.PagePublishRequest;
+import com.backend.application.dto.request.UpdatePageCompositeRequest;
+import com.backend.application.service.PageI18nService;
+import com.backend.application.service.PageService;
+import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.response.PageDetailResponse;
+import com.backend.presentation.dto.response.PageI18nResponse;
+import com.backend.presentation.dto.response.PageListResponse;
+import com.backend.presentation.dto.response.PageResponse;
+import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityUtil;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/pages")
@@ -202,6 +215,64 @@ public class PageController {
           new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(ApiResponse.error(message));
+    }
+  }
+
+  // ==================== Composite Endpoints (Sprint 34 Pattern)
+  // ====================
+
+  @PostMapping("/composite")
+  public ResponseEntity<ApiResponse<PageDetailResponse>> createComposite(
+      @Valid @RequestBody CreatePageCompositeRequest request,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      Long userId = SecurityUtil.getCurrentUserIdOrThrow();
+      PageDetailResponse response = pageService.createComposite(request, userId);
+      String successMessage = messageSource.getMessage("page.create.success",
+          null, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(ApiResponse.success(successMessage, response));
+    } catch (Exception ex) {
+      log.error("Error creating page composite", ex);
+      // OWASP: Do not expose exception details to client
+      String msg = messageSource.getMessage("page.create.error", null, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(msg));
+    }
+  }
+
+  @GetMapping("/{id}/composite")
+  public ResponseEntity<ApiResponse<PageDetailResponse>> getComposite(
+      @PathVariable @NotNull @Min(1) Long id,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      PageDetailResponse response = pageService.getPageWithI18n(id);
+      return ResponseEntity.ok(ApiResponse.success(response));
+    } catch (Exception ex) {
+      log.error("Error getting page composite id={}", id, ex);
+      String msg = messageSource.getMessage("page.get.error", null, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(ApiResponse.error(msg));
+    }
+  }
+
+  @PutMapping("/{id}/composite")
+  public ResponseEntity<ApiResponse<PageDetailResponse>> updateComposite(
+      @PathVariable @NotNull @Min(1) Long id,
+      @Valid @RequestBody UpdatePageCompositeRequest request,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+    try {
+      Long userId = SecurityUtil.getCurrentUserIdOrThrow();
+      PageDetailResponse response = pageService.updateComposite(id, request, userId);
+      String successMessage = messageSource.getMessage("page.update.success",
+          null, Locale.forLanguageTag(lang));
+      return ResponseEntity.ok(ApiResponse.success(successMessage, response));
+    } catch (Exception ex) {
+      log.error("Error updating page composite id={}", id, ex);
+      // OWASP: Do not expose exception details to client
+      String msg = messageSource.getMessage("page.update.error", null, Locale.forLanguageTag(lang));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.error(msg));
     }
   }
 }

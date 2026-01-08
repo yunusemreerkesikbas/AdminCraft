@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -9,7 +10,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
@@ -17,13 +17,10 @@ import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
-import { ItemDialogService } from '@shared/services/item-dialog.service';
-import { ItemDialogOptions } from '@shared/types/item-dialog.types';
-import { debounceTime, forkJoin, Observable, take, takeUntil } from 'rxjs';
-import { CreatePageFormData, PageI18nFormData } from '../models/page-form.types';
+import { debounceTime, Observable, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
-import { CreatePageRequest, Language, PageI18nRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
-import { PageSchemaBuilderService } from '../services/page-schema-builder.service';
+import { CreatePageRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
+import { PageEditDialogComponent, PageEditDialogData } from '../page-edit-dialog/page-edit-dialog.component';
 
 @Component({
     selector: 'spa-page-list',
@@ -54,17 +51,13 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
     #router = inject(Router);
     #notificationService = inject(NotificationService);
     #confirmationService = inject(ConfirmationService);
-
-    #itemDialogService = inject(ItemDialogService);
-    #schemaBuilder = inject(PageSchemaBuilderService);
-    #tenantContext = inject(TenantContextService);
+    #dialog = inject(MatDialog);
     #languageContext = inject(LanguageContextService);
 
     protected pageSizeSig = signal(24);
     protected pageIndexSig = signal(0);
     protected searchInputControl = new FormControl('');
     
-    // Derived signals for local pagination
     protected totalItemsSig = computed(() => this.filtered().length);
     protected paginatedItemsSig = computed(() => {
         const items = this.filtered();
@@ -126,7 +119,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
     }
 
     protected override loadItems(): void {
-        // Use BaseCrudList logic: fetchItems() -> store.setItems()
         super.loadItems();
     }
 
@@ -149,99 +141,37 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
     }
 
     createPage(): void {
-        const tenantId = this.#tenantContext.getCurrentTenantId();
-        if (!tenantId) {
-            this.#notificationService.warning('admin.pageBuilder.errors.noTenant');
-            return;
-        }
+        this.#openPageDialog('create');
+    }
 
-        const schema = this.#schemaBuilder.buildPageCreateSchema();
-        const initial: CreatePageFormData = {
-            status: 'DRAFT',
-            sortOrder: 0
+    editPage(page: PageListDto): void {
+        this.service.getPageDetail(page.id).pipe(take(1)).subscribe({
+            next: (detail) => {
+                this.#openPageDialog('edit', detail);
+            },
+            error: () => {
+                this.#notificationService.alert('admin.pages.errors.loadFailed');
+            }
+        });
+    }
+
+    #openPageDialog(mode: 'create' | 'edit', page?: any): void {
+        const dialogData: PageEditDialogData = {
+            mode,
+            page: page || undefined,
+            languages: this.#supportedLanguages
         };
 
-        this.#supportedLanguages.forEach(lang => {
-            initial[lang] = {};
+        const dialogRef = this.#dialog.open(PageEditDialogComponent, {
+            width: '720px',
+            height: '80vh',
+            disableClose: true,
+            data: dialogData
         });
 
-        const options: ItemDialogOptions<CreatePageFormData> = {
-            titleKey: 'admin.dialog.title.create',
-            mode: 'create',
-            schema,
-            languages: this.#supportedLanguages,
-            initial,
-            modalData: {
-                disableClose: true,
-                width: '720px',
-                height: '80vh'
-            }
-        };
-
-        this.#itemDialogService.open(options).pipe(take(1)).subscribe(result => {
-            if (!result) return;
-
-            try {
-                const generalReq: CreatePageRequest = {
-                    status: result.status || 'DRAFT',
-                    sortOrder: result.sortOrder || 0,
-                    styleClasses: result.styleClasses || null,
-                    featuredImage: null
-                };
-
-                this.service.createPage(generalReq).pipe(take(1)).subscribe({
-                    next: (createdPage) => {
-                        const i18nUpdates: Observable<PageI18nRequest>[] = [];
-
-                        this.#supportedLanguages.forEach(lang => {
-                            const langData = result[lang] as PageI18nFormData | undefined;
-                            const hasContent = langData && (
-                                langData.urlPath ||
-                                langData.title ||
-                                langData.subtitle ||
-                                langData.metaTitle ||
-                                langData.metaDescription ||
-                                langData.description
-                            );
-
-                            if (hasContent && langData) {
-                                const i18nReq: PageI18nRequest = {
-                                    language: lang.toUpperCase() as Language,
-                                    urlPath: langData.urlPath || null,
-                                    title: langData.title || null,
-                                    subtitle: langData.subtitle || null,
-                                    metaTitle: langData.metaTitle || null,
-                                    metaDescription: langData.metaDescription || null,
-                                    description: langData.description || null,
-                                    status: result.status || 'DRAFT'
-                                };
-                                i18nUpdates.push(this.service.updatePageI18n(createdPage.id, lang.toUpperCase() as Language, i18nReq));
-                            }
-                        });
-
-                        const handleSuccess = () => {
-                            this.#notificationService.success('admin.pageBuilder.messages.pageCreated');
-                            this.loadItems();
-                        };
-
-                        if (i18nUpdates.length > 0) {
-                            forkJoin(i18nUpdates).pipe(take(1)).subscribe({
-                                next: handleSuccess,
-                                error: (err) => {
-                                    this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
-                                    this.loadItems();
-                                }
-                            });
-                        } else {
-                            handleSuccess();
-                        }
-                    },
-                    error: (error) => {
-                        this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
-                    }
-                });
-            } catch (err) {
-                this.#notificationService.alert('admin.pageBuilder.errors.creationFailed');
+        dialogRef.afterClosed().pipe(take(1)).subscribe(result => {
+            if (result) {
+                this.loadItems();
             }
         });
     }
@@ -262,7 +192,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         const { action, item } = event;
         switch (action) {
             case 'edit':
-                this.#router.navigate(['/admin/pages', item.uid]);
+                this.editPage(item);
                 break;
             case 'slots':
                 this.#router.navigate(['/admin/pages', item.uid, 'slots']);

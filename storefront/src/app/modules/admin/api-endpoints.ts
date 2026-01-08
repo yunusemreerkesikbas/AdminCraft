@@ -85,6 +85,10 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageI18n: 'pages/${pageId}/i18n/${language}',
     pageI18nPublish: 'pages/${pageId}/publish/${language}',
 
+    // ----- PAGE BUILDER: PAGE COMPOSITE -----
+    pagesComposite: 'pages/composite',
+    pageComposite: 'pages/${id}/composite',
+
     // ----- PAGE BUILDER: SLOTS -----
     pageSlots: 'pages/${id}/slots',
     pageSlot: 'pages/${id}/slots/${slotName}',

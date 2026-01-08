@@ -2,14 +2,16 @@ import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable, Subject } from 'rxjs';
 import {
-  CreatePageRequest,
-  Language,
-  PageDetailDto,
-  PageI18nDto,
-  PageI18nRequest,
-  PageListDto,
-  PublishPageI18nRequest,
-  UpdatePageRequest
+    CreatePageCompositeRequest,
+    CreatePageRequest,
+    Language,
+    PageDetailDto,
+    PageI18nDto,
+    PageI18nRequest,
+    PageListDto,
+    PublishPageI18nRequest,
+    UpdatePageCompositeRequest,
+    UpdatePageRequest
 } from './page-builder.types';
 
 @Injectable({ providedIn: 'root' })
@@ -68,5 +70,17 @@ export class PageBuilderService extends CrudHttpService<PageListDto, CreatePageR
   publishPageI18n(pageId: number, language: Language, req?: PublishPageI18nRequest): Observable<PageI18nDto> {
     return this.customPost<PageI18nDto>('pageI18nPublish', req || {}, { pageId, language });
   }
-}
 
+  // Composite operations (Sprint 34 pattern)
+  getComposite(id: number): Observable<PageDetailDto> {
+    return this.customGet<PageDetailDto>('pageComposite', { id });
+  }
+
+  createComposite(req: CreatePageCompositeRequest): Observable<PageDetailDto> {
+    return this.customPost<PageDetailDto>('pagesComposite', req);
+  }
+
+  updateComposite(id: number, req: UpdatePageCompositeRequest): Observable<PageDetailDto> {
+    return this.customPut<PageDetailDto>('pageComposite', req, { id });
+  }
+}
