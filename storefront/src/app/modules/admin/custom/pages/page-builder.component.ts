@@ -83,9 +83,7 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
       try {
         const generalReq: CreatePageRequest = {
           status: result.status || 'DRAFT',
-          sortOrder: result.sortOrder || 0,
-          styleClasses: result.styleClasses || null,
-          featuredImage: null
+          styleClasses: result.styleClasses || null
         };
 
         this.#pageBuilderService.createPage(generalReq).pipe(take(1)).subscribe({
@@ -95,22 +93,16 @@ export class PageBuilderComponent implements OnInit, OnDestroy {
             this.#supportedLanguages.forEach(lang => {
               const langData = result[lang] as PageI18nFormData | undefined;
               const hasContent = langData && (
-                langData.urlPath ||
+                langData.canonicalUrl ||
                 langData.title ||
-                langData.subtitle ||
-                langData.metaTitle ||
-                langData.metaDescription ||
                 langData.description
               );
 
               if (hasContent && langData) {
                 const i18nReq: PageI18nRequest = {
                   language: lang.toUpperCase() as Language,
-                  urlPath: langData.urlPath || null,
+                  canonicalUrl: langData.canonicalUrl || null,
                   title: langData.title || null,
-                  subtitle: langData.subtitle || null,
-                  metaTitle: langData.metaTitle || null,
-                  metaDescription: langData.metaDescription || null,
                   description: langData.description || null,
                   status: result.status || 'DRAFT'
                 };

@@ -1,23 +1,22 @@
 package com.backend.application.dto.request;
 
-import java.time.LocalDateTime;
-
-import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record PageI18nRequest(
-    @NotNull(message = "validation.language.required") Language language,
+/**
+ * I18n request DTO for composite operations.
+ * Unlike PageI18nRequest, this doesn't include the language field
+ * as it's used as a value in Map<Language, PageI18nCompositeRequest>.
+ */
+public record PageI18nCompositeRequest(
     @Size(max = 200, message = "validation.name.size") String name,
     @Size(max = 255, message = "validation.canonical.url.size") String canonicalUrl,
     @Size(max = 200, message = "validation.title.size") String title,
     String description,
-    PageStatus status,
-    LocalDateTime scheduledAt) {
+    PageStatus status) {
 
-  public PageI18nRequest {
+  public PageI18nCompositeRequest {
     if (name != null) {
       name = name.trim();
     }

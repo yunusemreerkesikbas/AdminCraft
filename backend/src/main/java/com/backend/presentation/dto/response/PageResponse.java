@@ -11,9 +11,7 @@ public record PageResponse(
         String uid,
         Long templateId,
         PageStatus status,
-        String featuredImage,
         String styleClasses,
-        Integer sortOrder,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
 
@@ -28,9 +26,7 @@ public record PageResponse(
                 page.getUid(),
                 page.getTemplateId(),
                 page.getStatus(),
-                page.getFeaturedImage(),
                 page.getStyleClasses(),
-                page.getSortOrder(),
                 page.getCreatedAt(),
                 page.getUpdatedAt());
     }

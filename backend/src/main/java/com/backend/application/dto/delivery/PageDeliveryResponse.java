@@ -8,14 +8,11 @@ import lombok.Builder;
 @Builder
 public record PageDeliveryResponse(
     String uid,
+    String name,
     String title,
-    String subtitle,
     String description,
-    String metaTitle,
-    String metaDescription,
     String robotTag,
-    String urlPath,
-    String featuredImage,
+    String canonicalUrl,
     String styleClasses,
     Map<String, List<ComponentDeliveryResponse>> slots) {
 }

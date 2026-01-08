@@ -1,18 +1,15 @@
 import { PageStatus } from '../page-builder.types';
 
 export interface PageI18nFormData {
-  urlPath?: string | null;
+  canonicalUrl?: string | null;
   title?: string | null;
-  subtitle?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
+
   description?: string | null;
 }
 
 export interface CreatePageFormData {
   templateId?: number | null;
   status?: PageStatus;
-  sortOrder?: number;
   styleClasses?: string | null;
 
   [languageCode: string]: PageI18nFormData | number | string | boolean | null | undefined;
@@ -24,7 +21,7 @@ export function isPageI18nFormData(value: unknown): value is PageI18nFormData {
   }
 
   const data = value as Record<string, unknown>;
-  const validKeys = ['urlPath', 'title', 'subtitle', 'metaTitle', 'metaDescription', 'description'];
+  const validKeys = ['canonicalUrl', 'title', 'description'];
   const keys = Object.keys(data);
 
   return keys.length > 0 && keys.every(key => validKeys.includes(key));

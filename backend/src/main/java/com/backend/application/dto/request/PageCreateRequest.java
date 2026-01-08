@@ -1,23 +1,20 @@
 package com.backend.application.dto.request;
 
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.RobotTag;
 
 import jakarta.validation.constraints.Size;
 
 public record PageCreateRequest(
     Long templateId,
     PageStatus status,
-    @Size(max = 500, message = "validation.featured.image.size") String featuredImage,
     @Size(max = 255, message = "validation.style.classes.size") String styleClasses,
-    Integer sortOrder) {
+    RobotTag robotTag,
+    @Size(max = 36) String uid) {
 
   public PageCreateRequest {
-    if (featuredImage != null) {
-      featuredImage = featuredImage.trim();
-    }
     if (styleClasses != null) {
       styleClasses = styleClasses.trim();
     }
   }
 }
-

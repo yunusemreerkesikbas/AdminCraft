@@ -44,8 +44,8 @@ public class PageI18nServiceImpl implements PageI18nService {
         validatePageExists(pageId);
         validateLanguageMatch(language, request.language());
 
-        if (request.urlPath() != null && !request.urlPath().trim().isEmpty()) {
-            validateUrlPathUniqueness(language, request.urlPath(), pageId);
+        if (request.canonicalUrl() != null && !request.canonicalUrl().trim().isEmpty()) {
+            validateCanonicalUrlUniqueness(language, request.canonicalUrl(), pageId);
         }
 
         PageI18n pageI18n = pageI18nRepository
@@ -82,9 +82,24 @@ public class PageI18nServiceImpl implements PageI18nService {
 
         if (request.isImmediatePublish()) {
             pageI18n.publish();
+
+            // Update Parent Page PublishedAt
+            pageRepository.findById(pageId).ifPresent(p -> {
+                p.setPublishedAt(LocalDateTime.now());
+                p.setScheduledAt(null);
+                p.setStatus(PageStatus.PUBLISHED);
+                pageRepository.save(p);
+            });
+
         } else {
-            validateScheduledTime(request.scheduledAt());
+            // Schedule logic
             pageI18n.schedule(request.scheduledAt());
+
+            pageRepository.findById(pageId).ifPresent(p -> {
+                p.setScheduledAt(request.scheduledAt());
+                p.setStatus(PageStatus.SCHEDULED);
+                pageRepository.save(p);
+            });
         }
 
         pageI18n = pageI18nRepository.save(pageI18n);
@@ -102,6 +117,15 @@ public class PageI18nServiceImpl implements PageI18nService {
                         "PageI18n not found for pageId: " + pageId + " and language: " + language));
 
         pageI18n.unpublish();
+
+        // Update Parent Page
+        pageRepository.findById(pageId).ifPresent(p -> {
+            p.setPublishedAt(null);
+            p.setScheduledAt(null);
+            p.setStatus(PageStatus.DRAFT);
+            pageRepository.save(p);
+        });
+
         pageI18n = pageI18nRepository.save(pageI18n);
         return PageI18nResponse.from(pageI18n);
     }
@@ -124,12 +148,12 @@ public class PageI18nServiceImpl implements PageI18nService {
         }
     }
 
-    private void validateUrlPathUniqueness(Language language, String urlPath, Long pageId) {
-        pageI18nRepository.findByLanguageAndUrlPath(language, urlPath)
+    private void validateCanonicalUrlUniqueness(Language language, String canonicalUrl, Long pageId) {
+        pageI18nRepository.findByLanguageAndCanonicalUrl(language, canonicalUrl)
                 .ifPresent(existing -> {
                     if (!existing.getPageId().equals(pageId)) {
                         throw new IllegalArgumentException(
-                                "URL path '" + urlPath + "' already exists for language " + language);
+                                "Canonical URL '" + canonicalUrl + "' already exists for language " + language);
                     }
                 });
     }
@@ -137,15 +161,8 @@ public class PageI18nServiceImpl implements PageI18nService {
     private void validateCanPublish(PageI18n pageI18n) {
         if (!pageI18n.canBePublished()) {
             throw new PageCannotBePublishedException(
-                    "PageI18n cannot be published. Missing required fields: title and/or urlPath. " +
+                    "PageI18n cannot be published. Missing required fields: title and/or canonicalUrl. " +
                             "PageId: " + pageI18n.getPageId() + ", Language: " + pageI18n.getLanguage());
-        }
-    }
-
-    private void validateScheduledTime(LocalDateTime scheduledAt) {
-        if (scheduledAt != null && scheduledAt.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException(
-                    "Scheduled time must be in the future. Provided: " + scheduledAt);
         }
     }
 
@@ -157,27 +174,20 @@ public class PageI18nServiceImpl implements PageI18nService {
         return pageI18nRepository.findByPageId(pageId)
                 .stream()
                 .findFirst()
-                .map(pageI18n -> PageI18nResponse.from(pageI18n, true))
+                .map(PageI18nResponse::from)
                 .orElseThrow(() -> new PageNotFoundException(
                         "No i18n found for pageId: " + pageId + " in any language"));
     }
 
     private PageI18n updateExistingPageI18n(PageI18n existing, PageI18nRequest request) {
-        if (request.urlPath() != null)
-            existing.setUrlPath(request.urlPath());
+        if (request.name() != null)
+            existing.setName(request.name());
+        if (request.canonicalUrl() != null)
+            existing.setCanonicalUrl(request.canonicalUrl());
         if (request.title() != null)
             existing.setTitle(request.title());
-        if (request.subtitle() != null)
-            existing.setSubtitle(request.subtitle());
-        if (request.metaTitle() != null)
-            existing.setMetaTitle(request.metaTitle());
-        if (request.metaDescription() != null)
-            existing.setMetaDescription(request.metaDescription());
         if (request.description() != null)
             existing.setDescription(request.description());
-        if (request.descriptionHtml() != null)
-            existing.setDescriptionHtml(
-                    com.backend.shared.common.HtmlSanitizer.sanitizeRichText(request.descriptionHtml()));
         if (request.status() != null)
             existing.setStatus(request.status());
 
@@ -190,14 +200,10 @@ public class PageI18nServiceImpl implements PageI18nService {
         pageI18n.setLanguage(language);
         pageI18n.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
         pageI18n.setUid(generateUniqueUidForI18n());
-        pageI18n.setUrlPath(request.urlPath());
+        pageI18n.setName(request.name());
+        pageI18n.setCanonicalUrl(request.canonicalUrl());
         pageI18n.setTitle(request.title());
-        pageI18n.setSubtitle(request.subtitle());
-        pageI18n.setMetaTitle(request.metaTitle());
-        pageI18n.setMetaDescription(request.metaDescription());
         pageI18n.setDescription(request.description());
-        pageI18n.setDescriptionHtml(
-                com.backend.shared.common.HtmlSanitizer.sanitizeRichText(request.descriptionHtml()));
         pageI18n.setStatus(request.status() != null ? request.status() : PageStatus.DRAFT);
         pageI18n.setUpdatedAt(LocalDateTime.now());
 

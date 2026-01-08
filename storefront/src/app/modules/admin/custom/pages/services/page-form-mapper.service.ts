@@ -8,20 +8,18 @@ export class PageFormMapperService {
     return {
       templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
-      sortOrder: Number((result as any).sortOrder ?? 0),
       styleClasses: (result as any).styleClasses ?? null,
-      featuredImage: null,
     };
   }
 
-  toUpdatePageRequest(pageId: number, result: CreatePageFormData, featuredImage: string | null | undefined): UpdatePageRequest {
+  toUpdatePageRequest(pageId: number, result: CreatePageFormData): UpdatePageRequest {
     return {
       id: pageId,
       templateId: (result as any).templateId ?? null,
       status: ((result as any).status as PageStatus) || 'DRAFT',
-      sortOrder: Number((result as any).sortOrder ?? 0),
+
       styleClasses: (result as any).styleClasses ?? null,
-      featuredImage: featuredImage ?? null,
+
     };
   }
 
@@ -37,11 +35,9 @@ export class PageFormMapperService {
       const langEnum = lang.toUpperCase() as Language;
       const req: PageI18nRequest = {
         language: langEnum,
-        urlPath: langData.urlPath ?? null,
+        canonicalUrl: langData.canonicalUrl ?? null,
         title: langData.title ?? null,
-        subtitle: langData.subtitle ?? null,
-        metaTitle: langData.metaTitle ?? null,
-        metaDescription: langData.metaDescription ?? null,
+
         description: langData.description ?? null,
         status,
       };
@@ -53,11 +49,9 @@ export class PageFormMapperService {
 
   #hasAnyContent(data: PageI18nFormData): boolean {
     return Boolean(
-      (data.urlPath && data.urlPath.trim()) ||
+      (data.canonicalUrl && data.canonicalUrl.trim()) ||
       (data.title && data.title.trim()) ||
-      (data.subtitle && data.subtitle.trim()) ||
-      (data.metaTitle && data.metaTitle.trim()) ||
-      (data.metaDescription && data.metaDescription.trim()) ||
+
       (data.description && data.description.trim())
     );
   }

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.RobotTag;
 
 public record PageDetailResponse(
                 Long id,
@@ -16,16 +17,13 @@ public record PageDetailResponse(
                 String uid,
                 Long templateId,
                 PageStatus status,
-                String featuredImage,
                 String styleClasses,
-                Integer sortOrder,
+                RobotTag robotTag,
+                LocalDateTime publishedAt,
+                LocalDateTime scheduledAt,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt,
-                Map<String, PageI18nResponse> translations,
-                Metadata metadata) {
-
-        public record Metadata(int translationCount, int publishedTranslationCount) {
-        }
+                Map<String, PageI18nResponse> translations) {
 
         public static PageDetailResponse from(Page page, List<PageI18n> pageI18nList) {
                 if (page == null) {
@@ -40,23 +38,18 @@ public record PageDetailResponse(
                                                                 PageI18nResponse::from,
                                                                 (existing, replacement) -> replacement));
 
-                int translationCount = translationsMap.size();
-                int publishedCount = (int) translationsMap.values().stream()
-                                .filter(i18n -> i18n.status() == PageStatus.PUBLISHED)
-                                .count();
-
                 return new PageDetailResponse(
                                 page.getId(),
                                 page.getUuid(),
                                 page.getUid(),
                                 page.getTemplateId(),
                                 page.getStatus(),
-                                page.getFeaturedImage(),
                                 page.getStyleClasses(),
-                                page.getSortOrder(),
+                                page.getRobotTag(),
+                                page.getPublishedAt(),
+                                page.getScheduledAt(),
                                 page.getCreatedAt(),
                                 page.getUpdatedAt(),
-                                Map.copyOf(translationsMap),
-                                new Metadata(translationCount, publishedCount));
+                                Map.copyOf(translationsMap));
         }
 }

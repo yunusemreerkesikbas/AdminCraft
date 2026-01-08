@@ -151,6 +151,7 @@ export const langEN = {
                 priority: 'Priority',
                 notes: 'Notes',
                 urlPath: 'URL Path',
+                canonicalUrl: 'Canonical URL',
                 subtitle: 'Subtitle',
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
@@ -312,7 +313,52 @@ export const langEN = {
                 }
             },
             actions: {
-                create: 'Create Page'
+                create: 'Create Page',
+                slots: 'Manage Slots'
+            },
+            tabs: {
+                general: 'General'
+            },
+            fields: {
+                uid: 'UID',
+                sortOrder: 'Sort Order',
+                featuredImage: 'Featured Image',
+                styleClasses: 'CSS Classes',
+                urlPath: 'URL Path',
+                canonicalUrl: 'Canonical URL',
+                robotTag: 'Robot Tag',
+                title: 'Title',
+                subtitle: 'Subtitle',
+                metaTitle: 'Meta Title',
+                metaDescription: 'Meta Description',
+                description: 'Description'
+            },
+            hints: {
+                featuredImage: 'Main image for this page',
+                styleClasses: 'Ex: bg-dark text-white',
+                urlPath: 'Ex: about-us or contact',
+                canonicalUrl: 'Ex: about-us or contact',
+                metaTitle: 'Title displayed in search engine results',
+                metaDescription: 'Description displayed in search engine results'
+            },
+            appearance: 'Appearance',
+            basicInfo: 'Basic Information',
+            seoInfo: 'SEO Information',
+            dialogs: {
+                delete: {
+                    title: 'Delete Page',
+                    confirm: 'Are you sure you want to delete this page?'
+                }
+            },
+            success: {
+                created: 'Page successfully created',
+                updated: 'Page successfully updated',
+                deleted: 'Page successfully deleted'
+            },
+            errors: {
+                createFailed: 'Failed to create page',
+                updateFailed: 'Failed to update page',
+                loadFailed: 'Failed to load page'
             }
         },
         pageBuilder: {

@@ -59,9 +59,9 @@ export class PageSchemaBuilderService {
   #buildI18nFields(): ReadonlyArray<LangFieldConfig> {
     return [
       {
-        key: 'urlPath',
+        key: 'canonicalUrl',
         type: 'text',
-        labelKey: 'admin.common.fields.urlPath',
+        labelKey: 'admin.common.fields.canonicalUrl',
         required: false,
         maxLength: 255
       },
@@ -72,24 +72,7 @@ export class PageSchemaBuilderService {
         required: false,
         maxLength: 200
       },
-      {
-        key: 'subtitle',
-        type: 'text',
-        labelKey: 'admin.common.fields.subtitle',
-        maxLength: 200
-      },
-      {
-        key: 'metaTitle',
-        type: 'text',
-        labelKey: 'admin.common.fields.metaTitle',
-        maxLength: 200
-      },
-      {
-        key: 'metaDescription',
-        type: 'textarea',
-        labelKey: 'admin.common.fields.metaDescription',
-        maxLength: 500
-      },
+
       {
         key: 'description',
         type: 'textarea',

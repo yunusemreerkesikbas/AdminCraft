@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.RobotTag;
 
 public record PageListResponse(
         Long id,
@@ -15,9 +16,8 @@ public record PageListResponse(
         String uid,
         Long templateId,
         PageStatus status,
-        String featuredImage,
         String styleClasses,
-        Integer sortOrder,
+        RobotTag robotTag,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         Map<String, Boolean> translations) {
@@ -41,9 +41,8 @@ public record PageListResponse(
                 page.getUid(),
                 page.getTemplateId(),
                 page.getStatus(),
-                page.getFeaturedImage(),
                 page.getStyleClasses(),
-                page.getSortOrder(),
+                page.getRobotTag(),
                 page.getCreatedAt(),
                 page.getUpdatedAt(),
                 Map.copyOf(translationMap));

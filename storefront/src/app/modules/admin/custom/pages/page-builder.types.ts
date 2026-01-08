@@ -1,7 +1,9 @@
 import { Language } from '@shared/types/common.types';
 export { Language };
 export type PageStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'SCHEDULED';
+export type RobotTag = 'INDEX_FOLLOW' | 'NOINDEX_FOLLOW' | 'INDEX_NOFOLLOW' | 'NOINDEX_NOFOLLOW';
 
+// PageDto: Add dates
 export interface PageDto {
   id: number;
   uuid: string;
@@ -9,9 +11,11 @@ export interface PageDto {
   tenantId: number;
   templateId?: number | null;
   status: PageStatus;
-  featuredImage?: string | null;
   styleClasses?: string | null;
-  sortOrder: number;
+  robotTag: RobotTag;
+
+  publishedAt?: string | null;
+  scheduledAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,21 +24,15 @@ export interface PageI18nDto {
   id: number;
   uuid: string;
   uid: string;
-  pageId: number;
   tenantId: number;
-  language: Language;
-  urlPath?: string | null;
-  title?: string | null;
-  subtitle?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
+
+  name: string; // Mapped from title
+  title: string;
+  canonicalUrl: string; // Mapped from urlPath
   description?: string | null;
-  descriptionHtml?: string | null;
-  status: PageStatus;
-  publishedAt?: string | null;
-  scheduledAt?: string | null;
+
   updatedAt: string;
-  fallbackLanguage?: boolean;
+  // Removed: publishedAt, scheduledAt (moved to Page)
 }
 
 export interface PageListDto {
@@ -44,9 +42,9 @@ export interface PageListDto {
   tenantId: number;
   templateId?: number | null;
   status: PageStatus;
-  featuredImage?: string | null;
   styleClasses?: string | null;
-  sortOrder: number;
+  robotTag: RobotTag;
+
   createdAt: string;
   updatedAt: string;
   translations: {
@@ -54,55 +52,48 @@ export interface PageListDto {
   };
 }
 
-export interface PageDetailDto {
+export interface PageDetailDto { // Mapping PageDetailResponse
   id: number;
   uuid: string;
   uid: string;
   tenantId: number;
   templateId?: number | null;
   status: PageStatus;
-  featuredImage?: string | null;
   styleClasses?: string | null;
-  sortOrder: number;
+  robotTag: RobotTag;
+
+  publishedAt?: string | null;
+  scheduledAt?: string | null;
   createdAt: string;
   updatedAt: string;
   translations: {
     [key in Language]?: PageI18nDto;
-  };
-  metadata: {
-    translationCount: number;
-    publishedTranslationCount: number;
   };
 }
 
 export interface CreatePageRequest {
   templateId?: number | null;
   status?: PageStatus;
-  featuredImage?: string | null;
   styleClasses?: string | null;
-  sortOrder?: number;
+  robotTag?: RobotTag;
+  uid?: string;
 }
 
 export interface UpdatePageRequest {
   id: number;
   templateId?: number | null;
   status?: PageStatus;
-  featuredImage?: string | null;
   styleClasses?: string | null;
-  sortOrder?: number;
+  robotTag?: RobotTag;
 }
 
 export interface PageI18nRequest {
   language?: Language;
-  urlPath?: string | null;
+  canonicalUrl?: string | null;
   title?: string | null;
-  subtitle?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
   description?: string | null;
-  descriptionHtml?: string | null;
   status?: PageStatus;
-  scheduledAt?: string | null;
+  // scheduledAt removed from I18n request (moved to Page level or handled by publish)
 }
 
 export interface PublishPageI18nRequest {
@@ -123,7 +114,6 @@ export interface PaginatedResponse<T> {
   pageSize: number;
 }
 
-// Validation schemas
 export interface PageValidationErrors {
   title?: string;
   slug?: string;
@@ -131,3 +121,28 @@ export interface PageValidationErrors {
   tenantId?: string;
 }
 
+// Composite Request/Response types
+export interface PageI18nCompositeRequest {
+  canonicalUrl?: string | null;
+  title?: string | null;
+  description?: string | null;
+  status?: PageStatus;
+}
+
+export interface CreatePageCompositeRequest {
+  templateId?: number | null;
+  status?: PageStatus;
+  styleClasses?: string | null;
+  robotTag?: RobotTag;
+  uid?: string;
+  translations: Record<string, PageI18nCompositeRequest>;
+}
+
+export interface UpdatePageCompositeRequest {
+  templateId?: number | null;
+  status?: PageStatus;
+  styleClasses?: string | null;
+  robotTag?: RobotTag;
+  // Removed featuresImage, sortOrder
+  translations?: Record<string, PageI18nCompositeRequest>;
+}

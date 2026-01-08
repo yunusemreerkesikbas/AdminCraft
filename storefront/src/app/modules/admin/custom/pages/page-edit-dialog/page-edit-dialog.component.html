@@ -1,0 +1,146 @@
+<spa-dialog-header [title]="dialogTitle" (closeClicked)="cancel()">
+</spa-dialog-header>
+
+<spa-dialog-content type="tabbed">
+    <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
+        <ng-template spaTabContent="general">
+            <form [formGroup]="generalForm" class="flex flex-col gap-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <spa-select
+                        formControlName="status"
+                        [label]="'admin.common.fields.status' | transloco"
+                        [options]="statusOptions"
+                        [placeholder]="
+                            'admin.common.placeholders.selectStatus' | transloco
+                        "
+                        [required]="true"
+                    >
+                    </spa-select>
+
+                    <spa-select
+                        formControlName="robotTag"
+                        label="Robot Tag"
+                        [options]="robotTagOptions"
+                        [required]="true"
+                    >
+                    </spa-select>
+
+                    <div class="sm:col-span-2">
+                        <spa-input
+                            formControlName="uid"
+                            label="UID"
+                            [placeholder]="
+                                'admin.pages.placeholders.uidAuto' | transloco
+                            "
+                        >
+                        </spa-input>
+                    </div>
+                </div>
+
+                @if (isEditMode()) {
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                        <spa-input
+                            formControlName="publishedAt"
+                            label="Published At"
+                            [readonly]="true"
+                        >
+                        </spa-input>
+
+                        <spa-input
+                            formControlName="createdAt"
+                            label="Created At"
+                            [readonly]="true"
+                        >
+                        </spa-input>
+
+                        <spa-input
+                            formControlName="updatedAt"
+                            label="Updated At"
+                            [readonly]="true"
+                        >
+                        </spa-input>
+                    </div>
+                }
+
+                <div class="my-2 w-full border-t"></div>
+
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-secondary text-base font-medium">
+                        {{ 'admin.pages.appearance' | transloco }}
+                    </h3>
+
+                    <spa-input
+                        formControlName="styleClasses"
+                        [label]="'admin.pages.fields.styleClasses' | transloco"
+                        [hint]="'admin.pages.hints.styleClasses' | transloco"
+                        placeholder="e.g. bg-primary text-white"
+                    >
+                    </spa-input>
+                </div>
+            </form>
+        </ng-template>
+
+        @for (lang of languages; track lang) {
+            <ng-template [spaTabContent]="'lang-' + lang">
+                <form [formGroup]="i18nForms[lang]" class="flex flex-col gap-6">
+                    <div
+                        class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
+                    >
+                        <div
+                            class="text-secondary mb-4 flex items-center gap-2"
+                        >
+                            <mat-icon class="icon-size-5">info</mat-icon>
+                            <span
+                                class="text-sm font-medium uppercase tracking-wide"
+                            >
+                                {{ 'admin.pages.basicInfo' | transloco }}
+                                ({{ lang | uppercase }})
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <spa-input
+                                class="sm:col-span-2"
+                                formControlName="canonicalUrl"
+                                label="Canonical URL"
+                                [hint]="
+                                    'admin.pages.hints.canonicalUrl' | transloco
+                                "
+                            >
+                            </spa-input>
+
+                            <spa-input
+                                class="sm:col-span-2"
+                                formControlName="title"
+                                label="Name"
+                            >
+                            </spa-input>
+
+                            <div class="sm:col-span-2">
+                                <spa-textarea
+                                    formControlName="description"
+                                    [label]="
+                                        'admin.pages.fields.description'
+                                            | transloco
+                                    "
+                                    [rows]="4"
+                                >
+                                </spa-textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </ng-template>
+        }
+    </spa-tab-container>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitDisabled]="generalForm.invalid"
+    [isSubmitting]="isSubmitting()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.close"
+    (cancelClicked)="cancel()"
+    (submitClicked)="save()"
+>
+</spa-dialog-footer>
