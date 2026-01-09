@@ -2,6 +2,8 @@
 
 A modern, multi-tenant SaaS CMS platform built with Clean Architecture, emphasizing security, scalability, and performance.
 
+Documentation: [`docs/README.md`](docs/README.md)
+
 ## ?? Project Anatomy
 
 The project is structured as a monorepo containing both the backend and frontend applications:
