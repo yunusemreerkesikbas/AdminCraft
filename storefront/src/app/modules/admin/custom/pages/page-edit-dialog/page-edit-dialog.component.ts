@@ -1,6 +1,6 @@
 import { SpaLocalizedFormDialogData } from '@/app/shared/components/spa-dialog-base';
 import { CommonModule, UpperCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, ViewEncapsulation } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,8 @@ import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-di
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
+import { PageTemplateService } from '../../templates/page-template.service';
+import { PageTemplate } from '../../templates/page-template.types';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageCompositeRequest, PageDetailDto, PageStatus, RobotTag, UpdatePageCompositeRequest } from '../page-builder.types';
 
@@ -50,8 +52,17 @@ export interface PageEditDialogData extends SpaLocalizedFormDialogData<PageDetai
 export class PageEditDialogComponent extends SpaLocalizedFormDialog<any, PageEditDialogData> {
     readonly #translocoService = inject(TranslocoService);
     readonly #pageService = inject(PageBuilderService);
+    readonly #templateService = inject(PageTemplateService);
     readonly #notify = inject(NotificationService);
     readonly #tenantContext = inject(TenantContextService);
+    readonly #cdr = inject(ChangeDetectorRef);
+
+    // Template data signals
+    protected pageTemplates = signal<PageTemplate[]>([]);
+    protected templatesLoading = signal<boolean>(false);
+
+    // Template options for spa-select
+    templateOptions: { value: number | null; label: string }[] = [];
 
     statusOptions: { value: PageStatus; label: string }[] = [
         { value: 'DRAFT', label: 'DRAFT' },
@@ -92,7 +103,31 @@ export class PageEditDialogComponent extends SpaLocalizedFormDialog<any, PageEdi
         } else {
             this.languages = ['tr', 'en'];
         }
+        this.#loadPageTemplates();
         super.ngOnInit();
+    }
+
+    #loadPageTemplates(): void {
+        this.templatesLoading.set(true);
+        this.#templateService.getActive()
+            .pipe(take(1))
+            .subscribe({
+                next: (templates) => {
+                    this.pageTemplates.set(templates);
+                    this.templateOptions = [
+                        ...templates.map(t => ({
+                            value: t.id,
+                            label: t.uid
+                        }))
+                    ];
+                    this.templatesLoading.set(false);
+                    this.#cdr.markForCheck();
+                },
+                error: () => {
+                    this.#notify.alert('admin.pages.errors.loadTemplatesFailed');
+                    this.templatesLoading.set(false);
+                }
+            });
     }
 
     protected buildGeneralForm(): FormGroup {

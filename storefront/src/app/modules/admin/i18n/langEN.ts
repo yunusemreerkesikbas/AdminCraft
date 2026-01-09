@@ -321,6 +321,8 @@ export const langEN = {
             },
             fields: {
                 uid: 'UID',
+                template: 'Page Template',
+                noTemplate: 'No Template',
                 sortOrder: 'Sort Order',
                 featuredImage: 'Featured Image',
                 styleClasses: 'CSS Classes',
@@ -333,13 +335,18 @@ export const langEN = {
                 metaDescription: 'Meta Description',
                 description: 'Description'
             },
+            placeholders: {
+                selectTemplate: 'Select template...',
+                uidAuto: 'Auto-generated'
+            },
             hints: {
                 featuredImage: 'Main image for this page',
                 styleClasses: 'Ex: bg-dark text-white',
                 urlPath: 'Ex: about-us or contact',
                 canonicalUrl: 'Ex: about-us or contact',
                 metaTitle: 'Title displayed in search engine results',
-                metaDescription: 'Description displayed in search engine results'
+                metaDescription: 'Description displayed in search engine results',
+                templateSlots: 'Selecting a template will automatically create default content slots.'
             },
             appearance: 'Appearance',
             basicInfo: 'Basic Information',
@@ -358,7 +365,8 @@ export const langEN = {
             errors: {
                 createFailed: 'Failed to create page',
                 updateFailed: 'Failed to update page',
-                loadFailed: 'Failed to load page'
+                loadFailed: 'Failed to load page',
+                loadTemplatesFailed: 'Failed to load templates'
             }
         },
         pageBuilder: {
@@ -421,9 +429,15 @@ export const langEN = {
         },
         pageSlots: {
             title: 'Content Slots',
+            dialogTitle: 'Slot Management',
+            slotsCount: '{{count}} slots',
             addSlot: 'Add Slot',
+            addFirstSlot: 'Add First Slot',
             noSlots: 'No slots defined yet',
             addFirst: 'Add your first content slot',
+            shared: 'Shared',
+            componentLabel: 'Component #{{id}}',
+            removeComponent: 'Remove Component',
             slotName: 'Slot Name',
             position: 'Position',
             sortOrder: 'Sort Order',

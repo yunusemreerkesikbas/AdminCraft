@@ -1,5 +1,9 @@
 <div
-    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent"
+    [ngClass]="{
+        'sm:absolute sm:inset-0 sm:overflow-hidden': mode === 'admin',
+        'h-full overflow-hidden': mode === 'picker',
+    }"
 >
     @if (mode === 'admin') {
         <admin-page-header

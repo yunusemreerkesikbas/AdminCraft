@@ -1,5 +1,5 @@
 <div
-    class="flex flex-col gap-y-2"
+    class="flex flex-col gap-y-1"
     cdkDropList
     [cdkDropListData]="items"
     [cdkDropListDisabled]="disabled"
@@ -7,10 +7,12 @@
 >
     @for (item of items; track $index; let i = $index) {
         <div
-            class="border-default group text-default bg-card relative flex transform-gpu items-center gap-x-4 rounded-xl border px-4 py-3 shadow-sm transition-all duration-200 hover:bg-hover"
+            class="border-default group text-default bg-card relative flex transform-gpu items-center gap-x-2 rounded-lg border px-3 py-1.5 shadow-sm transition-all duration-200 hover:bg-hover"
+            [ngClass]="{
+                'opacity-50': disabled,
+            }"
             cdkDrag
             [cdkDragDisabled]="disabled"
-            [class.opacity-50]="disabled"
         >
             <!-- Drag Handle -->
             <div
@@ -19,7 +21,7 @@
             >
                 <mat-icon
                     svgIcon="heroicons_outline:bars-2"
-                    class="icon-size-5"
+                    class="icon-size-4"
                 ></mat-icon>
             </div>
 
@@ -34,25 +36,25 @@
                         }"
                     ></ng-container>
                 } @else {
-                    <span class="text-md font-medium">{{ item }}</span>
+                    <span class="text-sm font-medium">{{ item }}</span>
                 }
             </div>
 
             <!-- Drag Placeholder -->
             <div
-                class="rounded-xl border-2 border-dashed border-primary/20 bg-primary/5"
+                class="rounded-lg border-2 border-dashed border-primary/20 bg-primary/5"
                 *cdkDragPlaceholder
             ></div>
 
             <!-- Drag Preview -->
             <div
-                class="text-default bg-card flex items-center gap-x-4 rounded-xl border border-primary/50 px-4 py-3 shadow-xl"
+                class="text-default bg-card flex items-center gap-x-2 rounded-lg border border-primary/50 px-3 py-1.5 shadow-xl"
                 *cdkDragPreview
             >
                 <div class="flex items-center justify-center text-primary">
                     <mat-icon
                         svgIcon="heroicons_outline:bars-2"
-                        class="icon-size-5"
+                        class="icon-size-4"
                     ></mat-icon>
                 </div>
                 <div class="flex min-w-0 flex-1">
@@ -65,7 +67,7 @@
                             }"
                         ></ng-container>
                     } @else {
-                        <span class="text-md font-medium">{{ item }}</span>
+                        <span class="text-sm font-medium">{{ item }}</span>
                     }
                 </div>
             </div>

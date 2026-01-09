@@ -6,6 +6,15 @@
         <ng-template spaTabContent="general">
             <form [formGroup]="generalForm" class="flex flex-col gap-6">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <!-- Template Selector -->
+                    <spa-select
+                        formControlName="templateId"
+                        [label]="'admin.pages.fields.template' | transloco"
+                        [options]="templateOptions"
+                        [placeholder]="'admin.pages.placeholders.selectTemplate' | transloco"
+                    >
+                    </spa-select>
+
                     <spa-select
                         formControlName="status"
                         [label]="'admin.common.fields.status' | transloco"
@@ -25,17 +34,23 @@
                     >
                     </spa-select>
 
-                    <div class="sm:col-span-2">
-                        <spa-input
-                            formControlName="uid"
-                            label="UID"
-                            [placeholder]="
-                                'admin.pages.placeholders.uidAuto' | transloco
-                            "
-                        >
-                        </spa-input>
-                    </div>
+                    <spa-input
+                        formControlName="uid"
+                        label="UID"
+                        [placeholder]="
+                            'admin.pages.placeholders.uidAuto' | transloco
+                        "
+                    >
+                    </spa-input>
                 </div>
+
+                <!-- Template hint -->
+                @if (generalForm.get('templateId')?.value) {
+                    <p class="text-sm text-gray-500 flex items-center gap-1">
+                        <mat-icon class="text-blue-500 icon-size-4">info</mat-icon>
+                        {{ 'admin.pages.hints.templateSlots' | transloco }}
+                    </p>
+                }
 
                 @if (isEditMode()) {
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
