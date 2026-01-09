@@ -319,6 +319,8 @@ export const langTR = {
             },
             fields: {
                 uid: 'UID',
+                template: 'Sayfa Şablonu',
+                noTemplate: 'Şablon Seçilmedi',
                 sortOrder: 'Sıralama',
                 featuredImage: 'Öne Çıkan Görsel',
                 styleClasses: 'CSS Sınıfları',
@@ -331,13 +333,18 @@ export const langTR = {
                 metaDescription: 'Meta Açıklama',
                 description: 'Açıklama'
             },
+            placeholders: {
+                selectTemplate: 'Şablon seçin...',
+                uidAuto: 'Otomatik oluşturulacak'
+            },
             hints: {
                 featuredImage: 'Sayfanın ana görseli',
                 styleClasses: 'Örn: bg-dark text-white',
                 urlPath: 'Örn: hakkimizda veya iletisim',
                 canonicalUrl: 'Örn: hakkimizda veya iletisim',
                 metaTitle: 'Arama motoru sonuçlarında görünecek başlık',
-                metaDescription: 'Arama motoru sonuçlarında görünecek açıklama'
+                metaDescription: 'Arama motoru sonuçlarında görünecek açıklama',
+                templateSlots: 'Şablon seçildiğinde varsayılan içerik slotları otomatik oluşturulur.'
             },
             appearance: 'Görünüm',
             basicInfo: 'Temel Bilgiler',
@@ -356,7 +363,8 @@ export const langTR = {
             errors: {
                 createFailed: 'Sayfa oluşturulamadı',
                 updateFailed: 'Sayfa güncellenemedi',
-                loadFailed: 'Sayfa yüklenemedi'
+                loadFailed: 'Sayfa yüklenemedi',
+                loadTemplatesFailed: 'Şablonlar yüklenemedi'
             }
         },
         pageBuilder: {
@@ -419,9 +427,15 @@ export const langTR = {
         },
         pageSlots: {
             title: 'İçerik Slotları',
+            dialogTitle: 'Slot Yönetimi',
+            slotsCount: '{{count}} slot',
             addSlot: 'Slot Ekle',
+            addFirstSlot: 'İlk Slotu Ekle',
             noSlots: 'Henüz slot tanımlanmadı',
             addFirst: 'İlk içerik slotunuzu ekleyin',
+            shared: 'Paylaşımlı',
+            componentLabel: 'Bileşen #{{id}}',
+            removeComponent: 'Bileşeni Kaldır',
             slotName: 'Slot Adı',
             position: 'Pozisyon',
             sortOrder: 'Sıralama',

@@ -1,0 +1,205 @@
+<spa-dialog-header
+    [title]="'admin.pageSlots.dialogTitle' | transloco"
+    [subtitle]="pageUid"
+    (closeClicked)="cancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content>
+    <div class="flex h-full flex-col overflow-hidden">
+        <!-- Minimal Header with Actions -->
+        <div class="flex items-center justify-between py-2">
+            <div class="text-secondary text-sm font-medium">
+                {{
+                    'admin.pageSlots.slotsCount'
+                        | transloco: { count: (slots$ | async)?.length || 0 }
+                }}
+            </div>
+            <button
+                mat-stroked-button
+                color="primary"
+                class="!h-8 !px-4 leading-8"
+                (click)="addSlot()"
+            >
+                <mat-icon
+                    class="mr-2 icon-size-5"
+                    svgIcon="heroicons_outline:plus"
+                ></mat-icon>
+                <span>{{ 'admin.pageSlots.addSlot' | transloco }}</span>
+            </button>
+        </div>
+
+        @if (isLoading$ | async) {
+            <div class="flex flex-1 items-center justify-center">
+                <mat-progress-spinner
+                    mode="indeterminate"
+                    diameter="40"
+                ></mat-progress-spinner>
+            </div>
+        } @else {
+            <div class="-mr-2 flex-1 overflow-y-auto pr-2">
+                @for (slot of slots$ | async; track slot.slotName) {
+                    <div
+                        class="group relative mb-2 rounded-md border border-gray-200 bg-white transition-all hover:border-primary-300 dark:border-gray-800 dark:bg-transparent"
+                    >
+                        <!-- Minimal Slot Header -->
+                        <div
+                            class="flex items-center justify-between bg-gray-50/50 px-3 py-2 dark:bg-gray-900/20"
+                        >
+                            <div class="flex items-center gap-2">
+                                <mat-icon
+                                    svgIcon="heroicons_outline:view-columns"
+                                    class="text-secondary icon-size-5"
+                                ></mat-icon>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium">
+                                        {{ slot.slotName }}
+                                    </span>
+                                </div>
+                                @if (slot.isShared) {
+                                    <span
+                                        class="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                                    >
+                                        {{
+                                            'admin.pageSlots.shared' | transloco
+                                        }}
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center">
+                                <button
+                                    mat-icon-button
+                                    class="!h-8 !w-8"
+                                    color="primary"
+                                    (click)="addComponent(slot)"
+                                    [matTooltip]="
+                                        'admin.pageSlots.addComponent'
+                                            | transloco
+                                    "
+                                >
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        svgIcon="heroicons_outline:plus-circle"
+                                    ></mat-icon>
+                                </button>
+                                <button
+                                    mat-icon-button
+                                    class="!h-8 !w-8"
+                                    (click)="editSlot(slot)"
+                                    [matTooltip]="
+                                        'admin.common.edit' | transloco
+                                    "
+                                >
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        svgIcon="heroicons_outline:pencil-square"
+                                    ></mat-icon>
+                                </button>
+                                @if (!slot.isShared) {
+                                    <button
+                                        mat-icon-button
+                                        class="!h-8 !w-8"
+                                        color="warn"
+                                        (click)="deleteSlot(slot)"
+                                        [matTooltip]="
+                                            'admin.common.delete' | transloco
+                                        "
+                                    >
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            svgIcon="heroicons_outline:trash"
+                                        ></mat-icon>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Compact Component List -->
+                        <div class="px-3 pb-2 pt-1">
+                            @if (slot.components.length > 0) {
+                                <spa-reorder-list
+                                    [items]="slot.components"
+                                    (reorder)="
+                                        onComponentsReorder($event, slot)
+                                    "
+                                    class="block"
+                                >
+                                    <ng-template #itemTemplate let-comp>
+                                        <div
+                                            class="group/comp flex items-center justify-between py-1.5"
+                                        >
+                                            <div class="flex min-w-0 flex-col">
+                                                <span
+                                                    class="truncate text-sm font-medium"
+                                                >
+                                                    {{ comp?.componentUid }}
+                                                </span>
+                                                <span
+                                                    class="text-secondary truncate text-xs"
+                                                >
+                                                    {{ comp.component?.type }}
+                                                </span>
+                                            </div>
+                                            <button
+                                                mat-icon-button
+                                                class="!h-6 !w-6 opacity-0 transition-opacity group-hover/comp:opacity-100"
+                                                (click)="
+                                                    removeComponent(
+                                                        slot,
+                                                        comp.componentId
+                                                    );
+                                                    $event.stopPropagation()
+                                                "
+                                                [matTooltip]="
+                                                    'admin.pageSlots.removeComponent'
+                                                        | transloco
+                                                "
+                                            >
+                                                <mat-icon
+                                                    class="text-red-500 icon-size-5"
+                                                    svgIcon="heroicons_outline:x-mark"
+                                                ></mat-icon>
+                                            </button>
+                                        </div>
+                                    </ng-template>
+                                </spa-reorder-list>
+                            } @else {
+                                <div class="py-2 text-center">
+                                    <span class="text-xs italic text-gray-400">
+                                        {{
+                                            'admin.pageSlots.noComponents'
+                                                | transloco
+                                        }}
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if ((slots$ | async)?.length === 0) {
+                    <div
+                        class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-8 text-center dark:border-gray-800"
+                    >
+                        <mat-icon
+                            svgIcon="heroicons_outline:rectangle-group"
+                            class="mb-2 !h-10 !w-10 text-gray-300"
+                        ></mat-icon>
+                        <p class="text-secondary mb-3 text-sm">
+                            {{ 'admin.pageSlots.noSlots' | transloco }}
+                        </p>
+                        <button
+                            mat-stroked-button
+                            color="primary"
+                            (click)="addSlot()"
+                        >
+                            {{ 'admin.pageSlots.addFirstSlot' | transloco }}
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</spa-dialog-content>

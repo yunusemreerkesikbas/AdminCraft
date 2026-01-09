@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router } from '@angular/router';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -21,6 +20,7 @@ import { debounceTime, Observable, take, takeUntil } from 'rxjs';
 import { PageBuilderService } from '../page-builder.service';
 import { CreatePageRequest, PageListDto, UpdatePageRequest } from '../page-builder.types';
 import { PageEditDialogComponent, PageEditDialogData } from '../page-edit-dialog/page-edit-dialog.component';
+import { PageSlotDialogComponent, PageSlotDialogData } from '../slots/page-slot-dialog/page-slot-dialog.component';
 
 @Component({
     selector: 'spa-page-list',
@@ -48,7 +48,6 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
 
     protected override service = inject(PageBuilderService);
     protected override store = new CrudStore<PageListDto>();
-    #router = inject(Router);
     #notificationService = inject(NotificationService);
     #confirmationService = inject(ConfirmationService);
     #dialog = inject(MatDialog);
@@ -176,6 +175,21 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         });
     }
 
+    #openSlotDialog(page: PageListDto): void {
+        const dialogData: PageSlotDialogData = {
+            pageId: page.id,
+            pageUid: page.uid,
+        };
+
+        this.#dialog.open(PageSlotDialogComponent, {
+            width: '900px',
+            height: '80vh',
+            maxWidth: '95vw',
+            panelClass: 'spa-dialog-panel',
+            data: dialogData
+        });
+    }
+
     deletePage(page: PageListDto): void {
         const confirmation = this.#confirmationService.confirm(
             'admin.pages.dialogs.delete.title',
@@ -195,7 +209,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
                 this.editPage(item);
                 break;
             case 'slots':
-                this.#router.navigate(['/admin/pages', item.uid, 'slots']);
+                this.#openSlotDialog(item);
                 break;
             case 'delete':
                 this.deletePage(item);

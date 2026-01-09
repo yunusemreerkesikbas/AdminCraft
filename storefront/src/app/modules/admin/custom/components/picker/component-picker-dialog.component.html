@@ -4,8 +4,12 @@
 >
 </spa-dialog-header>
 
-<spa-dialog-content type="picker">
-    <spa-component-list mode="picker" (componentSelected)="select($event)">
+<spa-dialog-content type="picker" class="flex h-full flex-col overflow-hidden">
+    <spa-component-list
+        mode="picker"
+        (componentSelected)="select($event)"
+        class="block h-full min-h-0"
+    >
     </spa-component-list>
 </spa-dialog-content>
 
