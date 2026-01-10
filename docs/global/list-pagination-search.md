@@ -17,6 +17,7 @@ Examples in code:
 - Page templates: `GET /api/page-templates` in `PageTemplateController`
 - Media list: `GET /api/media` in `MediaController`
 - Component Library components: `GET /api/components` in `ComponentController`
+- Component Library types: `GET /api/components/types` in `ComponentTypeController`
 
 ## Frontend implementation
 

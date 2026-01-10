@@ -22,11 +22,24 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/Componen
 
 Base path: `/api/components/types`
 
-- `GET /api/components/types`
+- `GET /api/components/types` (paginated + sort + search)
 - `POST /api/components/types`
 - `GET /api/components/types/{id}`
 - `PUT /api/components/types/{id}`
 - `DELETE /api/components/types/{id}`
+
+List contract:
+
+- Query params:
+  - `page` (0-based, default: `0`)
+  - `size` (default: `20`, max: `100`)
+  - `sort` (e.g. `createdAt,desc`, `name,asc`, `category,asc`)
+  - `search` (optional, min 2 chars, searches by name/uid/category)
+- Response: `PageableResponse<ComponentTypeResponse>` (content + `totalPages` + `totalElements` + `sortConfig`)
+
+Example:
+
+- `GET /api/components/types?page=0&size=20&sort=createdAt,desc&search=header`
 
 ### Entry field definitions (dynamic form schema)
 
@@ -116,9 +129,16 @@ Key parts:
 
 - Types and schemas: `models/`, `services/component-schema-builder.service.ts`
 - CRUD list and edit dialogs:
-  - `list/`
+  - `list/` (paginated list with `BasePaginatedListComponent`)
   - `component-edit-dialog/`
-- Type manager UI: `types/`
+- Component Types UI: `types/`
+  - `component-types-list.component.ts` (paginated list with sorting/search)
+  - `component-type-edit-dialog/`
+- Services:
+  - `component-library.service.ts` (main CRUD service for components)
+  - `component-type.service.ts` (dedicated CRUD service for component types)
+  - `component.store.ts` (state store for components)
+  - `component-type.store.ts` (state store for component types)
 
 ## Security & tenant isolation
 

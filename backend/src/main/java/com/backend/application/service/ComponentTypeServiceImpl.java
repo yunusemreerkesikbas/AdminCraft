@@ -2,6 +2,8 @@ package com.backend.application.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,15 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
     @Transactional(readOnly = true)
     public List<ComponentType> getAllComponentTypes(GetAllComponentTypesQuery query) {
         return componentTypeRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ComponentType> searchComponentTypes(Pageable pageable, String searchQuery) {
+        if (searchQuery == null || searchQuery.trim().length() < 2) {
+            return componentTypeRepository.findAllPaged(pageable);
+        }
+        return componentTypeRepository.searchPaged(searchQuery.trim(), pageable);
     }
 
     @Override

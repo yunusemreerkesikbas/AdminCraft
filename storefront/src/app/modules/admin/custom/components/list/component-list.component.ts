@@ -25,11 +25,11 @@ import {
 } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentStore } from '../services/component.store';
-import { ComponentTypesManagerComponent } from '../types/component-types-manager.component';
+import { ComponentTypesListComponent } from '../types/component-types-list.component';
 
 const DIALOG_CONFIG = {
     COMPONENT_FORM: { width: '800px', height: 'auto' },
-    TYPES_MANAGER: { width: '900px', height: '80vh' }
+    TYPES_MANAGER: { width: '1200px', height: '80vh' }
 };
 
 @Component({
@@ -61,18 +61,18 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     @ViewChild('infoTemplate', { static: true }) infoTemplate!: TemplateRef<any>;
     @ViewChild('pickerActionsTemplate', { static: true }) pickerActionsTemplate!: TemplateRef<any>;
 
-    #dialog = inject(MatDialog);
-    #transloco = inject(TranslocoService);
-    #notify = inject(NotificationService);
-    #languageContext = inject(LanguageContextService);
+    #matDialog = inject(MatDialog);
+    #translocoService = inject(TranslocoService);
+    #notificationService = inject(NotificationService);
+    #languageContextService = inject(LanguageContextService);
     protected override service = inject(ComponentLibraryService);
     protected override store = inject(ComponentStore);
     protected override defaultSort = 'createdAt,desc';
     protected override defaultPageSize = 20;
 
-    protected componentTypes = signal<ComponentTypeDto[]>([]);
-    protected typesLoading = signal<boolean>(false);
-    protected supportedLanguages = computed(() => this.#languageContext.supportedLanguages());
+    protected componentTypesSig = signal<ComponentTypeDto[]>([]);
+    protected typesLoadingSig = signal<boolean>(false);
+    protected supportedLanguagesSig = computed(() => this.#languageContextService.supportedLanguages());
     protected searchInputControl = new FormControl('');
     protected paginatedItemsSig = computed(() => this.store.items());
 
@@ -121,23 +121,23 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     }
 
     #loadComponentTypes(): void {
-        this.typesLoading.set(true);
+        this.typesLoadingSig.set(true);
         this.service.listComponentTypes()
             .pipe(take(1))
             .subscribe({
                 next: (types) => {
-                    this.componentTypes.set(types);
-                    this.typesLoading.set(false);
+                    this.componentTypesSig.set(types);
+                    this.typesLoadingSig.set(false);
                 },
                 error: () => {
-                    this.#notify.alert('admin.components.errors.loadTypesFailed');
-                    this.typesLoading.set(false);
+                    this.#notificationService.alert('admin.components.errors.loadTypesFailed');
+                    this.typesLoadingSig.set(false);
                 }
             });
     }
 
     protected override onLoadError(error: any): void {
-        this.#notify.alert('admin.components.errors.loadFailed');
+        this.#notificationService.alert('admin.components.errors.loadFailed');
     }
 
     protected onGridAction(event: { action: string; item: ComponentDto }): void {
@@ -152,27 +152,27 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     }
 
     canCreateComponent(): boolean {
-        return this.componentTypes().length > 0;
+        return this.componentTypesSig().length > 0;
     }
 
     createComponent(): void {
         if (!this.canCreateComponent()) {
-            if (this.typesLoading()) {
-                this.#notify.info('admin.components.info.loadingTypes');
+            if (this.typesLoadingSig()) {
+                this.#notificationService.info('admin.components.info.loadingTypes');
             } else {
-                this.#notify.warning('admin.components.errors.noTypes');
+                this.#notificationService.warning('admin.components.errors.noTypes');
             }
             return;
         }
 
-        const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
+        const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
             width: DIALOG_CONFIG.COMPONENT_FORM.width,
             maxHeight: '90vh',
             disableClose: true,
             data: {
                 mode: 'create',
-                componentTypes: this.componentTypes(),
-                languages: this.supportedLanguages()
+                componentTypes: this.componentTypesSig(),
+                languages: this.supportedLanguagesSig()
             }
         });
 
@@ -194,21 +194,21 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
                 },
                 error: () => {
                     this.store.setLoading(false);
-                    this.#notify.alert('admin.components.errors.loadDetailFailed');
+                    this.#notificationService.alert('admin.components.errors.loadDetailFailed');
                 }
             });
     }
 
     #openEditDialog(detail: ComponentDetailDto): void {
-        const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
+        const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
             width: '900px',
             maxHeight: '90vh',
             disableClose: true,
             data: {
                 mode: 'edit',
                 component: detail,
-                languages: this.supportedLanguages(),
-                componentTypes: this.componentTypes()
+                languages: this.supportedLanguagesSig(),
+                componentTypes: this.componentTypesSig()
             }
         });
 
@@ -222,7 +222,7 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     }
 
     protected deleteComponent(componentId: number): void {
-        if (!confirm(this.#transloco.translate('admin.components.confirmDelete'))) {
+        if (!confirm(this.#translocoService.translate('admin.components.confirmDelete'))) {
             return;
         }
 
@@ -230,15 +230,15 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
             .pipe(take(1))
             .subscribe({
                 next: () => {
-                    this.#notify.success('admin.components.success.deleted');
+                    this.#notificationService.success('admin.components.success.deleted');
                     this.loadItems();
                 },
-                error: () => this.#notify.alert('admin.components.errors.deleteFailed')
+                error: () => this.#notificationService.alert('admin.components.errors.deleteFailed')
             });
     }
 
     openTypesManager(): void {
-        const dialogRef = this.#dialog.open(ComponentTypesManagerComponent, {
+        const dialogRef = this.#matDialog.open(ComponentTypesListComponent, {
             width: DIALOG_CONFIG.TYPES_MANAGER.width,
             height: DIALOG_CONFIG.TYPES_MANAGER.height,
             disableClose: false
