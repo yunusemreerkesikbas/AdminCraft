@@ -13,7 +13,7 @@
             [isLoading]="store.isLoading()"
             (createClick)="createComponent()"
             [showSearch]="true"
-            [searchPlaceholder]="'admin.common.search'"
+            [searchPlaceholder]="'admin.common.searchPlaceholder'"
             (search)="searchInputControl.setValue($event)"
         >
             <ng-container actions>
@@ -46,9 +46,7 @@
                 [columns]="columns"
                 [actions]="mode === 'admin' ? actions : []"
                 [actionsTemplate]="
-                    mode === 'picker'
-                        ? pickerActionsTemplate
-                        : undefined
+                    mode === 'picker' ? pickerActionsTemplate : undefined
                 "
                 [isLoading]="store.isLoading()"
                 [emptyIcon]="'layers'"

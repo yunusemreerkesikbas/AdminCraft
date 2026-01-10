@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core';
-import { CrudEndpoints, CrudHttpService } from '@core/crud';
-import {
-    ComponentTypeDto,
-    CreateComponentTypeRequest,
-    UpdateComponentTypeRequest
-} from '../models/component-library.types';
+import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
+import { ComponentTypeDto, CreateComponentTypeRequest, UpdateComponentTypeRequest } from '../models/component-library.types';
 
 @Injectable({ providedIn: 'root' })
 export class ComponentTypeService extends CrudHttpService<ComponentTypeDto, CreateComponentTypeRequest, UpdateComponentTypeRequest> {

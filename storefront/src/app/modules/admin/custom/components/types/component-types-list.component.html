@@ -1,0 +1,78 @@
+<div class="bg-card flex min-w-[700px] max-w-[90vw] flex-col">
+    <admin-page-header
+        [title]="'admin.components.types.title'"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.components.types.create'"
+        [isLoading]="store.isLoading()"
+        (createClick)="createType()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.searchPlaceholder'"
+        (search)="searchInputControl.setValue($event)"
+    >
+        <ng-container actions>
+            @if (availableSortsSig().length > 0) {
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            }
+            <button
+                mat-icon-button
+                (click)="close()"
+                [matTooltip]="'admin.common.close' | transloco"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        </ng-container>
+    </admin-page-header>
+
+    <div
+        class="flex-auto overflow-y-auto"
+        style="min-height: 300px; max-height: 55vh"
+    >
+        <spa-admin-grid
+            [items]="paginatedItemsSig()"
+            [columns]="columns"
+            [actions]="actions"
+            [isLoading]="store.isLoading()"
+            [emptyIcon]="'category'"
+            [emptyTitle]="'admin.components.types.noTypes'"
+            [emptyDescription]="'admin.components.types.createFirstHint'"
+            (actionClick)="onGridAction($event)"
+        >
+            <button
+                emptyAction
+                mat-flat-button
+                color="primary"
+                (click)="createType()"
+            >
+                <mat-icon>add</mat-icon>
+                {{ 'admin.components.types.create' | transloco }}
+            </button>
+        </spa-admin-grid>
+    </div>
+
+    <!-- Fixed paginator at bottom -->
+    @if (totalElementsSig() > 0) {
+        <spa-admin-paginator
+            class="flex-none border-t"
+            [length]="totalElementsSig()"
+            [pageSize]="pageSizeSig()"
+            [pageIndex]="pageIndexSig()"
+            (pageCallback)="onPageChange($event)"
+        >
+        </spa-admin-paginator>
+    }
+</div>
+
+<ng-template #infoTemplate let-type>
+    <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex items-center gap-3">
+            <span class="text-secondary text-sm">
+                {{ type.uid }}
+            </span>
+        </div>
+    </div>
+</ng-template>

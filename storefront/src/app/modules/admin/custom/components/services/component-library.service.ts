@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
-import { ApiResponse } from '@core/crud/api.types';
+import { ApiResponse, PageWithSort } from '@core/crud/api.types';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -65,7 +65,9 @@ export class ComponentLibraryService extends CrudHttpService<ComponentDto, Creat
     }
 
     listComponentTypes(): Observable<ComponentTypeDto[]> {
-        return this.customGet<ComponentTypeDto[]>('componentTypes');
+        return this.api.get<ApiResponse<PageWithSort<ComponentTypeDto>>>('componentTypes').pipe(
+            map(response => response.data?.content || [])
+        );
     }
 
     getComponentTypeById(id: number): Observable<ComponentTypeDto> {
