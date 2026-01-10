@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.Component;
@@ -70,6 +72,16 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     @Override
     public List<Object[]> findAllWithTypeNamesAndEntryCount() {
         return jpaRepository.findAllWithTypeNamesAndEntryCount();
+    }
+
+    @Override
+    public Page<Object[]> findAllPagedWithTypeNamesAndEntryCount(Pageable pageable) {
+        return jpaRepository.findAllPagedWithTypeNamesAndEntryCount(pageable);
+    }
+
+    @Override
+    public Page<Object[]> searchByQueryWithTypeNamesAndEntryCount(String query, Pageable pageable) {
+        return jpaRepository.searchByQueryWithTypeNamesAndEntryCount(query, pageable);
     }
 
     @Override

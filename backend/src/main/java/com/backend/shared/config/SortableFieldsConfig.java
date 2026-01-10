@@ -62,8 +62,19 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("createdAt,desc", "admin.sort.createdDesc"),
                         SortOptionDto.of("createdAt,asc", "admin.sort.createdAsc"));
 
-        // ========== Future Entities ==========
-        // Add PAGE_ALLOWED_FIELDS, COMPONENT_ALLOWED_FIELDS, etc. here
+        // ========== Component Entity ==========
+        public static final Set<String> COMPONENT_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "name", "uid", "displayOrder");
+
+        public static final String COMPONENT_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> COMPONENT_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("name,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("name,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("displayOrder,asc", "admin.sort.orderAsc"),
+                        SortOptionDto.of("displayOrder,desc", "admin.sort.orderDesc"));
 
         /**
          * Registry mapping entity names to their allowed fields.
@@ -71,15 +82,18 @@ public final class SortableFieldsConfig {
         public static final Map<String, Set<String>> ENTITY_FIELDS = Map.of(
                         "Media", MEDIA_ALLOWED_FIELDS,
                         "NavigationNode", NAVIGATION_NODE_ALLOWED_FIELDS,
-                        "PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS);
+                        "PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS,
+                        "Component", COMPONENT_ALLOWED_FIELDS);
 
         public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
                         "Media", MEDIA_SORT_OPTIONS,
                         "NavigationNode", NAVIGATION_NODE_SORT_OPTIONS,
-                        "PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS);
+                        "PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS,
+                        "Component", COMPONENT_SORT_OPTIONS);
 
         public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
                         "Media", MEDIA_DEFAULT_SORT,
                         "NavigationNode", NAVIGATION_NODE_DEFAULT_SORT,
-                        "PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT);
+                        "PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT,
+                        "Component", COMPONENT_DEFAULT_SORT);
 }

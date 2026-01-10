@@ -48,11 +48,24 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/Componen
 
 Base path: `/api/components`
 
-- `GET /api/components`
+- `GET /api/components` (paginated + sort + search)
 - `POST /api/components`
 - `GET /api/components/{id}` (supports `?include=translations`)
 - `PUT /api/components/{id}`
 - `DELETE /api/components/{id}`
+
+List contract:
+
+- Query params:
+  - `page` (0-based, default: `0`)
+  - `size` (default: `20`)
+  - `sort` (e.g. `createdAt,desc`)
+  - `search` (optional, min 2 chars)
+- Response: `PageableResponse<ComponentListItemResponse>` (content + `totalPages` + `totalElements` + `sortConfig`)
+
+Example:
+
+- `GET /api/components?page=0&size=20&sort=createdAt,desc&search=test`
 
 i18n:
 
@@ -148,4 +161,3 @@ Key parts:
 2. Frontend:
    - Ensure schema builder can map the field type to a form control:
      - `storefront/src/app/modules/admin/custom/components/services/component-schema-builder.service.ts`
-

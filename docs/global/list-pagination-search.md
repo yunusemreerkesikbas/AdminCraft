@@ -16,6 +16,7 @@ Examples in code:
 - Navigation root nodes: `GET /api/navigation/nodes` in `NavigationController`
 - Page templates: `GET /api/page-templates` in `PageTemplateController`
 - Media list: `GET /api/media` in `MediaController`
+- Component Library components: `GET /api/components` in `ComponentController`
 
 ## Frontend implementation
 
@@ -32,4 +33,3 @@ For sortable collections:
 
 - Use the shared reorder component (`SpaReorderListComponent`) for drag-and-drop.
 - Backends should expose a dedicated reorder endpoint (commonly `PUT .../reorder`).
-

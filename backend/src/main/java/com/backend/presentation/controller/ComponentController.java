@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,10 +51,15 @@ import com.backend.presentation.dto.response.ComponentDetailResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
 import com.backend.presentation.dto.response.ComponentListItemResponse;
 import com.backend.presentation.dto.response.ComponentResponse;
+import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -163,14 +171,32 @@ public class ComponentController {
         }
 
         @GetMapping
-        public ResponseEntity<ApiResponse<List<ComponentListItemResponse>>> list(
+        public ResponseEntity<ApiResponse<PageableResponse<ComponentListItemResponse>>> list(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+                        @RequestParam(required = false) String sort,
+                        @RequestParam(required = false) String search,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
-                        GetAllComponentsQuery query = new GetAllComponentsQuery();
-                        List<ComponentListItemResponse> responses = componentService
-                                        .getAllComponentsWithTypeNames(query);
+                        String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
+                                        SortableFieldsConfig.COMPONENT_DEFAULT_SORT);
+                        Sort sortObj = SortParseUtil.parse(effectiveSort,
+                                        SortableFieldsConfig.COMPONENT_ALLOWED_FIELDS,
+                                        SortableFieldsConfig.COMPONENT_DEFAULT_SORT);
 
-                        return ResponseEntity.ok(ApiResponse.success(responses));
+                        PageRequest pageRequest = PageRequest.of(page, size, sortObj);
+                        Page<ComponentListItemResponse> components = componentService.searchComponents(pageRequest, search);
+
+                        SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.COMPONENT_SORT_OPTIONS);
+                        PageableResponse<ComponentListItemResponse> response = PageableResponse.from(components, sortConfig);
+
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (IllegalArgumentException ex) {
+                        String message = messageSource.getMessage("component.sort.invalid",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error listing components: {}", ex.getMessage());
                         String msg = messageSource.getMessage("component.list.error",
