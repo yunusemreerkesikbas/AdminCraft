@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.application.command.ComponentCommands.CreateComponentCommand;
 import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
 import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
@@ -31,6 +34,8 @@ public interface ComponentService {
     Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations(GetAllComponentsWithTranslationsQuery query);
 
     List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query);
+
+    Page<ComponentListItemResponse> searchComponents(Pageable pageable, String searchQuery);
 
     List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query);
 

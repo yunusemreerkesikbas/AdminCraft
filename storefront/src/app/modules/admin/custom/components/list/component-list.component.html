@@ -14,17 +14,18 @@
             (createClick)="createComponent()"
             [showSearch]="true"
             [searchPlaceholder]="'admin.common.search'"
-            (search)="onSearchChange($event)"
+            (search)="searchInputControl.setValue($event)"
         >
-            <div actions class="flex items-center gap-2">
-                <button
-                    mat-icon-button
-                    (click)="loadItems()"
-                    [matTooltip]="'admin.common.refresh' | transloco"
-                >
-                    <mat-icon>refresh</mat-icon>
-                </button>
-            </div>
+            <ng-container actions>
+                @if (availableSortsSig().length > 0) {
+                    <spa-admin-sort-dropdown
+                        [availableSorts]="availableSortsSig()"
+                        [sortCode]="sortCodeSig()"
+                        (sortChange)="onSortChange($event)"
+                    >
+                    </spa-admin-sort-dropdown>
+                }
+            </ng-container>
 
             <button
                 after-create
@@ -38,41 +39,46 @@
         </admin-page-header>
     }
 
-    <div class="flex flex-auto overflow-hidden">
-        <div
-            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
-        >
-            <div class="flex-auto">
-                <div class="">
-                    <spa-admin-grid
-                        [items]="filteredComponents()"
-                        [columns]="columns"
-                        [actions]="mode === 'admin' ? actions : []"
-                        [actionsTemplate]="
-                            mode === 'picker'
-                                ? pickerActionsTemplate
-                                : undefined
-                        "
-                        [isLoading]="store.isLoading()"
-                        [emptyIcon]="'layers'"
-                        [emptyTitle]="'admin.components.noComponents'"
-                        [emptyDescription]="'admin.components.createFirstHint'"
-                        (actionClick)="onGridAction($event)"
-                    >
-                        <button
-                            emptyAction
-                            mat-flat-button
-                            color="primary"
-                            (click)="createComponent()"
-                            [disabled]="!canCreateComponent()"
-                        >
-                            <mat-icon>add</mat-icon>
-                            {{ 'admin.common.create' | transloco }}
-                        </button>
-                    </spa-admin-grid>
-                </div>
-            </div>
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="mode === 'admin' ? actions : []"
+                [actionsTemplate]="
+                    mode === 'picker'
+                        ? pickerActionsTemplate
+                        : undefined
+                "
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'layers'"
+                [emptyTitle]="'admin.components.noComponents'"
+                [emptyDescription]="'admin.components.createFirstHint'"
+                (actionClick)="onGridAction($event)"
+            >
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createComponent()"
+                    [disabled]="!canCreateComponent()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.common.create' | transloco }}
+                </button>
+            </spa-admin-grid>
         </div>
+
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
     </div>
 </div>
 

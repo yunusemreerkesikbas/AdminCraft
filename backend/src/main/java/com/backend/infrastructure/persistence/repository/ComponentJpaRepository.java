@@ -3,6 +3,8 @@ package com.backend.infrastructure.persistence.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,6 +39,34 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
                 ORDER BY c.updatedAt DESC
             """)
     List<Object[]> findAllWithTypeNamesAndEntryCount();
+
+    @Query(value = """
+                SELECT c, ct.name,
+                       (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
+                FROM Component c
+                LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
+            """,
+            countQuery = """
+                SELECT COUNT(c)
+                FROM Component c
+            """)
+    Page<Object[]> findAllPagedWithTypeNamesAndEntryCount(Pageable pageable);
+
+    @Query(value = """
+                SELECT c, ct.name,
+                       (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
+                FROM Component c
+                LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
+                WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                   OR LOWER(c.uid) LIKE LOWER(CONCAT('%', :query, '%'))
+            """,
+            countQuery = """
+                SELECT COUNT(c)
+                FROM Component c
+                WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))
+                   OR LOWER(c.uid) LIKE LOWER(CONCAT('%', :query, '%'))
+            """)
+    Page<Object[]> searchByQueryWithTypeNamesAndEntryCount(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT c FROM Component c WHERE c.id = :id")
     Optional<Component> findByIdOptimized(@Param("id") Long id);

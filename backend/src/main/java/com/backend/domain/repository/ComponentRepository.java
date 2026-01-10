@@ -3,6 +3,9 @@ package com.backend.domain.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
 
@@ -28,6 +31,10 @@ public interface ComponentRepository {
     List<Object[]> findAllWithTypeNames();
 
     List<Object[]> findAllWithTypeNamesAndEntryCount();
+
+    Page<Object[]> findAllPagedWithTypeNamesAndEntryCount(Pageable pageable);
+
+    Page<Object[]> searchByQueryWithTypeNamesAndEntryCount(String query, Pageable pageable);
 
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 

@@ -1,17 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnInit, Output, signal, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BaseCrudListComponent } from '@core/crud';
+import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
+import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
-import { take } from 'rxjs';
+import { take, takeUntil } from 'rxjs';
 import { ComponentEditDialogComponent } from '../component-edit-dialog/component-edit-dialog.component';
 import {
     ComponentDetailDto,
@@ -35,19 +38,23 @@ const DIALOG_CONFIG = {
     imports: [
         CommonModule,
         FormsModule,
+        ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
+        MatPaginatorModule,
         MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaAdminGridComponent
+        SpaAdminGridComponent,
+        SpaAdminPaginatorComponent,
+        SpaAdminSortDropdownComponent
     ],
     templateUrl: './component-list.component.html',
     styleUrls: ['./component-list.component.scss'],
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit {
+export class ComponentListComponent extends BasePaginatedListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit, OnDestroy {
     @Input() mode: 'admin' | 'picker' = 'admin';
     @Output() componentSelected = new EventEmitter<ComponentDto>();
 
@@ -58,12 +65,16 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
     #transloco = inject(TranslocoService);
     #notify = inject(NotificationService);
     #languageContext = inject(LanguageContextService);
-    protected service = inject(ComponentLibraryService);
-    protected store = inject(ComponentStore);
+    protected override service = inject(ComponentLibraryService);
+    protected override store = inject(ComponentStore);
+    protected override defaultSort = 'createdAt,desc';
+    protected override defaultPageSize = 20;
+
     protected componentTypes = signal<ComponentTypeDto[]>([]);
     protected typesLoading = signal<boolean>(false);
     protected supportedLanguages = computed(() => this.#languageContext.supportedLanguages());
-    protected searchTerm = signal<string>('');
+    protected searchInputControl = new FormControl('');
+    protected paginatedItemsSig = computed(() => this.store.items());
 
     protected columns: GridColumn<ComponentDto>[] = [];
 
@@ -72,17 +83,7 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
         { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
     ];
 
-    protected filteredComponents = computed(() => {
-        const items = this.store.items();
-        const term = this.searchTerm().toLowerCase();
-
-        return items.filter(item => {
-            const matchesSearch = !term || item.name.toLowerCase().includes(term) || item.uid.toLowerCase().includes(term);
-            return matchesSearch;
-        });
-    });
-
-    override ngOnInit(): void {
+    protected override onInit(): void {
         this.columns = [
             {
                 key: 'info',
@@ -107,8 +108,16 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             }
         ];
 
-        super.ngOnInit();
         this.#loadComponentTypes();
+        this.#setupSearchDebounce();
+    }
+
+    #setupSearchDebounce(): void {
+        this.searchInputControl.valueChanges.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(query => {
+            this.onSearchInput(query || '');
+        });
     }
 
     #loadComponentTypes(): void {
@@ -127,10 +136,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
             });
     }
 
-    protected override fetchItems() {
-        return this.service.listComponents();
-    }
-
     protected override onLoadError(error: any): void {
         this.#notify.alert('admin.components.errors.loadFailed');
     }
@@ -144,14 +149,6 @@ export class ComponentListComponent extends BaseCrudListComponent<ComponentDto, 
                 this.deleteComponent(event.item.id);
                 break;
         }
-    }
-
-
-
-
-    protected override onSearchChange(term: string): void {
-        this.searchTerm.set(term);
-        super.onSearchChange(term);
     }
 
     canCreateComponent(): boolean {

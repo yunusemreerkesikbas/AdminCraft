@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,6 +126,27 @@ public class ComponentServiceImpl implements ComponentService {
                     return ComponentListItemResponse.from(component, typeName, entryCount.intValue());
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ComponentListItemResponse> searchComponents(Pageable pageable, String searchQuery) {
+        Page<Object[]> results;
+
+        if (searchQuery == null || searchQuery.trim().length() < 2) {
+            results = componentRepository.findAllPagedWithTypeNamesAndEntryCount(pageable);
+        } else {
+            results = componentRepository.searchByQueryWithTypeNamesAndEntryCount(searchQuery.trim(), pageable);
+        }
+
+        return results.map(this::mapToListItemResponse);
+    }
+
+    private ComponentListItemResponse mapToListItemResponse(Object[] row) {
+        Component component = (Component) row[0];
+        String typeName = (String) row[1];
+        Long entryCount = (Long) row[2];
+        return ComponentListItemResponse.from(component, typeName, entryCount.intValue());
     }
 
     @Override
