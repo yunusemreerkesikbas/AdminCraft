@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.ContentCannotBePublishedException;
 import com.backend.domain.exception.DuplicateEntityException;
 import com.backend.domain.exception.EntityNotFoundException;
@@ -129,6 +130,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleDuplicateEntity(DuplicateEntityException ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Duplicate entity: {}", correlationId, ex.getMessage());
+        String message = ex.getMessage();
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ApiResponse<?>> handleBusinessRuleViolation(BusinessRuleViolationException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Business rule violation: {}", correlationId, ex.getMessage());
         String message = ex.getMessage();
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);

@@ -25,7 +25,7 @@ import com.backend.domain.enums.RobotTag;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
-import com.backend.infrastructure.util.UuidUidGenerator;
+import com.backend.domain.util.UuidUidGenerator;
 import com.backend.presentation.dto.response.PageDetailResponse;
 import com.backend.presentation.dto.response.PageResponse;
 

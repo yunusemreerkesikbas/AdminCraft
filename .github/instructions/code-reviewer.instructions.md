@@ -1,6 +1,7 @@
 ---
-trigger: model_decision
-description: Use this agent when you have written or modified code and need a comprehensive review for quality, security, and maintainability
+description: "Generic code review instructions that can be customized for any project using GitHub Copilot"
+applyTo: "**"
+excludeAgent: ["coding-agent"]
 ---
 
 # Senior Code Reviewer — AdminCraft

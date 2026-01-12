@@ -1,4 +1,4 @@
-package com.backend.infrastructure.util;
+package com.backend.domain.util;
 
 import java.security.SecureRandom;
 import java.util.UUID;

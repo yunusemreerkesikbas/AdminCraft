@@ -9,6 +9,7 @@ Requests are still **tenant-scoped** via tenant resolution (subdomain/header/hos
 
 - CMS content delivery: [`backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java)
 - CMS media delivery: [`backend/src/main/java/com/backend/presentation/controller/CmsMediaDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CmsMediaDeliveryController.java)
+- CMS product + category delivery: [`backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java)
 
 ## Endpoints
 
@@ -36,6 +37,17 @@ Base path: `/api/cms/media`
 
 - `GET /api/cms/media/{uid}` (optional `?format=thumbnail`)
 - `GET /api/cms/media?uids=uid1&uids=uid2` (max 50)
+
+### Products and categories
+
+Base path: `/api/cms/products`
+
+- `GET /api/cms/products/{uid}?lang=TR`
+- `GET /api/cms/products?uids=uid1&uids=uid2&lang=TR` (max 50)
+- `GET /api/cms/products/category/{categoryUid}?page=0&size=20&lang=TR`
+- `GET /api/cms/products/search?q=query&page=0&size=20&lang=TR`
+- `GET /api/cms/products/categories/{uid}?lang=TR`
+- `GET /api/cms/products/categories?lang=TR`
 
 ## Language resolution
 
@@ -80,4 +92,3 @@ Frontend client code exists for CMS component delivery (and can be extended for 
 
 - Delivery endpoints do not require auth, but they are still tenant-scoped.
 - Tenant resolution is enforced by [`backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java`](../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java).
-

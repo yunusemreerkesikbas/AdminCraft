@@ -13,7 +13,7 @@ import com.backend.application.query.ComponentI18nQueries.GetComponentI18nByComp
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.repository.ComponentI18nRepository;
-import com.backend.infrastructure.util.UuidUidGenerator;
+import com.backend.domain.util.UuidUidGenerator;
 
 import lombok.RequiredArgsConstructor;
 

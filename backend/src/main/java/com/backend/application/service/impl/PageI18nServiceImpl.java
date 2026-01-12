@@ -17,6 +17,7 @@ import com.backend.domain.exception.PageCannotBePublishedException;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
+import com.backend.domain.util.UuidUidGenerator;
 import com.backend.presentation.dto.response.PageI18nResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -198,7 +199,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         PageI18n pageI18n = new PageI18n();
         pageI18n.setPageId(pageId);
         pageI18n.setLanguage(language);
-        pageI18n.setUuid(com.backend.infrastructure.util.UuidUidGenerator.generateUuid());
+        pageI18n.setUuid(UuidUidGenerator.generateUuid());
         pageI18n.setUid(generateUniqueUidForI18n());
         pageI18n.setName(request.name());
         pageI18n.setCanonicalUrl(request.canonicalUrl());
@@ -214,7 +215,7 @@ public class PageI18nServiceImpl implements PageI18nService {
         String uid;
         int attempts = 0;
         do {
-            uid = com.backend.infrastructure.util.UuidUidGenerator.generateUid();
+            uid = UuidUidGenerator.generateUid();
             attempts++;
             if (attempts > 10) {
                 uid = uid + attempts;
