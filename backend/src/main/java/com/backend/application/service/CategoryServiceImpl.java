@@ -55,16 +55,19 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category saved = categoryRepository.save(category);
 
-        for (Map.Entry<Language, CategoryI18nDto> entry : translations.entrySet()) {
-            CategoryI18n i18n = new CategoryI18n();
-            i18n.setCategory(saved);
-            i18n.setLanguage(entry.getKey());
-            i18n.setName(entry.getValue().name());
-            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-            i18n.setCreatedBy(createdBy);
-            i18n.setUpdatedBy(createdBy);
-            categoryI18nRepository.save(i18n);
-        }
+        List<CategoryI18n> i18nList = translations.entrySet().stream()
+                .map(entry -> {
+                    CategoryI18n i18n = new CategoryI18n();
+                    i18n.setCategory(saved);
+                    i18n.setLanguage(entry.getKey());
+                    i18n.setName(entry.getValue().name());
+                    i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                    i18n.setCreatedBy(createdBy);
+                    i18n.setUpdatedBy(createdBy);
+                    return i18n;
+                })
+                .toList();
+        categoryI18nRepository.saveAll(i18nList);
 
         log.info("Created category id: {}, code: {}", saved.getId(), saved.getCode());
         return categoryRepository.findByIdWithI18n(saved.getId()).orElse(saved);
@@ -98,20 +101,23 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category saved = categoryRepository.save(category);
 
-        for (Map.Entry<Language, CategoryI18nDto> entry : translations.entrySet()) {
-            CategoryI18n i18n = categoryI18nRepository.findByCategoryIdAndLanguage(id, entry.getKey())
-                    .orElseGet(() -> {
-                        CategoryI18n newI18n = new CategoryI18n();
-                        newI18n.setCategory(saved);
-                        newI18n.setLanguage(entry.getKey());
-                        newI18n.setCreatedBy(updatedBy);
-                        return newI18n;
-                    });
-            i18n.setName(entry.getValue().name());
-            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-            i18n.setUpdatedBy(updatedBy);
-            categoryI18nRepository.save(i18n);
-        }
+        List<CategoryI18n> i18nList = translations.entrySet().stream()
+                .map(entry -> {
+                    CategoryI18n i18n = categoryI18nRepository.findByCategoryIdAndLanguage(id, entry.getKey())
+                            .orElseGet(() -> {
+                                CategoryI18n newI18n = new CategoryI18n();
+                                newI18n.setCategory(saved);
+                                newI18n.setLanguage(entry.getKey());
+                                newI18n.setCreatedBy(updatedBy);
+                                return newI18n;
+                            });
+                    i18n.setName(entry.getValue().name());
+                    i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                    i18n.setUpdatedBy(updatedBy);
+                    return i18n;
+                })
+                .toList();
+        categoryI18nRepository.saveAll(i18nList);
 
         log.info("Updated category id: {}, code: {}", saved.getId(), saved.getCode());
         return categoryRepository.findByIdWithI18n(saved.getId()).orElse(saved);

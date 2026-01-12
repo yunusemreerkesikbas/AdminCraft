@@ -253,39 +253,45 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void saveTranslations(Product product, Map<Language, ProductI18nDto> translations, Long createdBy) {
-        for (Map.Entry<Language, ProductI18nDto> entry : translations.entrySet()) {
-            ProductI18n i18n = new ProductI18n();
-            i18n.setProduct(product);
-            i18n.setLanguage(entry.getKey());
-            i18n.setName(entry.getValue().name());
-            i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
-            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-            i18n.setSeoTitle(entry.getValue().seoTitle());
-            i18n.setSeoDescription(entry.getValue().seoDescription());
-            i18n.setCreatedBy(createdBy);
-            i18n.setUpdatedBy(createdBy);
-            productI18nRepository.save(i18n);
-        }
+        List<ProductI18n> i18nList = translations.entrySet().stream()
+                .map(entry -> {
+                    ProductI18n i18n = new ProductI18n();
+                    i18n.setProduct(product);
+                    i18n.setLanguage(entry.getKey());
+                    i18n.setName(entry.getValue().name());
+                    i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+                    i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                    i18n.setSeoTitle(entry.getValue().seoTitle());
+                    i18n.setSeoDescription(entry.getValue().seoDescription());
+                    i18n.setCreatedBy(createdBy);
+                    i18n.setUpdatedBy(createdBy);
+                    return i18n;
+                })
+                .toList();
+        productI18nRepository.saveAll(i18nList);
     }
 
     private void updateTranslations(Product product, Map<Language, ProductI18nDto> translations, Long updatedBy) {
-        for (Map.Entry<Language, ProductI18nDto> entry : translations.entrySet()) {
-            ProductI18n i18n = productI18nRepository.findByProductIdAndLanguage(product.getId(), entry.getKey())
-                    .orElseGet(() -> {
-                        ProductI18n newI18n = new ProductI18n();
-                        newI18n.setProduct(product);
-                        newI18n.setLanguage(entry.getKey());
-                        newI18n.setCreatedBy(updatedBy);
-                        return newI18n;
-                    });
-            i18n.setName(entry.getValue().name());
-            i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
-            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-            i18n.setSeoTitle(entry.getValue().seoTitle());
-            i18n.setSeoDescription(entry.getValue().seoDescription());
-            i18n.setUpdatedBy(updatedBy);
-            productI18nRepository.save(i18n);
-        }
+        List<ProductI18n> i18nList = translations.entrySet().stream()
+                .map(entry -> {
+                    ProductI18n i18n = productI18nRepository.findByProductIdAndLanguage(product.getId(), entry.getKey())
+                            .orElseGet(() -> {
+                                ProductI18n newI18n = new ProductI18n();
+                                newI18n.setProduct(product);
+                                newI18n.setLanguage(entry.getKey());
+                                newI18n.setCreatedBy(updatedBy);
+                                return newI18n;
+                            });
+                    i18n.setName(entry.getValue().name());
+                    i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+                    i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                    i18n.setSeoTitle(entry.getValue().seoTitle());
+                    i18n.setSeoDescription(entry.getValue().seoDescription());
+                    i18n.setUpdatedBy(updatedBy);
+                    return i18n;
+                })
+                .toList();
+        productI18nRepository.saveAll(i18nList);
     }
 
     private void saveAttributes(Product product, ProductType productType, Map<String, Object> attributes) {
