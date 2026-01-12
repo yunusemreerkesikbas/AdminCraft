@@ -25,6 +25,7 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md)
 - Site Settings: [`modules/site-settings.md`](modules/site-settings.md)
 - Media Library (DAM): [`modules/media.md`](modules/media.md)
+- Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
 - Component Library: [`modules/component-library.md`](modules/component-library.md)
 
 ## Platform features (control-plane)

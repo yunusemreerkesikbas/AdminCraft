@@ -15,7 +15,7 @@ import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQu
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.repository.ComponentTypeRepository;
-import com.backend.infrastructure.util.UuidUidGenerator;
+import com.backend.domain.util.UuidUidGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.backend.domain.entity;
 
-import com.backend.infrastructure.util.UuidUidGenerator;
+import com.backend.domain.util.UuidUidGenerator;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

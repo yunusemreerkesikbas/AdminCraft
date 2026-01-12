@@ -63,4 +63,14 @@ VALUES (
     'Dynamic component management system for reusable UI components with multi-language support.'
 );
 
-
+-- Product Catalog module
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
+VALUES (
+    'product',
+    'Product Catalog',
+    'b2c',
+    '1.0.0',
+    '["core", "media"]',
+    FALSE,
+    'Product catalog management with dynamic attributes, categories, and multi-language support.'
+);
