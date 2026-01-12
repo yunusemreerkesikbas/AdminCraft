@@ -7,7 +7,7 @@
         <mat-label>{{ label }}</mat-label>
     }
     <mat-select
-        [disabled]="disabled"
+        [disabled]="disabled || readonly"
         [value]="value"
         [multiple]="multiple"
         [placeholder]="placeholder || ''"
@@ -17,10 +17,19 @@
         @if (placeholder) {
             <mat-option [value]="null">{{ placeholder }}</mat-option>
         }
-        @for (o of options; track o) {
-            <mat-option [value]="o.value" [disabled]="o.disabled">
-                {{ o.label || (o.labelKey | transloco) }}
-            </mat-option>
+        @if (options && options.length) {
+            @for (o of options; track o) {
+                <mat-option
+                    [value]="optionValue ? o[optionValue] : o.value"
+                    [disabled]="o.disabled"
+                >
+                    {{
+                        optionLabel
+                            ? o[optionLabel]
+                            : o.label || (o.labelKey | transloco)
+                    }}
+                </mat-option>
+            }
         }
     </mat-select>
     @if (hint) {

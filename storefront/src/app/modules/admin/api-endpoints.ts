@@ -171,6 +171,35 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- PAGE TEMPLATE I18N -----
     pageTemplateI18n: 'page-templates/${id}/i18n/${language}',
+
+    // ----- PRODUCT CATALOG: PRODUCT TYPES -----
+    productTypes: 'products/types',
+    productTypeById: 'products/types/${id}',
+
+    // ----- PRODUCT CATALOG: ATTRIBUTE DEFINITIONS -----
+    productAttributeDefinitions: 'products/types/${typeId}/attributes',
+    productAttributeDefinitionById: 'products/types/${typeId}/attributes/${id}',
+
+    // ----- PRODUCT CATALOG: CATEGORIES -----
+    productCategories: 'products/categories',
+    productCategoryComposite: 'products/categories/composite',
+    productCategoryById: 'products/categories/${id}',
+    productCategoryCompositeById: 'products/categories/${id}/composite',
+
+    // ----- PRODUCT CATALOG: PRODUCTS -----
+    products: 'products',
+    productComposite: 'products/composite',
+    productById: 'products/${id}',
+    productCompositeById: 'products/${id}/composite',
+    productMedia: 'products/${id}/media',
+    productMediaById: 'products/${id}/media/${mediaId}',
+
+    // ----- PRODUCT CATALOG: CMS DELIVERY (PUBLIC) -----
+    cmsProducts: 'cms/products',
+    cmsProductByUid: 'cms/products/${uid}',
+    cmsCategories: 'cms/categories',
+    cmsCategoryByUid: 'cms/categories/${uid}',
+    cmsCategoryProducts: 'cms/categories/${uid}/products',
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

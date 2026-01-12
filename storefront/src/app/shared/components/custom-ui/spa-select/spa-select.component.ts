@@ -51,6 +51,9 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor {
     @Input() options: SpaSelectOption<T>[] = [];
     @Input() styleClasses?: string;
     @Input() multiple?: boolean;
+    @Input() optionLabel?: string;
+    @Input() optionValue?: string;
+    @Input() readonly = false;
 
     @Output() changed = new EventEmitter<T | null>();
 

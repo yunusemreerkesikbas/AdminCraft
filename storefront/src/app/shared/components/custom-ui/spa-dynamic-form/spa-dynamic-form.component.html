@@ -1,0 +1,72 @@
+<div [formGroup]="form()" class="grid grid-cols-1 gap-4">
+    @for (field of fields(); track field.key) {
+        @switch (field.type) {
+            @case ('text') {
+                <spa-input
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [hint]="field.hint"
+                ></spa-input>
+            }
+            @case ('number') {
+                <spa-input
+                    type="number"
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [hint]="field.hint"
+                ></spa-input>
+            }
+            @case ('textarea') {
+                <spa-textarea
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [rows]="4"
+                    [hint]="field.hint"
+                ></spa-textarea>
+            }
+            @case ('richtext') {
+                <spa-textarea
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [rows]="6"
+                    [hint]="field.hint"
+                ></spa-textarea>
+            }
+            @case ('select') {
+                <spa-select
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [options]="field.options ?? []"
+                    [hint]="field.hint"
+                ></spa-select>
+            }
+            @case ('boolean') {
+                <spa-checkbox
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                ></spa-checkbox>
+            }
+            @case ('date') {
+                <spa-input
+                    type="date"
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                    [hint]="field.hint"
+                ></spa-input>
+            }
+            @case ('media') {
+                <spa-media-picker
+                    [controlName]="field.key"
+                    [label]="getLabel(field)"
+                    [required]="field.required ?? false"
+                ></spa-media-picker>
+            }
+        }
+    }
+</div>

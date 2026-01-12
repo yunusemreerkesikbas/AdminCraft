@@ -1,0 +1,239 @@
+<spa-dialog-header
+    [title]="
+        (data.mode === 'create'
+            ? 'admin.products.create'
+            : 'admin.products.edit'
+        ) | transloco
+    "
+    (closeClicked)="cancel()"
+></spa-dialog-header>
+
+<spa-dialog-content type="tabbed">
+    @if (isLoadingSig()) {
+        <div class="flex justify-center p-8">
+            <mat-progress-spinner
+                mode="indeterminate"
+                diameter="40"
+            ></mat-progress-spinner>
+        </div>
+    } @else {
+        <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
+            <ng-template spaTabContent="general">
+                <form
+                    [formGroup]="generalForm"
+                    class="mt-4 flex flex-col gap-4"
+                >
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <spa-input
+                            formControlName="sku"
+                            [label]="'admin.products.fields.sku' | transloco"
+                            [required]="true"
+                        ></spa-input>
+
+                        <spa-select
+                            formControlName="status"
+                            [label]="'admin.common.fields.status' | transloco"
+                            [options]="statusOptions"
+                            [required]="true"
+                        ></spa-select>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <spa-input
+                            formControlName="basePrice"
+                            type="number"
+                            [label]="'admin.products.fields.price' | transloco"
+                            [required]="true"
+                        ></spa-input>
+
+                        <spa-input
+                            formControlName="currency"
+                            [label]="
+                                'admin.products.fields.currency' | transloco
+                            "
+                            [required]="true"
+                        ></spa-input>
+                    </div>
+
+                    <spa-select
+                        formControlName="productTypeId"
+                        [label]="'admin.products.fields.type' | transloco"
+                        [options]="productTypes()"
+                        [optionLabel]="'name'"
+                        [optionValue]="'id'"
+                        [required]="true"
+                        [readonly]="data.mode === 'edit'"
+                    ></spa-select>
+
+                    <spa-checkbox
+                        formControlName="isVisible"
+                        [label]="'admin.common.fields.isVisible' | transloco"
+                        styleClasses="boxed"
+                    ></spa-checkbox>
+                </form>
+            </ng-template>
+
+            @for (lang of languages; track lang) {
+                <ng-template [spaTabContent]="'lang-' + lang">
+                    <form
+                        [formGroup]="i18nForms[lang]"
+                        class="mt-4 flex flex-col gap-4"
+                    >
+                        <spa-input
+                            formControlName="name"
+                            [label]="'admin.common.fields.name' | transloco"
+                            [required]="true"
+                        ></spa-input>
+
+                        <spa-textarea
+                            formControlName="shortDescription"
+                            [label]="
+                                'admin.products.fields.shortDescription'
+                                    | transloco
+                            "
+                            [rows]="2"
+                        ></spa-textarea>
+
+                        <spa-textarea
+                            formControlName="description"
+                            [label]="
+                                'admin.products.fields.description' | transloco
+                            "
+                            [rows]="5"
+                        ></spa-textarea>
+
+                        <div class="mt-2 border-t pt-4">
+                            <h3 class="text-secondary mb-2 text-sm font-medium">
+                                {{ 'admin.products.sections.seo' | transloco }}
+                            </h3>
+                            <div class="flex flex-col gap-4">
+                                <spa-input
+                                    formControlName="seoTitle"
+                                    [label]="
+                                        'admin.products.fields.seoTitle'
+                                            | transloco
+                                    "
+                                ></spa-input>
+                                <spa-textarea
+                                    formControlName="seoDescription"
+                                    [label]="
+                                        'admin.products.fields.seoDescription'
+                                            | transloco
+                                    "
+                                    [rows]="2"
+                                ></spa-textarea>
+                            </div>
+                        </div>
+                    </form>
+                </ng-template>
+            }
+
+            <ng-template spaTabContent="attributes">
+                <div class="mt-4">
+                    <spa-dynamic-form
+                        [form]="attributesForm"
+                        [fields]="dynamicFieldsConfig()"
+                    ></spa-dynamic-form>
+                </div>
+            </ng-template>
+
+            <ng-template spaTabContent="categories">
+                <form
+                    [formGroup]="generalForm"
+                    class="mt-4 flex flex-col gap-4"
+                >
+                    <spa-select
+                        formControlName="primaryCategoryId"
+                        [label]="
+                            'admin.products.fields.primaryCategory' | transloco
+                        "
+                        [options]="categories()"
+                        [optionLabel]="'code'"
+                        [optionValue]="'id'"
+                    ></spa-select>
+
+                    <spa-select
+                        formControlName="categoryIds"
+                        [label]="'admin.products.fields.categories' | transloco"
+                        [options]="categories()"
+                        [optionLabel]="'code'"
+                        [optionValue]="'id'"
+                        [multiple]="true"
+                    ></spa-select>
+                </form>
+            </ng-template>
+
+            <ng-template spaTabContent="media">
+                <div class="mt-4 flex flex-col gap-6">
+                    <!-- Responsive Image -->
+                    <div
+                        class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                    >
+                        <h3 class="mb-4 text-sm font-medium">
+                            {{ 'admin.products.media.mainImage' | transloco }}
+                        </h3>
+                        <form [formGroup]="generalForm">
+                            <!-- TODO: implement spa-responsive-media-picker integration similarly to component entry form -->
+                            <div class="text-secondary text-xs">
+                                {{
+                                    'admin.products.media.responsivePlaceholder'
+                                        | transloco
+                                }}
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Gallery -->
+                    <div
+                        class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
+                    >
+                        <h3 class="mb-4 text-sm font-medium">
+                            {{ 'admin.products.media.gallery' | transloco }}
+                        </h3>
+
+                        <div class="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                            @for (item of gallery(); track $index) {
+                                <div
+                                    class="group bg-card relative aspect-square overflow-hidden rounded-lg border"
+                                >
+                                    <img
+                                        [src]="item.media?.publicUrl"
+                                        class="h-full w-full object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        class="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                        (click)="removeGalleryImage($index)"
+                                    >
+                                        <mat-icon class="icon-size-4"
+                                            >close</mat-icon
+                                        >
+                                    </button>
+                                </div>
+                            }
+
+                            <div
+                                class="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <spa-media-picker
+                                    (mediaSelected)="addGalleryImage($event)"
+                                    [minimal]="true"
+                                ></spa-media-picker>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </spa-tab-container>
+    }
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="
+        (data.mode === 'create' ? 'admin.common.create' : 'admin.common.save')
+            | transloco
+    "
+    (submitClicked)="save()"
+    (cancelClicked)="cancel()"
+    [submitDisabled]="isLoadingSig()"
+></spa-dialog-footer>

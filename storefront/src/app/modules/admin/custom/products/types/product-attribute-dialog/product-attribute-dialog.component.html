@@ -1,0 +1,56 @@
+<spa-dialog-header
+    [title]="(data.mode === 'create' ? 'admin.products.attributes.create' : 'admin.products.attributes.edit') | transloco"
+    (closeClicked)="cancel()"
+></spa-dialog-header>
+
+<spa-dialog-content>
+    <form [formGroup]="generalForm" class="flex flex-col gap-4">
+        <spa-input
+            formControlName="code"
+            [label]="'admin.common.fields.code' | transloco"
+            [required]="true"
+            hint="Lowercase, numbers and underscores only"
+            [readonly]="data.mode === 'edit'"
+        ></spa-input>
+
+        <spa-input
+            formControlName="name"
+            [label]="'admin.common.fields.name' | transloco"
+            [required]="true"
+        ></spa-input>
+
+        <spa-select
+            formControlName="fieldType"
+            [label]="'admin.products.attributes.fields.type' | transloco"
+            [options]="fieldTypes"
+            [required]="true"
+            [disabled]="data.mode === 'edit'"
+        ></spa-select>
+
+        <spa-input
+            formControlName="sortOrder"
+            type="number"
+            [label]="'admin.common.fields.order' | transloco"
+        ></spa-input>
+
+        <div class="flex gap-6 mt-2">
+            <spa-checkbox
+                formControlName="isRequired"
+                [label]="'admin.common.fields.required' | transloco"
+                styleClasses="boxed"
+            ></spa-checkbox>
+
+            <spa-checkbox
+                formControlName="isSearchable"
+                [label]="'admin.products.attributes.fields.searchable' | transloco"
+                styleClasses="boxed"
+            ></spa-checkbox>
+        </div>
+    </form>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="(data.mode === 'create' ? 'admin.common.create' : 'admin.common.save') | transloco"
+    (submitClicked)="save()"
+    (cancelClicked)="cancel()"
+></spa-dialog-footer>

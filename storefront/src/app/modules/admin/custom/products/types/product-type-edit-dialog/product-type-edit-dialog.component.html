@@ -1,0 +1,109 @@
+<spa-dialog-header
+    [title]="(data.mode === 'create' ? 'admin.products.types.create' : 'admin.products.types.edit') | transloco"
+    (closeClicked)="cancel()"
+></spa-dialog-header>
+
+<spa-dialog-content type="tabbed">
+    <spa-tab-container
+        [tabs]="tabs"
+        [(activeTabIndex)]="activeTab"
+    >
+        <ng-template spaTabContent="general">
+            <form [formGroup]="generalForm" class="flex flex-col gap-4 mt-4">
+                <spa-input
+                    formControlName="code"
+                    [label]="'admin.common.fields.code' | transloco"
+                    [required]="true"
+                    hint="Unique identifier"
+                    [readonly]="data.mode === 'edit'"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="name"
+                    [label]="'admin.common.fields.name' | transloco"
+                    [required]="true"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="category"
+                    [label]="'admin.products.types.fields.category' | transloco"
+                    hint="Optional grouping"
+                ></spa-input>
+            </form>
+        </ng-template>
+
+        <ng-template spaTabContent="attributes">
+            <div class="flex flex-col gap-4 mt-4 h-full">
+                <div class="flex justify-end">
+                    <button mat-flat-button color="primary" (click)="addAttribute()">
+                        <mat-icon>add</mat-icon>
+                        {{ 'admin.products.attributes.add' | transloco }}
+                    </button>
+                </div>
+
+                @if (isLoadingAttributes()) {
+                    <div class="flex justify-center p-8">
+                        <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+                    </div>
+                } @else if (attributes().length === 0) {
+                    <div class="flex flex-col items-center justify-center p-8 text-secondary border-2 border-dashed rounded-lg">
+                        <mat-icon class="icon-size-10 mb-2">list_alt</mat-icon>
+                        <span>{{ 'admin.products.attributes.empty' | transloco }}</span>
+                    </div>
+                } @else {
+                    <div class="overflow-auto border rounded-lg max-h-[400px]">
+                        <table mat-table [dataSource]="attributes()">
+                            <ng-container matColumnDef="code">
+                                <th mat-header-cell *matHeaderCellDef>{{ 'admin.common.fields.code' | transloco }}</th>
+                                <td mat-cell *matCellDef="let attr">{{ attr.code }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="name">
+                                <th mat-header-cell *matHeaderCellDef>{{ 'admin.common.fields.name' | transloco }}</th>
+                                <td mat-cell *matCellDef="let attr">{{ attr.name }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="fieldType">
+                                <th mat-header-cell *matHeaderCellDef>{{ 'admin.products.attributes.fields.type' | transloco }}</th>
+                                <td mat-cell *matCellDef="let attr">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">{{ attr.fieldType }}</span>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="required">
+                                <th mat-header-cell *matHeaderCellDef>{{ 'admin.common.fields.required' | transloco }}</th>
+                                <td mat-cell *matCellDef="let attr">
+                                    @if (attr.isRequired) {
+                                        <mat-icon class="text-green-500 icon-size-4">check_circle</mat-icon>
+                                    }
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell *matHeaderCellDef></th>
+                                <td mat-cell *matCellDef="let attr">
+                                    <button mat-icon-button color="primary" (click)="editAttribute(attr)">
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                    <button mat-icon-button color="warn" (click)="deleteAttribute(attr)">
+                                        <mat-icon>delete</mat-icon>
+                                    </button>
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                        </table>
+                    </div>
+                }
+            </div>
+        </ng-template>
+    </spa-tab-container>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitLabel]="(data.mode === 'create' ? 'admin.common.create' : 'admin.common.save') | transloco"
+    (submitClicked)="save()"
+    (cancelClicked)="cancel()"
+    [submitDisabled]="activeTab === 1" 
+></spa-dialog-footer>
