@@ -35,6 +35,8 @@ import com.backend.domain.repository.ProductMediaRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
+import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.shared.common.HtmlSanitizer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<Long> galleryMediaIds,
             Long createdBy) {
+        TenantContext.validateActive();
         log.debug("Creating product with SKU: {}", sku);
 
         ProductType productType = productTypeRepository.findById(productTypeId)
@@ -111,6 +114,7 @@ public class ProductServiceImpl implements ProductService {
             List<Long> categoryIds, Long primaryCategoryId,
             List<Long> galleryMediaIds,
             Long updatedBy) {
+        TenantContext.validateActive();
         log.debug("Updating product id: {}", id);
 
         Product product = productRepository.findById(id)
@@ -158,6 +162,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void delete(Long id) {
+        TenantContext.validateActive();
         log.debug("Deleting product id: {}", id);
 
         Product product = productRepository.findById(id)
@@ -170,54 +175,63 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> findById(Long id) {
+        TenantContext.validateActive();
         return productRepository.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> findByIdComposite(Long id) {
+        TenantContext.validateActive();
         return productRepository.findByIdComposite(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> findByUid(String uid) {
+        TenantContext.validateActive();
         return productRepository.findByUid(uid);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Product> findBySku(String sku) {
+        TenantContext.validateActive();
         return productRepository.findBySku(sku);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Product> findAll() {
+        TenantContext.validateActive();
         return productRepository.findAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<Product> findAllPaged(Pageable pageable) {
+        TenantContext.validateActive();
         return productRepository.findAllPaged(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<Product> search(String query, ProductStatus status, Long categoryId, Pageable pageable) {
+        TenantContext.validateActive();
         return productRepository.searchWithFilters(query, status, categoryId, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Product> findByCategoryId(Long categoryId) {
+        TenantContext.validateActive();
         return productRepository.findByCategoryId(categoryId);
     }
 
     @Override
     @Transactional
     public Product updateStatus(Long id, ProductStatus status, Long updatedBy) {
+        TenantContext.validateActive();
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
 
@@ -229,6 +243,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Product updateVisibility(Long id, Boolean isVisible, Long updatedBy) {
+        TenantContext.validateActive();
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
 
@@ -243,8 +258,8 @@ public class ProductServiceImpl implements ProductService {
             i18n.setProduct(product);
             i18n.setLanguage(entry.getKey());
             i18n.setName(entry.getValue().name());
-            i18n.setShortDescription(entry.getValue().shortDescription());
-            i18n.setDescription(entry.getValue().description());
+            i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
             i18n.setSeoTitle(entry.getValue().seoTitle());
             i18n.setSeoDescription(entry.getValue().seoDescription());
             i18n.setCreatedBy(createdBy);
@@ -264,8 +279,8 @@ public class ProductServiceImpl implements ProductService {
                         return newI18n;
                     });
             i18n.setName(entry.getValue().name());
-            i18n.setShortDescription(entry.getValue().shortDescription());
-            i18n.setDescription(entry.getValue().description());
+            i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
             i18n.setSeoTitle(entry.getValue().seoTitle());
             i18n.setSeoDescription(entry.getValue().seoDescription());
             i18n.setUpdatedBy(updatedBy);
