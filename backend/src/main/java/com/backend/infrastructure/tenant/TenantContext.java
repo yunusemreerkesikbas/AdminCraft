@@ -47,4 +47,17 @@ public class TenantContext implements TenantContextPort {
   public boolean isSet() {
     return currentTenantId.get() != null && currentTenantDbName.get() != null;
   }
+
+  /**
+   * Validates that tenant context is properly set.
+   * Should be called at the entry point of all tenant-scoped service methods.
+   * 
+   * @throws IllegalStateException if tenant context is not set
+   */
+  public static void validateActive() {
+    if (currentTenantId.get() == null || currentTenantDbName.get() == null) {
+      throw new IllegalStateException(
+        "Tenant context is not set. This operation requires an active tenant context.");
+    }
+  }
 }
