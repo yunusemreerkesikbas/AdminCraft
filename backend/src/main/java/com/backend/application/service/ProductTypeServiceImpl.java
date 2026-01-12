@@ -15,6 +15,7 @@ import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.repository.ProductAttributeDefinitionRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
+import com.backend.infrastructure.tenant.TenantContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional
     public ProductType create(String code, String name, String category, Long createdBy) {
+        TenantContext.validateActive();
         log.debug("Creating product type with code: {}, name: {}", code, name);
 
         if (productTypeRepository.existsByCode(code)) {
@@ -52,6 +54,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional
     public ProductType update(Long id, String name, String category, Long updatedBy) {
+        TenantContext.validateActive();
         log.debug("Updating product type id: {} with name: {}", id, name);
 
         ProductType productType = productTypeRepository.findById(id)
@@ -69,6 +72,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional
     public void delete(Long id) {
+        TenantContext.validateActive();
         log.debug("Deleting product type id: {}", id);
 
         ProductType productType = productTypeRepository.findById(id)
@@ -90,42 +94,49 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional(readOnly = true)
     public Optional<ProductType> findById(Long id) {
+        TenantContext.validateActive();
         return productTypeRepository.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ProductType> findByIdWithAttributes(Long id) {
+        TenantContext.validateActive();
         return productTypeRepository.findByIdWithAttributes(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ProductType> findByUid(String uid) {
+        TenantContext.validateActive();
         return productTypeRepository.findByUid(uid);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<ProductType> findByCode(String code) {
+        TenantContext.validateActive();
         return productTypeRepository.findByCode(code);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductType> findAll() {
+        TenantContext.validateActive();
         return productTypeRepository.findAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductType> findAllPaged(Pageable pageable) {
+        TenantContext.validateActive();
         return productTypeRepository.findAllPaged(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductType> search(String query, Pageable pageable) {
+        TenantContext.validateActive();
         if (query == null || query.trim().length() < 2) {
             return productTypeRepository.findAllPaged(pageable);
         }
@@ -135,6 +146,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductType> findByCategory(String category) {
+        TenantContext.validateActive();
         return productTypeRepository.findByCategory(category);
     }
 
@@ -143,6 +155,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     public ProductAttributeDefinition addAttribute(Long productTypeId, String code, String name,
             ProductFieldType fieldType, Boolean isRequired, Boolean isSearchable,
             Integer sortOrder, String validationConfig) {
+        TenantContext.validateActive();
         log.debug("Adding attribute {} to product type {}", code, productTypeId);
 
         ProductType productType = productTypeRepository.findById(productTypeId)
@@ -175,6 +188,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     public ProductAttributeDefinition updateAttribute(Long productTypeId, Long attributeId,
             String name, ProductFieldType fieldType, Boolean isRequired,
             Boolean isSearchable, Integer sortOrder, String validationConfig) {
+        TenantContext.validateActive();
         log.debug("Updating attribute {} in product type {}", attributeId, productTypeId);
 
         ProductAttributeDefinition attribute = attributeDefinitionRepository.findById(attributeId)
@@ -202,6 +216,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional
     public void deleteAttribute(Long productTypeId, Long attributeId) {
+        TenantContext.validateActive();
         log.debug("Deleting attribute {} from product type {}", attributeId, productTypeId);
 
         ProductAttributeDefinition attribute = attributeDefinitionRepository.findById(attributeId)
@@ -218,6 +233,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductAttributeDefinition> getAttributes(Long productTypeId) {
+        TenantContext.validateActive();
         return attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(productTypeId);
     }
 }
