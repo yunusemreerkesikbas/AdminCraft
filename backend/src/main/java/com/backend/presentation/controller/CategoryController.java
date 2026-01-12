@@ -59,7 +59,7 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<CategoryTreeResponse>>> getTree(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            Language language = parseLanguage(lang);
+            Language language = Language.fromCodeOrDefault(lang);
             List<Category> roots = categoryService.getTree();
             List<CategoryTreeResponse> tree = roots.stream()
                     .map(c -> CategoryTreeResponse.fromAll(c, language))
@@ -80,7 +80,7 @@ public class CategoryController {
             @Parameter(description = "Category ID") @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            Language language = parseLanguage(lang);
+            Language language = Language.fromCodeOrDefault(lang);
             return categoryService.findByIdWithI18n(id)
                     .map(c -> ResponseEntity.ok(ApiResponse.success(CategoryResponse.from(c, language))))
                     .orElseGet(() -> {
@@ -197,14 +197,6 @@ public class CategoryController {
             String msg = messageSource.getMessage("category.delete.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
-        }
-    }
-
-    private Language parseLanguage(String lang) {
-        try {
-            return Language.valueOf(lang.toUpperCase());
-        } catch (Exception e) {
-            return Language.TR;
         }
     }
 

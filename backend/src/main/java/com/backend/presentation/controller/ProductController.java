@@ -76,7 +76,7 @@ public class ProductController {
             @RequestParam(required = false) Long categoryId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            Language language = parseLanguage(lang);
+            Language language = Language.fromCodeOrDefault(lang);
             String effectiveSort = sort != null ? sort : "createdAt,desc";
             Sort sortObj = SortParseUtil.parse(effectiveSort, Set.of("sku", "basePrice", "status", "createdAt"),
                     "createdAt,desc");
@@ -229,7 +229,7 @@ public class ProductController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            Language language = parseLanguage(lang);
+            Language language = Language.fromCodeOrDefault(lang);
             Product updated = productService.updateStatus(id, status, userId);
 
             String msg = messageSource.getMessage("product.status.update.success", null, Locale.forLanguageTag(lang));
@@ -255,7 +255,7 @@ public class ProductController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-            Language language = parseLanguage(lang);
+            Language language = Language.fromCodeOrDefault(lang);
             Product updated = productService.updateVisibility(id, isVisible, userId);
 
             String msg = messageSource.getMessage("product.visibility.update.success", null,
@@ -271,14 +271,6 @@ public class ProductController {
             String msg = messageSource.getMessage("product.visibility.update.error",
                     new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
-        }
-    }
-
-    private Language parseLanguage(String lang) {
-        try {
-            return Language.valueOf(lang.toUpperCase());
-        } catch (Exception e) {
-            return Language.TR;
         }
     }
 
