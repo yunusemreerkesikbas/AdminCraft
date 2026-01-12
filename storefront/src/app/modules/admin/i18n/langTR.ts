@@ -1062,6 +1062,103 @@ export const langTR = {
                 validationFailed: 'Alan doğrulama başarısız',
             },
         },
+        products: {
+            title: 'Ürünler',
+            subtitle: 'Ürün kataloğunu yönetin',
+            add: 'Yeni Ürün',
+            create: 'Ürün Oluştur',
+            edit: 'Ürün Düzenle',
+            delete: {
+                title: 'Ürünü Sil',
+                message: 'Bu ürünü silmek istediğinize emin misiniz?',
+            },
+            fields: {
+                sku: 'SKU',
+                price: 'Fiyat',
+                currency: 'Para Birimi',
+                type: 'Ürün Tipi',
+                shortDescription: 'Kısa Açıklama',
+                description: 'Açıklama',
+                primaryCategory: 'Ana Kategori',
+                categories: 'Kategoriler',
+            },
+            tabs: {
+                attributes: 'Özellikler',
+                categories: 'Kategoriler',
+                media: 'Medya',
+            },
+            sections: {
+                seo: 'SEO Ayarları',
+            },
+            media: {
+                mainImage: 'Ana Görsel',
+                gallery: 'Galeri',
+                responsivePlaceholder: 'Duyarlı medya uygulaması ID çözümlemesi gerektirir. Şimdilik yer tutucu.',
+            },
+            types: {
+                title: 'Ürün Tipleri',
+                subtitle: 'Ürün tiplerini yönetin',
+                add: 'Yeni Tip',
+                create: 'Tip Oluştur',
+                edit: 'Tip Düzenle',
+                delete: {
+                    title: 'Tipi Sil',
+                    message: 'Bu tipi silmek istediğinize emin misiniz?',
+                },
+                fields: {
+                    category: 'Kategori',
+                },
+                tabs: {
+                    attributes: 'Özellikler',
+                },
+                errors: {
+                    loadAttributesFailed: 'Özellikler yüklenemedi',
+                },
+            },
+            attributes: {
+                create: 'Özellik Oluştur',
+                edit: 'Özellik Düzenle',
+                add: 'Özellik Ekle',
+                empty: 'Henüz özellik eklenmedi',
+                fields: {
+                    type: 'Tip',
+                    searchable: 'Aranabilir',
+                },
+                createSuccess: 'Özellik başarıyla oluşturuldu',
+                createFailed: 'Özellik oluşturulamadı',
+                updateSuccess: 'Özellik başarıyla güncellendi',
+                updateFailed: 'Özellik güncellenemedi',
+                delete: {
+                    title: 'Özelliği Sil',
+                    message: 'Bu özelliği silmek istediğinize emin misiniz?',
+                },
+                deleteSuccess: 'Özellik başarıyla silindi',
+                deleteFailed: 'Özellik silinemedi',
+            },
+            categories: {
+                title: 'Kategoriler',
+                subtitle: 'Ürün kategorilerini yönetin',
+                add: 'Yeni Kategori',
+                addChild: 'Alt Kategori Ekle',
+                create: 'Kategori Oluştur',
+                edit: 'Kategori Düzenle',
+                delete: {
+                    title: 'Kategoriyi Sil',
+                    message: 'Bu kategoriyi silmek istediğinize emin misiniz?',
+                },
+                fields: {
+                    parent: 'Üst Kategori',
+                },
+                empty: {
+                    title: 'Henüz kategori yok',
+                    message: 'İlk kategoriyi oluşturarak başlayın',
+                },
+                errors: {
+                    loadFailed: 'Kategoriler yüklenemedi',
+                    hasChildren: 'Alt kategorisi olan bir kategori silinemez',
+                },
+            },
+        },
         tenants: {
             title: 'Tenant Yönetimi',
             list: 'Tenant Listesi',

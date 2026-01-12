@@ -1,15 +1,17 @@
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
+import { SpaDynamicFormService } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
+import { DynamicFieldConfig } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -67,12 +69,13 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     #entryService = inject(ComponentEntryService);
     #fieldService = inject(EntryFieldService);
     #mediaService = inject(MediaService);
-    #transloco = inject(TranslocoService);
-    #langCtx = inject(LanguageContextService);
+    #languageContext = inject(LanguageContextService);
+    #dynamicFormService = inject(SpaDynamicFormService);
 
-    override languages = this.#langCtx.supportedLanguages();
+    override languages = this.#languageContext.supportedLanguages();
 
     fieldDefinitions = signal<EntryFieldDefinition[]>([]);
+    dynamicFieldsConfig = computed(() => this.#mapToDynamicConfig(this.fieldDefinitions()));
     isLoading = signal<boolean>(false);
 
     canSave = computed(() =>
@@ -137,7 +140,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         if (!desktopMediaId && !mobileMediaId) {
             return of(undefined);
         }
-
+        //TODO: code değişkeni neden frontendde oluşturuluyor ?
         const request = {
             desktopMediaId,
             mobileMediaId,
@@ -181,61 +184,27 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     }
 
     #addDynamicFieldsToForms(): void {
+        const configs = this.dynamicFieldsConfig();
+        
         this.languages.forEach(lang => {
             const formGroup = this.i18nForms[lang];
             if (!formGroup) return;
 
-            this.fieldDefinitions().forEach(field => {
-                const control = this.#createControlForFieldType(field, lang);
-                (formGroup as any).addControl(field.fieldKey, control);
-            });
+            const initialValues = this.data.translations?.[lang]?.customFields || {};
+            this.#dynamicFormService.addControlsToFormGroup(formGroup, configs, initialValues);
         });
     }
 
-    #createControlForFieldType(field: EntryFieldDefinition, language: string): FormControl {
-        const validators = [];
-        if (field.isRequired) validators.push(Validators.required);
-
-        const initialValue = this.data.translations?.[language]?.customFields?.[field.fieldKey] ?? this.#getDefaultValue(field.fieldType);
-
-        switch (field.fieldType) {
-            case 'text':
-                if (field.maxLength) validators.push(Validators.maxLength(field.maxLength));
-                break;
-            case 'number':
-                if (field.minValue !== undefined) validators.push(Validators.min(field.minValue));
-                if (field.maxValue !== undefined) validators.push(Validators.max(field.maxValue));
-                break;
-        }
-
-        return new FormControl(initialValue, validators);
-    }
-
-    #getDefaultValue(fieldType: string): any {
-        switch (fieldType) {
-            case 'boolean': return false;
-            case 'number': return null;
-            case 'media': return null;
-            default: return '';
-        }
-    }
-
-    protected getFieldLabelWithFallback(fieldKey: string): string {
-        const i18nKey = `admin.components.entryFields.custom.${fieldKey}`;
-        const translation = this.#transloco.translate(i18nKey);
-
-        if (translation !== i18nKey) {
-            return translation;
-        }
-
-        return this.#humanizeFieldKey(fieldKey);
-    }
-
-    #humanizeFieldKey(fieldKey: string): string {
-        return fieldKey
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase())
-            .trim();
+    #mapToDynamicConfig(fields: EntryFieldDefinition[]): DynamicFieldConfig[] {
+        return fields.map(f => ({
+            key: f.fieldKey,
+            type: f.fieldType as any, 
+            required: f.isRequired,
+            maxLength: f.maxLength,
+            minValue: f.minValue,
+            maxValue: f.maxValue,
+            labelKey: `admin.components.entryFields.custom.${f.fieldKey}`
+        }));
     }
 
     save(): void {

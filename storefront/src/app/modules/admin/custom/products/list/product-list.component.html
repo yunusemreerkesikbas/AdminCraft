@@ -1,0 +1,32 @@
+<div class="flex h-full w-full min-w-0 flex-col">
+    <admin-page-header
+        [title]="'admin.products.title' | transloco"
+        [subtitle]="'admin.products.description' | transloco"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.common.actions.create' | transloco"
+        (createClick)="createProduct()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.searchPlaceholder' | transloco"
+        (search)="onSearchInput($event)"
+    >
+    </admin-page-header>
+
+    <div class="flex-auto p-6 sm:p-10">
+        <div class="bg-card flex flex-col overflow-hidden rounded-2xl shadow">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                (actionClick)="onGridAction($event)"
+            ></spa-admin-grid>
+
+            <spa-admin-paginator
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (page)="onPageChange($event)"
+            ></spa-admin-paginator>
+        </div>
+    </div>
+</div>

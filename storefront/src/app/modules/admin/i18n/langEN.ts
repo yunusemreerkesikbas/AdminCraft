@@ -1067,6 +1067,103 @@ export const langEN = {
                 validationFailed: 'Field validation failed',
             },
         },
+        products: {
+            title: 'Products',
+            subtitle: 'Manage product catalog',
+            add: 'New Product',
+            create: 'Create Product',
+            edit: 'Edit Product',
+            delete: {
+                title: 'Delete Product',
+                message: 'Are you sure you want to delete this product?',
+            },
+            fields: {
+                sku: 'SKU',
+                price: 'Price',
+                currency: 'Currency',
+                type: 'Product Type',
+                shortDescription: 'Short Description',
+                description: 'Description',
+                primaryCategory: 'Primary Category',
+                categories: 'Categories',
+            },
+            tabs: {
+                attributes: 'Attributes',
+                categories: 'Categories',
+                media: 'Media',
+            },
+            sections: {
+                seo: 'SEO Settings',
+            },
+            media: {
+                mainImage: 'Main Image',
+                gallery: 'Gallery',
+                responsivePlaceholder: 'Responsive media implementation requires resolving ID. Placeholder for now.',
+            },
+            types: {
+                title: 'Product Types',
+                subtitle: 'Manage product types',
+                add: 'New Type',
+                create: 'Create Type',
+                edit: 'Edit Type',
+                delete: {
+                    title: 'Delete Type',
+                    message: 'Are you sure you want to delete this type?',
+                },
+                fields: {
+                    category: 'Category',
+                },
+                tabs: {
+                    attributes: 'Attributes',
+                },
+                errors: {
+                    loadAttributesFailed: 'Failed to load attributes',
+                },
+            },
+            attributes: {
+                create: 'Create Attribute',
+                edit: 'Edit Attribute',
+                add: 'Add Attribute',
+                empty: 'No attributes added yet',
+                fields: {
+                    type: 'Type',
+                    searchable: 'Searchable',
+                },
+                createSuccess: 'Attribute created successfully',
+                createFailed: 'Failed to create attribute',
+                updateSuccess: 'Attribute updated successfully',
+                updateFailed: 'Failed to update attribute',
+                delete: {
+                    title: 'Delete Attribute',
+                    message: 'Are you sure you want to delete this attribute?',
+                },
+                deleteSuccess: 'Attribute deleted successfully',
+                deleteFailed: 'Failed to delete attribute',
+            },
+            categories: {
+                title: 'Categories',
+                subtitle: 'Manage product categories',
+                add: 'New Category',
+                addChild: 'Add Child Category',
+                create: 'Create Category',
+                edit: 'Edit Category',
+                delete: {
+                    title: 'Delete Category',
+                    message: 'Are you sure you want to delete this category?',
+                },
+                fields: {
+                    parent: 'Parent Category',
+                },
+                empty: {
+                    title: 'No categories yet',
+                    message: 'Get started by creating your first category',
+                },
+                errors: {
+                    loadFailed: 'Failed to load categories',
+                    hasChildren: 'Cannot delete a category with children',
+                },
+            },
+        },
         tenants: {
             title: 'Tenant Management',
             list: 'Tenant List',

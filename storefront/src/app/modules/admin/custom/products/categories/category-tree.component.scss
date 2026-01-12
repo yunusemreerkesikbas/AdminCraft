@@ -1,0 +1,16 @@
+.category-tree {
+    background: transparent;
+}
+
+.category-tree .mat-tree-node {
+    min-height: 48px;
+}
+
+.category-tree .mat-nested-tree-node div[role="group"] {
+    padding-left: 24px;
+    overflow: hidden;
+}
+
+.hidden {
+    display: none;
+}

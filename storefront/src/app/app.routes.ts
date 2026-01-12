@@ -118,6 +118,12 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/modules/admin/custom/components/component-library.routes')
             },
             {
+                path: 'products',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'product' },
+                loadChildren: () => import('app/modules/admin/custom/products/products.routes')
+            },
+            {
                 path: 'page-templates',
                 canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'pagebuilder' },

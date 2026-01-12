@@ -46,11 +46,12 @@ export class SpaInputComponent implements ControlValueAccessor {
     @Input() label?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
-    @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' = 'text';
+    @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' | 'date' = 'text';
     @Input() styleClasses?: string;
     @Input() fullWidth: boolean = true;
     @Input() textarea: boolean = false;
     @Input() rows: number = 3;
+    @Input() readonly: boolean = false;
 
     @Output() enter = new EventEmitter<string | number | null>();
 
