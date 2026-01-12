@@ -13,6 +13,8 @@ import com.backend.domain.entity.CategoryI18n;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.CategoryI18nRepository;
 import com.backend.domain.repository.CategoryRepository;
+import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.shared.common.HtmlSanitizer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public Category createComposite(String code, Long parentId, Integer sortOrder, Boolean isVisible,
             Map<Language, CategoryI18nDto> translations, Long createdBy) {
+        TenantContext.validateActive();
         log.debug("Creating category with code: {}", code);
 
         if (categoryRepository.existsByCode(code)) {
@@ -57,7 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
             i18n.setCategory(saved);
             i18n.setLanguage(entry.getKey());
             i18n.setName(entry.getValue().name());
-            i18n.setDescription(entry.getValue().description());
+            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
             i18n.setCreatedBy(createdBy);
             i18n.setUpdatedBy(createdBy);
             categoryI18nRepository.save(i18n);
@@ -71,6 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public Category updateComposite(Long id, Long parentId, Integer sortOrder, Boolean isVisible,
             Map<Language, CategoryI18nDto> translations, Long updatedBy) {
+        TenantContext.validateActive();
         log.debug("Updating category id: {}", id);
 
         Category category = categoryRepository.findById(id)
@@ -104,7 +108,7 @@ public class CategoryServiceImpl implements CategoryService {
                         return newI18n;
                     });
             i18n.setName(entry.getValue().name());
-            i18n.setDescription(entry.getValue().description());
+            i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
             i18n.setUpdatedBy(updatedBy);
             categoryI18nRepository.save(i18n);
         }
@@ -116,6 +120,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public void delete(Long id) {
+        TenantContext.validateActive();
         log.debug("Deleting category id: {}", id);
 
         Category category = categoryRepository.findById(id)
@@ -137,60 +142,70 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public Optional<Category> findById(Long id) {
+        TenantContext.validateActive();
         return categoryRepository.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Category> findByIdWithI18n(Long id) {
+        TenantContext.validateActive();
         return categoryRepository.findByIdWithI18n(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Category> findByUid(String uid) {
+        TenantContext.validateActive();
         return categoryRepository.findByUid(uid);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Category> findByCode(String code) {
+        TenantContext.validateActive();
         return categoryRepository.findByCode(code);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Category> findAll() {
+        TenantContext.validateActive();
         return categoryRepository.findAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Category> findRootCategories() {
+        TenantContext.validateActive();
         return categoryRepository.findRootCategories();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Category> getTree() {
+        TenantContext.validateActive();
         return categoryRepository.findRootCategories();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Category> findByParentId(Long parentId) {
+        TenantContext.validateActive();
         return categoryRepository.findByParentId(parentId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasChildren(Long categoryId) {
+        TenantContext.validateActive();
         return categoryRepository.hasChildren(categoryId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasProducts(Long categoryId) {
+        TenantContext.validateActive();
         return categoryRepository.hasProducts(categoryId);
     }
 }
