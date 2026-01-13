@@ -1,4 +1,4 @@
-<div class="flex flex-col min-w-0 w-full h-full">
+<div class="flex h-full w-full min-w-0 flex-col">
     <admin-page-header
         [title]="'admin.products.categories.title' | transloco"
         [subtitle]="'admin.products.categories.subtitle' | transloco"
@@ -8,70 +8,155 @@
     ></admin-page-header>
 
     <div class="flex-auto p-6 sm:p-10">
-        <div class="bg-card shadow rounded-2xl overflow-hidden p-6">
+        <div class="bg-card overflow-hidden rounded-2xl p-6 shadow">
             @if (dataSource.data.length === 0) {
                 <spa-empty-state
                     [icon]="'folder_open'"
-                    [title]="'admin.products.categories.empty.title' | transloco"
-                    [message]="'admin.products.categories.empty.message' | transloco"
+                    [title]="
+                        'admin.products.categories.empty.title' | transloco
+                    "
+                    [message]="
+                        'admin.products.categories.empty.message' | transloco
+                    "
                     [actionLabel]="'admin.products.categories.add' | transloco"
                     (actionClicked)="createCategory()"
                 ></spa-empty-state>
             } @else {
-                <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="category-tree">
-                    <mat-tree-node *matTreeNodeDef="letnode" matTreeNodeToggle>
-                        <div class="flex items-center justify-between w-full hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors group">
+                <mat-tree
+                    [dataSource]="dataSource"
+                    [treeControl]="treeControl"
+                    class="category-tree"
+                >
+                    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+                        <div
+                            class="group flex w-full items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
                             <div class="flex items-center gap-2">
                                 <button mat-icon-button disabled></button>
-                                <span class="font-medium">{{node.name || node.code}}</span>
-                                <span class="text-xs text-secondary bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{{node.code}}</span>
+                                <span class="font-medium">{{
+                                    node.name || node.code
+                                }}</span>
+                                <span
+                                    class="text-secondary rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-700"
+                                    >{{ node.code }}</span
+                                >
                                 @if (!node.isVisible) {
-                                    <mat-icon class="icon-size-4 text-warn-500" [matTooltip]="'admin.common.fields.hidden' | transloco">visibility_off</mat-icon>
+                                    <mat-icon
+                                        class="text-warn-500 icon-size-4"
+                                        [matTooltip]="
+                                            'admin.common.fields.hidden'
+                                                | transloco
+                                        "
+                                        >visibility_off</mat-icon
+                                    >
                                 }
                             </div>
-                            <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button mat-icon-button color="primary" (click)="createCategory(node.id)" [matTooltip]="'admin.products.categories.addChild' | transloco">
+                            <div
+                                class="flex items-center opacity-0 transition-opacity group-hover:opacity-100"
+                            >
+                                <button
+                                    mat-icon-button
+                                    color="primary"
+                                    (click)="createCategory(node.id)"
+                                    [matTooltip]="
+                                        'admin.products.categories.addChild'
+                                            | transloco
+                                    "
+                                >
                                     <mat-icon>add</mat-icon>
                                 </button>
-                                <button mat-icon-button (click)="editCategory(node)">
+                                <button
+                                    mat-icon-button
+                                    (click)="editCategory(node)"
+                                >
                                     <mat-icon>edit</mat-icon>
                                 </button>
-                                <button mat-icon-button color="warn" (click)="deleteCategory(node)">
+                                <button
+                                    mat-icon-button
+                                    color="warn"
+                                    (click)="deleteCategory(node)"
+                                >
                                     <mat-icon>delete</mat-icon>
                                 </button>
                             </div>
                         </div>
                     </mat-tree-node>
 
-                    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+                    <mat-nested-tree-node
+                        *matTreeNodeDef="let node; when: hasChild"
+                    >
                         <div class="mat-tree-node">
-                            <div class="flex items-center justify-between w-full hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors group">
+                            <div
+                                class="group flex w-full items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                            >
                                 <div class="flex items-center gap-2">
-                                    <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+                                    <button
+                                        mat-icon-button
+                                        matTreeNodeToggle
+                                        [attr.aria-label]="
+                                            'Toggle ' + node.name
+                                        "
+                                    >
                                         <mat-icon class="mat-icon-rtl-mirror">
-                                            {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+                                            {{
+                                                treeControl.isExpanded(node)
+                                                    ? 'expand_more'
+                                                    : 'chevron_right'
+                                            }}
                                         </mat-icon>
                                     </button>
-                                    <span class="font-medium">{{node.name || node.code}}</span>
-                                    <span class="text-xs text-secondary bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{{node.code}}</span>
+                                    <span class="font-medium">{{
+                                        node.name || node.code
+                                    }}</span>
+                                    <span
+                                        class="text-secondary rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-700"
+                                        >{{ node.code }}</span
+                                    >
                                     @if (!node.isVisible) {
-                                        <mat-icon class="icon-size-4 text-warn-500" [matTooltip]="'admin.common.fields.hidden' | transloco">visibility_off</mat-icon>
+                                        <mat-icon
+                                            class="text-warn-500 icon-size-4"
+                                            [matTooltip]="
+                                                'admin.common.fields.hidden'
+                                                    | transloco
+                                            "
+                                            >visibility_off</mat-icon
+                                        >
                                     }
                                 </div>
-                                <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button mat-icon-button color="primary" (click)="createCategory(node.id)" [matTooltip]="'admin.products.categories.addChild' | transloco">
+                                <div
+                                    class="flex items-center opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <button
+                                        mat-icon-button
+                                        color="primary"
+                                        (click)="createCategory(node.id)"
+                                        [matTooltip]="
+                                            'admin.products.categories.addChild'
+                                                | transloco
+                                        "
+                                    >
                                         <mat-icon>add</mat-icon>
                                     </button>
-                                    <button mat-icon-button (click)="editCategory(node)">
+                                    <button
+                                        mat-icon-button
+                                        (click)="editCategory(node)"
+                                    >
                                         <mat-icon>edit</mat-icon>
                                     </button>
-                                    <button mat-icon-button color="warn" (click)="deleteCategory(node)">
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="deleteCategory(node)"
+                                    >
                                         <mat-icon>delete</mat-icon>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <div [class.hidden]="!treeControl.isExpanded(node)" role="group">
+                        <div
+                            [class.hidden]="!treeControl.isExpanded(node)"
+                            role="group"
+                        >
                             <ng-container matTreeNodeOutlet></ng-container>
                         </div>
                     </mat-nested-tree-node>

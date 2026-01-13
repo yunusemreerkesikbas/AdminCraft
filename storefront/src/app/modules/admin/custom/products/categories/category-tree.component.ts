@@ -1,9 +1,10 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
@@ -27,6 +28,7 @@ import { CategoryEditDialogComponent } from './category-edit-dialog/category-edi
         MatTreeModule,
         MatButtonModule,
         MatIconModule,
+        MatTooltipModule,
         AdminPageHeaderComponent,
         SpaEmptyStateComponent
     ]
@@ -36,6 +38,7 @@ export class CategoryTreeComponent implements OnInit {
     #matDialog = inject(MatDialog);
     #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
+    #cdr = inject(ChangeDetectorRef);
 
     treeControl = new NestedTreeControl<CategoryTreeResponse>(node => node.children);
     dataSource = new MatTreeNestedDataSource<CategoryTreeResponse>();
@@ -53,6 +56,7 @@ export class CategoryTreeComponent implements OnInit {
             next: (tree) => {
                 this.dataSource.data = tree;
                 this.flatCategories = this.#flattenTree(tree);
+                this.#cdr.markForCheck();
             },
             error: () => this.#notificationService.alert('admin.products.categories.errors.loadFailed')
         });

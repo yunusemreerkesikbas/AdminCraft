@@ -1,5 +1,8 @@
 package com.backend.domain.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,20 +22,17 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "categories", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"uid"}, name = "uk_category_uid"),
-        @UniqueConstraint(columnNames = {"code"}, name = "uk_category_code")
+        @UniqueConstraint(columnNames = { "uid" }, name = "uk_category_uid"),
+        @UniqueConstraint(columnNames = { "code" }, name = "uk_category_code")
 }, indexes = {
         @Index(columnList = "parent_id", name = "idx_category_parent"),
         @Index(columnList = "sort_order", name = "idx_category_sort"),
         @Index(columnList = "is_visible", name = "idx_category_visible")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = {"parent", "children", "i18nContent"})
+@EqualsAndHashCode(callSuper = true, exclude = { "parent", "children", "i18nContent" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category extends BaseEntity {
@@ -59,11 +59,11 @@ public class Category extends BaseEntity {
     @ToString.Exclude
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC, id ASC")
-    private List<Category> children = new ArrayList<>();
+    private Set<Category> children = new HashSet<>();
 
     @ToString.Exclude
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CategoryI18n> i18nContent = new ArrayList<>();
+    private Set<CategoryI18n> i18nContent = new HashSet<>();
 
     public boolean isRoot() {
         return parentId == null;

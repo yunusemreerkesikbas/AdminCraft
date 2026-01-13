@@ -1,15 +1,17 @@
 <spa-dialog-header
-    [title]="(data.mode === 'create' ? 'admin.products.categories.create' : 'admin.products.categories.edit') | transloco"
+    [title]="
+        (data.mode === 'create'
+            ? 'admin.products.categories.create'
+            : 'admin.products.categories.edit'
+        ) | transloco
+    "
     (closeClicked)="cancel()"
 ></spa-dialog-header>
 
 <spa-dialog-content type="tabbed">
-    <spa-tab-container
-        [tabs]="tabs"
-        [(activeTabIndex)]="activeTab"
-    >
+    <spa-tab-container [tabs]="tabs()" [(activeTabIndex)]="activeTab">
         <ng-template spaTabContent="general">
-            <form [formGroup]="generalForm" class="flex flex-col gap-4 mt-4">
+            <form [formGroup]="generalForm" class="mt-4 flex flex-col gap-4">
                 <spa-input
                     formControlName="code"
                     [label]="'admin.common.fields.code' | transloco"
@@ -20,8 +22,10 @@
 
                 <spa-select
                     formControlName="parentId"
-                    [label]="'admin.products.categories.fields.parent' | transloco"
-                    [options]="parentOptions"
+                    [label]="
+                        'admin.products.categories.fields.parent' | transloco
+                    "
+                    [options]="parentOptions()"
                     hint="Optional parent category"
                 ></spa-select>
 
@@ -41,7 +45,10 @@
 
         @for (lang of languages; track lang) {
             <ng-template [spaTabContent]="'lang-' + lang">
-                <form [formGroup]="i18nForms[lang]" class="flex flex-col gap-4 mt-4">
+                <form
+                    [formGroup]="i18nForms[lang]"
+                    class="mt-4 flex flex-col gap-4"
+                >
                     <spa-input
                         formControlName="name"
                         [label]="'admin.common.fields.name' | transloco"
@@ -60,7 +67,10 @@
 </spa-dialog-content>
 
 <spa-dialog-footer
-    [submitLabel]="(data.mode === 'create' ? 'admin.common.create' : 'admin.common.save') | transloco"
+    [submitLabel]="
+        (data.mode === 'create' ? 'admin.common.create' : 'admin.common.save')
+            | transloco
+    "
     (submitClicked)="save()"
     (cancelClicked)="cancel()"
 ></spa-dialog-footer>

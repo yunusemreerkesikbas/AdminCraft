@@ -55,6 +55,11 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     }
 
     @Override
+    public List<Category> findRootCategoriesWithI18n() {
+        return jpaRepository.findRootCategoriesWithI18n();
+    }
+
+    @Override
     public List<Category> findByParentId(Long parentId) {
         return jpaRepository.findByParentIdOrderBySortOrderAsc(parentId);
     }

@@ -191,7 +191,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<Category> getTree() {
         TenantContext.validateActive();
-        return categoryRepository.findRootCategories();
+        return categoryRepository.findRootCategoriesWithI18n();
     }
 
     @Override

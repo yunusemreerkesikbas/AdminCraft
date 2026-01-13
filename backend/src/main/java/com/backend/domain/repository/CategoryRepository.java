@@ -1,11 +1,12 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.Category;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.Category;
 
 public interface CategoryRepository {
 
@@ -22,6 +23,8 @@ public interface CategoryRepository {
     List<Category> findAll();
 
     List<Category> findRootCategories();
+
+    List<Category> findRootCategoriesWithI18n();
 
     List<Category> findByParentId(Long parentId);
 
