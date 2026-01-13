@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { LanguageContextService } from '@core/services/language-context.service';
@@ -51,13 +51,14 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     override languages = this.#languageContextService.supportedLanguages();
 
-    get parentOptions() {
+    // Use computed signals instead of getters to avoid infinite loops
+    parentOptions = computed(() => {
         return (this.data.categories || [])
             .filter(c => c.id !== this.data.item?.id)
             .map(c => ({ value: c.id, label: `${c.code} (${c.name || c.uid})` }));
-    }
+    });
 
-    get tabs(): TabDefinition[] {
+    tabs = computed<TabDefinition[]>(() => {
         return [
             { id: 'general', label: 'admin.common.tabs.general', icon: 'settings' },
             ...this.languages.map(lang => ({
@@ -66,7 +67,7 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
                 icon: 'translate'
             }))
         ];
-    }
+    });
 
     override ngOnInit(): void {
         super.ngOnInit();
@@ -92,21 +93,7 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
     }
 
     loadTranslations(): void {
-        // Since getComposite returns the category with flattened fields usually for current lang,
-        // we might need to fetch all translations if the API supports it or if it's included.
-        // Assuming composite endpoint returns translations map or we need to fetch them.
-        // For MVP, if the API doesn't return full translations map, we might only show current lang.
-        // However, the `Category` model I defined doesn't have `translations` map property.
-        // I should update `CategoryService` or model to support full editing.
-        // Let's assume `getComposite` returns `Category` which I defined earlier. 
-        // Wait, `Category` interface in `category.types.ts` only has flat fields.
-        // I need to fetch the composite data which should include translations.
-        // Let's check `CategoryService.getComposite`. It calls `productCategoryCompositeById`.
-        // The backend `CategoryCompositeResponse` likely has a map.
-        // I will cast the response to any for now to access translations map if my type definition is incomplete.
-        
         this.#service.getComposite(this.data.item!.id).pipe(take(1)).subscribe(composite => {
-             // Assuming composite has translations map
              const translations = (composite as any).translations || {};
              this.languages.forEach(lang => {
                  if (translations[lang]) {

@@ -68,12 +68,12 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
     #notificationService = inject(NotificationService);
     #languageContextService = inject(LanguageContextService);
     override languages = this.#languageContextService.supportedLanguages();
-    productTypesSig = signal<ProductType[]>([]);
-    categoriesSig = signal<Category[]>([]);
-    attributeDefinitionsSig = signal<AttributeDefinition[]>([]);
-    dynamicFieldsConfigSig = computed(() => this.#mapToDynamicConfig(this.attributeDefinitionsSig()));
+    productTypes = signal<ProductType[]>([]);
+    categories = signal<Category[]>([]);
+    #attributeDefinitions = signal<AttributeDefinition[]>([]);
+    dynamicFieldsConfig = computed(() => this.#mapToDynamicConfig(this.#attributeDefinitions()));
     attributesForm: FormGroup;
-    gallerySig = signal<ProductMediaResponse[]>([]);
+    gallery = signal<ProductMediaResponse[]>([]);
     isLoadingSig = signal(false);
     statusOptions = [
         { value: 'DRAFT', label: 'DRAFT' },
@@ -107,7 +107,7 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             if (typeId) {
                 this.loadAttributes(typeId);
             } else {
-                this.attributeDefinitionsSig.set([]);
+                this.#attributeDefinitions.set([]);
                 Object.keys(this.attributesForm.controls).forEach(key => this.attributesForm.removeControl(key));
             }
         });
@@ -154,8 +154,8 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
 
         forkJoin(sources).pipe(take(1)).subscribe({
             next: (res: any) => {
-                this.productTypesSig.set(res.types || []);
-                this.categoriesSig.set(res.categories || []);
+                this.productTypes.set(res.types || []);
+                this.categories.set(res.categories || []);
                 
                 if (res.product) {
                     this.patchProductData(res.product);
@@ -204,14 +204,14 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
         });
         this.loadAttributes(product.productTypeId, product.attributes);
         if (product.gallery) {
-            this.gallerySig.set(product.gallery);
+            this.gallery.set(product.gallery);
         }
     }
 
     loadAttributes(typeId: number, existingAttributes?: any[]): void {
         this.#productTypeService.getAttributes(typeId).pipe(take(1)).subscribe(attrs => {
-            this.attributeDefinitionsSig.set(attrs);
-            this.#dynamicFormService.addControlsToFormGroup(this.attributesForm, this.dynamicFieldsConfigSig(), {});
+            this.#attributeDefinitions.set(attrs);
+            this.#dynamicFormService.addControlsToFormGroup(this.attributesForm, this.dynamicFieldsConfig(), {});
             if (existingAttributes) {
                 const values: any = {};
                 existingAttributes.forEach((attr: any) => {
@@ -264,7 +264,7 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             attributes: this.attributesForm.value,
             categoryIds: formValue.categoryIds || [],
             primaryCategoryId: formValue.primaryCategoryId,
-            galleryMediaIds: this.gallerySig().map(m => m.mediaId)
+            galleryMediaIds: this.gallery().map(m => m.mediaId)
         };
 
         let request$;
@@ -293,14 +293,14 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             id: 0,
             mediaId: media.id,
             mediaType: 'GALLERY',
-            sortOrder: this.gallerySig().length,
+            sortOrder: this.gallery().length,
             media: media
         };
         
-        this.gallerySig.update(current => [...current, newMedia]);
+        this.gallery.update(current => [...current, newMedia]);
     }
 
     removeGalleryImage(index: number): void {
-        this.gallerySig.update(current => current.filter((_, i) => i !== index));
+        this.gallery.update(current => current.filter((_, i) => i !== index));
     }
 }

@@ -51,8 +51,8 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
     #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
 
-    attributesSig = signal<AttributeDefinition[]>([]);
-    isLoadingAttributesSig = signal(false);
+    attributes = signal<AttributeDefinition[]>([]);
+    isLoadingAttributes = signal(false);
 
     displayedColumns = ['code', 'name', 'fieldType', 'required', 'actions'];
 
@@ -84,15 +84,15 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
 
     loadAttributes(): void {
         if (!this.data.item) return;
-        this.isLoadingAttributesSig.set(true);
+        this.isLoadingAttributes.set(true);
         this.#productTypeService.getAttributes(this.data.item.id).pipe(take(1)).subscribe({
             next: (attrs) => {
-                this.attributesSig.set(attrs);
-                this.isLoadingAttributesSig.set(false);
+                this.attributes.set(attrs);
+                this.isLoadingAttributes.set(false);
             },
             error: () => {
                 this.#notificationService.alert('admin.products.types.errors.loadAttributesFailed');
-                this.isLoadingAttributesSig.set(false);
+                this.isLoadingAttributes.set(false);
             }
         });
     }
