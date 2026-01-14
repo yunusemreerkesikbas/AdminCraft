@@ -101,6 +101,10 @@ export const langEN = {
                 phoneNumber: 'Please enter a valid phone number',
                 url: 'Please enter a valid URL',
                 slug: 'Must contain only lowercase letters, numbers, and hyphens',
+                invalidForm: 'The form contains invalid fields. Please check the fields marked in red.',
+                generalFormInvalid: 'The General tab has missing or invalid fields. Please check it.',
+                i18nFormsInvalid: 'The Language tabs have missing required fields. Please check all languages.',
+                attributesFormInvalid: 'The Attributes tab has missing required fields.',
             },
             messages: {
                 operationSuccess: 'Operation successful',
@@ -148,6 +152,9 @@ export const langEN = {
                 template: 'Template',
                 slug: 'Slug',
                 language: 'Language',
+                tabs: {
+                    general: 'General',
+                },
                 priority: 'Priority',
                 notes: 'Notes',
                 urlPath: 'URL Path',
@@ -155,6 +162,13 @@ export const langEN = {
                 subtitle: 'Subtitle',
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
+                priorityLabel: 'Priority',
+                statusLabel: 'Status',
+                typeLabel: 'Type',
+                categoryLabel: 'Category',
+                templateLabel: 'Template',
+                slugLabel: 'Slug',
+                languageLabel: 'Language',
                 defaultLanguage: 'Default Language',
                 supportedLanguages: 'Supported Languages',
                 actions: 'Actions',
@@ -221,6 +235,24 @@ export const langEN = {
                 },
             },
             manage: 'Manage',
+            placeholders: {
+                selectType: 'Select Type',
+                selectStatus: 'Select Status',
+                code: 'e.g. electronics-main',
+                name: 'e.g. Electronics',
+                description: 'Brief description of the category...',
+                sortOrder: 'e.g. 10',
+                select: 'Select',
+                default: 'Default',
+                type: 'Type',
+                parent: 'Parent Category',
+                title: 'Enter title',
+                slug: 'Enter URL path',
+                sku: 'e.g. SKU-12345',
+                price: 'e.g. 199.99',
+                currency: 'e.g. USD',
+                shortDescription: 'A short description of the product...'
+            },
         },
         sort: {
             newest: 'Newest First',
@@ -236,10 +268,7 @@ export const langEN = {
             orderAsc: 'Sort Order (Low-High)',
             orderDesc: 'Sort Order (High-Low)',
         },
-        placeholders: {
-            selectType: 'Select Type',
-            selectStatus: 'Select Status'
-        },
+
         dialog: {
             title: {
                 create: 'Create New',
@@ -523,6 +552,7 @@ export const langEN = {
                 empty: 'No media found',
                 emptyDescription: 'No media files have been uploaded yet.'
             },
+
             upload: 'Upload Media',
             actions: {
                 upload: 'Upload',
@@ -608,6 +638,7 @@ export const langEN = {
                 mobileHint: 'Optional image for small screens',
             },
             picker: {
+                title: 'Select Media',
                 desktopPlaceholder: 'Select Desktop Media',
                 mobilePlaceholder: 'Select Mobile Media'
             },
@@ -743,6 +774,7 @@ export const langEN = {
             list: 'Site List',
             create: 'Create Site',
             edit: 'Edit Site',
+
             delete: 'Delete Site',
             publish: 'Publish',
             preview: 'Preview',
@@ -1086,6 +1118,8 @@ export const langEN = {
                 description: 'Description',
                 primaryCategory: 'Primary Category',
                 categories: 'Categories',
+                seoTitle: 'SEO Title',
+                seoDescription: 'SEO Description',
             },
             tabs: {
                 attributes: 'Attributes',
@@ -1103,6 +1137,7 @@ export const langEN = {
             types: {
                 title: 'Product Types',
                 subtitle: 'Manage product types',
+                list: 'Type List',
                 add: 'New Type',
                 create: 'Create Type',
                 edit: 'Edit Type',
@@ -1111,38 +1146,55 @@ export const langEN = {
                     message: 'Are you sure you want to delete this type?',
                 },
                 fields: {
-                    category: 'Category',
+                    category: 'Category Group',
+                },
+                placeholders: {
+                     category: 'e.g. Components'
                 },
                 tabs: {
                     attributes: 'Attributes',
+                },
+                messages: {
+                    createSuccess: 'Product type successfully created',
+                    updateSuccess: 'Product type successfully updated',
+                    deleteSuccess: 'Product type successfully deleted',
                 },
                 errors: {
                     loadAttributesFailed: 'Failed to load attributes',
                 },
             },
             attributes: {
+                title: 'Product Attributes',
+                list: 'Attribute List',
                 create: 'Create Attribute',
                 edit: 'Edit Attribute',
                 add: 'Add Attribute',
                 empty: 'No attributes added yet',
                 fields: {
-                    type: 'Type',
+                    type: 'Attribute Type',
                     searchable: 'Searchable',
+                    required: 'Required',
                 },
-                createSuccess: 'Attribute created successfully',
-                createFailed: 'Failed to create attribute',
-                updateSuccess: 'Attribute updated successfully',
-                updateFailed: 'Failed to update attribute',
+                placeholders: {
+                    type: 'Select attribute type'
+                },
+                messages: {
+                    createSuccess: 'Attribute created successfully',
+                    createFailed: 'Failed to create attribute',
+                    updateSuccess: 'Attribute updated successfully',
+                    updateFailed: 'Failed to update attribute',
+                    deleteSuccess: 'Attribute deleted successfully',
+                    deleteFailed: 'Failed to delete attribute',
+                },
                 delete: {
                     title: 'Delete Attribute',
                     message: 'Are you sure you want to delete this attribute?',
                 },
-                deleteSuccess: 'Attribute deleted successfully',
-                deleteFailed: 'Failed to delete attribute',
             },
             categories: {
                 title: 'Categories',
                 subtitle: 'Manage product categories',
+                list: 'Category List',
                 add: 'New Category',
                 addChild: 'Add Child Category',
                 create: 'Create Category',
@@ -1153,6 +1205,20 @@ export const langEN = {
                 },
                 fields: {
                     parent: 'Parent Category',
+                    code: 'Code',
+                    name: 'Category Name',
+                    slug: 'Slug',
+                    description: 'Description',
+                    image: 'Image',
+                    active: 'Active',
+                },
+                placeholders: {
+                    parent: 'Select a parent category'
+                },
+                messages: {
+                    createSuccess: 'Category successfully created',
+                    updateSuccess: 'Category successfully updated',
+                    deleteSuccess: 'Category successfully deleted',
                 },
                 empty: {
                     title: 'No categories yet',

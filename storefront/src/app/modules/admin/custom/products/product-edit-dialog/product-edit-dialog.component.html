@@ -28,6 +28,9 @@
                             formControlName="sku"
                             [label]="'admin.products.fields.sku' | transloco"
                             [required]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.sku' | transloco
+                            "
                         ></spa-input>
 
                         <spa-select
@@ -35,6 +38,10 @@
                             [label]="'admin.common.fields.status' | transloco"
                             [options]="statusOptions"
                             [required]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.selectStatus'
+                                    | transloco
+                            "
                         ></spa-select>
                     </div>
 
@@ -44,6 +51,9 @@
                             type="number"
                             [label]="'admin.products.fields.price' | transloco"
                             [required]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.price' | transloco
+                            "
                         ></spa-input>
 
                         <spa-input
@@ -52,6 +62,9 @@
                                 'admin.products.fields.currency' | transloco
                             "
                             [required]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.currency' | transloco
+                            "
                         ></spa-input>
                     </div>
 
@@ -63,6 +76,9 @@
                         [optionValue]="'id'"
                         [required]="true"
                         [readonly]="data.mode === 'edit'"
+                        [placeholder]="
+                            'admin.common.placeholders.selectType' | transloco
+                        "
                     ></spa-select>
 
                     <spa-checkbox
@@ -83,6 +99,9 @@
                             formControlName="name"
                             [label]="'admin.common.fields.name' | transloco"
                             [required]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.name' | transloco
+                            "
                         ></spa-input>
 
                         <spa-textarea
@@ -92,6 +111,10 @@
                                     | transloco
                             "
                             [rows]="2"
+                            [placeholder]="
+                                'admin.common.placeholders.shortDescription'
+                                    | transloco
+                            "
                         ></spa-textarea>
 
                         <spa-textarea
@@ -100,6 +123,10 @@
                                 'admin.products.fields.description' | transloco
                             "
                             [rows]="5"
+                            [placeholder]="
+                                'admin.common.placeholders.description'
+                                    | transloco
+                            "
                         ></spa-textarea>
 
                         <div class="mt-2 border-t pt-4">
@@ -113,6 +140,10 @@
                                         'admin.products.fields.seoTitle'
                                             | transloco
                                     "
+                                    [placeholder]="
+                                        'admin.common.placeholders.title'
+                                            | transloco
+                                    "
                                 ></spa-input>
                                 <spa-textarea
                                     formControlName="seoDescription"
@@ -121,6 +152,10 @@
                                             | transloco
                                     "
                                     [rows]="2"
+                                    [placeholder]="
+                                        'admin.common.placeholders.description'
+                                            | transloco
+                                    "
                                 ></spa-textarea>
                             </div>
                         </div>
@@ -150,6 +185,9 @@
                         [options]="categories()"
                         [optionLabel]="'code'"
                         [optionValue]="'id'"
+                        [placeholder]="
+                            'admin.common.placeholders.select' | transloco
+                        "
                     ></spa-select>
 
                     <spa-select
@@ -159,6 +197,9 @@
                         [optionLabel]="'code'"
                         [optionValue]="'id'"
                         [multiple]="true"
+                        [placeholder]="
+                            'admin.common.placeholders.select' | transloco
+                        "
                     ></spa-select>
                 </form>
             </ng-template>

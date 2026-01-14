@@ -17,11 +17,12 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'spa-textarea',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
     templateUrl: './spa-textarea.component.html',
     styleUrls: ['./spa-textarea.component.scss'],
     encapsulation: ViewEncapsulation.None,
@@ -37,6 +38,7 @@ import { MatInputModule } from '@angular/material/input';
 export class SpaTextareaComponent implements ControlValueAccessor {
     #cdr = inject(ChangeDetectorRef);
     @Input() label?: string;
+    @Input() labelTooltip?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
     @Input() rows = 3;

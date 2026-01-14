@@ -1,3 +1,4 @@
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
@@ -8,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { SpaEmptyStateComponent } from 'app/shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
@@ -29,8 +31,10 @@ import { CategoryEditDialogComponent } from './category-edit-dialog/category-edi
         MatButtonModule,
         MatIconModule,
         MatTooltipModule,
+        DragDropModule,
         AdminPageHeaderComponent,
-        SpaEmptyStateComponent
+        SpaEmptyStateComponent,
+        SpaAdminPaginatorComponent
     ]
 })
 export class CategoryTreeComponent implements OnInit {
@@ -55,6 +59,7 @@ export class CategoryTreeComponent implements OnInit {
         this.#categoryService.getTree().pipe(take(1)).subscribe({
             next: (tree) => {
                 this.dataSource.data = tree;
+                this.treeControl.dataNodes = tree;
                 this.flatCategories = this.#flattenTree(tree);
                 this.#cdr.markForCheck();
             },
@@ -119,6 +124,18 @@ export class CategoryTreeComponent implements OnInit {
                     });
                 }
             });
+    }
+
+    drop(event: CdkDragDrop<CategoryTreeResponse[]>) {
+        // Tip: For nested trees, standard CdkDragDrop often requires specialized logic or flat tree usage
+        // But we will try to support basic reordering within the same parent container if possible
+        if (event.previousContainer === event.container) {
+             // Reordering siblings
+             // Note: event.container.data needs to be bound properly in template
+             // For mat-tree-nested, this is tricky as 'data' isn't auto-provided to cdkDropList easily without extra template work
+             // We will implement visual update first
+             console.log('Drop event', event);
+        }
     }
 
     #openDialog(mode: 'create' | 'edit', item?: Category, parentId?: number): void {

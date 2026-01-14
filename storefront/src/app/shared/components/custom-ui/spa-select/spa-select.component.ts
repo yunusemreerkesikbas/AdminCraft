@@ -17,6 +17,7 @@ import {
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -30,7 +31,7 @@ export interface SpaSelectOption<T = any> {
 @Component({
     selector: 'spa-select',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatSelectModule, TranslocoPipe],
+    imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatSelectModule, TranslocoPipe, MatTooltipModule],
     templateUrl: './spa-select.component.html',
     styleUrls: ['./spa-select.component.scss'],
     encapsulation: ViewEncapsulation.None,
@@ -46,6 +47,7 @@ export interface SpaSelectOption<T = any> {
 export class SpaSelectComponent<T = any> implements ControlValueAccessor {
     #cdr = inject(ChangeDetectorRef);
     @Input() label?: string;
+    @Input() labelTooltip?: string;
     @Input() hint?: string;
     @Input() placeholder?: string;
     @Input() options: SpaSelectOption<T>[] = [];

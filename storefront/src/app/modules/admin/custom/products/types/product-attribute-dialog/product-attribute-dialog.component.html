@@ -1,5 +1,10 @@
 <spa-dialog-header
-    [title]="(data.mode === 'create' ? 'admin.products.attributes.create' : 'admin.products.attributes.edit') | transloco"
+    [title]="
+        (data.mode === 'create'
+            ? 'admin.products.attributes.create'
+            : 'admin.products.attributes.edit'
+        ) | transloco
+    "
     (closeClicked)="cancel()"
 ></spa-dialog-header>
 
@@ -9,7 +14,8 @@
             formControlName="code"
             [label]="'admin.common.fields.code' | transloco"
             [required]="true"
-            hint="Lowercase, numbers and underscores only"
+            [placeholder]="'admin.common.placeholders.code' | transloco"
+            [labelTooltip]="'code'"
             [readonly]="data.mode === 'edit'"
         ></spa-input>
 
@@ -17,6 +23,8 @@
             formControlName="name"
             [label]="'admin.common.fields.name' | transloco"
             [required]="true"
+            [placeholder]="'admin.common.placeholders.name' | transloco"
+            [labelTooltip]="'name'"
         ></spa-input>
 
         <spa-select
@@ -24,6 +32,10 @@
             [label]="'admin.products.attributes.fields.type' | transloco"
             [options]="fieldTypes"
             [required]="true"
+            [placeholder]="
+                'admin.products.attributes.placeholders.type' | transloco
+            "
+            [labelTooltip]="'fieldType'"
             [disabled]="data.mode === 'edit'"
         ></spa-select>
 
@@ -31,18 +43,23 @@
             formControlName="sortOrder"
             type="number"
             [label]="'admin.common.fields.order' | transloco"
+            [labelTooltip]="'sortOrder'"
         ></spa-input>
 
-        <div class="flex gap-6 mt-2">
+        <div class="mt-2 flex gap-6">
             <spa-checkbox
                 formControlName="isRequired"
                 [label]="'admin.common.fields.required' | transloco"
+                [labelTooltip]="'isRequired'"
                 styleClasses="boxed"
             ></spa-checkbox>
 
             <spa-checkbox
                 formControlName="isSearchable"
-                [label]="'admin.products.attributes.fields.searchable' | transloco"
+                [label]="
+                    'admin.products.attributes.fields.searchable' | transloco
+                "
+                [labelTooltip]="'isSearchable'"
                 styleClasses="boxed"
             ></spa-checkbox>
         </div>
@@ -50,7 +67,10 @@
 </spa-dialog-content>
 
 <spa-dialog-footer
-    [submitLabel]="(data.mode === 'create' ? 'admin.common.create' : 'admin.common.save') | transloco"
+    [submitLabel]="
+        (data.mode === 'create' ? 'admin.common.create' : 'admin.common.save')
+            | transloco
+    "
     (submitClicked)="save()"
     (cancelClicked)="cancel()"
 ></spa-dialog-footer>

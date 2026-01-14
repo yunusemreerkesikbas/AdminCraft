@@ -45,7 +45,7 @@ export abstract class SpaFormDialog<
 
         this.form.markAllAsTouched();
         if (this.form.invalid) {
-            this.notify.warning('admin.validation.invalidForm');
+            this.notify.warning('admin.common.validation.invalidForm');
             return;
         }
         if (this.isSubmitting()) return;

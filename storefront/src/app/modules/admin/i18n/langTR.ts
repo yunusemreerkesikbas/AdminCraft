@@ -99,6 +99,10 @@ export const langTR = {
                 phoneNumber: 'Geçerli bir telefon numarası giriniz',
                 url: 'Geçerli bir URL giriniz',
                 slug: 'Yalnızca küçük harf, sayı ve tire içermelidir',
+                invalidForm: 'Formda geçersiz alanlar var. Lütfen kırmızı ile işaretli yerleri kontrol ediniz.',
+                generalFormInvalid: 'Genel ayarlarda eksik veya hatalı alanlar var. Lütfen ilgili sekmeyi kontrol ediniz.',
+                i18nFormsInvalid: 'Dil sekmelerinde zorunlu alanlar eksik. Lütfen tüm dillerdeki kırmızı alanları doldurunuz.',
+                attributesFormInvalid: 'Özellikler sekmesinde doldurulması gereken zorunlu alanlar var.',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',
@@ -148,12 +152,22 @@ export const langTR = {
                 slug: 'Slug',
                 language: 'Dil',
                 priority: 'Öncelik',
+                tabs: {
+                    general: 'Genel',
+                },
                 notes: 'Notlar',
                 urlPath: 'URL Yolu',
                 canonicalUrl: 'Kanonik URL',
                 subtitle: 'Alt Başlık',
-                metaTitle: 'Meta Başlık',
-                metaDescription: 'Meta Açıklama',
+                metaTitle: 'Meta Başlığı',
+                metaDescription: 'Meta Açıklaması',
+                priorityLabel: 'Öncelik',
+                statusLabel: 'Durum',
+                typeLabel: 'Tür',
+                categoryLabel: 'Kategori',
+                templateLabel: 'Şablon',
+                slugLabel: 'Slug',
+                languageLabel: 'Dil',
                 defaultLanguage: 'Varsayılan Dil',
                 supportedLanguages: 'Desteklenen Diller',
                 actions: 'İşlemler',
@@ -176,7 +190,6 @@ export const langTR = {
                     edit: 'Düzenle',
                 },
                 tabs: {
-                    general: 'Genel',
                     languages: {
                         tr: 'Türkçe',
                         en: 'İngilizce',
@@ -189,6 +202,9 @@ export const langTR = {
                     save: 'Kaydet',
                     cancel: 'İptal',
                 },
+            },
+            tabs: {
+                general: 'Genel',
             },
             provisioning: {
                 title: 'Dil İçerik Hazırlama',
@@ -219,6 +235,24 @@ export const langTR = {
                 },
             },
             manage: 'Yönet',
+            placeholders: {
+                selectType: 'Tür Seçiniz',
+                selectStatus: 'Durum Seçiniz',
+                code: 'örn. elektronik-ana',
+                name: 'örn. Elektronik',
+                description: 'Kategori hakkında kısa açıklama...',
+                sortOrder: 'örn. 10',
+                select: 'Seçiniz',
+                default: 'Varsayılan',
+                type: 'Tip',
+                parent: 'Üst Kategori',
+                title: 'Başlık giriniz',
+                slug: 'URL yolu giriniz',
+                sku: 'örn. SKU-12345',
+                price: 'örn. 199.90',
+                currency: 'örn. TRY',
+                shortDescription: 'Ürün hakkında kısa bir açıklama...'
+            },
         },
         sort: {
             newest: 'En Yeni',
@@ -234,10 +268,7 @@ export const langTR = {
             orderAsc: 'Sıra (Artan)',
             orderDesc: 'Sıra (Azalan)',
         },
-        placeholders: {
-            selectType: 'Tür Seçiniz',
-            selectStatus: 'Durum Seçiniz'
-        },
+
         dialog: {
             title: {
                 create: 'Yeni Oluştur',
@@ -521,6 +552,7 @@ export const langTR = {
                 empty: 'Medya bulunamadı',
                 emptyDescription: 'Henüz herhangi bir medya dosyası yüklenmemiş.'
             },
+
             upload: 'Medya Yükle',
             actions: {
                 upload: 'Yükle',
@@ -603,6 +635,7 @@ export const langTR = {
                 mobileHint: 'Küçük ekranlar için opsiyonel görsel',
             },
             picker: {
+                title: 'Medya Seç',
                 desktopPlaceholder: 'Masaüstü Medyası Seç',
                 mobilePlaceholder: 'Mobil Medya Seç'
             },
@@ -738,6 +771,7 @@ export const langTR = {
             list: 'Site Listesi',
             create: 'Site Oluştur',
             edit: 'Site Düzenle',
+
             delete: 'Site Sil',
             publish: 'Yayınla',
             preview: 'Önizleme',
@@ -1081,6 +1115,8 @@ export const langTR = {
                 description: 'Açıklama',
                 primaryCategory: 'Ana Kategori',
                 categories: 'Kategoriler',
+                seoTitle: 'SEO Başlık',
+                seoDescription: 'SEO Açıklama',
             },
             tabs: {
                 attributes: 'Özellikler',
@@ -1098,6 +1134,7 @@ export const langTR = {
             types: {
                 title: 'Ürün Tipleri',
                 subtitle: 'Ürün tiplerini yönetin',
+                list: 'Tip Listesi',
                 add: 'Yeni Tip',
                 create: 'Tip Oluştur',
                 edit: 'Tip Düzenle',
@@ -1106,38 +1143,53 @@ export const langTR = {
                     message: 'Bu tipi silmek istediğinize emin misiniz?',
                 },
                 fields: {
-                    category: 'Kategori',
+                    category: 'Kategori Grubu',
+                },
+                placeholders: {
+                    category: 'örn. Bileşenler'
                 },
                 tabs: {
                     attributes: 'Özellikler',
+                },
+                messages: {
+                    createSuccess: 'Ürün tipi başarıyla oluşturuldu',
+                    updateSuccess: 'Ürün tipi başarıyla güncellendi',
+                    deleteSuccess: 'Ürün tipi başarıyla silindi',
                 },
                 errors: {
                     loadAttributesFailed: 'Özellikler yüklenemedi',
                 },
             },
             attributes: {
+                title: 'Ürün Özellikleri',
+                list: 'Özellik Listesi',
                 create: 'Özellik Oluştur',
                 edit: 'Özellik Düzenle',
+
                 add: 'Özellik Ekle',
-                empty: 'Henüz özellik eklenmedi',
+                empty: 'Henüz özellik eklenmemiş',
                 fields: {
-                    type: 'Tip',
+                    type: 'Özellik Tipi',
                     searchable: 'Aranabilir',
+                    required: 'Zorunlu',
                 },
-                createSuccess: 'Özellik başarıyla oluşturuldu',
-                createFailed: 'Özellik oluşturulamadı',
-                updateSuccess: 'Özellik başarıyla güncellendi',
-                updateFailed: 'Özellik güncellenemedi',
+                placeholders: {
+                    type: 'Özellik tipi seçin'
+                },
+                messages: {
+                    createSuccess: 'Özellik başarıyla oluşturuldu',
+                    updateSuccess: 'Özellik başarıyla güncellendi',
+                    deleteSuccess: 'Özellik başarıyla silindi',
+                },
                 delete: {
                     title: 'Özelliği Sil',
                     message: 'Bu özelliği silmek istediğinize emin misiniz?',
                 },
-                deleteSuccess: 'Özellik başarıyla silindi',
-                deleteFailed: 'Özellik silinemedi',
             },
             categories: {
                 title: 'Kategoriler',
                 subtitle: 'Ürün kategorilerini yönetin',
+                list: 'Kategori Listesi',
                 add: 'Yeni Kategori',
                 addChild: 'Alt Kategori Ekle',
                 create: 'Kategori Oluştur',
@@ -1148,10 +1200,24 @@ export const langTR = {
                 },
                 fields: {
                     parent: 'Üst Kategori',
+                    code: 'Kod',
+                    name: 'Kategori Adı',
+                    slug: 'Slug',
+                    description: 'Açıklama',
+                    image: 'Görsel',
+                    active: 'Aktif',
+                },
+                placeholders: {
+                    parent: 'Bir üst kategori seçin'
                 },
                 empty: {
                     title: 'Henüz kategori yok',
                     message: 'İlk kategoriyi oluşturarak başlayın',
+                },
+                messages: {
+                    createSuccess: 'Kategori başarıyla oluşturuldu',
+                    updateSuccess: 'Kategori başarıyla güncellendi',
+                    deleteSuccess: 'Kategori başarıyla silindi',
                 },
                 errors: {
                     loadFailed: 'Kategoriler yüklenemedi',
