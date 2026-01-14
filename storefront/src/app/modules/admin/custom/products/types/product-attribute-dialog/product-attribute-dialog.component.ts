@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { TranslocoModule } from '@jsverse/transloco';
+import { VALIDATION_PATTERNS, VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
@@ -40,8 +41,15 @@ export class ProductAttributeDialogComponent extends SpaLocalizedFormDialog<Crea
 
     protected buildGeneralForm(): FormGroup {
         return this.fb.group({
-            code: [this.data.attribute?.code || '', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]],
-            name: [this.data.attribute?.name || '', Validators.required],
+            code: [this.data.attribute?.code || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.ATTRIBUTE_CODE_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.CODE)
+            ]],
+            name: [this.data.attribute?.name || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.ATTRIBUTE_NAME_MAX)
+            ]],
             fieldType: [this.data.attribute?.fieldType || 'TEXT', Validators.required],
             isRequired: [this.data.attribute?.isRequired || false],
             isSearchable: [this.data.attribute?.isSearchable || false],

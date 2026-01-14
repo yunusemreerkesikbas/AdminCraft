@@ -1,19 +1,20 @@
 package com.backend.presentation.dto.request;
 
 import com.backend.domain.enums.ProductFieldType;
+import com.backend.presentation.validation.Code;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import static com.backend.shared.constants.ValidationConstants.ATTRIBUTE_CODE_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.ATTRIBUTE_NAME_MAX_LENGTH;
+
 public record AttributeDefinitionCreateRequest(
-        @NotBlank(message = "validation.attribute.code.required")
-        @Size(max = 50, message = "validation.attribute.code.size")
-        @Pattern(regexp = "^[a-z][a-z0-9_]*$", message = "validation.attribute.code.pattern")
+        @Code(maxLength = ATTRIBUTE_CODE_MAX_LENGTH)
         String code,
 
         @NotBlank(message = "validation.attribute.name.required")
-        @Size(max = 100, message = "validation.attribute.name.size")
+        @Size(max = ATTRIBUTE_NAME_MAX_LENGTH, message = "validation.attribute.name.size")
         String name,
 
         @NotNull(message = "validation.attribute.fieldType.required")
@@ -28,6 +29,8 @@ public record AttributeDefinitionCreateRequest(
         String validationConfig
 ) {
     public AttributeDefinitionCreateRequest {
+        code = code != null ? code.trim() : null;
+        name = name != null ? name.trim() : null;
         if (isRequired == null) isRequired = false;
         if (isSearchable == null) isSearchable = false;
         if (sortOrder == null) sortOrder = 0;

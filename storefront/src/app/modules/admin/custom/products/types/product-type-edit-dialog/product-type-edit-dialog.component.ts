@@ -11,6 +11,7 @@ import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-in
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective } from '@shared/components/spa-tab-container';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take } from 'rxjs';
@@ -57,7 +58,7 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
     displayedColumns = ['code', 'name', 'fieldType', 'required', 'actions'];
 
     tabs = [
-        { id: 'general', label: 'admin.common.tabs.general', icon: 'settings' },
+        { id: 'general', label: 'admin.common.general', icon: 'settings' },
         { id: 'attributes', label: 'admin.products.types.tabs.attributes', icon: 'list_alt', disabled: this.data.mode === 'create' }
     ];
 
@@ -72,9 +73,18 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
 
     protected buildGeneralForm(): FormGroup {
         return this.fb.group({
-            code: [this.data.item?.code || '', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]],
-            name: [this.data.item?.name || '', Validators.required],
-            category: [this.data.item?.category || '']
+            code: [this.data.item?.code || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.PRODUCT_TYPE_CODE_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.CODE)
+            ]],
+            name: [this.data.item?.name || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.PRODUCT_TYPE_NAME_MAX)
+            ]],
+            category: [this.data.item?.category || '', [
+                Validators.maxLength(VALIDATION_LIMITS.PRODUCT_TYPE_CATEGORY_MAX)
+            ]]
         });
     }
 

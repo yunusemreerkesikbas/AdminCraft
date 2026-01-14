@@ -13,6 +13,7 @@
             [placeholder]="placeholder || ''"
             [disabled]="disabled"
             [value]="value ?? ''"
+            [errorStateMatcher]="errorStateMatcher"
             (input)="onInput($event)"
             (blur)="onBlur()"
         ></textarea>
@@ -24,6 +25,7 @@
             [disabled]="disabled"
             [readonly]="readonly"
             [value]="value ?? ''"
+            [errorStateMatcher]="errorStateMatcher"
             (input)="onInput($event)"
             (blur)="onBlur()"
             (keydown.enter)="enter.emit(value)"
@@ -31,7 +33,12 @@
     }
     <ng-content select="[matSuffix]"></ng-content>
     <ng-content select="[matPrefix]"></ng-content>
-    @if (hint) {
+    @if (hint && !hasError) {
         <mat-hint>{{ hint }}</mat-hint>
     }
 </mat-form-field>
+@if (showErrors && hasError) {
+    <div class="text-sm mat-mdc-form-field-error">
+        {{ errorMessage | transloco: errorParams }}
+    </div>
+}

@@ -3,6 +3,38 @@
  * Standardized patterns, common validation messages, enhanced Clean Architecture compliance
  */
 export const langTR = {
+    validation: {
+        required: 'Bu alan zorunludur',
+        email: 'Geçerli bir e-posta adresi giriniz',
+        pattern: 'Geçersiz format',
+        min: {
+            length: 'En az {{count}} karakter olmalıdır',
+            value: 'En az {{min}} olmalıdır',
+        },
+        max: {
+            length: 'En fazla {{count}} karakter olabilir',
+            value: 'En fazla {{max}} olabilir',
+        },
+        url: {
+            invalid: 'Geçerli bir URL giriniz',
+        },
+        code: {
+            pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam ve alt çizgi içerebilir',
+        },
+        category: {
+            code: {
+                pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içerebilir',
+            },
+        },
+        product: {
+            sku: {
+                pattern: 'Sadece harf, rakam, alt çizgi ve tire içerebilir',
+            },
+        },
+        slug: {
+            pattern: 'Yalnızca küçük harf, sayı ve tire içermelidir',
+        },
+    },
     admin: {
         common: {
             grid: {
@@ -83,26 +115,6 @@ export const langTR = {
                 reset: 'Sıfırla',
                 confirm: 'Onayla',
                 select: 'Seç',
-            },
-            validation: {
-                required: '{{field}} zorunludur',
-                requiredField: 'Bu alan zorunludur',
-                email: 'Geçerli bir e-posta adresi giriniz',
-                minLength: 'En az {{count}} karakter olmalıdır',
-                maxLength: 'En fazla {{count}} karakter olabilir',
-                pattern: '{{field}} geçerli bir format olmalıdır',
-                min: 'En az {{min}} olmalıdır',
-                max: 'En fazla {{max}} olabilir',
-                unique: '{{field}} benzersiz olmalıdır',
-                invalid: '{{field}} geçersizdir',
-                passwordMismatch: 'Şifreler uyuşmuyor',
-                phoneNumber: 'Geçerli bir telefon numarası giriniz',
-                url: 'Geçerli bir URL giriniz',
-                slug: 'Yalnızca küçük harf, sayı ve tire içermelidir',
-                invalidForm: 'Formda geçersiz alanlar var. Lütfen kırmızı ile işaretli yerleri kontrol ediniz.',
-                generalFormInvalid: 'Genel ayarlarda eksik veya hatalı alanlar var. Lütfen ilgili sekmeyi kontrol ediniz.',
-                i18nFormsInvalid: 'Dil sekmelerinde zorunlu alanlar eksik. Lütfen tüm dillerdeki kırmızı alanları doldurunuz.',
-                attributesFormInvalid: 'Özellikler sekmesinde doldurulması gereken zorunlu alanlar var.',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',

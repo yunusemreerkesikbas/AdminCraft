@@ -11,6 +11,7 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
 import { Category, CategoryCompositeRequest, CategoryI18nRequest } from '../../models/category.types';
@@ -50,8 +51,6 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
     #languageContextService = inject(LanguageContextService);
 
     override languages = this.#languageContextService.supportedLanguages();
-
-    // Use computed signals instead of getters to avoid infinite loops
     parentOptions = computed(() => {
         return (this.data.categories || [])
             .filter(c => c.id !== this.data.item?.id)
@@ -60,7 +59,7 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     tabs = computed<TabDefinition[]>(() => {
         return [
-            { id: 'general', label: 'admin.common.tabs.general', icon: 'settings' },
+            { id: 'general', label: 'admin.common.general', icon: 'settings' },
             ...this.languages.map(lang => ({
                 id: 'lang-' + lang,
                 label: lang.toUpperCase(),
@@ -78,7 +77,11 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     protected buildGeneralForm(): FormGroup {
         return this.fb.group({
-            code: [this.data.item?.code || '', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]],
+            code: [this.data.item?.code || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.CATEGORY_CODE_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.CATEGORY_CODE)
+            ]],
             parentId: [this.data.item?.parentId || this.data.parentId || null],
             sortOrder: [this.data.item?.sortOrder || 0],
             isVisible: [this.data.item?.isVisible ?? true]
@@ -87,7 +90,10 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     protected buildI18nForm(lang: string): FormGroup {
         return this.fb.group({
-            name: ['', Validators.required],
+            name: ['', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.CATEGORY_NAME_MAX)
+            ]],
             description: ['']
         });
     }
