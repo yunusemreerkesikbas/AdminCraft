@@ -12,6 +12,7 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { forkJoin, switchMap, take } from 'rxjs';
 import { PageSlotService } from '../../pages/slots/page-slot.service';
 import { PageTemplateService } from '../page-template.service';
@@ -66,9 +67,16 @@ export class PageTemplateEditDialogComponent extends SpaFormDialog<boolean, Page
     availableSlotsSig = signal<SpaSelectOption<string>[]>([]);
 
     protected form: FormGroup = this.fb.group({
-        name: ['', [Validators.required, Validators.maxLength(100)]],
-        uid: ['', [Validators.required, Validators.maxLength(50)]],
-        description: ['', Validators.maxLength(500)],
+        name: ['', [
+            Validators.required,
+            Validators.maxLength(VALIDATION_LIMITS.PAGE_TEMPLATE_NAME_MAX)
+        ]],
+        uid: ['', [
+            Validators.required,
+            Validators.maxLength(VALIDATION_LIMITS.UID_TEMPLATE_MAX),
+            Validators.pattern(VALIDATION_PATTERNS.UID)
+        ]],
+        description: ['', Validators.maxLength(VALIDATION_LIMITS.PAGE_TEMPLATE_DESCRIPTION_MAX)],
         isActive: [true]
     });
 

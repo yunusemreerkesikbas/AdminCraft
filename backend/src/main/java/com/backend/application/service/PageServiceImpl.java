@@ -278,6 +278,7 @@ public class PageServiceImpl implements PageService {
             for (TemplateSlotDto templateSlot : template.getSlots()) {
                 if (!existingSlotNames.contains(templateSlot.getSlotName())) {
                     CreatePageSlotCommand command = new CreatePageSlotCommand(
+                            null,
                             templateSlot.getSlotName(),
                             templateSlot.getPosition(),
                             templateSlot.getSortOrder(),

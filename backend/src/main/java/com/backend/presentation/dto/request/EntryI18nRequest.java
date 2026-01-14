@@ -3,19 +3,24 @@ package com.backend.presentation.dto.request;
 import jakarta.validation.constraints.Size;
 import java.util.Map;
 
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_BUTTON_TEXT_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_BUTTON_URL_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_IMAGE_URL_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_ENTRY_TITLE_MAX_LENGTH;
+
 public record EntryI18nRequest(
-    @Size(max = 255)
+    @Size(max = COMPONENT_ENTRY_TITLE_MAX_LENGTH)
     String title,
 
     String description,
 
-    @Size(max = 500)
+    @Size(max = COMPONENT_ENTRY_IMAGE_URL_MAX_LENGTH)
     String imageUrl,
 
-    @Size(max = 100)
+    @Size(max = COMPONENT_ENTRY_BUTTON_TEXT_MAX_LENGTH)
     String buttonText,
 
-    @Size(max = 500)
+    @Size(max = COMPONENT_ENTRY_BUTTON_URL_MAX_LENGTH)
     String buttonUrl,
 
     Map<String, Object> customFields

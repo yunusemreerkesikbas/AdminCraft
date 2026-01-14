@@ -64,6 +64,7 @@ public class PageSlotController {
   public ResponseEntity<ApiResponse<PageSlotResponse>> createSharedSlot(
       @Valid @RequestBody CreatePageSlotRequest request) {
     CreatePageSlotCommand command = new CreatePageSlotCommand(
+      request.getUid(),
         request.getSlotName(),
         request.getPosition(),
         request.getSortOrder(),
@@ -118,6 +119,7 @@ public class PageSlotController {
 
   private CreatePageSlotCommand mapToCommand(CreatePageSlotRequest request) {
     return new CreatePageSlotCommand(
+      request.getUid(),
         request.getSlotName(),
         request.getPosition(),
         request.getSortOrder(),

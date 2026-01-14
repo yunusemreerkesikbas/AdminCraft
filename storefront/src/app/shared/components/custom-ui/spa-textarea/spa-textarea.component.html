@@ -12,11 +12,17 @@
         [rows]="rows"
         [placeholder]="placeholder || ''"
         [disabled]="disabled"
+        [errorStateMatcher]="errorStateMatcher"
         (input)="onInput($event)"
         (blur)="onBlur()"
         >{{ value ?? '' }}</textarea
     >
-    @if (hint) {
+    @if (hint && !hasError) {
         <mat-hint>{{ hint }}</mat-hint>
     }
 </mat-form-field>
+@if (showErrors && hasError) {
+    <div class="text-sm mat-mdc-form-field-error">
+        {{ errorMessage | transloco:errorParams }}
+    </div>
+}

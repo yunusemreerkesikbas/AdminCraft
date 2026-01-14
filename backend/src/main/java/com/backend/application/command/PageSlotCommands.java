@@ -5,6 +5,7 @@ import java.util.List;
 public class PageSlotCommands {
 
   public record CreatePageSlotCommand(
+      String uid,
       String slotName,
       String position,
       Integer sortOrder,

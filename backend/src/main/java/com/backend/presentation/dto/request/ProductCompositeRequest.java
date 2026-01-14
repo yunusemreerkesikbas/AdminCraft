@@ -6,22 +6,30 @@ import java.util.Map;
 
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.presentation.validation.Sku;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
+import static com.backend.shared.constants.ValidationConstants.SKU_MAX_LENGTH;
+
 public record ProductCompositeRequest(
-        @NotNull(message = "validation.product.productTypeId.required") Long productTypeId,
+        @NotNull(message = "validation.product.productTypeId.required")
+        Long productTypeId,
 
-        @NotBlank(message = "validation.product.sku.required") @Size(max = 100, message = "validation.product.sku.size") String sku,
+        @Sku(maxLength = SKU_MAX_LENGTH)
+        String sku,
 
-        @DecimalMin(value = "0.0", inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
+        @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min")
+        BigDecimal basePrice,
 
-        @Size(max = 3, message = "validation.product.currency.size") String currency,
+        @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size")
+        String currency,
 
         ProductStatus status,
 
@@ -29,7 +37,9 @@ public record ProductCompositeRequest(
 
         Long responsiveMediaId,
 
-        @NotEmpty(message = "validation.product.translations.required") @Valid Map<Language, ProductI18nRequest> translations,
+        @NotEmpty(message = "validation.product.translations.required")
+        @Valid
+        Map<Language, ProductI18nRequest> translations,
 
         Map<String, Object> attributes,
 
@@ -37,10 +47,11 @@ public record ProductCompositeRequest(
 
         Long primaryCategoryId,
 
-        List<Long> galleryMediaIds) {
+        List<Long> galleryMediaIds
+) {
     public ProductCompositeRequest {
-        if (currency == null || currency.isBlank())
-            currency = "TRY";
+        sku = sku != null ? sku.trim() : null;
+        currency = currency != null && !currency.isBlank() ? currency.trim() : "TRY";
         if (status == null)
             status = ProductStatus.DRAFT;
         if (isVisible == null)

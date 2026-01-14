@@ -3,6 +3,51 @@
  * Standardized patterns, common validation messages, enhanced Clean Architecture compliance
  */
 export const langEN = {
+    validation: {
+        required: 'This field is required',
+        email: 'Please enter a valid email address',
+        pattern: 'Invalid format',
+        min: {
+            length: 'Must be at least {{count}} characters',
+            value: 'Must be at least {{min}}',
+        },
+        max: {
+            length: 'Must be no more than {{count}} characters',
+            value: 'Must be no more than {{max}}',
+        },
+        url: {
+            invalid: 'Please enter a valid URL',
+        },
+        code: {
+            pattern: 'Must start with lowercase letter, only lowercase letters, digits and underscores allowed',
+        },
+        category: {
+            code: {
+                pattern: 'Must start with lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
+            },
+        },
+        product: {
+            sku: {
+                pattern: 'Only letters, digits, underscores and hyphens allowed',
+            },
+        },
+        slug: {
+            pattern: 'Must contain only lowercase letters, numbers, and hyphens',
+        },
+        uid: {
+            pattern: 'Must start with a lowercase letter or digit, only lowercase letters, digits, underscores and hyphens allowed',
+        },
+        slot: {
+            name: {
+                pattern: 'Must start with a letter, only letters, digits, underscores and hyphens allowed',
+            },
+        },
+        media: {
+            code: {
+                pattern: 'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
+            },
+        },
+    },
     admin: {
         common: {
             grid: {
@@ -85,26 +130,6 @@ export const langEN = {
                 reset: 'Reset',
                 confirm: 'Confirm',
                 select: 'Select',
-            },
-            validation: {
-                required: '{{field}} is required',
-                requiredField: 'This field is required',
-                email: 'Please enter a valid email address',
-                minLength: 'Must be at least {{count}} characters',
-                maxLength: 'Must be no more than {{count}} characters',
-                pattern: '{{field}} must be in a valid format',
-                min: 'Must be at least {{min}}',
-                max: 'Must be no more than {{max}}',
-                unique: '{{field}} must be unique',
-                invalid: '{{field}} is invalid',
-                passwordMismatch: 'Passwords do not match',
-                phoneNumber: 'Please enter a valid phone number',
-                url: 'Please enter a valid URL',
-                slug: 'Must contain only lowercase letters, numbers, and hyphens',
-                invalidForm: 'The form contains invalid fields. Please check the fields marked in red.',
-                generalFormInvalid: 'The General tab has missing or invalid fields. Please check it.',
-                i18nFormsInvalid: 'The Language tabs have missing required fields. Please check all languages.',
-                attributesFormInvalid: 'The Attributes tab has missing required fields.',
             },
             messages: {
                 operationSuccess: 'Operation successful',

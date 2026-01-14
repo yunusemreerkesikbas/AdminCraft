@@ -1,18 +1,16 @@
 package com.backend.presentation.dto.request;
 
 import com.backend.domain.enums.Language;
+import com.backend.presentation.validation.CategoryCode;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 import java.util.Map;
 
+import static com.backend.shared.constants.ValidationConstants.CATEGORY_CODE_MAX_LENGTH;
+
 public record CategoryCompositeRequest(
-        @NotBlank(message = "validation.category.code.required")
-        @Size(max = 50, message = "validation.category.code.size")
-        @Pattern(regexp = "^[a-z][a-z0-9_-]*$", message = "validation.category.code.pattern")
+        @CategoryCode(maxLength = CATEGORY_CODE_MAX_LENGTH)
         String code,
 
         Long parentId,
@@ -26,6 +24,7 @@ public record CategoryCompositeRequest(
         Map<Language, CategoryI18nRequest> translations
 ) {
     public CategoryCompositeRequest {
+        code = code != null ? code.trim() : null;
         if (sortOrder == null) sortOrder = 0;
         if (isVisible == null) isVisible = true;
     }

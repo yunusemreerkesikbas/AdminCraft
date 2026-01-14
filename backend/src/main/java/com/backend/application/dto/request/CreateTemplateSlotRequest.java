@@ -2,6 +2,7 @@ package com.backend.application.dto.request;
 
 import java.util.List;
 
+import com.backend.presentation.validation.SlotName;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -10,29 +11,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import static com.backend.shared.constants.ValidationConstants.SLOT_NAME_MAX_LENGTH;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateTemplateSlotRequest {
 
-  @NotBlank(message = "Slot name is required")
-  @Size(max = 50, message = "Slot name must be at most 50 characters")
-  @Pattern(regexp = "^[A-Z][a-zA-Z0-9]*$", message = "Slot name must be PascalCase (e.g., Header, MainContent)")
+  @SlotName(maxLength = SLOT_NAME_MAX_LENGTH)
   private String slotName;
 
-  @NotBlank(message = "Position is required")
-  @Size(max = 20, message = "Position must be at most 20 characters")
-  @Pattern(regexp = "^(TOP|CENTER|BOTTOM|LEFT|RIGHT)$", message = "Position must be one of: TOP, CENTER, BOTTOM, LEFT, RIGHT")
+  @NotBlank(message = "validation.slot.position.required")
+  @Size(max = 20, message = "validation.slot.position.size")
+  @Pattern(regexp = "^(TOP|CENTER|BOTTOM|LEFT|RIGHT)$", message = "validation.slot.position.pattern")
   private String position;
 
-  @Min(value = 0, message = "Sort order cannot be negative")
+  @Min(value = 0, message = "validation.sortOrder.min")
   private Integer sortOrder = 0;
 
   private Boolean isRequired = false;
 
-  @Min(value = 1, message = "Max components must be at least 1")
+  @Min(value = 1, message = "validation.slot.maxComponents.min")
   private Integer maxComponents;
 
-  @Size(max = 50, message = "Maximum 50 allowed types")
-  private List<@NotBlank @Size(max = 100) String> allowedTypes;
+  @Size(max = 50, message = "validation.slot.allowedTypes.size")
+  private List<@NotBlank(message = "validation.slot.allowedType.required") @Size(max = 100, message = "validation.slot.allowedType.size") String> allowedTypes;
 }
