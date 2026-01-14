@@ -209,13 +209,13 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
 
     save(): void {
         if (this.generalForm.invalid) {
-            this.notify.warning('admin.validation.generalFormInvalid');
+            this.notify.warning('admin.common.validation.generalFormInvalid');
             return;
         }
 
         const hasInvalidI18n = Object.values(this.i18nForms).some(form => form.invalid);
         if (hasInvalidI18n) {
-            this.notify.warning('admin.validation.i18nFormsInvalid');
+            this.notify.warning('admin.common.validation.i18nFormsInvalid');
             return;
         }
 

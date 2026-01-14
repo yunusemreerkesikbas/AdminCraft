@@ -234,13 +234,20 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
     save(): void {
         if (this.generalForm.invalid) {
             this.generalForm.markAllAsTouched();
-            this.#notificationService.warning('admin.validation.generalFormInvalid');
+            this.#notificationService.warning('admin.common.validation.generalFormInvalid');
+            return;
+        }
+
+        const invalidI18nForms = Object.values(this.i18nForms).filter(f => f.invalid);
+        if (invalidI18nForms.length > 0) {
+            invalidI18nForms.forEach(f => f.markAllAsTouched());
+            this.#notificationService.warning('admin.common.validation.i18nFormsInvalid');
             return;
         }
         
         if (this.attributesForm.invalid) {
             this.attributesForm.markAllAsTouched();
-            this.#notificationService.warning('admin.validation.attributesFormInvalid');
+            this.#notificationService.warning('admin.common.validation.attributesFormInvalid');
             return;
         }
 

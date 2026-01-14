@@ -19,6 +19,7 @@ import {
     MatFormFieldModule,
 } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'spa-input',
@@ -28,6 +29,7 @@ import { MatInputModule } from '@angular/material/input';
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
+        MatTooltipModule
     ],
     templateUrl: './spa-input.component.html',
     styleUrls: ['./spa-input.component.scss'],
@@ -44,6 +46,7 @@ import { MatInputModule } from '@angular/material/input';
 export class SpaInputComponent implements ControlValueAccessor {
     #cdr = inject(ChangeDetectorRef);
     @Input() label?: string;
+    @Input() labelTooltip?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
     @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' | 'date' = 'text';

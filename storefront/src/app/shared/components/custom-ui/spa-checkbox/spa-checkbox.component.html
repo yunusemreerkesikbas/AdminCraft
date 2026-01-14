@@ -10,11 +10,12 @@
             <mat-icon class="checkbox-icon">{{ icon }}</mat-icon>
         }
         @if (label) {
-            <span class="checkbox-label">{{ label }}</span>
+            <span class="checkbox-label" [matTooltip]="labelTooltip || ''">{{
+                label
+            }}</span>
         }
     </span>
 </mat-checkbox>
 @if (hint) {
     <span class="checkbox-hint">{{ hint }}</span>
 }
-

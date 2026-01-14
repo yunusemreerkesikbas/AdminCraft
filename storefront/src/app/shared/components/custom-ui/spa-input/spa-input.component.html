@@ -1,9 +1,10 @@
 <mat-form-field
     [class]="fullWidth ? 'w-full ' + (styleClasses || '') : styleClasses"
     [subscriptSizing]="'dynamic'"
+    [floatLabel]="'always'"
 >
     @if (label) {
-        <mat-label>{{ label }}</mat-label>
+        <mat-label [matTooltip]="labelTooltip || ''">{{ label }}</mat-label>
     }
     @if (textarea) {
         <textarea

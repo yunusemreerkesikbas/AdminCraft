@@ -191,7 +191,22 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<Category> getTree() {
         TenantContext.validateActive();
-        return categoryRepository.findRootCategoriesWithI18n();
+        List<Category> roots = categoryRepository.findRootCategoriesWithI18n();
+        // Recursively initialize all children and their i18n to avoid
+        // LazyInitializationException
+        roots.forEach(this::initializeCategoryTreeRecursively);
+        return roots;
+    }
+
+    private void initializeCategoryTreeRecursively(Category category) {
+        // Force initialization of i18nContent
+        if (category.getI18nContent() != null) {
+            category.getI18nContent().size();
+        }
+        // Force initialization and recursion for children
+        if (category.getChildren() != null && !category.getChildren().isEmpty()) {
+            category.getChildren().forEach(this::initializeCategoryTreeRecursively);
+        }
     }
 
     @Override

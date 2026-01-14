@@ -16,7 +16,8 @@
                     formControlName="code"
                     [label]="'admin.common.fields.code' | transloco"
                     [required]="true"
-                    hint="Unique identifier"
+                    [placeholder]="'admin.common.placeholders.code' | transloco"
+                    [labelTooltip]="'code'"
                     [readonly]="data.mode === 'edit'"
                 ></spa-input>
 
@@ -26,18 +27,26 @@
                         'admin.products.categories.fields.parent' | transloco
                     "
                     [options]="parentOptions()"
-                    hint="Optional parent category"
+                    [placeholder]="
+                        'admin.common.placeholders.parent' | transloco
+                    "
+                    [labelTooltip]="'parentId'"
                 ></spa-select>
 
                 <spa-input
                     formControlName="sortOrder"
                     type="number"
                     [label]="'admin.common.fields.order' | transloco"
+                    [placeholder]="
+                        'admin.common.placeholders.sortOrder' | transloco
+                    "
+                    [labelTooltip]="'sortOrder'"
                 ></spa-input>
 
                 <spa-checkbox
                     formControlName="isVisible"
                     [label]="'admin.common.fields.isVisible' | transloco"
+                    [labelTooltip]="'isVisible'"
                     styleClasses="boxed"
                 ></spa-checkbox>
             </form>
@@ -53,11 +62,19 @@
                         formControlName="name"
                         [label]="'admin.common.fields.name' | transloco"
                         [required]="true"
+                        [placeholder]="
+                            'admin.common.placeholders.name' | transloco
+                        "
+                        [labelTooltip]="'name'"
                     ></spa-input>
 
                     <spa-textarea
                         formControlName="description"
                         [label]="'admin.common.fields.description' | transloco"
+                        [placeholder]="
+                            'admin.common.placeholders.description' | transloco
+                        "
+                        [labelTooltip]="'description'"
                         [rows]="4"
                     ></spa-textarea>
                 </form>

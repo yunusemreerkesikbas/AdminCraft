@@ -2,9 +2,10 @@
     class="w-full"
     [class]="styleClasses"
     [subscriptSizing]="'dynamic'"
+    [floatLabel]="'always'"
 >
     @if (label) {
-        <mat-label>{{ label }}</mat-label>
+        <mat-label [matTooltip]="labelTooltip || ''">{{ label }}</mat-label>
     }
     <mat-select
         [disabled]="disabled || readonly"

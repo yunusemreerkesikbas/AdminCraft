@@ -109,12 +109,13 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
     save(): void {
         if (this.generalForm.invalid) {
             this.generalForm.markAllAsTouched();
+            this.#notificationService.warning('admin.common.validation.generalFormInvalid');
             return;
         }
         
         const hasInvalidI18n = Object.values(this.i18nForms).some(f => f.invalid);
         if (hasInvalidI18n) {
-            this.notify.warning('admin.validation.i18nFormsInvalid');
+            this.#notificationService.warning('admin.common.validation.i18nFormsInvalid');
             return;
         }
 

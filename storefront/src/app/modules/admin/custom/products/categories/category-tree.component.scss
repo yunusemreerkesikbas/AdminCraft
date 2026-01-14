@@ -1,14 +1,74 @@
+// Modern Tree Styling
 .category-tree {
     background: transparent;
+    font-family: var(--font-family-sans);
+
+    .mat-tree-node,
+    .mat-nested-tree-node {
+        min-height: 48px; // Taller rows for better touch targets
+        position: relative;
+    }
+
+    // Hide default expansion indicator since we use custom implementation
+    .mat-tree-node button[matTreeNodeToggle] {
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        margin-right: 8px;
+    }
 }
 
-.category-tree .mat-tree-node {
-    min-height: 48px;
-}
-
-.category-tree .mat-nested-tree-node div[role="group"] {
+// Nested Content with Guides
+.category-tree-nested-node {
     padding-left: 24px;
-    overflow: hidden;
+    position: relative;
+
+    // Vertical Guide Line
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 12px; // Adjusted based on padding
+        border-left: 1px dashed var(--mat-sys-outline-variant); // Use dashed line for cleaner look
+        opacity: 0.5;
+    }
+}
+
+// Drag and Drop Styles (Adapted from spa-reorder-list)
+.cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow:
+        0 5px 5px -3px rgba(0, 0, 0, 0.2),
+        0 8px 10px 1px rgba(0, 0, 0, 0.14),
+        0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    background-color: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    z-index: 1000; // Ensure it floats above
+}
+
+.cdk-drag-placeholder {
+    opacity: 0;
+}
+
+.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.category-tree.cdk-drop-list-dragging
+    .mat-tree-node:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Visual Helpers
+.group:hover {
+    transition: background-color 0.2s ease;
 }
 
 .hidden {

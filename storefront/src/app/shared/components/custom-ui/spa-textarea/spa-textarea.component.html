@@ -1,6 +1,11 @@
-<mat-form-field class="w-full" [class]="styleClasses" [subscriptSizing]="'dynamic'">
+<mat-form-field
+    class="w-full"
+    [class]="styleClasses"
+    [subscriptSizing]="'dynamic'"
+    [floatLabel]="'always'"
+>
     @if (label) {
-        <mat-label>{{ label }}</mat-label>
+        <mat-label [matTooltip]="labelTooltip || ''">{{ label }}</mat-label>
     }
     <textarea
         matInput
@@ -9,10 +14,9 @@
         [disabled]="disabled"
         (input)="onInput($event)"
         (blur)="onBlur()"
-    >{{ value ?? '' }}</textarea>
+        >{{ value ?? '' }}</textarea
+    >
     @if (hint) {
         <mat-hint>{{ hint }}</mat-hint>
     }
 </mat-form-field>
-
-

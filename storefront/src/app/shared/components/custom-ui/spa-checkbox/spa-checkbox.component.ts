@@ -17,11 +17,12 @@ import {
 } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'spa-checkbox',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, MatCheckboxModule, MatIconModule],
+    imports: [CommonModule, ReactiveFormsModule, MatCheckboxModule, MatIconModule, MatTooltipModule],
     templateUrl: './spa-checkbox.component.html',
     styleUrls: ['./spa-checkbox.component.scss'],
     encapsulation: ViewEncapsulation.None,
@@ -38,6 +39,7 @@ export class SpaCheckboxComponent implements ControlValueAccessor {
     #cdr = inject(ChangeDetectorRef);
     
     @Input() label?: string;
+    @Input() labelTooltip?: string;
     @Input() hint?: string;
     @Input() icon?: string;
     @Input() styleClasses?: string;
