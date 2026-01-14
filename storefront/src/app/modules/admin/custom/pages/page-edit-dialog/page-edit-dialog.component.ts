@@ -12,6 +12,7 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
 import { PageTemplateService } from '../../templates/page-template.service';
@@ -139,9 +140,14 @@ export class PageEditDialogComponent extends SpaLocalizedFormDialog<any, PageEdi
         return this.fb.group({
             templateId: [page?.templateId || null],
             status: [page?.status || 'DRAFT', Validators.required],
-            styleClasses: [page?.styleClasses || ''],
+            styleClasses: [page?.styleClasses || '', [
+                Validators.maxLength(VALIDATION_LIMITS.PAGE_STYLE_CLASSES_MAX)
+            ]],
             robotTag: [page?.robotTag || 'INDEX_FOLLOW', Validators.required],
-            uid: [{ value: page?.uid || '', disabled: false }], 
+            uid: [{ value: page?.uid || '', disabled: false }, [
+                Validators.maxLength(VALIDATION_LIMITS.UID_PAGE_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.UID)
+            ]],
             publishedAt: [{ value: publishedAt || '-', disabled: true }],
             createdAt: [{ value: createdAt || '-', disabled: true }],
             updatedAt: [{ value: updatedAt || '-', disabled: true }]
@@ -151,9 +157,16 @@ export class PageEditDialogComponent extends SpaLocalizedFormDialog<any, PageEdi
     protected buildI18nForm(lang: string): FormGroup {
         const translation = this.data?.page?.translations?.[lang as keyof typeof this.data.page.translations];
         return this.fb.group({
-            canonicalUrl: [translation?.canonicalUrl || '', [Validators.required, Validators.maxLength(255), Validators.pattern('https?://.+')]],
-            title: [translation?.title || translation?.name || '', [Validators.required, Validators.maxLength(200)]],
-            description: [translation?.description || '', [Validators.maxLength(500)]]
+            canonicalUrl: [translation?.canonicalUrl || '', [
+                Validators.maxLength(VALIDATION_LIMITS.PAGE_CANONICAL_URL_MAX)
+            ]],
+            title: [translation?.title || translation?.name || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.PAGE_TITLE_MAX)
+            ]],
+            description: [translation?.description || '', [
+                Validators.maxLength(VALIDATION_LIMITS.PAGE_DESCRIPTION_MAX)
+            ]]
         });
     }
 

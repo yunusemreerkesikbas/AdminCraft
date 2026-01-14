@@ -12,6 +12,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaRadioButtonComponent, SpaRadioOption } from '@shared/components/custom-ui/spa-radio-button/spa-radio-button.component';
 import { SpaSelectComponent, SpaSelectOption } from '@shared/components/custom-ui/spa-select/spa-select.component';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { finalize } from 'rxjs/operators';
 import { MediaService } from '../../media.service';
@@ -69,7 +70,11 @@ export class FormatGeneratorComponent implements OnInit {
             outputFormat: [OutputFormat.ORIGINAL, Validators.required],
             customWidth: [null],
             customHeight: [null],
-            quality: [80, [Validators.min(1), Validators.max(100), Validators.required]]
+            quality: [80, [
+                Validators.min(VALIDATION_LIMITS.MEDIA_FORMAT_QUALITY_MIN),
+                Validators.max(VALIDATION_LIMITS.MEDIA_FORMAT_QUALITY_MAX),
+                Validators.required
+            ]]
         });
     }
 
@@ -87,8 +92,16 @@ export class FormatGeneratorComponent implements OnInit {
                 heightCtrl?.clearValidators();
             } else {
                 formatCodeCtrl?.clearValidators();
-                widthCtrl?.setValidators([Validators.required, Validators.min(1)]);
-                heightCtrl?.setValidators([Validators.required, Validators.min(1)]);
+                widthCtrl?.setValidators([
+                    Validators.required,
+                    Validators.min(VALIDATION_LIMITS.MEDIA_FORMAT_DIMENSION_MIN),
+                    Validators.max(VALIDATION_LIMITS.MEDIA_FORMAT_DIMENSION_MAX)
+                ]);
+                heightCtrl?.setValidators([
+                    Validators.required,
+                    Validators.min(VALIDATION_LIMITS.MEDIA_FORMAT_DIMENSION_MIN),
+                    Validators.max(VALIDATION_LIMITS.MEDIA_FORMAT_DIMENSION_MAX)
+                ]);
             }
 
             formatCodeCtrl?.updateValueAndValidity();

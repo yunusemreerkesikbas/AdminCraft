@@ -1,6 +1,7 @@
 package com.backend.presentation.dto.request;
 
 import com.backend.domain.enums.CropMode;
+import com.backend.presentation.validation.MediaCode;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -8,21 +9,38 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_CODE_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_DIMENSION_MAX;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_DIMENSION_MIN;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_NAME_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_QUALITY_MAX;
+import static com.backend.shared.constants.ValidationConstants.MEDIA_FORMAT_QUALITY_MIN;
+
 /**
  * Request DTO for creating a custom media format.
  * System formats cannot be created via API.
  */
 public record MediaFormatCreateRequest(
-    @NotBlank(message = "Format code is required") @Size(max = 50, message = "Code must be at most 50 characters") String code,
+    @MediaCode(maxLength = MEDIA_FORMAT_CODE_MAX_LENGTH)
+    String code,
 
-    @NotBlank(message = "Format name is required") @Size(max = 100, message = "Name must be at most 100 characters") String name,
+    @NotBlank(message = "validation.media.format.name.required")
+    @Size(max = MEDIA_FORMAT_NAME_MAX_LENGTH, message = "validation.media.format.name.size")
+    String name,
 
-    @NotNull(message = "Width is required") @Min(value = 1, message = "Width must be at least 1") @Max(value = 10000, message = "Width must be at most 10000") Integer width,
+    @NotNull(message = "validation.media.format.width.required")
+    @Min(value = MEDIA_FORMAT_DIMENSION_MIN, message = "validation.media.format.width.min")
+    @Max(value = MEDIA_FORMAT_DIMENSION_MAX, message = "validation.media.format.width.max")
+    Integer width,
 
-    @NotNull(message = "Height is required") @Min(value = 1, message = "Height must be at least 1") @Max(value = 10000, message = "Height must be at most 10000") Integer height,
+    @NotNull(message = "validation.media.format.height.required")
+    @Min(value = MEDIA_FORMAT_DIMENSION_MIN, message = "validation.media.format.height.min")
+    @Max(value = MEDIA_FORMAT_DIMENSION_MAX, message = "validation.media.format.height.max")
+    Integer height,
 
-    @Min(value = 1, message = "Quality must be at least 1") @Max(value = 100, message = "Quality must be at most 100") Integer quality, // default
-                                                                                                                                        // 80
+    @Min(value = MEDIA_FORMAT_QUALITY_MIN, message = "validation.media.format.quality.min")
+    @Max(value = MEDIA_FORMAT_QUALITY_MAX, message = "validation.media.format.quality.max")
+    Integer quality,
 
     CropMode cropMode // default FIT
 ) {

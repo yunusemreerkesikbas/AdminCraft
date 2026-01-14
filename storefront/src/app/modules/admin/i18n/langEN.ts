@@ -34,6 +34,19 @@ export const langEN = {
         slug: {
             pattern: 'Must contain only lowercase letters, numbers, and hyphens',
         },
+        uid: {
+            pattern: 'Must start with a lowercase letter or digit, only lowercase letters, digits, underscores and hyphens allowed',
+        },
+        slot: {
+            name: {
+                pattern: 'Must start with a letter, only letters, digits, underscores and hyphens allowed',
+            },
+        },
+        media: {
+            code: {
+                pattern: 'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
+            },
+        },
     },
     admin: {
         common: {

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { GeneralFieldConfig, ItemDialogSchema, LangFieldConfig } from '@shared/types/item-dialog.types';
 import { PageTemplate } from '../../templates/page-template.types';
 
@@ -51,7 +52,7 @@ export class PageSchemaBuilderService {
         key: 'styleClasses',
         type: 'text',
         labelKey: 'admin.common.fields.styleClasses',
-        maxLength: 500
+        maxLength: VALIDATION_LIMITS.PAGE_STYLE_CLASSES_MAX
       }
     ];
   }
@@ -63,21 +64,21 @@ export class PageSchemaBuilderService {
         type: 'text',
         labelKey: 'admin.common.fields.canonicalUrl',
         required: false,
-        maxLength: 255
+        maxLength: VALIDATION_LIMITS.PAGE_CANONICAL_URL_MAX
       },
       {
         key: 'title',
         type: 'text',
         labelKey: 'admin.common.fields.title',
         required: false,
-        maxLength: 200
+        maxLength: VALIDATION_LIMITS.PAGE_TITLE_MAX
       },
 
       {
         key: 'description',
         type: 'textarea',
         labelKey: 'admin.common.fields.description',
-        maxLength: 2000
+        maxLength: VALIDATION_LIMITS.PAGE_DESCRIPTION_MAX
       }
     ];
   }

@@ -65,7 +65,7 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
     @Input() rows: number = 3;
     @Input() readonly: boolean = false;
     @Input() showErrors: boolean = true;
-    @Input() patternType?: 'code' | 'categoryCode' | 'sku' | 'slug';
+    @Input() patternType?: 'code' | 'categoryCode' | 'sku' | 'slug' | 'uid' | 'slotName' | 'mediaCode';
 
     @Input() control?: NgControl['control'];
 
@@ -166,6 +166,12 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
                     return VALIDATION_MESSAGES.SKU_PATTERN;
                 case 'slug':
                     return VALIDATION_MESSAGES.SLUG_PATTERN;
+                case 'uid':
+                    return VALIDATION_MESSAGES.UID_PATTERN;
+                case 'slotName':
+                    return VALIDATION_MESSAGES.SLOT_NAME_PATTERN;
+                case 'mediaCode':
+                    return VALIDATION_MESSAGES.MEDIA_CODE_PATTERN;
             }
         }
 
@@ -182,6 +188,15 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
         }
         if (labelLower.includes('slug')) {
             return VALIDATION_MESSAGES.SLUG_PATTERN;
+        }
+        if (labelLower.includes('uid')) {
+            return VALIDATION_MESSAGES.UID_PATTERN;
+        }
+        if (labelLower.includes('slot')) {
+            return VALIDATION_MESSAGES.SLOT_NAME_PATTERN;
+        }
+        if (labelLower.includes('media') && labelLower.includes('code')) {
+            return VALIDATION_MESSAGES.MEDIA_CODE_PATTERN;
         }
 
         return VALIDATION_MESSAGES.PATTERN;

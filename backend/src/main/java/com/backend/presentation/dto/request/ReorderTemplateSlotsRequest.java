@@ -13,6 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReorderTemplateSlotsRequest {
-  @NotEmpty(message = "Slot names list cannot be empty")
+  @NotEmpty(message = "validation.slot.names.required")
   private List<String> slotNames;
 }

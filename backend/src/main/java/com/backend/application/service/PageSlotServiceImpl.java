@@ -62,6 +62,13 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     PageSlot slot = new PageSlot();
     slot.setPageId(effectivePageId);
+    if (command.uid() != null && !command.uid().isBlank()) {
+      pageSlotRepository.findByUid(command.uid())
+          .ifPresent(existing -> {
+            throw new IllegalArgumentException("Slot uid already exists: " + command.uid());
+          });
+      slot.setUid(command.uid());
+    }
     slot.setSlotName(command.slotName());
     slot.setPosition(command.position());
     slot.setSortOrder(command.sortOrder() != null ? command.sortOrder() : 0);

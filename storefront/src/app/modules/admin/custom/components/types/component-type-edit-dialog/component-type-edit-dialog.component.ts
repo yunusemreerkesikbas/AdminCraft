@@ -11,6 +11,7 @@ import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { take, takeUntil } from 'rxjs';
 import { EntryFieldsBuilderComponent } from '../../entries/entry-fields-builder/entry-fields-builder.component';
 import { COMPONENT_CATEGORIES } from '../../models/component-categories.constants';
@@ -52,8 +53,13 @@ export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTyp
     override ngOnInit(): void {
         const typeData = this.data!.type;
         this.form = this.fb.group({
-            name: [typeData.name, Validators.required],
-            category: [typeData.category || null]
+            name: [typeData.name, [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_TYPE_NAME_MAX)
+            ]],
+            category: [typeData.category || null, [
+                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_TYPE_CATEGORY_MAX)
+            ]]
         });
     }
 

@@ -7,7 +7,7 @@ AdminCraft uses a synchronized validation framework across frontend and backend 
 | Layer | Location | Purpose |
 |-------|----------|---------|
 | Backend | `ValidationConstants.java` | Central patterns, limits, message keys |
-| Backend | `@Code`, `@CategoryCode`, `@Sku` | Custom validation annotations |
+| Backend | `@Code`, `@CategoryCode`, `@Sku`, `@Slug`, `@Uid`, `@SlotName`, `@MediaCode` | Custom validation annotations |
 | Frontend | `validation.constants.ts` | Synchronized patterns, limits, messages |
 | Frontend | `spa-input`, `spa-textarea`, `spa-select` | Field-level error display |
 
@@ -27,15 +27,30 @@ public final class ValidationConstants {
     public static final String CODE_PATTERN = "^[a-z][a-z0-9_]*$";
     public static final String CATEGORY_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
     public static final String SKU_PATTERN = "^[A-Za-z0-9_-]+$";
+    public static final String SLUG_PATTERN = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
+    public static final String UID_PATTERN = "^[a-z0-9][a-z0-9_-]*$";
+    public static final String SLOT_NAME_PATTERN = "^[A-Za-z][A-Za-z0-9_-]*$";
+    public static final String MEDIA_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
 
     // Limits
     public static final int SKU_MAX_LENGTH = 100;
     public static final int CODE_MAX_LENGTH = 50;
     public static final int NAME_MAX_LENGTH = 200;
+    public static final int SLUG_MIN_LENGTH = 3;
+    public static final int SLUG_MAX_LENGTH = 200;
+    public static final int UID_MAX_LENGTH = 100;
+    public static final int UID_PAGE_MAX_LENGTH = 36;
+    public static final int UID_TEMPLATE_MAX_LENGTH = 50;
+    public static final int SLOT_NAME_MAX_LENGTH = 50;
+    public static final int MEDIA_CODE_MAX_LENGTH = 100;
 
     // Message Keys (i18n)
     public static final String MSG_CODE_PATTERN = "{validation.code.pattern}";
     public static final String MSG_SKU_PATTERN = "{validation.sku.pattern}";
+    public static final String MSG_SLUG_PATTERN = "{validation.slug.pattern}";
+    public static final String MSG_UID_PATTERN = "{validation.uid.pattern}";
+    public static final String MSG_SLOT_NAME_PATTERN = "{validation.slot.name.pattern}";
+    public static final String MSG_MEDIA_CODE_PATTERN = "{validation.media.code.pattern}";
 }
 ```
 
@@ -85,6 +100,65 @@ private String sku;  // Must match: ^[A-Za-z0-9_-]+$
 - Alphanumeric with underscores and hyphens
 - Max 100 characters
 
+#### @Slug
+For page slug fields.
+
+**Location:** `backend/src/main/java/com/backend/presentation/validation/Slug.java`
+
+```java
+@Slug
+private String slug;  // Must match: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+```
+
+**Rules:**
+- Lowercase letters, digits, and hyphens only
+- Min 3, max 200 characters
+
+#### @Uid
+For UID fields (page/template/slot optional).
+
+**Location:** `backend/src/main/java/com/backend/presentation/validation/Uid.java`
+
+```java
+@Uid(required = false)
+private String uid;  // Must match: ^[a-z0-9][a-z0-9_-]*$
+```
+
+**Rules:**
+- Start with lowercase letter or digit
+- Lowercase letters, digits, underscores, and hyphens allowed
+- Max length varies by DTO (e.g., page 36, template 50, default 100)
+
+#### @SlotName
+For page/template slot name fields.
+
+**Location:** `backend/src/main/java/com/backend/presentation/validation/SlotName.java`
+
+```java
+@SlotName
+private String slotName;  // Must match: ^[A-Za-z][A-Za-z0-9_-]*$
+```
+
+**Rules:**
+- Start with a letter
+- Letters, digits, underscores, and hyphens allowed
+- Max 50 characters
+
+#### @MediaCode
+For media code fields.
+
+**Location:** `backend/src/main/java/com/backend/presentation/validation/MediaCode.java`
+
+```java
+@MediaCode
+private String code;  // Must match: ^[a-z][a-z0-9_-]*$
+```
+
+**Rules:**
+- Must start with lowercase letter
+- Lowercase letters, digits, underscores, and hyphens allowed
+- Max 100 characters
+
 ### DTO Usage Example
 
 ```java
@@ -122,7 +196,10 @@ export const VALIDATION_PATTERNS = {
     CODE: /^[a-z][a-z0-9_]*$/,
     CATEGORY_CODE: /^[a-z][a-z0-9_-]*$/,
     SKU: /^[A-Za-z0-9_-]+$/,
-    SLUG: /^[a-z0-9-]+$/,
+    SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    UID: /^[a-z0-9][a-z0-9_-]*$/,
+    SLOT_NAME: /^[A-Za-z][A-Za-z0-9_-]*$/,
+    MEDIA_CODE: /^[a-z][a-z0-9_-]*$/,
 } as const;
 
 // Size limits
@@ -130,6 +207,13 @@ export const VALIDATION_LIMITS = {
     SKU_MAX: 100,
     CODE_MAX: 50,
     NAME_MAX: 200,
+    SLUG_MIN: 3,
+    SLUG_MAX: 200,
+    UID_MAX: 100,
+    UID_PAGE_MAX: 36,
+    UID_TEMPLATE_MAX: 50,
+    SLOT_NAME_MAX: 50,
+    MEDIA_CODE_MAX: 100,
 } as const;
 
 // Numeric limits
@@ -148,6 +232,9 @@ export const VALIDATION_MESSAGES = {
     CATEGORY_CODE_PATTERN: 'validation.category.code.pattern',
     SKU_PATTERN: 'validation.product.sku.pattern',
     SLUG_PATTERN: 'validation.slug.pattern',
+    UID_PATTERN: 'validation.uid.pattern',
+    SLOT_NAME_PATTERN: 'validation.slot.name.pattern',
+    MEDIA_CODE_PATTERN: 'validation.media.code.pattern',
 } as const;
 ```
 
@@ -223,6 +310,9 @@ The component uses `patternType` input for explicit pattern selection, with labe
 | `categoryCode` | `validation.category.code.pattern` |
 | `sku` | `validation.product.sku.pattern` |
 | `slug` | `validation.slug.pattern` |
+| `uid` | `validation.uid.pattern` |
+| `slotName` | `validation.slot.name.pattern` |
+| `mediaCode` | `validation.media.code.pattern` |
 
 **Fallback (when patternType not set):**
 
@@ -232,6 +322,9 @@ The component uses `patternType` input for explicit pattern selection, with labe
 | `category` + `code` | `validation.category.code.pattern` |
 | `code`, `kod` | `validation.code.pattern` |
 | `slug` | `validation.slug.pattern` |
+| `uid` | `validation.uid.pattern` |
+| `slot` + `name` | `validation.slot.name.pattern` |
+| `media` + `code` | `validation.media.code.pattern` |
 
 ### i18n Messages
 

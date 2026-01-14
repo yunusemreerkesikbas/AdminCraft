@@ -19,6 +19,7 @@ import { SpaDialogContentComponent } from '@shared/components/spa-dialog/spa-dia
 import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dialog-footer/spa-dialog-footer.component';
 import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog/spa-localized-form-dialog.directive';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { forkJoin, take } from 'rxjs';
 import { ComponentEditDialogComponent } from '../../../components/component-edit-dialog/component-edit-dialog.component';
@@ -95,9 +96,9 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
 
     protected buildI18nForm(lang: string): FormGroup {
         return this.fb.group({
-            altText: ['', Validators.maxLength(500)],
-            title: ['', Validators.maxLength(255)],
-            description: ['']
+            altText: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_ALT_TEXT_MAX)],
+            title: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_TITLE_MAX)],
+            description: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_DESCRIPTION_MAX)]
         });
     }
 

@@ -34,6 +34,19 @@ export const langTR = {
         slug: {
             pattern: 'Yalnızca küçük harf, sayı ve tire içermelidir',
         },
+        uid: {
+            pattern: 'Küçük harf veya rakam ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
+        },
+        slot: {
+            name: {
+                pattern: 'Harf ile başlamalı, sadece harf, rakam, alt çizgi ve tire içermelidir',
+            },
+        },
+        media: {
+            code: {
+                pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
+            },
+        },
     },
     admin: {
         common: {

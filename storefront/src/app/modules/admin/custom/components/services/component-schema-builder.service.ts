@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { GeneralFieldConfig, ItemDialogSchema, LangFieldConfig } from '@shared/types/item-dialog.types';
-import { ComponentTypeDto } from '../models/component-library.types';
 import { COMPONENT_CATEGORIES } from '../models/component-categories.constants';
+import { ComponentTypeDto } from '../models/component-library.types';
 
 @Injectable({
     providedIn: 'root'
@@ -51,7 +52,7 @@ export class ComponentSchemaBuilderService {
                 type: 'text',
                 labelKey: 'admin.common.fields.name',
                 required: true,
-                maxLength: 200
+                maxLength: VALIDATION_LIMITS.COMPONENT_NAME_MAX
             },
             {
                 key: 'status',
@@ -80,7 +81,7 @@ export class ComponentSchemaBuilderService {
                 key: 'styleClasses',
                 type: 'text',
                 labelKey: 'admin.common.fields.styleClasses',
-                maxLength: 500
+                maxLength: VALIDATION_LIMITS.COMPONENT_STYLE_CLASSES_MAX
             }
         ];
     }
@@ -115,21 +116,22 @@ export class ComponentSchemaBuilderService {
                 type: 'text',
                 labelKey: 'admin.common.fields.code',
                 required: true,
-                maxLength: 50
+                maxLength: VALIDATION_LIMITS.CODE_MAX
             },
             {
                 key: 'name',
                 type: 'text',
                 labelKey: 'admin.common.fields.name',
                 required: true,
-                maxLength: 100
+                maxLength: VALIDATION_LIMITS.COMPONENT_TYPE_NAME_MAX
             },
             {
                 key: 'category',
                 type: 'select',
                 labelKey: 'admin.components.fields.category',
                 required: false,
-                options: COMPONENT_CATEGORIES
+                options: COMPONENT_CATEGORIES,
+                maxLength: VALIDATION_LIMITS.COMPONENT_TYPE_CATEGORY_MAX
             },
             {
                 key: 'icon',

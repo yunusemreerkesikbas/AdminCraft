@@ -40,7 +40,31 @@ export const VALIDATION_PATTERNS = {
      * @example "about-us", "contact-page", "product-detail"
      * @backend [a-z0-9-]+
      */
-    SLUG: /^[a-z0-9-]+$/,
+    SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+
+    /**
+     * UID Pattern
+     * - Start with lowercase letter or digit
+     * - Lowercase letters, digits, underscores, and hyphens allowed
+     * @backend ^[a-z0-9][a-z0-9_-]*$
+     */
+    UID: /^[a-z0-9][a-z0-9_-]*$/,
+
+    /**
+     * Slot Name Pattern
+     * - Start with a letter
+     * - Letters, digits, underscores, and hyphens allowed
+     * @backend ^[A-Za-z][A-Za-z0-9_-]*$
+     */
+    SLOT_NAME: /^[A-Za-z][A-Za-z0-9_-]*$/,
+
+    /**
+     * Media Code Pattern
+     * - Must start with lowercase letter
+     * - Lowercase letters, digits, underscores, and hyphens allowed
+     * @backend ^[a-z][a-z0-9_-]*$
+     */
+    MEDIA_CODE: /^[a-z][a-z0-9_-]*$/,
 
     /**
      * E.164 Phone Number Pattern
@@ -74,6 +98,31 @@ export const VALIDATION_LIMITS = {
     // Codes
     CODE_MAX: 50,
 
+    // Slug
+    SLUG_MIN: 3,
+    SLUG_MAX: 200,
+
+    // UID
+    UID_MAX: 100,
+    UID_PAGE_MAX: 36,
+    UID_TEMPLATE_MAX: 50,
+
+    // Slot
+    SLOT_NAME_MAX: 50,
+
+    // Media
+    MEDIA_CODE_MAX: 100,
+    MEDIA_FORMAT_CODE_MAX: 50,
+    MEDIA_FORMAT_NAME_MAX: 100,
+    MEDIA_FORMAT_DIMENSION_MIN: 1,
+    MEDIA_FORMAT_DIMENSION_MAX: 10000,
+    MEDIA_FORMAT_QUALITY_MIN: 1,
+    MEDIA_FORMAT_QUALITY_MAX: 100,
+    MEDIA_TAGS_MAX: 20,
+    MEDIA_ALT_TEXT_MAX: 500,
+    MEDIA_TITLE_MAX: 255,
+    MEDIA_DESCRIPTION_MAX: 5000,
+
     // Category
     CATEGORY_CODE_MAX: 50,
     CATEGORY_NAME_MAX: 200,
@@ -86,6 +135,32 @@ export const VALIDATION_LIMITS = {
     // Attribute
     ATTRIBUTE_CODE_MAX: 50,
     ATTRIBUTE_NAME_MAX: 100,
+
+    // Components
+    COMPONENT_NAME_MAX: 100,
+    COMPONENT_TYPE_NAME_MAX: 100,
+    COMPONENT_TYPE_CATEGORY_MAX: 50,
+    COMPONENT_STYLE_CLASSES_MAX: 500,
+    COMPONENT_ENTRY_TITLE_MAX: 255,
+    COMPONENT_ENTRY_IMAGE_URL_MAX: 500,
+    COMPONENT_ENTRY_BUTTON_TEXT_MAX: 100,
+    COMPONENT_ENTRY_BUTTON_URL_MAX: 500,
+
+    // Pages
+    PAGE_TITLE_MAX: 200,
+    PAGE_NAME_MAX: 200,
+    PAGE_DESCRIPTION_MAX: 5000,
+    PAGE_CANONICAL_URL_MAX: 255,
+    PAGE_STYLE_CLASSES_MAX: 255,
+
+    // Page Templates
+    PAGE_TEMPLATE_NAME_MAX: 100,
+    PAGE_TEMPLATE_DESCRIPTION_MAX: 500,
+
+    // Slots
+    SLOT_POSITION_MAX: 20,
+    SLOT_ALLOWED_TYPES_MAX: 50,
+    SLOT_ALLOWED_TYPE_MAX: 100,
 } as const;
 
 // ============================================================================
@@ -115,6 +190,9 @@ export const VALIDATION_MESSAGES = {
     CATEGORY_CODE_PATTERN: 'validation.category.code.pattern',
     SKU_PATTERN: 'validation.product.sku.pattern',
     SLUG_PATTERN: 'validation.slug.pattern',
+    UID_PATTERN: 'validation.uid.pattern',
+    SLOT_NAME_PATTERN: 'validation.slot.name.pattern',
+    MEDIA_CODE_PATTERN: 'validation.media.code.pattern',
 } as const;
 
 // ============================================================================

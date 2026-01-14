@@ -13,6 +13,7 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
+import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { map, Observable, of, switchMap, take } from 'rxjs';
 import { SpaResponsiveMediaPickerComponent } from '../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
@@ -117,11 +118,16 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         } : null;
 
         return this.fb.group({
-            name: [component?.name || '', Validators.required],
+            name: [component?.name || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_NAME_MAX)
+            ]],
             componentTypeId: [component?.componentTypeId || '', Validators.required],
             status: [component?.status, Validators.required],
             isVisible: [component?.isVisible ?? true],
-            styleClasses: [component?.styleClasses || ''],
+            styleClasses: [component?.styleClasses || '', [
+                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_STYLE_CLASSES_MAX)
+            ]],
             displayOrder: [component?.displayOrder || 0],
             responsiveMedia: [responsiveValue]
         });

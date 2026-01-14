@@ -6,6 +6,7 @@ import { SpaInputComponent, SpaSelectComponent, SpaSelectOption, SpaToggleCompon
 import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
 import { SpaFormDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { SLOT_POSITION_OPTIONS, SlotPosition } from '@shared/types/common.types';
 import { CreatePageSlotRequest, PageSlotResponse, UpdatePageSlotRequest } from '../page-slot.types';
 
@@ -65,8 +66,15 @@ export class PageSlotFormDialogComponent extends SpaFormDialog<PageSlotFormDialo
 
         const slot = this.data?.slot;
         this.form = this.fb.group({
-            uid: [slot?.uid || '', [Validators.maxLength(50)]],
-            slotName: [slot?.slotName || '', [Validators.required, Validators.maxLength(50)]],
+            uid: [slot?.uid || '', [
+                Validators.maxLength(VALIDATION_LIMITS.UID_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.UID)
+            ]],
+            slotName: [slot?.slotName || '', [
+                Validators.required,
+                Validators.maxLength(VALIDATION_LIMITS.SLOT_NAME_MAX),
+                Validators.pattern(VALIDATION_PATTERNS.SLOT_NAME)
+            ]],
             position: [slot?.position || SlotPosition.CENTER, Validators.required],
             isActive: [slot?.isActive ?? true],
             isShared: [slot?.isShared ?? false]

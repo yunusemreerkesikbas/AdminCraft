@@ -46,7 +46,31 @@ public final class ValidationConstants {
      * - Lowercase letters, digits, and hyphens only
      * @example "about-us", "contact-page", "product-detail"
      */
-    public static final String SLUG_PATTERN = "^[a-z0-9-]+$";
+    public static final String SLUG_PATTERN = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
+
+    /**
+     * UID Pattern
+     * - Start with lowercase letter or digit
+     * - Lowercase letters, digits, underscores, and hyphens allowed
+     * @example "page_123", "template-main", "a1"
+     */
+    public static final String UID_PATTERN = "^[a-z0-9][a-z0-9_-]*$";
+
+    /**
+     * Slot Name Pattern
+     * - Start with a letter
+     * - Letters, digits, underscores, and hyphens allowed
+     * @example "Header", "Main_Content", "footer-section"
+     */
+    public static final String SLOT_NAME_PATTERN = "^[A-Za-z][A-Za-z0-9_-]*$";
+
+    /**
+     * Media Code Pattern
+     * - Must start with lowercase letter
+     * - Lowercase letters, digits, underscores, and hyphens allowed
+     * @example "hero_desktop", "banner-1"
+     */
+    public static final String MEDIA_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
 
     /**
      * E.164 Phone Number Pattern
@@ -77,6 +101,31 @@ public final class ValidationConstants {
     // Codes
     public static final int CODE_MAX_LENGTH = 50;
 
+    // Slug
+    public static final int SLUG_MIN_LENGTH = 3;
+    public static final int SLUG_MAX_LENGTH = 200;
+
+    // UID
+    public static final int UID_MAX_LENGTH = 100;
+    public static final int UID_PAGE_MAX_LENGTH = 36;
+    public static final int UID_TEMPLATE_MAX_LENGTH = 50;
+
+    // Slot
+    public static final int SLOT_NAME_MAX_LENGTH = 50;
+
+    // Media
+    public static final int MEDIA_CODE_MAX_LENGTH = 100;
+    public static final int MEDIA_FORMAT_CODE_MAX_LENGTH = 50;
+    public static final int MEDIA_FORMAT_NAME_MAX_LENGTH = 100;
+    public static final int MEDIA_FORMAT_DIMENSION_MIN = 1;
+    public static final int MEDIA_FORMAT_DIMENSION_MAX = 10000;
+    public static final int MEDIA_FORMAT_QUALITY_MIN = 1;
+    public static final int MEDIA_FORMAT_QUALITY_MAX = 100;
+    public static final int MEDIA_TAGS_MAX = 20;
+    public static final int MEDIA_I18N_ALT_TEXT_MAX_LENGTH = 500;
+    public static final int MEDIA_I18N_TITLE_MAX_LENGTH = 255;
+    public static final int MEDIA_I18N_DESCRIPTION_MAX_LENGTH = 5000;
+
     // Category
     public static final int CATEGORY_CODE_MAX_LENGTH = 50;
     public static final int CATEGORY_NAME_MAX_LENGTH = 200;
@@ -89,6 +138,27 @@ public final class ValidationConstants {
     // Attribute
     public static final int ATTRIBUTE_CODE_MAX_LENGTH = 50;
     public static final int ATTRIBUTE_NAME_MAX_LENGTH = 100;
+
+    // Components
+    public static final int COMPONENT_NAME_MAX_LENGTH = 100;
+    public static final int COMPONENT_TYPE_NAME_MAX_LENGTH = 100;
+    public static final int COMPONENT_TYPE_CATEGORY_MAX_LENGTH = 50;
+    public static final int COMPONENT_STYLE_CLASSES_MAX_LENGTH = 500;
+    public static final int COMPONENT_ENTRY_TITLE_MAX_LENGTH = 255;
+    public static final int COMPONENT_ENTRY_IMAGE_URL_MAX_LENGTH = 500;
+    public static final int COMPONENT_ENTRY_BUTTON_TEXT_MAX_LENGTH = 100;
+    public static final int COMPONENT_ENTRY_BUTTON_URL_MAX_LENGTH = 500;
+
+    // Pages
+    public static final int PAGE_TITLE_MAX_LENGTH = 200;
+    public static final int PAGE_NAME_MAX_LENGTH = 200;
+    public static final int PAGE_DESCRIPTION_MAX_LENGTH = 5000;
+    public static final int PAGE_CANONICAL_URL_MAX_LENGTH = 255;
+    public static final int PAGE_STYLE_CLASSES_MAX_LENGTH = 255;
+
+    // Page Templates
+    public static final int PAGE_TEMPLATE_NAME_MAX_LENGTH = 100;
+    public static final int PAGE_TEMPLATE_DESCRIPTION_MAX_LENGTH = 500;
 
     // ============================================================================
     // NUMERIC LIMITS (Frontend VALIDATION_NUMERIC ile senkronize)
@@ -133,6 +203,22 @@ public final class ValidationConstants {
     public static final String MSG_SKU_REQUIRED = "validation.product.sku.required";
     public static final String MSG_SKU_SIZE = "validation.product.sku.size";
     public static final String MSG_SKU_PATTERN = "validation.product.sku.pattern";
+
+    public static final String MSG_SLUG_REQUIRED = "validation.slug.required";
+    public static final String MSG_SLUG_SIZE = "validation.slug.size";
+    public static final String MSG_SLUG_PATTERN = "validation.slug.pattern";
+
+    public static final String MSG_UID_REQUIRED = "validation.uid.required";
+    public static final String MSG_UID_SIZE = "validation.uid.size";
+    public static final String MSG_UID_PATTERN = "validation.uid.pattern";
+
+    public static final String MSG_SLOT_NAME_REQUIRED = "validation.slot.name.required";
+    public static final String MSG_SLOT_NAME_SIZE = "validation.slot.name.size";
+    public static final String MSG_SLOT_NAME_PATTERN = "validation.slot.name.pattern";
+
+    public static final String MSG_MEDIA_CODE_REQUIRED = "validation.media.code.required";
+    public static final String MSG_MEDIA_CODE_SIZE = "validation.media.code.size";
+    public static final String MSG_MEDIA_CODE_PATTERN = "validation.media.code.pattern";
 
     // ============================================================================
     // HELPER METHODS
