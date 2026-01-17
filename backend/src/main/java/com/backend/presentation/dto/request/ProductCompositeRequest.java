@@ -10,6 +10,7 @@ import com.backend.presentation.validation.Sku;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -37,6 +38,7 @@ public record ProductCompositeRequest(
         Long responsiveMediaId,
 
         @Valid
+        @NotEmpty(message = "validation.product.translations.notEmpty")
         Map<Language, ProductI18nRequest> translations,
 
         Map<String, Object> attributes,

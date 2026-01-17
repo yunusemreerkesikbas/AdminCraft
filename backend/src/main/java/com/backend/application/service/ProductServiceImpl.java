@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.ProductI18nDto;
 import com.backend.domain.entity.Category;
+import com.backend.domain.entity.CategoryI18n;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.Product;
 import com.backend.domain.entity.ProductAttribute;
@@ -162,26 +163,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
-
-        // Reload product with productType eagerly fetched
-        Product result = productRepository.findByIdComposite(saved.getId())
+        return productRepository.findByIdComposite(saved.getId())
                 .orElseThrow(() -> new IllegalStateException("Product not found after save: " + saved.getId()));
-
-        // Refresh collections with eager fetched data
-        List<ProductI18n> i18nContent = productI18nRepository.findByProductId(result.getId());
-        result.getI18nContent().clear();
-        result.getI18nContent().addAll(i18nContent);
-
-        List<ProductCategoryLink> categoryLinks = productCategoryLinkRepository
-                .findByProductIdWithCategories(result.getId());
-        result.getCategoryLinks().clear();
-        result.getCategoryLinks().addAll(categoryLinks);
-
-        List<ProductMedia> gallery = productMediaRepository.findByProductIdWithMedia(result.getId());
-        result.getGallery().clear();
-        result.getGallery().addAll(gallery);
-
-        return result;
     }
 
     @Override
@@ -208,27 +191,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Optional<Product> findByIdComposite(Long id) {
         TenantContext.validateActive();
-        Optional<Product> productOpt = productRepository.findByIdComposite(id);
-        if (productOpt.isPresent()) {
-            Product product = productOpt.get();
-            List<ProductI18n> i18nContent = productI18nRepository.findByProductId(product.getId());
-            product.getI18nContent().clear();
-            if (!i18nContent.isEmpty()) {
-                product.getI18nContent().addAll(i18nContent);
-            }
-            List<ProductCategoryLink> categoryLinks = productCategoryLinkRepository
-                    .findByProductIdWithCategories(product.getId());
-            product.getCategoryLinks().clear();
-            if (!categoryLinks.isEmpty()) {
-                product.getCategoryLinks().addAll(categoryLinks);
-            }
-            List<ProductMedia> gallery = productMediaRepository.findByProductIdWithMedia(product.getId());
-            product.getGallery().clear();
-            if (!gallery.isEmpty()) {
-                product.getGallery().addAll(gallery);
-            }
-        }
-        return productOpt;
+        return productRepository.findByIdComposite(id);
     }
 
     @Override
@@ -264,6 +227,29 @@ public class ProductServiceImpl implements ProductService {
     public Page<Product> search(String query, ProductStatus status, Long categoryId, Pageable pageable) {
         TenantContext.validateActive();
         return productRepository.searchWithFilters(query, status, categoryId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, String> getPrimaryCategoryNamesForProducts(List<Long> productIds, Language language) {
+        TenantContext.validateActive();
+        return productCategoryLinkRepository.findPrimaryByProductIdIn(productIds)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        link -> link.getId().getProductId(),
+                        link -> {
+                            Category category = link.getCategory();
+                            if (category.getI18nContent() != null && !category.getI18nContent().isEmpty()) {
+                                return category.getI18nContent().stream()
+                                        .filter(i -> i.getLanguage() == language)
+                                        .findFirst()
+                                        .map(CategoryI18n::getName)
+                                        .orElse(category.getCode());
+                            }
+                            return category.getCode();
+                        },
+                        (existing, replacement) -> existing
+                ));
     }
 
     @Override
@@ -338,19 +324,15 @@ public class ProductServiceImpl implements ProductService {
             productI18nRepository.findByProductIdAndLanguage(product.getId(), entry.getKey())
                     .ifPresentOrElse(
                             existingI18n -> {
-                                if (hasName) {
-                                    existingI18n.setName(name);
-                                    existingI18n.setShortDescription(
-                                            HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
-                                    existingI18n.setDescription(
-                                            HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-                                    existingI18n.setSeoTitle(entry.getValue().seoTitle());
-                                    existingI18n.setSeoDescription(entry.getValue().seoDescription());
-                                    existingI18n.setUpdatedBy(updatedBy);
-                                    productI18nRepository.save(existingI18n);
-                                } else {
-                                    productI18nRepository.delete(existingI18n);
-                                }
+                                existingI18n.setName(hasName ? name : null);
+                                existingI18n.setShortDescription(
+                                        HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+                                existingI18n.setDescription(
+                                        HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                                existingI18n.setSeoTitle(entry.getValue().seoTitle());
+                                existingI18n.setSeoDescription(entry.getValue().seoDescription());
+                                existingI18n.setUpdatedBy(updatedBy);
+                                productI18nRepository.save(existingI18n);
                             },
                             () -> {
                                 if (hasName) {

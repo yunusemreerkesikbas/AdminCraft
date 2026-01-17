@@ -218,7 +218,7 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             responsiveMediaId: product.responsiveMedia?.id,
             categoryIds: product.categories?.map((c: any) => c.id) || [],
             primaryCategoryId: product.categories?.find((c: any) => c.isPrimary)?.id
-        }, { emitEvent: false });
+        });
 
         const translations = product.translations || {};
         this.languages.forEach(lang => {
@@ -251,13 +251,14 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             key: attr.code,
             label: attr.name,
             type: attr.fieldType.toLowerCase() as any,
-            required: false,
+            required: attr.isRequired,
         }));
     }
 
     save(): void {
         this.generalForm.markAllAsTouched();
         Object.values(this.i18nForms).forEach(f => f.markAllAsTouched());
+        this.attributesForm.markAllAsTouched();
         
         if (this.generalForm.invalid) {
             this.#notificationService.warning('admin.common.validation.generalFormInvalid');

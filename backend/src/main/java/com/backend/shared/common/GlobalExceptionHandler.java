@@ -1,6 +1,7 @@
 package com.backend.shared.common;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.slf4j.MDC;
@@ -242,7 +243,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.warn("Validation exception: {}", ex.getMessage());
-        Map<String, String> validationErrors = new HashMap<>();
+        Map<String, String> validationErrors = new LinkedHashMap<>();
         String firstErrorMessage = null;
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();

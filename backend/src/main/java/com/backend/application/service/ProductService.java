@@ -47,6 +47,8 @@ public interface ProductService {
 
     Page<Product> search(String query, ProductStatus status, Long categoryId, Pageable pageable);
 
+    Map<Long, String> getPrimaryCategoryNamesForProducts(List<Long> productIds, Language language);
+
     List<Product> findByCategoryId(Long categoryId);
 
     Product updateStatus(Long id, ProductStatus status, Long updatedBy);
