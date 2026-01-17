@@ -243,12 +243,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.warn("Validation exception: {}", ex.getMessage());
         Map<String, String> validationErrors = new HashMap<>();
+        String firstErrorMessage = null;
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = getMessage(error.getDefaultMessage());
             validationErrors.put(fieldName, errorMessage);
         });
-        ApiResponse<?> response = new ApiResponse<>("ERROR", "Validation failed", validationErrors);
+        if (!validationErrors.isEmpty()) {
+            firstErrorMessage = validationErrors.values().iterator().next();
+        }
+        ApiResponse<?> response = new ApiResponse<>("ERROR", firstErrorMessage != null ? firstErrorMessage : "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

@@ -1,10 +1,8 @@
 package com.backend.presentation.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record ProductI18nRequest(
-        @NotBlank(message = "validation.product.name.required")
         @Size(max = 200, message = "validation.product.name.size")
         String name,
 

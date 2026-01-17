@@ -25,6 +25,10 @@ public record ProductListItemResponse(
         LocalDateTime updatedAt
 ) {
     public static ProductListItemResponse from(Product entity, Language language) {
+        return from(entity, language, null);
+    }
+
+    public static ProductListItemResponse from(Product entity, Language language, String primaryCategoryName) {
         if (entity == null) {
             throw new IllegalArgumentException("Product entity cannot be null");
         }
@@ -35,21 +39,6 @@ public record ProductListItemResponse(
                     .map(ProductI18n::getName)
                     .orElse(entity.getSku())
                 : entity.getSku();
-
-        String primaryCategoryName = entity.getCategoryLinks() != null
-                ? entity.getCategoryLinks().stream()
-                    .filter(l -> l.getIsPrimary() != null && l.getIsPrimary())
-                    .findFirst()
-                    .map(ProductCategoryLink::getCategory)
-                    .map(c -> c.getI18nContent() != null
-                            ? c.getI18nContent().stream()
-                                .filter(i -> i.getLanguage() == language)
-                                .findFirst()
-                                .map(ci -> ci.getName())
-                                .orElse(c.getCode())
-                            : c.getCode())
-                    .orElse(null)
-                : null;
 
         String thumbnailUrl = entity.getResponsiveMediaSet() != null
                 && entity.getResponsiveMediaSet().getDesktopMedia() != null

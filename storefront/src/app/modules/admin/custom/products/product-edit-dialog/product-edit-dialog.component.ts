@@ -19,7 +19,7 @@ import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-di
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS, VALIDATION_NUMERIC, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { forkJoin, map, take } from 'rxjs';
+import { forkJoin, map, take, takeUntil } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../media/components/spa-media-picker/spa-media-picker.component';
 import { Category } from '../models/category.types';
 import { AttributeDefinition, ProductType } from '../models/product-type.types';
@@ -107,7 +107,9 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             this.loadInitialData();
         });
 
-        this.generalForm.get('productTypeId')?.valueChanges.subscribe(typeId => {
+        this.generalForm.get('productTypeId')?.valueChanges.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(typeId => {
             if (typeId) {
                 this.loadAttributes(typeId);
             } else {
@@ -144,7 +146,6 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
     protected buildI18nForm(lang: string): FormGroup {
         return this.fb.group({
             name: ['', [
-                Validators.required,
                 Validators.maxLength(VALIDATION_LIMITS.NAME_MAX)
             ]],
             shortDescription: ['', [
@@ -217,7 +218,7 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             responsiveMediaId: product.responsiveMedia?.id,
             categoryIds: product.categories?.map((c: any) => c.id) || [],
             primaryCategoryId: product.categories?.find((c: any) => c.isPrimary)?.id
-        });
+        }, { emitEvent: false });
 
         const translations = product.translations || {};
         this.languages.forEach(lang => {
@@ -250,27 +251,33 @@ export class ProductEditDialogComponent extends SpaLocalizedFormDialog<boolean, 
             key: attr.code,
             label: attr.name,
             type: attr.fieldType.toLowerCase() as any,
-            required: attr.isRequired,
+            required: false,
         }));
     }
 
     save(): void {
         this.generalForm.markAllAsTouched();
         Object.values(this.i18nForms).forEach(f => f.markAllAsTouched());
-        this.attributesForm.markAllAsTouched();
+        
         if (this.generalForm.invalid) {
             this.#notificationService.warning('admin.common.validation.generalFormInvalid');
             return;
         }
 
-        const hasInvalidI18nForms = Object.values(this.i18nForms).some(f => f.invalid);
-        if (hasInvalidI18nForms) {
-            this.#notificationService.warning('admin.common.validation.i18nFormsInvalid');
+        const hasAtLeastOneName = Object.values(this.i18nForms).some(f => {
+            const nameValue = f.get('name')?.value;
+            return nameValue && typeof nameValue === 'string' && nameValue.trim().length > 0;
+        });
+        if (!hasAtLeastOneName) {
+            this.#notificationService.warning('admin.common.validation.atLeastOneLanguageRequired');
             return;
         }
 
-        if (this.attributesForm.invalid) {
-            this.#notificationService.warning('admin.common.validation.attributesFormInvalid');
+        const hasInvalidI18nForms = Object.values(this.i18nForms).some(f => {
+            return this.formHasContent(f) && f.invalid;
+        });
+        if (hasInvalidI18nForms) {
+            this.#notificationService.warning('admin.common.validation.i18nFormsInvalid');
             return;
         }
 

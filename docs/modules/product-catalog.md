@@ -65,7 +65,7 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductC
 Base path: `/api/products`
 
 - `GET /api/products` (paginated + sort + search; optional filters: `status`, `categoryId`)
-- `GET /api/products/{id}` (composite view)
+- `GET /api/products/{id}?include=translations` (composite view with translations)
 - `POST /api/products/composite` (atomic create)
 - `PUT /api/products/{id}/composite` (atomic update)
 - `DELETE /api/products/{id}`
@@ -186,18 +186,21 @@ Translation save operations use batch processing for improved performance:
 ### Input validation rules
 
 **Price validation**:
+
 - `basePrice` field on product creation/update must be ≥ 0
 - Enforced via `@DecimalMin("0.0")` on DTOs:
   - `ProductCompositeRequest`
   - `ProductUpdateRequest`
 
 **String length validation**:
+
 - `sku`: max 100 characters (`@Size(max=100)`)
 - `name`: max 200 characters (in i18n DTOs)
 - `code`: max 100 characters with pattern validation
 - `currency`: exactly 3 characters (`@Size(min=3, max=3)`)
 
 **Required field validation**:
+
 - All DTOs enforce required fields via `@NotNull`, `@NotBlank`, or `@NotEmpty`
 - Translations map must contain at least one entry (`@NotEmpty`)
 - Controller methods validate all request bodies using `@Valid`

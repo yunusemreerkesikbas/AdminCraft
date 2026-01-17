@@ -19,7 +19,7 @@ export class ProductService extends CrudHttpService<Product, ProductCompositeReq
     };
 
     getComposite(id: number): Observable<Product> {
-        return this.customGet<Product>('productCompositeById', { id });
+        return this.customGet<Product>('productById', { id }, { include: 'translations' });
     }
 
     getGallery(id: number): Observable<ProductMediaResponse[]> {

@@ -18,6 +18,8 @@ public interface ProductCategoryLinkRepository {
 
     Optional<ProductCategoryLink> findPrimaryByProductId(Long productId);
 
+    List<ProductCategoryLink> findPrimaryByProductIdIn(List<Long> productIds);
+
     ProductCategoryLink save(ProductCategoryLink entity);
 
     List<ProductCategoryLink> saveAll(List<ProductCategoryLink> entities);
