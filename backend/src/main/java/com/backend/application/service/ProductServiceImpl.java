@@ -226,7 +226,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<Product> search(String query, ProductStatus status, Long categoryId, Pageable pageable) {
         TenantContext.validateActive();
-        return productRepository.searchWithFilters(query, status, categoryId, pageable);
+        return productRepository.searchWithFilters(query, categoryId, status, pageable);
     }
 
     @Override
