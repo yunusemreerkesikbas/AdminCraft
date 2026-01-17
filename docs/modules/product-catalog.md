@@ -210,6 +210,106 @@ Translation save operations use batch processing for improved performance:
 - `ProductMedia.mediaType` uses `ProductMediaType` enum (`PRIMARY`, `GALLERY`, `THUMBNAIL`)
 - Stored as `VARCHAR` via `@Enumerated(EnumType.STRING)`
 
+## Testing
+
+The Product Catalog module has comprehensive backend test coverage using JUnit 5 + Mockito + AssertJ. For general testing patterns and conventions, see [`../global/testing.md`](../global/testing.md).
+
+### Test structure
+
+```
+backend/src/test/java/com/backend/
+├── testutil/
+│   ├── BaseServiceTest.java                    # Base class with TenantContext setup
+│   └── builders/                               # Test data builders (Builder Pattern)
+│       ├── ProductTestDataBuilder.java
+│       ├── ProductTypeTestDataBuilder.java
+│       ├── CategoryTestDataBuilder.java
+│       ├── CategoryI18nTestDataBuilder.java
+│       ├── ProductI18nTestDataBuilder.java
+│       └── ProductAttributeDefinitionTestDataBuilder.java
+├── application/service/impl/
+│   ├── ProductServiceImplTest.java             # ~35 unit tests
+│   ├── CategoryServiceImplTest.java            # ~30 unit tests
+│   └── ProductTypeServiceImplTest.java         # ~25 unit tests
+├── presentation/controller/
+│   ├── ProductControllerIntegrationTest.java   # @WebMvcTest integration tests
+│   ├── CategoryControllerIntegrationTest.java
+│   └── ProductTypeControllerIntegrationTest.java
+└── presentation/dto/
+    └── ProductCatalogDtoValidationTest.java    # Bean Validation tests
+```
+
+### Test categories
+
+**Service Unit Tests** - Mock-based tests for business logic:
+
+- CRUD operations (create, update, delete, find)
+- Validation logic (translations, attributes, categories)
+- Business rule enforcement (deletion constraints)
+- TenantContext validation
+- Exception handling (IllegalArgumentException, IllegalStateException, BusinessRuleViolationException)
+
+**Controller Integration Tests** - `@WebMvcTest` for HTTP layer:
+
+- Request/response mapping
+- HTTP status codes (200, 400, 404, 409)
+- Input validation via `@Valid`
+- Error response formatting
+
+**DTO Validation Tests** - Bean Validation annotation tests:
+
+- `@NotNull`, `@NotBlank`, `@Size`, `@Pattern` constraints
+- Nested validation (`@Valid` on maps)
+
+### Critical test cases
+
+| Test Case | Exception Type | HTTP Status |
+|-----------|---------------|-------------|
+| ProductType delete with products | `BusinessRuleViolationException` | **409 Conflict** |
+| Category delete with children | `IllegalStateException` | 400 |
+| Category delete with products | `IllegalStateException` | 400 |
+| Product create without translations | `IllegalArgumentException` | 400 |
+| Duplicate SKU prevention | `IllegalArgumentException` | 400 |
+| Duplicate code prevention | `IllegalArgumentException` | 400 |
+| TenantContext not active | `IllegalStateException` | 500 |
+| Circular category parent | `IllegalArgumentException` | 400 |
+
+### Running tests
+
+```bash
+# All Product Catalog tests
+mvn test -Dtest="*ServiceImplTest,*ControllerIntegrationTest,*DtoValidationTest"
+
+# Service unit tests only
+mvn test -Dtest="ProductServiceImplTest,CategoryServiceImplTest,ProductTypeServiceImplTest"
+
+# Controller integration tests only
+mvn test -Dtest="*ControllerIntegrationTest"
+
+# Coverage report
+mvn jacoco:report
+# Report: target/site/jacoco/index.html
+```
+
+### Test data builders
+
+All builders follow the fluent Builder Pattern for readable test setup:
+
+```java
+// Example usage
+ProductType productType = ProductTypeTestDataBuilder.aProductType()
+    .withId(1L)
+    .withCode("electronics")
+    .withName("Electronics")
+    .build();
+
+Product product = ProductTestDataBuilder.aProduct()
+    .withProductType(productType)
+    .withSku("SKU-001")
+    .withStatus(ProductStatus.PUBLISHED)
+    .build();
+```
+
 ## Implementation guide
 
 ### Minimal working flow (admin → delivery)

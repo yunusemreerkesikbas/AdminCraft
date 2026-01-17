@@ -16,6 +16,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Dialogs and shared UI: [`global/dialogs-and-ui.md`](global/dialogs-and-ui.md)
   - List views (pagination/sort/search): [`global/list-pagination-search.md`](global/list-pagination-search.md)
   - Validation framework: [`global/validation.md`](global/validation.md)
+  - Testing patterns: [`global/testing.md`](global/testing.md)
 
 ## Modules (admin APIs)
 
