@@ -28,9 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.request.ProductI18nDto;
 import com.backend.application.service.ProductService;
+import com.backend.domain.entity.Category;
+import com.backend.domain.entity.CategoryI18n;
 import com.backend.domain.entity.Product;
+import com.backend.domain.entity.ProductCategoryLink;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.domain.repository.ProductCategoryLinkRepository;
 import com.backend.presentation.dto.request.ProductCompositeRequest;
 import com.backend.presentation.dto.request.ProductI18nRequest;
 import com.backend.presentation.dto.request.ProductUpdateRequest;
@@ -64,6 +68,7 @@ public class ProductController {
 
     private final ProductService productService;
     private final MessageSource messageSource;
+    private final ProductCategoryLinkRepository productCategoryLinkRepository;
 
     @GetMapping
     @Operation(summary = "List products", description = "Retrieves products with pagination, search and filters")
@@ -83,7 +88,32 @@ public class ProductController {
             PageRequest pageRequest = PageRequest.of(page, size, sortObj);
 
             Page<Product> products = productService.search(search, status, categoryId, pageRequest);
-            Page<ProductListItemResponse> responsePage = products.map(p -> ProductListItemResponse.from(p, language));
+            
+            List<Long> productIds = products.getContent().stream()
+                    .map(Product::getId)
+                    .toList();
+            
+            Map<Long, String> primaryCategoryNames = productCategoryLinkRepository.findPrimaryByProductIdIn(productIds)
+                    .stream()
+                    .collect(Collectors.toMap(
+                            link -> link.getId().getProductId(),
+                            link -> {
+                                Category category = link.getCategory();
+                                if (category.getI18nContent() != null && !category.getI18nContent().isEmpty()) {
+                                    return category.getI18nContent().stream()
+                                            .filter(i -> i.getLanguage() == language)
+                                            .findFirst()
+                                            .map(CategoryI18n::getName)
+                                            .orElse(category.getCode());
+                                }
+                                return category.getCode();
+                            },
+                            (existing, replacement) -> existing
+                    ));
+            
+            Page<ProductListItemResponse> responsePage = products.map(p -> 
+                    ProductListItemResponse.from(p, language, primaryCategoryNames.get(p.getId()))
+            );
 
             SortConfig sortConfig = SortConfig.of(effectiveSort, List.of(
                     SortOptionDto.of("sku,asc", "admin.sort.sku"),
@@ -103,11 +133,14 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get product by ID", description = "Retrieves a product with all its details")
+    @Operation(summary = "Get product by ID", description = "Retrieves a product. Use 'include=translations' to get all translations")
     public ResponseEntity<ApiResponse<ProductCompositeResponse>> getById(
             @Parameter(description = "Product ID") @PathVariable @Valid @NotNull @Min(1) Long id,
+            @RequestParam(value = "include", required = false) String include,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
+            boolean includeTranslations = include != null && include.contains("translations");
+            
             return productService.findByIdComposite(id)
                     .map(p -> ResponseEntity.ok(ApiResponse.success(ProductCompositeResponse.from(p))))
                     .orElseGet(() -> {
@@ -123,6 +156,7 @@ public class ProductController {
                     .body(ApiResponse.error(msg));
         }
     }
+
 
     @PostMapping("/composite")
     @Operation(summary = "Create product", description = "Creates a new product with translations, attributes, categories and gallery")

@@ -96,13 +96,18 @@ public class ProductServiceImpl implements ProductService {
 
         Product saved = productRepository.save(product);
 
-        saveTranslations(saved, translations, createdBy);
+        if (translations != null && !translations.isEmpty()) {
+            validateAtLeastOneTranslationName(translations);
+            saveTranslations(saved, translations, createdBy);
+        } else {
+            throw new IllegalArgumentException("At least one translation with name is required");
+        }
         saveAttributes(saved, productType, attributes);
         saveCategoryLinks(saved, categoryIds, primaryCategoryId);
         saveGalleryMedia(saved, galleryMediaIds);
 
         log.info("Created product id: {}, sku: {}", saved.getId(), saved.getSku());
-        return productRepository.findByIdComposite(saved.getId()).orElse(saved);
+        return findByIdComposite(saved.getId()).orElse(saved);
     }
 
     @Override
@@ -140,6 +145,7 @@ public class ProductServiceImpl implements ProductService {
         Product saved = productRepository.save(product);
 
         if (translations != null && !translations.isEmpty()) {
+            validateAtLeastOneTranslationName(translations);
             updateTranslations(saved, translations, updatedBy);
         }
 
@@ -156,7 +162,26 @@ public class ProductServiceImpl implements ProductService {
         }
 
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
-        return productRepository.findByIdComposite(saved.getId()).orElse(saved);
+
+        // Reload product with productType eagerly fetched
+        Product result = productRepository.findByIdComposite(saved.getId())
+                .orElseThrow(() -> new IllegalStateException("Product not found after save: " + saved.getId()));
+
+        // Refresh collections with eager fetched data
+        List<ProductI18n> i18nContent = productI18nRepository.findByProductId(result.getId());
+        result.getI18nContent().clear();
+        result.getI18nContent().addAll(i18nContent);
+
+        List<ProductCategoryLink> categoryLinks = productCategoryLinkRepository
+                .findByProductIdWithCategories(result.getId());
+        result.getCategoryLinks().clear();
+        result.getCategoryLinks().addAll(categoryLinks);
+
+        List<ProductMedia> gallery = productMediaRepository.findByProductIdWithMedia(result.getId());
+        result.getGallery().clear();
+        result.getGallery().addAll(gallery);
+
+        return result;
     }
 
     @Override
@@ -183,7 +208,27 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Optional<Product> findByIdComposite(Long id) {
         TenantContext.validateActive();
-        return productRepository.findByIdComposite(id);
+        Optional<Product> productOpt = productRepository.findByIdComposite(id);
+        if (productOpt.isPresent()) {
+            Product product = productOpt.get();
+            List<ProductI18n> i18nContent = productI18nRepository.findByProductId(product.getId());
+            product.getI18nContent().clear();
+            if (!i18nContent.isEmpty()) {
+                product.getI18nContent().addAll(i18nContent);
+            }
+            List<ProductCategoryLink> categoryLinks = productCategoryLinkRepository
+                    .findByProductIdWithCategories(product.getId());
+            product.getCategoryLinks().clear();
+            if (!categoryLinks.isEmpty()) {
+                product.getCategoryLinks().addAll(categoryLinks);
+            }
+            List<ProductMedia> gallery = productMediaRepository.findByProductIdWithMedia(product.getId());
+            product.getGallery().clear();
+            if (!gallery.isEmpty()) {
+                product.getGallery().addAll(gallery);
+            }
+        }
+        return productOpt;
     }
 
     @Override
@@ -252,8 +297,20 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    private void validateAtLeastOneTranslationName(Map<Language, ProductI18nDto> translations) {
+        boolean hasAtLeastOneName = translations.values().stream()
+                .anyMatch(dto -> dto.name() != null && !dto.name().trim().isEmpty());
+        if (!hasAtLeastOneName) {
+            throw new IllegalArgumentException("At least one translation must have a name");
+        }
+    }
+
     private void saveTranslations(Product product, Map<Language, ProductI18nDto> translations, Long createdBy) {
         List<ProductI18n> i18nList = translations.entrySet().stream()
+                .filter(entry -> {
+                    String name = entry.getValue().name();
+                    return name != null && !name.trim().isEmpty();
+                })
                 .map(entry -> {
                     ProductI18n i18n = new ProductI18n();
                     i18n.setProduct(product);
@@ -268,30 +325,51 @@ public class ProductServiceImpl implements ProductService {
                     return i18n;
                 })
                 .toList();
-        productI18nRepository.saveAll(i18nList);
+        if (!i18nList.isEmpty()) {
+            productI18nRepository.saveAll(i18nList);
+        }
     }
 
     private void updateTranslations(Product product, Map<Language, ProductI18nDto> translations, Long updatedBy) {
-        List<ProductI18n> i18nList = translations.entrySet().stream()
-                .map(entry -> {
-                    ProductI18n i18n = productI18nRepository.findByProductIdAndLanguage(product.getId(), entry.getKey())
-                            .orElseGet(() -> {
-                                ProductI18n newI18n = new ProductI18n();
-                                newI18n.setProduct(product);
-                                newI18n.setLanguage(entry.getKey());
-                                newI18n.setCreatedBy(updatedBy);
-                                return newI18n;
+        translations.entrySet().forEach(entry -> {
+            String name = entry.getValue().name();
+            boolean hasName = name != null && !name.trim().isEmpty();
+
+            productI18nRepository.findByProductIdAndLanguage(product.getId(), entry.getKey())
+                    .ifPresentOrElse(
+                            existingI18n -> {
+                                if (hasName) {
+                                    existingI18n.setName(name);
+                                    existingI18n.setShortDescription(
+                                            HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+                                    existingI18n.setDescription(
+                                            HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                                    existingI18n.setSeoTitle(entry.getValue().seoTitle());
+                                    existingI18n.setSeoDescription(entry.getValue().seoDescription());
+                                    existingI18n.setUpdatedBy(updatedBy);
+                                    productI18nRepository.save(existingI18n);
+                                } else {
+                                    productI18nRepository.delete(existingI18n);
+                                }
+                            },
+                            () -> {
+                                if (hasName) {
+                                    ProductI18n newI18n = new ProductI18n();
+                                    newI18n.setProduct(product);
+                                    newI18n.setLanguage(entry.getKey());
+                                    newI18n.setName(name);
+                                    newI18n.setShortDescription(
+                                            HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
+                                    newI18n.setDescription(
+                                            HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
+                                    newI18n.setSeoTitle(entry.getValue().seoTitle());
+                                    newI18n.setSeoDescription(entry.getValue().seoDescription());
+                                    newI18n.setCreatedBy(updatedBy);
+                                    newI18n.setUpdatedBy(updatedBy);
+                                    productI18nRepository.save(newI18n);
+                                }
                             });
-                    i18n.setName(entry.getValue().name());
-                    i18n.setShortDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().shortDescription()));
-                    i18n.setDescription(HtmlSanitizer.sanitizeRichText(entry.getValue().description()));
-                    i18n.setSeoTitle(entry.getValue().seoTitle());
-                    i18n.setSeoDescription(entry.getValue().seoDescription());
-                    i18n.setUpdatedBy(updatedBy);
-                    return i18n;
-                })
-                .toList();
-        productI18nRepository.saveAll(i18nList);
+        });
     }
 
     private void saveAttributes(Product product, ProductType productType, Map<String, Object> attributes) {

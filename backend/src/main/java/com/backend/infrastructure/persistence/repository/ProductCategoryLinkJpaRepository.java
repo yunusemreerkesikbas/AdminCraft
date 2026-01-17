@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,10 @@ interface ProductCategoryLinkJpaRepository extends JpaRepository<ProductCategory
     @Query("SELECT pcl FROM ProductCategoryLink pcl WHERE pcl.product.id = :productId")
     List<ProductCategoryLink> findByProductIdWithCategories(@Param("productId") Long productId);
 
+    @EntityGraph(attributePaths = {"category", "category.i18nContent"})
+    @Query("SELECT pcl FROM ProductCategoryLink pcl WHERE pcl.product.id IN :productIds AND pcl.isPrimary = true")
+    List<ProductCategoryLink> findPrimaryByProductIdIn(@Param("productIds") List<Long> productIds);
+
     List<ProductCategoryLink> findByCategoryId(Long categoryId);
 
     @Query("SELECT pcl FROM ProductCategoryLink pcl WHERE pcl.product.id = :productId AND pcl.isPrimary = true")
@@ -29,10 +34,12 @@ interface ProductCategoryLinkJpaRepository extends JpaRepository<ProductCategory
     long countByCategoryId(Long categoryId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductCategoryLink pcl WHERE pcl.product.id = :productId")
     void deleteByProductId(@Param("productId") Long productId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductCategoryLink pcl WHERE pcl.product.id = :productId AND pcl.category.id = :categoryId")
     void deleteByProductIdAndCategoryId(@Param("productId") Long productId, @Param("categoryId") Long categoryId);
 }

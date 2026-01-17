@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,15 +17,18 @@ interface ProductAttributeJpaRepository extends JpaRepository<ProductAttribute, 
 
     List<ProductAttribute> findByProductId(Long productId);
 
-    @EntityGraph(attributePaths = {"attributeDefinition"})
+    @EntityGraph(attributePaths = { "attributeDefinition" })
     @Query("SELECT pa FROM ProductAttribute pa WHERE pa.product.id = :productId")
     List<ProductAttribute> findByProductIdWithDefinitions(@Param("productId") Long productId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductAttribute pa WHERE pa.product.id = :productId")
     void deleteByProductId(@Param("productId") Long productId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductAttribute pa WHERE pa.product.id = :productId AND pa.attributeDefinition.id = :attributeDefinitionId")
-    void deleteByProductIdAndAttributeDefinitionId(@Param("productId") Long productId, @Param("attributeDefinitionId") Long attributeDefinitionId);
+    void deleteByProductIdAndAttributeDefinitionId(@Param("productId") Long productId,
+            @Param("attributeDefinitionId") Long attributeDefinitionId);
 }

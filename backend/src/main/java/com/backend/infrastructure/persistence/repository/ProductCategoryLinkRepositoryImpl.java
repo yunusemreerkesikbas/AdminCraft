@@ -44,6 +44,14 @@ public class ProductCategoryLinkRepositoryImpl implements ProductCategoryLinkRep
     }
 
     @Override
+    public List<ProductCategoryLink> findPrimaryByProductIdIn(List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return List.of();
+        }
+        return jpaRepository.findPrimaryByProductIdIn(productIds);
+    }
+
+    @Override
     @Transactional
     public ProductCategoryLink save(ProductCategoryLink entity) {
         return jpaRepository.save(entity);

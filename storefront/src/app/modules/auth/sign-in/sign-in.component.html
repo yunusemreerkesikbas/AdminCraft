@@ -35,30 +35,6 @@
                     [fullWidth]="true"
                     formControlName="email"
                 ></spa-input>
-                @if (
-                    (signInForm.get('email')?.touched || formSubmitted) &&
-                    signInForm.get('email')?.hasError('required')
-                ) {
-                    <div class="mt-1 text-sm text-rose-600">
-                        {{
-                            'admin.common.validation.required'
-                                | transloco
-                                    : {
-                                          field:
-                                              ('auth.signIn.emailLabel'
-                                              | transloco),
-                                      }
-                        }}
-                    </div>
-                }
-                @if (
-                    (signInForm.get('email')?.touched || formSubmitted) &&
-                    signInForm.get('email')?.hasError('email')
-                ) {
-                    <div class="mt-1 text-sm text-rose-600">
-                        {{ 'admin.common.validation.email' | transloco }}
-                    </div>
-                }
 
                 <!-- Password field -->
                 <spa-input
@@ -94,22 +70,6 @@
                         }
                     </button>
                 </spa-input>
-                @if (
-                    (signInForm.get('password')?.touched || formSubmitted) &&
-                    signInForm.get('password')?.hasError('required')
-                ) {
-                    <div class="mt-1 text-sm text-rose-600">
-                        {{
-                            'admin.common.validation.required'
-                                | transloco
-                                    : {
-                                          field:
-                                              ('auth.signIn.passwordLabel'
-                                              | transloco),
-                                      }
-                        }}
-                    </div>
-                }
 
                 <!-- Actions -->
                 <div

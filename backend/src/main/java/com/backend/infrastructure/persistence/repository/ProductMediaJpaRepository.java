@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,10 +29,12 @@ interface ProductMediaJpaRepository extends JpaRepository<ProductMedia, Long> {
     int findMaxSortOrderByProductId(@Param("productId") Long productId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductMedia pm WHERE pm.product.id = :productId")
     void deleteByProductId(@Param("productId") Long productId);
 
     @Modifying
+    @Transactional
     @Query("DELETE FROM ProductMedia pm WHERE pm.product.id = :productId AND pm.media.id = :mediaId")
     void deleteByProductIdAndMediaId(@Param("productId") Long productId, @Param("mediaId") Long mediaId);
 }
