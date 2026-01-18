@@ -1,5 +1,6 @@
 package com.backend.application.dto.request;
 
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import jakarta.validation.constraints.*;
 
@@ -14,15 +15,19 @@ public record CreateTenantRequest(
 
         Set<Language> supportedLanguages,
 
+        @NotNull(message = "validation.currency.required") Currency currency,
+
         @Size(max = 1000, message = "validation.notes.size") String notes) {
     public CreateTenantRequest(
             String subdomain,
             String companyName,
             Language defaultLanguage,
             Set<Language> supportedLanguages,
+            Currency currency,
             String notes) {
         this.subdomain = normalizeString(subdomain, true);
         this.companyName = normalizeString(companyName, false);
+        this.currency = currency != null ? currency : Currency.TRY;
         this.notes = notes;
         var languageResult = normalizeLanguages(defaultLanguage, supportedLanguages);
         this.defaultLanguage = languageResult.defaultLang();

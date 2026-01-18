@@ -7,6 +7,8 @@
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-input>
             }
             @case ('number') {
@@ -16,6 +18,8 @@
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-input>
             }
             @case ('textarea') {
@@ -25,6 +29,8 @@
                     [required]="field.required ?? false"
                     [rows]="4"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-textarea>
             }
             @case ('richtext') {
@@ -34,6 +40,8 @@
                     [required]="field.required ?? false"
                     [rows]="6"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-textarea>
             }
             @case ('select') {
@@ -43,12 +51,15 @@
                     [required]="field.required ?? false"
                     [options]="field.options ?? []"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-select>
             }
             @case ('boolean') {
                 <spa-checkbox
                     [controlName]="field.key"
                     [label]="getLabel(field)"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-checkbox>
             }
             @case ('date') {
@@ -58,6 +69,8 @@
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
+                    [placeholder]="field.placeholder"
+                    [labelTooltip]="field.labelTooltip"
                 ></spa-input>
             }
             @case ('media') {

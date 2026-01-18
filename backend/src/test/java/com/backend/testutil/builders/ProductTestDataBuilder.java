@@ -25,7 +25,6 @@ public class ProductTestDataBuilder {
     private ProductType productType;
     private String sku;
     private BigDecimal basePrice;
-    private String currency;
     private ProductStatus status;
     private Boolean isVisible;
     private ResponsiveMediaSet responsiveMediaSet;
@@ -42,7 +41,6 @@ public class ProductTestDataBuilder {
         this.uid = "product_" + currentId;
         this.sku = "SKU-" + String.format("%05d", currentId);
         this.basePrice = BigDecimal.valueOf(99.99);
-        this.currency = "TRY";
         this.status = ProductStatus.DRAFT;
         this.isVisible = true;
         this.createdAt = LocalDateTime.now();
@@ -105,11 +103,6 @@ public class ProductTestDataBuilder {
         return this;
     }
 
-    public ProductTestDataBuilder withCurrency(String currency) {
-        this.currency = currency;
-        return this;
-    }
-
     public ProductTestDataBuilder withStatus(ProductStatus status) {
         this.status = status;
         return this;
@@ -153,7 +146,6 @@ public class ProductTestDataBuilder {
         product.setProductType(productType);
         product.setSku(sku);
         product.setBasePrice(basePrice);
-        product.setCurrency(currency);
         product.setStatus(status);
         product.setIsVisible(isVisible);
         product.setResponsiveMediaSet(responsiveMediaSet);

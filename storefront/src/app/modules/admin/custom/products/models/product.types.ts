@@ -4,14 +4,20 @@ import {
 } from '../../media/media.types';
 import { ProductFieldType } from './product-type.types';
 
+export interface PriceResponse {
+    currencyIso: string;
+    formattedValue: string;
+    priceType: string;
+    value: number;
+}
+
 export interface Product {
     id: number;
     uid: string;
     productTypeId: number;
     productTypeName: string;
     sku: string;
-    basePrice: number;
-    currency: string;
+    price: PriceResponse;
     status: ProductStatus;
     isVisible: boolean;
     createdAt: string;
@@ -64,7 +70,6 @@ export interface ProductCompositeRequest {
     productTypeId: number;
     sku: string;
     basePrice: number;
-    currency: string;
     status: ProductStatus;
     isVisible: boolean;
     responsiveMediaId?: number;
@@ -90,8 +95,7 @@ export interface ProductListItemResponse {
     sku: string;
     status: ProductStatus;
     isVisible: boolean;
-    basePrice: number;
-    currency: string;
+    price: PriceResponse;
     name: string;
     productTypeName: string;
     thumbnailUrl?: string;

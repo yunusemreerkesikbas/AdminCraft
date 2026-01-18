@@ -25,9 +25,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.backend.application.command.CreateTenantCommand;
-import com.backend.application.command.UpdateTenantCommand;
+import com.backend.application.dto.request.CreateTenantRequest;
+import com.backend.application.dto.request.UpdateTenantRequest;
 import com.backend.domain.entity.Tenant;
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.TenantRepository;
@@ -65,8 +66,8 @@ class TenantServiceImplTest {
         private TenantServiceImpl tenantService;
 
         private Tenant testTenant;
-        private CreateTenantCommand createRequest;
-        private UpdateTenantCommand updateRequest;
+        private CreateTenantRequest createRequest;
+        private UpdateTenantRequest updateRequest;
 
         @BeforeEach
         void setUp() {
@@ -83,19 +84,19 @@ class TenantServiceImplTest {
                 testTenant.setCreatedAt(LocalDateTime.now());
                 testTenant.setUpdatedAt(LocalDateTime.now());
 
-                createRequest = new CreateTenantCommand(
+                createRequest = new CreateTenantRequest(
                                 "newcompany",
                                 "New Company",
                                 Language.TR,
                                 new HashSet<>(Set.of(Language.TR, Language.EN)),
-                                "Test notes",
-                                "admin@newcompany.com",
-                                "Admin User");
+                                Currency.TRY,
+                                "Test notes");
 
-                updateRequest = new UpdateTenantCommand(
+                updateRequest = new UpdateTenantRequest(
                                 "Updated Company",
                                 Language.EN,
                                 new HashSet<>(Set.of(Language.EN, Language.TR)),
+                                Currency.USD,
                                 "updated.com",
                                 "Updated notes");
         }
@@ -149,14 +150,13 @@ class TenantServiceImplTest {
         @Test
         @DisplayName("Should throw exception when creating tenant with reserved subdomain")
         void testCreateTenantWithDetail_ReservedSubdomain() {
-                CreateTenantCommand reservedRequest = new CreateTenantCommand(
+                CreateTenantRequest reservedRequest = new CreateTenantRequest(
                                 "admin",
                                 "Company",
                                 Language.TR,
                                 new HashSet<>(Set.of(Language.TR)),
-                                null,
-                                "admin@company.com",
-                                "Admin User");
+                                Currency.TRY,
+                                null);
 
                 assertThatThrownBy(() -> tenantService.createTenantWithDetail(reservedRequest, Language.TR))
                                 .isInstanceOf(IllegalArgumentException.class)

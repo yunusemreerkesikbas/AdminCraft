@@ -38,6 +38,7 @@ import {
     VALIDATION_PATTERNS,
 } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaDateTimePipe } from '@shared/pipes/spa-date-time.pipe';
 import {
     forkJoin,
     map,
@@ -103,6 +104,7 @@ export class ProductEditDialogComponent
     #notificationService = inject(NotificationService);
     #languageContextService = inject(LanguageContextService);
     #mediaService = inject(MediaService);
+    #datePipe = new SpaDateTimePipe();
     override languages = this.#languageContextService.supportedLanguages();
     productTypes = signal<ProductType[]>([]);
     categories = signal<Category[]>([]);
@@ -190,19 +192,14 @@ export class ProductEditDialogComponent
                     Validators.min(VALIDATION_NUMERIC.PRICE_MIN),
                 ],
             ],
-            currency: [
-                'TRY',
-                [
-                    Validators.required,
-                    Validators.maxLength(VALIDATION_LIMITS.CURRENCY_MAX),
-                ],
-            ],
             status: ['DRAFT', [Validators.required]],
             isVisible: [true],
             responsiveMedia: [null],
             categoryIds: [[]],
             primaryCategoryId: [null],
             galleryImages: [[]],
+            createdAt: [{ value: null, disabled: true }],
+            updatedAt: [{ value: null, disabled: true }],
         });
     }
 
@@ -293,8 +290,7 @@ export class ProductEditDialogComponent
             {
                 sku: product.sku,
                 productTypeId: product.productTypeId,
-                basePrice: product.basePrice,
-                currency: product.currency,
+                basePrice: product.price?.value || 0,
                 status: product.status,
                 isVisible: product.isVisible,
                 responsiveMedia: responsiveMedia,
@@ -302,6 +298,8 @@ export class ProductEditDialogComponent
                 primaryCategoryId: product.categories?.find(
                     (c: any) => c.isPrimary
                 )?.id,
+                createdAt: this.#formatDateTime(product.createdAt),
+                updatedAt: this.#formatDateTime(product.updatedAt),
             },
             { emitEvent: false }
         );
@@ -356,6 +354,7 @@ export class ProductEditDialogComponent
             label: attr.name,
             type: attr.fieldType.toLowerCase() as any,
             required: false,
+            labelTooltip: attr.code,
         }));
     }
 
@@ -410,7 +409,6 @@ export class ProductEditDialogComponent
                         sku: formValue.sku,
                         productTypeId: formValue.productTypeId,
                         basePrice: formValue.basePrice,
-                        currency: formValue.currency,
                         status: formValue.status,
                         isVisible: formValue.isVisible,
                         responsiveMediaId: responsiveMediaId || undefined,
@@ -485,5 +483,9 @@ export class ProductEditDialogComponent
                 .createResponsiveMedia(responsiveMediaRequest)
                 .pipe(map((response) => response.id));
         }
+    }
+
+    #formatDateTime(value: string | Date | null | undefined): string {
+        return this.#datePipe.transform(value);
     }
 }

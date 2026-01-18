@@ -161,7 +161,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When
             Product result = productService.createComposite(
-                    1L, "SKU-NEW", BigDecimal.valueOf(199.99), "TRY",
+                    1L, "SKU-NEW", BigDecimal.valueOf(199.99),
                     ProductStatus.DRAFT, true, null,
                     translations, attributes, categoryIds, 1L, gallery, TEST_USER_ID);
 
@@ -191,39 +191,15 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When
             Product result = productService.createComposite(
-                    1L, "SKU-MIN", null, null,
+                    1L, "SKU-MIN", null,
                     null, null, null,
                     translations, null, null, null, null, TEST_USER_ID);
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product -> product.getCurrency().equals("TRY") &&
+            verify(productRepository).save(argThat(product -> 
                     product.getStatus() == ProductStatus.DRAFT &&
                     product.getIsVisible() == true));
-        }
-
-        @Test
-        @DisplayName("Should set default currency to TRY when null")
-        void createComposite_SetsDefaultCurrency_WhenNull() {
-            // Given
-            Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Test"));
-
-            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(productRepository.existsBySku(anyString())).thenReturn(false);
-            when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
-                Product p = inv.getArgument(0);
-                p.setId(1L);
-                return p;
-            });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
-            when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
-
-            // When
-            productService.createComposite(1L, "SKU-TEST", null, null,
-                    null, null, null, translations, null, null, null, null, TEST_USER_ID);
-
-            // Then
-            verify(productRepository).save(argThat(product -> "TRY".equals(product.getCurrency())));
         }
 
         @Test
@@ -243,7 +219,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
-            productService.createComposite(1L, "SKU-TEST", null, null,
+            productService.createComposite(1L, "SKU-TEST", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID);
 
             // Then
@@ -267,7 +243,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
-            productService.createComposite(1L, "SKU-TEST", null, null,
+            productService.createComposite(1L, "SKU-TEST", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID);
 
             // Then
@@ -294,7 +270,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
-            Product result = productService.createComposite(1L, "SKU-MULTI", null, null,
+            Product result = productService.createComposite(1L, "SKU-MULTI", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID);
 
             // Then
@@ -311,7 +287,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    999L, "SKU-001", null, null,
+                    999L, "SKU-001", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Product type not found");
@@ -327,7 +303,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "EXISTING-SKU", null, null,
+                    1L, "EXISTING-SKU", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("SKU already exists");
@@ -344,7 +320,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, 999L, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Responsive media set not found");
@@ -365,7 +341,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("At least one translation");
@@ -389,7 +365,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("name");
@@ -414,7 +390,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, null, translations, null, categoryIds, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Category not found");
@@ -440,10 +416,10 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, null, translations, null, null, null, gallery, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Media not found");
+                    .hasMessageContaining("media not found");
         }
 
         @Test
@@ -455,7 +431,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
-                    1L, "SKU-001", null, null,
+                    1L, "SKU-001", null,
                     null, null, null, translations, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Tenant context");
@@ -483,7 +459,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productMediaRepository.findByProductIdWithMedia(1L)).thenReturn(List.of());
 
             // When
-            Product result = productService.updateComposite(1L, BigDecimal.valueOf(299.99), "USD",
+            Product result = productService.updateComposite(1L, BigDecimal.valueOf(299.99),
                     ProductStatus.PUBLISHED, false, null,
                     translations, null, null, null, null, TEST_USER_ID);
 
@@ -491,7 +467,6 @@ class ProductServiceImplTest extends BaseServiceTest {
             assertThat(result).isNotNull();
             verify(productRepository)
                     .save(argThat(product -> product.getBasePrice().compareTo(BigDecimal.valueOf(299.99)) == 0 &&
-                            "USD".equals(product.getCurrency()) &&
                             product.getStatus() == ProductStatus.PUBLISHED &&
                             product.getIsVisible() == false));
         }
@@ -508,7 +483,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productMediaRepository.findByProductIdWithMedia(1L)).thenReturn(List.of());
 
             // When - Only update basePrice, leave others null
-            Product result = productService.updateComposite(1L, BigDecimal.valueOf(150.00), null,
+            Product result = productService.updateComposite(1L, BigDecimal.valueOf(150.00),
                     null, null, null, null, null, null, null, null, TEST_USER_ID);
 
             // Then
@@ -524,7 +499,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When & Then
-            assertThatThrownBy(() -> productService.updateComposite(999L, null, null,
+            assertThatThrownBy(() -> productService.updateComposite(999L, null,
                     null, null, null, null, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Product not found");
@@ -538,7 +513,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             when(responsiveMediaSetRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When & Then
-            assertThatThrownBy(() -> productService.updateComposite(1L, null, null,
+            assertThatThrownBy(() -> productService.updateComposite(1L, null,
                     null, null, 999L, null, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Responsive media set not found");
@@ -551,7 +526,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             simulateInactiveTenantContext();
 
             // When & Then
-            assertThatThrownBy(() -> productService.updateComposite(1L, null, null,
+            assertThatThrownBy(() -> productService.updateComposite(1L, null,
                     null, null, null, null, null, null, null, null, TEST_USER_ID))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Tenant context");

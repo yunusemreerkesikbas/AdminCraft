@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.backend.domain.enums.Currency;
 import com.backend.infrastructure.persistence.platform.entity.Tenant;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
 
@@ -97,6 +98,7 @@ public class TenantFilter extends OncePerRequestFilter {
       tenantContext.setTenantId(String.valueOf(tenant.getId()));
       tenantContext.setTenantDbName(tenant.getDatabaseName());
       tenantContext.setSubdomain(tenant.getSubdomain());
+      tenantContext.setCurrency(Currency.fromCodeOrDefault(tenant.getCurrency()));
 
       MDC.put("tenantId", String.valueOf(tenant.getId()));
       MDC.put("tenantDb", tenant.getDatabaseName());

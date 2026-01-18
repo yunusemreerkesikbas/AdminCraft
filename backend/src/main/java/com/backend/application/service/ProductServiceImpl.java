@@ -60,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product createComposite(Long productTypeId, String sku, BigDecimal basePrice, String currency,
+    public Product createComposite(Long productTypeId, String sku, BigDecimal basePrice,
             ProductStatus status, Boolean isVisible, Long responsiveMediaId,
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
@@ -89,7 +89,6 @@ public class ProductServiceImpl implements ProductService {
         product.setProductType(productType);
         product.setSku(sku);
         product.setBasePrice(basePrice);
-        product.setCurrency(currency != null ? currency : "TRY");
         product.setStatus(status != null ? status : ProductStatus.DRAFT);
         product.setIsVisible(isVisible != null ? isVisible : true);
         product.setResponsiveMediaSet(responsiveMediaSet);
@@ -115,7 +114,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product updateComposite(Long id, BigDecimal basePrice, String currency,
+    public Product updateComposite(Long id, BigDecimal basePrice,
             ProductStatus status, Boolean isVisible, Long responsiveMediaId,
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
@@ -131,8 +130,6 @@ public class ProductServiceImpl implements ProductService {
 
         if (basePrice != null)
             product.setBasePrice(basePrice);
-        if (currency != null)
-            product.setCurrency(currency);
         if (status != null)
             product.setStatus(status);
         if (isVisible != null)

@@ -55,10 +55,10 @@ export class ProductListComponent extends BasePaginatedListComponent<ProductList
         },
         { key: 'productTypeName', label: 'admin.products.fields.type', type: 'text' },
         { 
-            key: 'basePrice', 
+            key: 'price', 
             label: 'admin.products.fields.price', 
             type: 'custom',
-            getValue: (item) => `${item.basePrice} ${item.currency}`
+            getValue: (item) => item.price?.formattedValue || '-'
         },
         { 
             key: 'status', 

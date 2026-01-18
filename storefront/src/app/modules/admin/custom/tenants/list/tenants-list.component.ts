@@ -2,8 +2,8 @@ import { CommonModule, DatePipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    ViewEncapsulation,
     inject,
+    ViewEncapsulation,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,7 +25,7 @@ import { ItemDialogService } from '@shared/services/item-dialog.service';
 import { ItemDialogOptions, ItemDialogSchema } from '@shared/types/item-dialog.types';
 import { take } from 'rxjs';
 import { TenantsService } from '../tenants.service';
-import { AdminUserResponse, CreateTenantRequest, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
+import { AdminUserResponse, CreateTenantRequest, Currency, CURRENCY_LABELS, Language, Tenant, UpdateTenantRequest } from '../tenants.types';
 
 @Component({
     selector: 'tenants-list',
@@ -86,6 +86,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 subdomain: '',
                 supportedLanguages: [Language.TR],
                 defaultLanguage: Language.TR,
+                currency: Currency.TRY,
                 customDomain: '',
                 notes: ''
             },
@@ -103,6 +104,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                     subdomain: result.subdomain || '',
                     supportedLanguages: (result.supportedLanguages as Language[]) || [Language.TR],
                     defaultLanguage: (result.defaultLanguage as Language) || Language.TR,
+                    currency: (result.currency as Currency) || Currency.TRY,
                     customDomain: result.customDomain || undefined,
                     notes: result.notes || undefined
                 };
@@ -142,6 +144,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
                 companyName: tenant.companyName,
                 supportedLanguages: oldSupportedLanguages,
                 defaultLanguage: tenant.defaultLanguage,
+                currency: tenant.currency,
                 customDomain: tenant.customDomain || '',
                 notes: tenant.notes || ''
             },
@@ -226,6 +229,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
 
     #buildTenantDialogSchema(isEdit: boolean = false): ItemDialogSchema {
         const languageOptions = Object.values(Language).map((lang) => ({ value: lang as Language, label: lang }));
+        const currencyOptions = Object.values(Currency).map((currency) => ({ value: currency as Currency, label: CURRENCY_LABELS[currency] }));
 
         const baseFields = [
             { key: 'companyName', type: 'text' as const, labelKey: 'admin.tenants.fields.companyName', required: true, maxLength: 200, placeholder: 'Acme Inc.' },
@@ -238,6 +242,7 @@ export class TenantsListComponent extends BaseCrudListComponent<Tenant, CreateTe
         const commonFields = [
             { key: 'supportedLanguages', type: 'select' as const, labelKey: 'admin.common.fields.supportedLanguages', required: true, options: languageOptions, multiple: true },
             { key: 'defaultLanguage', type: 'select' as const, labelKey: 'admin.tenants.fields.defaultLanguage', required: true, options: languageOptions },
+            { key: 'currency', type: 'select' as const, labelKey: 'admin.tenants.fields.currency', required: !isEdit, options: currencyOptions },
             { key: 'customDomain', type: 'text' as const, labelKey: 'admin.tenants.fields.customDomain', maxLength: 200, placeholder: 'example.com' },
             { key: 'notes', type: 'textarea' as const, labelKey: 'admin.tenants.fields.notes', maxLength: 1000, placeholder: '' }
         ];

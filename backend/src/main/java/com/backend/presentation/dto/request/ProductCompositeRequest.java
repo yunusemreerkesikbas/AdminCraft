@@ -1,6 +1,5 @@
 package com.backend.presentation.dto.request;
 
-import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.GALLERY_MAX_SIZE;
 import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
 import static com.backend.shared.constants.ValidationConstants.SKU_MAX_LENGTH;
@@ -25,8 +24,6 @@ public record ProductCompositeRequest(
 
         @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
 
-        @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size") String currency,
-
         ProductStatus status,
 
         Boolean isVisible,
@@ -44,7 +41,6 @@ public record ProductCompositeRequest(
         @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
-        currency = currency != null && !currency.isBlank() ? currency.trim() : "TRY";
         if (status == null)
             status = ProductStatus.DRAFT;
         if (isVisible == null)

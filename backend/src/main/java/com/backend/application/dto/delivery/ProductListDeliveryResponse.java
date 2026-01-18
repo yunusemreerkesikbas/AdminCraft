@@ -16,7 +16,6 @@ public class ProductListDeliveryResponse {
     private String name;
     private String shortDescription;
     private BigDecimal basePrice;
-    private String currency;
     private String thumbnailUrl;
     private String productTypeName;
 
@@ -47,7 +46,6 @@ public class ProductListDeliveryResponse {
                 .name(name != null ? name : product.getSku())
                 .shortDescription(shortDesc)
                 .basePrice(product.getBasePrice())
-                .currency(product.getCurrency())
                 .thumbnailUrl(thumbnailUrl)
                 .productTypeName(product.getProductType() != null ? product.getProductType().getName() : null)
                 .build();

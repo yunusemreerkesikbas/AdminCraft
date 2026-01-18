@@ -53,6 +53,10 @@ public class Tenant {
   @Column(name = "admin_name", length = 100)
   private String adminName;
 
+  @Column(name = "currency", nullable = false, length = 3)
+  @Builder.Default
+  private String currency = "TRY";
+
   @Column(name = "has_admin_user", nullable = false)
   @Builder.Default
   private Boolean hasAdminUser = false;

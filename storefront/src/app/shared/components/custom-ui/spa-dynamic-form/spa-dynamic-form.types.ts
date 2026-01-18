@@ -14,4 +14,6 @@ export interface DynamicFieldConfig {
     defaultValue?: any;
     hint?: string;
     styleClasses?: string;
+    placeholder?: string;
+    labelTooltip?: string;
 }

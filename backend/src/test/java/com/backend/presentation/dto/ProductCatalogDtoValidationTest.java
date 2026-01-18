@@ -42,7 +42,6 @@ class ProductCatalogDtoValidationTest {
                     1L, // productTypeId
                     "SKU-001", // sku
                     BigDecimal.valueOf(99.99), // basePrice
-                    "TRY", // currency
                     null, // status
                     true, // isVisible
                     null, // responsiveMediaId
@@ -71,7 +70,6 @@ class ProductCatalogDtoValidationTest {
                     null, // productTypeId - MISSING
                     "SKU-001",
                     BigDecimal.valueOf(99.99),
-                    "TRY",
                     null, true, null, translations, null, null, null, null
             );
 
@@ -83,28 +81,6 @@ class ProductCatalogDtoValidationTest {
             assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("productTypeId"));
         }
 
-        @Test
-        @DisplayName("Should fail when currency exceeds max length")
-        void productCompositeRequest_CurrencyMaxLength() {
-            // Given
-            Map<Language, ProductI18nRequest> translations = new HashMap<>();
-            translations.put(Language.TR, new ProductI18nRequest("Test", null, null, null, null));
-
-            ProductCompositeRequest request = new ProductCompositeRequest(
-                    1L,
-                    "SKU-001",
-                    BigDecimal.valueOf(99.99),
-                    "TOOLONG", // currency > 3 chars
-                    null, true, null, translations, null, null, null, null
-            );
-
-            // When
-            Set<ConstraintViolation<ProductCompositeRequest>> violations = validator.validate(request);
-
-            // Then
-            assertThat(violations).isNotEmpty();
-            assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("currency"));
-        }
     }
 
     // ==================== ProductI18nRequest Tests ====================

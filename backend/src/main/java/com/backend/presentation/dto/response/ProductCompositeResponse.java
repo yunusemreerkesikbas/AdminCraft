@@ -1,14 +1,15 @@
 package com.backend.presentation.dto.response;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.backend.domain.entity.Product;
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.presentation.dto.PriceResponse;
 
 public record ProductCompositeResponse(
                 Long id,
@@ -17,8 +18,7 @@ public record ProductCompositeResponse(
                 Long productTypeId,
                 String productTypeName,
                 String sku,
-                BigDecimal basePrice,
-                String currency,
+                PriceResponse price,
                 ProductStatus status,
                 Boolean isVisible,
                 ResponsiveMediaResponse images,
@@ -28,7 +28,7 @@ public record ProductCompositeResponse(
                 List<ProductMediaResponse> galleryImages,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt) {
-        public static ProductCompositeResponse from(Product entity) {
+        public static ProductCompositeResponse from(Product entity, Currency currency) {
                 if (entity == null) {
                         throw new IllegalArgumentException("Product entity cannot be null");
                 }
@@ -64,6 +64,8 @@ public record ProductCompositeResponse(
                                 ? ResponsiveMediaResponse.from(entity.getResponsiveMediaSet())
                                 : null;
 
+                PriceResponse price = PriceResponse.from(entity.getBasePrice(), currency);
+
                 return new ProductCompositeResponse(
                                 entity.getId(),
                                 entity.getUuid(),
@@ -71,8 +73,7 @@ public record ProductCompositeResponse(
                                 entity.getProductType() != null ? entity.getProductType().getId() : null,
                                 entity.getProductType() != null ? entity.getProductType().getName() : null,
                                 entity.getSku(),
-                                entity.getBasePrice(),
-                                entity.getCurrency(),
+                                price,
                                 entity.getStatus(),
                                 entity.getIsVisible(),
                                 images,

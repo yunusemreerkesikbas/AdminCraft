@@ -81,15 +81,18 @@ class ProductControllerIntegrationTest {
     @MockBean
     private com.backend.infrastructure.tenant.TenantFilter tenantFilter;
 
+    @MockBean
+    private TenantContext tenantContext;
+
     private Product testProduct;
     private ProductType testProductType;
 
     @BeforeEach
     void setUp() {
-        // Set up tenant context for tests
-        TenantContext tenantContext = new TenantContext();
-        tenantContext.setTenantId("1");
-        tenantContext.setTenantDbName("ac_tenant_1");
+        // Set up tenant context mock for tests
+        when(tenantContext.getTenantId()).thenReturn("1");
+        when(tenantContext.getTenantDbName()).thenReturn("ac_tenant_1");
+        when(tenantContext.getCurrency()).thenReturn(com.backend.domain.enums.Currency.TRY);
 
         ProductTypeTestDataBuilder.resetIdCounter();
         ProductTestDataBuilder.resetIdCounter();
@@ -112,8 +115,6 @@ class ProductControllerIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        TenantContext ctx = new TenantContext();
-        ctx.clear();
         SecurityContextHolder.clearContext();
     }
 
@@ -216,7 +217,7 @@ class ProductControllerIntegrationTest {
         void createProduct_Success() throws Exception {
             // Given
             Map<String, Object> request = createValidProductRequest();
-            when(productService.createComposite(anyLong(), anyString(), any(), any(),
+            when(productService.createComposite(anyLong(), anyString(), any(),
                     any(), any(), any(), anyMap(), any(), any(), any(), any(), any()))
                     .thenReturn(testProduct);
 
@@ -248,7 +249,6 @@ class ProductControllerIntegrationTest {
             request.put("productTypeId", 1L);
             request.put("sku", "NEW-SKU-001");
             request.put("basePrice", 199.99);
-            request.put("currency", "TRY");
             request.put("status", "DRAFT");
             request.put("isVisible", true);
 
@@ -282,7 +282,7 @@ class ProductControllerIntegrationTest {
             translation.put("description", "Test Description");
             request.put("translations", Map.of("TR", translation));
 
-            when(productService.updateComposite(eq(1L), any(), any(), any(), any(),
+            when(productService.updateComposite(eq(1L), any(), any(), any(),
                     any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(testProduct);
 
@@ -301,7 +301,7 @@ class ProductControllerIntegrationTest {
             Map<String, Object> request = new HashMap<>();
             request.put("basePrice", 299.99);
 
-            when(productService.updateComposite(eq(999L), any(), any(), any(), any(),
+            when(productService.updateComposite(eq(999L), any(), any(), any(),
                     any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new IllegalArgumentException("Product not found"));
 

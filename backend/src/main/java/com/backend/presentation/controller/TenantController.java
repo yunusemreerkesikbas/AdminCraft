@@ -59,10 +59,7 @@ public class TenantController {
                         @Valid @RequestBody CreateTenantRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                var cmd = new com.backend.application.command.CreateTenantCommand(
-                                request.subdomain(), request.companyName(), request.defaultLanguage(),
-                                request.supportedLanguages(), request.notes(), null, null);
-                TenantDetailResponse response = createTenantUseCase.execute(cmd, displayLanguage);
+                TenantDetailResponse response = createTenantUseCase.execute(request, displayLanguage);
                 String message = messageSource.getMessage("tenant.created.success", null,
                                 Locale.forLanguageTag(languageCode));
                 return ResponseEntity.status(HttpStatus.CREATED)
@@ -98,10 +95,7 @@ public class TenantController {
                         @Valid @RequestBody UpdateTenantRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                var cmd = new com.backend.application.command.UpdateTenantCommand(
-                                request.companyName(), request.defaultLanguage(), request.supportedLanguages(),
-                                request.customDomain(), request.notes());
-                TenantDetailResponse response = tenantService.updateTenantWithDetail(id, cmd, displayLanguage);
+                TenantDetailResponse response = tenantService.updateTenantWithDetail(id, request, displayLanguage);
                 String message = messageSource.getMessage("tenant.updated.success", null,
                                 Locale.forLanguageTag(languageCode));
                 return ResponseEntity.ok(ApiResponse.success(message, response));

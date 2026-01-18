@@ -2,6 +2,7 @@ package com.backend.infrastructure.tenant;
 
 import org.springframework.stereotype.Component;
 
+import com.backend.domain.enums.Currency;
 import com.backend.domain.port.TenantContextPort;
 
 @Component
@@ -10,6 +11,7 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentTenantId = new ThreadLocal<>();
   private static final ThreadLocal<String> currentTenantDbName = new ThreadLocal<>();
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
+  private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
 
   public void setTenantId(String tenantId) {
     currentTenantId.set(tenantId);
@@ -38,10 +40,21 @@ public class TenantContext implements TenantContextPort {
     return currentSubdomain.get();
   }
 
+  public void setCurrency(Currency currency) {
+    currentCurrency.set(currency);
+  }
+
+  @Override
+  public Currency getCurrency() {
+    Currency currency = currentCurrency.get();
+    return currency != null ? currency : Currency.getDefault();
+  }
+
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
     currentSubdomain.remove();
+    currentCurrency.remove();
   }
 
   public boolean isSet() {
