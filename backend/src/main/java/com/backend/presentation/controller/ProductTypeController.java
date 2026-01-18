@@ -1,8 +1,32 @@
 package com.backend.presentation.controller;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
+import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.backend.application.service.ProductTypeService;
 import com.backend.domain.entity.ProductAttributeDefinition;
 import com.backend.domain.entity.ProductType;
+import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.presentation.dto.request.AttributeDefinitionCreateRequest;
 import com.backend.presentation.dto.request.AttributeDefinitionUpdateRequest;
 import com.backend.presentation.dto.request.ProductTypeCreateRequest;
@@ -12,9 +36,11 @@ import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.ProductTypeDetailResponse;
 import com.backend.presentation.dto.response.ProductTypeResponse;
 import com.backend.presentation.dto.response.SortConfig;
+import com.backend.presentation.dto.response.SortOptionDto;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 import com.backend.shared.common.SortParseUtil;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,21 +50,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import com.backend.presentation.dto.response.SortOptionDto;
 
 @RestController
 @RequestMapping("/products/types")
@@ -62,7 +73,8 @@ public class ProductTypeController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             String effectiveSort = sort != null ? sort : "name,asc";
-            Sort sortObj = SortParseUtil.parse(effectiveSort, Set.of("name", "code", "category", "createdAt"), "name,asc");
+            Sort sortObj = SortParseUtil.parse(effectiveSort, Set.of("name", "code", "category", "createdAt"),
+                    "name,asc");
             PageRequest pageRequest = PageRequest.of(page, size, sortObj);
 
             Page<ProductType> types = productTypeService.search(search, pageRequest);
@@ -71,15 +83,14 @@ public class ProductTypeController {
             SortConfig sortConfig = SortConfig.of(effectiveSort, List.of(
                     SortOptionDto.defaultOption("name,asc", "admin.sort.name"),
                     SortOptionDto.of("code,asc", "admin.sort.code"),
-                    SortOptionDto.of("createdAt,desc", "admin.sort.newest")
-            ));
+                    SortOptionDto.of("createdAt,desc", "admin.sort.newest")));
             PageableResponse<ProductTypeResponse> response = PageableResponse.from(responsePage, sortConfig);
 
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error listing product types: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.type.list.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(msg));
         }
@@ -92,16 +103,17 @@ public class ProductTypeController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             return productTypeService.findByIdWithAttributes(id)
-                    .map(pt -> ResponseEntity.ok(ApiResponse.success(ProductTypeDetailResponse.from(pt))))
+                    .map(pt -> ResponseEntity.ok(ApiResponse.success("Operation completed successfully",
+                            ProductTypeDetailResponse.from(pt))))
                     .orElseGet(() -> {
                         String msg = messageSource.getMessage("product.type.not.found",
-                                new Object[]{id}, Locale.forLanguageTag(lang));
+                                new Object[] { id }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(msg));
                     });
         } catch (Exception ex) {
             log.error("Error getting product type {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("product.type.get.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(msg));
         }
@@ -123,12 +135,12 @@ public class ProductTypeController {
         } catch (IllegalArgumentException ex) {
             log.warn("Product type creation validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.type.create.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
         } catch (Exception ex) {
             log.error("Error creating product type: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.type.create.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
@@ -148,12 +160,12 @@ public class ProductTypeController {
         } catch (IllegalArgumentException ex) {
             log.warn("Product type update validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.type.update.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
         } catch (Exception ex) {
             log.error("Error updating product type {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("product.type.update.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
@@ -170,12 +182,14 @@ public class ProductTypeController {
         } catch (IllegalArgumentException ex) {
             log.warn("Product type delete validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.type.delete.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
+        } catch (BusinessRuleViolationException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Error deleting product type {}: {}", id, ex.getMessage());
             String msg = messageSource.getMessage("product.type.delete.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
@@ -194,7 +208,7 @@ public class ProductTypeController {
         } catch (Exception ex) {
             log.error("Error listing attributes for product type {}: {}", typeId, ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.list.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(msg));
         }
@@ -212,18 +226,19 @@ public class ProductTypeController {
                     request.isRequired(), request.isSearchable(), request.sortOrder(),
                     request.validationConfig());
 
-            String msg = messageSource.getMessage("product.attribute.create.success", null, Locale.forLanguageTag(lang));
+            String msg = messageSource.getMessage("product.attribute.create.success", null,
+                    Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success(msg, AttributeDefinitionResponse.from(created)));
         } catch (IllegalArgumentException ex) {
             log.warn("Attribute creation validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.create.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
         } catch (Exception ex) {
             log.error("Error creating attribute for product type {}: {}", typeId, ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.create.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
@@ -241,17 +256,18 @@ public class ProductTypeController {
                     request.isRequired(), request.isSearchable(), request.sortOrder(),
                     request.validationConfig());
 
-            String msg = messageSource.getMessage("product.attribute.update.success", null, Locale.forLanguageTag(lang));
+            String msg = messageSource.getMessage("product.attribute.update.success", null,
+                    Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(msg, AttributeDefinitionResponse.from(updated)));
         } catch (IllegalArgumentException ex) {
             log.warn("Attribute update validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.update.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
         } catch (Exception ex) {
             log.error("Error updating attribute {} for product type {}: {}", attrId, typeId, ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.update.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
@@ -264,17 +280,18 @@ public class ProductTypeController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             productTypeService.deleteAttribute(typeId, attrId);
-            String msg = messageSource.getMessage("product.attribute.delete.success", null, Locale.forLanguageTag(lang));
+            String msg = messageSource.getMessage("product.attribute.delete.success", null,
+                    Locale.forLanguageTag(lang));
             return ResponseEntity.ok(ApiResponse.success(msg, null));
         } catch (IllegalArgumentException ex) {
             log.warn("Attribute delete validation error: {}", ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.delete.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
         } catch (Exception ex) {
             log.error("Error deleting attribute {} for product type {}: {}", attrId, typeId, ex.getMessage());
             String msg = messageSource.getMessage("product.attribute.delete.error",
-                    new Object[]{ex.getMessage()}, Locale.forLanguageTag(lang));
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }

@@ -6,10 +6,8 @@ import com.backend.domain.entity.ResponsiveMediaSet;
 public record ResponsiveMediaResponse(
         Long id,
         String uid,
-        String code,
         MediaInfo desktop,
-        MediaInfo mobile
-) {
+        MediaInfo mobile) {
     public static ResponsiveMediaResponse from(ResponsiveMediaSet entity) {
         if (entity == null) {
             return null;
@@ -17,10 +15,8 @@ public record ResponsiveMediaResponse(
         return new ResponsiveMediaResponse(
                 entity.getId(),
                 entity.getUid(),
-                entity.getCode(),
                 entity.getDesktopMedia() != null ? MediaInfo.from(entity.getDesktopMedia()) : null,
-                entity.getMobileMedia() != null ? MediaInfo.from(entity.getMobileMedia()) : null
-        );
+                entity.getMobileMedia() != null ? MediaInfo.from(entity.getMobileMedia()) : null);
     }
 
     public record MediaInfo(
@@ -31,10 +27,10 @@ public record ResponsiveMediaResponse(
             String mimeType,
             String publicUrl,
             Integer width,
-            Integer height
-    ) {
+            Integer height) {
         public static MediaInfo from(Media media) {
-            if (media == null) return null;
+            if (media == null)
+                return null;
             return new MediaInfo(
                     media.getId(),
                     media.getUid(),
@@ -43,8 +39,7 @@ public record ResponsiveMediaResponse(
                     media.getMimeType(),
                     "/api/media/files/" + media.getFileName(),
                     media.getWidth(),
-                    media.getHeight()
-            );
+                    media.getHeight());
         }
     }
 }

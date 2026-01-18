@@ -94,6 +94,7 @@ export const VALIDATION_LIMITS = {
     SEO_TITLE_MAX: 200,
     SEO_DESCRIPTION_MAX: 500,
     CURRENCY_MAX: 3,
+    GALLERY_MAX: 10,
 
     // Codes
     CODE_MAX: 50,

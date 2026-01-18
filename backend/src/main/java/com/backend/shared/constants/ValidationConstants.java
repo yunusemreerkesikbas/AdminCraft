@@ -98,6 +98,9 @@ public final class ValidationConstants {
     public static final int SEO_DESCRIPTION_MAX_LENGTH = 500;
     public static final int CURRENCY_MAX_LENGTH = 3;
 
+    // Gallery
+    public static final int GALLERY_MAX_SIZE = 10;
+
     // Codes
     public static final int CODE_MAX_LENGTH = 50;
 

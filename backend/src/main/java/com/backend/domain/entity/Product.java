@@ -1,6 +1,13 @@
 package com.backend.domain.entity;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.backend.domain.enums.ProductStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,14 +30,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "products", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"uid"}, name = "uk_product_uid"),
-        @UniqueConstraint(columnNames = {"sku"}, name = "uk_product_sku")
+        @UniqueConstraint(columnNames = { "uid" }, name = "uk_product_uid"),
+        @UniqueConstraint(columnNames = { "sku" }, name = "uk_product_sku")
 }, indexes = {
         @Index(columnList = "product_type_id", name = "idx_product_type"),
         @Index(columnList = "status", name = "idx_product_status"),
@@ -38,7 +41,8 @@ import java.util.List;
         @Index(columnList = "responsive_id", name = "idx_product_responsive")
 })
 @Data
-@EqualsAndHashCode(callSuper = true, exclude = {"productType", "responsiveMediaSet", "i18nContent", "attributes", "categoryLinks", "gallery"})
+@EqualsAndHashCode(callSuper = true, exclude = { "productType", "responsiveMediaSet", "i18nContent", "attributes",
+        "categoryLinks", "gallery" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product extends BaseEntity {
@@ -79,7 +83,7 @@ public class Product extends BaseEntity {
 
     @ToString.Exclude
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ProductAttribute> attributes = new ArrayList<>();
+    private Set<ProductAttribute> attributes = new HashSet<>();
 
     @ToString.Exclude
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

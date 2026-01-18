@@ -6,10 +6,7 @@
 </spa-dialog-header>
 
 <spa-dialog-content type="tabbed">
-    <spa-tab-container
-        [tabs]="tabs"
-        [(activeTabIndex)]="activeTab"
-    >
+    <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
         <ng-template spaTabContent="general">
             <form [formGroup]="generalForm" class="flex flex-col gap-6">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -25,7 +22,9 @@
                         formControlName="componentTypeId"
                         [label]="'admin.components.fields.type' | transloco"
                         [options]="componentTypeOptions"
-                        [placeholder]="'admin.common.placeholders.selectType' | transloco"
+                        [placeholder]="
+                            'admin.common.placeholders.selectType' | transloco
+                        "
                         [required]="true"
                     >
                     </spa-select>
@@ -34,7 +33,9 @@
                         formControlName="status"
                         [label]="'admin.common.fields.status' | transloco"
                         [options]="statusOptions"
-                        [placeholder]="'admin.common.placeholders.selectStatus' | transloco"
+                        [placeholder]="
+                            'admin.common.placeholders.selectStatus' | transloco
+                        "
                         [required]="true"
                     >
                     </spa-select>
@@ -49,15 +50,21 @@
 
                     <spa-input
                         formControlName="styleClasses"
-                        [label]="'admin.components.fields.styleClasses' | transloco"
-                        [hint]="'admin.components.hints.styleClasses' | transloco"
+                        [label]="
+                            'admin.components.fields.styleClasses' | transloco
+                        "
+                        [hint]="
+                            'admin.components.hints.styleClasses' | transloco
+                        "
                         placeholder="e.g. bg-primary text-white"
                     >
                     </spa-input>
 
                     <spa-checkbox
                         formControlName="isVisible"
-                        [label]="'admin.components.fields.isVisible' | transloco"
+                        [label]="
+                            'admin.components.fields.isVisible' | transloco
+                        "
                         styleClasses="boxed"
                     >
                     </spa-checkbox>
@@ -67,9 +74,10 @@
 
         <ng-template spaTabContent="media">
             <form [formGroup]="generalForm">
-                <spa-responsive-media-picker
+                <spa-media-picker
                     formControlName="responsiveMedia"
-                ></spa-responsive-media-picker>
+                    [responsive]="true"
+                ></spa-media-picker>
             </form>
         </ng-template>
 
@@ -79,10 +87,17 @@
                     <div
                         class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
                     >
-                        <div class="text-secondary mb-4 flex items-center gap-2">
+                        <div
+                            class="text-secondary mb-4 flex items-center gap-2"
+                        >
                             <mat-icon class="icon-size-5">info</mat-icon>
-                            <span class="text-sm font-medium uppercase tracking-wide">
-                                {{ 'admin.components.entries.basicInfo' | transloco }}
+                            <span
+                                class="text-sm font-medium uppercase tracking-wide"
+                            >
+                                {{
+                                    'admin.components.entries.basicInfo'
+                                        | transloco
+                                }}
                                 ({{ lang | uppercase }})
                             </span>
                         </div>
@@ -90,19 +105,27 @@
                         <div class="flex flex-col gap-4">
                             <spa-input
                                 formControlName="title"
-                                [label]="'admin.components.fields.title' | transloco"
+                                [label]="
+                                    'admin.components.fields.title' | transloco
+                                "
                             >
                             </spa-input>
 
                             <spa-input
                                 formControlName="subtitle"
-                                [label]="'admin.components.fields.subtitle' | transloco"
+                                [label]="
+                                    'admin.components.fields.subtitle'
+                                        | transloco
+                                "
                             >
                             </spa-input>
 
                             <spa-textarea
                                 formControlName="description"
-                                [label]="'admin.components.fields.description' | transloco"
+                                [label]="
+                                    'admin.components.fields.description'
+                                        | transloco
+                                "
                                 [rows]="4"
                             >
                             </spa-textarea>

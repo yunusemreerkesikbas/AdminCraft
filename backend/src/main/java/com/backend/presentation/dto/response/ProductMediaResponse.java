@@ -8,21 +8,21 @@ public record ProductMediaResponse(
         Long mediaId,
         String mediaType,
         Integer sortOrder,
-        MediaSummaryResponse media) {
+        ResponsiveMediaResponse media) {
     public static ProductMediaResponse from(ProductMedia entity) {
         if (entity == null) {
             throw new IllegalArgumentException("ProductMedia entity cannot be null");
         }
-        MediaSummaryResponse mediaSummary = entity.getMedia() != null
-                ? MediaSummaryResponse.from(entity.getMedia())
+        ResponsiveMediaResponse mediaResponse = entity.getResponsiveMediaSet() != null
+                ? ResponsiveMediaResponse.from(entity.getResponsiveMediaSet())
                 : null;
 
         return new ProductMediaResponse(
                 entity.getId(),
-                entity.getMedia() != null ? entity.getMedia().getId() : null,
+                entity.getResponsiveMediaSet() != null ? entity.getResponsiveMediaSet().getId() : null,
                 entity.getMediaType() != null ? entity.getMediaType().name() : null,
                 entity.getSortOrder(),
-                mediaSummary);
+                mediaResponse);
     }
 
     public record MediaSummaryResponse(

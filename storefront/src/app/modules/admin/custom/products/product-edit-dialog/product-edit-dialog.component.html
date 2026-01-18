@@ -204,7 +204,10 @@
             </ng-template>
 
             <ng-template spaTabContent="media">
-                <div class="mt-4 flex flex-col gap-6">
+                <form
+                    [formGroup]="generalForm"
+                    class="mt-4 flex flex-col gap-6"
+                >
                     <!-- Responsive Image -->
                     <div
                         class="rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
@@ -212,15 +215,10 @@
                         <h3 class="mb-4 text-sm font-medium">
                             {{ 'admin.products.media.mainImage' | transloco }}
                         </h3>
-                        <form [formGroup]="generalForm">
-                            <!-- TODO: implement spa-responsive-media-picker integration similarly to component entry form -->
-                            <div class="text-secondary text-xs">
-                                {{
-                                    'admin.products.media.responsivePlaceholder'
-                                        | transloco
-                                }}
-                            </div>
-                        </form>
+                        <spa-media-picker
+                            formControlName="responsiveMedia"
+                            [responsive]="true"
+                        ></spa-media-picker>
                     </div>
 
                     <!-- Gallery -->
@@ -230,39 +228,13 @@
                         <h3 class="mb-4 text-sm font-medium">
                             {{ 'admin.products.media.gallery' | transloco }}
                         </h3>
-
-                        <div class="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            @for (item of gallery(); track $index) {
-                                <div
-                                    class="group bg-card relative aspect-square overflow-hidden rounded-lg border"
-                                >
-                                    <img
-                                        [src]="item.media?.publicUrl"
-                                        class="h-full w-full object-cover"
-                                    />
-                                    <button
-                                        type="button"
-                                        class="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                        (click)="removeGalleryImage($index)"
-                                    >
-                                        <mat-icon class="icon-size-4"
-                                            >close</mat-icon
-                                        >
-                                    </button>
-                                </div>
-                            }
-
-                            <div
-                                class="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                                <spa-media-picker
-                                    (mediaSelected)="addGalleryImage($event)"
-                                    [minimal]="true"
-                                ></spa-media-picker>
-                            </div>
-                        </div>
+                        <spa-media-picker
+                            formControlName="galleryImages"
+                            [multiple]="true"
+                            [responsive]="true"
+                        ></spa-media-picker>
                     </div>
-                </div>
+                </form>
             </ng-template>
         </spa-tab-container>
     }

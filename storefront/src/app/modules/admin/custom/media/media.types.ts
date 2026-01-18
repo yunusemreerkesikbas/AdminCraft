@@ -15,20 +15,20 @@ export enum MediaStatus {
     PROCESSING = 'PROCESSING',
     ACTIVE = 'ACTIVE',
     ARCHIVED = 'ARCHIVED',
-    FAILED = 'FAILED'
+    FAILED = 'FAILED',
 }
 
 export enum StorageProvider {
     LOCAL = 'LOCAL',
     S3 = 'S3',
     AZURE = 'AZURE',
-    CLOUDINARY = 'CLOUDINARY'
+    CLOUDINARY = 'CLOUDINARY',
 }
 
 export enum CropMode {
     FIT = 'FIT',
     FILL = 'FILL',
-    COVER = 'COVER'
+    COVER = 'COVER',
 }
 
 export enum MediaType {
@@ -36,7 +36,7 @@ export enum MediaType {
     VIDEO = 'VIDEO',
     AUDIO = 'AUDIO',
     DOCUMENT = 'DOCUMENT',
-    OTHER = 'OTHER'
+    OTHER = 'OTHER',
 }
 
 export interface Media {
@@ -190,7 +190,7 @@ export enum OutputFormat {
     ORIGINAL = 'ORIGINAL',
     JPEG = 'JPEG',
     PNG = 'PNG',
-    WEBP = 'WEBP'
+    WEBP = 'WEBP',
 }
 
 export interface GenerateFormatRequest {
@@ -227,9 +227,8 @@ export interface MediaSummary {
 export interface ResponsiveMediaResponse {
     id: number;
     uid: string;
-    code: string;
-    desktopMedia: MediaSummary;
-    mobileMedia: MediaSummary;
+    desktop: MediaSummary;
+    mobile: MediaSummary;
     createdAt?: string;
     updatedAt?: string;
 }

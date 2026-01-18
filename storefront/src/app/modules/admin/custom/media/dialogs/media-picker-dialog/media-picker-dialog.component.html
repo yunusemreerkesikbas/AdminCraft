@@ -13,4 +13,28 @@
             (onMediaSelect)="select($event)"
         ></app-media-list>
     </div>
+
+    @if (data.mode === 'multiple') {
+        <div
+            class="flex items-center justify-between border-t bg-gray-50 px-6 py-4 dark:bg-black/10"
+        >
+            <div class="text-secondary text-sm">
+                {{ selectedItems.size }}
+                {{ 'admin.common.selected' | transloco }}
+            </div>
+            <div class="flex items-center gap-2">
+                <button mat-button (click)="close()">
+                    {{ 'admin.common.actions.cancel' | transloco }}
+                </button>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="submit()"
+                    [disabled]="selectedItems.size === 0"
+                >
+                    {{ 'admin.common.actions.select' | transloco }}
+                </button>
+            </div>
+        </div>
+    }
 </div>

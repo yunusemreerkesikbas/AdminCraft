@@ -61,6 +61,6 @@ For form inputs, always use existing shared components under:
 Examples include:
 
 - `SpaInputComponent`, `SpaTextareaComponent`, `SpaSelectComponent`
+- `SpaMediaPickerComponent` (supports single/multiple and responsive modes)
 - `SpaSearchInputComponent` (debounced search)
 - `SpaReorderListComponent` (drag & drop reorder)
-

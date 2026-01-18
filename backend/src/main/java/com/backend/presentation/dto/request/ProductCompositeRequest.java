@@ -1,5 +1,10 @@
 package com.backend.presentation.dto.request;
 
+import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.GALLERY_MAX_SIZE;
+import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
+import static com.backend.shared.constants.ValidationConstants.SKU_MAX_LENGTH;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -13,22 +18,14 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
-import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
-import static com.backend.shared.constants.ValidationConstants.SKU_MAX_LENGTH;
-
 public record ProductCompositeRequest(
-        @NotNull(message = "validation.product.productTypeId.required")
-        Long productTypeId,
+        @NotNull(message = "validation.product.productTypeId.required") Long productTypeId,
 
-        @Sku(maxLength = SKU_MAX_LENGTH)
-        String sku,
+        @Sku(maxLength = SKU_MAX_LENGTH) String sku,
 
-        @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min")
-        BigDecimal basePrice,
+        @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
 
-        @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size")
-        String currency,
+        @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size") String currency,
 
         ProductStatus status,
 
@@ -36,8 +33,7 @@ public record ProductCompositeRequest(
 
         Long responsiveMediaId,
 
-        @Valid
-        Map<Language, ProductI18nRequest> translations,
+        @Valid Map<Language, ProductI18nRequest> translations,
 
         Map<String, Object> attributes,
 
@@ -45,8 +41,7 @@ public record ProductCompositeRequest(
 
         Long primaryCategoryId,
 
-        List<Long> galleryMediaIds
-) {
+        @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
         currency = currency != null && !currency.isBlank() ? currency.trim() : "TRY";

@@ -36,6 +36,7 @@ import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.presentation.dto.request.ResponsiveMediaRequest;
 import com.backend.shared.common.HtmlSanitizer;
 
 import lombok.RequiredArgsConstructor;
@@ -64,7 +65,8 @@ public class ProductServiceImpl implements ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-            List<Long> galleryMediaIds,
+
+            List<ResponsiveMediaRequest> gallery,
             Long createdBy) {
         TenantContext.validateActive();
         log.debug("Creating product with SKU: {}", sku);
@@ -104,7 +106,8 @@ public class ProductServiceImpl implements ProductService {
         }
         saveAttributes(saved, productType, attributes);
         saveCategoryLinks(saved, categoryIds, primaryCategoryId);
-        saveGalleryMedia(saved, galleryMediaIds);
+        saveCategoryLinks(saved, categoryIds, primaryCategoryId);
+        saveGalleryMedia(saved, gallery);
 
         log.info("Created product id: {}, sku: {}", saved.getId(), saved.getSku());
         return findByIdComposite(saved.getId()).orElse(saved);
@@ -117,7 +120,8 @@ public class ProductServiceImpl implements ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-            List<Long> galleryMediaIds,
+
+            List<ResponsiveMediaRequest> gallery,
             Long updatedBy) {
         TenantContext.validateActive();
         log.debug("Updating product id: {}", id);
@@ -157,8 +161,8 @@ public class ProductServiceImpl implements ProductService {
             updateCategoryLinks(saved, categoryIds, primaryCategoryId);
         }
 
-        if (galleryMediaIds != null) {
-            updateGalleryMedia(saved, galleryMediaIds);
+        if (gallery != null) {
+            updateGalleryMedia(saved, gallery);
         }
 
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
@@ -177,9 +181,9 @@ public class ProductServiceImpl implements ProductService {
         result.getCategoryLinks().clear();
         result.getCategoryLinks().addAll(categoryLinks);
 
-        List<ProductMedia> gallery = productMediaRepository.findByProductIdWithMedia(result.getId());
+        List<ProductMedia> galleryMedia = productMediaRepository.findByProductIdWithMedia(result.getId());
         result.getGallery().clear();
-        result.getGallery().addAll(gallery);
+        result.getGallery().addAll(galleryMedia);
 
         return result;
     }
@@ -452,26 +456,43 @@ public class ProductServiceImpl implements ProductService {
         saveCategoryLinks(product, categoryIds, primaryCategoryId);
     }
 
-    private void saveGalleryMedia(Product product, List<Long> galleryMediaIds) {
-        if (galleryMediaIds == null || galleryMediaIds.isEmpty())
+    private void saveGalleryMedia(Product product, List<ResponsiveMediaRequest> gallery) {
+        if (gallery == null || gallery.isEmpty())
             return;
 
         int sortOrder = 0;
-        for (Long mediaId : galleryMediaIds) {
-            Media media = mediaRepository.findById(mediaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Media not found: " + mediaId));
+        for (ResponsiveMediaRequest req : gallery) {
+            Media desktop = mediaRepository.findById(req.desktopMediaId())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Desktop media not found: " + req.desktopMediaId()));
+
+            Media mobile = null;
+            if (req.mobileMediaId() != null) {
+                mobile = mediaRepository.findById(req.mobileMediaId())
+                        .orElseThrow(
+                                () -> new IllegalArgumentException("Mobile media not found: " + req.mobileMediaId()));
+            } else {
+                mobile = desktop;
+            }
+            ResponsiveMediaSet responsiveSet = new ResponsiveMediaSet();
+            responsiveSet.setUid("rm_" + System.nanoTime());
+            responsiveSet.setCode("gallery_" + product.getSku() + "_" + sortOrder + "_" + System.currentTimeMillis());
+            responsiveSet.setDesktopMedia(desktop);
+            responsiveSet.setMobileMedia(mobile);
+
+            responsiveMediaSetRepository.save(responsiveSet);
 
             ProductMedia pm = new ProductMedia();
             pm.setProduct(product);
-            pm.setMedia(media);
+            pm.setResponsiveMediaSet(responsiveSet);
             pm.setMediaType(com.backend.domain.enums.ProductMediaType.GALLERY);
             pm.setSortOrder(sortOrder++);
             productMediaRepository.save(pm);
         }
     }
 
-    private void updateGalleryMedia(Product product, List<Long> galleryMediaIds) {
+    private void updateGalleryMedia(Product product, List<ResponsiveMediaRequest> gallery) {
         productMediaRepository.deleteByProductId(product.getId());
-        saveGalleryMedia(product, galleryMediaIds);
+        saveGalleryMedia(product, gallery);
     }
 }

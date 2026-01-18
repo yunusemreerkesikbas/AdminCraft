@@ -30,6 +30,14 @@ export const langTR = {
             sku: {
                 pattern: 'Sadece harf, rakam, alt çizgi ve tire içerebilir',
             },
+            gallery: {
+                maxSize: 'Galeri en fazla {{max}} görsel içerebilir',
+            },
+        },
+        responsiveMedia: {
+            desktopMediaId: {
+                required: 'Desktop görseli zorunludur',
+            },
         },
         slug: {
             pattern: 'Yalnızca küçük harf, sayı ve tire içermelidir',

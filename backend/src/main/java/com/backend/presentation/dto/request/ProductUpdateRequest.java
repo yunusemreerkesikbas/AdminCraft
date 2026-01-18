@@ -1,5 +1,9 @@
 package com.backend.presentation.dto.request;
 
+import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.GALLERY_MAX_SIZE;
+import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -13,23 +17,23 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public record ProductUpdateRequest(
-                @DecimalMin(value = "0.0", inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
+    @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
 
-                @Size(max = 3, message = "validation.product.currency.size") String currency,
+    @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size") String currency,
 
-                ProductStatus status,
+    ProductStatus status,
 
-                Boolean isVisible,
+    Boolean isVisible,
 
-                Long responsiveMediaId,
+    Long responsiveMediaId,
 
-                @NotEmpty(message = "validation.product.translations.required") @Valid Map<Language, ProductI18nRequest> translations,
+    @NotEmpty(message = "validation.product.translations.required") @Valid Map<Language, ProductI18nRequest> translations,
 
-                Map<String, Object> attributes,
+    Map<String, Object> attributes,
 
-                List<Long> categoryIds,
+    List<Long> categoryIds,
 
-                Long primaryCategoryId,
+    Long primaryCategoryId,
 
-                List<Long> galleryMediaIds) {
+    @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
 }

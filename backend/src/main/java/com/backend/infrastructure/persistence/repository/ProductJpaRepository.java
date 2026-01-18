@@ -1,7 +1,7 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.Product;
-import com.backend.domain.enums.ProductStatus;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import com.backend.domain.entity.Product;
+import com.backend.domain.enums.ProductStatus;
 
 interface ProductJpaRepository extends JpaRepository<Product, Long> {
 
@@ -92,15 +93,18 @@ interface ProductJpaRepository extends JpaRepository<Product, Long> {
                                         "OR LOWER(i.shortDescription) LIKE LOWER(CONCAT('%', :query, '%')))")
         Page<Product> searchPublished(@Param("query") String query, Pageable pageable);
 
-        @EntityGraph(attributePaths = { "productType", "responsiveMediaSet", "attributes",
-                        "attributes.attributeDefinition" })
+        @EntityGraph(attributePaths = { "productType", "responsiveMediaSet", "responsiveMediaSet.desktopMedia",
+                        "responsiveMediaSet.mobileMedia", "attributes",
+                        "attributes.attributeDefinition", "gallery", "gallery.responsiveMediaSet",
+                        "gallery.responsiveMediaSet.desktopMedia", "gallery.responsiveMediaSet.mobileMedia" })
         @Query("SELECT p FROM Product p WHERE p.id = :id")
         Optional<Product> findByIdComposite(@Param("id") Long id);
 
         @Query("SELECT DISTINCT p FROM Product p JOIN p.categoryLinks pcl WHERE pcl.category.id = :categoryId")
         java.util.List<Product> findByCategoryIdList(@Param("categoryId") Long categoryId);
 
-        @EntityGraph(attributePaths = { "i18nContent", "responsiveMediaSet" })
+        @EntityGraph(attributePaths = { "i18nContent", "responsiveMediaSet", "responsiveMediaSet.desktopMedia",
+                        "responsiveMediaSet.mobileMedia" })
         @Query(value = "SELECT DISTINCT p FROM Product p LEFT JOIN p.i18nContent i LEFT JOIN p.categoryLinks pcl " +
                         "WHERE (:query IS NULL OR :query = '' OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(i.name) LIKE LOWER(CONCAT('%', :query, '%'))) "
                         +

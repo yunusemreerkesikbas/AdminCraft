@@ -12,6 +12,7 @@ import com.backend.application.dto.request.ProductI18nDto;
 import com.backend.domain.entity.Product;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.presentation.dto.request.ResponsiveMediaRequest;
 
 public interface ProductService {
 
@@ -20,7 +21,7 @@ public interface ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-            List<Long> galleryMediaIds,
+            List<ResponsiveMediaRequest> gallery,
             Long createdBy);
 
     Product updateComposite(Long id, BigDecimal basePrice, String currency,
@@ -28,7 +29,7 @@ public interface ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-            List<Long> galleryMediaIds,
+            List<ResponsiveMediaRequest> gallery,
             Long updatedBy);
 
     void delete(Long id);
