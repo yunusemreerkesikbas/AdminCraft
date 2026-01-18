@@ -92,10 +92,15 @@ Location: `storefront/src/app/modules/admin/custom/media/`
 Key files:
 
 - `media.service.ts`, `media.store.ts`, `media.types.ts`
-- dialogs:
+- Components:
+  - `SpaMediaPickerComponent`: The main component for selecting media.
+    - Supports **Single Selection**: `<spa-media-picker formControlName="media">`
+    - Supports **Multiple Selection**: `<spa-media-picker formControlName="gallery" [multiple]="true">`
+    - Supports **Responsive Mode** (Desktop/Mobile): `<spa-media-picker formControlName="responsiveMedia" [responsive]="true">`
+- Dialogs:
   - `dialogs/media-upload-dialog/`
   - `dialogs/media-detail-dialog/`
-  - `dialogs/media-picker-dialog/`
+  - `dialogs/media-picker-dialog/` (Used by `SpaMediaPickerComponent` for selecting images)
 
 ## Security & tenant isolation
 
@@ -118,4 +123,3 @@ Key files:
 - Add backend capability in the application service layer (processing/service).
 - Expose it via `MediaController` (admin) and/or `CmsMediaDeliveryController` (public) only if it is safe for public use.
 - Update docs and types in `storefront/src/app/modules/admin/custom/media/media.types.ts`.
-

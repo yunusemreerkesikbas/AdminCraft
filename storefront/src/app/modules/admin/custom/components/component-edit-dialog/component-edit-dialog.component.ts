@@ -1,6 +1,11 @@
 import { SpaLocalizedFormDialogData } from '@/app/shared/components/spa-dialog-base';
 import { CommonModule, UpperCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, ViewEncapsulation } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    inject,
+    ViewEncapsulation,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,19 +15,34 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import {
+    SpaDialogContentComponent,
+    SpaDialogFooterComponent,
+    SpaDialogHeaderComponent,
+} from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
-import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
+import {
+    SpaTabContainerComponent,
+    SpaTabContentDirective,
+    TabDefinition,
+} from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { map, Observable, of, switchMap, take } from 'rxjs';
-import { SpaResponsiveMediaPickerComponent } from '../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
+import { SpaMediaPickerComponent } from '../../media/components/spa-media-picker/spa-media-picker.component';
 import { MediaService } from '../../media/media.service';
 import { ComponentEntryListComponent } from '../entries/component-entry-list/component-entry-list.component';
-import { ComponentDetailDto, ComponentStatus, ComponentTypeDto, CreateComponentCompositeRequest, UpdateComponentCompositeRequest } from '../models/component-library.types';
+import {
+    ComponentDetailDto,
+    ComponentStatus,
+    ComponentTypeDto,
+    CreateComponentCompositeRequest,
+    UpdateComponentCompositeRequest,
+} from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 
-export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<ComponentDetailDto> {
+export interface ComponentEditDialogData
+    extends SpaLocalizedFormDialogData<ComponentDetailDto> {
     mode: 'create' | 'edit';
     component?: ComponentDetailDto;
     componentTypes?: ComponentTypeDto[];
@@ -47,23 +67,29 @@ export interface ComponentEditDialogData extends SpaLocalizedFormDialogData<Comp
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
         SpaDialogFooterComponent,
-        SpaResponsiveMediaPickerComponent,
+        SpaMediaPickerComponent,
         SpaTabContainerComponent,
-        SpaTabContentDirective
+        SpaTabContentDirective,
     ],
     templateUrl: './component-edit-dialog.component.html',
     styleUrls: ['./component-edit-dialog.component.scss'],
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, ComponentEditDialogData> {
+export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
+    any,
+    ComponentEditDialogData
+> {
     readonly #translocoService = inject(TranslocoService);
     readonly #componentService = inject(ComponentLibraryService);
     readonly #mediaService = inject(MediaService);
     readonly #notify = inject(NotificationService);
     readonly #tenantContext = inject(TenantContextService);
 
-    statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
+    statusOptions = Object.values(ComponentStatus).map((s) => ({
+        value: s,
+        label: s,
+    }));
     componentTypeOptions: { value: any; label: string }[] = [];
     override languages: string[] = [];
 
@@ -73,25 +99,35 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
 
     constructor() {
         super();
-        this.componentTypeOptions = (this.data?.componentTypes || []).map(type => ({
-            value: type.id,
-            label: type.name
-        }));
+        this.componentTypeOptions = (this.data?.componentTypes || []).map(
+            (type) => ({
+                value: type.id,
+                label: type.name,
+            })
+        );
     }
 
     get tabs(): TabDefinition[] {
         const baseTabs: TabDefinition[] = [
-            { id: 'general', label: 'admin.components.entries.tabs.general', icon: 'settings' },
+            {
+                id: 'general',
+                label: 'admin.components.entries.tabs.general',
+                icon: 'settings',
+            },
             { id: 'media', label: 'admin.media.title', icon: 'image' },
-            ...this.languages.map(lang => ({
+            ...this.languages.map((lang) => ({
                 id: 'lang-' + lang,
                 label: lang.toUpperCase(),
-                icon: 'translate'
-            }))
+                icon: 'translate',
+            })),
         ];
 
         if (this.data?.component) {
-            baseTabs.push({ id: 'entries', label: 'admin.components.entries.tabs.items', icon: 'list' });
+            baseTabs.push({
+                id: 'entries',
+                label: 'admin.components.entries.tabs.items',
+                icon: 'list',
+            });
         }
 
         return baseTabs;
@@ -102,7 +138,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         if (this.data?.languages?.length) {
             this.languages = this.data.languages;
         } else if (tenant?.supportedLanguages) {
-            this.languages = tenant.supportedLanguages.map(l => l.code);
+            this.languages = tenant.supportedLanguages.map((l) => l.code);
         } else {
             this.languages = ['en'];
         }
@@ -112,24 +148,37 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
     protected buildGeneralForm(): FormGroup {
         const component = this.data?.component;
         const responsiveMedia = component?.responsiveMedia;
-        const responsiveValue = responsiveMedia ? {
-            desktop: responsiveMedia.desktopMedia,
-            mobile: responsiveMedia.mobileMedia
-        } : null;
+        const responsiveValue = responsiveMedia
+            ? {
+                  desktop: responsiveMedia.desktop,
+                  mobile: responsiveMedia.mobile,
+              }
+            : null;
 
         return this.fb.group({
-            name: [component?.name || '', [
+            name: [
+                component?.name || '',
+                [
+                    Validators.required,
+                    Validators.maxLength(VALIDATION_LIMITS.COMPONENT_NAME_MAX),
+                ],
+            ],
+            componentTypeId: [
+                component?.componentTypeId || '',
                 Validators.required,
-                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_NAME_MAX)
-            ]],
-            componentTypeId: [component?.componentTypeId || '', Validators.required],
+            ],
             status: [component?.status, Validators.required],
             isVisible: [component?.isVisible ?? true],
-            styleClasses: [component?.styleClasses || '', [
-                Validators.maxLength(VALIDATION_LIMITS.COMPONENT_STYLE_CLASSES_MAX)
-            ]],
+            styleClasses: [
+                component?.styleClasses || '',
+                [
+                    Validators.maxLength(
+                        VALIDATION_LIMITS.COMPONENT_STYLE_CLASSES_MAX
+                    ),
+                ],
+            ],
             displayOrder: [component?.displayOrder || 0],
-            responsiveMedia: [responsiveValue]
+            responsiveMedia: [responsiveValue],
         });
     }
 
@@ -138,7 +187,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         return this.fb.group({
             title: [translation?.title || ''],
             subtitle: [translation?.subtitle || ''],
-            description: [translation?.description || '']
+            description: [translation?.description || ''],
         });
     }
 
@@ -166,12 +215,17 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
             status: generalData.status,
-            translations: translations
+            translations: translations,
         };
 
-        this.#componentService.createComposite(request)
+        this.#componentService
+            .createComposite(request)
             .pipe(
-                switchMap(response => this.#handleResponsiveMedia(response.id).pipe(map(() => response))),
+                switchMap((response) =>
+                    this.#handleResponsiveMedia(response.id).pipe(
+                        map(() => response)
+                    )
+                ),
                 take(1)
             )
             .subscribe({
@@ -179,11 +233,10 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
                     this.#notify.success('admin.components.success.created');
                     this.close(true);
                 },
-                error: (err) => {
+                error: () => {
                     this.setSubmitting(false);
                     this.#notify.alert('admin.components.errors.createFailed');
-                    console.error(err);
-                }
+                },
             });
     }
 
@@ -197,12 +250,17 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
             status: generalData.status,
-            translations: translations
+            translations: translations,
         };
 
-        this.#componentService.updateComposite(this.data.component.id, request)
+        this.#componentService
+            .updateComposite(this.data.component.id, request)
             .pipe(
-                switchMap(response => this.#handleResponsiveMedia(response.id).pipe(map(() => response))),
+                switchMap((response) =>
+                    this.#handleResponsiveMedia(response.id).pipe(
+                        map(() => response)
+                    )
+                ),
                 take(1)
             )
             .subscribe({
@@ -210,18 +268,17 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
                     this.#notify.success('admin.components.success.updated');
                     this.close(true);
                 },
-                error: (err) => {
+                error: () => {
                     this.setSubmitting(false);
                     this.#notify.alert('admin.components.errors.updateFailed');
-                    console.error(err);
-                }
+                },
             });
     }
 
     #buildTranslations(): Record<string, any> {
         const translations: Record<string, any> = {};
 
-        this.languages.forEach(lang => {
+        this.languages.forEach((lang) => {
             const form = this.i18nForms[lang];
             if (!form) return;
 
@@ -235,7 +292,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
                     title: title.trim(),
                     subtitle: subtitle?.trim() || undefined,
                     description: description?.trim() || undefined,
-                    status: status
+                    status: status,
                 };
             }
         });
@@ -247,16 +304,21 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
-        const desktopMediaId = typeof responsiveValue?.desktop === 'number'
-            ? responsiveValue.desktop
-            : responsiveValue?.desktop?.id;
-        const mobileMediaId = typeof responsiveValue?.mobile === 'number'
-            ? responsiveValue.mobile
-            : responsiveValue?.mobile?.id;
+        const desktopMediaId =
+            typeof responsiveValue?.desktop === 'number'
+                ? responsiveValue.desktop
+                : responsiveValue?.desktop?.id;
+        const mobileMediaId =
+            typeof responsiveValue?.mobile === 'number'
+                ? responsiveValue.mobile
+                : responsiveValue?.mobile?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             if (currentSetId) {
-                return this.#componentService.assignResponsiveMedia(componentId, null);
+                return this.#componentService.assignResponsiveMedia(
+                    componentId,
+                    null
+                );
             }
             return of(null);
         }
@@ -264,17 +326,24 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<any, Co
         const responsiveMediaRequest = {
             desktopMediaId: desktopMediaId,
             mobileMediaId: mobileMediaId,
-            code: `responsive_${componentId}_${Date.now()}`
+            code: `responsive_${componentId}_${Date.now()}`,
         };
 
         if (currentSetId) {
-            return this.#mediaService.updateResponsiveMedia(currentSetId, responsiveMediaRequest).pipe(
-                map(() => null)
-            );
+            return this.#mediaService
+                .updateResponsiveMedia(currentSetId, responsiveMediaRequest)
+                .pipe(map(() => null));
         } else {
-            return this.#mediaService.createResponsiveMedia(responsiveMediaRequest).pipe(
-                switchMap(set => this.#componentService.assignResponsiveMedia(componentId, set.id))
-            );
+            return this.#mediaService
+                .createResponsiveMedia(responsiveMediaRequest)
+                .pipe(
+                    switchMap((set) =>
+                        this.#componentService.assignResponsiveMedia(
+                            componentId,
+                            set.id
+                        )
+                    )
+                );
         }
     }
 }

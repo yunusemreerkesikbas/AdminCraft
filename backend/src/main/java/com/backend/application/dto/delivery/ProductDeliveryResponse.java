@@ -10,7 +10,6 @@ import com.backend.domain.entity.Product;
 import com.backend.domain.entity.ProductAttribute;
 import com.backend.domain.entity.ProductCategoryLink;
 import com.backend.domain.entity.ProductI18n;
-import com.backend.domain.entity.ProductMedia;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Language;
 
@@ -33,7 +32,7 @@ public class ProductDeliveryResponse {
     private ResponsiveMediaDelivery mainImage;
     private List<AttributeDelivery> attributes;
     private List<CategoryDelivery> categories;
-    private List<MediaDelivery> gallery;
+    private List<ResponsiveMediaDelivery> gallery;
 
     public static ProductDeliveryResponse from(Product product, Language language) {
         if (product == null)
@@ -68,10 +67,10 @@ public class ProductDeliveryResponse {
                         .toList()
                 : List.of();
 
-        List<MediaDelivery> gallery = product.getGallery() != null
+        List<ResponsiveMediaDelivery> gallery = product.getGallery() != null
                 ? product.getGallery().stream()
-                        .filter(pm -> pm.getMedia() != null)
-                        .map(MediaDelivery::from)
+                        .filter(pm -> pm.getResponsiveMediaSet() != null)
+                        .map(pm -> ResponsiveMediaDelivery.from(pm.getResponsiveMediaSet()))
                         .toList()
                 : List.of();
 
@@ -152,8 +151,9 @@ public class ProductDeliveryResponse {
         private Integer width;
         private Integer height;
 
-        public static MediaDelivery from(ProductMedia pm) {
-            Media m = pm.getMedia();
+        public static MediaDelivery from(Media m) {
+            if (m == null)
+                return null;
             return MediaDelivery.builder()
                     .uid(m.getUid())
                     .url("/api/media/files/" + m.getFileName())
@@ -176,18 +176,8 @@ public class ProductDeliveryResponse {
                 return null;
             return ResponsiveMediaDelivery.builder()
                     .uid(set.getUid())
-                    .desktop(set.getDesktopMedia() != null ? toMediaDelivery(set.getDesktopMedia()) : null)
-                    .mobile(set.getMobileMedia() != null ? toMediaDelivery(set.getMobileMedia()) : null)
-                    .build();
-        }
-
-        private static MediaDelivery toMediaDelivery(Media m) {
-            return MediaDelivery.builder()
-                    .uid(m.getUid())
-                    .url("/api/media/files/" + m.getFileName())
-                    .mimeType(m.getMimeType())
-                    .width(m.getWidth())
-                    .height(m.getHeight())
+                    .desktop(set.getDesktopMedia() != null ? MediaDelivery.from(set.getDesktopMedia()) : null)
+                    .mobile(set.getMobileMedia() != null ? MediaDelivery.from(set.getMobileMedia()) : null)
                     .build();
         }
     }

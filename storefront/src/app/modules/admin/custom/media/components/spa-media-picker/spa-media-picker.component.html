@@ -10,87 +10,388 @@
         </label>
     }
 
-    @if (value()) {
-        <div
-            class="group relative flex w-full items-center gap-3 rounded-md border bg-white p-2 pl-3 dark:bg-gray-800"
-        >
+    <!-- RESPONSIVE MODE -->
+    @if (responsive) {
+        @if (multiple) {
+            <!-- RESPONSIVE LIST (Multiple) -->
             <div
-                class="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded bg-gray-100 dark:bg-gray-900"
+                class="flex flex-col gap-3"
+                cdkDropList
+                (cdkDropListDropped)="drop($event)"
             >
-                @if (value()?.fileType === 'image') {
-                    <img
-                        [src]="value()?.publicUrl || value()?.url"
-                        [alt]="value()?.altText || 'Media'"
-                        class="h-full w-full object-cover"
-                    />
-                } @else {
-                    <mat-icon
-                        class="text-secondary icon-size-5"
-                        [svgIcon]="
-                            value()?.fileType === 'video'
-                                ? 'heroicons_outline:film'
-                                : value()?.fileType === 'audio'
-                                  ? 'heroicons_outline:musical-note'
-                                  : 'heroicons_outline:document'
-                        "
-                    ></mat-icon>
+                @for (item of asArray(value()); track $index) {
+                    <div
+                        class="group relative flex items-stretch overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                        cdkDrag
+                    >
+                        <!-- Drag Handle -->
+                        <div
+                            class="flex w-9 flex-shrink-0 cursor-grab flex-col items-center justify-center border-r border-gray-100 bg-gray-50 text-gray-400 active:cursor-grabbing dark:border-gray-700 dark:bg-gray-900/50"
+                            cdkDragHandle
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:bars-2'"
+                            ></mat-icon>
+                        </div>
+
+                        <!-- Content Area -->
+                        <div
+                            class="grid flex-1 grid-cols-2 divide-x divide-gray-100 dark:divide-gray-700"
+                        >
+                            <!-- Desktop Slot -->
+                            <div class="relative flex items-center p-3">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        mediaSlot;
+                                        context: {
+                                            $implicit: item.desktop,
+                                            type: 'desktop',
+                                            index: $index,
+                                            label: 'Desktop',
+                                        }
+                                    "
+                                ></ng-container>
+                            </div>
+
+                            <!-- Mobile Slot -->
+                            <div class="relative flex items-center p-3">
+                                <ng-container
+                                    *ngTemplateOutlet="
+                                        mediaSlot;
+                                        context: {
+                                            $implicit: item.mobile,
+                                            type: 'mobile',
+                                            index: $index,
+                                            label: 'Mobile',
+                                        }
+                                    "
+                                ></ng-container>
+                            </div>
+                        </div>
+
+                        <!-- Actions Column -->
+                        <div
+                            class="flex w-12 flex-shrink-0 flex-col items-center justify-center border-l border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50"
+                        >
+                            <button
+                                mat-icon-button
+                                type="button"
+                                color="warn"
+                                class="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                (click)="removeAt($index)"
+                                [matTooltip]="
+                                    'admin.common.actions.remove' | transloco
+                                "
+                            >
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="'heroicons_outline:trash'"
+                                ></mat-icon>
+                            </button>
+                        </div>
+
+                        <!-- Drag Placeholder -->
+                        <div *cdkDragPlaceholder class="opacity-0"></div>
+                    </div>
                 }
-            </div>
 
-            <!-- Info -->
-            <div class="flex min-w-0 flex-1 flex-col truncate">
-                <span class="truncate text-sm font-medium leading-tight">
-                    {{ value()?.originalName || value()?.title || 'Media' }}
-                </span>
-                <span class="text-secondary truncate text-xs">{{
-                    value()?.fileSizeFormatted
-                }}</span>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center gap-1">
+                <!-- Add Button -->
                 <button
-                    mat-icon-button
+                    mat-stroked-button
                     type="button"
-                    class="h-8 w-8"
-                    (click)="openPicker()"
-                    [matTooltip]="'admin.common.actions.edit' | transloco"
+                    class="w-full border-dashed py-6 text-gray-500 transition-colors hover:border-primary-500 hover:bg-primary-50 hover:text-primary-600 dark:text-gray-400 dark:hover:bg-primary-900/10"
+                    (click)="addResponsiveItem()"
                 >
                     <mat-icon
-                        class="icon-size-4"
-                        [svgIcon]="'heroicons_outline:pencil'"
+                        class="mr-2 icon-size-5"
+                        [svgIcon]="'heroicons_outline:plus'"
                     ></mat-icon>
-                </button>
-                <button
-                    mat-icon-button
-                    type="button"
-                    color="warn"
-                    class="h-8 w-8"
-                    (click)="remove()"
-                    [matTooltip]="'admin.common.actions.remove' | transloco"
-                >
-                    <mat-icon
-                        class="icon-size-4"
-                        [svgIcon]="'heroicons_outline:trash'"
-                    ></mat-icon>
+                    <span>{{ 'admin.common.actions.add' | transloco }}</span>
                 </button>
             </div>
-        </div>
+        } @else {
+            <!-- RESPONSIVE SINGLE (Detailed View) -->
+            <div
+                class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+            >
+                <div
+                    class="grid grid-cols-2 divide-x divide-gray-100 dark:divide-gray-700"
+                >
+                    <div class="p-4">
+                        <ng-container
+                            *ngTemplateOutlet="
+                                mediaSlot;
+                                context: {
+                                    $implicit: asResponsive(value())?.desktop,
+                                    type: 'desktop',
+                                    label: 'Desktop',
+                                }
+                            "
+                        ></ng-container>
+                    </div>
+                    <div class="p-4">
+                        <ng-container
+                            *ngTemplateOutlet="
+                                mediaSlot;
+                                context: {
+                                    $implicit: asResponsive(value())?.mobile,
+                                    type: 'mobile',
+                                    label: 'Mobile',
+                                }
+                            "
+                        ></ng-container>
+                    </div>
+                </div>
+            </div>
+        }
     } @else {
-        <div
-            class="flex h-14 w-full cursor-pointer flex-row items-center gap-2 rounded-md border-2 border-dashed border-gray-300 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-            (click)="openPicker()"
-        >
-            <mat-icon
-                class="text-gray-400 icon-size-5"
-                [svgIcon]="'heroicons_outline:photo'"
-            ></mat-icon>
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {{
-                    placeholder ||
-                        ('admin.media.picker.placeholder' | transloco)
-                }}
-            </span>
-        </div>
+        <!-- STANDARD MODE (Existing Logic) -->
+        @if (multiple) {
+            <div
+                class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                cdkDropList
+                cdkDropListOrientation="mixed"
+                (cdkDropListDropped)="drop($event)"
+            >
+                @for (media of asArray(value()); track media.id) {
+                    <div
+                        class="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+                        cdkDrag
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="
+                                mediaContent;
+                                context: { $implicit: media, size: 'cover' }
+                            "
+                        ></ng-container>
+
+                        <!-- Remove Button -->
+                        <button
+                            mat-icon-button
+                            type="button"
+                            color="warn"
+                            class="absolute right-1 top-1 h-7 w-7 bg-white/80 opacity-0 backdrop-blur-sm transition-all hover:bg-white group-hover:opacity-100 dark:bg-black/50 dark:hover:bg-black/70"
+                            (click)="removeAt($index)"
+                        >
+                            <mat-icon
+                                class="icon-size-4"
+                                [svgIcon]="'heroicons_outline:trash'"
+                            ></mat-icon>
+                        </button>
+                    </div>
+                }
+
+                <!-- Add Button -->
+                <div
+                    class="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-primary-500 hover:bg-primary-50 dark:border-gray-600 dark:hover:bg-primary-900/10"
+                    (click)="openPicker()"
+                    [class.opacity-50]="isDisabled()"
+                >
+                    <mat-icon
+                        class="text-gray-400 transition-colors icon-size-8 group-hover:text-primary-500"
+                        [svgIcon]="'heroicons_outline:plus'"
+                    ></mat-icon>
+                    <span
+                        class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400"
+                    >
+                        {{ 'admin.common.actions.add' | transloco }}
+                    </span>
+                </div>
+            </div>
+        } @else {
+            <!-- STANDARD SINGLE -->
+            @if (asMedia(value())) {
+                <div
+                    class="group relative flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800"
+                >
+                    <div
+                        class="relative h-14 w-14 flex-shrink-0 cursor-pointer overflow-hidden rounded-md bg-gray-100 dark:bg-gray-900"
+                        (click)="openPreview(value())"
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="
+                                mediaContent;
+                                context: { $implicit: asMedia(value()) }
+                            "
+                        ></ng-container>
+                    </div>
+
+                    <div class="flex min-w-0 flex-1 flex-col">
+                        <span
+                            class="truncate text-sm font-medium leading-tight"
+                        >
+                            {{
+                                asMedia(value())?.originalName ||
+                                    asMedia(value())?.title ||
+                                    'Media'
+                            }}
+                        </span>
+                        <span class="text-secondary mt-0.5 truncate text-xs">
+                            {{ asMedia(value())?.fileSizeFormatted }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center pr-1">
+                        <button
+                            mat-icon-button
+                            type="button"
+                            class="text-secondary opacity-0 transition-opacity hover:text-primary-500 group-hover:opacity-100"
+                            (click)="openPicker()"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:pencil'"
+                            ></mat-icon>
+                        </button>
+                        <button
+                            mat-icon-button
+                            type="button"
+                            color="warn"
+                            class="ml-1"
+                            (click)="remove()"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_outline:trash'"
+                            ></mat-icon>
+                        </button>
+                    </div>
+                </div>
+            } @else {
+                <div
+                    class="flex h-14 w-full cursor-pointer flex-row items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 px-4 transition-colors hover:border-primary-500 hover:bg-primary-50 dark:border-gray-600 dark:hover:bg-primary-900/10"
+                    (click)="openPicker()"
+                >
+                    <div
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800"
+                    >
+                        <mat-icon
+                            class="text-gray-500 icon-size-4"
+                            [svgIcon]="'heroicons_outline:photo'"
+                        ></mat-icon>
+                    </div>
+                    <span
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                    >
+                        {{
+                            placeholder ||
+                                ('admin.media.picker.placeholder' | transloco)
+                        }}
+                    </span>
+                </div>
+            }
+        }
     }
 </div>
+
+<!-- TEMPLATES -->
+
+<!-- Media Slot Template (Revised for cleaner look) -->
+<ng-template
+    #mediaSlot
+    let-media
+    let-type="type"
+    let-index="index"
+    let-label="label"
+>
+    <div class="group/slot flex w-full items-center gap-3">
+        <!-- Preview / Placeholder -->
+        <div
+            class="relative h-14 w-14 flex-shrink-0 cursor-pointer overflow-hidden rounded-md border border-gray-100 bg-gray-50 transition-colors hover:border-primary-300 dark:border-gray-700 dark:bg-gray-900"
+            (click)="
+                media
+                    ? openPreview(media)
+                    : openPicker({ index: index, type: type })
+            "
+        >
+            @if (media) {
+                <ng-container
+                    *ngTemplateOutlet="
+                        mediaContent;
+                        context: { $implicit: media }
+                    "
+                ></ng-container>
+            } @else {
+                <div
+                    class="flex h-full w-full flex-col items-center justify-center text-gray-400 group-hover/slot:text-primary-500"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        [svgIcon]="'heroicons_outline:photo'"
+                    ></mat-icon>
+                </div>
+            }
+        </div>
+
+        <!-- Info -->
+        <div class="flex min-w-0 flex-1 flex-col justify-center">
+            <span
+                class="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400"
+            >
+                {{ label }}
+            </span>
+            @if (media) {
+                <span
+                    class="truncate text-sm font-medium leading-tight text-gray-900 dark:text-gray-100"
+                >
+                    {{ media.originalName || media.title || 'Media' }}
+                </span>
+                <span class="text-secondary mt-0.5 truncate text-xs">
+                    {{ media.fileSizeFormatted }}
+                </span>
+            } @else {
+                <span
+                    class="cursor-pointer text-sm text-gray-500 transition-colors hover:text-primary-600 hover:underline"
+                    (click)="openPicker({ index: index, type: type })"
+                >
+                    {{ 'admin.media.picker.select' | transloco }}
+                </span>
+            }
+        </div>
+
+        <!-- Edit Action (Subtle, on hover) -->
+        @if (media) {
+            <button
+                mat-icon-button
+                type="button"
+                class="h-8 w-8 text-gray-400 opacity-0 transition-opacity hover:text-primary-500 group-hover/slot:opacity-100"
+                (click)="openPicker({ index: index, type: type })"
+            >
+                <mat-icon
+                    class="icon-size-4"
+                    [svgIcon]="'heroicons_outline:pencil'"
+                ></mat-icon>
+            </button>
+        }
+    </div>
+</ng-template>
+
+<!-- Media Content (Image vs Icon) -->
+<ng-template #mediaContent let-media let-size="size">
+    @if (media.mimeType?.startsWith('image/') || media.fileType === 'image') {
+        <img
+            [src]="media.publicUrl || media.url"
+            [alt]="media.altText || 'Media'"
+            class="h-full w-full object-cover"
+        />
+    } @else {
+        <div
+            class="flex h-full w-full items-center justify-center bg-gray-100 p-2 dark:bg-gray-800"
+        >
+            <mat-icon
+                class="text-secondary"
+                [class.icon-size-8]="size !== 'cover'"
+                [svgIcon]="
+                    media.fileType === 'video' ||
+                    media.mimeType?.startsWith('video/')
+                        ? 'heroicons_outline:film'
+                        : media.fileType === 'audio' ||
+                            media.mimeType?.startsWith('audio/')
+                          ? 'heroicons_outline:musical-note'
+                          : 'heroicons_outline:document-text'
+                "
+            ></mat-icon>
+        </div>
+    }
+</ng-template>

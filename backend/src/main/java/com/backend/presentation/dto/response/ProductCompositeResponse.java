@@ -1,14 +1,14 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.domain.entity.Product;
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.ProductStatus;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.backend.domain.entity.Product;
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProductStatus;
 
 public record ProductCompositeResponse(
                 Long id,
@@ -21,11 +21,11 @@ public record ProductCompositeResponse(
                 String currency,
                 ProductStatus status,
                 Boolean isVisible,
-                ResponsiveMediaResponse responsiveMedia,
+                ResponsiveMediaResponse images,
                 Map<Language, ProductI18nResponse> translations,
                 List<ProductAttributeValueResponse> attributes,
                 List<ProductCategoryResponse> categories,
-                List<ProductMediaResponse> gallery,
+                List<ProductMediaResponse> galleryImages,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt) {
         public static ProductCompositeResponse from(Product entity) {
@@ -54,13 +54,13 @@ public record ProductCompositeResponse(
                                                 .toList()
                                 : List.of();
 
-                List<ProductMediaResponse> gallery = entity.getGallery() != null
+                List<ProductMediaResponse> galleryImages = entity.getGallery() != null
                                 ? entity.getGallery().stream()
                                                 .map(ProductMediaResponse::from)
                                                 .toList()
                                 : List.of();
 
-                ResponsiveMediaResponse responsiveMedia = entity.getResponsiveMediaSet() != null
+                ResponsiveMediaResponse images = entity.getResponsiveMediaSet() != null
                                 ? ResponsiveMediaResponse.from(entity.getResponsiveMediaSet())
                                 : null;
 
@@ -75,11 +75,11 @@ public record ProductCompositeResponse(
                                 entity.getCurrency(),
                                 entity.getStatus(),
                                 entity.getIsVisible(),
-                                responsiveMedia,
+                                images,
                                 translations,
                                 attributes,
                                 categories,
-                                gallery,
+                                galleryImages,
                                 entity.getCreatedAt(),
                                 entity.getUpdatedAt());
         }

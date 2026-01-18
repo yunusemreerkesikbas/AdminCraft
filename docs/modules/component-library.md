@@ -130,7 +130,7 @@ Key parts:
 - Types and schemas: `models/`, `services/component-schema-builder.service.ts`
 - CRUD list and edit dialogs:
   - `list/` (paginated list with `BasePaginatedListComponent`)
-  - `component-edit-dialog/`
+  - `component-edit-dialog/` (uses `SpaMediaPicker` for responsive media)
 - Component Types UI: `types/`
   - `component-types-list.component.ts` (paginated list with sorting/search)
   - `component-type-edit-dialog/`

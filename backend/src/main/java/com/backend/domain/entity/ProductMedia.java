@@ -25,10 +25,10 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "product_media", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "product_id", "media_id" }, name = "uk_product_media")
+        @UniqueConstraint(columnNames = { "product_id", "responsive_media_set_id" }, name = "uk_product_media")
 }, indexes = {
         @Index(columnList = "product_id", name = "idx_pm_product"),
-        @Index(columnList = "media_id", name = "idx_pm_media"),
+        @Index(columnList = "responsive_media_set_id", name = "idx_pm_media_set"),
         @Index(columnList = "sort_order", name = "idx_pm_sort")
 })
 @Data
@@ -47,8 +47,8 @@ public class ProductMedia {
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "media_id", nullable = false)
-    private Media media;
+    @JoinColumn(name = "responsive_media_set_id", nullable = false)
+    private ResponsiveMediaSet responsiveMediaSet;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "media_type", length = 30)

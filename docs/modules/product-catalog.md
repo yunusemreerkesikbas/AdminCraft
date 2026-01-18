@@ -6,8 +6,8 @@ The Product Catalog module provides tenant-scoped management and public delivery
 
 - Product types with dynamic attribute definitions (EAV)
 - Hierarchical categories with i18n content
-- Products with composite create/update (translations + attributes + categories + gallery)
-- Optional responsive media set assignment (Media module integration)
+- Products with composite create/update (translations + attributes + categories + responsive gallery)
+- Responsive media support for both main product image and gallery items (Desktop + Mobile)
 
 ## Database
 
@@ -263,16 +263,16 @@ backend/src/test/java/com/backend/
 
 ### Critical test cases
 
-| Test Case | Exception Type | HTTP Status |
-|-----------|---------------|-------------|
-| ProductType delete with products | `BusinessRuleViolationException` | **409 Conflict** |
-| Category delete with children | `IllegalStateException` | 400 |
-| Category delete with products | `IllegalStateException` | 400 |
-| Product create without translations | `IllegalArgumentException` | 400 |
-| Duplicate SKU prevention | `IllegalArgumentException` | 400 |
-| Duplicate code prevention | `IllegalArgumentException` | 400 |
-| TenantContext not active | `IllegalStateException` | 500 |
-| Circular category parent | `IllegalArgumentException` | 400 |
+| Test Case                           | Exception Type                   | HTTP Status      |
+| ----------------------------------- | -------------------------------- | ---------------- |
+| ProductType delete with products    | `BusinessRuleViolationException` | **409 Conflict** |
+| Category delete with children       | `IllegalStateException`          | 400              |
+| Category delete with products       | `IllegalStateException`          | 400              |
+| Product create without translations | `IllegalArgumentException`       | 400              |
+| Duplicate SKU prevention            | `IllegalArgumentException`       | 400              |
+| Duplicate code prevention           | `IllegalArgumentException`       | 400              |
+| TenantContext not active            | `IllegalStateException`          | 500              |
+| Circular category parent            | `IllegalArgumentException`       | 400              |
 
 ### Running tests
 

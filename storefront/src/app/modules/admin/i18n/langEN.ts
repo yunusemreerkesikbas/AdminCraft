@@ -30,6 +30,14 @@ export const langEN = {
             sku: {
                 pattern: 'Only letters, digits, underscores and hyphens allowed',
             },
+            gallery: {
+                maxSize: 'Gallery can contain at most {{max}} images',
+            },
+        },
+        responsiveMedia: {
+            desktopMediaId: {
+                required: 'Desktop image is required',
+            },
         },
         slug: {
             pattern: 'Must contain only lowercase letters, numbers, and hyphens',

@@ -1,5 +1,8 @@
-import { ResponsiveMediaResponse } from "../../media/media.types";
-import { ProductFieldType } from "./product-type.types";
+import {
+    ResponsiveMediaRequest,
+    ResponsiveMediaResponse,
+} from '../../media/media.types';
+import { ProductFieldType } from './product-type.types';
 
 export interface Product {
     id: number;
@@ -13,11 +16,11 @@ export interface Product {
     isVisible: boolean;
     createdAt: string;
     updatedAt: string;
-    responsiveMedia?: ResponsiveMediaResponse;
+    images?: ResponsiveMediaResponse;
     translations?: Record<string, ProductI18n>;
     attributes?: ProductAttributeResponse[];
     categories?: ProductCategoryResponse[];
-    gallery?: ProductMediaResponse[];
+    galleryImages?: ProductMediaResponse[];
 }
 
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
@@ -54,7 +57,7 @@ export interface ProductMediaResponse {
     mediaId: number;
     mediaType: 'GALLERY' | 'PRIMARY' | 'THUMBNAIL';
     sortOrder: number;
-    media: any;
+    media: ResponsiveMediaResponse;
 }
 
 export interface ProductCompositeRequest {
@@ -65,12 +68,12 @@ export interface ProductCompositeRequest {
     status: ProductStatus;
     isVisible: boolean;
     responsiveMediaId?: number;
-    
+
     translations: Record<string, ProductI18nRequest>;
     attributes: Record<string, any>;
     categoryIds: number[];
     primaryCategoryId: number;
-    galleryMediaIds: number[];
+    gallery: ResponsiveMediaRequest[];
 }
 
 export interface ProductI18nRequest {

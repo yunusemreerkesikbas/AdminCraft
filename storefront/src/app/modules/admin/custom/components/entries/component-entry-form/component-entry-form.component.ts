@@ -1,5 +1,11 @@
 import { CommonModule, UpperCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+    signal,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,19 +14,30 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
-import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
+import {
+    SpaTabContainerComponent,
+    SpaTabContentDirective,
+    TabDefinition,
+} from '@shared/components/spa-tab-container';
 import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaDynamicFormService } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
 import { DynamicFieldConfig } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from 'app/shared/components/spa-dialog';
+import {
+    SpaDialogContentComponent,
+    SpaDialogFooterComponent,
+    SpaDialogHeaderComponent,
+} from 'app/shared/components/spa-dialog';
 import { map, Observable, of, switchMap, take } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../../media/components/spa-media-picker/spa-media-picker.component';
-import { SpaResponsiveMediaPickerComponent } from '../../../media/components/spa-responsive-media-picker/spa-responsive-media-picker.component';
 import { MediaService } from '../../../media/media.service';
-import { ComponentEntry, EntryFieldDefinition, EntryI18nDto } from '../../models/component-entry.types';
+import {
+    ComponentEntry,
+    EntryFieldDefinition,
+    EntryI18nDto,
+} from '../../models/component-entry.types';
 import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
@@ -58,12 +75,14 @@ interface ComponentEntryFormData {
         SpaDialogContentComponent,
         SpaDialogFooterComponent,
         SpaMediaPickerComponent,
-        SpaResponsiveMediaPickerComponent,
         SpaTabContainerComponent,
-        SpaTabContentDirective
-    ]
+        SpaTabContentDirective,
+    ],
 })
-export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean, ComponentEntryFormData> {
+export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
+    boolean,
+    ComponentEntryFormData
+> {
     override data = inject<ComponentEntryFormData>(MAT_DIALOG_DATA);
 
     #entryService = inject(ComponentEntryService);
@@ -75,26 +94,34 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
     override languages = this.#languageContext.supportedLanguages();
 
     fieldDefinitions = signal<EntryFieldDefinition[]>([]);
-    dynamicFieldsConfig = computed(() => this.#mapToDynamicConfig(this.fieldDefinitions()));
+    dynamicFieldsConfig = computed(() =>
+        this.#mapToDynamicConfig(this.fieldDefinitions())
+    );
     isLoading = signal<boolean>(false);
 
-    canSave = computed(() =>
-        this.generalForm?.valid &&
-        !this.isSubmitting() &&
-        !this.isLoading()
+    canSave = computed(
+        () =>
+            this.generalForm?.valid && !this.isSubmitting() && !this.isLoading()
     );
 
-    statusOptions = Object.values(ComponentStatus).map(s => ({ value: s, label: s }));
+    statusOptions = Object.values(ComponentStatus).map((s) => ({
+        value: s,
+        label: s,
+    }));
 
     get tabs(): TabDefinition[] {
         return [
-            { id: 'general', label: 'admin.components.entries.tabs.general', icon: 'settings' },
+            {
+                id: 'general',
+                label: 'admin.components.entries.tabs.general',
+                icon: 'settings',
+            },
             { id: 'media', label: 'admin.media.title', icon: 'image' },
-            ...this.languages.map(lang => ({
+            ...this.languages.map((lang) => ({
                 id: 'lang-' + lang,
                 label: lang.toUpperCase(),
-                icon: 'translate'
-            }))
+                icon: 'translate',
+            })),
         ];
     }
 
@@ -113,7 +140,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
             isVisible: [this.data.entry?.isVisible ?? true],
             styleClasses: [this.data.entry?.styleClasses || ''],
             status: [this.data.entry?.status ?? 'DRAFT', Validators.required],
-            responsiveMedia: [this.#buildResponsiveMediaValue()]
+            responsiveMedia: [this.#buildResponsiveMediaValue()],
         });
     }
 
@@ -122,7 +149,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         if (!responsive) return null;
         return {
             desktop: responsive.desktopMedia || null,
-            mobile: responsive.mobileMedia || null
+            mobile: responsive.mobileMedia || null,
         };
     }
 
@@ -130,12 +157,14 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         const mediaValue = this.generalForm.value.responsiveMedia;
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
-        const desktopMediaId = typeof mediaValue?.desktop === 'number'
-            ? mediaValue.desktop
-            : mediaValue?.desktop?.id;
-        const mobileMediaId = typeof mediaValue?.mobile === 'number'
-            ? mediaValue.mobile
-            : mediaValue?.mobile?.id;
+        const desktopMediaId =
+            typeof mediaValue?.desktop === 'number'
+                ? mediaValue.desktop
+                : mediaValue?.desktop?.id;
+        const mobileMediaId =
+            typeof mediaValue?.mobile === 'number'
+                ? mediaValue.mobile
+                : mediaValue?.mobile?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             return of(undefined);
@@ -144,31 +173,32 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
         const request = {
             desktopMediaId,
             mobileMediaId,
-            code: `responsive_entry_${this.data.componentId}_${Date.now()}`
+            code: `responsive_entry_${this.data.componentId}_${Date.now()}`,
         };
 
         if (currentSetId) {
-            return this.#mediaService.updateResponsiveMedia(currentSetId, request).pipe(
-                map(() => currentSetId)
-            );
+            return this.#mediaService
+                .updateResponsiveMedia(currentSetId, request)
+                .pipe(map(() => currentSetId));
         } else {
-            return this.#mediaService.createResponsiveMedia(request).pipe(
-                map(set => set.id)
-            );
+            return this.#mediaService
+                .createResponsiveMedia(request)
+                .pipe(map((set) => set.id));
         }
     }
 
     protected buildI18nForm(lang: string): FormGroup {
         return this.fb.group({
             title: [this.data.translations?.[lang]?.title || ''],
-            description: [this.data.translations?.[lang]?.description || '']
+            description: [this.data.translations?.[lang]?.description || ''],
         });
     }
 
     #loadFieldDefinitions(): void {
         this.isLoading.set(true);
 
-        this.#fieldService.getFields(this.data.componentTypeId!)
+        this.#fieldService
+            .getFields(this.data.componentTypeId!)
             .pipe(take(1))
             .subscribe({
                 next: (fields) => {
@@ -177,33 +207,40 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
                     this.isLoading.set(false);
                 },
                 error: () => {
-                    this.notify.alert('admin.components.entries.loadFieldsFailed');
+                    this.notify.alert(
+                        'admin.components.entries.loadFieldsFailed'
+                    );
                     this.isLoading.set(false);
-                }
+                },
             });
     }
 
     #addDynamicFieldsToForms(): void {
         const configs = this.dynamicFieldsConfig();
-        
-        this.languages.forEach(lang => {
+
+        this.languages.forEach((lang) => {
             const formGroup = this.i18nForms[lang];
             if (!formGroup) return;
 
-            const initialValues = this.data.translations?.[lang]?.customFields || {};
-            this.#dynamicFormService.addControlsToFormGroup(formGroup, configs, initialValues);
+            const initialValues =
+                this.data.translations?.[lang]?.customFields || {};
+            this.#dynamicFormService.addControlsToFormGroup(
+                formGroup,
+                configs,
+                initialValues
+            );
         });
     }
 
     #mapToDynamicConfig(fields: EntryFieldDefinition[]): DynamicFieldConfig[] {
-        return fields.map(f => ({
+        return fields.map((f) => ({
             key: f.fieldKey,
-            type: f.fieldType as any, 
+            type: f.fieldType as any,
             required: f.isRequired,
             maxLength: f.maxLength,
             minValue: f.minValue,
             maxValue: f.maxValue,
-            labelKey: `admin.components.entryFields.custom.${f.fieldKey}`
+            labelKey: `admin.components.entryFields.custom.${f.fieldKey}`,
         }));
     }
 
@@ -213,7 +250,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
             return;
         }
 
-        const hasInvalidI18n = Object.values(this.i18nForms).some(form => form.invalid);
+        const hasInvalidI18n = Object.values(this.i18nForms).some(
+            (form) => form.invalid
+        );
         if (hasInvalidI18n) {
             this.notify.warning('admin.common.validation.i18nFormsInvalid');
             return;
@@ -223,61 +262,76 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
 
         const translations = this.#buildCompositeTranslations();
 
-        this.#resolveResponsiveMediaId().pipe(
-            switchMap(responsiveMediaId => {
-                if (this.data.mode === 'create') {
-                    const payload: any = {
-                        componentId: this.data.componentId,
-                        sortOrder: this.data.sortOrder ?? 0,
-                        isVisible: this.generalForm.value.isVisible,
-                        styleClasses: this.generalForm.value.styleClasses || undefined,
-                        status: this.generalForm.value.status,
-                        responsiveMediaId,
-                        translations
-                    };
-                    return this.#entryService.createComposite(payload);
-                } else {
-                    const payload: any = {
-                        sortOrder: this.data.sortOrder,
-                        isVisible: this.generalForm.value.isVisible,
-                        styleClasses: this.generalForm.value.styleClasses || undefined,
-                        status: this.generalForm.value.status,
-                        responsiveMediaId,
-                        translations
-                    };
-                    return this.#entryService.updateComposite(this.data.entry!.id, payload);
-                }
-            }),
-            take(1)
-        ).subscribe({
-            next: () => {
-                this.setSubmitting(false);
-                const msgKey = this.data.mode === 'create'
-                    ? 'admin.components.entries.createSuccess'
-                    : 'admin.components.entries.updateSuccess';
-                this.notify.success(msgKey);
-                this.close(true);
-            },
-            error: (err) => {
-                this.setSubmitting(false);
-                const msgKey = this.data.mode === 'create'
-                    ? 'admin.components.entries.createFailed'
-                    : 'admin.components.entries.updateFailed';
-                this.notify.alert(err?.error?.message || msgKey);
-            }
-        });
+        this.#resolveResponsiveMediaId()
+            .pipe(
+                switchMap((responsiveMediaId) => {
+                    if (this.data.mode === 'create') {
+                        const payload: any = {
+                            componentId: this.data.componentId,
+                            sortOrder: this.data.sortOrder ?? 0,
+                            isVisible: this.generalForm.value.isVisible,
+                            styleClasses:
+                                this.generalForm.value.styleClasses ||
+                                undefined,
+                            status: this.generalForm.value.status,
+                            responsiveMediaId,
+                            translations,
+                        };
+                        return this.#entryService.createComposite(payload);
+                    } else {
+                        const payload: any = {
+                            sortOrder: this.data.sortOrder,
+                            isVisible: this.generalForm.value.isVisible,
+                            styleClasses:
+                                this.generalForm.value.styleClasses ||
+                                undefined,
+                            status: this.generalForm.value.status,
+                            responsiveMediaId,
+                            translations,
+                        };
+                        return this.#entryService.updateComposite(
+                            this.data.entry!.id,
+                            payload
+                        );
+                    }
+                }),
+                take(1)
+            )
+            .subscribe({
+                next: () => {
+                    this.setSubmitting(false);
+                    const msgKey =
+                        this.data.mode === 'create'
+                            ? 'admin.components.entries.createSuccess'
+                            : 'admin.components.entries.updateSuccess';
+                    this.notify.success(msgKey);
+                    this.close(true);
+                },
+                error: (err) => {
+                    this.setSubmitting(false);
+                    const msgKey =
+                        this.data.mode === 'create'
+                            ? 'admin.components.entries.createFailed'
+                            : 'admin.components.entries.updateFailed';
+                    this.notify.alert(err?.error?.message || msgKey);
+                },
+            });
     }
 
     #buildCompositeTranslations(): Record<string, any> {
         const translations: Record<string, any> = {};
         const baseFields = ['title', 'description'];
 
-        this.languages.forEach(lang => {
+        this.languages.forEach((lang) => {
             const formData = this.i18nForms[lang].value;
             const dynamicFields: Record<string, any> = {};
 
-            Object.keys(formData).forEach(key => {
-                if (!baseFields.includes(key) && formData[key] !== null && formData[key] !== '') {
+            Object.keys(formData).forEach((key) => {
+                if (
+                    !baseFields.includes(key) &&
+                    formData[key] !== null &&
+                    formData[key] !== ''
+                ) {
                     dynamicFields[key] = formData[key];
                 }
             });
@@ -286,7 +340,10 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<boolean,
                 title: formData.title || undefined,
                 description: formData.description || undefined,
                 status: this.generalForm.value.status || ComponentStatus.DRAFT,
-                dynamicFields: Object.keys(dynamicFields).length > 0 ? dynamicFields : undefined
+                dynamicFields:
+                    Object.keys(dynamicFields).length > 0
+                        ? dynamicFields
+                        : undefined,
             };
         });
 

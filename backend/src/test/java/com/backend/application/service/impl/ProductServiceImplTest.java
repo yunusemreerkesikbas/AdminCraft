@@ -1,20 +1,29 @@
 package com.backend.application.service.impl;
 
-import com.backend.application.dto.request.ProductI18nDto;
-import com.backend.application.service.ProductServiceImpl;
-import com.backend.domain.entity.Category;
-import com.backend.domain.entity.Media;
-import com.backend.domain.entity.Product;
-import com.backend.domain.entity.ProductI18n;
-import com.backend.domain.entity.ProductType;
-import com.backend.domain.entity.ResponsiveMediaSet;
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.ProductStatus;
-import com.backend.domain.repository.*;
-import com.backend.testutil.BaseServiceTest;
-import com.backend.testutil.builders.*;
-import org.junit.jupiter.api.*;
-import org.mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
@@ -22,12 +31,29 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.service.ProductServiceImpl;
+import com.backend.domain.entity.Category;
+import com.backend.domain.entity.Media;
+import com.backend.domain.entity.Product;
+import com.backend.domain.entity.ProductType;
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProductStatus;
+import com.backend.domain.repository.CategoryRepository;
+import com.backend.domain.repository.MediaRepository;
+import com.backend.domain.repository.ProductAttributeDefinitionRepository;
+import com.backend.domain.repository.ProductAttributeRepository;
+import com.backend.domain.repository.ProductCategoryLinkRepository;
+import com.backend.domain.repository.ProductI18nRepository;
+import com.backend.domain.repository.ProductMediaRepository;
+import com.backend.domain.repository.ProductRepository;
+import com.backend.domain.repository.ProductTypeRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
+import com.backend.presentation.dto.request.ResponsiveMediaRequest;
+import com.backend.testutil.BaseServiceTest;
+import com.backend.testutil.builders.CategoryTestDataBuilder;
+import com.backend.testutil.builders.ProductTestDataBuilder;
+import com.backend.testutil.builders.ProductTypeTestDataBuilder;
 
 /**
  * Unit tests for ProductServiceImpl.
@@ -108,14 +134,18 @@ class ProductServiceImplTest extends BaseServiceTest {
         void createComposite_WithAllFields_Success() {
             // Given
             Map<Language, ProductI18nDto> translations = new HashMap<>();
-            translations.put(Language.TR, new ProductI18nDto("Türkçe Ürün", "Kısa açıklama", "<p>Açıklama</p>", "SEO Title", "SEO Desc"));
-            translations.put(Language.EN, new ProductI18nDto("English Product", "Short desc", "<p>Description</p>", "SEO Title EN", "SEO Desc EN"));
+            translations.put(Language.TR,
+                    new ProductI18nDto("Türkçe Ürün", "Kısa açıklama", "<p>Açıklama</p>", "SEO Title", "SEO Desc"));
+            translations.put(Language.EN, new ProductI18nDto("English Product", "Short desc", "<p>Description</p>",
+                    "SEO Title EN", "SEO Desc EN"));
 
             Map<String, Object> attributes = new HashMap<>();
             attributes.put("color", "red");
 
             List<Long> categoryIds = List.of(1L);
-            List<Long> galleryMediaIds = List.of(10L, 11L);
+            List<ResponsiveMediaRequest> gallery = List.of(
+                    new ResponsiveMediaRequest(10L, null),
+                    new ResponsiveMediaRequest(11L, null));
 
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
             when(productRepository.existsBySku("SKU-NEW")).thenReturn(false);
@@ -133,7 +163,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             Product result = productService.createComposite(
                     1L, "SKU-NEW", BigDecimal.valueOf(199.99), "TRY",
                     ProductStatus.DRAFT, true, null,
-                    translations, attributes, categoryIds, 1L, galleryMediaIds, TEST_USER_ID);
+                    translations, attributes, categoryIds, 1L, gallery, TEST_USER_ID);
 
             // Then
             assertThat(result).isNotNull();
@@ -167,11 +197,9 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product ->
-                    product.getCurrency().equals("TRY") &&
+            verify(productRepository).save(argThat(product -> product.getCurrency().equals("TRY") &&
                     product.getStatus() == ProductStatus.DRAFT &&
-                    product.getIsVisible() == true
-            ));
+                    product.getIsVisible() == true));
         }
 
         @Test
@@ -397,7 +425,8 @@ class ProductServiceImplTest extends BaseServiceTest {
         void createComposite_ThrowsException_WhenMediaNotFound() {
             // Given
             Map<Language, ProductI18nDto> translations = Map.of(Language.TR, new ProductI18nDto("Test"));
-            List<Long> galleryMediaIds = List.of(999L);
+            List<ResponsiveMediaRequest> gallery = List.of(
+                    new ResponsiveMediaRequest(999L, null));
 
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
             when(productRepository.existsBySku(anyString())).thenReturn(false);
@@ -412,7 +441,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             // When & Then
             assertThatThrownBy(() -> productService.createComposite(
                     1L, "SKU-001", null, null,
-                    null, null, null, translations, null, null, null, galleryMediaIds, TEST_USER_ID))
+                    null, null, null, translations, null, null, null, gallery, TEST_USER_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Media not found");
         }
@@ -444,8 +473,7 @@ class ProductServiceImplTest extends BaseServiceTest {
         void updateComposite_AllFields_Success() {
             // Given
             Map<Language, ProductI18nDto> translations = Map.of(
-                    Language.TR, new ProductI18nDto("Güncel Ürün")
-            );
+                    Language.TR, new ProductI18nDto("Güncel Ürün"));
 
             when(productRepository.findById(1L)).thenReturn(Optional.of(testProduct));
             when(productRepository.save(any(Product.class))).thenReturn(testProduct);
@@ -461,12 +489,11 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product ->
-                    product.getBasePrice().compareTo(BigDecimal.valueOf(299.99)) == 0 &&
-                    "USD".equals(product.getCurrency()) &&
-                    product.getStatus() == ProductStatus.PUBLISHED &&
-                    product.getIsVisible() == false
-            ));
+            verify(productRepository)
+                    .save(argThat(product -> product.getBasePrice().compareTo(BigDecimal.valueOf(299.99)) == 0 &&
+                            "USD".equals(product.getCurrency()) &&
+                            product.getStatus() == ProductStatus.PUBLISHED &&
+                            product.getIsVisible() == false));
         }
 
         @Test
@@ -486,9 +513,8 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product ->
-                    product.getBasePrice().compareTo(BigDecimal.valueOf(150.00)) == 0
-            ));
+            verify(productRepository)
+                    .save(argThat(product -> product.getBasePrice().compareTo(BigDecimal.valueOf(150.00)) == 0));
         }
 
         @Test
@@ -679,7 +705,8 @@ class ProductServiceImplTest extends BaseServiceTest {
         void search_WithMultipleFilters() {
             // Given
             Page<Product> productPage = new PageImpl<>(List.of(testProduct));
-            when(productRepository.searchWithFilters(eq("test"), eq(ProductStatus.PUBLISHED), eq(1L), any(Pageable.class)))
+            when(productRepository.searchWithFilters(eq("test"), eq(ProductStatus.PUBLISHED), eq(1L),
+                    any(Pageable.class)))
                     .thenReturn(productPage);
 
             // When
@@ -691,7 +718,8 @@ class ProductServiceImplTest extends BaseServiceTest {
         }
     }
 
-    // ==================== updateStatus() and updateVisibility() Tests ====================
+    // ==================== updateStatus() and updateVisibility() Tests
+    // ====================
 
     @Nested
     @DisplayName("Status and Visibility Update Tests")
@@ -709,8 +737,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product ->
-                    product.getStatus() == ProductStatus.PUBLISHED));
+            verify(productRepository).save(argThat(product -> product.getStatus() == ProductStatus.PUBLISHED));
         }
 
         @Test
@@ -737,8 +764,7 @@ class ProductServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productRepository).save(argThat(product ->
-                    product.getIsVisible() == false));
+            verify(productRepository).save(argThat(product -> product.getIsVisible() == false));
         }
     }
 }
