@@ -71,7 +71,6 @@ Base path: `/api/products`
 - `DELETE /api/products/{id}`
 - `PATCH /api/products/{id}/status?status=DRAFT|PUBLISHED`
 - `PATCH /api/products/{id}/visibility?isVisible=true|false`
-
 ## Public delivery APIs
 
 Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java)
@@ -197,7 +196,6 @@ Translation save operations use batch processing for improved performance:
 - `sku`: max 100 characters (`@Size(max=100)`)
 - `name`: max 200 characters (in i18n DTOs)
 - `code`: max 100 characters with pattern validation
-- `currency`: exactly 3 characters (`@Size(min=3, max=3)`)
 
 **Required field validation**:
 

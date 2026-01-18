@@ -6,6 +6,7 @@ export interface Tenant {
     status: TenantStatus;
     defaultLanguage: Language;
     supportedLanguages: LanguageResponse[];
+    currency: Currency;
     customDomain?: string;
     notes?: string;
     hasAdminUser: boolean;
@@ -38,6 +39,26 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
     [Language.AR]: 'العربية'
 };
 
+export enum Currency {
+    TRY = 'TRY',
+    USD = 'USD',
+    EUR = 'EUR',
+    GBP = 'GBP',
+    JPY = 'JPY',
+    AED = 'AED',
+    SAR = 'SAR'
+}
+
+export const CURRENCY_LABELS: Record<Currency, string> = {
+    [Currency.TRY]: 'TRY - Türk Lirası (₺)',
+    [Currency.USD]: 'USD - US Dollar ($)',
+    [Currency.EUR]: 'EUR - Euro (€)',
+    [Currency.GBP]: 'GBP - British Pound (£)',
+    [Currency.JPY]: 'JPY - Japanese Yen (¥)',
+    [Currency.AED]: 'AED - UAE Dirham',
+    [Currency.SAR]: 'SAR - Saudi Riyal'
+};
+
 export interface LanguageResponse {
     code: string;
     nativeName: string;
@@ -50,6 +71,7 @@ export interface CreateTenantRequest {
     subdomain: string;
     defaultLanguage: Language;
     supportedLanguages: Language[];
+    currency: Currency;
     customDomain?: string;
     notes?: string;
 }
@@ -58,6 +80,7 @@ export interface UpdateTenantRequest {
     companyName?: string;
     defaultLanguage?: Language;
     supportedLanguages?: Language[];
+    currency?: Currency;
     customDomain?: string;
     notes?: string;
 }
@@ -97,6 +120,7 @@ export interface TenantListResponse {
     status: TenantStatus;
     defaultLanguage: Language;
     supportedLanguages: LanguageResponse[];
+    currency: Currency;
     hasAdminUser: boolean;
 
     provisioningStatus: 'idle' | 'provisioning' | 'failed';

@@ -60,10 +60,6 @@ public class Product extends BaseEntity {
     @Column(name = "base_price", precision = 15, scale = 2)
     private BigDecimal basePrice;
 
-    @Size(max = 3)
-    @Column(length = 3)
-    private String currency = "TRY";
-
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

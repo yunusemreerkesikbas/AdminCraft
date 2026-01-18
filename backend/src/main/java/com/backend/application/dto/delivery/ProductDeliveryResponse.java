@@ -1,6 +1,5 @@
 package com.backend.application.dto.delivery;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import com.backend.domain.entity.Category;
@@ -11,7 +10,9 @@ import com.backend.domain.entity.ProductAttribute;
 import com.backend.domain.entity.ProductCategoryLink;
 import com.backend.domain.entity.ProductI18n;
 import com.backend.domain.entity.ResponsiveMediaSet;
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.PriceResponse;
 
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +25,7 @@ public class ProductDeliveryResponse {
     private String name;
     private String shortDescription;
     private String description;
-    private BigDecimal basePrice;
-    private String currency;
+    private PriceResponse price;
     private String seoTitle;
     private String seoDescription;
     private String productTypeName;
@@ -34,7 +34,7 @@ public class ProductDeliveryResponse {
     private List<CategoryDelivery> categories;
     private List<ResponsiveMediaDelivery> gallery;
 
-    public static ProductDeliveryResponse from(Product product, Language language) {
+    public static ProductDeliveryResponse from(Product product, Language language, Currency currency) {
         if (product == null)
             return null;
 
@@ -79,14 +79,15 @@ public class ProductDeliveryResponse {
             mainImage = ResponsiveMediaDelivery.from(product.getResponsiveMediaSet());
         }
 
+        PriceResponse price = PriceResponse.from(product.getBasePrice(), currency);
+
         return ProductDeliveryResponse.builder()
                 .uid(product.getUid())
                 .sku(product.getSku())
                 .name(name != null ? name : product.getSku())
                 .shortDescription(shortDesc)
                 .description(description)
-                .basePrice(product.getBasePrice())
-                .currency(product.getCurrency())
+                .price(price)
                 .seoTitle(seoTitle)
                 .seoDescription(seoDesc)
                 .productTypeName(product.getProductType() != null ? product.getProductType().getName() : null)

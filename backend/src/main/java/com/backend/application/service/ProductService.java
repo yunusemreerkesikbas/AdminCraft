@@ -16,7 +16,7 @@ import com.backend.presentation.dto.request.ResponsiveMediaRequest;
 
 public interface ProductService {
 
-    Product createComposite(Long productTypeId, String sku, BigDecimal basePrice, String currency,
+    Product createComposite(Long productTypeId, String sku, BigDecimal basePrice,
             ProductStatus status, Boolean isVisible, Long responsiveMediaId,
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
@@ -24,7 +24,7 @@ public interface ProductService {
             List<ResponsiveMediaRequest> gallery,
             Long createdBy);
 
-    Product updateComposite(Long id, BigDecimal basePrice, String currency,
+    Product updateComposite(Long id, BigDecimal basePrice,
             ProductStatus status, Boolean isVisible, Long responsiveMediaId,
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,

@@ -1,5 +1,6 @@
 package com.backend.presentation.dto.response;
 
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
@@ -15,6 +16,7 @@ public record TenantListResponse(
         TenantStatus status,
         Language defaultLanguage,
         Set<LanguageResponse> supportedLanguages,
+        Currency currency,
 
         String provisioningStatus,
         Integer provisionedModulesCount,
@@ -38,6 +40,7 @@ public record TenantListResponse(
                 tenant.getSupportedLanguages().stream()
                         .map(LanguageResponse::from)
                         .collect(Collectors.toSet()),
+                tenant.getCurrency(),
                 provisioningStatus.name().toLowerCase(),
                 modulesCount,
                 tenant.getCreatedAt(),

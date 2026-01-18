@@ -13,6 +13,7 @@ import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-di
 import { SpaTabContainerComponent, SpaTabContentDirective } from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaDateTimePipe } from '@shared/pipes/spa-date-time.pipe';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take } from 'rxjs';
 import { AttributeDefinition, CreateProductTypeRequest, ProductType } from '../../models/product-type.types';
@@ -51,6 +52,7 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
     #matDialog = inject(MatDialog);
     #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
+    #datePipe = new SpaDateTimePipe();
 
     attributes = signal<AttributeDefinition[]>([]);
     isLoadingAttributes = signal(false);
@@ -84,8 +86,14 @@ export class ProductTypeEditDialogComponent extends SpaLocalizedFormDialog<boole
             ]],
             category: [this.data.item?.category || '', [
                 Validators.maxLength(VALIDATION_LIMITS.PRODUCT_TYPE_CATEGORY_MAX)
-            ]]
+            ]],
+            createdAt: [{ value: this.#formatDateTime(this.data.item?.createdAt), disabled: true }],
+            updatedAt: [{ value: this.#formatDateTime(this.data.item?.updatedAt), disabled: true }]
         });
+    }
+
+    #formatDateTime(value: string | Date | null | undefined): string {
+        return this.#datePipe.transform(value);
     }
 
     protected buildI18nForm(lang: string): FormGroup {

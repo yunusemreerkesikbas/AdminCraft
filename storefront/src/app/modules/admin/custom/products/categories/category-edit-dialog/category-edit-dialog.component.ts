@@ -13,6 +13,7 @@ import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-di
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { SpaDateTimePipe } from '@shared/pipes/spa-date-time.pipe';
 import { take } from 'rxjs';
 import { Category, CategoryCompositeRequest, CategoryI18nRequest } from '../../models/category.types';
 import { CategoryService } from '../../services/category.service';
@@ -49,6 +50,7 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
     #service = inject(CategoryService);
     #notificationService = inject(NotificationService);
     #languageContextService = inject(LanguageContextService);
+    #datePipe = new SpaDateTimePipe();
 
     override languages = this.#languageContextService.supportedLanguages();
     parentOptions = computed(() => {
@@ -84,8 +86,14 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
             ]],
             parentId: [this.data.item?.parentId || this.data.parentId || null],
             sortOrder: [this.data.item?.sortOrder || 0],
-            isVisible: [this.data.item?.isVisible ?? true]
+            isVisible: [this.data.item?.isVisible ?? true],
+            createdAt: [{ value: this.#formatDateTime(this.data.item?.createdAt), disabled: true }],
+            updatedAt: [{ value: this.#formatDateTime(this.data.item?.updatedAt), disabled: true }]
         });
+    }
+
+    #formatDateTime(value: string | Date | null | undefined): string {
+        return this.#datePipe.transform(value);
     }
 
     protected buildI18nForm(lang: string): FormGroup {

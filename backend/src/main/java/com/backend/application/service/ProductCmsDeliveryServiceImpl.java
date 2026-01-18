@@ -9,6 +9,7 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
 import com.backend.domain.repository.CategoryRepository;
 import com.backend.domain.repository.ProductRepository;
+import com.backend.infrastructure.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ public class ProductCmsDeliveryServiceImpl implements ProductCmsDeliveryService 
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +39,7 @@ public class ProductCmsDeliveryServiceImpl implements ProductCmsDeliveryService 
                 .filter(p -> p.getIsVisible() != null && p.getIsVisible())
                 .map(p -> {
                     Product full = productRepository.findByIdComposite(p.getId()).orElse(p);
-                    return ProductDeliveryResponse.from(full, language);
+                    return ProductDeliveryResponse.from(full, language, tenantContext.getCurrency());
                 });
     }
 

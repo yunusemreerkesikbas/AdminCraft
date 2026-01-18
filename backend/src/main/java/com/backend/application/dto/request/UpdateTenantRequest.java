@@ -1,5 +1,6 @@
 package com.backend.application.dto.request;
 
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import jakarta.validation.constraints.*;
 
@@ -11,6 +12,8 @@ public record UpdateTenantRequest(
         Language defaultLanguage,
 
         Set<Language> supportedLanguages,
+
+        Currency currency,
 
         @Size(max = 100, message = "validation.custom.domain.size") String customDomain,
 

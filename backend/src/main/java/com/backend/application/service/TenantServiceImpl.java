@@ -9,8 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.application.command.CreateTenantCommand;
-import com.backend.application.command.UpdateTenantCommand;
+import com.backend.application.dto.request.CreateTenantRequest;
+import com.backend.application.dto.request.UpdateTenantRequest;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
@@ -44,22 +44,23 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    public TenantDetailResponse createTenantWithDetail(CreateTenantCommand command, Language displayLanguage) {
-        if (ValidationConstants.isReservedSubdomain(command.subdomain())) {
-            throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + command.subdomain());
+    public TenantDetailResponse createTenantWithDetail(CreateTenantRequest request, Language displayLanguage) {
+        if (ValidationConstants.isReservedSubdomain(request.subdomain())) {
+            throw new IllegalArgumentException("Subdomain is reserved and cannot be used: " + request.subdomain());
         }
-        if (tenantRepository.existsBySubdomain(command.subdomain())) {
-            throw new IllegalArgumentException("Subdomain already exists: " + command.subdomain());
+        if (tenantRepository.existsBySubdomain(request.subdomain())) {
+            throw new IllegalArgumentException("Subdomain already exists: " + request.subdomain());
         }
 
         Tenant tenant = new Tenant();
-        tenant.setSubdomain(command.subdomain());
-        tenant.setCompanyName(command.companyName());
-        tenant.setDefaultLanguage(command.defaultLanguage());
-        tenant.setSupportedLanguages(command.supportedLanguages());
-        tenant.setNotes(command.notes());
-        tenant.setAdminEmail(command.adminEmail());
-        tenant.setAdminName(command.adminName());
+        tenant.setSubdomain(request.subdomain());
+        tenant.setCompanyName(request.companyName());
+        tenant.setDefaultLanguage(request.defaultLanguage());
+        tenant.setSupportedLanguages(request.supportedLanguages());
+        tenant.setCurrency(request.currency() != null ? request.currency() : com.backend.domain.enums.Currency.TRY);
+        tenant.setNotes(request.notes());
+        tenant.setAdminEmail(null);
+        tenant.setAdminName(null);
 
         Tenant savedTenant = tenantRepository.save(tenant);
 
@@ -71,28 +72,31 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    public TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantCommand command, Language displayLanguage) {
+    public TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantRequest request, Language displayLanguage) {
         Tenant tenant = tenantRepository.findById(id)
                 .orElseThrow(() -> new TenantNotFoundException(id));
 
-        if (command.companyName() != null) {
-            tenant.setCompanyName(command.companyName());
+        if (request.companyName() != null) {
+            tenant.setCompanyName(request.companyName());
         }
-        if (command.defaultLanguage() != null) {
-            tenant.setDefaultLanguage(command.defaultLanguage());
+        if (request.defaultLanguage() != null) {
+            tenant.setDefaultLanguage(request.defaultLanguage());
         }
-        if (command.supportedLanguages() != null && !command.supportedLanguages().isEmpty()) {
-            tenant.setSupportedLanguages(command.supportedLanguages());
+        if (request.supportedLanguages() != null && !request.supportedLanguages().isEmpty()) {
+            tenant.setSupportedLanguages(request.supportedLanguages());
         }
-        if (command.customDomain() != null) {
-            if (!command.customDomain().isEmpty() &&
-                    tenantRepository.existsByCustomDomainAndIdNot(command.customDomain(), id)) {
-                throw new IllegalArgumentException("Custom domain already exists: " + command.customDomain());
+        if (request.currency() != null) {
+            tenant.setCurrency(request.currency());
+        }
+        if (request.customDomain() != null) {
+            if (!request.customDomain().isEmpty() &&
+                    tenantRepository.existsByCustomDomainAndIdNot(request.customDomain(), id)) {
+                throw new IllegalArgumentException("Custom domain already exists: " + request.customDomain());
             }
-            tenant.setCustomDomain(command.customDomain());
+            tenant.setCustomDomain(request.customDomain());
         }
-        if (command.notes() != null) {
-            tenant.setNotes(command.notes());
+        if (request.notes() != null) {
+            tenant.setNotes(request.notes());
         }
 
         Tenant updatedTenant = tenantRepository.save(tenant);

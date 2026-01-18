@@ -1,12 +1,12 @@
 package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.Product;
-import com.backend.domain.entity.ProductCategoryLink;
 import com.backend.domain.entity.ProductI18n;
+import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
+import com.backend.presentation.dto.PriceResponse;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record ProductListItemResponse(
@@ -17,18 +17,17 @@ public record ProductListItemResponse(
         String name,
         ProductStatus status,
         Boolean isVisible,
-        BigDecimal basePrice,
-        String currency,
+        PriceResponse price,
         String primaryCategoryName,
         String thumbnailUrl,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static ProductListItemResponse from(Product entity, Language language) {
-        return from(entity, language, null);
+    public static ProductListItemResponse from(Product entity, Language language, Currency currency) {
+        return from(entity, language, currency, null);
     }
 
-    public static ProductListItemResponse from(Product entity, Language language, String primaryCategoryName) {
+    public static ProductListItemResponse from(Product entity, Language language, Currency currency, String primaryCategoryName) {
         if (entity == null) {
             throw new IllegalArgumentException("Product entity cannot be null");
         }
@@ -45,6 +44,8 @@ public record ProductListItemResponse(
                 ? "/api/media/files/" + entity.getResponsiveMediaSet().getDesktopMedia().getFileName()
                 : null;
 
+        PriceResponse price = PriceResponse.from(entity.getBasePrice(), currency);
+
         return new ProductListItemResponse(
                 entity.getId(),
                 entity.getUuid(),
@@ -53,16 +54,11 @@ public record ProductListItemResponse(
                 name,
                 entity.getStatus(),
                 entity.getIsVisible(),
-                entity.getBasePrice(),
-                entity.getCurrency(),
+                price,
                 primaryCategoryName,
                 thumbnailUrl,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
-    }
-
-    public static ProductListItemResponse from(Product entity) {
-        return from(entity, Language.TR);
     }
 }

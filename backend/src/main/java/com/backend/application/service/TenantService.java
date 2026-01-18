@@ -1,7 +1,7 @@
 package com.backend.application.service;
 
-import com.backend.application.command.CreateTenantCommand;
-import com.backend.application.command.UpdateTenantCommand;
+import com.backend.application.dto.request.CreateTenantRequest;
+import com.backend.application.dto.request.UpdateTenantRequest;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
@@ -20,9 +20,9 @@ public interface TenantService {
 
     List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage);
 
-    TenantDetailResponse createTenantWithDetail(CreateTenantCommand command, Language displayLanguage);
+    TenantDetailResponse createTenantWithDetail(CreateTenantRequest request, Language displayLanguage);
 
-    TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantCommand command, Language displayLanguage);
+    TenantDetailResponse updateTenantWithDetail(Long id, UpdateTenantRequest request, Language displayLanguage);
 
     TenantListResponse getTenantListById(Long id, Language displayLanguage);
 

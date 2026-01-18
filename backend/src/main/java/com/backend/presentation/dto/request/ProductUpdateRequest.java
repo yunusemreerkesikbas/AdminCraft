@@ -1,6 +1,5 @@
 package com.backend.presentation.dto.request;
 
-import static com.backend.shared.constants.ValidationConstants.CURRENCY_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.GALLERY_MAX_SIZE;
 import static com.backend.shared.constants.ValidationConstants.PRICE_MIN;
 
@@ -18,8 +17,6 @@ import jakarta.validation.constraints.Size;
 
 public record ProductUpdateRequest(
     @DecimalMin(value = PRICE_MIN, inclusive = true, message = "validation.product.basePrice.min") BigDecimal basePrice,
-
-    @Size(max = CURRENCY_MAX_LENGTH, message = "validation.product.currency.size") String currency,
 
     ProductStatus status,
 
