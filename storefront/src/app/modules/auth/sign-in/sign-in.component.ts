@@ -79,12 +79,12 @@ export class AuthSignInComponent implements OnInit {
                 const lang = this._translocoService.getActiveLang();
                 const user = this._userService.user();
                 if (user?.role === 'SUPER_ADMIN') {
-                    this._router.navigateByUrl(`/${lang}/dashboards/project`);
+                    this._router.navigateByUrl(`/${lang}/pages`);
                     return;
                 }
                 const returnUrl = this._activatedRoute.snapshot.queryParamMap.get('redirectURL');
                 const safeUrl = this.#getSafeUrl(returnUrl);
-                const fallback = `/${lang}/dashboards/project`;
+                const fallback = `/${lang}/pages`;
                 this._router.navigateByUrl(safeUrl || fallback);
             } else {
                 this.signInForm.enable();

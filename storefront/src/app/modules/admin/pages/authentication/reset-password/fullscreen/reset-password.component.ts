@@ -14,7 +14,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { FuseValidators } from '@fuse/validators';
 
 @Component({
     selector: 'reset-password-fullscreen',
@@ -60,12 +59,6 @@ export class ResetPasswordFullscreenComponent implements OnInit {
                 password: ['', Validators.required],
                 passwordConfirm: ['', Validators.required],
             },
-            {
-                validators: FuseValidators.mustMatch(
-                    'password',
-                    'passwordConfirm'
-                ),
-            }
         );
     }
 

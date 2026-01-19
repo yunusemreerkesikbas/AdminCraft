@@ -94,20 +94,7 @@
             must be used within the <code>validators</code> option of the form
             builder:
         </p>
-        <textarea fuse-highlight lang="typescript">
-            import { FuseValidators } from '@fuse/validators';
-
-            // Create the reset password form
-            this.resetPasswordForm = this._formBuilder.group(
-                {
-                    password       : ['', Validators.required],
-                    passwordConfirm: ['', Validators.required]
-                },
-                {
-                    validators: FuseValidators.mustMatch('password', 'passwordConfirm')
-                }
-            );
-        </textarea>
+        
         <p>
             To show an error message on the field, the
             <code>mat-error</code> element can be used within the

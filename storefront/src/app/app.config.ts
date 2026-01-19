@@ -13,6 +13,7 @@ import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { appRoutes } from 'app/app.routes';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
+import { languageInterceptor } from 'app/core/i18n/language.interceptor';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { AuthService } from 'app/core/auth/auth.service';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
@@ -20,7 +21,7 @@ import { SupportedLanguage } from 'app/core/i18n/translation.types';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
-import { MockApiService } from 'app/mock-api';
+
 import { provideToastr } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
 
@@ -38,6 +39,7 @@ export const appConfig: ApplicationConfig = {
             tapToDismiss: true,
         }),
         provideHttpClient(withInterceptors([
+            languageInterceptor,
             authInterceptor,
             tenantInterceptor,
             errorToastInterceptor
@@ -79,7 +81,7 @@ export const appConfig: ApplicationConfig = {
                         label: 'English',
                     },
                 ],
-                defaultLang: SupportedLanguage.TR,
+                defaultLang: SupportedLanguage.EN,
                 fallbackLang: SupportedLanguage.EN, // Always fallback to English
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
@@ -116,29 +118,10 @@ export const appConfig: ApplicationConfig = {
                         );
                     }
 
-                    translocoService.setActiveLang(SupportedLanguage.TR);
+                    translocoService.setActiveLang(SupportedLanguage.EN);
                     
-                } catch (error) {
-                    try {
-                        const fallbackTranslations = {
-                            'admin.common.messages.error': 'An error occurred',
-                            'admin.common.messages.loading': 'Loading...',
-                            'admin.tenants.title': 'Tenant Management',
-                            'admin.users.title': 'User Management',
-                            'admin.content.title': 'Content Management',
-                            'admin.media.title': 'Media Management',
-                            'admin.sites.title': 'Site Management'
-                        };
-                        
-                        translocoService.setTranslation(
-                            fallbackTranslations,
-                            SupportedLanguage.EN,
-                            { merge: true }
-                        );
-                        
-                        translocoService.setActiveLang(SupportedLanguage.EN);
-                    } catch (fallbackError) {
-                    }
+                } catch (error: unknown) {
+                    console.error('[i18n] Failed to load translations:', error);
                 }
             })();
         }),
@@ -158,10 +141,6 @@ export const appConfig: ApplicationConfig = {
         provideAuth(),
         provideIcons(),
         provideFuse({
-            mockApi: {
-                delay: 0,
-                service: MockApiService,
-            },
             fuse: {
                 layout: 'classy',
                 scheme: 'light',

@@ -14,7 +14,7 @@ export const appRoutes: Route[] = [
     {
         path: 'signed-in-redirect',
         pathMatch : 'full',
-        redirectTo: 'dashboards/project'
+        redirectTo: 'pages'
     },
 
     {
@@ -66,7 +66,7 @@ export const appRoutes: Route[] = [
         },
         children: [
 
-            {path: '', redirectTo: 'dashboards/project', pathMatch: 'full'},
+            {path: '', redirectTo: 'pages', pathMatch: 'full'},
             {path: 'dashboards', children: [
                 {path: 'project', loadChildren: () => import('app/modules/admin/dashboards/project/project.routes')},
                 {path: 'analytics', loadChildren: () => import('app/modules/admin/dashboards/analytics/analytics.routes')},
@@ -74,7 +74,7 @@ export const appRoutes: Route[] = [
                 {path: 'crypto', loadChildren: () => import('app/modules/admin/dashboards/crypto/crypto.routes')},
             ]},
             {path: 'apps', children: [
-                {path: '**', redirectTo: 'dashboards/project'}
+                {path: '**', redirectTo: 'pages'}
             ]},
             {
                 path: 'tenants',
@@ -201,14 +201,6 @@ export const appRoutes: Route[] = [
                 {path: 'page-layouts', loadChildren: () => import('app/modules/admin/ui/page-layouts/page-layouts.routes')},
 
                 {path: 'typography', loadChildren: () => import('app/modules/admin/ui/typography/typography.routes')}
-            ]},
-
-            // Documentation
-            {path: 'docs', children: [
-
-                {path: 'changelog', loadChildren: () => import('app/modules/admin/docs/changelog/changelog.routes')},
-
-                {path: 'guides', loadChildren: () => import('app/modules/admin/docs/guides/guides.routes')}
             ]},
 
             {path: '404-not-found', pathMatch: 'full', loadChildren: () => import('app/modules/admin/pages/error/error-404/error-404.routes')},
