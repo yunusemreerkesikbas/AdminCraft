@@ -10,7 +10,6 @@ import { NavigationComponent } from 'app/modules/admin/ui/fuse-components/compon
 import { ScrollResetComponent } from 'app/modules/admin/ui/fuse-components/directives/scroll-reset/scroll-reset.component';
 import { ScrollbarComponent } from 'app/modules/admin/ui/fuse-components/directives/scrollbar/scrollbar.component';
 import { FuseComponentsComponent } from 'app/modules/admin/ui/fuse-components/fuse-components.component';
-import { MockApiComponent } from 'app/modules/admin/ui/fuse-components/libraries/mock-api/mock-api.component';
 import { FindByKeyComponent } from 'app/modules/admin/ui/fuse-components/pipes/find-by-key/find-by-key.component';
 import { ConfigComponent } from 'app/modules/admin/ui/fuse-components/services/config/config.component';
 import { ConfirmationComponent } from 'app/modules/admin/ui/fuse-components/services/confirmation/confirmation.component';
@@ -26,16 +25,7 @@ export default [
             {
                 path: '',
                 pathMatch: 'full',
-                redirectTo: 'libraries/mock-api',
-            },
-            {
-                path: 'libraries',
-                children: [
-                    {
-                        path: 'mock-api',
-                        component: MockApiComponent,
-                    },
-                ],
+                redirectTo: 'components/alert',
             },
             {
                 path: 'components',

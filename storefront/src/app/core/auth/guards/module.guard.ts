@@ -22,7 +22,7 @@ export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state)
         { durationMs: 5000 }
     );
     const currentLang = route.paramMap.get('lang') || 'tr';
-    router.navigate([`/${currentLang}/dashboards/project`]);
+    router.navigate([`/${currentLang}/pages`]);
 
     return false;
 };

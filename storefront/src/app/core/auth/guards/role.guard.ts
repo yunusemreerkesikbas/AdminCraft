@@ -17,7 +17,7 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
             });
 
             const currentLang = route.paramMap.get('lang') || 'tr';
-            router.navigateByUrl(`/${currentLang}/dashboards/project`);
+            router.navigateByUrl(`/${currentLang}/pages`);
             return false;
         }
 

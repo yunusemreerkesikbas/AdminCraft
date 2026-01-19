@@ -77,7 +77,7 @@ export class LanguagesComponent implements OnInit, OnDestroy {
         const currentUrl = this._router.url;
         const langPattern = /^\/(tr|en)/;
         const pathWithoutLang = currentUrl.replace(langPattern, '');
-        const newUrl = `/${lang}${pathWithoutLang || '/dashboards/project'}`;
+        const newUrl = `/${lang}${pathWithoutLang || '/pages'}`;
 
         this._router.navigateByUrl(newUrl);
     }

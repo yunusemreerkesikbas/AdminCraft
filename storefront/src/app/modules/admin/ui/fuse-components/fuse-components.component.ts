@@ -40,19 +40,6 @@ export class FuseComponentsComponent implements OnInit, OnDestroy {
     constructor(private _fuseMediaWatcherService: FuseMediaWatcherService) {
         this.menuData = [
             {
-                id: 'fuse-components.libraries',
-                title: 'Libraries',
-                type: 'group',
-                children: [
-                    {
-                        id: 'fuse-components.libraries.mock-api',
-                        title: 'MockAPI',
-                        type: 'basic',
-                        link: '/ui/fuse-components/libraries/mock-api',
-                    },
-                ],
-            },
-            {
                 id: 'fuse-components.components',
                 title: 'Components',
                 type: 'group',

@@ -15,7 +15,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
-import { FuseValidators } from '@fuse/validators';
 import { AuthService } from 'app/core/auth/auth.service';
 import { finalize } from 'rxjs';
 
@@ -68,12 +67,6 @@ export class AuthResetPasswordComponent implements OnInit {
                 password: ['', Validators.required],
                 passwordConfirm: ['', Validators.required],
             },
-            {
-                validators: FuseValidators.mustMatch(
-                    'password',
-                    'passwordConfirm'
-                ),
-            }
         );
     }
 
