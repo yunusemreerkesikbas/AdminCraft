@@ -13,8 +13,8 @@ export const environment = {
     enableDebugMode: true,
     
     // i18n Configuration
-    supportedLanguages: ['tr', 'en'],
-    defaultLanguage: 'tr',
+    supportedLanguages: ['en', 'tr'],
+    defaultLanguage: 'en',
     
     // Application Metadata
     version: '1.0.0-dev',
