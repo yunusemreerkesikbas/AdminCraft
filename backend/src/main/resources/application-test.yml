@@ -5,6 +5,14 @@ spring:
     username: sa
     password:
 
+    tenant:
+      host: localhost
+      port: 3306
+      username: sa
+      password:
+      jdbc-url-template: jdbc:h2:mem:{dbName};MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      driver-class-name: org.h2.Driver
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -18,7 +26,21 @@ spring:
 app:
   tenant:
     auto-sync-on-startup: false # Disable for tests
+  cms:
+    rate-limit:
+      permits-per-minute: 10000.0
 
 logging:
   level:
     com.backend: DEBUG
+
+# Disable rate limiting for tests
+resilience4j:
+  ratelimiter:
+    instances:
+      runtimeMigration:
+        limit-for-period: 1000
+        limit-refresh-period: 1s
+      entryFieldDefinition:
+        limit-for-period: 1000
+        limit-refresh-period: 1s

@@ -53,11 +53,13 @@ class TenantServiceImplTest {
         @Mock
         private UserRepository userRepository;
 
-        @Mock
-        private ProvisioningService provisioningService;
+        // ProvisioningService removed (unused)
 
         @Mock
         private TenantModuleRepository tenantModuleRepository;
+
+        @Mock
+        private com.backend.infrastructure.tenant.TenantContext tenantContext;
 
         @Mock
         private ProvisioningJobRepository provisioningJobRepository;
@@ -202,7 +204,7 @@ class TenantServiceImplTest {
 
                 // When/Then
                 assertThatThrownBy(() -> tenantService.updateTenantWithDetail(999L, updateRequest, Language.TR))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class)
                                 .hasMessageContaining("Tenant not found");
 
                 verify(tenantRepository).findById(999L);

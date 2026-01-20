@@ -31,148 +31,151 @@ import com.backend.infrastructure.persistence.platform.repository.TenantModuleRe
 @ExtendWith(MockitoExtension.class)
 class TenantModuleServiceTest {
 
-    @Mock
-    private TenantRepository tenantRepository;
+        @Mock
+        private TenantRepository tenantRepository;
 
-    @Mock
-    private TenantModuleRepository tenantModuleRepository;
+        @Mock
+        private TenantModuleRepository tenantModuleRepository;
 
-    @InjectMocks
-    private TenantServiceImpl tenantService;
+        @Mock
+        private com.backend.infrastructure.tenant.TenantContext tenantContext;
 
-    private Tenant testTenant;
-    private List<TenantModule> testModules;
+        @InjectMocks
+        private TenantServiceImpl tenantService;
 
-    @BeforeEach
-    void setUp() {
-        testTenant = new Tenant();
-        testTenant.setId(1L);
-        testTenant.setSubdomain("test-tenant");
-        testTenant.setCompanyName("Test Company");
+        private Tenant testTenant;
+        private List<TenantModule> testModules;
 
-        ModuleCatalog coreCatalog = ModuleCatalog.builder()
-                .code("core")
-                .name("Core System")
-                .build();
+        @BeforeEach
+        void setUp() {
+                testTenant = new Tenant();
+                testTenant.setId(1L);
+                testTenant.setSubdomain("test-tenant");
+                testTenant.setCompanyName("Test Company");
 
-        ModuleCatalog pageBuilderCatalog = ModuleCatalog.builder()
-                .code("pagebuilder")
-                .name("Page Builder")
-                .build();
+                ModuleCatalog coreCatalog = ModuleCatalog.builder()
+                                .code("core")
+                                .name("Core System")
+                                .build();
 
-        TenantModule coreModule = TenantModule.builder()
-                .id(1L)
-                .tenantId(1L)
-                .moduleCode("core")
-                .status("enabled")
-                .installedAt(LocalDateTime.now())
-                .moduleCatalog(coreCatalog)
-                .build();
+                ModuleCatalog pageBuilderCatalog = ModuleCatalog.builder()
+                                .code("pagebuilder")
+                                .name("Page Builder")
+                                .build();
 
-        TenantModule pageBuilderModule = TenantModule.builder()
-                .id(2L)
-                .tenantId(1L)
-                .moduleCode("pagebuilder")
-                .status("enabled")
-                .installedAt(LocalDateTime.now())
-                .moduleCatalog(pageBuilderCatalog)
-                .build();
+                TenantModule coreModule = TenantModule.builder()
+                                .id(1L)
+                                .tenantId(1L)
+                                .moduleCode("core")
+                                .status("enabled")
+                                .installedAt(LocalDateTime.now())
+                                .moduleCatalog(coreCatalog)
+                                .build();
 
-        testModules = Arrays.asList(coreModule, pageBuilderModule);
-    }
+                TenantModule pageBuilderModule = TenantModule.builder()
+                                .id(2L)
+                                .tenantId(1L)
+                                .moduleCode("pagebuilder")
+                                .status("enabled")
+                                .installedAt(LocalDateTime.now())
+                                .moduleCatalog(pageBuilderCatalog)
+                                .build();
 
-    @Test
-    void shouldReturnTenantModulesWhenTenantExists() {
-        // Given
-        when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
-        when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
-                .thenReturn(testModules);
+                testModules = Arrays.asList(coreModule, pageBuilderModule);
+        }
 
-        // When
-        List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+        @Test
+        void shouldReturnTenantModulesWhenTenantExists() {
+                // Given
+                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+                when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
+                                .thenReturn(testModules);
 
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getModuleCode()).isEqualTo("core");
-        assertThat(result.get(0).getModuleName()).isEqualTo("Core System");
-        assertThat(result.get(0).getStatus()).isEqualTo("enabled");
-        assertThat(result.get(1).getModuleCode()).isEqualTo("pagebuilder");
-        assertThat(result.get(1).getModuleName()).isEqualTo("Page Builder");
+                // When
+                List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
 
-        verify(tenantRepository).findById(1L);
-        verify(tenantModuleRepository).findByTenantIdAndStatus(1L, "enabled");
-    }
+                // Then
+                assertThat(result).hasSize(2);
+                assertThat(result.get(0).getModuleCode()).isEqualTo("core");
+                assertThat(result.get(0).getModuleName()).isEqualTo("Core System");
+                assertThat(result.get(0).getStatus()).isEqualTo("enabled");
+                assertThat(result.get(1).getModuleCode()).isEqualTo("pagebuilder");
+                assertThat(result.get(1).getModuleName()).isEqualTo("Page Builder");
 
-    @Test
-    void shouldThrowExceptionWhenTenantNotFound() {
-        // Given
-        when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
+                verify(tenantRepository).findById(1L);
+                verify(tenantModuleRepository).findByTenantIdAndStatus(1L, "enabled");
+        }
 
-        // When & Then
-        assertThatThrownBy(() -> tenantService.getTenantModules(999L, Language.EN))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Tenant not found with id: 999");
+        @Test
+        void shouldThrowExceptionWhenTenantNotFound() {
+                // Given
+                when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
 
-        verify(tenantRepository).findById(999L);
-        verify(tenantModuleRepository, never()).findByTenantIdAndStatus(anyLong(), anyString());
-    }
+                // When & Then
+                assertThatThrownBy(() -> tenantService.getTenantModules(999L, Language.EN))
+                                .isInstanceOf(com.backend.domain.exception.TenantNotFoundException.class)
+                                .hasMessageContaining("Tenant not found with ID: 999");
 
-    @Test
-    void shouldReturnEmptyListWhenTenantHasNoModules() {
-        // Given
-        when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
-        when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
-                .thenReturn(List.of());
+                verify(tenantRepository).findById(999L);
+                verify(tenantModuleRepository, never()).findByTenantIdAndStatus(anyLong(), anyString());
+        }
 
-        // When
-        List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+        @Test
+        void shouldReturnEmptyListWhenTenantHasNoModules() {
+                // Given
+                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+                when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
+                                .thenReturn(List.of());
 
-        // Then
-        assertThat(result).isEmpty();
-        verify(tenantRepository).findById(1L);
-        verify(tenantModuleRepository).findByTenantIdAndStatus(1L, "enabled");
-    }
+                // When
+                List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
 
-    @Test
-    void shouldHandleModuleWithoutCatalog() {
-        // Given
-        TenantModule moduleWithoutCatalog = TenantModule.builder()
-                .id(3L)
-                .tenantId(1L)
-                .moduleCode("custom_module")
-                .status("enabled")
-                .installedAt(LocalDateTime.now())
-                .moduleCatalog(null)
-                .build();
+                // Then
+                assertThat(result).isEmpty();
+                verify(tenantRepository).findById(1L);
+                verify(tenantModuleRepository).findByTenantIdAndStatus(1L, "enabled");
+        }
 
-        when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
-        when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
-                .thenReturn(List.of(moduleWithoutCatalog));
+        @Test
+        void shouldHandleModuleWithoutCatalog() {
+                // Given
+                TenantModule moduleWithoutCatalog = TenantModule.builder()
+                                .id(3L)
+                                .tenantId(1L)
+                                .moduleCode("custom_module")
+                                .status("enabled")
+                                .installedAt(LocalDateTime.now())
+                                .moduleCatalog(null)
+                                .build();
 
-        // When
-        List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+                when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
+                                .thenReturn(List.of(moduleWithoutCatalog));
 
-        // Then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getModuleCode()).isEqualTo("custom_module");
-        assertThat(result.get(0).getModuleName()).isEqualTo("custom_module"); // Falls back to code
-    }
+                // When
+                List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
 
-    @Test
-    void shouldOnlyReturnEnabledModules() {
-        // Given
-        when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
-        when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
-                .thenReturn(testModules);
+                // Then
+                assertThat(result).hasSize(1);
+                assertThat(result.get(0).getModuleCode()).isEqualTo("custom_module");
+                assertThat(result.get(0).getModuleName()).isEqualTo("custom_module"); // Falls back to code
+        }
 
-        // When
-        List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+        @Test
+        void shouldOnlyReturnEnabledModules() {
+                // Given
+                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+                when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
+                                .thenReturn(testModules);
 
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result).extracting(TenantModuleResponse::getStatus)
-                .allMatch(status -> status.equals("enabled"));
-        assertThat(result).extracting(TenantModuleResponse::getModuleCode)
-                .doesNotContain("disabled_module");
-    }
+                // When
+                List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+
+                // Then
+                assertThat(result).hasSize(2);
+                assertThat(result).extracting(TenantModuleResponse::getStatus)
+                                .allMatch(status -> status.equals("enabled"));
+                assertThat(result).extracting(TenantModuleResponse::getModuleCode)
+                                .doesNotContain("disabled_module");
+        }
 }

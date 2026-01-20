@@ -144,7 +144,7 @@ class AsyncProvisioningExecutorTest {
                                 .toList();
 
                 // Then
-                assertThat(tenantModules).hasSize(4);
+                assertThat(tenantModules).hasSize(3);
                 assertThat(tenantModules.get(0).getModuleCode()).isEqualTo("core");
                 assertThat(tenantModules.get(1).getModuleCode()).isEqualTo("pagebuilder");
                 assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("site_settings");

@@ -1,9 +1,9 @@
 package com.backend.domain.enums;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
 
 class ModuleCodeTest {
 
@@ -78,11 +78,13 @@ class ModuleCodeTest {
     @Test
     void shouldReturnAllModuleCodes() {
         ModuleCode[] allModules = ModuleCode.values();
-        assertThat(allModules).hasSize(4);
+        assertThat(allModules).hasSize(6);
         assertThat(allModules).contains(
                 ModuleCode.CORE,
                 ModuleCode.PAGEBUILDER,
                 ModuleCode.SITE_SETTINGS,
-                ModuleCode.MEDIA);
+                ModuleCode.MEDIA,
+                ModuleCode.COMPONENT_LIBRARY,
+                ModuleCode.PRODUCT_CATALOG);
     }
 }

@@ -43,6 +43,12 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
   @Value("${spring.datasource.tenant.password}")
   private String dbPassword;
 
+  @Value("${spring.datasource.tenant.jdbc-url-template}")
+  private String jdbcUrlTemplate;
+
+  @Value("${spring.datasource.tenant.driver-class-name}")
+  private String driverClassName;
+
   private volatile DataSource defaultDataSource;
 
   private final LoadingCache<String, DataSource> tenantDataSources = CacheBuilder.newBuilder()
@@ -80,7 +86,7 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
         dbHost, dbPort));
     config.setUsername(dbUsername);
     config.setPassword(dbPassword);
-    config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+    config.setDriverClassName(driverClassName);
     config.setMaximumPoolSize(1);
     config.setMinimumIdle(0);
     config.setPoolName("DefaultPool");
@@ -101,12 +107,11 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     log.info("Creating new datasource for tenant DB: {}", dbName);
 
     HikariConfig config = new HikariConfig();
-    config.setJdbcUrl(String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true",
-        dbHost, dbPort, dbName));
+    String jdbcUrl = jdbcUrlTemplate.replace("{dbName}", dbName);
+    config.setJdbcUrl(jdbcUrl);
     config.setUsername(dbUsername);
     config.setPassword(dbPassword);
-    config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+    config.setDriverClassName(driverClassName);
 
     config.setMaximumPoolSize(MAX_POOL_SIZE_PER_TENANT);
     config.setMinimumIdle(1);
