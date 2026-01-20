@@ -39,6 +39,7 @@ spring:
       username: ${DB_USERNAME:root}
       password: ${DB_PASSWORD:1234}
       driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url-template: jdbc:mysql://${spring.datasource.tenant.host}:${spring.datasource.tenant.port}/{dbName}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
 
   jpa:
     hibernate:

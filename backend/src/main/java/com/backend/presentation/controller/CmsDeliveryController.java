@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.shared.common.ApiResponse;
 import com.google.common.util.concurrent.RateLimiter;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +38,21 @@ import lombok.extern.slf4j.Slf4j;
 public class CmsDeliveryController {
 
   private static final int MAX_BATCH_SIZE = 50;
-  private static final double PERMITS_PER_MINUTE = 100.0;
-  private static final double PERMITS_PER_SECOND = PERMITS_PER_MINUTE / 60.0;
+
+  @Value("${app.cms.rate-limit.permits-per-minute:100.0}")
+  private double permitsPerMinute;
+
   private final ConcurrentHashMap<String, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
 
   private final CmsDeliveryService cmsDeliveryService;
   private final NavigationService navigationService;
   private final MessageSource messageSource;
   private final TenantContext tenantContext;
+
+  @PostConstruct
+  public void init() {
+    log.info("CMS Delivery Controller initialized with rate limit: {} permits/min", permitsPerMinute);
+  }
 
   @GetMapping("/components/{uid}")
   public ResponseEntity<ApiResponse<ComponentDeliveryResponse>> getComponentByUid(
@@ -179,7 +188,7 @@ public class CmsDeliveryController {
     }
 
     RateLimiter rateLimiter = rateLimiters.computeIfAbsent(tenantId,
-        id -> RateLimiter.create(PERMITS_PER_SECOND));
+        id -> RateLimiter.create(permitsPerMinute / 60.0));
 
     if (!rateLimiter.tryAcquire()) {
       log.warn("CMS Delivery: Rate limit exceeded for tenant {}", tenantId);

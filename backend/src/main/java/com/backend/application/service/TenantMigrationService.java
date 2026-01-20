@@ -28,6 +28,12 @@ public class TenantMigrationService {
   @Value("${spring.datasource.tenant.password}")
   private String dbPassword;
 
+  @Value("${spring.datasource.tenant.jdbc-url-template}")
+  private String jdbcUrlTemplate;
+
+  @Value("${spring.datasource.tenant.driver-class-name}")
+  private String driverClassName;
+
   public void migrateTenant(String dbName, List<String> modules) {
     log.info("Starting migration for tenant database: {} with modules: {}", dbName, modules);
 
@@ -80,9 +86,9 @@ public class TenantMigrationService {
 
   private HikariDataSource createTenantDataSource(String dbName) {
     HikariConfig config = new HikariConfig();
-    config.setJdbcUrl(String.format(
-        "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true",
-        dbHost, dbPort, dbName));
+    String jdbcUrl = jdbcUrlTemplate.replace("{dbName}", dbName);
+    config.setJdbcUrl(jdbcUrl);
+    config.setDriverClassName(driverClassName);
     config.setUsername(dbUsername);
     config.setPassword(dbPassword);
     config.setMaximumPoolSize(2);

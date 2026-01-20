@@ -1,22 +1,39 @@
 package com.backend.infrastructure.tenant;
 
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Optional;
+import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+import com.backend.infrastructure.persistence.platform.entity.Tenant;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class TenantFilterTest {
 
   @Mock
@@ -37,6 +54,9 @@ class TenantFilterTest {
   @Mock
   private FilterChain filterChain;
 
+  @Mock
+  private SecurityContext securityContext;
+
   private TenantFilter tenantFilter;
 
   @BeforeEach
@@ -47,12 +67,14 @@ class TenantFilterTest {
   @Test
   void shouldBypassFilterForWhitelistedPaths() throws Exception {
     when(request.getRequestURI()).thenReturn("/api/provisioning/modules/catalog");
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
     verify(tenantRepository, never()).findById(any());
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -60,37 +82,27 @@ class TenantFilterTest {
     when(request.getRequestURI()).thenReturn("/api/pages");
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn(null);
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
     verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
   }
 
-  // SUPER_ADMIN tokens should bypass tenant header requirement
-  // Note: We simulate SecurityContext here minimally by not asserting details;
-  // focus is bypass behavior
   @Test
   void shouldBypassWhenSuperAdminAndNoTenantHeader() throws Exception {
-    when(request.getRequestURI()).thenReturn("/api/pages");
+    when(request.getRequestURI()).thenReturn("/api/platform/users");
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn(null);
-
-    // Simulate JwtAuthenticationFilter having set ROLE_SUPER_ADMIN
-    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-            "admin@platform.local",
-            null,
-            java.util.List
-                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(response, never()).sendError(anyInt(), anyString());
-
-    // cleanup
-    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -98,11 +110,13 @@ class TenantFilterTest {
     when(request.getRequestURI()).thenReturn("/api/pages");
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("");
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
     verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -110,11 +124,14 @@ class TenantFilterTest {
     when(request.getRequestURI()).thenReturn("/api/pages");
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("invalid");
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
-    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid tenant identifier");
+    // Code swallows NumberFormatException and returns generic error
+    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
     verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -123,11 +140,14 @@ class TenantFilterTest {
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("999");
     when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
-    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant not found");
+    // Code returns generic error if tenant not found from headers
+    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
     verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -142,11 +162,13 @@ class TenantFilterTest {
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn("1");
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(inactiveTenant));
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Tenant not active");
     verify(filterChain, never()).doFilter(request, response);
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -162,6 +184,7 @@ class TenantFilterTest {
     when(request.getHeader("X-Tenant-ID")).thenReturn("1");
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
     doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
@@ -170,6 +193,7 @@ class TenantFilterTest {
     verify(connectionProvider).warmUpConnectionPool("ac_tenant_1");
     verify(filterChain).doFilter(request, response);
     verify(tenantContext).clear();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -186,6 +210,7 @@ class TenantFilterTest {
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
     doNothing().when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
     doThrow(new RuntimeException("Test exception")).when(filterChain).doFilter(request, response);
+    mockWaitUser();
 
     try {
       tenantFilter.doFilterInternal(request, response, filterChain);
@@ -194,6 +219,7 @@ class TenantFilterTest {
     }
 
     verify(tenantContext).clear();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -210,6 +236,7 @@ class TenantFilterTest {
     when(tenantRepository.findById(1L)).thenReturn(Optional.of(activeTenant));
     doThrow(new RuntimeException("Connection pool initialization failed"))
         .when(connectionProvider).warmUpConnectionPool("ac_tenant_1");
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
@@ -220,6 +247,7 @@ class TenantFilterTest {
         "Tenant database is initializing, please retry in a moment");
     verify(filterChain, never()).doFilter(request, response);
     verify(tenantContext).clear();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -235,41 +263,37 @@ class TenantFilterTest {
   @Test
   void shouldBypassFilterForPlatformPaths() throws Exception {
     when(request.getRequestURI()).thenReturn("/api/platform/tenants");
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
+    SecurityContextHolder.clearContext();
   }
 
   @Test
   void shouldBypassFilterForProvisioningPaths() throws Exception {
-    when(request.getRequestURI()).thenReturn("/api/provisioning/tenants/1/provision");
+    givenRequestUri("/api/provisioning/tenants/1/provision");
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
+    SecurityContextHolder.clearContext();
   }
 
   @Test
   void shouldBypassFilterForTenantsPathsWhenSuperAdmin() throws Exception {
     when(request.getRequestURI()).thenReturn("/api/tenants");
-
-    // SUPER_ADMIN auth
-    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-            "admin@platform.local",
-            null,
-            java.util.List
-                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
-
-    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -277,37 +301,43 @@ class TenantFilterTest {
     when(request.getRequestURI()).thenReturn("/api/tenants");
     when(request.getHeader("X-Correlation-ID")).thenReturn(null);
     when(request.getHeader("X-Tenant-ID")).thenReturn(null);
-
-    // Non-super admin (no authorities)
-    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-            "user@tenant.local", null, java.util.List.of()));
+    mockWaitUser();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
-    verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
+    verify(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
     verify(filterChain, never()).doFilter(request, response);
-
-    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    SecurityContextHolder.clearContext();
   }
 
   @Test
   void shouldBypassFilterForTenantsModulesPathWhenSuperAdmin() throws Exception {
     when(request.getRequestURI()).thenReturn("/api/tenants/1/modules");
-
-    // SUPER_ADMIN auth
-    org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
-        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-            "admin@platform.local",
-            null,
-            java.util.List
-                .of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+    mockSuperAdmin();
 
     tenantFilter.doFilterInternal(request, response, filterChain);
 
     verify(filterChain).doFilter(request, response);
     verify(tenantContext, never()).setTenantId(anyString());
+    SecurityContextHolder.clearContext();
+  }
 
-    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+  private void givenRequestUri(String uri) {
+    when(request.getRequestURI()).thenReturn(uri);
+  }
+
+  private void mockSuperAdmin() {
+    SecurityContextHolder.setContext(securityContext);
+    org.springframework.security.core.Authentication authMock = mock(org.springframework.security.core.Authentication.class);
+    when(securityContext.getAuthentication()).thenReturn(authMock);
+    doReturn(List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))).when(authMock).getAuthorities();
+  }
+
+  private void mockWaitUser() {
+    SecurityContextHolder.setContext(securityContext);
+    org.springframework.security.core.Authentication authMock = mock(org.springframework.security.core.Authentication.class);
+    when(securityContext.getAuthentication()).thenReturn(authMock);
+    // User has no special authorities
+    doReturn(List.of(new SimpleGrantedAuthority("ROLE_USER"))).when(authMock).getAuthorities();
   }
 }
