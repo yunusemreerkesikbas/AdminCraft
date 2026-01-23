@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
-import com.backend.presentation.validation.Sku;
+import com.backend.shared.validation.Sku;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -38,7 +38,9 @@ public record ProductCompositeRequest(
 
         Long primaryCategoryId,
 
-        @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
+        @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery,
+
+        Map<String, Object> customFields) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
         if (status == null)

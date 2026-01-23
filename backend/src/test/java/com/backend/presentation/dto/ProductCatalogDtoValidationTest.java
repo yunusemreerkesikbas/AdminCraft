@@ -1,15 +1,29 @@
 package com.backend.presentation.dto;
 
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.ProductFieldType;
-import com.backend.presentation.dto.request.*;
-import jakarta.validation.*;
-import org.junit.jupiter.api.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.ProductFieldType;
+import com.backend.presentation.dto.request.AttributeDefinitionCreateRequest;
+import com.backend.presentation.dto.request.CategoryI18nRequest;
+import com.backend.presentation.dto.request.ProductCompositeRequest;
+import com.backend.presentation.dto.request.ProductI18nRequest;
+import com.backend.presentation.dto.request.ProductTypeCreateRequest;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 /**
  * Validation tests for Product Catalog DTOs.
@@ -49,7 +63,8 @@ class ProductCatalogDtoValidationTest {
                     null, // attributes
                     null, // categoryIds
                     null, // primaryCategoryId
-                    null // galleryMediaIds
+                    null, // galleryMediaIds
+                    null // customFields
             );
 
             // When
@@ -70,8 +85,7 @@ class ProductCatalogDtoValidationTest {
                     null, // productTypeId - MISSING
                     "SKU-001",
                     BigDecimal.valueOf(99.99),
-                    null, true, null, translations, null, null, null, null
-            );
+                    null, true, null, translations, null, null, null, null, null);
 
             // When
             Set<ConstraintViolation<ProductCompositeRequest>> violations = validator.validate(request);
@@ -98,8 +112,7 @@ class ProductCatalogDtoValidationTest {
                     "Short description",
                     "<p>Full description</p>",
                     "SEO Title",
-                    "SEO Description"
-            );
+                    "SEO Description");
 
             // When
             Set<ConstraintViolation<ProductI18nRequest>> violations = validator.validate(request);
@@ -114,8 +127,7 @@ class ProductCatalogDtoValidationTest {
             // Given
             String longName = "A".repeat(201); // > 200 chars
             ProductI18nRequest request = new ProductI18nRequest(
-                    longName, null, null, null, null
-            );
+                    longName, null, null, null, null);
 
             // When
             Set<ConstraintViolation<ProductI18nRequest>> violations = validator.validate(request);
@@ -131,8 +143,7 @@ class ProductCatalogDtoValidationTest {
             // Given
             String longDesc = "A".repeat(501); // > 500 chars
             ProductI18nRequest request = new ProductI18nRequest(
-                    "Valid Name", longDesc, null, null, null
-            );
+                    "Valid Name", longDesc, null, null, null);
 
             // When
             Set<ConstraintViolation<ProductI18nRequest>> violations = validator.validate(request);
@@ -155,8 +166,7 @@ class ProductCatalogDtoValidationTest {
             // Given
             CategoryI18nRequest request = new CategoryI18nRequest(
                     "Valid Category Name",
-                    "Category description"
-            );
+                    "Category description");
 
             // When
             Set<ConstraintViolation<CategoryI18nRequest>> violations = validator.validate(request);
@@ -208,8 +218,7 @@ class ProductCatalogDtoValidationTest {
             ProductTypeCreateRequest request = new ProductTypeCreateRequest(
                     "general_product",
                     "General Product",
-                    "electronics"
-            );
+                    "electronics");
 
             // When
             Set<ConstraintViolation<ProductTypeCreateRequest>> violations = validator.validate(request);
@@ -223,8 +232,7 @@ class ProductCatalogDtoValidationTest {
         void productTypeCreateRequest_NameRequired() {
             // Given
             ProductTypeCreateRequest request = new ProductTypeCreateRequest(
-                    "code", "", "category"
-            );
+                    "code", "", "category");
 
             // When
             Set<ConstraintViolation<ProductTypeCreateRequest>> violations = validator.validate(request);
@@ -240,8 +248,7 @@ class ProductCatalogDtoValidationTest {
             // Given
             String longName = "A".repeat(101); // > 100 chars
             ProductTypeCreateRequest request = new ProductTypeCreateRequest(
-                    "code", longName, "category"
-            );
+                    "code", longName, "category");
 
             // When
             Set<ConstraintViolation<ProductTypeCreateRequest>> violations = validator.validate(request);
@@ -251,7 +258,8 @@ class ProductCatalogDtoValidationTest {
         }
     }
 
-    // ==================== AttributeDefinitionCreateRequest Tests ====================
+    // ==================== AttributeDefinitionCreateRequest Tests
+    // ====================
 
     @Nested
     @DisplayName("AttributeDefinitionCreateRequest Validation")
@@ -268,8 +276,7 @@ class ProductCatalogDtoValidationTest {
                     false,
                     false,
                     null,
-                    null
-            );
+                    null);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);
@@ -283,8 +290,7 @@ class ProductCatalogDtoValidationTest {
         void attributeDefinitionCreateRequest_NameRequired() {
             // Given
             AttributeDefinitionCreateRequest request = new AttributeDefinitionCreateRequest(
-                    "code", "", ProductFieldType.TEXT, false, false, null, null
-            );
+                    "code", "", ProductFieldType.TEXT, false, false, null, null);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);
@@ -299,8 +305,7 @@ class ProductCatalogDtoValidationTest {
         void attributeDefinitionCreateRequest_FieldTypeRequired() {
             // Given
             AttributeDefinitionCreateRequest request = new AttributeDefinitionCreateRequest(
-                    "code", "Name", null, false, false, null, null
-            );
+                    "code", "Name", null, false, false, null, null);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);

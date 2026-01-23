@@ -44,4 +44,12 @@ public interface ProductTypeService {
     void deleteAttribute(Long productTypeId, Long attributeId);
 
     List<ProductAttributeDefinition> getAttributes(Long productTypeId);
+
+    /**
+     * Returns the count of products using a specific product type.
+     *
+     * @param productTypeId the product type ID
+     * @return the count of products
+     */
+    long getProductCount(Long productTypeId);
 }

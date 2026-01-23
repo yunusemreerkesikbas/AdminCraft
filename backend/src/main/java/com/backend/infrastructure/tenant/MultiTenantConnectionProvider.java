@@ -118,7 +118,7 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     config.setIdleTimeout(TimeUnit.MINUTES.toMillis(IDLE_EVICT_MINUTES));
     config.setConnectionTimeout(60000);
     config.setValidationTimeout(5000);
-    config.setInitializationFailTimeout(-1);
+    config.setInitializationFailTimeout(10000);
     config.setLeakDetectionThreshold(10000);
     config.setPoolName("TenantPool-" + dbName);
 

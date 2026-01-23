@@ -1,15 +1,16 @@
 package com.backend.application.dto.request;
 
-import com.backend.presentation.validation.Uid;
+import static com.backend.shared.constants.ValidationConstants.PAGE_TEMPLATE_DESCRIPTION_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.PAGE_TEMPLATE_NAME_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.UID_TEMPLATE_MAX_LENGTH;
+
+import com.backend.shared.validation.Uid;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import static com.backend.shared.constants.ValidationConstants.PAGE_TEMPLATE_DESCRIPTION_MAX_LENGTH;
-import static com.backend.shared.constants.ValidationConstants.PAGE_TEMPLATE_NAME_MAX_LENGTH;
-import static com.backend.shared.constants.ValidationConstants.UID_TEMPLATE_MAX_LENGTH;
 
 @Data
 @NoArgsConstructor

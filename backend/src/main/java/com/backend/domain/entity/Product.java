@@ -42,7 +42,7 @@ import lombok.ToString;
 })
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = { "productType", "responsiveMediaSet", "i18nContent", "attributes",
-        "categoryLinks", "gallery" })
+        "categoryLinks", "gallery", "fieldValues" })
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product extends BaseEntity {
@@ -108,5 +108,21 @@ public class Product extends BaseEntity {
     public void addGalleryItem(ProductMedia media) {
         gallery.add(media);
         media.setProduct(this);
+    }
+
+    @ToString.Exclude
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProductFieldValue> fieldValues = new ArrayList<>();
+
+    public void addFieldValue(ProductFieldValue fieldValue) {
+        if (fieldValue.getFieldDefinition() != null) {
+            removeFieldValue(fieldValue.getFieldDefinition().getCode());
+        }
+        fieldValues.add(fieldValue);
+        fieldValue.setProduct(this);
+    }
+
+    public void removeFieldValue(String code) {
+        fieldValues.removeIf(fv -> fv.getFieldDefinition() != null && fv.getFieldDefinition().getCode().equals(code));
     }
 }

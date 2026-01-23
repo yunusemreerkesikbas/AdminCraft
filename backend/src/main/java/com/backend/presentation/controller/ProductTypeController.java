@@ -295,4 +295,20 @@ public class ProductTypeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
         }
     }
+
+    @GetMapping("/{id}/product-count")
+    @Operation(summary = "Get product count", description = "Returns the count of products using this product type")
+    public ResponseEntity<ApiResponse<Long>> getProductCount(
+            @Parameter(description = "Product Type ID") @PathVariable @Valid @NotNull @Min(1) Long id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+        try {
+            long count = productTypeService.getProductCount(id);
+            return ResponseEntity.ok(ApiResponse.success(count));
+        } catch (Exception ex) {
+            log.error("Error getting product count for product type {}: {}", id, ex.getMessage());
+            String msg = messageSource.getMessage("product.type.get.error",
+                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
+        }
+    }
 }

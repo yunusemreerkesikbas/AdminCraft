@@ -1,32 +1,26 @@
 package com.backend.application.dto.request;
 
-import com.backend.domain.enums.Language;
-import com.backend.presentation.validation.Slug;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 import static com.backend.shared.constants.ValidationConstants.PAGE_CANONICAL_URL_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.PAGE_DESCRIPTION_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.PAGE_STYLE_CLASSES_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.PAGE_TITLE_MAX_LENGTH;
 
+import com.backend.domain.enums.Language;
+import com.backend.shared.validation.Slug;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public record UpdatePageRequest(
         @NotNull Long id,
         @NotNull Long tenantId,
-        @NotBlank
-        @Size(max = PAGE_TITLE_MAX_LENGTH, message = "validation.page.title.size")
-        String title,
-        @Slug
-        String slug,
+        @NotBlank @Size(max = PAGE_TITLE_MAX_LENGTH, message = "validation.page.title.size") String title,
+        @Slug String slug,
         @NotNull Language language,
-        @Size(max = PAGE_CANONICAL_URL_MAX_LENGTH, message = "validation.page.canonicalUrl.size")
-        String canonicalUrl,
-        @Size(max = PAGE_STYLE_CLASSES_MAX_LENGTH, message = "validation.page.styleClasses.size")
-        String styleClasses,
-        @Size(max = PAGE_DESCRIPTION_MAX_LENGTH, message = "validation.page.description.size")
-        String description) {
+        @Size(max = PAGE_CANONICAL_URL_MAX_LENGTH, message = "validation.page.canonicalUrl.size") String canonicalUrl,
+        @Size(max = PAGE_STYLE_CLASSES_MAX_LENGTH, message = "validation.page.styleClasses.size") String styleClasses,
+        @Size(max = PAGE_DESCRIPTION_MAX_LENGTH, message = "validation.page.description.size") String description) {
 
     public UpdatePageRequest {
         if (title != null)

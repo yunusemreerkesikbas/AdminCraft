@@ -2,8 +2,6 @@ package com.backend.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -217,8 +215,8 @@ class ProductControllerIntegrationTest {
         void createProduct_Success() throws Exception {
             // Given
             Map<String, Object> request = createValidProductRequest();
-            when(productService.createComposite(anyLong(), anyString(), any(),
-                    any(), any(), any(), anyMap(), any(), any(), any(), any(), any()))
+            when(productService.createComposite(any(), anyString(), any(),
+                    any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(testProduct);
 
             // When & Then
@@ -283,7 +281,7 @@ class ProductControllerIntegrationTest {
             request.put("translations", Map.of("TR", translation));
 
             when(productService.updateComposite(eq(1L), any(), any(), any(),
-                    any(), any(), any(), any(), any(), any(), any()))
+                    any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(testProduct);
 
             // When & Then
@@ -302,7 +300,7 @@ class ProductControllerIntegrationTest {
             request.put("basePrice", 299.99);
 
             when(productService.updateComposite(eq(999L), any(), any(), any(),
-                    any(), any(), any(), any(), any(), any(), any()))
+                    any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new IllegalArgumentException("Product not found"));
 
             // When & Then
