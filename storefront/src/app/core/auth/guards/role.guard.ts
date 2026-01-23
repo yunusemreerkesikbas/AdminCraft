@@ -13,11 +13,11 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
 
         if (!userRole || !allowedRoles.includes(userRole)) {
             notify.alert('You do not have permission to access this page', {
-                durationMs: 5000
+                durationMs: 5000,
             });
 
             const currentLang = route.paramMap.get('lang') || 'tr';
-            router.navigateByUrl(`/${currentLang}/pages`);
+            router.navigateByUrl(`/${currentLang}/sign-in`);
             return false;
         }
 

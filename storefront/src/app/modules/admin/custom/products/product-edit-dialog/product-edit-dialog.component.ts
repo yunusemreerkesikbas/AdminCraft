@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LanguageContextService } from '@core/services/language-context.service';
@@ -18,6 +18,7 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaDynamicFormComponent } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.component';
 import { SpaDynamicFormService } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
 import { DynamicFieldConfig } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
+import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -50,13 +51,16 @@ import {
 } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../media/components/spa-media-picker/spa-media-picker.component';
 import { MediaService } from '../../media/media.service';
+import { ProductFieldDialogComponent } from '../fields/product-field-dialog/product-field-dialog.component';
 import { Category } from '../models/category.types';
+import { ProductFieldDefinition } from '../models/product-field.types';
 import { AttributeDefinition, ProductType } from '../models/product-type.types';
 import {
     ProductCompositeRequest,
     ProductI18nRequest,
 } from '../models/product.types';
 import { CategoryService } from '../services/category.service';
+import { ProductFieldService } from '../services/product-field.service';
 import { ProductTypeService } from '../services/product-type.service';
 import { ProductService } from '../services/product.service';
 
@@ -89,6 +93,7 @@ export interface ProductEditDialogData {
         SpaTabContentDirective,
         SpaDynamicFormComponent,
         SpaMediaPickerComponent,
+        SpaEmptyStateComponent,
     ],
 })
 export class ProductEditDialogComponent
@@ -98,12 +103,14 @@ export class ProductEditDialogComponent
     override data = inject<ProductEditDialogData>(MAT_DIALOG_DATA);
 
     #productService = inject(ProductService);
+    #productFieldService = inject(ProductFieldService);
     #productTypeService = inject(ProductTypeService);
     #categoryService = inject(CategoryService);
     #dynamicFormService = inject(SpaDynamicFormService);
     #notificationService = inject(NotificationService);
     #languageContextService = inject(LanguageContextService);
     #mediaService = inject(MediaService);
+    #dialog = inject(MatDialog);
     #datePipe = new SpaDateTimePipe();
     override languages = this.#languageContextService.supportedLanguages();
     productTypes = signal<ProductType[]>([]);
@@ -113,8 +120,14 @@ export class ProductEditDialogComponent
         this.#mapToDynamicConfig(this.#attributeDefinitions())
     );
     attributesForm: FormGroup;
+    customFieldsForm: FormGroup;
+    fieldDefinitions = signal<ProductFieldDefinition[]>([]);
+    customFieldsConfig = computed(() =>
+        this.#mapFieldsToDynamicConfig(this.fieldDefinitions())
+    );
     isLoadingSig = signal(false);
     #currentResponsiveMediaId: number | undefined;
+    #skipNextTypeValueChange = false;
     statusOptions = [
         { value: 'DRAFT', label: 'DRAFT' },
         { value: 'PUBLISHED', label: 'PUBLISHED' },
@@ -123,6 +136,7 @@ export class ProductEditDialogComponent
     constructor() {
         super();
         this.attributesForm = new FormGroup({});
+        this.customFieldsForm = new FormGroup({});
     }
 
     get tabs(): TabDefinition[] {
@@ -138,6 +152,11 @@ export class ProductEditDialogComponent
                 label: 'admin.products.tabs.attributes',
                 icon: 'list_alt',
                 disabled: !this.generalForm?.get('productTypeId')?.value,
+            },
+            {
+                id: 'custom-fields',
+                label: 'admin.products.globalFields',
+                icon: 'extension',
             },
             {
                 id: 'categories',
@@ -163,6 +182,10 @@ export class ProductEditDialogComponent
             .get('productTypeId')
             ?.valueChanges.pipe(takeUntil(this.destroy$))
             .subscribe((typeId) => {
+                if (this.#skipNextTypeValueChange) {
+                    this.#skipNextTypeValueChange = false;
+                    return;
+                }
                 if (typeId) {
                     this.loadAttributes(typeId);
                 } else {
@@ -233,6 +256,7 @@ export class ProductEditDialogComponent
         const sources: any = {
             types: types$,
             categories: categories$,
+            fieldDefinitions: this.#productFieldService.getAllDefinitions(),
         };
 
         if (this.data.mode === 'edit' && this.data.productId) {
@@ -246,7 +270,14 @@ export class ProductEditDialogComponent
             .subscribe({
                 next: (res: any) => {
                     this.productTypes.set(res.types || []);
+                    this.productTypes.set(res.types || []);
                     this.categories.set(res.categories || []);
+                    this.fieldDefinitions.set(res.fieldDefinitions || []);
+                    this.#dynamicFormService.addControlsToFormGroup(
+                        this.customFieldsForm,
+                        this.customFieldsConfig(),
+                        {}
+                    );
 
                     if (res.product) {
                         this.patchProductData(res.product);
@@ -286,6 +317,7 @@ export class ProductEditDialogComponent
 
         this.#currentResponsiveMediaId = product.images?.id;
 
+        this.#skipNextTypeValueChange = true;
         this.generalForm.patchValue(
             {
                 sku: product.sku,
@@ -325,6 +357,10 @@ export class ProductEditDialogComponent
                 galleryImages: galleryMedia,
             });
         }
+
+        if (product.customFields) {
+            this.customFieldsForm.patchValue(product.customFields);
+        }
     }
 
     loadAttributes(typeId: number, existingAttributes?: any[]): void {
@@ -349,13 +385,62 @@ export class ProductEditDialogComponent
     }
 
     #mapToDynamicConfig(attrs: AttributeDefinition[]): DynamicFieldConfig[] {
-        return attrs.map((attr) => ({
-            key: attr.code,
-            label: attr.name,
-            type: attr.fieldType.toLowerCase() as any,
-            required: false,
-            labelTooltip: attr.code,
-        }));
+        return attrs.map((attr) => {
+            const config: DynamicFieldConfig = {
+                key: attr.code,
+                label: attr.name,
+                type: attr.fieldType.toLowerCase() as any,
+                required: attr.isRequired,
+                labelTooltip: attr.code,
+            };
+
+            // Map validationConfig if present
+            if (attr.validationConfig) {
+                if (attr.validationConfig['minLength'] !== undefined) {
+                    config.minLength = attr.validationConfig['minLength'];
+                }
+                if (attr.validationConfig['maxLength'] !== undefined) {
+                    config.maxLength = attr.validationConfig['maxLength'];
+                }
+                if (attr.validationConfig['pattern'] !== undefined) {
+                    config.pattern = attr.validationConfig['pattern'];
+                }
+                if (attr.validationConfig['minValue'] !== undefined) {
+                    config.minValue = attr.validationConfig['minValue'];
+                }
+                if (attr.validationConfig['maxValue'] !== undefined) {
+                    config.maxValue = attr.validationConfig['maxValue'];
+                }
+                if (attr.validationConfig['minDate'] !== undefined) {
+                    config.minDate = attr.validationConfig['minDate'];
+                }
+                if (attr.validationConfig['maxDate'] !== undefined) {
+                    config.maxDate = attr.validationConfig['maxDate'];
+                }
+            }
+
+            return config;
+        });
+    }
+
+    #mapFieldsToDynamicConfig(
+        fields: ProductFieldDefinition[]
+    ): DynamicFieldConfig[] {
+        return fields.map((field) => {
+            const config: DynamicFieldConfig = {
+                key: field.code,
+                label: field.name,
+                type: field.fieldType.toLowerCase() as any,
+                required: field.isRequired,
+                labelTooltip: field.code,
+            };
+
+            if (field.validationConfig) {
+                Object.assign(config, field.validationConfig);
+            }
+
+            return config;
+        });
     }
 
     save(): void {
@@ -421,6 +506,7 @@ export class ProductEditDialogComponent
                                 desktopMediaId: m.desktop?.id,
                                 mobileMediaId: m.mobile?.id,
                             })) || [],
+                        customFields: this.customFieldsForm.value,
                     };
 
                     if (this.data.mode === 'create') {
@@ -487,5 +573,110 @@ export class ProductEditDialogComponent
 
     #formatDateTime(value: string | Date | null | undefined): string {
         return this.#datePipe.transform(value);
+    }
+
+    openFieldDialog(): void {
+        this.#openFieldDialog('create');
+    }
+
+    editField(code: string): void {
+        const field = this.fieldDefinitions().find((f) => f.code === code);
+        if (field) {
+            this.#openFieldDialog('edit', field);
+        }
+    }
+
+    deleteField(code: string): void {
+        const field = this.fieldDefinitions().find((f) => f.code === code);
+        if (!field) return;
+
+        if (confirm('Are you sure you want to delete this field definition?')) {
+            this.isLoadingSig.set(true);
+            this.#productFieldService
+                .delete(field.id)
+                .pipe(
+                    switchMap(() =>
+                        this.#productFieldService.getAllDefinitions()
+                    ),
+                    take(1)
+                )
+                .subscribe({
+                    next: (fields) => {
+                        this.isLoadingSig.set(false);
+                        this.fieldDefinitions.set(fields || []);
+                        this.#rebuildCustomFieldsForm();
+                        this.#notificationService.success(
+                            'admin.common.messages.deleteSuccess'
+                        );
+                    },
+                    error: () => {
+                        this.isLoadingSig.set(false);
+                        this.#notificationService.alert(
+                            'admin.common.errors.deleteFailed'
+                        );
+                    },
+                });
+        }
+    }
+
+    #openFieldDialog(
+        mode: 'create' | 'edit',
+        field?: ProductFieldDefinition
+    ): void {
+        const dialogRef = this.#dialog.open(ProductFieldDialogComponent, {
+            data: { mode, fieldId: field?.id },
+            width: '600px',
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.isLoadingSig.set(true);
+                const action$ =
+                    mode === 'create'
+                        ? this.#productFieldService.create(result)
+                        : this.#productFieldService.update(field!.id, result);
+
+                action$
+                    .pipe(
+                        switchMap(() =>
+                            this.#productFieldService.getAllDefinitions()
+                        ),
+                        take(1)
+                    )
+                    .subscribe({
+                        next: (fields) => {
+                            this.isLoadingSig.set(false);
+                            this.fieldDefinitions.set(fields || []);
+                            this.#rebuildCustomFieldsForm();
+                            this.#notificationService.success(
+                                'admin.common.messages.saveSuccess'
+                            );
+                        },
+                        error: () => {
+                            this.isLoadingSig.set(false);
+                            this.#notificationService.alert(
+                                'admin.common.errors.saveFailed'
+                            );
+                        },
+                    });
+            }
+        });
+    }
+
+    #rebuildCustomFieldsForm(): void {
+        // Remove old controls
+        Object.keys(this.customFieldsForm.controls).forEach((key) => {
+            this.customFieldsForm.removeControl(key);
+        });
+
+        // Add new controls
+        this.#dynamicFormService.addControlsToFormGroup(
+            this.customFieldsForm,
+            this.customFieldsConfig(),
+            {} // We might lose values here if we don't preserve them, but for definition changes it's acceptable to reset or refetch
+        );
+
+        // Try to preserve existing values where possible
+        // Ideally we should merge, but since definitions changed, some values might be invalid
     }
 }

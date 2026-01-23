@@ -57,10 +57,7 @@ export class AuthSignInComponent implements OnInit {
 
     ngOnInit(): void {
         this.signInForm = this._formBuilder.group({
-            email: [
-                '',
-                [Validators.required, Validators.email],
-            ],
+            email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
             rememberMe: [''],
         });
@@ -74,33 +71,47 @@ export class AuthSignInComponent implements OnInit {
         }
         this.signInForm.disable();
 
-        this._authService.signIn(this.signInForm.value).pipe(take(1)).subscribe((success) => {
-            if (success) {
-                const lang = this._translocoService.getActiveLang();
-                const user = this._userService.user();
-                if (user?.role === 'SUPER_ADMIN') {
-                    this._router.navigateByUrl(`/${lang}/pages`);
-                    return;
+        this._authService
+            .signIn(this.signInForm.value)
+            .pipe(take(1))
+            .subscribe((success) => {
+                if (success) {
+                    const lang = this._translocoService.getActiveLang();
+                    const user = this._userService.user();
+                    if (user?.role === 'SUPER_ADMIN') {
+                        this._router.navigateByUrl(`/${lang}/tenants`);
+                        return;
+                    }
+                    if (user?.role === 'TENANT_ADMIN') {
+                        this._router.navigateByUrl(`/${lang}/pages/list`);
+                        return;
+                    }
+                    const returnUrl =
+                        this._activatedRoute.snapshot.queryParamMap.get(
+                            'redirectURL'
+                        );
+                    const safeUrl = this.#getSafeUrl(returnUrl);
+                    const fallback = `/${lang}/dashboards/project`;
+                    this._router.navigateByUrl(safeUrl || fallback);
+                } else {
+                    this.signInForm.enable();
+                    this.formSubmitted = false;
                 }
-                const returnUrl = this._activatedRoute.snapshot.queryParamMap.get('redirectURL');
-                const safeUrl = this.#getSafeUrl(returnUrl);
-                const fallback = `/${lang}/pages`;
-                this._router.navigateByUrl(safeUrl || fallback);
-            } else {
-                this.signInForm.enable();
-                this.formSubmitted = false;
-            }
-        });
+            });
     }
 
     #getSafeUrl(url: string | null): string | null {
-        if (!url) { return null; }
+        if (!url) {
+            return null;
+        }
         try {
             const u = new URL(url, window.location.origin);
             if (u.origin !== window.location.origin) {
                 return null;
             }
             return u.pathname + u.search + u.hash;
-        } catch { return null; }
+        } catch {
+            return null;
+        }
     }
 }

@@ -42,9 +42,12 @@ export class SpaDynamicFormService {
         if (field.maxValue !== undefined) {
             validators.push(Validators.max(field.maxValue));
         }
+        if (field.pattern !== undefined && field.pattern !== '') {
+            validators.push(Validators.pattern(field.pattern));
+        }
 
         const value = initialValue !== undefined ? initialValue : (field.defaultValue ?? this.#getDefaultValue(field.type));
-        
+
         return new FormControl(value, validators);
     }
 

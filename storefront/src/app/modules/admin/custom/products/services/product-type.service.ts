@@ -43,4 +43,8 @@ export class ProductTypeService extends CrudHttpService<ProductType, CreateProdu
             map(() => void 0)
         );
     }
+
+    getProductCount(typeId: number): Observable<number> {
+        return this.customGet<number>('productTypeProductCount', { id: typeId });
+    }
 }
