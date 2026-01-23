@@ -32,5 +32,7 @@ public record ProductUpdateRequest(
 
     Long primaryCategoryId,
 
-    @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
+    @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery,
+
+    Map<String, Object> customFields) {
 }

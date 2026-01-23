@@ -146,7 +146,8 @@ public class ProductController {
 
                         return productService.findByIdComposite(id)
                                         .map(p -> ResponseEntity
-                                                        .ok(ApiResponse.success(ProductCompositeResponse.from(p, tenantContext.getCurrency()))))
+                                                        .ok(ApiResponse.success(ProductCompositeResponse.from(p,
+                                                                        tenantContext.getCurrency()))))
                                         .orElseGet(() -> {
                                                 String msg = messageSource.getMessage("product.not.found",
                                                                 new Object[] { id }, Locale.forLanguageTag(lang));
@@ -181,12 +182,14 @@ public class ProductController {
                                         request.categoryIds(),
                                         request.primaryCategoryId(),
                                         request.gallery(),
+                                        request.customFields(),
                                         userId);
 
                         String msg = messageSource.getMessage("product.create.success", null,
                                         Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.CREATED)
-                                        .body(ApiResponse.success(msg, ProductCompositeResponse.from(created, tenantContext.getCurrency())));
+                                        .body(ApiResponse.success(msg, ProductCompositeResponse.from(created,
+                                                        tenantContext.getCurrency())));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Product creation validation error: {}", ex.getMessage());
                         String msg = messageSource.getMessage("product.create.error",
@@ -219,11 +222,13 @@ public class ProductController {
                                         request.categoryIds(),
                                         request.primaryCategoryId(),
                                         request.gallery(),
+                                        request.customFields(),
                                         userId);
 
                         String msg = messageSource.getMessage("product.update.success", null,
                                         Locale.forLanguageTag(lang));
-                        return ResponseEntity.ok(ApiResponse.success(msg, ProductCompositeResponse.from(updated, tenantContext.getCurrency())));
+                        return ResponseEntity.ok(ApiResponse.success(msg,
+                                        ProductCompositeResponse.from(updated, tenantContext.getCurrency())));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Product update validation error: {}", ex.getMessage());
                         String msg = messageSource.getMessage("product.update.error",
@@ -274,7 +279,8 @@ public class ProductController {
                         String msg = messageSource.getMessage("product.status.update.success", null,
                                         Locale.forLanguageTag(lang));
                         return ResponseEntity
-                                        .ok(ApiResponse.success(msg, ProductListItemResponse.from(updated, language, tenantContext.getCurrency())));
+                                        .ok(ApiResponse.success(msg, ProductListItemResponse.from(updated, language,
+                                                        tenantContext.getCurrency())));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Product status update validation error: {}", ex.getMessage());
                         String msg = messageSource.getMessage("product.status.update.error",
@@ -302,7 +308,8 @@ public class ProductController {
                         String msg = messageSource.getMessage("product.visibility.update.success", null,
                                         Locale.forLanguageTag(lang));
                         return ResponseEntity
-                                        .ok(ApiResponse.success(msg, ProductListItemResponse.from(updated, language, tenantContext.getCurrency())));
+                                        .ok(ApiResponse.success(msg, ProductListItemResponse.from(updated, language,
+                                                        tenantContext.getCurrency())));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Product visibility update validation error: {}", ex.getMessage());
                         String msg = messageSource.getMessage("product.visibility.update.error",

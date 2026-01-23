@@ -22,6 +22,7 @@ public interface ProductService {
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
             Long createdBy);
 
     Product updateComposite(Long id, BigDecimal basePrice,
@@ -30,6 +31,7 @@ public interface ProductService {
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
             List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
             Long updatedBy);
 
     void delete(Long id);

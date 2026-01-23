@@ -38,7 +38,9 @@ public record ProductCompositeRequest(
 
         Long primaryCategoryId,
 
-        @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery) {
+        @Valid @Size(max = GALLERY_MAX_SIZE, message = "validation.product.gallery.maxSize") List<ResponsiveMediaRequest> gallery,
+
+        Map<String, Object> customFields) {
     public ProductCompositeRequest {
         sku = sku != null ? sku.trim() : null;
         if (status == null)

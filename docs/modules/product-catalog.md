@@ -5,8 +5,9 @@
 The Product Catalog module provides tenant-scoped management and public delivery for:
 
 - Product types with dynamic attribute definitions (EAV)
+- Global custom fields for all products (tenant-wide)
 - Hierarchical categories with i18n content
-- Products with composite create/update (translations + attributes + categories + responsive gallery)
+- Products with composite create/update (translations + attributes + categories + global fields + responsive gallery)
 - Responsive media support for both main product image and gallery items (Desktop + Mobile)
 
 ## Database
@@ -15,6 +16,7 @@ Tenant migrations:
 
 - `backend/src/main/resources/db/tenant/product/`
   - `V27__product_baseline.sql`
+  - `V30__add_product_fields.sql`
   - `R__seed_product_types.sql`
 
 Platform registration (module catalog):
@@ -45,6 +47,17 @@ Attributes:
 - `PUT /api/products/types/{typeId}/attributes/{attrId}`
 - `DELETE /api/products/types/{typeId}/attributes/{attrId}`
 
+### Global Product Fields
+
+Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductFieldController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductFieldController.java)
+
+Base path: `/api/products/fields`
+
+- `GET /api/products/fields` (list all definitions)
+- `POST /api/products/fields` (create definition)
+- `PUT /api/products/fields/{id}` (update definition)
+- `DELETE /api/products/fields/{id}` (delete definition)
+
 ### Categories (hierarchical, i18n, composite)
 
 Controller: [`backend/src/main/java/com/backend/presentation/controller/CategoryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CategoryController.java)
@@ -71,6 +84,7 @@ Base path: `/api/products`
 - `DELETE /api/products/{id}`
 - `PATCH /api/products/{id}/status?status=DRAFT|PUBLISHED`
 - `PATCH /api/products/{id}/visibility?isVisible=true|false`
+
 ## Public delivery APIs
 
 Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/ProductCmsDeliveryController.java)
@@ -107,14 +121,17 @@ Key parts:
 - Models: `models/`
   - `product.types.ts` (Product, ProductCompositeRequest, ProductListItemResponse, etc.)
   - `product-type.types.ts` (ProductType, AttributeDefinition, ProductFieldType, etc.)
+  - `product-field.types.ts` (Global field definitions, validation config)
   - `category.types.ts` (Category, CategoryTreeResponse, etc.)
 - Services:
   - `services/product.service.ts` (CRUD service extending `CrudHttpService`)
   - `services/product-type.service.ts` (CRUD service with attribute management)
+  - `services/product-field.service.ts` (Global field definition management)
   - `services/category.service.ts` (tree operations and composite CRUD)
 - Components:
   - `list/product-list.component.ts` (paginated list with search, extends `BaseCrudListComponent`)
-  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media)
+  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media, custom fields)
+  - `fields/product-field-dialog/` (global field definition create/edit)
   - `types/product-type-list.component.ts` (paginated list)
   - `types/product-type-edit-dialog/` (type management with attributes tab)
   - `categories/category-tree.component.ts` (hierarchical tree using Angular Material `MatTree`)

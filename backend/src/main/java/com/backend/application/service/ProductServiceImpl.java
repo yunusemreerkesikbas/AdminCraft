@@ -13,12 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.ProductI18nDto;
+import com.backend.application.dto.validation.ValidationConfigDto;
+import com.backend.application.util.AttributeValidationHelper;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.Product;
 import com.backend.domain.entity.ProductAttribute;
 import com.backend.domain.entity.ProductAttributeDefinition;
 import com.backend.domain.entity.ProductCategoryLink;
+import com.backend.domain.entity.ProductFieldValue;
 import com.backend.domain.entity.ProductI18n;
 import com.backend.domain.entity.ProductMedia;
 import com.backend.domain.entity.ProductType;
@@ -30,6 +33,7 @@ import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.ProductAttributeDefinitionRepository;
 import com.backend.domain.repository.ProductAttributeRepository;
 import com.backend.domain.repository.ProductCategoryLinkRepository;
+import com.backend.domain.repository.ProductFieldValueRepository;
 import com.backend.domain.repository.ProductI18nRepository;
 import com.backend.domain.repository.ProductMediaRepository;
 import com.backend.domain.repository.ProductRepository;
@@ -58,6 +62,9 @@ public class ProductServiceImpl implements ProductService {
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final MediaRepository mediaRepository;
 
+    private final ProductFieldService productFieldService;
+    private final ProductFieldValueRepository productFieldValueRepository;
+
     @Override
     @Transactional
     public Product createComposite(Long productTypeId, String sku, BigDecimal basePrice,
@@ -65,8 +72,8 @@ public class ProductServiceImpl implements ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-
             List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
             Long createdBy) {
         TenantContext.validateActive();
         log.debug("Creating product with SKU: {}", sku);
@@ -105,8 +112,12 @@ public class ProductServiceImpl implements ProductService {
         }
         saveAttributes(saved, productType, attributes);
         saveCategoryLinks(saved, categoryIds, primaryCategoryId);
-        saveCategoryLinks(saved, categoryIds, primaryCategoryId);
         saveGalleryMedia(saved, gallery);
+
+        // Save custom field values (global product fields)
+        if (customFields != null && !customFields.isEmpty()) {
+            productFieldService.saveFieldValues(saved, customFields);
+        }
 
         log.info("Created product id: {}, sku: {}", saved.getId(), saved.getSku());
         return findByIdComposite(saved.getId()).orElse(saved);
@@ -119,8 +130,8 @@ public class ProductServiceImpl implements ProductService {
             Map<Language, ProductI18nDto> translations,
             Map<String, Object> attributes,
             List<Long> categoryIds, Long primaryCategoryId,
-
             List<ResponsiveMediaRequest> gallery,
+            Map<String, Object> customFields,
             Long updatedBy) {
         TenantContext.validateActive();
         log.debug("Updating product id: {}", id);
@@ -162,6 +173,11 @@ public class ProductServiceImpl implements ProductService {
             updateGalleryMedia(saved, gallery);
         }
 
+        // Save custom field values (global product fields)
+        if (customFields != null && !customFields.isEmpty()) {
+            productFieldService.saveFieldValues(saved, customFields);
+        }
+
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
 
         // Reload product with productType eagerly fetched
@@ -181,6 +197,16 @@ public class ProductServiceImpl implements ProductService {
         List<ProductMedia> galleryMedia = productMediaRepository.findByProductIdWithMedia(result.getId());
         result.getGallery().clear();
         result.getGallery().addAll(galleryMedia);
+
+        List<ProductAttribute> refreshedAttributes = productAttributeRepository
+                .findByProductIdWithDefinitions(result.getId());
+        result.getAttributes().clear();
+        result.getAttributes().addAll(refreshedAttributes);
+
+        List<ProductFieldValue> refreshedFieldValues = productFieldValueRepository
+                .findByProductIdWithDefinition(result.getId());
+        result.getFieldValues().clear();
+        result.getFieldValues().addAll(refreshedFieldValues);
 
         return result;
     }
@@ -227,6 +253,20 @@ public class ProductServiceImpl implements ProductService {
             product.getGallery().clear();
             if (!gallery.isEmpty()) {
                 product.getGallery().addAll(gallery);
+            }
+            // Refresh attributes with their definitions
+            List<ProductAttribute> attributes = productAttributeRepository
+                    .findByProductIdWithDefinitions(product.getId());
+            product.getAttributes().clear();
+            if (!attributes.isEmpty()) {
+                product.getAttributes().addAll(attributes);
+            }
+            // Refresh custom field values
+            List<ProductFieldValue> fieldValues = productFieldValueRepository
+                    .findByProductIdWithDefinition(product.getId());
+            product.getFieldValues().clear();
+            if (!fieldValues.isEmpty()) {
+                product.getFieldValues().addAll(fieldValues);
             }
         }
         return productOpt;
@@ -374,11 +414,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void saveAttributes(Product product, ProductType productType, Map<String, Object> attributes) {
-        if (attributes == null || attributes.isEmpty())
-            return;
-
         List<ProductAttributeDefinition> definitions = attributeDefinitionRepository
                 .findByProductTypeIdOrderBySortOrder(productType.getId());
+
+        // Validate required attributes
+        for (ProductAttributeDefinition def : definitions) {
+            if (Boolean.TRUE.equals(def.getIsRequired())) {
+                Object value = attributes != null ? attributes.get(def.getCode()) : null;
+                if (isValueEmpty(value)) {
+                    throw new IllegalArgumentException(
+                            "Required attribute '" + def.getName() + "' (" + def.getCode() + ") is missing or empty");
+                }
+            }
+        }
+
+        if (attributes == null || attributes.isEmpty())
+            return;
 
         for (ProductAttributeDefinition def : definitions) {
             if (attributes.containsKey(def.getCode())) {
@@ -393,9 +444,31 @@ public class ProductServiceImpl implements ProductService {
         saveAttributes(product, productType, attributes);
     }
 
-    private void saveAttribute(Product product, ProductAttributeDefinition def, Object value) {
+    private boolean isValueEmpty(Object value) {
         if (value == null)
+            return true;
+        if (value instanceof String str)
+            return str.trim().isEmpty();
+        return false;
+    }
+
+    private void saveAttribute(Product product, ProductAttributeDefinition def, Object value) {
+        if (isValueEmpty(value)) {
+            if (Boolean.TRUE.equals(def.getIsRequired())) {
+                throw new IllegalArgumentException(
+                        "Required attribute '" + def.getName() + "' (" + def.getCode() + ") is missing or empty");
+            }
             return;
+        }
+
+        // Validate against validationConfig if present
+        if (def.getValidationConfig() != null && !def.getValidationConfig().trim().isEmpty()) {
+            ValidationConfigDto validationConfig = AttributeValidationHelper
+                    .parseValidationConfig(def.getValidationConfig());
+            if (validationConfig != null) {
+                AttributeValidationHelper.validateOrThrow(value, def.getFieldType(), validationConfig, def.getName());
+            }
+        }
 
         ProductAttribute attr = new ProductAttribute();
         attr.setProduct(product);

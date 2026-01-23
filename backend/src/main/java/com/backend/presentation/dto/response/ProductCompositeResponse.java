@@ -26,6 +26,7 @@ public record ProductCompositeResponse(
                 List<ProductAttributeValueResponse> attributes,
                 List<ProductCategoryResponse> categories,
                 List<ProductMediaResponse> galleryImages,
+                Map<String, Object> customFields,
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt) {
         public static ProductCompositeResponse from(Product entity, Currency currency) {
@@ -46,6 +47,17 @@ public record ProductCompositeResponse(
                                                 .map(ProductAttributeValueResponse::from)
                                                 .toList()
                                 : List.of();
+
+                // Add custom fields mapping
+                // Add custom fields mapping
+                Map<String, Object> customFields = entity.getFieldValues() != null
+                                ? entity.getFieldValues().stream()
+                                                .filter(fv -> fv.getFieldDefinition() != null)
+                                                .collect(Collectors.toMap(
+                                                                fv -> fv.getFieldDefinition().getCode(),
+                                                                fv -> fv.getValue(),
+                                                                (existing, replacement) -> replacement))
+                                : Map.of();
 
                 List<ProductCategoryResponse> categories = entity.getCategoryLinks() != null
                                 ? entity.getCategoryLinks().stream()
@@ -81,6 +93,7 @@ public record ProductCompositeResponse(
                                 attributes,
                                 categories,
                                 galleryImages,
+                                customFields,
                                 entity.getCreatedAt(),
                                 entity.getUpdatedAt());
         }

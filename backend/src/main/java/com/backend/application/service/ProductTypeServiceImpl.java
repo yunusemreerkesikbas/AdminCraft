@@ -236,4 +236,11 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         TenantContext.validateActive();
         return attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(productTypeId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getProductCount(Long productTypeId) {
+        TenantContext.validateActive();
+        return productRepository.countByProductTypeId(productTypeId);
+    }
 }
