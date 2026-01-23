@@ -1,15 +1,27 @@
 <spa-dialog-header
     [title]="
         (data.mode === 'create'
-            ? 'admin.products.attributes.create'
-            : 'admin.products.attributes.edit'
+            ? 'admin.products.globalFields.create'
+            : 'admin.products.globalFields.edit'
         ) | transloco
     "
     (closeClicked)="cancel()"
 ></spa-dialog-header>
 
 <spa-dialog-content>
-    <form [formGroup]="generalForm" class="flex flex-col gap-4">
+    <form
+        [formGroup]="generalForm"
+        class="flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-2"
+    >
+        <spa-input
+            formControlName="uid"
+            [label]="'admin.common.fields.uid' | transloco"
+            [required]="true"
+            [placeholder]="'admin.common.placeholders.uid' | transloco"
+            [labelTooltip]="'uid'"
+            [readonly]="data.mode === 'edit'"
+        ></spa-input>
+
         <spa-input
             formControlName="code"
             [label]="'admin.common.fields.code' | transloco"
@@ -29,15 +41,22 @@
 
         <spa-select
             formControlName="fieldType"
-            [label]="'admin.products.attributes.fields.type' | transloco"
+            [label]="'admin.products.globalFields.fieldType' | transloco"
             [options]="fieldTypes"
             [required]="true"
             [placeholder]="
-                'admin.products.attributes.placeholders.type' | transloco
+                'admin.products.globalFields.placeholders.fieldType' | transloco
             "
             [labelTooltip]="'fieldType'"
             [disabled]="data.mode === 'edit'"
         ></spa-select>
+
+        <spa-input
+            formControlName="defaultValue"
+            [label]="'admin.products.globalFields.defaultValue' | transloco"
+            [placeholder]="'admin.common.placeholders.optional' | transloco"
+            [labelTooltip]="'defaultValue'"
+        ></spa-input>
 
         <spa-input
             formControlName="sortOrder"
@@ -56,11 +75,11 @@
             ></spa-checkbox>
 
             <spa-checkbox
-                formControlName="isSearchable"
+                formControlName="isVisibleInList"
                 [label]="
-                    'admin.products.attributes.fields.searchable' | transloco
+                    'admin.products.globalFields.visibleInList' | transloco
                 "
-                [labelTooltip]="'isSearchable'"
+                [labelTooltip]="'isVisibleInList'"
                 styleClasses="boxed"
             ></spa-checkbox>
         </div>
@@ -68,7 +87,10 @@
         <!-- Validation Config Section -->
         <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
             <h4 class="mb-3 text-sm font-medium text-gray-700">
-                {{ 'admin.products.attributes.validationConfig.title' | transloco }}
+                {{
+                    'admin.products.attributes.validationConfig.title'
+                        | transloco
+                }}
             </h4>
 
             <!-- TEXT/RICHTEXT validation -->
@@ -77,16 +99,26 @@
                     <spa-input
                         formControlName="minLength"
                         type="number"
-                        [label]="'admin.products.attributes.validationConfig.minLength' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.minLength'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'minLength'"
                     ></spa-input>
 
                     <spa-input
                         formControlName="maxLength"
                         type="number"
-                        [label]="'admin.products.attributes.validationConfig.maxLength' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.maxLength'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'maxLength'"
                     ></spa-input>
                 </div>
@@ -94,8 +126,14 @@
                 <div class="mt-4">
                     <spa-input
                         formControlName="pattern"
-                        [label]="'admin.products.attributes.validationConfig.pattern' | transloco"
-                        [placeholder]="'admin.products.attributes.validationConfig.patternPlaceholder' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.pattern'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.products.attributes.validationConfig.patternPlaceholder'
+                                | transloco
+                        "
                         [labelTooltip]="'pattern (regex)'"
                     ></spa-input>
                 </div>
@@ -107,16 +145,26 @@
                     <spa-input
                         formControlName="minValue"
                         type="number"
-                        [label]="'admin.products.attributes.validationConfig.minValue' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.minValue'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'minValue'"
                     ></spa-input>
 
                     <spa-input
                         formControlName="maxValue"
                         type="number"
-                        [label]="'admin.products.attributes.validationConfig.maxValue' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.maxValue'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'maxValue'"
                     ></spa-input>
                 </div>
@@ -128,24 +176,41 @@
                     <spa-input
                         formControlName="minDate"
                         type="date"
-                        [label]="'admin.products.attributes.validationConfig.minDate' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.minDate'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'minDate'"
                     ></spa-input>
 
                     <spa-input
                         formControlName="maxDate"
                         type="date"
-                        [label]="'admin.products.attributes.validationConfig.maxDate' | transloco"
-                        [placeholder]="'admin.common.placeholders.optional' | transloco"
+                        [label]="
+                            'admin.products.attributes.validationConfig.maxDate'
+                                | transloco
+                        "
+                        [placeholder]="
+                            'admin.common.placeholders.optional' | transloco
+                        "
                         [labelTooltip]="'maxDate'"
                     ></spa-input>
                 </div>
             }
 
-            @if (!showTextValidation() && !showNumberValidation() && !showDateValidation()) {
+            @if (
+                !showTextValidation() &&
+                !showNumberValidation() &&
+                !showDateValidation()
+            ) {
                 <p class="text-sm text-gray-500">
-                    {{ 'admin.products.attributes.validationConfig.noValidation' | transloco }}
+                    {{
+                        'admin.products.attributes.validationConfig.noValidation'
+                            | transloco
+                    }}
                 </p>
             }
         </div>

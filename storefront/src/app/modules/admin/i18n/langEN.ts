@@ -19,19 +19,33 @@ export const langEN = {
             invalid: 'Please enter a valid URL',
         },
         code: {
-            pattern: 'Must start with lowercase letter, only lowercase letters, digits and underscores allowed',
+            pattern:
+                'Must start with lowercase letter, only lowercase letters, digits and underscores allowed',
         },
         category: {
             code: {
-                pattern: 'Must start with lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
+                pattern:
+                    'Must start with lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
             },
         },
         product: {
             sku: {
-                pattern: 'Only letters, digits, underscores and hyphens allowed',
+                pattern:
+                    'Only letters, digits, underscores and hyphens allowed',
             },
             gallery: {
                 maxSize: 'Gallery can contain at most {{max}} images',
+            },
+            globalFields: {
+                title: 'Custom Fields',
+                description:
+                    'Manage custom fields defined for this product here.',
+                create: 'Add Field',
+                empty: {
+                    title: 'No custom fields found',
+                    description:
+                        'No custom fields have been added to this product yet.',
+                },
             },
         },
         responsiveMedia: {
@@ -40,19 +54,23 @@ export const langEN = {
             },
         },
         slug: {
-            pattern: 'Must contain only lowercase letters, numbers, and hyphens',
+            pattern:
+                'Must contain only lowercase letters, numbers, and hyphens',
         },
         uid: {
-            pattern: 'Must start with a lowercase letter or digit, only lowercase letters, digits, underscores and hyphens allowed',
+            pattern:
+                'Must start with a lowercase letter or digit, only lowercase letters, digits, underscores and hyphens allowed',
         },
         slot: {
             name: {
-                pattern: 'Must start with a letter, only letters, digits, underscores and hyphens allowed',
+                pattern:
+                    'Must start with a letter, only letters, digits, underscores and hyphens allowed',
             },
         },
         media: {
             code: {
-                pattern: 'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
+                pattern:
+                    'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
             },
         },
     },
@@ -168,10 +186,14 @@ export const langEN = {
                 saveFailed: 'Failed to save',
             },
             validation: {
-                generalFormInvalid: 'General form information is invalid. Please check.',
-                i18nFormsInvalid: 'There are errors in language forms. Please check.',
-                attributesFormInvalid: 'There are errors in attributes form. Please check.',
-                atLeastOneLanguageRequired: 'At least one language must have the name field filled.',
+                generalFormInvalid:
+                    'General form information is invalid. Please check.',
+                i18nFormsInvalid:
+                    'There are errors in language forms. Please check.',
+                attributesFormInvalid:
+                    'There are errors in attributes form. Please check.',
+                atLeastOneLanguageRequired:
+                    'At least one language must have the name field filled.',
             },
             system: 'System',
             general: 'General',
@@ -228,7 +250,7 @@ export const langEN = {
             },
             target: {
                 self: 'Same Tab',
-                blank: 'New Tab'
+                blank: 'New Tab',
             },
             dialog: {
                 title: {
@@ -252,7 +274,8 @@ export const langEN = {
             },
             provisioning: {
                 title: 'Language Content Provisioning',
-                message: 'Create empty content records for newly added languages? This may take a few minutes.',
+                message:
+                    'Create empty content records for newly added languages? This may take a few minutes.',
                 confirm: 'Start',
                 cancel: 'Cancel',
                 progress: 'Processing...',
@@ -269,12 +292,14 @@ export const langEN = {
             confirm: {
                 delete: {
                     title: 'Delete Item?',
-                    message: 'Are you sure you want to delete this item? This action cannot be undone!',
+                    message:
+                        'Are you sure you want to delete this item? This action cannot be undone!',
                     label: 'Delete',
                 },
                 unsavedChanges: {
                     title: 'Unsaved Changes',
-                    message: 'Are you sure you want to leave this page? Your changes will be lost.',
+                    message:
+                        'Are you sure you want to leave this page? Your changes will be lost.',
                     label: 'Leave',
                 },
             },
@@ -386,15 +411,15 @@ export const langEN = {
             list: {
                 empty: {
                     title: 'No pages found',
-                    description: 'No pages have been created yet.'
-                }
+                    description: 'No pages have been created yet.',
+                },
             },
             actions: {
                 create: 'Create Page',
-                slots: 'Manage Slots'
+                slots: 'Manage Slots',
             },
             tabs: {
-                general: 'General'
+                general: 'General',
             },
             fields: {
                 uid: 'UID',
@@ -410,11 +435,11 @@ export const langEN = {
                 subtitle: 'Subtitle',
                 metaTitle: 'Meta Title',
                 metaDescription: 'Meta Description',
-                description: 'Description'
+                description: 'Description',
             },
             placeholders: {
                 selectTemplate: 'Select template...',
-                uidAuto: 'Auto-generated'
+                uidAuto: 'Auto-generated',
             },
             hints: {
                 featuredImage: 'Main image for this page',
@@ -422,8 +447,10 @@ export const langEN = {
                 urlPath: 'Ex: about-us or contact',
                 canonicalUrl: 'Ex: about-us or contact',
                 metaTitle: 'Title displayed in search engine results',
-                metaDescription: 'Description displayed in search engine results',
-                templateSlots: 'Selecting a template will automatically create default content slots.'
+                metaDescription:
+                    'Description displayed in search engine results',
+                templateSlots:
+                    'Selecting a template will automatically create default content slots.',
             },
             appearance: 'Appearance',
             basicInfo: 'Basic Information',
@@ -431,20 +458,20 @@ export const langEN = {
             dialogs: {
                 delete: {
                     title: 'Delete Page',
-                    confirm: 'Are you sure you want to delete this page?'
-                }
+                    confirm: 'Are you sure you want to delete this page?',
+                },
             },
             success: {
                 created: 'Page successfully created',
                 updated: 'Page successfully updated',
-                deleted: 'Page successfully deleted'
+                deleted: 'Page successfully deleted',
             },
             errors: {
                 createFailed: 'Failed to create page',
                 updateFailed: 'Failed to update page',
                 loadFailed: 'Failed to load page',
-                loadTemplatesFailed: 'Failed to load templates'
-            }
+                loadTemplatesFailed: 'Failed to load templates',
+            },
         },
         pageBuilder: {
             title: 'Page Builder',
@@ -456,7 +483,7 @@ export const langEN = {
                 draft: 'Draft',
                 published: 'Published',
                 archived: 'Archived',
-                scheduled: 'Scheduled'
+                scheduled: 'Scheduled',
             },
             fields: {
                 uid: 'UID',
@@ -495,7 +522,8 @@ export const langEN = {
                 sectionAdded: 'Section added',
                 blockAdded: 'Block added',
                 orderSaved: 'Order saved',
-                languageVersionNotFound: 'Language version not found. Please create a page for this language first.',
+                languageVersionNotFound:
+                    'Language version not found. Please create a page for this language first.',
             },
             errors: {
                 noTenant: 'Tenant not found',
@@ -534,8 +562,10 @@ export const langEN = {
             editTitle: 'Edit Slot',
             uid: 'UID',
             deleteTitle: 'Delete Slot',
-            deleteMessage: 'Are you sure you want to delete this slot? All component associations will be removed.',
-            sharedSlotDeleteError: 'Shared slots cannot be deleted from a page context',
+            deleteMessage:
+                'Are you sure you want to delete this slot? All component associations will be removed.',
+            sharedSlotDeleteError:
+                'Shared slots cannot be deleted from a page context',
             createSuccess: 'Slot created successfully',
             createError: 'Failed to create slot',
             deleteSuccess: 'Slot deleted successfully',
@@ -578,7 +608,8 @@ export const langEN = {
             messages: {
                 noTemplates: 'No page templates found.',
                 createSuccess: 'Page template created successfully',
-                createPartial: 'Page template created. Some slots could not be added.',
+                createPartial:
+                    'Page template created. Some slots could not be added.',
                 createFailed: 'Failed to create page template',
                 updateSuccess: 'Page template updated successfully',
                 updateFailed: 'Failed to update page template',
@@ -594,11 +625,11 @@ export const langEN = {
                 root: 'All Media',
                 createSub: 'Create Sub-folder',
                 createTitle: 'Create Folder',
-                editTitle: 'Edit Folder'
+                editTitle: 'Edit Folder',
             },
             list: {
                 empty: 'No media found',
-                emptyDescription: 'No media files have been uploaded yet.'
+                emptyDescription: 'No media files have been uploaded yet.',
             },
 
             upload: 'Upload Media',
@@ -607,7 +638,7 @@ export const langEN = {
                 createFolder: 'New Folder',
                 gridView: 'Grid View',
                 listView: 'List View',
-                openFile: 'Open File'
+                openFile: 'Open File',
             },
             uploadFiles: 'Upload Files',
             dragDrop: 'Drag and drop files here',
@@ -618,14 +649,16 @@ export const langEN = {
             uploading: 'Uploading',
             selectedFiles: 'Selected Files',
             batchMetadata: 'Batch Metadata',
-            batchMetadataDesc: 'Information entered here will apply to all selected files.',
+            batchMetadataDesc:
+                'Information entered here will apply to all selected files.',
             files: 'Files',
             fields: {
                 originalName: 'File Name',
                 folderName: 'Folder Name',
                 isPublic: 'Publicly Accessible',
                 altText: 'Alternative Text',
-                altTextPlaceholder: 'Describe the image content (important for SEO)',
+                altTextPlaceholder:
+                    'Describe the image content (important for SEO)',
                 title: 'Title',
                 titlePlaceholder: 'Image title (optional)',
                 description: 'Description',
@@ -635,7 +668,7 @@ export const langEN = {
                 size: 'Size',
                 uploadedAt: 'Uploaded At',
                 caption: 'Caption',
-                folder: 'Folder'
+                folder: 'Folder',
             },
             messages: {
                 noMediaFound: 'No media files found in this folder',
@@ -652,16 +685,16 @@ export const langEN = {
                 noFormats: 'No generated formats available',
                 generatedFormats: 'Generated formats (thumbnails, etc.)',
                 processingFormats: 'Processing formats... Please wait.',
-                variantDeleteSuccess: 'Variant deleted'
+                variantDeleteSuccess: 'Variant deleted',
             },
             formats: {
-                original: 'Original File'
+                original: 'Original File',
             },
             focalPoint: {
                 title: 'Focal Point',
                 help: 'Click on the image to select the focal point.',
                 updateSuccess: 'Focal point updated',
-                tab: 'Tools'
+                tab: 'Tools',
             },
             format: {
                 generator: {
@@ -676,7 +709,7 @@ export const langEN = {
                 quality: 'Quality',
                 generate: 'Generate',
                 generating: 'Generating...',
-                success: 'Format generated'
+                success: 'Format generated',
             },
             responsive: {
                 background: 'Background Media',
@@ -689,25 +722,26 @@ export const langEN = {
                 title: 'Select Media',
                 select: 'Select',
                 desktopPlaceholder: 'Select Desktop Media',
-                mobilePlaceholder: 'Select Mobile Media'
+                mobilePlaceholder: 'Select Mobile Media',
             },
             dialogs: {
                 detail: {
                     title: 'Media Details',
                     formats: 'Formats',
-                    linkedComponents: 'Linked Components'
+                    linkedComponents: 'Linked Components',
                 },
                 messages: {
-                    noLinkedComponents: 'No linked components found'
+                    noLinkedComponents: 'No linked components found',
                 },
                 folder: {
                     createTitle: 'Create Folder',
-                    editTitle: 'Edit Folder'
+                    editTitle: 'Edit Folder',
                 },
                 delete: {
                     title: 'Delete Media?',
-                    confirm: 'Are you sure you want to delete this file? This action cannot be undone!'
-                }
+                    confirm:
+                        'Are you sure you want to delete this file? This action cannot be undone!',
+                },
             },
             dragDropText: 'Drag files here or click to select',
         },
@@ -719,7 +753,8 @@ export const langEN = {
                 create: 'Create Node',
                 edit: 'Edit Node',
                 delete: 'Delete Node',
-                confirmDelete: 'Are you sure you want to delete this node? All children will be deleted as well.',
+                confirmDelete:
+                    'Are you sure you want to delete this node? All children will be deleted as well.',
             },
             actions: {
                 addChild: 'Add Child',
@@ -746,7 +781,7 @@ export const langEN = {
                 isExternal: 'External Link',
                 itemType: 'Item Type',
                 itemId: 'Item ID',
-                target: 'Target'
+                target: 'Target',
             },
             messages: {
                 successCreateNode: 'Node created successfully',
@@ -759,37 +794,38 @@ export const langEN = {
                 errorUpdateNode: 'Failed to update node',
                 errorCreateEntry: 'Failed to create entry',
                 errorUpdateEntry: 'Failed to update entry',
-                warningI18nSaveFailed: 'Created successfully, but translation save failed',
+                warningI18nSaveFailed:
+                    'Created successfully, but translation save failed',
                 errorLoadI18n: 'Failed to load translations',
                 reorderSuccess: 'Order updated successfully',
                 noEntries: 'No entries yet',
-                noChildren: 'No child nodes'
+                noChildren: 'No child nodes',
             },
             enums: {
                 position: {
                     LEFT: 'Left',
                     RIGHT: 'Right',
                     CENTER: 'Center',
-                    BOTTOM: 'Bottom'
+                    BOTTOM: 'Bottom',
                 },
                 itemType: {
                     URL: 'URL',
                     PAGE: 'Page',
                     CATEGORY: 'Category',
-                    PRODUCT: 'Product'
-                }
+                    PRODUCT: 'Product',
+                },
             },
             sections: {
                 subMenus: 'Sub Menus',
-                entries: 'Entries'
+                entries: 'Entries',
             },
             manager: {
-                title: 'Manage Node'
+                title: 'Manage Node',
             },
             tabs: {
                 submenus: 'Submenus',
-                entries: 'Entries'
-            }
+                entries: 'Entries',
+            },
         },
         users: {
             title: 'User Management',
@@ -848,7 +884,10 @@ export const langEN = {
         siteSettings: {
             title: 'Site Settings',
             panels: {
-                general: { title: 'General', desc: 'Basic contact and meta settings' },
+                general: {
+                    title: 'General',
+                    desc: 'Basic contact and meta settings',
+                },
                 address: { title: 'Address', desc: 'Company address and map' },
                 social: { title: 'Social', desc: 'Social media profiles' },
                 seo: { title: 'SEO', desc: 'Language-specific SEO defaults' },
@@ -928,14 +967,15 @@ export const langEN = {
                 styleClasses: 'CSS Classes',
             },
             hints: {
-                imageUrl: 'Enter full URL for image (e.g., https://example.com/image.jpg)',
+                imageUrl:
+                    'Enter full URL for image (e.g., https://example.com/image.jpg)',
                 styleClasses: 'Ex: col-span-12 md:col-span-6',
                 createFirstHint: 'Start by creating your first component',
             },
             buttonStyles: {
                 primary: 'Primary',
                 secondary: 'Secondary',
-                outline: 'Outline'
+                outline: 'Outline',
             },
             addLink: 'Add Link',
             saveTranslation: 'Save Translation',
@@ -976,7 +1016,7 @@ export const langEN = {
                 gallery: 'Gallery',
                 pricing: 'Pricing',
                 form: 'Form',
-                other: 'Other'
+                other: 'Other',
             },
             types: {
                 title: 'Component Types',
@@ -1008,8 +1048,10 @@ export const langEN = {
             },
             entryFields: {
                 title: 'Entry Fields',
-                subtitle: 'These fields will be populated when creating the component',
-                noFieldsDesc: 'No entry fields defined for this component type yet. You can add new fields using the "Add Field" button.',
+                subtitle:
+                    'These fields will be populated when creating the component',
+                noFieldsDesc:
+                    'No entry fields defined for this component type yet. You can add new fields using the "Add Field" button.',
                 addField: 'Add Field',
                 addFirst: 'Add First Field',
                 noFields: 'No entry fields defined yet',
@@ -1032,7 +1074,8 @@ export const langEN = {
                 failedCount: 'Failed',
                 invalidFieldKey: 'Field key must be camelCase',
                 readOnlyNote: 'Fields cannot be modified after creation',
-                translationInfo: 'Dynamic translation keys are used for field labels',
+                translationInfo:
+                    'Dynamic translation keys are used for field labels',
                 types: {
                     text: 'Text',
                     textarea: 'Long Text',
@@ -1103,7 +1146,7 @@ export const langEN = {
                 confirmDelete: 'Are you sure you want to delete entry {{uid}}?',
                 messages: {
                     i18nSaved: '{{lang}} translation saved',
-                    published: '{{lang}} published'
+                    published: '{{lang}} published',
                 },
                 tabs: {
                     general: 'General',
@@ -1125,9 +1168,11 @@ export const langEN = {
                 addField: 'Add Field',
                 editField: 'Edit Field',
                 noFields: 'No extended fields added yet',
-                noFieldsHint: 'You can add type-specific fields using the button above',
+                noFieldsHint:
+                    'You can add type-specific fields using the button above',
                 fieldKey: 'Field Key',
-                keyHint: 'Must start with a letter, only letters, numbers and underscores',
+                keyHint:
+                    'Must start with a letter, only letters, numbers and underscores',
                 fieldType: 'Field Type',
                 fieldLabel: 'Field Label',
                 required: 'Required',
@@ -1144,7 +1189,8 @@ export const langEN = {
                 optionsHint: 'One option per line',
                 jsonPreview: 'JSON Preview',
                 maxFieldsReached: 'Maximum {{max}} fields can be added',
-                confirmDelete: 'Are you sure you want to delete {{name}} field?',
+                confirmDelete:
+                    'Are you sure you want to delete {{name}} field?',
                 validationErrors: 'Schema validation errors exist',
                 validationFailed: 'Field validation failed',
             },
@@ -1183,7 +1229,8 @@ export const langEN = {
             media: {
                 mainImage: 'Main Image',
                 gallery: 'Gallery',
-                responsivePlaceholder: 'Responsive media implementation requires resolving ID. Placeholder for now.',
+                responsivePlaceholder:
+                    'Responsive media implementation requires resolving ID. Placeholder for now.',
             },
             types: {
                 title: 'Product Types',
@@ -1200,7 +1247,7 @@ export const langEN = {
                     category: 'Category Group',
                 },
                 placeholders: {
-                     category: 'e.g. Components'
+                    category: 'e.g. Components',
                 },
                 tabs: {
                     attributes: 'Attributes',
@@ -1241,6 +1288,57 @@ export const langEN = {
                     title: 'Delete Attribute',
                     message: 'Are you sure you want to delete this attribute?',
                 },
+                fieldTypeChange: {
+                    title: 'Field Type Change',
+                    message:
+                        'This change may affect {{count}} products. Do you want to continue?',
+                },
+                validationConfig: {
+                    title: 'Validation Rules',
+                    minLength: 'Minimum Length',
+                    maxLength: 'Maximum Length',
+                    pattern: 'Regex Pattern',
+                    patternPlaceholder: 'e.g. ^[A-Z]+$',
+                    minValue: 'Minimum Value',
+                    maxValue: 'Maximum Value',
+                    minDate: 'Minimum Date',
+                    maxDate: 'Maximum Date',
+                    noValidation:
+                        'No validation rules available for this field type.',
+                },
+            },
+            globalFields: {
+                title: 'Global Fields',
+                subtitle: 'Manage global product fields',
+                list: 'Field List',
+                create: 'Create Field',
+                edit: 'Edit Field',
+                add: 'Add Field',
+                empty: {
+                    title: 'No Custom Fields Found',
+                    description:
+                        "You haven't created any custom fields yet. Create one to add extra data to your products.",
+                },
+
+                fieldType: 'Field Type',
+                defaultValue: 'Default Value',
+                visibleInList: 'Show in Product List',
+                placeholders: {
+                    fieldType: 'Select field type',
+                },
+                messages: {
+                    createSuccess: 'Field created successfully',
+                    createFailed: 'Failed to create field',
+                    updateSuccess: 'Field updated successfully',
+                    updateFailed: 'Failed to update field',
+                    deleteSuccess: 'Field deleted successfully',
+                    deleteFailed: 'Failed to delete field',
+                },
+                delete: {
+                    title: 'Delete Field',
+                    message:
+                        'Are you sure you want to delete this field? This may affect existing product data.',
+                },
             },
             categories: {
                 title: 'Categories',
@@ -1264,7 +1362,7 @@ export const langEN = {
                     active: 'Active',
                 },
                 placeholders: {
-                    parent: 'Select a parent category'
+                    parent: 'Select a parent category',
                 },
                 messages: {
                     createSuccess: 'Category successfully created',
@@ -1318,7 +1416,8 @@ export const langEN = {
             activateSuccess: 'Tenant successfully activated',
             suspendSuccess: 'Tenant successfully suspended',
             validation: {
-                defaultLanguageInSupported: 'Default language must be in supported languages',
+                defaultLanguageInSupported:
+                    'Default language must be in supported languages',
             },
             actions: {
                 generateAdmin: 'Generate Admin User',
@@ -1338,7 +1437,8 @@ export const langEN = {
                 passwordLabel: 'Temporary Password',
                 loginUrlLabel: 'Login URL',
                 importantTitle: 'Important:',
-                passwordWarning: 'This password will NOT be shown again after closing this dialog. Please copy and securely share these credentials with the tenant administrator.',
+                passwordWarning:
+                    'This password will NOT be shown again after closing this dialog. Please copy and securely share these credentials with the tenant administrator.',
             },
             errors: {
                 adminGenerationFailed: 'Failed to generate admin user',
@@ -1346,7 +1446,8 @@ export const langEN = {
         },
         provisioning: {
             title: 'Module Provisioning',
-            description: 'Select modules to provision for the tenant. Database structures will be created for selected modules.',
+            description:
+                'Select modules to provision for the tenant. Database structures will be created for selected modules.',
             startButton: 'Start Provisioning',
             manualProvision: 'Provision Modules',
             coreModules: 'Core Modules',

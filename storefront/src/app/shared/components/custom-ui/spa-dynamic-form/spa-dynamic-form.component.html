@@ -3,7 +3,7 @@
         @switch (field.type) {
             @case ('text') {
                 <spa-input
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
@@ -14,7 +14,7 @@
             @case ('number') {
                 <spa-input
                     type="number"
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
@@ -24,7 +24,7 @@
             }
             @case ('textarea') {
                 <spa-textarea
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [rows]="4"
@@ -35,7 +35,7 @@
             }
             @case ('richtext') {
                 <spa-textarea
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [rows]="6"
@@ -46,7 +46,7 @@
             }
             @case ('select') {
                 <spa-select
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [options]="field.options ?? []"
@@ -57,7 +57,7 @@
             }
             @case ('boolean') {
                 <spa-checkbox
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [labelTooltip]="field.labelTooltip"
                 ></spa-checkbox>
@@ -65,7 +65,7 @@
             @case ('date') {
                 <spa-input
                     type="date"
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                     [hint]="field.hint"
@@ -75,7 +75,7 @@
             }
             @case ('media') {
                 <spa-media-picker
-                    [controlName]="field.key"
+                    [formControlName]="field.key"
                     [label]="getLabel(field)"
                     [required]="field.required ?? false"
                 ></spa-media-picker>

@@ -1,4 +1,6 @@
-<div class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent">
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
     <admin-page-header
         [title]="'admin.products.title' | transloco"
         [subtitle]="'admin.products.description' | transloco"
@@ -9,13 +11,25 @@
         [searchPlaceholder]="'admin.common.searchPlaceholder' | transloco"
         (search)="onSearchInput($event)"
     >
+        <button
+            mat-stroked-button
+            class="mr-4"
+            (click)="addField()"
+            extra-buttons
+        >
+            <mat-icon
+                class="mr-2 icon-size-5"
+                [svgIcon]="'heroicons_outline:plus'"
+            ></mat-icon>
+            {{ 'admin.products.globalFields.add' | transloco }}
+        </button>
     </admin-page-header>
 
     <div class="flex flex-auto flex-col overflow-hidden">
         <div class="flex flex-auto flex-col overflow-y-auto">
             <spa-admin-grid
                 [items]="store.items()"
-                [columns]="columns"
+                [columns]="columns()"
                 [actions]="actions"
                 [isLoading]="store.isLoading()"
                 (actionClick)="onGridAction($event)"

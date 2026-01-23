@@ -27,6 +27,7 @@ export interface Product {
     attributes?: ProductAttributeResponse[];
     categories?: ProductCategoryResponse[];
     galleryImages?: ProductMediaResponse[];
+    customFields?: Record<string, any>;
 }
 
 export type ProductStatus = 'DRAFT' | 'PUBLISHED';
@@ -79,6 +80,7 @@ export interface ProductCompositeRequest {
     categoryIds: number[];
     primaryCategoryId: number;
     gallery: ResponsiveMediaRequest[];
+    customFields?: Record<string, any>;
 }
 
 export interface ProductI18nRequest {
@@ -102,4 +104,5 @@ export interface ProductListItemResponse {
     primaryCategoryName?: string;
     createdAt: string;
     updatedAt: string;
+    customFields?: Record<string, any>;
 }

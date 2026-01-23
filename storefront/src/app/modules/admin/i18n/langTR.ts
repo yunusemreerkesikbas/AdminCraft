@@ -19,11 +19,13 @@ export const langTR = {
             invalid: 'Geçerli bir URL giriniz',
         },
         code: {
-            pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam ve alt çizgi içerebilir',
+            pattern:
+                'Küçük harf ile başlamalı, sadece küçük harf, rakam ve alt çizgi içerebilir',
         },
         category: {
             code: {
-                pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içerebilir',
+                pattern:
+                    'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içerebilir',
             },
         },
         product: {
@@ -32,6 +34,16 @@ export const langTR = {
             },
             gallery: {
                 maxSize: 'Galeri en fazla {{max}} görsel içerebilir',
+            },
+            globalFields: {
+                title: 'Özel Alanlar',
+                description:
+                    'Bu ürün için tanımlanmış özel alanları buradan yönetebilirsiniz.',
+                create: 'Alan Ekle',
+                empty: {
+                    title: 'Özel alan bulunamadı',
+                    description: 'Bu ürüne henüz hiç özel alan eklenmemiş.',
+                },
             },
         },
         responsiveMedia: {
@@ -43,16 +55,19 @@ export const langTR = {
             pattern: 'Yalnızca küçük harf, sayı ve tire içermelidir',
         },
         uid: {
-            pattern: 'Küçük harf veya rakam ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
+            pattern:
+                'Küçük harf veya rakam ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
         },
         slot: {
             name: {
-                pattern: 'Harf ile başlamalı, sadece harf, rakam, alt çizgi ve tire içermelidir',
+                pattern:
+                    'Harf ile başlamalı, sadece harf, rakam, alt çizgi ve tire içermelidir',
             },
         },
         media: {
             code: {
-                pattern: 'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
+                pattern:
+                    'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
             },
         },
     },
@@ -166,10 +181,14 @@ export const langTR = {
                 saveFailed: 'Kaydetme başarısız oldu',
             },
             validation: {
-                generalFormInvalid: 'Genel form bilgileri geçersiz. Lütfen kontrol edin.',
-                i18nFormsInvalid: 'Dil formlarında hata var. Lütfen kontrol edin.',
-                attributesFormInvalid: 'Özellik formunda hata var. Lütfen kontrol edin.',
-                atLeastOneLanguageRequired: 'En az bir dil için ad alanı doldurulmalıdır.',
+                generalFormInvalid:
+                    'Genel form bilgileri geçersiz. Lütfen kontrol edin.',
+                i18nFormsInvalid:
+                    'Dil formlarında hata var. Lütfen kontrol edin.',
+                attributesFormInvalid:
+                    'Özellik formunda hata var. Lütfen kontrol edin.',
+                atLeastOneLanguageRequired:
+                    'En az bir dil için ad alanı doldurulmalıdır.',
             },
             system: 'Sistem',
             general: 'Genel',
@@ -226,7 +245,7 @@ export const langTR = {
             },
             target: {
                 self: 'Aynı Sekmede',
-                blank: 'Yeni Sekmede'
+                blank: 'Yeni Sekmede',
             },
             dialog: {
                 title: {
@@ -252,7 +271,8 @@ export const langTR = {
             },
             provisioning: {
                 title: 'Dil İçerik Hazırlama',
-                message: 'Yeni eklenen diller için boş içerik kayıtları oluşturulsun mu? Bu işlem birkaç dakika sürebilir.',
+                message:
+                    'Yeni eklenen diller için boş içerik kayıtları oluşturulsun mu? Bu işlem birkaç dakika sürebilir.',
                 confirm: 'Başlat',
                 cancel: 'İptal',
                 progress: 'İşleniyor...',
@@ -269,12 +289,14 @@ export const langTR = {
             confirm: {
                 delete: {
                     title: 'Silinsin mi?',
-                    message: 'Bu öğeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
+                    message:
+                        'Bu öğeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
                     label: 'Sil',
                 },
                 unsavedChanges: {
                     title: 'Kaydedilmemiş Değişiklikler',
-                    message: 'Sayfadan ayrılmak istediğinize emin misiniz? Değişiklikleriniz kaybolacak.',
+                    message:
+                        'Sayfadan ayrılmak istediğinize emin misiniz? Değişiklikleriniz kaybolacak.',
                     label: 'Ayrıl',
                 },
             },
@@ -386,15 +408,15 @@ export const langTR = {
             list: {
                 empty: {
                     title: 'Sayfa bulunamadı',
-                    description: 'Henüz herhangi bir sayfa oluşturulmamış.'
-                }
+                    description: 'Henüz herhangi bir sayfa oluşturulmamış.',
+                },
             },
             actions: {
                 create: 'Sayfa Oluştur',
-                slots: 'Slotları Yönet'
+                slots: 'Slotları Yönet',
             },
             tabs: {
-                general: 'Genel'
+                general: 'Genel',
             },
             fields: {
                 uid: 'UID',
@@ -410,11 +432,11 @@ export const langTR = {
                 subtitle: 'Alt Başlık',
                 metaTitle: 'Meta Başlık',
                 metaDescription: 'Meta Açıklama',
-                description: 'Açıklama'
+                description: 'Açıklama',
             },
             placeholders: {
                 selectTemplate: 'Şablon seçin...',
-                uidAuto: 'Otomatik oluşturulacak'
+                uidAuto: 'Otomatik oluşturulacak',
             },
             hints: {
                 featuredImage: 'Sayfanın ana görseli',
@@ -423,7 +445,8 @@ export const langTR = {
                 canonicalUrl: 'Örn: hakkimizda veya iletisim',
                 metaTitle: 'Arama motoru sonuçlarında görünecek başlık',
                 metaDescription: 'Arama motoru sonuçlarında görünecek açıklama',
-                templateSlots: 'Şablon seçildiğinde varsayılan içerik slotları otomatik oluşturulur.'
+                templateSlots:
+                    'Şablon seçildiğinde varsayılan içerik slotları otomatik oluşturulur.',
             },
             appearance: 'Görünüm',
             basicInfo: 'Temel Bilgiler',
@@ -431,20 +454,20 @@ export const langTR = {
             dialogs: {
                 delete: {
                     title: 'Sayfayı Sil',
-                    confirm: 'Bu sayfayı silmek istediğinize emin misiniz?'
-                }
+                    confirm: 'Bu sayfayı silmek istediğinize emin misiniz?',
+                },
             },
             success: {
                 created: 'Sayfa başarıyla oluşturuldu',
                 updated: 'Sayfa başarıyla güncellendi',
-                deleted: 'Sayfa başarıyla silindi'
+                deleted: 'Sayfa başarıyla silindi',
             },
             errors: {
                 createFailed: 'Sayfa oluşturulamadı',
                 updateFailed: 'Sayfa güncellenemedi',
                 loadFailed: 'Sayfa yüklenemedi',
-                loadTemplatesFailed: 'Şablonlar yüklenemedi'
-            }
+                loadTemplatesFailed: 'Şablonlar yüklenemedi',
+            },
         },
         pageBuilder: {
             title: 'Sayfa Oluşturucu',
@@ -456,7 +479,7 @@ export const langTR = {
                 draft: 'Taslak',
                 published: 'Yayında',
                 archived: 'Arşivlenmiş',
-                scheduled: 'Zamanlanmış'
+                scheduled: 'Zamanlanmış',
             },
             fields: {
                 uid: 'UID',
@@ -495,7 +518,8 @@ export const langTR = {
                 sectionAdded: 'Bölüm eklendi',
                 blockAdded: 'Blok eklendi',
                 orderSaved: 'Sıralama kaydedildi',
-                languageVersionNotFound: 'Bu dil versiyonu bulunamadı. Önce bu dil için sayfa oluşturun.',
+                languageVersionNotFound:
+                    'Bu dil versiyonu bulunamadı. Önce bu dil için sayfa oluşturun.',
             },
             errors: {
                 noTenant: 'Tenant bulunamadı',
@@ -534,8 +558,10 @@ export const langTR = {
             editTitle: 'Slotu Düzenle',
             uid: 'UID',
             deleteTitle: 'Slotu Sil',
-            deleteMessage: 'Bu slotu silmek istediğinizden emin misiniz? Tüm bileşen ilişkileri kaldırılacak.',
-            sharedSlotDeleteError: 'Paylaşımlı slotlar sayfa bağlamından silinemez',
+            deleteMessage:
+                'Bu slotu silmek istediğinizden emin misiniz? Tüm bileşen ilişkileri kaldırılacak.',
+            sharedSlotDeleteError:
+                'Paylaşımlı slotlar sayfa bağlamından silinemez',
             createSuccess: 'Slot başarıyla oluşturuldu',
             createError: 'Slot oluşturulamadı',
             deleteSuccess: 'Slot başarıyla silindi',
@@ -578,7 +604,8 @@ export const langTR = {
             messages: {
                 noTemplates: 'Sayfa şablonu bulunamadı.',
                 createSuccess: 'Sayfa şablonu başarıyla oluşturuldu',
-                createPartial: 'Sayfa şablonu oluşturuldu. Bazı slotlar eklenemedi.',
+                createPartial:
+                    'Sayfa şablonu oluşturuldu. Bazı slotlar eklenemedi.',
                 createFailed: 'Sayfa şablonu oluşturulamadı',
                 updateSuccess: 'Sayfa şablonu başarıyla güncellendi',
                 updateFailed: 'Sayfa şablonu güncellenemedi',
@@ -586,7 +613,8 @@ export const langTR = {
                 deleteFailed: 'Sayfa şablonu silinemedi',
                 loadFailed: 'Sayfa şablonları yüklenemedi',
             },
-            confirmDelete: '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
+            confirmDelete:
+                '"{{name}}" şablonunu silmek istediğinize emin misiniz?',
         },
         media: {
             title: 'Medya Kütüphanesi',
@@ -594,11 +622,12 @@ export const langTR = {
                 root: 'Tüm Medyalar',
                 createSub: 'Alt Klasör Ekle',
                 createTitle: 'Klasör Oluştur',
-                editTitle: 'Klasörü Düzenle'
+                editTitle: 'Klasörü Düzenle',
             },
             list: {
                 empty: 'Medya bulunamadı',
-                emptyDescription: 'Henüz herhangi bir medya dosyası yüklenmemiş.'
+                emptyDescription:
+                    'Henüz herhangi bir medya dosyası yüklenmemiş.',
             },
 
             upload: 'Medya Yükle',
@@ -607,14 +636,15 @@ export const langTR = {
                 createFolder: 'Klasör Ekle',
                 gridView: 'Tablo Görünümü',
                 listView: 'Liste Görünümü',
-                openFile: 'Dosyayı Aç'
+                openFile: 'Dosyayı Aç',
             },
             uploadFiles: 'Dosya Yükle',
             dragDrop: 'Dosyaları buraya sürükleyip bırakın',
             orBrowse: 'veya bilgisayarınızdan seçin',
             maxFileSize: 'Maksimum dosya boyutu: 50MB',
             batchMetadata: 'Toplu Medya Bilgileri',
-            batchMetadataDesc: 'Girdiğiniz bilgiler seçili tüm dosyalara uygulanacaktır.',
+            batchMetadataDesc:
+                'Girdiğiniz bilgiler seçili tüm dosyalara uygulanacaktır.',
             files: 'Dosyalar',
             selectedFiles: 'Seçilen Dosyalar',
             fields: {
@@ -622,7 +652,8 @@ export const langTR = {
                 folderName: 'Klasör Adı',
                 isPublic: 'Herkese Açık',
                 altText: 'Alternatif Metin',
-                altTextPlaceholder: 'Görsel içeriğini açıklayın (SEO için önemli)',
+                altTextPlaceholder:
+                    'Görsel içeriğini açıklayın (SEO için önemli)',
                 title: 'Başlık',
                 titlePlaceholder: 'Görsel başlığı (opsiyonel)',
                 description: 'Açıklama',
@@ -632,7 +663,7 @@ export const langTR = {
                 size: 'Boyut',
                 uploadedAt: 'Yüklenme Tarihi',
                 caption: 'Başlık',
-                folder: 'Klasör'
+                folder: 'Klasör',
             },
             messages: {
                 noMediaFound: 'Bu klasörde henüz medya dosyası yok',
@@ -649,16 +680,16 @@ export const langTR = {
                 noFormats: 'Oluşturulmuş format bulunamadı',
                 generatedFormats: 'Oluşturulan Formatlar (Küçük resim vb.)',
                 processingFormats: 'Formatlar işleniyor... Lütfen bekleyin.',
-                variantDeleteSuccess: 'Varyasyon silindi'
+                variantDeleteSuccess: 'Varyasyon silindi',
             },
             formats: {
-                original: 'Orijinal Dosya'
+                original: 'Orijinal Dosya',
             },
             focalPoint: {
                 title: 'Odak Noktası',
                 help: 'Görselin odak noktasını seçmek için resmin üzerine tıklayın.',
                 updateSuccess: 'Odak noktası güncellendi',
-                tab: 'Araçlar'
+                tab: 'Araçlar',
             },
             format: {
                 generator: {
@@ -673,7 +704,7 @@ export const langTR = {
                 quality: 'Kalite',
                 generate: 'Oluştur',
                 generating: 'Oluşturuluyor...',
-                success: 'Format oluşturuldu'
+                success: 'Format oluşturuldu',
             },
             responsive: {
                 background: 'Arkaplan Medyası',
@@ -686,27 +717,29 @@ export const langTR = {
                 title: 'Medya Seç',
                 select: 'Seç',
                 desktopPlaceholder: 'Masaüstü Medyası Seç',
-                mobilePlaceholder: 'Mobil Medya Seç'
+                mobilePlaceholder: 'Mobil Medya Seç',
             },
             dialogs: {
                 detail: {
                     title: 'Medya Detayı',
                     formats: 'Formatlar',
-                    linkedComponents: 'Bağlı Bileşenler'
+                    linkedComponents: 'Bağlı Bileşenler',
                 },
                 messages: {
-                    noLinkedComponents: 'Bağlı bileşen bulunamadı'
+                    noLinkedComponents: 'Bağlı bileşen bulunamadı',
                 },
                 folder: {
                     createTitle: 'Klasör Oluştur',
-                    editTitle: 'Klasör Düzenle'
+                    editTitle: 'Klasör Düzenle',
                 },
                 delete: {
                     title: 'Dosyayı Sil?',
-                    confirm: 'Bu dosyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz!'
-                }
+                    confirm:
+                        'Bu dosyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
+                },
             },
-            dragDropText: 'Dosyaları buraya sürükleyin veya seçmek için tıklayın',
+            dragDropText:
+                'Dosyaları buraya sürükleyin veya seçmek için tıklayın',
         },
         navigation: {
             title: 'Navigasyon Yönetimi',
@@ -716,7 +749,8 @@ export const langTR = {
                 create: 'Düğüm Oluştur',
                 edit: 'Düğüm Düzenle',
                 delete: 'Düğüm Sil',
-                confirmDelete: 'Bu düğümü silmek istediğinize emin misiniz? Alt öğeler de silinecektir.',
+                confirmDelete:
+                    'Bu düğümü silmek istediğinize emin misiniz? Alt öğeler de silinecektir.',
             },
             actions: {
                 addChild: 'Alt Öğe Ekle',
@@ -743,7 +777,7 @@ export const langTR = {
                 isExternal: 'Harici Link',
                 itemType: 'Öğe Türü',
                 itemId: 'Öğe ID',
-                target: 'Hedef'
+                target: 'Hedef',
             },
             messages: {
                 successCreateNode: 'Düğüm başarıyla oluşturuldu',
@@ -756,37 +790,38 @@ export const langTR = {
                 errorUpdateNode: 'Düğüm güncellenirken hata oluştu',
                 errorCreateEntry: 'Giriş oluşturulurken hata oluştu',
                 errorUpdateEntry: 'Giriş güncellenirken hata oluştu',
-                warningI18nSaveFailed: 'Oluşturuldu, ancak çeviri kaydedilemedi',
+                warningI18nSaveFailed:
+                    'Oluşturuldu, ancak çeviri kaydedilemedi',
                 errorLoadI18n: 'Çeviriler yüklenemedi',
                 reorderSuccess: 'Sıralama güncellendi',
                 noEntries: 'Henüz giriş yok',
-                noChildren: 'Alt düğüm yok'
+                noChildren: 'Alt düğüm yok',
             },
             enums: {
                 position: {
                     LEFT: 'Sol',
                     RIGHT: 'Sağ',
                     CENTER: 'Orta',
-                    BOTTOM: 'Alt'
+                    BOTTOM: 'Alt',
                 },
                 itemType: {
                     URL: 'URL',
                     PAGE: 'Sayfa',
                     CATEGORY: 'Kategori',
-                    PRODUCT: 'Ürün'
-                }
+                    PRODUCT: 'Ürün',
+                },
             },
             sections: {
                 subMenus: 'Alt Menüler',
-                entries: 'Girişler'
+                entries: 'Girişler',
             },
             manager: {
-                title: 'Düğüm Yönetimi'
+                title: 'Düğüm Yönetimi',
             },
             tabs: {
                 submenus: 'Alt Menüler',
-                entries: 'Girdiler'
-            }
+                entries: 'Girdiler',
+            },
         },
         users: {
             title: 'Kullanıcı Yönetimi',
@@ -845,7 +880,10 @@ export const langTR = {
         settings: {
             title: 'Site Ayarları',
             panels: {
-                general: { title: 'Genel', desc: 'Temel iletişim ve meta ayarlar' },
+                general: {
+                    title: 'Genel',
+                    desc: 'Temel iletişim ve meta ayarlar',
+                },
                 address: { title: 'Adres', desc: 'Şirket adresi ve harita' },
                 social: { title: 'Sosyal', desc: 'Sosyal medya profilleri' },
                 seo: { title: 'SEO', desc: 'Dil bazlı SEO varsayılanları' },
@@ -925,14 +963,15 @@ export const langTR = {
                 styleClasses: 'CSS Sınıfları',
             },
             hints: {
-                imageUrl: 'Görsel için tam URL girin (örn: https://example.com/image.jpg)',
+                imageUrl:
+                    'Görsel için tam URL girin (örn: https://example.com/image.jpg)',
                 styleClasses: 'Örn: col-span-12 md:col-span-6',
                 createFirstHint: 'İlk bileşeninizi oluşturarak başlayın',
             },
             buttonStyles: {
                 primary: 'Birincil',
                 secondary: 'İkincil',
-                outline: 'Çerçeveli'
+                outline: 'Çerçeveli',
             },
             addLink: 'Link Ekle',
             saveTranslation: 'Çeviriyi Kaydet',
@@ -973,7 +1012,7 @@ export const langTR = {
                 gallery: 'Gallery',
                 pricing: 'Pricing',
                 form: 'Form',
-                other: 'Other'
+                other: 'Other',
             },
             types: {
                 title: 'Bileşen Türleri',
@@ -985,7 +1024,8 @@ export const langTR = {
                 noSearchResults: 'Arama kriterlerine uygun tür bulunamadı',
                 createFirst: 'İlk Türü Oluştur',
                 manageFields: 'Genişletilmiş Alanları Yönet',
-                confirmDelete: '{{name}} türünü silmek istediğinize emin misiniz?',
+                confirmDelete:
+                    '{{name}} türünü silmek istediğinize emin misiniz?',
                 tabs: {
                     general: 'Genel',
                     entryFields: 'Öğe Alanları',
@@ -1006,7 +1046,8 @@ export const langTR = {
             entryFields: {
                 title: 'Öğe Alanları',
                 subtitle: 'Bu alanlar bileşen oluşturulurken doldurulacaktır',
-                noFieldsDesc: 'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
+                noFieldsDesc:
+                    'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
                 addField: 'Alan Ekle',
                 addFirst: 'İlk Alanı Ekle',
                 noFields: 'Henüz öğe alanı tanımlanmadı',
@@ -1021,7 +1062,7 @@ export const langTR = {
                 export: 'Dışa Aktar',
                 importFields: 'Alanları İçe Aktar',
                 jsonInput: 'JSON İçeriği',
-                parseJson: 'JSON\'u Ayrıştır',
+                parseJson: "JSON'u Ayrıştır",
                 previewFields: 'Alan Önizlemesi',
                 validationErrors: 'Doğrulama Hataları',
                 importResult: 'İçe Aktarma Sonucu',
@@ -1029,7 +1070,8 @@ export const langTR = {
                 failedCount: 'Başarısız',
                 invalidFieldKey: 'Alan anahtarı camelCase olmalıdır',
                 readOnlyNote: 'Alanlar oluşturulduktan sonra değiştirilemez',
-                translationInfo: 'Alan etiketleri için dinamik çeviri anahtarları kullanılır',
+                translationInfo:
+                    'Alan etiketleri için dinamik çeviri anahtarları kullanılır',
                 types: {
                     text: 'Metin',
                     textarea: 'Uzun Metin',
@@ -1097,10 +1139,11 @@ export const langTR = {
                 loadFailed: 'Öğeler yüklenemedi',
                 loadFieldsFailed: 'Alan tanımları yüklenemedi',
                 saveI18nFailed: 'Çeviriler kaydedilemedi',
-                confirmDelete: '{{uid}} kodlu öğeyi silmek istediğinize emin misiniz?',
+                confirmDelete:
+                    '{{uid}} kodlu öğeyi silmek istediğinize emin misiniz?',
                 messages: {
                     i18nSaved: '{{lang}} çevirisi kaydedildi',
-                    published: '{{lang}} yayınlandı'
+                    published: '{{lang}} yayınlandı',
                 },
                 tabs: {
                     general: 'Genel',
@@ -1122,9 +1165,11 @@ export const langTR = {
                 addField: 'Alan Ekle',
                 editField: 'Alan Düzenle',
                 noFields: 'Henüz genişletilmiş alan eklenmedi',
-                noFieldsHint: 'Yukarıdaki butonu kullanarak bu türe özel alanlar ekleyebilirsiniz',
+                noFieldsHint:
+                    'Yukarıdaki butonu kullanarak bu türe özel alanlar ekleyebilirsiniz',
                 fieldKey: 'Alan Anahtarı',
-                keyHint: 'Harf ile başlamalı, yalnızca harf, sayı ve alt çizgi içerebilir',
+                keyHint:
+                    'Harf ile başlamalı, yalnızca harf, sayı ve alt çizgi içerebilir',
                 fieldType: 'Alan Türü',
                 fieldLabel: 'Alan Etiketi',
                 required: 'Zorunlu',
@@ -1141,7 +1186,8 @@ export const langTR = {
                 optionsHint: 'Her satıra bir seçenek',
                 jsonPreview: 'JSON Önizleme',
                 maxFieldsReached: 'Maksimum {{max}} alan eklenebilir',
-                confirmDelete: '{{name}} alanını silmek istediğinize emin misiniz?',
+                confirmDelete:
+                    '{{name}} alanını silmek istediğinize emin misiniz?',
                 validationErrors: 'Şema doğrulama hataları var',
                 validationFailed: 'Alan doğrulama başarısız',
             },
@@ -1180,7 +1226,8 @@ export const langTR = {
             media: {
                 mainImage: 'Ana Görsel',
                 gallery: 'Galeri',
-                responsivePlaceholder: 'Duyarlı medya uygulaması ID çözümlemesi gerektirir. Şimdilik yer tutucu.',
+                responsivePlaceholder:
+                    'Duyarlı medya uygulaması ID çözümlemesi gerektirir. Şimdilik yer tutucu.',
             },
             types: {
                 title: 'Ürün Tipleri',
@@ -1197,7 +1244,7 @@ export const langTR = {
                     category: 'Kategori Grubu',
                 },
                 placeholders: {
-                    category: 'örn. Bileşenler'
+                    category: 'örn. Bileşenler',
                 },
                 tabs: {
                     attributes: 'Özellikler',
@@ -1236,6 +1283,57 @@ export const langTR = {
                     title: 'Özelliği Sil',
                     message: 'Bu özelliği silmek istediğinize emin misiniz?',
                 },
+                fieldTypeChange: {
+                    title: 'Alan Tipi Değişikliği',
+                    message:
+                        'Bu değişiklik {{count}} ürünü etkileyebilir. Devam etmek istiyor musunuz?',
+                },
+                validationConfig: {
+                    title: 'Doğrulama Kuralları',
+                    minLength: 'Minimum Uzunluk',
+                    maxLength: 'Maksimum Uzunluk',
+                    pattern: 'Regex Deseni',
+                    patternPlaceholder: 'örn. ^[A-Z]+$',
+                    minValue: 'Minimum Değer',
+                    maxValue: 'Maksimum Değer',
+                    minDate: 'Minimum Tarih',
+                    maxDate: 'Maksimum Tarih',
+                    noValidation:
+                        'Bu alan tipi için doğrulama kuralı mevcut değil.',
+                },
+            },
+            globalFields: {
+                title: 'Global Alanlar',
+                subtitle: 'Global ürün alanlarını yönetin',
+                list: 'Alan Listesi',
+                create: 'Alan Oluştur',
+                edit: 'Alan Düzenle',
+                add: 'Alan Ekle',
+                empty: {
+                    title: 'Özel Alan Bulunamadı',
+                    description:
+                        'Henüz herhangi bir özel alan oluşturmadınız. Ürünlerinize ekstra veri eklemek için bir tane oluşturun.',
+                },
+
+                fieldType: 'Alan Tipi',
+                defaultValue: 'Varsayılan Değer',
+                visibleInList: 'Ürün Listesinde Göster',
+                placeholders: {
+                    fieldType: 'Alan tipi seçin',
+                },
+                messages: {
+                    createSuccess: 'Alan başarıyla oluşturuldu',
+                    createFailed: 'Alan oluşturulamadı',
+                    updateSuccess: 'Alan başarıyla güncellendi',
+                    updateFailed: 'Alan güncellenemedi',
+                    deleteSuccess: 'Alan başarıyla silindi',
+                    deleteFailed: 'Alan silinemedi',
+                },
+                delete: {
+                    title: 'Alanı Sil',
+                    message:
+                        'Bu alanı silmek istediğinize emin misiniz? Bu işlem mevcut ürün verilerini etkileyebilir.',
+                },
             },
             categories: {
                 title: 'Kategoriler',
@@ -1259,7 +1357,7 @@ export const langTR = {
                     active: 'Aktif',
                 },
                 placeholders: {
-                    parent: 'Bir üst kategori seçin'
+                    parent: 'Bir üst kategori seçin',
                 },
                 empty: {
                     title: 'Henüz kategori yok',
@@ -1313,7 +1411,8 @@ export const langTR = {
             activateSuccess: 'Tenant başarıyla aktifleştirildi',
             suspendSuccess: 'Tenant başarıyla askıya alındı',
             validation: {
-                defaultLanguageInSupported: 'Varsayılan dil desteklenen diller arasında olmalıdır',
+                defaultLanguageInSupported:
+                    'Varsayılan dil desteklenen diller arasında olmalıdır',
             },
             actions: {
                 generateAdmin: 'Admin Kullanıcı Oluştur',
@@ -1322,9 +1421,11 @@ export const langTR = {
             },
             messages: {
                 syncStarted: 'Migrasyon senkronizasyonu başlatıldı...',
-                syncSuccess: 'Veritabanı migrasyonları başarıyla senkronize edildi',
+                syncSuccess:
+                    'Veritabanı migrasyonları başarıyla senkronize edildi',
                 syncFailed: 'Migrasyon senkronizasyonu başarısız',
-                syncOnlyActive: 'Sadece aktif tenantlar migrasyon senkronizasyonu yapabilir',
+                syncOnlyActive:
+                    'Sadece aktif tenantlar migrasyon senkronizasyonu yapabilir',
             },
             modal: {
                 adminCreated: 'Admin Kullanıcı Başarıyla Oluşturuldu',
@@ -1333,7 +1434,8 @@ export const langTR = {
                 passwordLabel: 'Geçici Şifre',
                 loginUrlLabel: 'Giriş URL',
                 importantTitle: 'Önemli:',
-                passwordWarning: 'Bu şifre bu pencere kapatıldıktan sonra bir daha GÖSTERİLMEYECEKTİR. Lütfen bu bilgileri kopyalayın ve tenant yöneticisi ile güvenli şekilde paylaşın.',
+                passwordWarning:
+                    'Bu şifre bu pencere kapatıldıktan sonra bir daha GÖSTERİLMEYECEKTİR. Lütfen bu bilgileri kopyalayın ve tenant yöneticisi ile güvenli şekilde paylaşın.',
             },
             errors: {
                 adminGenerationFailed: 'Admin kullanıcı oluşturulamadı',
@@ -1341,7 +1443,8 @@ export const langTR = {
         },
         provisioning: {
             title: 'Modül Hazırlama',
-            description: 'Tenant için yüklenecek modülleri seçin. Seçilen modüller için veritabanı yapıları oluşturulacaktır.',
+            description:
+                'Tenant için yüklenecek modülleri seçin. Seçilen modüller için veritabanı yapıları oluşturulacaktır.',
             startButton: 'Hazırlamayı Başlat',
             manualProvision: 'Modül Provision',
             coreModules: 'Temel Modüller',

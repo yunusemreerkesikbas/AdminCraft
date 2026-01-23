@@ -8,7 +8,16 @@ import { TenantModule } from 'app/core/tenant/tenant.types';
 import { UserService } from 'app/core/user/user.service';
 import { User } from 'app/core/user/user.types';
 import { Tenant } from 'app/modules/admin/custom/tenants/tenants.types';
-import { catchError, forkJoin, map, Observable, of, switchMap, take, timer } from 'rxjs';
+import {
+    catchError,
+    forkJoin,
+    map,
+    Observable,
+    of,
+    switchMap,
+    take,
+    timer,
+} from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class TenantContextService {
@@ -20,7 +29,7 @@ export class TenantContextService {
     #STORAGE_KEYS = {
         subdomain: 'currentTenantSubdomain',
         tenantId: 'superAdminSelectedTenantId',
-        selectedTenantId: 'superAdminSelectedTenantId'
+        selectedTenantId: 'superAdminSelectedTenantId',
     } as const;
 
     #tenantSig = signal<Tenant | null>(null);
@@ -30,7 +39,8 @@ export class TenantContextService {
 
     tenant: Signal<Tenant | null> = this.#tenantSig.asReadonly();
     subdomain: Signal<string | null> = this.#subdomainSig.asReadonly();
-    selectedTenant: Signal<Tenant | null> = this.#selectedTenantSig.asReadonly();
+    selectedTenant: Signal<Tenant | null> =
+        this.#selectedTenantSig.asReadonly();
     tenantModules: Signal<string[]> = this.#tenantModulesSig.asReadonly();
 
     tenant$ = toObservable(this.#tenantSig);
@@ -41,11 +51,17 @@ export class TenantContextService {
     setCurrentTenant(tenant: Tenant): void {
         this.#tenantSig.set(tenant);
         if (tenant?.subdomain) {
-            localStorage.setItem(this.#STORAGE_KEYS.subdomain, tenant.subdomain);
+            localStorage.setItem(
+                this.#STORAGE_KEYS.subdomain,
+                tenant.subdomain
+            );
             this.#subdomainSig.set(tenant.subdomain);
         }
         if (tenant?.id) {
-            localStorage.setItem(this.#STORAGE_KEYS.tenantId, String(tenant.id));
+            localStorage.setItem(
+                this.#STORAGE_KEYS.tenantId,
+                String(tenant.id)
+            );
         }
     }
 
@@ -84,29 +100,39 @@ export class TenantContextService {
         }
     }
 
-    selectTenant(tenant: Tenant): void {
+    selectTenant(tenant: Tenant, reload: boolean = true): void {
         this.setCurrentTenant(tenant);
         this.#selectedTenantSig.set(tenant);
-        localStorage.setItem(this.#STORAGE_KEYS.selectedTenantId, String(tenant.id));
-        this.#loadTenantModules(tenant.id);
+        localStorage.setItem(
+            this.#STORAGE_KEYS.selectedTenantId,
+            String(tenant.id)
+        );
+        this.#loadTenantModules(tenant.id, reload);
     }
 
-    #loadTenantModules(tenantId: number): void {
+    #loadTenantModules(tenantId: number, reload: boolean = true): void {
         this.#apiClient
             .get<ApiResponse<TenantModule[]>>('tenantModules', { tenantId })
             .pipe(
                 take(1),
                 catchError(() => {
                     this.#notify.alert('Failed to load tenant modules');
-                    return of({ data: [], result: 'ERROR' } as ApiResponse<TenantModule[]>);
+                    return of({ data: [], result: 'ERROR' } as ApiResponse<
+                        TenantModule[]
+                    >);
                 }),
-                switchMap(response => {
+                switchMap((response) => {
                     const moduleCodes = response.data
                         .filter((m: TenantModule) => m.status === 'enabled')
                         .map((m: TenantModule) => m.moduleCode);
                     this.#tenantModulesSig.set(moduleCodes);
                     this.#userService.setTenantModules(moduleCodes);
-                    return timer(0).pipe(map(() => this.#navigationService.reload()));
+                    if (reload) {
+                        return timer(0).pipe(
+                            map(() => this.#navigationService.reload())
+                        );
+                    }
+                    return of(null);
                 })
             )
             .subscribe();
@@ -125,7 +151,7 @@ export class TenantContextService {
                     this.#userService.setTenantModules(moduleCodes);
                     return moduleCodes;
                 }),
-                switchMap(moduleCodes =>
+                switchMap((moduleCodes) =>
                     timer(0).pipe(
                         map(() => {
                             this.#navigationService.reload();
@@ -146,26 +172,28 @@ export class TenantContextService {
         } else if (user.role === 'TENANT_ADMIN' && user.tenantId) {
             return forkJoin([
                 this.loadCurrentUserTenantModules(),
-                this.#loadTenantDetails()
+                this.#loadTenantDetails(),
             ]);
         }
         return of(null);
     }
 
     #loadTenantDetails(): Observable<Tenant | null> {
-        return this.#apiClient.get<ApiResponse<Tenant>>('tenantCurrentDetail').pipe(
-            take(1),
-            map((response: ApiResponse<Tenant>) => {
-                if (response.data) {
-                    this.setCurrentTenant(response.data);
-                    return response.data;
-                }
-                return null;
-            }),
-            catchError(() => {
-                return of(null);
-            })
-        );
+        return this.#apiClient
+            .get<ApiResponse<Tenant>>('tenantCurrentDetail')
+            .pipe(
+                take(1),
+                map((response: ApiResponse<Tenant>) => {
+                    if (response.data) {
+                        this.setCurrentTenant(response.data);
+                        return response.data;
+                    }
+                    return null;
+                }),
+                catchError(() => {
+                    return of(null);
+                })
+            );
     }
 
     clearTenantSelection(): void {
@@ -178,7 +206,9 @@ export class TenantContextService {
     }
 
     getSelectedTenantId(): number | null {
-        const savedId = localStorage.getItem(this.#STORAGE_KEYS.selectedTenantId);
+        const savedId = localStorage.getItem(
+            this.#STORAGE_KEYS.selectedTenantId
+        );
         if (savedId) {
             const parsed = Number(savedId);
             return Number.isFinite(parsed) ? parsed : null;
@@ -198,9 +228,12 @@ export class TenantContextService {
             return 'admin';
         }
         if (!this.isValidSubdomain(subdomain)) {
-            this.#notify.alert('Invalid tenant subdomain. Please contact your administrator.', {
-                durationMs: 5000
-            });
+            this.#notify.alert(
+                'Invalid tenant subdomain. Please contact your administrator.',
+                {
+                    durationMs: 5000,
+                }
+            );
             return null;
         }
 
@@ -239,19 +272,21 @@ export class TenantContextService {
             return of(null);
         }
 
-        return this.#apiClient.get<ApiResponse<Tenant>>('tenantById', { id: tenantId }).pipe(
-            take(1),
-            map((response: ApiResponse<Tenant>) => {
-                if (response.data) {
-                    this.selectTenant(response.data);
-                    return response.data;
-                }
-                return null;
-            }),
-            catchError(() => {
-                this.clearTenantSelection();
-                return of(null);
-            })
-        );
+        return this.#apiClient
+            .get<ApiResponse<Tenant>>('tenantById', { id: tenantId })
+            .pipe(
+                take(1),
+                map((response: ApiResponse<Tenant>) => {
+                    if (response.data) {
+                        this.selectTenant(response.data, false); // Reload false to prevent loop
+                        return response.data;
+                    }
+                    return null;
+                }),
+                catchError(() => {
+                    this.clearTenantSelection();
+                    return of(null);
+                })
+            );
     }
 }

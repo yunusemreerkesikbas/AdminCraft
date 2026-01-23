@@ -44,7 +44,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     mediaGenerateFormats: 'media/${id}/generate-formats',
     mediaVariantDelete: 'media/${mediaId}/variants/${variantId}',
     mediaFocalPoint: 'media/${id}/focal-point',
-    
+
     // ----- RESPONSIVE MEDIA -----
     responsiveMedia: 'responsive-media',
     responsiveMediaById: 'responsive-media/${id}',
@@ -93,7 +93,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     pageSlots: 'pages/${id}/slots',
     pageSlot: 'pages/${id}/slots/${slotName}',
     pageSlotComponents: 'pages/${id}/slots/${slotName}/components',
-    pageSlotComponent: 'pages/${id}/slots/${slotName}/components/${componentId}',
+    pageSlotComponent:
+        'pages/${id}/slots/${slotName}/components/${componentId}',
     pageSlotComponentsReorder: 'pages/${id}/slots/${slotName}/reorder',
     sharedSlots: 'pages/shared/slots',
 
@@ -113,10 +114,14 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
     componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
-    componentTypeEntryFieldById: 'components/types/${typeId}/entry-fields/${id}',
-    componentTypeEntryFieldsImport: 'components/types/${typeId}/entry-fields/import',
-    componentTypeEntryFieldsExport: 'components/types/${typeId}/entry-fields/export',
-    componentTypeEntryFieldValidate: 'components/types/${typeId}/entry-fields/validate',
+    componentTypeEntryFieldById:
+        'components/types/${typeId}/entry-fields/${id}',
+    componentTypeEntryFieldsImport:
+        'components/types/${typeId}/entry-fields/import',
+    componentTypeEntryFieldsExport:
+        'components/types/${typeId}/entry-fields/export',
+    componentTypeEntryFieldValidate:
+        'components/types/${typeId}/entry-fields/validate',
 
     // ----- COMPONENT LIBRARY: ENTRIES -----
     componentEntriesList: 'components/${componentId}/entries',
@@ -134,7 +139,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',
-    provisioningSyncMigrations: 'provisioning/tenants/${tenantId}/sync-migrations',
+    provisioningSyncMigrations:
+        'provisioning/tenants/${tenantId}/sync-migrations',
     provisioningJob: 'provisioning/jobs/${jobId}',
     provisioningJobByUuid: 'provisioning/jobs/${jobUuid}',
 
@@ -175,6 +181,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PRODUCT CATALOG: PRODUCT TYPES -----
     productTypes: 'products/types',
     productTypeById: 'products/types/${id}',
+    productTypeProductCount: 'products/types/${id}/product-count',
 
     // ----- PRODUCT CATALOG: ATTRIBUTE DEFINITIONS -----
     productAttributeDefinitions: 'products/types/${typeId}/attributes',
@@ -200,6 +207,11 @@ export const SPA_ENDPOINTS_CONFIG = {
     cmsCategories: 'cms/categories',
     cmsCategoryByUid: 'cms/categories/${uid}',
     cmsCategoryProducts: 'cms/categories/${uid}/products',
+
+    // ----- PRODUCT CATALOG: GLOBAL PRODUCT FIELDS -----
+    productFields: 'products/fields',
+    productFieldsVisible: 'products/fields/visible',
+    productFieldById: 'products/fields/${id}',
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;
@@ -228,5 +240,3 @@ export function resolveEndpoint(
         return encodeURIComponent(String(value));
     });
 }
-
-
