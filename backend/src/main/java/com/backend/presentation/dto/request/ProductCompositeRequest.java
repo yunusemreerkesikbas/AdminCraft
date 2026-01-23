@@ -10,7 +10,7 @@ import java.util.Map;
 
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
-import com.backend.presentation.validation.Sku;
+import com.backend.shared.validation.Sku;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;

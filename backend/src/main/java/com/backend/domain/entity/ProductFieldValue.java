@@ -2,28 +2,21 @@ package com.backend.domain.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import com.backend.domain.enums.ProductFieldType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Entity representing a product field value.
@@ -37,12 +30,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ProductFieldValue {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+@SuperBuilder
+public class ProductFieldValue extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id", nullable = false)
@@ -64,14 +53,6 @@ public class ProductFieldValue {
   @Column(name = "value_date")
   private LocalDate valueDate;
 
-  @CreationTimestamp
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
-
-  @UpdateTimestamp
-  @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
-
   /**
    * Gets the value based on the field type.
    * 
@@ -92,9 +73,12 @@ public class ProductFieldValue {
   /**
    * Sets the value based on the object type.
    * Validates that the value type matches the expected field type.
+   * Performs automatic type conversion for String values when field type is
+   * known.
    *
    * @param value The value to set
-   * @throws IllegalArgumentException if value type doesn't match field definition type
+   * @throws IllegalArgumentException if value type doesn't match field definition
+   *                                  type
    */
   public void setValue(Object value) {
     // Reset all values first
@@ -111,7 +95,34 @@ public class ProductFieldValue {
       validateValueType(value, fieldDefinition.getFieldType());
     }
 
-    if (value instanceof String str) {
+    // Handle String values with type conversion based on field definition
+    if (value instanceof String str && fieldDefinition != null && fieldDefinition.getFieldType() != null) {
+      ProductFieldType type = fieldDefinition.getFieldType();
+      switch (type) {
+        case NUMBER:
+          if (canConvertToNumber(str)) {
+            this.valueNumber = new BigDecimal(str);
+            return;
+          }
+          break;
+        case BOOLEAN:
+          if (canConvertToBoolean(str)) {
+            this.valueBoolean = Boolean.parseBoolean(str);
+            return;
+          }
+          break;
+        case DATE:
+          if (canConvertToDate(str)) {
+            this.valueDate = LocalDate.parse(str);
+            return;
+          }
+          break;
+        default:
+          // TEXT, RICHTEXT, MEDIA - keep as string
+          break;
+      }
+      this.valueText = str;
+    } else if (value instanceof String str) {
       this.valueText = str;
     } else if (value instanceof Number num) {
       this.valueNumber = new BigDecimal(num.toString());

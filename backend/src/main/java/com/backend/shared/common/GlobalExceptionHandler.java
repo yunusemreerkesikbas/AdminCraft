@@ -252,7 +252,8 @@ public class GlobalExceptionHandler {
         if (!validationErrors.isEmpty()) {
             firstErrorMessage = validationErrors.values().iterator().next();
         }
-        ApiResponse<?> response = new ApiResponse<>("ERROR", firstErrorMessage != null ? firstErrorMessage : "Validation failed", validationErrors);
+        ApiResponse<?> response = new ApiResponse<>("ERROR",
+                firstErrorMessage != null ? firstErrorMessage : "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -301,7 +302,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleMaxFieldLimit(com.backend.domain.exception.MaxFieldLimitException ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Max field limit exceeded: {}", correlationId, ex.getMessage());
-        String message = getMessage("error.max.field.limit");
+        String message = getMessage("product.field.max.limit");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }

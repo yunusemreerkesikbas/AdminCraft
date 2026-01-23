@@ -1,8 +1,11 @@
 package com.backend.application.dto.request;
 
+import static com.backend.shared.constants.ValidationConstants.SLOT_NAME_MAX_LENGTH;
+
 import java.util.List;
 
-import com.backend.presentation.validation.SlotName;
+import com.backend.shared.validation.SlotName;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -10,8 +13,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import static com.backend.shared.constants.ValidationConstants.SLOT_NAME_MAX_LENGTH;
 
 @Data
 @NoArgsConstructor

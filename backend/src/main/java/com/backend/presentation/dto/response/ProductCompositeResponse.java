@@ -49,7 +49,6 @@ public record ProductCompositeResponse(
                                 : List.of();
 
                 // Add custom fields mapping
-                // Add custom fields mapping
                 Map<String, Object> customFields = entity.getFieldValues() != null
                                 ? entity.getFieldValues().stream()
                                                 .filter(fv -> fv.getFieldDefinition() != null)
