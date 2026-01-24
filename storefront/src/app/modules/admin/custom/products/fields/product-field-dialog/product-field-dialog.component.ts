@@ -67,14 +67,6 @@ export class ProductFieldDialogComponent extends SpaLocalizedFormDialog<
 
     protected buildGeneralForm(): FormGroup {
         const form = this.fb.group({
-            uid: [
-                this.data.field?.uid,
-                [
-                    Validators.required,
-                    Validators.maxLength(VALIDATION_LIMITS.FIELD_UID_MAX),
-                    Validators.pattern(VALIDATION_PATTERNS.UID),
-                ],
-            ],
             name: [
                 this.data.field?.name,
                 [
@@ -101,7 +93,6 @@ export class ProductFieldDialogComponent extends SpaLocalizedFormDialog<
         const formValue = this.generalForm.value;
 
         const value: CreateProductFieldRequest = {
-            uid: formValue.uid,
             name: formValue.name,
             fieldType: formValue.fieldType,
         };

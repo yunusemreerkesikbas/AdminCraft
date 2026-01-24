@@ -138,7 +138,6 @@ export const VALIDATION_LIMITS = {
     ATTRIBUTE_NAME_MAX: 100,
 
     // Product Field
-    FIELD_UID_MAX: 50,
     FIELD_CODE_MAX: 50,
     FIELD_NAME_MAX: 200,
 

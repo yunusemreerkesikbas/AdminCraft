@@ -18,7 +18,6 @@ export type ProductFieldType =
 export interface ProductFieldDefinition {
     id: number;
     uuid: string;
-    uid: string;
     code: string;
     name: string;
     fieldType: ProductFieldType;
@@ -30,7 +29,6 @@ export interface ProductFieldDefinition {
  * Request for creating a new product field
  */
 export interface CreateProductFieldRequest {
-    uid: string;
     name: string;
     fieldType: ProductFieldType;
 }

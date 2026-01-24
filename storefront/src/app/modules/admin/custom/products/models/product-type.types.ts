@@ -21,7 +21,6 @@ export interface UpdateProductTypeRequest {
 
 export interface AttributeDefinition {
     id: number;
-    uid: string;
     productTypeId: number;
     code: string;
     name: string;

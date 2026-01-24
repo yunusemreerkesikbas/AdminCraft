@@ -10,7 +10,28 @@
         [showSearch]="true"
         [searchPlaceholder]="'admin.common.searchPlaceholder' | transloco"
         (search)="onSearchInput($event)"
-    ></admin-page-header>
+    >
+        <ng-container actions>
+            @if (availableSortsSig().length > 0) {
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            }
+        </ng-container>
+
+        <button
+            after-create
+            mat-stroked-button
+            (click)="openFieldDialog()"
+            class="hidden sm:inline-flex"
+        >
+            <mat-icon class="mr-2 icon-size-5">extension</mat-icon>
+            {{ 'admin.products.customFields.create' | transloco }}
+        </button>
+    </admin-page-header>
 
     <div class="flex flex-auto flex-col overflow-hidden">
         <div class="flex flex-auto flex-col overflow-y-auto">

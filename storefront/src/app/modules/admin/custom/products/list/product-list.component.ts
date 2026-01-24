@@ -21,12 +21,15 @@ import {
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
+import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { take } from 'rxjs';
 import {
     ProductCompositeRequest,
     ProductListItemResponse,
 } from '../models/product.types';
+import { ProductFieldDialogComponent } from '../fields/product-field-dialog/product-field-dialog.component';
 import { ProductEditDialogComponent } from '../product-edit-dialog/product-edit-dialog.component';
+import { ProductFieldService } from '../services/product-field.service';
 import { ProductService } from '../services/product.service';
 
 @Component({
@@ -40,6 +43,7 @@ import { ProductService } from '../services/product.service';
         AdminPageHeaderComponent,
         SpaAdminGridComponent,
         SpaAdminPaginatorComponent,
+        SpaAdminSortDropdownComponent,
         MatButtonModule,
         MatIconModule,
         MatPaginatorModule,
@@ -66,6 +70,7 @@ export class ProductListComponent extends BasePaginatedListComponent<
     #matDialog = inject(MatDialog);
     #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
+    #productFieldService = inject(ProductFieldService);
 
     protected columns: GridColumn<ProductListItemResponse>[] = [
         {
@@ -171,5 +176,32 @@ export class ProductListComponent extends BasePaginatedListComponent<
         this.#notificationService.alert(
             error?.error?.message || 'admin.common.errors.deleteFailed'
         );
+    }
+
+    openFieldDialog(): void {
+        const dialogRef = this.#matDialog.open(ProductFieldDialogComponent, {
+            data: { mode: 'create' },
+            width: '600px',
+        });
+
+        dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+            if (result) {
+                this.#productFieldService
+                    .create(result)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: () => {
+                            this.#notificationService.success(
+                                'admin.common.messages.saveSuccess'
+                            );
+                        },
+                        error: () => {
+                            this.#notificationService.alert(
+                                'admin.common.errors.saveFailed'
+                            );
+                        },
+                    });
+            }
+        });
     }
 }

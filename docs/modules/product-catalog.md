@@ -7,7 +7,7 @@ The Product Catalog module provides tenant-scoped management and public delivery
 - Product types with dynamic attribute definitions (EAV)
 - Global custom fields for all products (tenant-wide)
 - Hierarchical categories with i18n content
-- Products with composite create/update (translations + attributes + categories + global fields + responsive gallery)
+- Products with composite create/update (translations + attributes + categories + custom fields + responsive gallery)
 - Responsive media support for both main product image and gallery items (Desktop + Mobile)
 
 ## Database
@@ -50,6 +50,7 @@ Attributes:
 - `DELETE /api/products/types/{typeId}/attributes/{attrId}`
 
 **Attribute Definition Model**:
+
 - Fields: `id`, `uuid`, `uid`, `code` (auto-generated), `name`, `fieldType`
 - Removed fields (as of V33): `isRequired`, `isSearchable`, `sortOrder`, `validationConfig`
 - Code generation: Automatically generated from `name` using `SlugGenerator.generateUniqueCode()` to ensure uniqueness per product type
@@ -65,7 +66,8 @@ Base path: `/api/products/fields`
 - `PUT /api/products/fields/{id}` (update definition: `name` and `fieldType` only)
 - `DELETE /api/products/fields/{id}` (delete definition)
 
-**Global Field Definition Model**:
+**Custom Field Definition Model**:
+
 - Fields: `id`, `uuid`, `uid`, `code` (auto-generated), `name`, `fieldType`
 - Removed fields (as of V32): `isRequired`, `isVisibleInList`, `sortOrder`, `defaultValue`, `validationConfig`
 - Code generation: Automatically generated from `name` using `SlugGenerator.generateUniqueCode()` to ensure uniqueness
@@ -168,17 +170,17 @@ Key parts:
 - Models: `models/`
   - `product.types.ts` (Product, ProductCompositeRequest, ProductListItemResponse, etc.)
   - `product-type.types.ts` (ProductType, AttributeDefinition, ProductFieldType, etc.)
-  - `product-field.types.ts` (Global field definitions: code, name, fieldType)
+  - `product-field.types.ts` (Custom field definitions: code, name, fieldType)
   - `category.types.ts` (Category, CategoryTreeResponse, etc.)
 - Services:
   - `services/product.service.ts` (CRUD service extending `CrudHttpService`)
   - `services/product-type.service.ts` (CRUD service with attribute management)
-  - `services/product-field.service.ts` (Global field definition management)
+  - `services/product-field.service.ts` (custom field definition management)
   - `services/category.service.ts` (tree operations and composite CRUD)
 - Components:
   - `list/product-list.component.ts` (paginated list with search, extends `BaseCrudListComponent`; displays: name+SKU, productTypeName, status, actions)
   - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media, custom fields - nested structure: `product.customFields.{code}`)
-  - `fields/product-field-dialog/` (simplified global field definition create/edit: only `name` and `fieldType`; `code` auto-generated)
+  - `fields/product-field-dialog/` (simplified custom field definition create/edit: only `name` and `fieldType`; `code` auto-generated)
   - `types/product-type-list.component.ts` (paginated list)
   - `types/product-type-edit-dialog/` (type management with attributes tab)
   - `types/product-attribute-dialog/` (simplified attribute definition create/edit: only `name` and `fieldType`; `code` auto-generated)
@@ -409,4 +411,4 @@ Product product = ProductTestDataBuilder.aProduct()
 - Both global product fields and product attribute definitions use automatic code generation from the `name` field
 - Implementation: `backend/src/main/java/com/backend/shared/util/SlugGenerator.java`
 - The `code` field is generated using `SlugGenerator.generateCodeFromName()` and made unique using `SlugGenerator.generateUniqueCode()`
-- Code generation handles Turkish character transliteration and ensures uniqueness per product type (for attributes) or globally (for global fields)
+- Code generation handles Turkish character transliteration and ensures uniqueness per product type (for attributes) or globally (for custom fields)

@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 public record AttributeDefinitionResponse(
         Long id,
         String uuid,
-        String uid,
         String code,
         String name,
         ProductFieldType fieldType,
@@ -22,7 +21,6 @@ public record AttributeDefinitionResponse(
         return new AttributeDefinitionResponse(
                 entity.getId(),
                 entity.getUuid(),
-                entity.getUid(),
                 entity.getCode(),
                 entity.getName(),
                 entity.getFieldType(),

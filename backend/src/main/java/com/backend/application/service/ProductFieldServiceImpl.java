@@ -56,11 +56,6 @@ public class ProductFieldServiceImpl implements ProductFieldService {
   public ProductFieldDefinitionResponse createDefinition(CreateProductFieldRequest request) {
     TenantContext.validateActive();
 
-    // Check for duplicate uid
-    if (definitionRepository.existsByUid(request.uid())) {
-      throw new BusinessRuleViolationException("Field with uid '" + request.uid() + "' already exists");
-    }
-
     // Generate code from name
     String code = SlugGenerator.generateUniqueCode(
         SlugGenerator.generateCodeFromName(request.name()),
@@ -68,7 +63,6 @@ public class ProductFieldServiceImpl implements ProductFieldService {
     );
 
     ProductFieldDefinition definition = ProductFieldDefinition.builder()
-        .uid(request.uid())
         .code(code)
         .name(request.name())
         .fieldType(request.fieldType())

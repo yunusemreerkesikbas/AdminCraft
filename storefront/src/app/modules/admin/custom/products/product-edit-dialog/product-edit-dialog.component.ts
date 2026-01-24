@@ -589,7 +589,7 @@ export class ProductEditDialogComponent
         field?: ProductFieldDefinition
     ): void {
         const dialogRef = this.#dialog.open(ProductFieldDialogComponent, {
-            data: { mode, fieldId: field?.id },
+            data: { mode, field },
             width: '600px',
         });
 
