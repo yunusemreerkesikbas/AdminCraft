@@ -1,6 +1,7 @@
 package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.ProductType;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,19 +21,19 @@ public record ProductTypeDetailResponse(
         if (entity == null) {
             throw new IllegalArgumentException("ProductType entity cannot be null");
         }
-        List<AttributeDefinitionResponse> attrs = entity.getAttributeDefinitions() != null
-                ? entity.getAttributeDefinitions().stream()
-                    .map(AttributeDefinitionResponse::from)
-                    .toList()
-                : List.of();
         return new ProductTypeDetailResponse(
                 entity.getId(),
                 entity.getUuid(),
                 entity.getUid(),
                 entity.getCode(),
                 entity.getName(),
-                entity.getCategory(),
-                attrs,
+                ResponseValueFilter.filterEmptyString(entity.getCategory()),
+                ResponseValueFilter.filterEmptyList(
+                        entity.getAttributeDefinitions() != null
+                                ? entity.getAttributeDefinitions().stream()
+                                        .map(AttributeDefinitionResponse::from)
+                                        .toList()
+                                : null),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

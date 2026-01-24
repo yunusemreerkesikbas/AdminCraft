@@ -73,11 +73,15 @@ export class ProductListComponent extends BasePaginatedListComponent<
             label: 'admin.common.grid.name',
             type: 'text',
             getSecondaryValue: (item) => item.sku,
+            width: '1fr',
+            cssClass: 'flex flex-col justify-center',
         },
         {
             key: 'productTypeName',
             label: 'admin.products.fields.type',
             type: 'text',
+            width: '200px',
+            cssClass: 'flex flex-col justify-center',
         },
         {
             key: 'status',

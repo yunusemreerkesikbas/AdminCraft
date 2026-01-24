@@ -2,6 +2,7 @@ package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.CategoryI18n;
 import com.backend.domain.enums.Language;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 
@@ -25,7 +26,7 @@ public record CategoryI18nResponse(
                 entity.getUid(),
                 entity.getLanguage(),
                 entity.getName(),
-                entity.getDescription(),
+                ResponseValueFilter.filterEmptyString(entity.getDescription()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

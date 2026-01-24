@@ -247,7 +247,7 @@ export class ProductEditDialogComponent
         this.isLoadingSig.set(true);
         const types$ = this.#productTypeService
             .listPaged({ page: 0, size: 100 })
-            .pipe(map((page) => page?.content || []));
+            .pipe(map((page) => page?.content ?? []));
         const categories$ = this.#categoryService
             .getTree()
             .pipe(map((tree) => this.#flattenTree(tree)));
@@ -267,10 +267,9 @@ export class ProductEditDialogComponent
             .pipe(take(1))
             .subscribe({
                 next: (res: any) => {
-                    this.productTypes.set(res.types || []);
-                    this.productTypes.set(res.types || []);
-                    this.categories.set(res.categories || []);
-                    this.fieldDefinitions.set(res.fieldDefinitions || []);
+                    this.productTypes.set(res.types ?? []);
+                    this.categories.set(res.categories ?? []);
+                    this.fieldDefinitions.set(res.fieldDefinitions ?? []);
                     this.#dynamicFormService.addControlsToFormGroup(
                         this.customFieldsForm,
                         this.customFieldsConfig(),
@@ -324,22 +323,23 @@ export class ProductEditDialogComponent
                 status: product.status,
                 isVisible: product.isVisible,
                 responsiveMedia: responsiveMedia,
-                categoryIds: product.categories?.map((c: any) => c.id) || [],
+                categoryIds: product.categories?.map((c: any) => c.id) ?? [],
                 primaryCategoryId: product.categories?.find(
                     (c: any) => c.isPrimary
-                )?.id,
+                )?.id ?? null,
                 createdAt: this.#formatDateTime(product.createdAt),
                 updatedAt: this.#formatDateTime(product.updatedAt),
             },
             { emitEvent: false }
         );
 
-        const translations = product.translations || {};
-        this.languages.forEach((lang) => {
-            if (translations[lang]) {
-                this.i18nForms[lang].patchValue(translations[lang]);
-            }
-        });
+        if (product.translations) {
+            this.languages.forEach((lang) => {
+                if (product.translations[lang]) {
+                    this.i18nForms[lang].patchValue(product.translations[lang]);
+                }
+            });
+        }
         this.loadAttributes(product.productTypeId, product.attributes);
         // Patch Gallery Images
         if (product.galleryImages && product.galleryImages.length > 0) {
@@ -464,13 +464,13 @@ export class ProductEditDialogComponent
                         responsiveMediaId: responsiveMediaId || undefined,
                         translations,
                         attributes: this.attributesForm.value,
-                        categoryIds: formValue.categoryIds || [],
+                        categoryIds: formValue.categoryIds ?? [],
                         primaryCategoryId: formValue.primaryCategoryId,
                         gallery:
                             formValue.galleryImages?.map((m: any) => ({
                                 desktopMediaId: m.desktop?.id,
                                 mobileMediaId: m.mobile?.id,
-                            })) || [],
+                            })) ?? [],
                         customFields: this.customFieldsForm.value,
                     };
 
@@ -568,7 +568,7 @@ export class ProductEditDialogComponent
                 .subscribe({
                     next: (fields) => {
                         this.isLoadingSig.set(false);
-                        this.fieldDefinitions.set(fields || []);
+                        this.fieldDefinitions.set(fields ?? []);
                         this.#rebuildCustomFieldsForm();
                         this.#notificationService.success(
                             'admin.common.messages.deleteSuccess'
@@ -611,7 +611,7 @@ export class ProductEditDialogComponent
                     .subscribe({
                         next: (fields) => {
                             this.isLoadingSig.set(false);
-                            this.fieldDefinitions.set(fields || []);
+                            this.fieldDefinitions.set(fields ?? []);
                             this.#rebuildCustomFieldsForm();
                             this.#notificationService.success(
                                 'admin.common.messages.saveSuccess'

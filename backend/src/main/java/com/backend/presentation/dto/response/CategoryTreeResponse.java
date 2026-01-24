@@ -3,6 +3,7 @@ package com.backend.presentation.dto.response;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.CategoryI18n;
 import com.backend.domain.enums.Language;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.util.List;
 
@@ -28,12 +29,13 @@ public record CategoryTreeResponse(
                     .orElse(entity.getCode())
                 : entity.getCode();
 
-        List<CategoryTreeResponse> childList = entity.getChildren() != null
-                ? entity.getChildren().stream()
-                    .filter(c -> c.getIsVisible() != null && c.getIsVisible())
-                    .map(c -> CategoryTreeResponse.from(c, language))
-                    .toList()
-                : List.of();
+        List<CategoryTreeResponse> childList = ResponseValueFilter.filterEmptyList(
+                entity.getChildren() != null
+                        ? entity.getChildren().stream()
+                                .filter(c -> c.getIsVisible() != null && c.getIsVisible())
+                                .map(c -> CategoryTreeResponse.from(c, language))
+                                .toList()
+                        : null);
 
         return new CategoryTreeResponse(
                 entity.getId(),
@@ -59,11 +61,12 @@ public record CategoryTreeResponse(
                     .orElse(entity.getCode())
                 : entity.getCode();
 
-        List<CategoryTreeResponse> childList = entity.getChildren() != null
-                ? entity.getChildren().stream()
-                    .map(c -> CategoryTreeResponse.fromAll(c, language))
-                    .toList()
-                : List.of();
+        List<CategoryTreeResponse> childList = ResponseValueFilter.filterEmptyList(
+                entity.getChildren() != null
+                        ? entity.getChildren().stream()
+                                .map(c -> CategoryTreeResponse.fromAll(c, language))
+                                .toList()
+                        : null);
 
         return new CategoryTreeResponse(
                 entity.getId(),

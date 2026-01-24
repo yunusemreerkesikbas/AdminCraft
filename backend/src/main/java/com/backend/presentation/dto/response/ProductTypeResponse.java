@@ -1,6 +1,7 @@
 package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.ProductType;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +29,7 @@ public record ProductTypeResponse(
                 entity.getUid(),
                 entity.getCode(),
                 entity.getName(),
-                entity.getCategory(),
+                ResponseValueFilter.filterEmptyString(entity.getCategory()),
                 attrCount,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
@@ -45,7 +46,7 @@ public record ProductTypeResponse(
                 entity.getUid(),
                 entity.getCode(),
                 entity.getName(),
-                entity.getCategory(),
+                ResponseValueFilter.filterEmptyString(entity.getCategory()),
                 0,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

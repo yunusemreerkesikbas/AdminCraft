@@ -2,6 +2,7 @@ package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.Category;
 import com.backend.domain.enums.Language;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -23,13 +24,14 @@ public record CategoryCompositeResponse(
         if (entity == null) {
             throw new IllegalArgumentException("Category entity cannot be null");
         }
-        Map<Language, CategoryI18nResponse> translations = entity.getI18nContent() != null
-                ? entity.getI18nContent().stream()
-                    .collect(Collectors.toMap(
-                            i18n -> i18n.getLanguage(),
-                            CategoryI18nResponse::from
-                    ))
-                : Map.of();
+        Map<Language, CategoryI18nResponse> translations = ResponseValueFilter.filterEmptyMap(
+                entity.getI18nContent() != null
+                        ? entity.getI18nContent().stream()
+                                .collect(Collectors.toMap(
+                                        i18n -> i18n.getLanguage(),
+                                        CategoryI18nResponse::from
+                                ))
+                        : null);
 
         return new CategoryCompositeResponse(
                 entity.getId(),

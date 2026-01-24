@@ -103,7 +103,7 @@ interface ProductJpaRepository extends JpaRepository<Product, Long> {
         @Query("SELECT DISTINCT p FROM Product p JOIN p.categoryLinks pcl WHERE pcl.category.id = :categoryId")
         java.util.List<Product> findByCategoryIdList(@Param("categoryId") Long categoryId);
 
-        @EntityGraph(attributePaths = { "i18nContent", "responsiveMediaSet", "responsiveMediaSet.desktopMedia",
+        @EntityGraph(attributePaths = { "productType", "i18nContent", "responsiveMediaSet", "responsiveMediaSet.desktopMedia",
                         "responsiveMediaSet.mobileMedia" })
         @Query(value = "SELECT DISTINCT p FROM Product p LEFT JOIN p.i18nContent i LEFT JOIN p.categoryLinks pcl " +
                         "WHERE (:query IS NULL OR :query = '' OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(i.name) LIKE LOWER(CONCAT('%', :query, '%'))) "

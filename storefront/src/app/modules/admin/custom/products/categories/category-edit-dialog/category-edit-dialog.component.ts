@@ -54,7 +54,7 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     override languages = this.#languageContextService.supportedLanguages();
     parentOptions = computed(() => {
-        return (this.data.categories || [])
+        return (this.data.categories ?? [])
             .filter(c => c.id !== this.data.item?.id)
             .map(c => ({ value: c.id, label: `${c.code} (${c.name || c.uid})` }));
     });
@@ -108,15 +108,17 @@ export class CategoryEditDialogComponent extends SpaLocalizedFormDialog<boolean,
 
     loadTranslations(): void {
         this.#service.getComposite(this.data.item!.id).pipe(take(1)).subscribe(composite => {
-             const translations = (composite as any).translations || {};
-             this.languages.forEach(lang => {
-                 if (translations[lang]) {
-                     this.i18nForms[lang].patchValue({
-                         name: translations[lang].name,
-                         description: translations[lang].description
-                     });
-                 }
-             });
+             const translations = (composite as any).translations;
+             if (translations) {
+                 this.languages.forEach(lang => {
+                     if (translations[lang]) {
+                         this.i18nForms[lang].patchValue({
+                             name: translations[lang].name,
+                             description: translations[lang].description
+                         });
+                     }
+                 });
+             }
         });
     }
 
