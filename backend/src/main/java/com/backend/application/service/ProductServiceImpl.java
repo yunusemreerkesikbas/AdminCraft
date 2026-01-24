@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.ProductI18nDto;
-import com.backend.application.dto.validation.ValidationConfigDto;
-import com.backend.application.util.AttributeValidationHelper;
 import com.backend.domain.entity.Category;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.Product;
@@ -415,18 +413,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void saveAttributes(Product product, ProductType productType, Map<String, Object> attributes) {
         List<ProductAttributeDefinition> definitions = attributeDefinitionRepository
-                .findByProductTypeIdOrderBySortOrder(productType.getId());
-
-        // Validate required attributes
-        for (ProductAttributeDefinition def : definitions) {
-            if (Boolean.TRUE.equals(def.getIsRequired())) {
-                Object value = attributes != null ? attributes.get(def.getCode()) : null;
-                if (isValueEmpty(value)) {
-                    throw new IllegalArgumentException(
-                            "Required attribute '" + def.getName() + "' (" + def.getCode() + ") is missing or empty");
-                }
-            }
-        }
+                .findByProductTypeId(productType.getId());
 
         if (attributes == null || attributes.isEmpty())
             return;
@@ -454,20 +441,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void saveAttribute(Product product, ProductAttributeDefinition def, Object value) {
         if (isValueEmpty(value)) {
-            if (Boolean.TRUE.equals(def.getIsRequired())) {
-                throw new IllegalArgumentException(
-                        "Required attribute '" + def.getName() + "' (" + def.getCode() + ") is missing or empty");
-            }
             return;
-        }
-
-        // Validate against validationConfig if present
-        if (def.getValidationConfig() != null && !def.getValidationConfig().trim().isEmpty()) {
-            ValidationConfigDto validationConfig = AttributeValidationHelper
-                    .parseValidationConfig(def.getValidationConfig());
-            if (validationConfig != null) {
-                AttributeValidationHelper.validateOrThrow(value, def.getFieldType(), validationConfig, def.getName());
-            }
         }
 
         ProductAttribute attr = new ProductAttribute();

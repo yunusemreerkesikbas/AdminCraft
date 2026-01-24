@@ -30,11 +30,6 @@ public class ProductAttributeDefinitionRepositoryImpl implements ProductAttribut
     }
 
     @Override
-    public List<ProductAttributeDefinition> findByProductTypeIdOrderBySortOrder(Long productTypeId) {
-        return jpaRepository.findByProductTypeIdOrderBySortOrderAsc(productTypeId);
-    }
-
-    @Override
     public Optional<ProductAttributeDefinition> findByProductTypeIdAndCode(Long productTypeId, String code) {
         return jpaRepository.findByProductTypeIdAndCode(productTypeId, code);
     }
@@ -62,10 +57,5 @@ public class ProductAttributeDefinitionRepositoryImpl implements ProductAttribut
     @Override
     public boolean existsByProductTypeIdAndCode(Long productTypeId, String code) {
         return jpaRepository.existsByProductTypeIdAndCode(productTypeId, code);
-    }
-
-    @Override
-    public int findMaxSortOrderByProductTypeId(Long productTypeId) {
-        return jpaRepository.findMaxSortOrderByProductTypeId(productTypeId);
     }
 }

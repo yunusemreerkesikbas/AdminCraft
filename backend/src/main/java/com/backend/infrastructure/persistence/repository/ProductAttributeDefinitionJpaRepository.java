@@ -15,8 +15,6 @@ interface ProductAttributeDefinitionJpaRepository extends JpaRepository<ProductA
 
     List<ProductAttributeDefinition> findByProductTypeId(Long productTypeId);
 
-    List<ProductAttributeDefinition> findByProductTypeIdOrderBySortOrderAsc(Long productTypeId);
-
     Optional<ProductAttributeDefinition> findByProductTypeIdAndCode(Long productTypeId, String code);
 
     boolean existsByProductTypeIdAndCode(Long productTypeId, String code);
@@ -24,7 +22,4 @@ interface ProductAttributeDefinitionJpaRepository extends JpaRepository<ProductA
     @Modifying
     @Query("DELETE FROM ProductAttributeDefinition pad WHERE pad.productType.id = :productTypeId")
     void deleteByProductTypeId(@Param("productTypeId") Long productTypeId);
-
-    @Query("SELECT COALESCE(MAX(pad.sortOrder), 0) FROM ProductAttributeDefinition pad WHERE pad.productType.id = :productTypeId")
-    int findMaxSortOrderByProductTypeId(@Param("productTypeId") Long productTypeId);
 }

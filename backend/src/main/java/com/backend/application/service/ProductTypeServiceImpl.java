@@ -16,6 +16,7 @@ import com.backend.domain.repository.ProductAttributeDefinitionRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.shared.util.SlugGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -152,31 +153,24 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     @Transactional
-    public ProductAttributeDefinition addAttribute(Long productTypeId, String code, String name,
-            ProductFieldType fieldType, Boolean isRequired, Boolean isSearchable,
-            Integer sortOrder, String validationConfig) {
+    public ProductAttributeDefinition addAttribute(Long productTypeId, String name,
+            ProductFieldType fieldType) {
         TenantContext.validateActive();
-        log.debug("Adding attribute {} to product type {}", code, productTypeId);
+        log.debug("Adding attribute to product type {}", productTypeId);
 
         ProductType productType = productTypeRepository.findById(productTypeId)
                 .orElseThrow(() -> new IllegalArgumentException("Product type not found with id: " + productTypeId));
 
-        if (attributeDefinitionRepository.existsByProductTypeIdAndCode(productTypeId, code)) {
-            throw new IllegalArgumentException("Attribute code already exists for this product type: " + code);
-        }
-
-        int nextSortOrder = sortOrder != null ? sortOrder
-                : attributeDefinitionRepository.findMaxSortOrderByProductTypeId(productTypeId) + 1;
+        String code = SlugGenerator.generateUniqueCode(
+                SlugGenerator.generateCodeFromName(name),
+                (c) -> attributeDefinitionRepository.existsByProductTypeIdAndCode(productTypeId, c)
+        );
 
         ProductAttributeDefinition attribute = new ProductAttributeDefinition();
         attribute.setProductType(productType);
         attribute.setCode(code);
         attribute.setName(name);
         attribute.setFieldType(fieldType);
-        attribute.setIsRequired(isRequired != null ? isRequired : false);
-        attribute.setIsSearchable(isSearchable != null ? isSearchable : false);
-        attribute.setSortOrder(nextSortOrder);
-        attribute.setValidationConfig(validationConfig);
 
         ProductAttributeDefinition saved = attributeDefinitionRepository.save(attribute);
         log.info("Added attribute id: {}, code: {} to product type {}", saved.getId(), saved.getCode(), productTypeId);
@@ -186,8 +180,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     @Transactional
     public ProductAttributeDefinition updateAttribute(Long productTypeId, Long attributeId,
-            String name, ProductFieldType fieldType, Boolean isRequired,
-            Boolean isSearchable, Integer sortOrder, String validationConfig) {
+            String name, ProductFieldType fieldType) {
         TenantContext.validateActive();
         log.debug("Updating attribute {} in product type {}", attributeId, productTypeId);
 
@@ -200,13 +193,6 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
         attribute.setName(name);
         attribute.setFieldType(fieldType);
-        if (isRequired != null)
-            attribute.setIsRequired(isRequired);
-        if (isSearchable != null)
-            attribute.setIsSearchable(isSearchable);
-        if (sortOrder != null)
-            attribute.setSortOrder(sortOrder);
-        attribute.setValidationConfig(validationConfig);
 
         ProductAttributeDefinition saved = attributeDefinitionRepository.save(attribute);
         log.info("Updated attribute id: {}, code: {}", saved.getId(), saved.getCode());
@@ -234,7 +220,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Transactional(readOnly = true)
     public List<ProductAttributeDefinition> getAttributes(Long productTypeId) {
         TenantContext.validateActive();
-        return attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(productTypeId);
+        return attributeDefinitionRepository.findByProductTypeId(productTypeId);
     }
 
     @Override

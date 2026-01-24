@@ -270,13 +270,8 @@ class ProductCatalogDtoValidationTest {
         void attributeDefinitionCreateRequest_ValidInput() {
             // Given
             AttributeDefinitionCreateRequest request = new AttributeDefinitionCreateRequest(
-                    "color",
                     "Color",
-                    ProductFieldType.TEXT,
-                    false,
-                    false,
-                    null,
-                    null);
+                    ProductFieldType.TEXT);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);
@@ -290,7 +285,7 @@ class ProductCatalogDtoValidationTest {
         void attributeDefinitionCreateRequest_NameRequired() {
             // Given
             AttributeDefinitionCreateRequest request = new AttributeDefinitionCreateRequest(
-                    "code", "", ProductFieldType.TEXT, false, false, null, null);
+                    "", ProductFieldType.TEXT);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);
@@ -305,7 +300,7 @@ class ProductCatalogDtoValidationTest {
         void attributeDefinitionCreateRequest_FieldTypeRequired() {
             // Given
             AttributeDefinitionCreateRequest request = new AttributeDefinitionCreateRequest(
-                    "code", "Name", null, false, false, null, null);
+                    "Name", null);
 
             // When
             Set<ConstraintViolation<AttributeDefinitionCreateRequest>> violations = validator.validate(request);

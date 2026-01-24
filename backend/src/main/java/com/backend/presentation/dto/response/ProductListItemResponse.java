@@ -6,6 +6,7 @@ import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
 import com.backend.presentation.dto.PriceResponse;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +19,7 @@ public record ProductListItemResponse(
         ProductStatus status,
         Boolean isVisible,
         PriceResponse price,
+        String productTypeName,
         String primaryCategoryName,
         String thumbnailUrl,
         LocalDateTime createdAt,
@@ -45,6 +47,10 @@ public record ProductListItemResponse(
                 : null;
 
         PriceResponse price = PriceResponse.from(entity.getBasePrice(), currency);
+        
+        String productTypeName = entity.getProductType() != null 
+                ? entity.getProductType().getName() 
+                : null;
 
         return new ProductListItemResponse(
                 entity.getId(),
@@ -55,7 +61,8 @@ public record ProductListItemResponse(
                 entity.getStatus(),
                 entity.getIsVisible(),
                 price,
-                primaryCategoryName,
+                ResponseValueFilter.filterEmptyString(productTypeName),
+                ResponseValueFilter.filterEmptyString(primaryCategoryName),
                 thumbnailUrl,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

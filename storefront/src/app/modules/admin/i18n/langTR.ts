@@ -35,7 +35,7 @@ export const langTR = {
             gallery: {
                 maxSize: 'Galeri en fazla {{max}} görsel içerebilir',
             },
-            globalFields: {
+            customFields: {
                 title: 'Özel Alanlar',
                 description:
                     'Bu ürün için tanımlanmış özel alanları buradan yönetebilirsiniz.',
@@ -1302,7 +1302,7 @@ export const langTR = {
                         'Bu alan tipi için doğrulama kuralı mevcut değil.',
                 },
             },
-            globalFields: {
+            customFields: {
                 title: 'Global Alanlar',
                 subtitle: 'Global ürün alanlarını yönetin',
                 list: 'Alan Listesi',
@@ -1314,10 +1314,7 @@ export const langTR = {
                     description:
                         'Henüz herhangi bir özel alan oluşturmadınız. Ürünlerinize ekstra veri eklemek için bir tane oluşturun.',
                 },
-
                 fieldType: 'Alan Tipi',
-                defaultValue: 'Varsayılan Değer',
-                visibleInList: 'Ürün Listesinde Göster',
                 placeholders: {
                     fieldType: 'Alan tipi seçin',
                 },

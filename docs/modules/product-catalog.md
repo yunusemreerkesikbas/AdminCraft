@@ -17,6 +17,8 @@ Tenant migrations:
 - `backend/src/main/resources/db/tenant/product/`
   - `V27__product_baseline.sql`
   - `V30__add_product_fields.sql`
+  - `V32__remove_product_field_unused_columns.sql` (removed: isRequired, isVisibleInList, sortOrder, defaultValue, validationConfig)
+  - `V33__remove_product_attribute_unused_columns.sql` (removed: isRequired, isSearchable, sortOrder, validationConfig)
   - `R__seed_product_types.sql`
 
 Platform registration (module catalog):
@@ -43,9 +45,14 @@ Base path: `/api/products/types`
 Attributes:
 
 - `GET /api/products/types/{typeId}/attributes`
-- `POST /api/products/types/{typeId}/attributes`
-- `PUT /api/products/types/{typeId}/attributes/{attrId}`
+- `POST /api/products/types/{typeId}/attributes` (creates attribute with auto-generated `code` from `name` using `SlugGenerator`)
+- `PUT /api/products/types/{typeId}/attributes/{attrId}` (updates `name` and `fieldType` only)
 - `DELETE /api/products/types/{typeId}/attributes/{attrId}`
+
+**Attribute Definition Model**:
+- Fields: `id`, `uuid`, `uid`, `code` (auto-generated), `name`, `fieldType`
+- Removed fields (as of V33): `isRequired`, `isSearchable`, `sortOrder`, `validationConfig`
+- Code generation: Automatically generated from `name` using `SlugGenerator.generateUniqueCode()` to ensure uniqueness per product type
 
 ### Global Product Fields
 
@@ -54,9 +61,14 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/ProductF
 Base path: `/api/products/fields`
 
 - `GET /api/products/fields` (list all definitions)
-- `POST /api/products/fields` (create definition)
-- `PUT /api/products/fields/{id}` (update definition)
+- `POST /api/products/fields` (create definition with auto-generated `code` from `name` using `SlugGenerator`)
+- `PUT /api/products/fields/{id}` (update definition: `name` and `fieldType` only)
 - `DELETE /api/products/fields/{id}` (delete definition)
+
+**Global Field Definition Model**:
+- Fields: `id`, `uuid`, `uid`, `code` (auto-generated), `name`, `fieldType`
+- Removed fields (as of V32): `isRequired`, `isVisibleInList`, `sortOrder`, `defaultValue`, `validationConfig`
+- Code generation: Automatically generated from `name` using `SlugGenerator.generateUniqueCode()` to ensure uniqueness
 
 ### Categories (hierarchical, i18n, composite)
 
@@ -84,6 +96,41 @@ Base path: `/api/products`
 - `DELETE /api/products/{id}`
 - `PATCH /api/products/{id}/status?status=DRAFT|PUBLISHED`
 - `PATCH /api/products/{id}/visibility?isVisible=true|false`
+
+### Custom Fields Structure
+
+Global product fields are returned in a **nested structure** within product responses:
+
+```json
+{
+  "id": 10012,
+  "sku": "PROD-001",
+  "status": "PUBLISHED",
+  "customFields": {
+    "isbanner": false,
+    "featured": true,
+    "discount_percent": 15
+  }
+}
+```
+
+**Design Rationale:**
+
+- **Namespace collision prevention**: Custom field names (e.g., `status`, `isVisible`, `name`) cannot conflict with fixed product fields
+- **Type safety**: TypeScript can properly type `product.customFields` as `Record<string, unknown>`
+- **API versioning**: The nested structure allows future changes to custom fields without breaking existing clients
+- **Clear separation**: Makes it explicit which fields are custom vs. fixed product properties
+
+**Response DTOs:**
+
+- `ProductCompositeResponse.customFields`: `Map<String, Object>` (nested)
+- `ProductListItemResponse`: Does not include customFields (list view optimization)
+- `ProductDeliveryResponse`: Does not include customFields (public delivery optimization)
+
+**Request DTOs:**
+
+- `ProductCompositeRequest.customFields`: `Map<String, Object>` (nested)
+- `ProductUpdateRequest.customFields`: `Map<String, Object>` (nested)
 
 ## Public delivery APIs
 
@@ -121,7 +168,7 @@ Key parts:
 - Models: `models/`
   - `product.types.ts` (Product, ProductCompositeRequest, ProductListItemResponse, etc.)
   - `product-type.types.ts` (ProductType, AttributeDefinition, ProductFieldType, etc.)
-  - `product-field.types.ts` (Global field definitions, validation config)
+  - `product-field.types.ts` (Global field definitions: code, name, fieldType)
   - `category.types.ts` (Category, CategoryTreeResponse, etc.)
 - Services:
   - `services/product.service.ts` (CRUD service extending `CrudHttpService`)
@@ -129,11 +176,12 @@ Key parts:
   - `services/product-field.service.ts` (Global field definition management)
   - `services/category.service.ts` (tree operations and composite CRUD)
 - Components:
-  - `list/product-list.component.ts` (paginated list with search, extends `BaseCrudListComponent`)
-  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media, custom fields)
-  - `fields/product-field-dialog/` (global field definition create/edit)
+  - `list/product-list.component.ts` (paginated list with search, extends `BaseCrudListComponent`; displays: name+SKU, productTypeName, status, actions)
+  - `product-edit-dialog/` (composite product create/edit with tabs: general, i18n, attributes, categories, media, custom fields - nested structure: `product.customFields.{code}`)
+  - `fields/product-field-dialog/` (simplified global field definition create/edit: only `name` and `fieldType`; `code` auto-generated)
   - `types/product-type-list.component.ts` (paginated list)
   - `types/product-type-edit-dialog/` (type management with attributes tab)
+  - `types/product-attribute-dialog/` (simplified attribute definition create/edit: only `name` and `fieldType`; `code` auto-generated)
   - `categories/category-tree.component.ts` (hierarchical tree using Angular Material `MatTree`)
   - `categories/category-edit-dialog/` (composite category create/edit)
 - Routes: `products.routes.ts`
@@ -212,13 +260,21 @@ Translation save operations use batch processing for improved performance:
 
 - `sku`: max 100 characters (`@Size(max=100)`)
 - `name`: max 200 characters (in i18n DTOs)
-- `code`: max 100 characters with pattern validation
+- `code`: max 100 characters with pattern validation (auto-generated from `name`)
 
 **Required field validation**:
 
 - All DTOs enforce required fields via `@NotNull`, `@NotBlank`, or `@NotEmpty`
 - Translations map must contain at least one entry (`@NotEmpty`)
 - Controller methods validate all request bodies using `@Valid`
+
+**Code auto-generation**:
+
+- Both `ProductFieldDefinition` and `ProductAttributeDefinition` automatically generate `code` from `name` using `SlugGenerator.generateUniqueCode()`
+- Code generation handles Turkish characters (ı, ğ, ü, ş, ö, ç) and ensures uniqueness by appending numeric suffixes if needed
+- Location: `backend/src/main/java/com/backend/shared/util/SlugGenerator.java`
+
+**Note**: Attribute validation rules (`validationConfig`) and required field checks (`isRequired`) have been removed as of migrations V32 and V33. Products now only validate basic field types (TEXT, NUMBER, BOOLEAN, DATE, etc.) without custom validation rules.
 
 ### Entity type safety
 
@@ -341,9 +397,16 @@ Product product = ProductTestDataBuilder.aProduct()
 5. Fetch the product publicly:
    - `GET /api/cms/products/{uid}?lang=TR`
 
-### Add a new attribute type / validation rule
+### Add a new attribute type
 
 - Attribute field types are defined in:
   - `backend/src/main/java/com/backend/domain/enums/ProductFieldType.java`
-- Validation config is stored as JSON on the attribute definition and is enforced in the application service layer:
-  - `backend/src/main/java/com/backend/application/service/ProductServiceImpl.java`
+- Supported types: `TEXT`, `RICHTEXT`, `NUMBER`, `BOOLEAN`, `DATE`, `MEDIA`
+- **Note**: Custom validation rules (`validationConfig`) have been removed. Products now only validate basic field types without custom min/max length, pattern, or range validations.
+
+### Code generation
+
+- Both global product fields and product attribute definitions use automatic code generation from the `name` field
+- Implementation: `backend/src/main/java/com/backend/shared/util/SlugGenerator.java`
+- The `code` field is generated using `SlugGenerator.generateCodeFromName()` and made unique using `SlugGenerator.generateUniqueCode()`
+- Code generation handles Turkish character transliteration and ensures uniqueness per product type (for attributes) or globally (for global fields)

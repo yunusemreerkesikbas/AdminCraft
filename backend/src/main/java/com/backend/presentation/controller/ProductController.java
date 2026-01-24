@@ -127,9 +127,9 @@ public class ProductController {
 
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
-                        log.error("Error listing products: {}", ex.getMessage());
+                        log.error("Error listing products", ex);
                         String msg = messageSource.getMessage("product.list.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(msg));
                 }
@@ -155,9 +155,9 @@ public class ProductController {
                                                                 .body(ApiResponse.error(msg));
                                         });
                 } catch (Exception ex) {
-                        log.error("Error getting product {}: {}", id, ex.getMessage());
+                        log.error("Error getting product {}", id, ex);
                         String msg = messageSource.getMessage("product.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(msg));
                 }
@@ -196,9 +196,9 @@ public class ProductController {
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
                 } catch (Exception ex) {
-                        log.error("Error creating product: {}", ex.getMessage());
+                        log.error("Error creating product", ex);
                         String msg = messageSource.getMessage("product.create.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
                 }
         }
@@ -235,9 +235,9 @@ public class ProductController {
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
                 } catch (Exception ex) {
-                        log.error("Error updating product {}: {}", id, ex.getMessage());
+                        log.error("Error updating product {}", id, ex);
                         String msg = messageSource.getMessage("product.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
                 }
         }
@@ -258,9 +258,9 @@ public class ProductController {
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
                 } catch (Exception ex) {
-                        log.error("Error deleting product {}: {}", id, ex.getMessage());
+                        log.error("Error deleting product {}", id, ex);
                         String msg = messageSource.getMessage("product.delete.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
                 }
         }
@@ -287,9 +287,9 @@ public class ProductController {
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
                 } catch (Exception ex) {
-                        log.error("Error updating product status {}: {}", id, ex.getMessage());
+                        log.error("Error updating product status {}", id, ex);
                         String msg = messageSource.getMessage("product.status.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
                 }
         }
@@ -316,9 +316,9 @@ public class ProductController {
                                         new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
                 } catch (Exception ex) {
-                        log.error("Error updating product visibility {}: {}", id, ex.getMessage());
+                        log.error("Error updating product visibility {}", id, ex);
                         String msg = messageSource.getMessage("product.visibility.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        new Object[] { "An unexpected error occurred" }, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(msg));
                 }
         }

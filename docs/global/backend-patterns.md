@@ -36,6 +36,45 @@ Controllers return a wrapped response type:
 
 - `ApiResponse<T>` (see usage in controllers, e.g. `CmsDeliveryController` and `MediaController`)
 
+## API response filtering
+
+All API responses automatically exclude null, empty strings, empty arrays, and empty maps to reduce payload size and improve readability.
+
+**Global configuration:**
+- `JacksonConfig` sets `JsonInclude.Include.NON_NULL` globally
+- Location: `backend/src/main/java/com/backend/infrastructure/config/JacksonConfig.java`
+
+**Response value filtering:**
+- Use `ResponseValueFilter` utility class in DTO factory methods:
+  - `ResponseValueFilter.filterEmptyString(String)` - Converts empty/whitespace to `null`
+  - `ResponseValueFilter.filterEmptyCollection(Collection<T>)` - Converts empty collections to `null`
+  - `ResponseValueFilter.filterEmptyMap(Map<K, V>)` - Converts empty maps to `null`
+- Location: `backend/src/main/java/com/backend/shared/util/ResponseValueFilter.java`
+
+**Example:**
+```java
+public static ProductCompositeResponse from(Product entity, Currency currency) {
+    Map<String, Object> attributes = ResponseValueFilter.filterEmptyMap(
+        entity.getAttributes() != null
+            ? entity.getAttributes().stream()
+                .collect(Collectors.toMap(...))
+            : null
+    );
+    // ...
+}
+```
+
+**Filtered values:**
+- Empty strings (`""`) → `null` → excluded
+- Empty arrays (`[]`) → `null` → excluded
+- Empty maps (`{}`) → `null` → excluded
+- `null` values → excluded (via Jackson `NON_NULL`)
+- **Note**: `false` boolean values are preserved
+
+**Frontend integration:**
+- Use nullish coalescing (`??`) instead of logical OR (`||`)
+- Example: `product.categories?.map(...) ?? []` instead of `product.categories?.map(...) || []`
+
 ## Async jobs (platform operations)
 
 Provisioning and migration sync are implemented as asynchronous jobs:

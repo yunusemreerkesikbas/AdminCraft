@@ -26,28 +26,18 @@ export interface AttributeDefinition {
     code: string;
     name: string;
     fieldType: ProductFieldType;
-    isRequired: boolean;
-    isSearchable: boolean;
-    sortOrder: number;
-    validationConfig?: Record<string, any>;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface CreateAttributeDefinitionRequest {
-    code: string;
     name: string;
     fieldType: ProductFieldType;
-    isRequired?: boolean;
-    isSearchable?: boolean;
-    sortOrder?: number;
-    validationConfig?: Record<string, any>;
 }
 
 export interface UpdateAttributeDefinitionRequest {
-    name: string;
-    isRequired?: boolean;
-    isSearchable?: boolean;
-    sortOrder?: number;
-    validationConfig?: Record<string, any>;
+    name?: string;
+    fieldType?: ProductFieldType;
 }
 
 export type ProductFieldType = 'TEXT' | 'RICHTEXT' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'MEDIA';

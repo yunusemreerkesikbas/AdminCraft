@@ -2,6 +2,7 @@ package com.backend.presentation.dto.response;
 
 import com.backend.domain.entity.ProductI18n;
 import com.backend.domain.enums.Language;
+import com.backend.shared.util.ResponseValueFilter;
 
 import java.time.LocalDateTime;
 
@@ -28,10 +29,10 @@ public record ProductI18nResponse(
                 entity.getUid(),
                 entity.getLanguage(),
                 entity.getName(),
-                entity.getShortDescription(),
-                entity.getDescription(),
-                entity.getSeoTitle(),
-                entity.getSeoDescription(),
+                ResponseValueFilter.filterEmptyString(entity.getShortDescription()),
+                ResponseValueFilter.filterEmptyString(entity.getDescription()),
+                ResponseValueFilter.filterEmptyString(entity.getSeoTitle()),
+                ResponseValueFilter.filterEmptyString(entity.getSeoDescription()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

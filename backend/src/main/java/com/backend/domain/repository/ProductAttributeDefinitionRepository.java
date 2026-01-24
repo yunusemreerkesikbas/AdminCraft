@@ -13,8 +13,6 @@ public interface ProductAttributeDefinitionRepository {
 
     List<ProductAttributeDefinition> findByProductTypeId(Long productTypeId);
 
-    List<ProductAttributeDefinition> findByProductTypeIdOrderBySortOrder(Long productTypeId);
-
     Optional<ProductAttributeDefinition> findByProductTypeIdAndCode(Long productTypeId, String code);
 
     ProductAttributeDefinition save(ProductAttributeDefinition entity);
@@ -26,6 +24,4 @@ public interface ProductAttributeDefinitionRepository {
     void deleteByProductTypeId(Long productTypeId);
 
     boolean existsByProductTypeIdAndCode(Long productTypeId, String code);
-
-    int findMaxSortOrderByProductTypeId(Long productTypeId);
 }

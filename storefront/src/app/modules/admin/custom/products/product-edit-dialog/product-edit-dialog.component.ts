@@ -18,7 +18,6 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaDynamicFormComponent } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.component';
 import { SpaDynamicFormService } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
 import { DynamicFieldConfig } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
-import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -93,7 +92,6 @@ export interface ProductEditDialogData {
         SpaTabContentDirective,
         SpaDynamicFormComponent,
         SpaMediaPickerComponent,
-        SpaEmptyStateComponent,
     ],
 })
 export class ProductEditDialogComponent
@@ -155,7 +153,7 @@ export class ProductEditDialogComponent
             },
             {
                 id: 'custom-fields',
-                label: 'admin.products.globalFields',
+                label: 'admin.products.customFields.title',
                 icon: 'extension',
             },
             {
@@ -249,7 +247,7 @@ export class ProductEditDialogComponent
         this.isLoadingSig.set(true);
         const types$ = this.#productTypeService
             .listPaged({ page: 0, size: 100 })
-            .pipe(map((page) => page?.content || []));
+            .pipe(map((page) => page?.content ?? []));
         const categories$ = this.#categoryService
             .getTree()
             .pipe(map((tree) => this.#flattenTree(tree)));
@@ -269,10 +267,9 @@ export class ProductEditDialogComponent
             .pipe(take(1))
             .subscribe({
                 next: (res: any) => {
-                    this.productTypes.set(res.types || []);
-                    this.productTypes.set(res.types || []);
-                    this.categories.set(res.categories || []);
-                    this.fieldDefinitions.set(res.fieldDefinitions || []);
+                    this.productTypes.set(res.types ?? []);
+                    this.categories.set(res.categories ?? []);
+                    this.fieldDefinitions.set(res.fieldDefinitions ?? []);
                     this.#dynamicFormService.addControlsToFormGroup(
                         this.customFieldsForm,
                         this.customFieldsConfig(),
@@ -326,22 +323,23 @@ export class ProductEditDialogComponent
                 status: product.status,
                 isVisible: product.isVisible,
                 responsiveMedia: responsiveMedia,
-                categoryIds: product.categories?.map((c: any) => c.id) || [],
+                categoryIds: product.categories?.map((c: any) => c.id) ?? [],
                 primaryCategoryId: product.categories?.find(
                     (c: any) => c.isPrimary
-                )?.id,
+                )?.id ?? null,
                 createdAt: this.#formatDateTime(product.createdAt),
                 updatedAt: this.#formatDateTime(product.updatedAt),
             },
             { emitEvent: false }
         );
 
-        const translations = product.translations || {};
-        this.languages.forEach((lang) => {
-            if (translations[lang]) {
-                this.i18nForms[lang].patchValue(translations[lang]);
-            }
-        });
+        if (product.translations) {
+            this.languages.forEach((lang) => {
+                if (product.translations[lang]) {
+                    this.i18nForms[lang].patchValue(product.translations[lang]);
+                }
+            });
+        }
         this.loadAttributes(product.productTypeId, product.attributes);
         // Patch Gallery Images
         if (product.galleryImages && product.galleryImages.length > 0) {
@@ -363,7 +361,7 @@ export class ProductEditDialogComponent
         }
     }
 
-    loadAttributes(typeId: number, existingAttributes?: any[]): void {
+    loadAttributes(typeId: number, existingAttributes?: Record<string, unknown>): void {
         this.#productTypeService
             .getAttributes(typeId)
             .pipe(take(1))
@@ -375,11 +373,7 @@ export class ProductEditDialogComponent
                     {}
                 );
                 if (existingAttributes) {
-                    const values: any = {};
-                    existingAttributes.forEach((attr: any) => {
-                        values[attr.code] = attr.value;
-                    });
-                    this.attributesForm.patchValue(values);
+                    this.attributesForm.patchValue(existingAttributes);
                 }
             });
     }
@@ -390,34 +384,9 @@ export class ProductEditDialogComponent
                 key: attr.code,
                 label: attr.name,
                 type: attr.fieldType.toLowerCase() as any,
-                required: attr.isRequired,
+                required: false,
                 labelTooltip: attr.code,
             };
-
-            // Map validationConfig if present
-            if (attr.validationConfig) {
-                if (attr.validationConfig['minLength'] !== undefined) {
-                    config.minLength = attr.validationConfig['minLength'];
-                }
-                if (attr.validationConfig['maxLength'] !== undefined) {
-                    config.maxLength = attr.validationConfig['maxLength'];
-                }
-                if (attr.validationConfig['pattern'] !== undefined) {
-                    config.pattern = attr.validationConfig['pattern'];
-                }
-                if (attr.validationConfig['minValue'] !== undefined) {
-                    config.minValue = attr.validationConfig['minValue'];
-                }
-                if (attr.validationConfig['maxValue'] !== undefined) {
-                    config.maxValue = attr.validationConfig['maxValue'];
-                }
-                if (attr.validationConfig['minDate'] !== undefined) {
-                    config.minDate = attr.validationConfig['minDate'];
-                }
-                if (attr.validationConfig['maxDate'] !== undefined) {
-                    config.maxDate = attr.validationConfig['maxDate'];
-                }
-            }
 
             return config;
         });
@@ -431,13 +400,9 @@ export class ProductEditDialogComponent
                 key: field.code,
                 label: field.name,
                 type: field.fieldType.toLowerCase() as any,
-                required: field.isRequired,
+                required: false,
                 labelTooltip: field.code,
             };
-
-            if (field.validationConfig) {
-                Object.assign(config, field.validationConfig);
-            }
 
             return config;
         });
@@ -499,13 +464,13 @@ export class ProductEditDialogComponent
                         responsiveMediaId: responsiveMediaId || undefined,
                         translations,
                         attributes: this.attributesForm.value,
-                        categoryIds: formValue.categoryIds || [],
+                        categoryIds: formValue.categoryIds ?? [],
                         primaryCategoryId: formValue.primaryCategoryId,
                         gallery:
                             formValue.galleryImages?.map((m: any) => ({
                                 desktopMediaId: m.desktop?.id,
                                 mobileMediaId: m.mobile?.id,
-                            })) || [],
+                            })) ?? [],
                         customFields: this.customFieldsForm.value,
                     };
 
@@ -603,7 +568,7 @@ export class ProductEditDialogComponent
                 .subscribe({
                     next: (fields) => {
                         this.isLoadingSig.set(false);
-                        this.fieldDefinitions.set(fields || []);
+                        this.fieldDefinitions.set(fields ?? []);
                         this.#rebuildCustomFieldsForm();
                         this.#notificationService.success(
                             'admin.common.messages.deleteSuccess'
@@ -646,7 +611,7 @@ export class ProductEditDialogComponent
                     .subscribe({
                         next: (fields) => {
                             this.isLoadingSig.set(false);
-                            this.fieldDefinitions.set(fields || []);
+                            this.fieldDefinitions.set(fields ?? []);
                             this.#rebuildCustomFieldsForm();
                             this.#notificationService.success(
                                 'admin.common.messages.saveSuccess'

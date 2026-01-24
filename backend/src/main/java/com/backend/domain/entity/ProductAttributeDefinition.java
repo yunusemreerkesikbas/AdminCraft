@@ -33,8 +33,7 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"uid"}, name = "uk_product_attr_def_uid"),
         @UniqueConstraint(columnNames = {"product_type_id", "code"}, name = "uk_product_attr_type_code")
 }, indexes = {
-        @Index(columnList = "product_type_id", name = "idx_product_attr_def_type"),
-        @Index(columnList = "sort_order", name = "idx_product_attr_def_sort")
+        @Index(columnList = "product_type_id", name = "idx_product_attr_def_type")
 })
 @Data
 @NoArgsConstructor
@@ -70,18 +69,6 @@ public class ProductAttributeDefinition {
     @Enumerated(EnumType.STRING)
     @Column(name = "field_type", nullable = false, length = 30)
     private ProductFieldType fieldType;
-
-    @Column(name = "is_required")
-    private Boolean isRequired = false;
-
-    @Column(name = "is_searchable")
-    private Boolean isSearchable = false;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder = 0;
-
-    @Column(name = "validation_config", columnDefinition = "JSON")
-    private String validationConfig;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
