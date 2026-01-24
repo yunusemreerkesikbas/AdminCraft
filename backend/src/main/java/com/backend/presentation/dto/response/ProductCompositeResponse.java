@@ -23,7 +23,7 @@ public record ProductCompositeResponse(
                 Boolean isVisible,
                 ResponsiveMediaResponse images,
                 Map<Language, ProductI18nResponse> translations,
-                List<ProductAttributeValueResponse> attributes,
+                Map<String, Object> attributes,
                 List<ProductCategoryResponse> categories,
                 List<ProductMediaResponse> galleryImages,
                 Map<String, Object> customFields,
@@ -41,12 +41,14 @@ public record ProductCompositeResponse(
                                                                 ProductI18nResponse::from))
                                 : Map.of();
 
-                List<ProductAttributeValueResponse> attributes = entity.getAttributes() != null
+                Map<String, Object> attributes = entity.getAttributes() != null
                                 ? entity.getAttributes().stream()
                                                 .filter(a -> a.getAttributeDefinition() != null)
-                                                .map(ProductAttributeValueResponse::from)
-                                                .toList()
-                                : List.of();
+                                                .collect(Collectors.toMap(
+                                                                a -> a.getAttributeDefinition().getCode(),
+                                                                a -> a.getValue(),
+                                                                (existing, replacement) -> replacement))
+                                : Map.of();
 
                 // Add custom fields mapping
                 Map<String, Object> customFields = entity.getFieldValues() != null

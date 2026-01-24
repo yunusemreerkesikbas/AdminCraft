@@ -36,7 +36,7 @@ export const langEN = {
             gallery: {
                 maxSize: 'Gallery can contain at most {{max}} images',
             },
-            globalFields: {
+            customFields: {
                 title: 'Custom Fields',
                 description:
                     'Manage custom fields defined for this product here.',
@@ -1307,7 +1307,7 @@ export const langEN = {
                         'No validation rules available for this field type.',
                 },
             },
-            globalFields: {
+            customFields: {
                 title: 'Global Fields',
                 subtitle: 'Manage global product fields',
                 list: 'Field List',
@@ -1319,10 +1319,7 @@ export const langEN = {
                     description:
                         "You haven't created any custom fields yet. Create one to add extra data to your products.",
                 },
-
                 fieldType: 'Field Type',
-                defaultValue: 'Default Value',
-                visibleInList: 'Show in Product List',
                 placeholders: {
                     fieldType: 'Select field type',
                 },

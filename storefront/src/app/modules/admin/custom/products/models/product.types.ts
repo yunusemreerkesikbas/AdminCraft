@@ -24,7 +24,7 @@ export interface Product {
     updatedAt: string;
     images?: ResponsiveMediaResponse;
     translations?: Record<string, ProductI18n>;
-    attributes?: ProductAttributeResponse[];
+    attributes?: Record<string, unknown>;
     categories?: ProductCategoryResponse[];
     galleryImages?: ProductMediaResponse[];
     customFields?: Record<string, any>;

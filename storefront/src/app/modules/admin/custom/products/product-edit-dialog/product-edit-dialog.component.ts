@@ -18,7 +18,6 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaDynamicFormComponent } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.component';
 import { SpaDynamicFormService } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
 import { DynamicFieldConfig } from '@shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
-import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -93,7 +92,6 @@ export interface ProductEditDialogData {
         SpaTabContentDirective,
         SpaDynamicFormComponent,
         SpaMediaPickerComponent,
-        SpaEmptyStateComponent,
     ],
 })
 export class ProductEditDialogComponent
@@ -155,7 +153,7 @@ export class ProductEditDialogComponent
             },
             {
                 id: 'custom-fields',
-                label: 'admin.products.globalFields',
+                label: 'admin.products.customFields.title',
                 icon: 'extension',
             },
             {
@@ -363,7 +361,7 @@ export class ProductEditDialogComponent
         }
     }
 
-    loadAttributes(typeId: number, existingAttributes?: any[]): void {
+    loadAttributes(typeId: number, existingAttributes?: Record<string, unknown>): void {
         this.#productTypeService
             .getAttributes(typeId)
             .pipe(take(1))
@@ -375,11 +373,7 @@ export class ProductEditDialogComponent
                     {}
                 );
                 if (existingAttributes) {
-                    const values: any = {};
-                    existingAttributes.forEach((attr: any) => {
-                        values[attr.code] = attr.value;
-                    });
-                    this.attributesForm.patchValue(values);
+                    this.attributesForm.patchValue(existingAttributes);
                 }
             });
     }
@@ -390,34 +384,9 @@ export class ProductEditDialogComponent
                 key: attr.code,
                 label: attr.name,
                 type: attr.fieldType.toLowerCase() as any,
-                required: attr.isRequired,
+                required: false,
                 labelTooltip: attr.code,
             };
-
-            // Map validationConfig if present
-            if (attr.validationConfig) {
-                if (attr.validationConfig['minLength'] !== undefined) {
-                    config.minLength = attr.validationConfig['minLength'];
-                }
-                if (attr.validationConfig['maxLength'] !== undefined) {
-                    config.maxLength = attr.validationConfig['maxLength'];
-                }
-                if (attr.validationConfig['pattern'] !== undefined) {
-                    config.pattern = attr.validationConfig['pattern'];
-                }
-                if (attr.validationConfig['minValue'] !== undefined) {
-                    config.minValue = attr.validationConfig['minValue'];
-                }
-                if (attr.validationConfig['maxValue'] !== undefined) {
-                    config.maxValue = attr.validationConfig['maxValue'];
-                }
-                if (attr.validationConfig['minDate'] !== undefined) {
-                    config.minDate = attr.validationConfig['minDate'];
-                }
-                if (attr.validationConfig['maxDate'] !== undefined) {
-                    config.maxDate = attr.validationConfig['maxDate'];
-                }
-            }
 
             return config;
         });
@@ -431,13 +400,9 @@ export class ProductEditDialogComponent
                 key: field.code,
                 label: field.name,
                 type: field.fieldType.toLowerCase() as any,
-                required: field.isRequired,
+                required: false,
                 labelTooltip: field.code,
             };
-
-            if (field.validationConfig) {
-                Object.assign(config, field.validationConfig);
-            }
 
             return config;
         });

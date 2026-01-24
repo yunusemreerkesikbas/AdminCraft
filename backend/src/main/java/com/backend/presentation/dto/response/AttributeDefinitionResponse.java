@@ -12,10 +12,6 @@ public record AttributeDefinitionResponse(
         String code,
         String name,
         ProductFieldType fieldType,
-        Boolean isRequired,
-        Boolean isSearchable,
-        Integer sortOrder,
-        String validationConfig,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -30,10 +26,6 @@ public record AttributeDefinitionResponse(
                 entity.getCode(),
                 entity.getName(),
                 entity.getFieldType(),
-                entity.getIsRequired(),
-                entity.getIsSearchable(),
-                entity.getSortOrder(),
-                entity.getValidationConfig(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

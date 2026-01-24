@@ -222,9 +222,7 @@ public class ProductTypeController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             ProductAttributeDefinition created = productTypeService.addAttribute(
-                    typeId, request.code(), request.name(), request.fieldType(),
-                    request.isRequired(), request.isSearchable(), request.sortOrder(),
-                    request.validationConfig());
+                    typeId, request.name(), request.fieldType());
 
             String msg = messageSource.getMessage("product.attribute.create.success", null,
                     Locale.forLanguageTag(lang));
@@ -252,9 +250,7 @@ public class ProductTypeController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
             ProductAttributeDefinition updated = productTypeService.updateAttribute(
-                    typeId, attrId, request.name(), request.fieldType(),
-                    request.isRequired(), request.isSearchable(), request.sortOrder(),
-                    request.validationConfig());
+                    typeId, attrId, request.name(), request.fieldType());
 
             String msg = messageSource.getMessage("product.attribute.update.success", null,
                     Locale.forLanguageTag(lang));

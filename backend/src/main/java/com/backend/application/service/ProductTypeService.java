@@ -33,13 +33,11 @@ public interface ProductTypeService {
 
     List<ProductType> findByCategory(String category);
 
-    ProductAttributeDefinition addAttribute(Long productTypeId, String code, String name,
-            ProductFieldType fieldType, Boolean isRequired, Boolean isSearchable,
-            Integer sortOrder, String validationConfig);
+    ProductAttributeDefinition addAttribute(Long productTypeId, String name,
+            ProductFieldType fieldType);
 
     ProductAttributeDefinition updateAttribute(Long productTypeId, Long attributeId,
-            String name, ProductFieldType fieldType, Boolean isRequired,
-            Boolean isSearchable, Integer sortOrder, String validationConfig);
+            String name, ProductFieldType fieldType);
 
     void deleteAttribute(Long productTypeId, Long attributeId);
 

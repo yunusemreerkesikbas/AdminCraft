@@ -24,9 +24,5 @@ public interface ProductFieldDefinitionRepository extends JpaRepository<ProductF
 
   boolean existsByUid(String uid);
 
-  List<ProductFieldDefinition> findAllByOrderBySortOrderAsc();
-
-  List<ProductFieldDefinition> findByIsVisibleInListTrueOrderBySortOrderAsc();
-
   List<ProductFieldDefinition> findByCodeIn(List<String> codes);
 }

@@ -23,10 +23,6 @@ public class ProductAttributeDefinitionTestDataBuilder {
     private String code;
     private String name;
     private ProductFieldType fieldType;
-    private Boolean isRequired;
-    private Boolean isSearchable;
-    private Integer sortOrder;
-    private String validationConfig;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -39,10 +35,6 @@ public class ProductAttributeDefinitionTestDataBuilder {
         this.code = "attribute_" + currentId;
         this.name = "Attribute " + currentId;
         this.fieldType = ProductFieldType.TEXT;
-        this.isRequired = false;
-        this.isSearchable = false;
-        this.sortOrder = (int) currentId;
-        this.validationConfig = null;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -66,15 +58,6 @@ public class ProductAttributeDefinitionTestDataBuilder {
                 .withFieldType(ProductFieldType.BOOLEAN);
     }
 
-    public static ProductAttributeDefinitionTestDataBuilder aRequiredAttribute() {
-        return new ProductAttributeDefinitionTestDataBuilder()
-                .withIsRequired(true);
-    }
-
-    public static ProductAttributeDefinitionTestDataBuilder aSearchableAttribute() {
-        return new ProductAttributeDefinitionTestDataBuilder()
-                .withIsSearchable(true);
-    }
 
     public ProductAttributeDefinitionTestDataBuilder withId(Long id) {
         this.id = id;
@@ -111,26 +94,6 @@ public class ProductAttributeDefinitionTestDataBuilder {
         return this;
     }
 
-    public ProductAttributeDefinitionTestDataBuilder withIsRequired(Boolean isRequired) {
-        this.isRequired = isRequired;
-        return this;
-    }
-
-    public ProductAttributeDefinitionTestDataBuilder withIsSearchable(Boolean isSearchable) {
-        this.isSearchable = isSearchable;
-        return this;
-    }
-
-    public ProductAttributeDefinitionTestDataBuilder withSortOrder(Integer sortOrder) {
-        this.sortOrder = sortOrder;
-        return this;
-    }
-
-    public ProductAttributeDefinitionTestDataBuilder withValidationConfig(String validationConfig) {
-        this.validationConfig = validationConfig;
-        return this;
-    }
-
     public ProductAttributeDefinitionTestDataBuilder withCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
         return this;
@@ -150,10 +113,6 @@ public class ProductAttributeDefinitionTestDataBuilder {
         definition.setCode(code);
         definition.setName(name);
         definition.setFieldType(fieldType);
-        definition.setIsRequired(isRequired);
-        definition.setIsSearchable(isSearchable);
-        definition.setSortOrder(sortOrder);
-        definition.setValidationConfig(validationConfig);
         definition.setCreatedAt(createdAt);
         definition.setUpdatedAt(updatedAt);
         return definition;

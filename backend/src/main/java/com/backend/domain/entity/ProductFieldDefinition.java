@@ -36,22 +36,4 @@ public class ProductFieldDefinition extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "field_type", nullable = false, length = 20)
   private ProductFieldType fieldType;
-
-  @Column(name = "is_required", nullable = false)
-  @Builder.Default
-  private Boolean isRequired = false;
-
-  @Column(name = "is_visible_in_list", nullable = false)
-  @Builder.Default
-  private Boolean isVisibleInList = true;
-
-  @Column(name = "sort_order", nullable = false)
-  @Builder.Default
-  private Integer sortOrder = 0;
-
-  @Column(name = "default_value", columnDefinition = "TEXT")
-  private String defaultValue;
-
-  @Column(name = "validation_config", columnDefinition = "JSON")
-  private String validationConfig;
 }

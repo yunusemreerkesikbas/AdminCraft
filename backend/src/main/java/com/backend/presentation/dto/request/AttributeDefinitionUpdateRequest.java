@@ -11,14 +11,6 @@ public record AttributeDefinitionUpdateRequest(
         String name,
 
         @NotNull(message = "validation.attribute.fieldType.required")
-        ProductFieldType fieldType,
-
-        Boolean isRequired,
-
-        Boolean isSearchable,
-
-        Integer sortOrder,
-
-        String validationConfig
+        ProductFieldType fieldType
 ) {
 }

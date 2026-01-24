@@ -44,14 +44,6 @@ public class ProductFieldController {
     return ResponseEntity.ok(ApiResponse.success(definitions));
   }
 
-  @GetMapping("/visible")
-  @Operation(summary = "Get field definitions visible in list view")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
-  public ResponseEntity<ApiResponse<List<ProductFieldDefinitionResponse>>> getVisibleDefinitions() {
-    List<ProductFieldDefinitionResponse> definitions = productFieldService.findVisibleDefinitions();
-    return ResponseEntity.ok(ApiResponse.success(definitions));
-  }
-
   @GetMapping("/{id}")
   @Operation(summary = "Get field definition by ID")
   @PreAuthorize("hasRole('TENANT_ADMIN')")

@@ -49,7 +49,7 @@ public class ProductType extends BaseEntity {
 
     @ToString.Exclude
     @OneToMany(mappedBy = "productType", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("sortOrder ASC, id ASC")
+    @OrderBy("id ASC")
     private List<ProductAttributeDefinition> attributeDefinitions = new ArrayList<>();
 
     public void addAttributeDefinition(ProductAttributeDefinition definition) {

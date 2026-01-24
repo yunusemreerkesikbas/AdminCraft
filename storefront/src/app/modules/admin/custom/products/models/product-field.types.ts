@@ -11,20 +11,9 @@ export type ProductFieldType =
     | 'MEDIA';
 
 /**
- * Validation config for fields
- */
-export interface ValidationConfig {
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    minValue?: number;
-    maxValue?: number;
-    minDate?: string;
-    maxDate?: string;
-}
-
-/**
  * Product field definition interface
+ * Note: Backend may still return code, isRequired, isVisibleInList, sortOrder, defaultValue, validationConfig
+ * but these fields are not used in the frontend
  */
 export interface ProductFieldDefinition {
     id: number;
@@ -33,11 +22,6 @@ export interface ProductFieldDefinition {
     code: string;
     name: string;
     fieldType: ProductFieldType;
-    isRequired: boolean;
-    isVisibleInList: boolean;
-    sortOrder: number;
-    defaultValue?: string;
-    validationConfig?: ValidationConfig;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -47,14 +31,8 @@ export interface ProductFieldDefinition {
  */
 export interface CreateProductFieldRequest {
     uid: string;
-    code: string;
     name: string;
     fieldType: ProductFieldType;
-    isRequired?: boolean;
-    isVisibleInList?: boolean;
-    sortOrder?: number;
-    defaultValue?: string;
-    validationConfig?: ValidationConfig;
 }
 
 /**
@@ -63,11 +41,6 @@ export interface CreateProductFieldRequest {
 export interface UpdateProductFieldRequest {
     name?: string;
     fieldType?: ProductFieldType;
-    isRequired?: boolean;
-    isVisibleInList?: boolean;
-    sortOrder?: number;
-    defaultValue?: string;
-    validationConfig?: ValidationConfig;
 }
 
 /**

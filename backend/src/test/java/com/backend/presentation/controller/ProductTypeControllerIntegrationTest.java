@@ -342,14 +342,11 @@ class ProductTypeControllerIntegrationTest {
                 void addAttribute_Success() throws Exception {
                         // Given
                         Map<String, Object> request = new HashMap<>();
-                        request.put("code", "size");
                         request.put("name", "Size");
                         request.put("fieldType", "TEXT");
-                        request.put("isRequired", false);
-                        request.put("isSearchable", true);
 
-                        when(productTypeService.addAttribute(eq(1L), anyString(), anyString(),
-                                        any(ProductFieldType.class), any(), any(), any(), any()))
+                        when(productTypeService.addAttribute(eq(1L), anyString(),
+                                        any(ProductFieldType.class)))
                                         .thenReturn(testAttributeDefinition);
 
                         // When & Then
@@ -365,12 +362,11 @@ class ProductTypeControllerIntegrationTest {
                 void addAttribute_DuplicateCode() throws Exception {
                         // Given
                         Map<String, Object> request = new HashMap<>();
-                        request.put("code", "existing_attr");
                         request.put("name", "Existing");
                         request.put("fieldType", "TEXT");
 
-                        when(productTypeService.addAttribute(eq(1L), eq("existing_attr"), anyString(),
-                                        any(), any(), any(), any(), any()))
+                        when(productTypeService.addAttribute(eq(1L), anyString(),
+                                        any(ProductFieldType.class)))
                                         .thenThrow(new IllegalArgumentException("Attribute code already exists"));
 
                         // When & Then
@@ -395,10 +391,9 @@ class ProductTypeControllerIntegrationTest {
                         Map<String, Object> request = new HashMap<>();
                         request.put("name", "Updated Name");
                         request.put("fieldType", "NUMBER");
-                        request.put("isRequired", true);
 
                         when(productTypeService.updateAttribute(eq(1L), eq(1L), anyString(),
-                                        any(ProductFieldType.class), any(), any(), any(), any()))
+                                        any(ProductFieldType.class)))
                                         .thenReturn(testAttributeDefinition);
 
                         // When & Then
@@ -416,8 +411,8 @@ class ProductTypeControllerIntegrationTest {
                         Map<String, Object> request = new HashMap<>();
                         request.put("name", "Updated");
 
-                        when(productTypeService.updateAttribute(eq(1L), eq(999L), any(), any(), any(), any(), any(),
-                                        any()))
+                        when(productTypeService.updateAttribute(eq(1L), eq(999L), anyString(),
+                                        any(ProductFieldType.class)))
                                         .thenThrow(new IllegalArgumentException("Attribute not found"));
 
                         // When & Then

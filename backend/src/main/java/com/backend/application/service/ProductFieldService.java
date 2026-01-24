@@ -12,8 +12,6 @@ public interface ProductFieldService {
 
   List<ProductFieldDefinitionResponse> findAllDefinitions();
 
-  List<ProductFieldDefinitionResponse> findVisibleDefinitions();
-
   ProductFieldDefinitionResponse findDefinitionById(Long id);
 
   ProductFieldDefinitionResponse createDefinition(CreateProductFieldRequest request);

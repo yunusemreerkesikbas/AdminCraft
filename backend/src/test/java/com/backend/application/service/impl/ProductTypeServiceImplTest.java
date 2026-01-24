@@ -290,8 +290,7 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void addAttribute_Success() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "new_attr")).thenReturn(false);
-            when(attributeDefinitionRepository.findMaxSortOrderByProductTypeId(1L)).thenReturn(5);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
             when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> {
                 ProductAttributeDefinition def = inv.getArgument(0);
                 def.setId(100L);
@@ -300,68 +299,65 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // When
             ProductAttributeDefinition result = productTypeService.addAttribute(
-                    1L, "new_attr", "New Attribute", ProductFieldType.TEXT,
-                    false, false, null, null);
+                    1L, "New Attribute", ProductFieldType.TEXT);
 
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(100L);
             verify(attributeDefinitionRepository).save(argThat(def ->
-                    "new_attr".equals(def.getCode()) &&
                     "New Attribute".equals(def.getName()) &&
                     def.getFieldType() == ProductFieldType.TEXT
             ));
         }
 
         @Test
-        @DisplayName("Should auto-calculate sortOrder when not provided")
-        void addAttribute_AutoCalculatesSortOrder() {
+        @DisplayName("Should generate code from name")
+        void addAttribute_GeneratesCodeFromName() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "auto_sort")).thenReturn(false);
-            when(attributeDefinitionRepository.findMaxSortOrderByProductTypeId(1L)).thenReturn(10);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
             when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> inv.getArgument(0));
 
             // When
-            productTypeService.addAttribute(1L, "auto_sort", "Auto Sort", ProductFieldType.TEXT,
-                    null, null, null, null);
+            productTypeService.addAttribute(1L, "Auto Sort", ProductFieldType.TEXT);
 
             // Then
             verify(attributeDefinitionRepository).save(argThat(def ->
-                    def.getSortOrder() == 11 // max + 1
+                    "Auto Sort".equals(def.getName()) &&
+                    def.getCode() != null &&
+                    !def.getCode().isEmpty()
             ));
         }
 
         @Test
-        @DisplayName("Should use explicit sortOrder when provided")
-        void addAttribute_WithExplicitSortOrder() {
+        @DisplayName("Should create attribute with correct field type")
+        void addAttribute_WithFieldType() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "explicit_sort")).thenReturn(false);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
             when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> inv.getArgument(0));
 
             // When
-            productTypeService.addAttribute(1L, "explicit_sort", "Explicit Sort", ProductFieldType.NUMBER,
-                    null, null, 50, null);
+            productTypeService.addAttribute(1L, "Explicit Sort", ProductFieldType.NUMBER);
 
             // Then
             verify(attributeDefinitionRepository).save(argThat(def ->
-                    def.getSortOrder() == 50
+                    "Explicit Sort".equals(def.getName()) &&
+                    def.getFieldType() == ProductFieldType.NUMBER
             ));
         }
 
         @Test
-        @DisplayName("Should throw exception when attribute code is duplicate")
+        @DisplayName("Should throw exception when generated code is duplicate")
         void addAttribute_ThrowsException_WhenCodeDuplicate() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "existing_attr")).thenReturn(true);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(true);
 
             // When & Then
             assertThatThrownBy(() -> productTypeService.addAttribute(
-                    1L, "existing_attr", "Name", ProductFieldType.TEXT, null, null, null, null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("already exists");
+                    1L, "Name", ProductFieldType.TEXT))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -372,29 +368,9 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productTypeService.addAttribute(
-                    999L, "attr", "Name", ProductFieldType.TEXT, null, null, null, null))
+                    999L, "Name", ProductFieldType.TEXT))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Product type not found");
-        }
-
-        @Test
-        @DisplayName("Should set default values for isRequired and isSearchable")
-        void addAttribute_SetsDefaultValues() {
-            // Given
-            when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, "default_vals")).thenReturn(false);
-            when(attributeDefinitionRepository.findMaxSortOrderByProductTypeId(1L)).thenReturn(0);
-            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> inv.getArgument(0));
-
-            // When
-            productTypeService.addAttribute(1L, "default_vals", "Defaults", ProductFieldType.TEXT,
-                    null, null, null, null);
-
-            // Then
-            verify(attributeDefinitionRepository).save(argThat(def ->
-                    def.getIsRequired() == false &&
-                    def.getIsSearchable() == false
-            ));
         }
     }
 
@@ -414,16 +390,13 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // When
             ProductAttributeDefinition result = productTypeService.updateAttribute(
-                    1L, 1L, "Updated Name", ProductFieldType.NUMBER, true, true, 10, "{}");
+                    1L, 1L, "Updated Name", ProductFieldType.NUMBER);
 
             // Then
             assertThat(result).isNotNull();
             verify(attributeDefinitionRepository).save(argThat(def ->
                     "Updated Name".equals(def.getName()) &&
-                    def.getFieldType() == ProductFieldType.NUMBER &&
-                    def.getIsRequired() == true &&
-                    def.getIsSearchable() == true &&
-                    def.getSortOrder() == 10
+                    def.getFieldType() == ProductFieldType.NUMBER
             ));
         }
 
@@ -435,7 +408,7 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productTypeService.updateAttribute(
-                    1L, 999L, "Name", ProductFieldType.TEXT, null, null, null, null))
+                    1L, 999L, "Name", ProductFieldType.TEXT))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Attribute not found");
         }
@@ -454,7 +427,7 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productTypeService.updateAttribute(
-                    1L, 1L, "Name", ProductFieldType.TEXT, null, null, null, null))
+                    1L, 1L, "Name", ProductFieldType.TEXT))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("does not belong");
         }
@@ -659,11 +632,11 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void getAttributes_ReturnsOrderedAttributes() {
             // Given
             ProductAttributeDefinition attr1 = ProductAttributeDefinitionTestDataBuilder.anAttributeDefinition()
-                    .withId(1L).withCode("attr1").withSortOrder(1).build();
+                    .withId(1L).withCode("attr1").build();
             ProductAttributeDefinition attr2 = ProductAttributeDefinitionTestDataBuilder.anAttributeDefinition()
-                    .withId(2L).withCode("attr2").withSortOrder(2).build();
+                    .withId(2L).withCode("attr2").build();
 
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L))
+            when(attributeDefinitionRepository.findByProductTypeId(1L))
                     .thenReturn(List.of(attr1, attr2));
 
             // When
@@ -671,7 +644,6 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getSortOrder()).isLessThan(result.get(1).getSortOrder());
         }
     }
 }

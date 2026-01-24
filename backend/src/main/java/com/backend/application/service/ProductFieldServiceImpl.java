@@ -19,9 +19,7 @@ import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ProductFieldDefinitionRepository;
 import com.backend.domain.repository.ProductFieldValueRepository;
 import com.backend.infrastructure.tenant.TenantContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.backend.shared.util.SlugGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,23 +31,12 @@ public class ProductFieldServiceImpl implements ProductFieldService {
 
   private final ProductFieldDefinitionRepository definitionRepository;
   private final ProductFieldValueRepository valueRepository;
-  private final ObjectMapper objectMapper;
 
   @Override
   @Transactional(readOnly = true)
   public List<ProductFieldDefinitionResponse> findAllDefinitions() {
     TenantContext.validateActive();
-    return definitionRepository.findAllByOrderBySortOrderAsc()
-        .stream()
-        .map(this::toResponse)
-        .toList();
-  }
-
-  @Override
-  @Transactional(readOnly = true)
-  public List<ProductFieldDefinitionResponse> findVisibleDefinitions() {
-    TenantContext.validateActive();
-    return definitionRepository.findByIsVisibleInListTrueOrderBySortOrderAsc()
+    return definitionRepository.findAll()
         .stream()
         .map(this::toResponse)
         .toList();
@@ -69,26 +56,22 @@ public class ProductFieldServiceImpl implements ProductFieldService {
   public ProductFieldDefinitionResponse createDefinition(CreateProductFieldRequest request) {
     TenantContext.validateActive();
 
-    // Check for duplicate code
-    if (definitionRepository.existsByCode(request.code())) {
-      throw new BusinessRuleViolationException("Field with code '" + request.code() + "' already exists");
-    }
-
     // Check for duplicate uid
     if (definitionRepository.existsByUid(request.uid())) {
       throw new BusinessRuleViolationException("Field with uid '" + request.uid() + "' already exists");
     }
 
+    // Generate code from name
+    String code = SlugGenerator.generateUniqueCode(
+        SlugGenerator.generateCodeFromName(request.name()),
+        definitionRepository::existsByCode
+    );
+
     ProductFieldDefinition definition = ProductFieldDefinition.builder()
         .uid(request.uid())
-        .code(request.code())
+        .code(code)
         .name(request.name())
         .fieldType(request.fieldType())
-        .isRequired(request.isRequired())
-        .isVisibleInList(request.isVisibleInList())
-        .sortOrder(request.sortOrder())
-        .defaultValue(request.defaultValue())
-        .validationConfig(serializeValidationConfig(request.validationConfig()))
         .build();
 
     definition = definitionRepository.save(definition);
@@ -109,21 +92,6 @@ public class ProductFieldServiceImpl implements ProductFieldService {
     }
     if (request.fieldType() != null) {
       definition.setFieldType(request.fieldType());
-    }
-    if (request.isRequired() != null) {
-      definition.setIsRequired(request.isRequired());
-    }
-    if (request.isVisibleInList() != null) {
-      definition.setIsVisibleInList(request.isVisibleInList());
-    }
-    if (request.sortOrder() != null) {
-      definition.setSortOrder(request.sortOrder());
-    }
-    if (request.defaultValue() != null) {
-      definition.setDefaultValue(request.defaultValue());
-    }
-    if (request.validationConfig() != null) {
-      definition.setValidationConfig(serializeValidationConfig(request.validationConfig()));
     }
 
     definition = definitionRepository.save(definition);
@@ -231,32 +199,6 @@ public class ProductFieldServiceImpl implements ProductFieldService {
   // ========================
 
   private ProductFieldDefinitionResponse toResponse(ProductFieldDefinition entity) {
-    Map<String, Object> validationConfig = parseValidationConfig(entity.getValidationConfig());
-    return ProductFieldDefinitionResponse.from(entity, validationConfig);
-  }
-
-  private String serializeValidationConfig(Map<String, Object> config) {
-    if (config == null || config.isEmpty()) {
-      return null;
-    }
-    try {
-      return objectMapper.writeValueAsString(config);
-    } catch (JsonProcessingException e) {
-      log.error("Failed to serialize validation config", e);
-      return null;
-    }
-  }
-
-  private Map<String, Object> parseValidationConfig(String json) {
-    if (json == null || json.isBlank()) {
-      return null;
-    }
-    try {
-      return objectMapper.readValue(json, new TypeReference<>() {
-      });
-    } catch (JsonProcessingException e) {
-      log.error("Failed to parse validation config", e);
-      return null;
-    }
+    return ProductFieldDefinitionResponse.from(entity, null);
   }
 }

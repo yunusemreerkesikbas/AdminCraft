@@ -159,7 +159,7 @@ class ProductServiceImplTest extends BaseServiceTest {
             });
             when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
             when(mediaRepository.findById(anyLong())).thenReturn(Optional.of(new Media()));
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
@@ -189,7 +189,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(2L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(productRepository.findByIdComposite(2L)).thenReturn(Optional.of(testProduct));
 
             // When
@@ -217,7 +217,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(1L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
@@ -241,7 +241,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(1L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
@@ -268,7 +268,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(1L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(productRepository.findByIdComposite(1L)).thenReturn(Optional.of(testProduct));
 
             // When
@@ -387,7 +387,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(1L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When & Then
@@ -413,7 +413,7 @@ class ProductServiceImplTest extends BaseServiceTest {
                 p.setId(1L);
                 return p;
             });
-            when(attributeDefinitionRepository.findByProductTypeIdOrderBySortOrder(1L)).thenReturn(List.of());
+            when(attributeDefinitionRepository.findByProductTypeId(1L)).thenReturn(List.of());
             when(mediaRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When & Then
