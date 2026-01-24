@@ -11,7 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
@@ -58,7 +57,6 @@ export interface ProductTypeEditDialogData {
         TranslocoModule,
         MatButtonModule,
         MatIconModule,
-        MatTableModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
         SpaDialogHeaderComponent,
@@ -83,8 +81,6 @@ export class ProductTypeEditDialogComponent
 
     attributes = signal<AttributeDefinition[]>([]);
     isLoadingAttributes = signal(false);
-
-    displayedColumns = ['code', 'name', 'fieldType', 'required', 'searchable', 'actions'];
 
     tabs = [
         { id: 'general', label: 'admin.common.general', icon: 'settings' },

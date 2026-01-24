@@ -104,6 +104,7 @@ export const langTR = {
             close: 'Kapat',
             select: 'Seç',
             selectComponent: 'Bileşen Seç',
+            selected: 'seçildi',
             status: {
                 active: 'Aktif',
                 inactive: 'Pasif',
@@ -152,6 +153,7 @@ export const langTR = {
                 reset: 'Sıfırla',
                 confirm: 'Onayla',
                 select: 'Seç',
+                remove: 'Kaldır',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',
@@ -1249,6 +1251,8 @@ export const langTR = {
                 tabs: {
                     attributes: 'Özellikler',
                 },
+                attributesDescription:
+                    'Bu ürün tipi için özellikler tanımlayın. Özellikler, bu tipteki tüm ürünlerde kullanılabilir.',
                 messages: {
                     createSuccess: 'Ürün tipi başarıyla oluşturuldu',
                     updateSuccess: 'Ürün tipi başarıyla güncellendi',
@@ -1305,6 +1309,8 @@ export const langTR = {
             customFields: {
                 title: 'Global Alanlar',
                 subtitle: 'Global ürün alanlarını yönetin',
+                description:
+                    'Bu ürün için tanımlanmış özel alanları buradan yönetebilirsiniz.',
                 list: 'Alan Listesi',
                 create: 'Alan Oluştur',
                 edit: 'Alan Düzenle',

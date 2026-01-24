@@ -109,6 +109,7 @@ export const langEN = {
             close: 'Close',
             clearAll: 'Clear All',
             selectComponent: 'Select Component',
+            selected: 'selected',
             status: {
                 active: 'Active',
                 inactive: 'Inactive',
@@ -157,6 +158,7 @@ export const langEN = {
                 reset: 'Reset',
                 confirm: 'Confirm',
                 select: 'Select',
+                remove: 'Remove',
             },
             messages: {
                 operationSuccess: 'Operation successful',
@@ -1252,6 +1254,8 @@ export const langEN = {
                 tabs: {
                     attributes: 'Attributes',
                 },
+                attributesDescription:
+                    'Define attributes for this product type. Attributes will be available for all products of this type.',
                 messages: {
                     createSuccess: 'Product type successfully created',
                     updateSuccess: 'Product type successfully updated',
@@ -1308,8 +1312,10 @@ export const langEN = {
                 },
             },
             customFields: {
-                title: 'Global Fields',
+                title: 'Custom Fields',
                 subtitle: 'Manage global product fields',
+                description:
+                    'Manage custom fields defined for this product here.',
                 list: 'Field List',
                 create: 'Create Field',
                 edit: 'Edit Field',
