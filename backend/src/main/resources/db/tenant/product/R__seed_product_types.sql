@@ -11,22 +11,22 @@ INSERT INTO product_types (id, uuid, uid, code, name, category) VALUES
 ON DUPLICATE KEY UPDATE name = VALUES(name), category = VALUES(category);
 
 -- General Product Type Attributes
-INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type, is_required, is_searchable, sort_order) VALUES
-(10000, UUID(), 'attr_general_brand', 10000, 'brand', 'Brand', 'TEXT', FALSE, TRUE, 1),
-(10001, UUID(), 'attr_general_description_long', 10000, 'description_long', 'Long Description', 'RICHTEXT', FALSE, FALSE, 2)
+INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type) VALUES
+(10000, UUID(), 'attr_general_brand', 10000, 'brand', 'Brand', 'TEXT'),
+(10001, UUID(), 'attr_general_description_long', 10000, 'description_long', 'Long Description', 'RICHTEXT')
 ON DUPLICATE KEY UPDATE name = VALUES(name), field_type = VALUES(field_type);
 
 -- Electronics Product Type Attributes
-INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type, is_required, is_searchable, sort_order) VALUES
-(10010, UUID(), 'attr_electronics_brand', 10001, 'brand', 'Brand', 'TEXT', TRUE, TRUE, 1),
-(10011, UUID(), 'attr_electronics_model', 10001, 'model', 'Model', 'TEXT', TRUE, TRUE, 2),
-(10012, UUID(), 'attr_electronics_warranty', 10001, 'warranty_months', 'Warranty (months)', 'NUMBER', FALSE, FALSE, 3),
-(10013, UUID(), 'attr_electronics_specs', 10001, 'specifications', 'Specifications', 'RICHTEXT', FALSE, FALSE, 4)
+INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type) VALUES
+(10010, UUID(), 'attr_electronics_brand', 10001, 'brand', 'Brand', 'TEXT'),
+(10011, UUID(), 'attr_electronics_model', 10001, 'model', 'Model', 'TEXT'),
+(10012, UUID(), 'attr_electronics_warranty', 10001, 'warranty_months', 'Warranty (months)', 'NUMBER'),
+(10013, UUID(), 'attr_electronics_specs', 10001, 'specifications', 'Specifications', 'RICHTEXT')
 ON DUPLICATE KEY UPDATE name = VALUES(name), field_type = VALUES(field_type);
 
 -- Clothing Product Type Attributes
-INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type, is_required, is_searchable, sort_order) VALUES
-(10020, UUID(), 'attr_clothing_brand', 10002, 'brand', 'Brand', 'TEXT', TRUE, TRUE, 1),
-(10021, UUID(), 'attr_clothing_material', 10002, 'material', 'Material', 'TEXT', FALSE, TRUE, 2),
-(10022, UUID(), 'attr_clothing_care', 10002, 'care_instructions', 'Care Instructions', 'RICHTEXT', FALSE, FALSE, 3)
+INSERT INTO product_attribute_definitions (id, uuid, uid, product_type_id, code, name, field_type) VALUES
+(10020, UUID(), 'attr_clothing_brand', 10002, 'brand', 'Brand', 'TEXT'),
+(10021, UUID(), 'attr_clothing_material', 10002, 'material', 'Material', 'TEXT'),
+(10022, UUID(), 'attr_clothing_care', 10002, 'care_instructions', 'Care Instructions', 'RICHTEXT')
 ON DUPLICATE KEY UPDATE name = VALUES(name), field_type = VALUES(field_type);

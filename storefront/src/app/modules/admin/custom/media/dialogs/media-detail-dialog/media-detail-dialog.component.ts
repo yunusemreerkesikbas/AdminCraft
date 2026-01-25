@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+    signal,
+} from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,7 +16,11 @@ import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { FuseConfirmationService } from '@fuse/services/confirmation/confirmation.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { MediaService } from '@media/media.service';
-import { MediaDetailDialogData, MediaDetailResponse, MediaStatus } from '@media/media.types';
+import {
+    MediaDetailDialogData,
+    MediaDetailResponse,
+    MediaStatus,
+} from '@media/media.types';
 import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
@@ -46,13 +56,15 @@ import { FormatGeneratorComponent } from '../../components/format-generator/form
         SpaTextareaComponent,
         SpaToggleComponent,
         FormatGeneratorComponent,
-        FocalPointPickerComponent
+        FocalPointPickerComponent,
     ],
     templateUrl: './media-detail-dialog.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, MediaDetailDialogData> {
-
+export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
+    boolean,
+    MediaDetailDialogData
+> {
     protected mediaService = inject(MediaService);
     #tenantContext = inject(TenantContextService);
     #transloco = inject(TranslocoService);
@@ -63,7 +75,9 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
     #mediaDetails = signal<MediaDetailResponse | null>(null);
     #isLoadingDetails = signal(true);
     protected media = computed(() => this.#mediaDetails() ?? this.data?.media);
-    protected containerVariants = computed(() => this.#mediaDetails()?.container?.variants ?? []);
+    protected containerVariants = computed(
+        () => this.#mediaDetails()?.container?.variants ?? []
+    );
     protected isLoadingDetails = computed(() => this.#isLoadingDetails());
     protected isProcessing = computed(() => {
         const details = this.#mediaDetails();
@@ -80,7 +94,7 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         const tenant = this.#tenantContext.tenant();
         if (tenant?.supportedLanguages) {
             this.supportedLanguages.set(tenant.supportedLanguages);
-            this.languages = tenant.supportedLanguages.map(l => l.code);
+            this.languages = tenant.supportedLanguages.map((l) => l.code);
         } else {
             this.languages = ['en'];
         }
@@ -89,16 +103,28 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
 
     protected buildGeneralForm(): FormGroup {
         return this.fb.group({
-            originalName: [this.data?.media?.originalName || '', Validators.required],
-            isPublic: [this.data?.media?.isPublic ?? true]
+            originalName: [
+                this.data?.media?.originalName || '',
+                Validators.required,
+            ],
+            isPublic: [this.data?.media?.isPublic ?? true],
         });
     }
 
     protected buildI18nForm(lang: string): FormGroup {
         return this.fb.group({
-            altText: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_ALT_TEXT_MAX)],
-            title: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_TITLE_MAX)],
-            description: ['', Validators.maxLength(VALIDATION_LIMITS.MEDIA_DESCRIPTION_MAX)]
+            altText: [
+                '',
+                Validators.maxLength(VALIDATION_LIMITS.MEDIA_ALT_TEXT_MAX),
+            ],
+            title: [
+                '',
+                Validators.maxLength(VALIDATION_LIMITS.MEDIA_TITLE_MAX),
+            ],
+            description: [
+                '',
+                Validators.maxLength(VALIDATION_LIMITS.MEDIA_DESCRIPTION_MAX),
+            ],
         });
     }
 
@@ -116,32 +142,37 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         }
 
         this.#isLoadingDetails.set(true);
-        this.mediaService.getDetails(mediaId).pipe(take(1)).subscribe({
-            next: (details) => {
-                this.#mediaDetails.set(details);
-                this.#isLoadingDetails.set(false);
-                this.generalForm.patchValue({
-                    originalName: details.originalName,
-                    isPublic: details.isPublic
-                });
-
-                if (details.translations) {
-                    Object.entries(details.translations).forEach(([lang, i18n]) => {
-                        if (this.i18nForms[lang] && i18n) {
-                            this.i18nForms[lang].patchValue({
-                                altText: i18n.altText || '',
-                                title: i18n.title || '',
-                                description: i18n.description || ''
-                            });
-                        }
+        this.mediaService
+            .getDetails(mediaId)
+            .pipe(take(1))
+            .subscribe({
+                next: (details) => {
+                    this.#mediaDetails.set(details);
+                    this.#isLoadingDetails.set(false);
+                    this.generalForm.patchValue({
+                        originalName: details.originalName,
+                        isPublic: details.isPublic,
                     });
-                }
-            },
-            error: (err) => {
-                this.#isLoadingDetails.set(false);
-                this.onError(err);
-            }
-        });
+
+                    if (details.translations) {
+                        Object.entries(details.translations).forEach(
+                            ([lang, i18n]) => {
+                                if (this.i18nForms[lang] && i18n) {
+                                    this.i18nForms[lang].patchValue({
+                                        altText: i18n.altText || '',
+                                        title: i18n.title || '',
+                                        description: i18n.description || '',
+                                    });
+                                }
+                            }
+                        );
+                    }
+                },
+                error: (err) => {
+                    this.#isLoadingDetails.set(false);
+                    this.onError(err);
+                },
+            });
     }
 
     #loadLinkedComponents(): void {
@@ -149,24 +180,34 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         if (!mediaId) return;
 
         this.isLoadingLinkedComponentsSig.set(true);
-        this.mediaService.getLinkedComponents(mediaId).pipe(take(1)).subscribe({
-            next: (ids) => {
-                if (ids.length === 0) {
-                    this.linkedComponentsSig.set([]);
-                    this.isLoadingLinkedComponentsSig.set(false);
-                    return;
-                }
-                
-                forkJoin(ids.map(id => this.#componentService.getComponentById(id))).pipe(take(1)).subscribe({
-                    next: (components) => {
-                        this.linkedComponentsSig.set(components);
+        this.mediaService
+            .getLinkedComponents(mediaId)
+            .pipe(take(1))
+            .subscribe({
+                next: (ids) => {
+                    if (ids.length === 0) {
+                        this.linkedComponentsSig.set([]);
                         this.isLoadingLinkedComponentsSig.set(false);
-                    },
-                    error: () => this.isLoadingLinkedComponentsSig.set(false)
-                });
-            },
-            error: () => this.isLoadingLinkedComponentsSig.set(false)
-        });
+                        return;
+                    }
+
+                    forkJoin(
+                        ids.map((id) =>
+                            this.#componentService.getComponentById(id)
+                        )
+                    )
+                        .pipe(take(1))
+                        .subscribe({
+                            next: (components) => {
+                                this.linkedComponentsSig.set(components);
+                                this.isLoadingLinkedComponentsSig.set(false);
+                            },
+                            error: () =>
+                                this.isLoadingLinkedComponentsSig.set(false),
+                        });
+                },
+                error: () => this.isLoadingLinkedComponentsSig.set(false),
+            });
     }
 
     reloadDetails(): void {
@@ -179,11 +220,11 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
             data: {
                 component: component,
                 mode: 'edit',
-                languages: this.supportedLanguages().map(l => l.code)
+                languages: this.supportedLanguages().map((l) => l.code),
             },
             disableClose: true,
             autoFocus: false,
-            maxHeight: '90vh'
+            maxHeight: '90vh',
         });
     }
 
@@ -197,32 +238,35 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
             icon: {
                 show: true,
                 name: 'heroicons_outline:exclamation-triangle',
-                color: 'warn'
+                color: 'warn',
             },
             actions: {
                 confirm: {
                     show: true,
                     label: 'admin.common.actions.delete',
-                    color: 'warn'
+                    color: 'warn',
                 },
                 cancel: {
                     show: true,
-                    label: 'admin.common.actions.cancel'
-                }
+                    label: 'admin.common.actions.cancel',
+                },
             },
-            dismissible: true
+            dismissible: true,
         });
 
         confirmation.afterClosed().subscribe((result) => {
             if (result === 'confirmed') {
-                this.mediaService.deleteVariant(mediaId, variantId)
+                this.mediaService
+                    .deleteVariant(mediaId, variantId)
                     .pipe(take(1))
                     .subscribe({
                         next: () => {
-                            this.#notificationService.success('media.variant.delete.success');
+                            this.#notificationService.success(
+                                'media.variant.delete.success'
+                            );
                             this.reloadDetails();
                         },
-                        error: (err) => this.onError(err)
+                        error: (err) => this.onError(err),
                     });
             }
         });
@@ -237,24 +281,30 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<boolean, 
         const generalData = this.generalForm.value;
         const translations: Record<string, any> = {};
 
-        this.languages.forEach(lang => {
+        this.languages.forEach((lang) => {
             if (this.formHasContent(this.i18nForms[lang])) {
                 translations[lang] = this.i18nForms[lang].value;
             }
         });
 
-        this.mediaService.updateComposite(mediaId, {
-            originalName: generalData.originalName,
-            isPublic: generalData.isPublic,
-            translations: translations
-        }).pipe(take(1)).subscribe({
-            next: () => {
-                this.#transloco.selectTranslate('admin.media.messages.updateSuccess').pipe(take(1)).subscribe(msg => {
-                   this.#notificationService.success(msg);
-                });
-                this.close(true);
-            },
-            error: (err) => this.onError(err)
-        });
+        this.mediaService
+            .updateComposite(mediaId, {
+                originalName: generalData.originalName,
+                isPublic: generalData.isPublic,
+                translations: translations,
+            })
+            .pipe(take(1))
+            .subscribe({
+                next: () => {
+                    this.#transloco
+                        .selectTranslate('admin.media.messages.updateSuccess')
+                        .pipe(take(1))
+                        .subscribe((msg) => {
+                            this.#notificationService.success(msg);
+                        });
+                    this.close(true);
+                },
+                error: (err) => this.onError(err),
+            });
     }
 }

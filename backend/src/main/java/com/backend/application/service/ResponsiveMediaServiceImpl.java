@@ -129,7 +129,49 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
     ResponsiveMediaSet saved = repository.save(entity);
     log.info("Updated responsive media set: {}", id);
 
+    // Update component links for all components using this responsive set
+    updateMediaLinksForResponsiveSet(saved);
+
     return ResponsiveMediaResponse.from(saved);
+  }
+
+  private void updateMediaLinksForResponsiveSet(ResponsiveMediaSet responsiveSet) {
+    // Get all component IDs that use this responsive set
+    List<Long> componentIds = linkRepository.findByResponsiveSetId(responsiveSet.getId())
+        .stream()
+        .map(ComponentMediaLink::getComponentId)
+        .distinct()
+        .toList();
+
+    if (componentIds.isEmpty()) {
+      log.debug("No components linked to responsive set {}", responsiveSet.getId());
+      return;
+    }
+
+    // Delete existing links and recreate for all components using this responsive
+    // set
+    for (Long componentId : componentIds) {
+      linkRepository.deleteByComponentId(componentId);
+
+      // Recreate links with updated media references
+      if (responsiveSet.getDesktopMedia() != null) {
+        linkRepository.save(ComponentMediaLink.forComponentResponsive(
+            componentId,
+            responsiveSet.getDesktopMedia().getId(),
+            responsiveSet.getId(),
+            true));
+      }
+      if (responsiveSet.getMobileMedia() != null) {
+        linkRepository.save(ComponentMediaLink.forComponentResponsive(
+            componentId,
+            responsiveSet.getMobileMedia().getId(),
+            responsiveSet.getId(),
+            false));
+      }
+    }
+
+    log.info("Updated media links for {} components using responsive set {}",
+        componentIds.size(), responsiveSet.getId());
   }
 
   @Override

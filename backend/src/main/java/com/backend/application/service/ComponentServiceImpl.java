@@ -27,6 +27,7 @@ import com.backend.application.query.ComponentQueries.GetComponentsByTypeIdQuery
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
+import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
@@ -317,8 +318,28 @@ public class ComponentServiceImpl implements ComponentService {
                     .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", responsiveMediaId));
             component.setResponsiveMedia(responsiveMedia);
             log.info("Assigned responsive media {} to component {}", responsiveMediaId, componentId);
+
+            // Update Media Links
+            componentMediaLinkRepository.deleteByComponentId(componentId);
+
+            if (responsiveMedia.getDesktopMedia() != null) {
+                componentMediaLinkRepository.save(ComponentMediaLink.forComponentResponsive(
+                        componentId,
+                        responsiveMedia.getDesktopMedia().getId(),
+                        responsiveMedia.getId(),
+                        true));
+            }
+            if (responsiveMedia.getMobileMedia() != null) {
+                componentMediaLinkRepository.save(ComponentMediaLink.forComponentResponsive(
+                        componentId,
+                        responsiveMedia.getMobileMedia().getId(),
+                        responsiveMedia.getId(),
+                        false));
+            }
+
         } else {
             component.setResponsiveMedia(null);
+            componentMediaLinkRepository.deleteByComponentId(componentId);
             log.info("Removed responsive media from component {}", componentId);
         }
 

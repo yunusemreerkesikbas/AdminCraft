@@ -45,8 +45,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
                        (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
                 FROM Component c
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
-            """,
-            countQuery = """
+            """, countQuery = """
                 SELECT COUNT(c)
                 FROM Component c
             """)
@@ -59,8 +58,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
                 WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))
                    OR LOWER(c.uid) LIKE LOWER(CONCAT('%', :query, '%'))
-            """,
-            countQuery = """
+            """, countQuery = """
                 SELECT COUNT(c)
                 FROM Component c
                 WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))
@@ -74,4 +72,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 
     List<Component> findByIdIn(List<Long> ids);
+
+    @Query("SELECT c FROM Component c WHERE c.responsiveMedia.id = :responsiveMediaId")
+    List<Component> findByResponsiveMediaId(@Param("responsiveMediaId") Long responsiveMediaId);
 }

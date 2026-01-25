@@ -131,6 +131,25 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
             });
     }
 
+    asResponsive(val: any): ResponsiveMediaResponse | null {
+        // Naive check: object with desktop/mobile props (even if null)
+        if (
+            !Array.isArray(val) &&
+            (val?.desktopMedia !== undefined || val?.mobileMedia !== undefined)
+        ) {
+            return val;
+        }
+        return null;
+    }
+
+    addResponsiveItem(): void {
+        if (this.isDisabled() || !this.multiple || !this.responsive) return;
+        const current = (this.value() as ResponsiveMediaResponse[]) || [];
+        // Add empty placeholder
+        const newItem: any = { desktopMedia: null, mobileMedia: null };
+        this.#updateValue([...current, newItem]);
+    }
+
     #handlePickerResult(
         result: any,
         responsiveInfo?: { index?: number; type: 'desktop' | 'mobile' }
@@ -148,14 +167,14 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
                 if (responsiveInfo && responsiveInfo.index !== undefined) {
                     const newList = [...currentList];
                     const item = { ...newList[responsiveInfo.index] };
-                    if (!item.desktop && !item.mobile) {
+                    if (!item.desktopMedia && !item.mobileMedia) {
                         // Initialization case if empty
                     }
 
                     if (responsiveInfo.type === 'desktop') {
-                        item.desktop = selectedMedia;
+                        item.desktopMedia = selectedMedia;
                     } else {
-                        item.mobile = selectedMedia;
+                        item.mobileMedia = selectedMedia;
                     }
                     newList[responsiveInfo.index] = item;
                     this.#updateValue(newList);
@@ -167,17 +186,17 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
                 // Single Responsive Item
                 const currentItem =
                     (this.value() as ResponsiveMediaResponse) || {
-                        desktop: null,
-                        mobile: null,
+                        desktopMedia: null,
+                        mobileMedia: null,
                     };
                 const newItem = { ...currentItem };
                 if (responsiveInfo?.type === 'desktop') {
-                    newItem.desktop = selectedMedia;
+                    newItem.desktopMedia = selectedMedia;
                 } else if (responsiveInfo?.type === 'mobile') {
-                    newItem.mobile = selectedMedia;
+                    newItem.mobileMedia = selectedMedia;
                 } else {
                     // Default to desktop if unspecified?
-                    newItem.desktop = selectedMedia;
+                    newItem.desktopMedia = selectedMedia;
                 }
                 this.#updateValue(newItem);
             }
@@ -194,20 +213,11 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
             this.#updateValue(selected);
         }
     }
-
     #updateValue(val: any): void {
         this.value.set(val);
         this.onChange(val);
         this.onTouched();
         this.#cdr.markForCheck();
-    }
-
-    addResponsiveItem(): void {
-        if (this.isDisabled() || !this.multiple || !this.responsive) return;
-        const current = (this.value() as ResponsiveMediaResponse[]) || [];
-        // Add empty placeholder
-        const newItem: any = { desktop: null, mobile: null };
-        this.#updateValue([...current, newItem]);
     }
 
     remove(): void {
@@ -247,16 +257,5 @@ export class SpaMediaPickerComponent implements ControlValueAccessor {
         return !Array.isArray(val) && (val?.fileType || val?.mimeType)
             ? val
             : null;
-    }
-
-    asResponsive(val: any): ResponsiveMediaResponse | null {
-        // Naive check: object with desktop/mobile props (even if null)
-        if (
-            !Array.isArray(val) &&
-            (val?.desktop !== undefined || val?.mobile !== undefined)
-        ) {
-            return val;
-        }
-        return null;
     }
 }
