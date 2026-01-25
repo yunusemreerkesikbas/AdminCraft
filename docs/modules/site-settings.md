@@ -1,5 +1,7 @@
 # Site Settings
 
+> **Note**: Site Settings functionality has been integrated into the [Site Dashboard](site-dashboard.md). The standalone settings module is maintained for backward compatibility but new features should be added to Site Dashboard.
+
 ## Purpose
 
 Site Settings stores tenant-specific configuration used by both the admin panel and storefront.

@@ -245,4 +245,9 @@ public class MediaRepositoryImpl implements MediaRepository {
         Long sum = jpaRepository.sumFileSize();
         return sum != null ? sum : 0L;
     }
+
+    @Override
+    public int countByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
+        return jpaRepository.countByCreatedAtBetween(start, end);
+    }
 }

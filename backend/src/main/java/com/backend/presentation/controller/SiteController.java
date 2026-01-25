@@ -1,10 +1,15 @@
 package com.backend.presentation.controller;
 
 import com.backend.application.service.SiteService;
+import com.backend.application.service.SiteOverviewService;
+import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.UpdateSiteRequest;
+import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.presentation.dto.response.SiteResponse;
+import com.backend.presentation.dto.response.SiteOverviewResponse;
+import com.backend.presentation.dto.response.SiteTechnicalResponse;
 import com.backend.shared.common.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -29,6 +34,8 @@ import java.util.Optional;
 public class SiteController {
 
     private final SiteService siteService;
+    private final SiteOverviewService siteOverviewService;
+    private final SiteTechnicalService siteTechnicalService;
     private final MessageSource messageSource;
 
     @PostMapping
@@ -255,6 +262,87 @@ public class SiteController {
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
+        }
+    }
+
+    // ========== Site Dashboard Endpoints ==========
+
+    /**
+     * Get site overview for dashboard.
+     * Includes status, stats, recent activity, and available actions.
+     */
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<SiteOverviewResponse>> getOverview(
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SiteOverviewResponse response = siteOverviewService.getOverview();
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception ex) {
+            log.error("Error getting site overview: {}", ex.getMessage());
+            String message = messageSource.getMessage("site.overview.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    /**
+     * Get technical settings for the site.
+     * Includes domain info, robots.txt, verification codes, and scripts.
+     */
+    @GetMapping("/technical")
+    public ResponseEntity<ApiResponse<SiteTechnicalResponse>> getTechnicalSettings(
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SiteTechnicalResponse response = siteTechnicalService.getTechnicalSettings();
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception ex) {
+            log.error("Error getting technical settings: {}", ex.getMessage());
+            String message = messageSource.getMessage("site.technical.get.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    /**
+     * Update technical settings for the site.
+     * Only provided fields will be updated (PATCH semantics).
+     */
+    @PatchMapping("/technical")
+    public ResponseEntity<ApiResponse<SiteTechnicalResponse>> patchTechnicalSettings(
+            @Valid @RequestBody SiteTechnicalPatchRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SiteTechnicalResponse response = siteTechnicalService.patchTechnicalSettings(request);
+            String message = messageSource.getMessage("site.technical.updated.success", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, response));
+        } catch (Exception ex) {
+            log.error("Error updating technical settings: {}", ex.getMessage());
+            String message = messageSource.getMessage("site.technical.update.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    /**
+     * Get robots.txt content for the site.
+     * Public endpoint for search engine crawlers.
+     */
+    @GetMapping("/robots.txt")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<String> getRobotsTxt() {
+        try {
+            String robotsTxt = siteTechnicalService.getRobotsTxt();
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/plain")
+                    .body(robotsTxt);
+        } catch (Exception ex) {
+            log.error("Error getting robots.txt: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("User-agent: *\nAllow: /");
         }
     }
 

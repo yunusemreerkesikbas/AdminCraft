@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,5 +98,20 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     @Override
     public List<Component> findByResponsiveMediaId(Long responsiveMediaId) {
         return jpaRepository.findByResponsiveMediaId(responsiveMediaId);
+    }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
+
+    @Override
+    public long countByStatus(ComponentStatus status) {
+        return jpaRepository.countByStatus(status);
+    }
+
+    @Override
+    public int countByCreatedAtAfter(LocalDateTime date) {
+        return jpaRepository.countByCreatedAtAfter(date);
     }
 }

@@ -1,5 +1,6 @@
 package com.backend.shared.common;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -260,7 +261,8 @@ public class GlobalExceptionHandler {
     // Database Constraint Exceptions
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        log.error("Data integrity violation: ", ex); // Log full stack trace
+        String correlationId = MDC.get("correlationId");
+        log.error("[{}] Data integrity violation: ", correlationId, ex); // Log full stack trace
 
         String userMessage;
         String exceptionMessage = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
@@ -305,6 +307,15 @@ public class GlobalExceptionHandler {
         String message = getMessage("product.field.max.limit");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SQLException.class)
+    public ResponseEntity<ApiResponse<?>> handleSQLException(SQLException ex) {
+        String correlationId = MDC.get("correlationId");
+        log.error("[{}] Database error: ", correlationId, ex);
+        String message = getMessage("error.database");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)

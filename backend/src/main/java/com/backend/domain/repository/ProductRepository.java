@@ -1,12 +1,14 @@
 package com.backend.domain.repository;
 
-import com.backend.domain.entity.Product;
-import com.backend.domain.enums.ProductStatus;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.Product;
+import com.backend.domain.enums.ProductStatus;
 
 public interface ProductRepository {
 
@@ -32,7 +34,8 @@ public interface ProductRepository {
 
     Page<Product> searchPaged(String query, Pageable pageable);
 
-    Page<Product> searchWithFilters(String query, Long productTypeId, Long categoryId, ProductStatus status, Pageable pageable);
+    Page<Product> searchWithFilters(String query, Long productTypeId, Long categoryId, ProductStatus status,
+            Pageable pageable);
 
     Page<Product> findPublishedByCategoryId(Long categoryId, Pageable pageable);
 
@@ -59,4 +62,10 @@ public interface ProductRepository {
     long countByProductTypeId(Long productTypeId);
 
     long countByCategoryId(Long categoryId);
+
+    long count();
+
+    long countByStatus(ProductStatus status);
+
+    int countByCreatedAtAfter(LocalDateTime date);
 }

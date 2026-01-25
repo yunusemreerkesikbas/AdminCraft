@@ -1,5 +1,6 @@
 package com.backend.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,8 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     boolean existsByUid(String uid);
 
     List<Page> findByUidIn(List<String> uids);
+
+    long countByStatus(PageStatus status);
+
+    int countByCreatedAtAfter(LocalDateTime date);
 }

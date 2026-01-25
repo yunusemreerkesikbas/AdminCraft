@@ -18,17 +18,22 @@ Tenant migrations:
   - `R__seed_system_user.sql`
   - `V17__navigation_nodes.sql`
   - `V18__navigation_i18n.sql`
+  - `V19__create_sites_table.sql`
+  - `V20__create_site_activity.sql` (Site Dashboard activity tracking)
+  - `V21__create_site_technical_settings.sql` (Technical settings: robots.txt, scripts)
 
 ## Admin UI
 
 Admin features built on core data typically live under:
 
 - `storefront/src/app/modules/admin/custom/users/`
-- `storefront/src/app/modules/admin/custom/sites/`
+- `storefront/src/app/modules/admin/custom/sites/` (legacy, use Site Dashboard instead)
+- `storefront/src/app/modules/admin/custom/site/` (Site Dashboard - unified site management)
 
-Navigation management is documented separately:
+Related documentation:
 
-- [`navigation.md`](navigation.md)
+- Navigation management: [`navigation.md`](navigation.md)
+- Site Dashboard (unified site management): [`site-dashboard.md`](site-dashboard.md)
 
 ## Security & tenant isolation
 
