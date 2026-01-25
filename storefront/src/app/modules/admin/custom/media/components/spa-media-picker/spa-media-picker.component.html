@@ -45,7 +45,7 @@
                                     *ngTemplateOutlet="
                                         mediaSlot;
                                         context: {
-                                            $implicit: item.desktop,
+                                            $implicit: item.desktopMedia,
                                             type: 'desktop',
                                             index: $index,
                                             label: 'Desktop',
@@ -60,7 +60,7 @@
                                     *ngTemplateOutlet="
                                         mediaSlot;
                                         context: {
-                                            $implicit: item.mobile,
+                                            $implicit: item.mobileMedia,
                                             type: 'mobile',
                                             index: $index,
                                             label: 'Mobile',
@@ -123,7 +123,8 @@
                             *ngTemplateOutlet="
                                 mediaSlot;
                                 context: {
-                                    $implicit: asResponsive(value())?.desktop,
+                                    $implicit:
+                                        asResponsive(value())?.desktopMedia,
                                     type: 'desktop',
                                     label: 'Desktop',
                                 }
@@ -135,7 +136,8 @@
                             *ngTemplateOutlet="
                                 mediaSlot;
                                 context: {
-                                    $implicit: asResponsive(value())?.mobile,
+                                    $implicit:
+                                        asResponsive(value())?.mobileMedia,
                                     type: 'mobile',
                                     label: 'Mobile',
                                 }

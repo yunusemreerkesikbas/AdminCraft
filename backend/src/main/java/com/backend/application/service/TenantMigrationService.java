@@ -1,6 +1,5 @@
 package com.backend.application.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.flywaydb.core.Flyway;
@@ -15,6 +14,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class TenantMigrationService {
+
+  /**
+   * CRITICAL: Module execution order for Flyway migrations.
+   * This order ensures that FK dependencies are satisfied:
+   * - media creates responsive_media_set before component_library references it
+   * - component_library creates components before pagebuilder references them
+   * See docs/global/migrations.md for full documentation.
+   */
+  private static final List<String> MODULE_ORDER = List.of(
+      "core", // Base tables (users, sites) - always first
+      "media", // Media assets, responsive_media_set
+      "component_library", // Components, entries (references media)
+      "pagebuilder", // Pages, slots (references components)
+      "product" // Product catalog
+  );
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -38,15 +52,11 @@ public class TenantMigrationService {
     log.info("Starting migration for tenant database: {} with modules: {}", dbName, modules);
 
     try (HikariDataSource tenantDs = createTenantDataSource(dbName)) {
-      List<String> modulesToMigrate = new ArrayList<>();
-      if (modules.contains("core")) {
-        modulesToMigrate.add("core");
-      }
-      modules.stream()
-          .filter(m -> !"core".equals(m))
-          .forEach(modulesToMigrate::add);
+      // CRITICAL: Modules must be executed in this order for FK dependencies
+      // See docs/global/migrations.md for details
+      List<String> orderedModules = getOrderedModules(modules);
 
-      for (String module : modulesToMigrate) {
+      for (String module : orderedModules) {
         String location = "classpath:db/tenant/" + module;
         String historyTable = "flyway_" + module + "_history";
 
@@ -94,5 +104,33 @@ public class TenantMigrationService {
     config.setMaximumPoolSize(2);
     config.setPoolName("MigrationPool-" + dbName);
     return new HikariDataSource(config);
+  }
+
+  /**
+   * Orders the requested modules according to MODULE_ORDER.
+   * Only includes modules that are in both the requested list and MODULE_ORDER.
+   * Modules not in MODULE_ORDER are appended at the end (for forward
+   * compatibility).
+   */
+  private List<String> getOrderedModules(List<String> requestedModules) {
+    List<String> ordered = new java.util.ArrayList<>();
+
+    // Add modules in the correct order
+    for (String module : MODULE_ORDER) {
+      if (requestedModules.contains(module)) {
+        ordered.add(module);
+      }
+    }
+
+    // Add any modules not in MODULE_ORDER (forward compatibility)
+    for (String module : requestedModules) {
+      if (!ordered.contains(module)) {
+        log.warn("Module '{}' not in MODULE_ORDER, appending at end. Consider adding to MODULE_ORDER.", module);
+        ordered.add(module);
+      }
+    }
+
+    log.debug("Ordered modules for migration: {}", ordered);
+    return ordered;
   }
 }

@@ -39,4 +39,6 @@ public interface ComponentRepository {
     List<Component> findByUidInAndStatus(List<String> uids, ComponentStatus status);
 
     List<Component> findByIdIn(List<Long> ids);
+
+    List<Component> findByResponsiveMediaId(Long responsiveMediaId);
 }

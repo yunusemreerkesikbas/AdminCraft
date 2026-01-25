@@ -227,8 +227,8 @@ export interface MediaSummary {
 export interface ResponsiveMediaResponse {
     id: number;
     uid: string;
-    desktop: MediaSummary;
-    mobile: MediaSummary;
+    desktopMedia: MediaSummary;
+    mobileMedia: MediaSummary;
     createdAt?: string;
     updatedAt?: string;
 }

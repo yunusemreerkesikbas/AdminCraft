@@ -81,14 +81,23 @@ graph LR
 
 ## Database Migrations (Flyway)
 
-- **Versioning**: Global Sequential Versioning.
-- **Rules**: `hibernate.ddl-auto=none`, `utf8mb4` encoding, No idempotent DDL.
-- **Version Bundles**:
-  - `V1-V2`: **Core** (Users, Roles, Sites)
-  - `V3`: **PageBuilder** (Pages, Categories)
-  - `V4-V5`: **ComponentLibrary** (Components, Types)
-  - `V6-V7`: **Media** Module
-  - `V8+`: Future modules.
+- **Versioning**: Global Sequential Versioning per module.
+- **Rules**: `hibernate.ddl-auto=none`, `utf8mb4` encoding.
+- **Module Execution Order** (CRITICAL - enforced for FK dependencies):
+  1. `core` → Base tables (users, sites)
+  2. `media` → Media, responsive_media_set
+  3. `component_library` → Components, entries
+  4. `pagebuilder` → Pages, slots
+  5. `product` → Product catalog
+
+### Migration Rules
+
+- ❌ **No idempotent DDL**: MySQL doesn't support `ADD COLUMN IF NOT EXISTS`
+- ❌ **No cross-module FK violations**: If Table A (module X) references Table B (module Y), migration must be in module Y
+- ✅ **Update seeds after schema changes**: When removing columns, update `R__seed_*.sql` files
+- ✅ **Test on fresh database**: Before committing, test migration on empty tenant DB
+
+> 📖 Full migration guide: [`docs/global/migrations.md`](docs/global/migrations.md)
 
 ---
 

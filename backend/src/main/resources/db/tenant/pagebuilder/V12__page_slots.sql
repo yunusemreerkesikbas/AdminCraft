@@ -41,8 +41,5 @@ CREATE TABLE IF NOT EXISTS slot_components (
     FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- SEO fields for Page entity (Idempotent via Procedure)
--- SEO fields for Page entity (Idempotent via standard SQL)
-ALTER TABLE pages ADD COLUMN IF NOT EXISTS robot_tag VARCHAR(50) DEFAULT 'INDEX_FOLLOW' COMMENT 'Meta robots directive';
-ALTER TABLE pages ADD COLUMN IF NOT EXISTS template_uid VARCHAR(50) NULL COMMENT 'Future: PageTemplate reference';
+-- SEO fields (robot_tag, template_uid) already exist in pages table from baseline migration
 

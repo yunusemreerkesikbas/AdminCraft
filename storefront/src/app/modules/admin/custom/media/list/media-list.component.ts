@@ -9,7 +9,7 @@ import {
     OnInit,
     Output,
     TemplateRef,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,7 +25,12 @@ import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.compo
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
-import { GridAction, GridActionEvent, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import {
+    GridAction,
+    GridActionEvent,
+    GridColumn,
+    SpaAdminGridComponent,
+} from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -35,7 +40,11 @@ import { MediaDetailDialogComponent } from '../dialogs/media-detail-dialog/media
 import { MediaUploadDialogComponent } from '../dialogs/media-upload-dialog/media-upload-dialog.component';
 import { MediaService } from '../media.service';
 import { MediaStore } from '../media.store';
-import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types';
+import {
+    Media,
+    MediaDetailDialogData,
+    UpdateMediaRequest,
+} from '../media.types';
 
 @Component({
     selector: 'app-media-list',
@@ -56,19 +65,23 @@ import { Media, MediaDetailDialogData, UpdateMediaRequest } from '../media.types
         SpaAdminGridComponent,
         SpaAdminPaginatorComponent,
         SpaAdminSortDropdownComponent,
-        MatSelectModule
+        MatSelectModule,
     ],
     templateUrl: './media-list.component.html',
     styles: [],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MediaListComponent extends BasePaginatedListComponent<Media, FormData, UpdateMediaRequest> implements OnInit {
-
+export class MediaListComponent
+    extends BasePaginatedListComponent<Media, FormData, UpdateMediaRequest>
+    implements OnInit
+{
     @Input() selectionMode = false;
     @Output() onMediaSelect = new EventEmitter<Media>();
 
-    @ViewChild('previewTemplate', { static: true }) previewTemplate!: TemplateRef<any>;
-    @ViewChild('nameTemplate', { static: true }) nameTemplate!: TemplateRef<any>;
+    @ViewChild('previewTemplate', { static: true })
+    previewTemplate!: TemplateRef<any>;
+    @ViewChild('nameTemplate', { static: true })
+    nameTemplate!: TemplateRef<any>;
 
     protected override service = inject(MediaService);
     protected override store = inject(MediaStore);
@@ -98,14 +111,14 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 label: '',
                 type: 'custom',
                 width: '80px',
-                template: this.previewTemplate
+                template: this.previewTemplate,
             },
             {
                 key: 'name',
                 label: 'admin.media.fields.name',
                 type: 'custom',
                 width: '1fr',
-                template: this.nameTemplate
+                template: this.nameTemplate,
             },
             {
                 key: 'fileType',
@@ -113,14 +126,14 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 type: 'text',
                 width: '100px',
                 hideOn: 'sm',
-                getValue: (item) => item.fileType.toUpperCase() // Or use badge if preferred
+                getValue: (item) => item.fileType.toUpperCase(), // Or use badge if preferred
             },
             {
                 key: 'fileSizeFormatted',
                 label: 'admin.common.grid.size',
                 type: 'text',
                 width: '100px',
-                hideOn: 'sm'
+                hideOn: 'sm',
             },
             {
                 key: 'createdAt',
@@ -128,8 +141,9 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 type: 'date',
                 width: '120px',
                 hideOn: 'sm',
-                getSecondaryValue: (item) => item.uploaderName ? `by ${item.uploaderName}` : ''
-            }
+                getSecondaryValue: (item) =>
+                    item.uploaderName ? `by ${item.uploaderName}` : '',
+            },
         ];
 
         this.actions = [
@@ -137,48 +151,56 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
                 icon: 'heroicons_outline:pencil-square',
                 label: 'admin.common.actions.edit',
                 action: 'edit',
-                show: () => !this.selectionMode
+                show: () => !this.selectionMode,
             },
             {
                 icon: 'heroicons_outline:trash',
                 label: 'admin.common.actions.delete',
                 action: 'delete',
                 color: 'warn',
-                show: () => !this.selectionMode
+                show: () => !this.selectionMode,
             },
             {
                 icon: 'heroicons_outline:plus-circle',
                 label: 'admin.common.actions.select',
                 action: 'select',
                 color: 'primary',
-                show: () => this.selectionMode
-            }
+                show: () => this.selectionMode,
+            },
         ];
     }
 
     #setupSearchDebounce(): void {
-        this.searchInputControl.valueChanges.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(query => {
-            this.onSearchInput(query || '');
-            this.store.setSearchQuery(query || '');
-        });
+        this.searchInputControl.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((query) => {
+                this.onSearchInput(query || '');
+                this.store.setSearchQuery(query || '');
+            });
     }
 
     openUploadDialog(): void {
-        this.#matDialog.open(MediaUploadDialogComponent, {
-            width: '700px',
-            maxHeight: '90vh',
-            disableClose: true,
-            data: {
-                languages: this.#tenantContext.tenant()?.supportedLanguages?.map(l => l.code) || ['EN']
-            }
-        }).afterClosed().pipe(take(1)).subscribe(result => {
-            if (result && result.length > 0) {
-                this.loadItems();
-                this.#notificationService.success('admin.media.messages.uploadSuccess');
-            }
-        });
+        this.#matDialog
+            .open(MediaUploadDialogComponent, {
+                width: '700px',
+                maxHeight: '90vh',
+                disableClose: true,
+                data: {
+                    languages: this.#tenantContext
+                        .tenant()
+                        ?.supportedLanguages?.map((l) => l.code) || ['EN'],
+                },
+            })
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (result && result.length > 0) {
+                    this.loadItems();
+                    this.#notificationService.success(
+                        'admin.media.messages.uploadSuccess'
+                    );
+                }
+            });
     }
 
     openDetailDialog(media: Media): void {
@@ -187,18 +209,24 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
             return;
         }
 
-        this.#matDialog.open(MediaDetailDialogComponent, {
-            width: '900px',
-            data: {
-                mode: 'edit',
-                media
-            } as MediaDetailDialogData
-        }).afterClosed().pipe(take(1)).subscribe(result => {
-            if (result) {
-                this.#notificationService.success('admin.media.messages.updateSuccess');
-                this.loadItems();
-            }
-        });
+        this.#matDialog
+            .open(MediaDetailDialogComponent, {
+                width: '1100px',
+                data: {
+                    mode: 'edit',
+                    media,
+                } as MediaDetailDialogData,
+            })
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (result) {
+                    this.#notificationService.success(
+                        'admin.media.messages.updateSuccess'
+                    );
+                    this.loadItems();
+                }
+            });
     }
 
     selectMedia(media: Media): void {
@@ -237,7 +265,7 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
     }
 
     protected override onDeleteError(error: any): void {
-         this.#notificationService.alert('admin.media.messages.deleteError');
+        this.#notificationService.alert('admin.media.messages.deleteError');
     }
 
     override onPageChange(event: PageEvent): void {
@@ -250,11 +278,16 @@ export class MediaListComponent extends BasePaginatedListComponent<Media, FormDa
 
     getMediaTypeClass(media: Media): string {
         switch (media.fileType) {
-            case 'image': return 'bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50';
-            case 'video': return 'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50';
-            case 'audio': return 'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50';
-            case 'document': return 'bg-orange-100 text-orange-800 dark:bg-orange-600 dark:text-orange-50';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50';
+            case 'image':
+                return 'bg-green-100 text-green-800 dark:bg-green-600 dark:text-green-50';
+            case 'video':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-blue-50';
+            case 'audio':
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-purple-50';
+            case 'document':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-600 dark:text-orange-50';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-50';
         }
     }
 }

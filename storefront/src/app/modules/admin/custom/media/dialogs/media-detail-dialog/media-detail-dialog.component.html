@@ -4,7 +4,7 @@
 >
 </spa-dialog-header>
 
-<spa-dialog-content class="h-[600px] max-h-[80vh] !p-0">
+<spa-dialog-content type="tabbed" class="h-[600px] max-h-[80vh] !p-0">
     <div class="flex h-full flex-col md:flex-row">
         <!-- Left Panel: Preview & Info (35%) -->
         <div
@@ -118,9 +118,10 @@
         </div>
 
         <!-- Right Panel: Metadata Form (65%) -->
-        <div class="flex w-full flex-col bg-white md:w-[65%] dark:bg-gray-900">
+        <div
+            class="flex w-full flex-col overflow-hidden bg-white md:w-[65%] dark:bg-gray-900"
+        >
             <mat-tab-group
-                class="min-h-0 flex-auto"
                 [selectedIndex]="activeTab"
                 (selectedIndexChange)="activeTab = $event"
                 [animationDuration]="'0ms'"
@@ -349,11 +350,11 @@
                 <mat-tab
                     [label]="'admin.media.dialogs.detail.formats' | transloco"
                 >
-                    <div
-                        class="flex h-full flex-col overflow-hidden p-4 md:p-6"
-                    >
-                        <!-- Generator Section -->
-                        <div class="mb-2">
+                    <div class="flex h-full flex-col overflow-hidden">
+                        <!-- Generator Section (Fixed Header) -->
+                        <div
+                            class="flex-none border-b bg-gray-50/50 p-6 dark:border-gray-800 dark:bg-gray-900/20"
+                        >
                             <app-format-generator
                                 [mediaId]="media()?.id!"
                                 (generated)="reloadDetails()"
@@ -361,21 +362,18 @@
                             </app-format-generator>
                         </div>
 
-                        <!-- Divider -->
-                        <div class="my-4 border-t"></div>
-
-                        <!-- List Section -->
-                        <div class="min-h-0 flex-1 overflow-y-auto">
+                        <!-- Scrollable Content -->
+                        <div class="min-h-0 flex-auto overflow-y-auto p-6">
                             <!-- Loading State -->
                             @if (isLoadingDetails()) {
                                 <div
-                                    class="flex flex-col items-center justify-center py-12"
+                                    class="flex flex-col items-center justify-center py-12 text-gray-400"
                                 >
                                     <mat-spinner
                                         diameter="40"
                                         class="mb-4"
                                     ></mat-spinner>
-                                    <p class="text-secondary">
+                                    <p class="text-secondary text-sm">
                                         {{
                                             'admin.common.messages.loading'
                                                 | transloco
@@ -386,13 +384,13 @@
                             <!-- Processing State -->
                             @else if (isProcessing()) {
                                 <div
-                                    class="flex flex-col items-center justify-center py-12"
+                                    class="flex flex-col items-center justify-center py-12 text-gray-400"
                                 >
                                     <mat-spinner
                                         diameter="40"
                                         class="mb-4"
                                     ></mat-spinner>
-                                    <p class="text-secondary">
+                                    <p class="text-secondary text-sm">
                                         {{
                                             'admin.media.messages.processingFormats'
                                                 | transloco
@@ -402,167 +400,260 @@
                             }
                             <!-- List -->
                             @else {
-                                <div class="grid grid-cols-1 gap-4">
+                                <div class="flex flex-col gap-6">
                                     <!-- Original -->
-                                    <div
-                                        class="flex items-start gap-4 rounded-lg border bg-gray-50 p-4 dark:bg-gray-800/50"
-                                    >
+                                    <div class="flex flex-col gap-3">
+                                        <h3
+                                            class="text-xs font-bold uppercase tracking-wider text-gray-500"
+                                        >
+                                            {{
+                                                'admin.media.formats.original'
+                                                    | transloco
+                                            }}
+                                        </h3>
                                         <div
-                                            class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded border bg-white dark:bg-gray-900"
-                                        >
-                                            <span
-                                                class="text-secondary text-xs font-bold"
-                                                >ORIGINAL</span
-                                            >
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <div
-                                                class="flex items-center gap-2"
-                                            >
-                                                <span class="font-medium">{{
-                                                    'admin.media.formats.original'
-                                                        | transloco
-                                                }}</span>
-                                                <span
-                                                    class="rounded bg-primary/10 px-2 py-0.5 text-xs text-primary"
-                                                    >{{
-                                                        media()?.mimeType
-                                                    }}</span
-                                                >
-                                            </div>
-                                            <div
-                                                class="text-secondary mt-1 text-xs"
-                                            >
-                                                @if (
-                                                    media()?.width &&
-                                                    media()?.height
-                                                ) {
-                                                    {{ media()?.width }}x{{
-                                                        media()?.height
-                                                    }}
-                                                    •
-                                                }
-                                                {{ media()?.fileSizeFormatted }}
-                                            </div>
-                                        </div>
-                                        <a
-                                            [href]="media()?.publicUrl"
-                                            target="_blank"
-                                            mat-icon-button
-                                        >
-                                            <mat-icon class="icon-size-5"
-                                                >open_in_new</mat-icon
-                                            >
-                                        </a>
-                                    </div>
-
-                                    <!-- Generated Variants -->
-                                    @for (
-                                        variant of containerVariants();
-                                        track variant.id
-                                    ) {
-                                        <div
-                                            class="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                            class="group relative flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
                                         >
                                             <div
-                                                class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded border bg-gray-100 dark:bg-gray-900"
+                                                class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-300"
                                             >
-                                                @if (
-                                                    media()?.fileType ===
-                                                        'image' &&
-                                                    variant.publicUrl
-                                                ) {
-                                                    <img
-                                                        [src]="
-                                                            variant.publicUrl
-                                                        "
-                                                        [alt]="
-                                                            variant.formatName
-                                                        "
-                                                        class="h-full w-full object-cover"
-                                                    />
-                                                } @else {
-                                                    <span
-                                                        class="text-secondary text-xs font-bold uppercase"
-                                                        >{{
-                                                            variant.formatCode
-                                                        }}</span
-                                                    >
-                                                }
+                                                ORIGINAL
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <div
                                                     class="flex items-center gap-2"
                                                 >
-                                                    <span class="font-medium">{{
-                                                        variant.formatName
-                                                    }}</span>
                                                     <span
-                                                        class="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-700"
-                                                        >{{
-                                                            variant.mimeType
-                                                        }}</span
+                                                        class="font-semibold text-gray-900 dark:text-gray-100"
+                                                        >Original File</span
                                                     >
+                                                    <span
+                                                        class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                                                    >
+                                                        {{ media()?.mimeType }}
+                                                    </span>
                                                 </div>
                                                 <div
-                                                    class="text-secondary mt-1 text-xs"
+                                                    class="mt-1 flex items-center gap-2 text-xs text-gray-500"
                                                 >
-                                                    {{ variant.width }}x{{
-                                                        variant.height
-                                                    }}
-                                                    •
-                                                    {{
-                                                        variant.fileSizeFormatted
-                                                    }}
+                                                    @if (
+                                                        media()?.width &&
+                                                        media()?.height
+                                                    ) {
+                                                        <span
+                                                            >{{
+                                                                media()?.width
+                                                            }}x{{
+                                                                media()?.height
+                                                            }}
+                                                            px</span
+                                                        >
+                                                        <span>&bull;</span>
+                                                    }
+                                                    <span>{{
+                                                        media()
+                                                            ?.fileSizeFormatted
+                                                    }}</span>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                                            <a
+                                                [href]="media()?.publicUrl"
+                                                target="_blank"
+                                                mat-icon-button
+                                                class="text-gray-400 transition-colors hover:text-primary-500"
+                                                [matTooltip]="'Open in new tab'"
                                             >
-                                                <a
-                                                    [href]="variant.publicUrl"
-                                                    target="_blank"
-                                                    mat-icon-button
+                                                <mat-icon class="icon-size-5"
+                                                    >open_in_new</mat-icon
                                                 >
-                                                    <mat-icon
-                                                        class="icon-size-5"
-                                                        >open_in_new</mat-icon
-                                                    >
-                                                </a>
-                                                <button
-                                                    mat-icon-button
-                                                    color="warn"
-                                                    (click)="
-                                                        deleteVariant(
-                                                            variant.id
-                                                        )
-                                                    "
-                                                >
-                                                    <mat-icon
-                                                        class="icon-size-5"
-                                                        >delete</mat-icon
-                                                    >
-                                                </button>
-                                            </div>
+                                            </a>
                                         </div>
-                                    }
+                                    </div>
 
-                                    @if (containerVariants().length === 0) {
+                                    <!-- Generated Variants -->
+                                    <div class="flex flex-col gap-3">
                                         <div
-                                            class="text-secondary flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-8"
+                                            class="flex items-center justify-between"
                                         >
-                                            <mat-icon
-                                                class="text-secondary/50 mb-2 icon-size-8"
-                                                >layers_clear</mat-icon
+                                            <h3
+                                                class="text-xs font-bold uppercase tracking-wider text-gray-500"
                                             >
-                                            <p>
-                                                {{
-                                                    'admin.media.messages.noFormats'
-                                                        | transloco
+                                                Generated Formats
+                                            </h3>
+                                            <span class="text-xs text-gray-400"
+                                                >{{
+                                                    containerVariants().length
                                                 }}
-                                            </p>
+                                                variants</span
+                                            >
                                         </div>
-                                    }
+
+                                        @if (containerVariants().length > 0) {
+                                            <div
+                                                class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                                            >
+                                                @for (
+                                                    variant of containerVariants();
+                                                    track variant.id
+                                                ) {
+                                                    <div
+                                                        class="group relative flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-all hover:border-primary-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-primary-700"
+                                                    >
+                                                        <!-- Header -->
+                                                        <div
+                                                            class="flex items-start justify-between"
+                                                        >
+                                                            <div
+                                                                class="flex items-center gap-2"
+                                                            >
+                                                                <span
+                                                                    class="font-medium text-gray-900 dark:text-gray-100"
+                                                                >
+                                                                    {{
+                                                                        variant.formatName
+                                                                    }}
+                                                                </span>
+                                                                <span
+                                                                    class="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                                                                >
+                                                                    {{
+                                                                        variant.formatCode
+                                                                    }}
+                                                                </span>
+                                                            </div>
+                                                            <!-- Actions -->
+                                                            <div
+                                                                class="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                                                            >
+                                                                <a
+                                                                    [href]="
+                                                                        variant.publicUrl
+                                                                    "
+                                                                    target="_blank"
+                                                                    mat-icon-button
+                                                                    class="h-6 min-h-6 w-6"
+                                                                    [matTooltip]="
+                                                                        'Open'
+                                                                    "
+                                                                >
+                                                                    <mat-icon
+                                                                        class="text-gray-400 icon-size-4 hover:text-primary-500"
+                                                                        >open_in_new</mat-icon
+                                                                    >
+                                                                </a>
+                                                                <button
+                                                                    mat-icon-button
+                                                                    class="h-6 min-h-6 w-6"
+                                                                    color="warn"
+                                                                    (click)="
+                                                                        deleteVariant(
+                                                                            variant.id
+                                                                        )
+                                                                    "
+                                                                    [matTooltip]="
+                                                                        'Delete'
+                                                                    "
+                                                                >
+                                                                    <mat-icon
+                                                                        class="text-gray-400 icon-size-4 hover:text-red-500"
+                                                                        >trash</mat-icon
+                                                                    >
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Content with Preview -->
+                                                        <div class="flex gap-3">
+                                                            <div
+                                                                class="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-900"
+                                                            >
+                                                                @if (
+                                                                    media()
+                                                                        ?.fileType ===
+                                                                        'image' &&
+                                                                    variant.publicUrl
+                                                                ) {
+                                                                    <img
+                                                                        [src]="
+                                                                            variant.publicUrl
+                                                                        "
+                                                                        [alt]="
+                                                                            variant.formatName
+                                                                        "
+                                                                        class="h-full w-full object-cover"
+                                                                    />
+                                                                } @else {
+                                                                    <div
+                                                                        class="flex h-full w-full items-center justify-center text-gray-400"
+                                                                    >
+                                                                        <mat-icon
+                                                                            class="icon-size-6"
+                                                                            >image</mat-icon
+                                                                        >
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                            <div
+                                                                class="flex min-w-0 flex-col justify-center text-xs"
+                                                            >
+                                                                <div
+                                                                    class="mb-1 text-gray-500"
+                                                                >
+                                                                    <span
+                                                                        class="font-medium text-gray-700 dark:text-gray-300"
+                                                                        >{{
+                                                                            variant.width
+                                                                        }}x{{
+                                                                            variant.height
+                                                                        }}</span
+                                                                    >
+                                                                    <span
+                                                                        class="mx-1 text-gray-300"
+                                                                        >|</span
+                                                                    >
+                                                                    <span>{{
+                                                                        variant.mimeType
+                                                                    }}</span>
+                                                                </div>
+                                                                <div
+                                                                    class="font-medium text-gray-900 dark:text-gray-100"
+                                                                >
+                                                                    {{
+                                                                        variant.fileSizeFormatted
+                                                                    }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        } @else {
+                                            <div
+                                                class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-12 dark:border-gray-700 dark:bg-gray-800/20"
+                                            >
+                                                <mat-icon
+                                                    class="mb-3 text-gray-300 icon-size-12 dark:text-gray-600"
+                                                >
+                                                    layers_clear
+                                                </mat-icon>
+                                                <p
+                                                    class="font-medium text-gray-500 dark:text-gray-400"
+                                                >
+                                                    {{
+                                                        'admin.media.messages.noFormats'
+                                                            | transloco
+                                                    }}
+                                                </p>
+                                                <p
+                                                    class="text-secondary mt-1 max-w-xs text-center text-xs"
+                                                >
+                                                    Use the generator above to
+                                                    create optimized versions of
+                                                    this media.
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             }
                         </div>

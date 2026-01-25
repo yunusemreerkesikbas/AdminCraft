@@ -150,8 +150,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const responsiveMedia = component?.responsiveMedia;
         const responsiveValue = responsiveMedia
             ? {
-                  desktop: responsiveMedia.desktop,
-                  mobile: responsiveMedia.mobile,
+                  desktopMedia: responsiveMedia.desktopMedia,
+                  mobileMedia: responsiveMedia.mobileMedia,
               }
             : null;
 
@@ -305,13 +305,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
         const desktopMediaId =
-            typeof responsiveValue?.desktop === 'number'
-                ? responsiveValue.desktop
-                : responsiveValue?.desktop?.id;
+            typeof responsiveValue?.desktopMedia === 'number'
+                ? responsiveValue.desktopMedia
+                : responsiveValue?.desktopMedia?.id;
         const mobileMediaId =
-            typeof responsiveValue?.mobile === 'number'
-                ? responsiveValue.mobile
-                : responsiveValue?.mobile?.id;
+            typeof responsiveValue?.mobileMedia === 'number'
+                ? responsiveValue.mobileMedia
+                : responsiveValue?.mobileMedia?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             if (currentSetId) {

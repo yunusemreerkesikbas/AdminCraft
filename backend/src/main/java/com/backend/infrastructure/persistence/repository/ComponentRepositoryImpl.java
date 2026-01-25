@@ -93,4 +93,9 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public List<Component> findByIdIn(List<Long> ids) {
         return jpaRepository.findByIdIn(ids);
     }
+
+    @Override
+    public List<Component> findByResponsiveMediaId(Long responsiveMediaId) {
+        return jpaRepository.findByResponsiveMediaId(responsiveMediaId);
+    }
 }
