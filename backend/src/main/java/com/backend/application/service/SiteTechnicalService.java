@@ -1,7 +1,7 @@
 package com.backend.application.service;
 
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
-import com.backend.presentation.dto.response.SiteTechnicalResponse;
+import com.backend.application.dto.response.SiteTechnicalAppDto;
 
 /**
  * Service interface for Site Technical Settings operations.
@@ -12,18 +12,18 @@ public interface SiteTechnicalService {
     /**
      * Get technical settings for the current site.
      *
-     * @return SiteTechnicalResponse containing all technical settings
+     * @return SiteTechnicalAppDto containing all technical settings
      */
-    SiteTechnicalResponse getTechnicalSettings();
+    SiteTechnicalAppDto getTechnicalSettings();
 
     /**
      * Update technical settings for the current site.
      * Only non-null fields in the request will be updated (PATCH semantics).
      *
      * @param request the patch request with fields to update
-     * @return updated SiteTechnicalResponse
+     * @return updated SiteTechnicalAppDto
      */
-    SiteTechnicalResponse patchTechnicalSettings(SiteTechnicalPatchRequest request);
+    SiteTechnicalAppDto patchTechnicalSettings(SiteTechnicalPatchRequest request);
 
     /**
      * Get the effective robots.txt content for the site.

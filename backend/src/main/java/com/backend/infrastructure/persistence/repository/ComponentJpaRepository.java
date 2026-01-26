@@ -79,5 +79,5 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
     long countByStatus(ComponentStatus status);
 
-    int countByCreatedAtAfter(LocalDateTime date);
+    long countByCreatedAtAfter(LocalDateTime date);
 }

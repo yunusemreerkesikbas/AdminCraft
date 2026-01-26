@@ -47,5 +47,5 @@ public interface ComponentRepository {
 
     long countByStatus(ComponentStatus status);
 
-    int countByCreatedAtAfter(LocalDateTime date);
+    long countByCreatedAtAfter(LocalDateTime date);
 }

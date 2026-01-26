@@ -121,7 +121,7 @@ public interface MediaRepository {
     // Statistics
     long countByMimeTypeStartingWith(String mimeTypePrefix);
 
-    int countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long sumFileSize();
 }

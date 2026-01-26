@@ -1,30 +1,45 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.service.SiteService;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.backend.application.dto.request.CreateSiteRequest;
+import com.backend.application.dto.request.SiteTechnicalPatchRequest;
+import com.backend.application.dto.request.UpdateSiteRequest;
+import com.backend.application.dto.response.SiteOverviewAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.service.SiteOverviewService;
+import com.backend.application.service.SiteService;
 import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
-import com.backend.application.dto.request.CreateSiteRequest;
-import com.backend.application.dto.request.UpdateSiteRequest;
-import com.backend.application.dto.request.SiteTechnicalPatchRequest;
-import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SiteOverviewResponse;
+import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SiteTechnicalResponse;
 import com.backend.shared.common.ApiResponse;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/sites")
@@ -275,7 +290,8 @@ public class SiteController {
     public ResponseEntity<ApiResponse<SiteOverviewResponse>> getOverview(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            SiteOverviewResponse response = siteOverviewService.getOverview();
+            SiteOverviewAppDto appDto = siteOverviewService.getOverview();
+            SiteOverviewResponse response = toSiteOverviewResponse(appDto);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting site overview: {}", ex.getMessage());
@@ -294,7 +310,8 @@ public class SiteController {
     public ResponseEntity<ApiResponse<SiteTechnicalResponse>> getTechnicalSettings(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            SiteTechnicalResponse response = siteTechnicalService.getTechnicalSettings();
+            SiteTechnicalAppDto appDto = siteTechnicalService.getTechnicalSettings();
+            SiteTechnicalResponse response = toSiteTechnicalResponse(appDto);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting technical settings: {}", ex.getMessage());
@@ -314,7 +331,8 @@ public class SiteController {
             @Valid @RequestBody SiteTechnicalPatchRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            SiteTechnicalResponse response = siteTechnicalService.patchTechnicalSettings(request);
+            SiteTechnicalAppDto appDto = siteTechnicalService.patchTechnicalSettings(request);
+            SiteTechnicalResponse response = toSiteTechnicalResponse(appDto);
             String message = messageSource.getMessage("site.technical.updated.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -353,5 +371,140 @@ public class SiteController {
         return input.trim()
                 .replaceAll("[<>\"'&]", "")
                 .toLowerCase();
+    }
+
+    // Mappers
+
+    private SiteOverviewResponse toSiteOverviewResponse(SiteOverviewAppDto dto) {
+        if (dto == null)
+            return null;
+
+        // Map Status
+        SiteOverviewResponse.SiteStatusDto status = null;
+        if (dto.status() != null) {
+            SiteOverviewResponse.UserDto lastUpdatedBy = null;
+            if (dto.status().lastUpdatedBy() != null) {
+                lastUpdatedBy = new SiteOverviewResponse.UserDto(
+                        dto.status().lastUpdatedBy().id(),
+                        dto.status().lastUpdatedBy().email(),
+                        dto.status().lastUpdatedBy().fullName());
+            }
+            status = new SiteOverviewResponse.SiteStatusDto(
+                    dto.status().state(),
+                    dto.status().publishedAt(),
+                    dto.status().lastUpdatedAt(),
+                    lastUpdatedBy);
+        }
+
+        // Map Stats
+        SiteOverviewResponse.SiteStatsDto stats = null;
+        if (dto.stats() != null) {
+            SiteOverviewResponse.EntityStatsDto pageStats = new SiteOverviewResponse.EntityStatsDto(
+                    dto.stats().pages().total(),
+                    dto.stats().pages().published(),
+                    dto.stats().pages().draft(),
+                    (int) dto.stats().pages().weeklyChange() // int check
+            );
+            SiteOverviewResponse.EntityStatsDto componentStats = new SiteOverviewResponse.EntityStatsDto(
+                    dto.stats().components().total(),
+                    dto.stats().components().published(),
+                    dto.stats().components().draft(),
+                    (int) dto.stats().components().weeklyChange());
+            SiteOverviewResponse.MediaStatsDto mediaStats = new SiteOverviewResponse.MediaStatsDto(
+                    dto.stats().media().totalCount(),
+                    dto.stats().media().totalSizeMb(),
+                    (int) dto.stats().media().dailyChange());
+            SiteOverviewResponse.EntityStatsDto productStats = new SiteOverviewResponse.EntityStatsDto(
+                    dto.stats().products().total(),
+                    dto.stats().products().published(),
+                    dto.stats().products().draft(),
+                    (int) dto.stats().products().weeklyChange());
+            stats = new SiteOverviewResponse.SiteStatsDto(pageStats, componentStats, mediaStats, productStats);
+        }
+
+        // Map Recent Activity
+        List<SiteOverviewResponse.ActivityDto> recentActivity = null;
+        if (dto.recentActivity() != null) {
+            recentActivity = dto.recentActivity().stream().map(a -> {
+                SiteOverviewResponse.UserDto user = null;
+                if (a.user() != null) {
+                    user = new SiteOverviewResponse.UserDto(a.user().id(), a.user().email(), a.user().fullName());
+                }
+                return new SiteOverviewResponse.ActivityDto(
+                        a.id(), a.action(), a.entityType(), a.entityId(), a.entityName(), a.description(), user,
+                        a.createdAt());
+            }).collect(Collectors.toList());
+        }
+
+        // Map Actions
+        SiteOverviewResponse.ActionsDto actions = null;
+        if (dto.actions() != null) {
+            actions = new SiteOverviewResponse.ActionsDto(
+                    dto.actions().canPublish(),
+                    dto.actions().canPreview(),
+                    dto.actions().canEnableMaintenance(),
+                    dto.actions().canDisableMaintenance(),
+                    dto.actions().previewUrl());
+        }
+
+        return SiteOverviewResponse.builder()
+                .status(status)
+                .stats(stats)
+                .recentActivity(recentActivity)
+                .actions(actions)
+                .build();
+    }
+
+    private SiteTechnicalResponse toSiteTechnicalResponse(SiteTechnicalAppDto dto) {
+        if (dto == null)
+            return null;
+
+        SiteTechnicalResponse.DomainDto domain = null;
+        if (dto.domain() != null) {
+            domain = new SiteTechnicalResponse.DomainDto(
+                    dto.domain().subdomain(),
+                    dto.domain().platformDomain(),
+                    dto.domain().fullUrl(),
+                    dto.domain().customDomain(),
+                    dto.domain().sslEnabled());
+        }
+
+        SiteTechnicalResponse.SearchEngineDto searchEngine = null;
+        if (dto.searchEngine() != null) {
+            SiteTechnicalResponse.VerificationDto verification = null;
+            if (dto.searchEngine().verification() != null) {
+                verification = new SiteTechnicalResponse.VerificationDto(
+                        dto.searchEngine().verification().google(),
+                        dto.searchEngine().verification().bing(),
+                        dto.searchEngine().verification().yandex());
+            }
+            searchEngine = new SiteTechnicalResponse.SearchEngineDto(
+                    dto.searchEngine().robotsTxt(),
+                    dto.searchEngine().sitemapEnabled(),
+                    dto.searchEngine().indexingEnabled(),
+                    verification);
+        }
+
+        SiteTechnicalResponse.ScriptsDto scripts = null;
+        if (dto.scripts() != null) {
+            scripts = new SiteTechnicalResponse.ScriptsDto(
+                    dto.scripts().head(),
+                    dto.scripts().bodyStart(),
+                    dto.scripts().bodyEnd());
+        }
+
+        SiteTechnicalResponse.CookieConsentDto cookieConsent = null;
+        if (dto.cookieConsent() != null) {
+            cookieConsent = new SiteTechnicalResponse.CookieConsentDto(
+                    dto.cookieConsent().enabled(),
+                    dto.cookieConsent().text());
+        }
+
+        return SiteTechnicalResponse.builder()
+                .domain(domain)
+                .searchEngine(searchEngine)
+                .scripts(scripts)
+                .cookieConsent(cookieConsent)
+                .build();
     }
 }

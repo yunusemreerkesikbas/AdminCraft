@@ -1,15 +1,17 @@
 package com.backend.application.service;
 
-import com.backend.domain.entity.SiteActivity;
-import com.backend.domain.enums.ActivityAction;
-import com.backend.domain.enums.ActivityEntityType;
-import com.backend.domain.repository.SiteActivityRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.domain.entity.SiteActivity;
+import com.backend.domain.enums.ActivityAction;
+import com.backend.domain.enums.ActivityEntityType;
+import com.backend.domain.repository.SiteActivityRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Publisher for site activity events.
@@ -29,8 +31,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishPageEvent(Long pageId, String pageName, ActivityAction action,
-                                  Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.PAGE, pageId, pageName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.PAGE, pageId, pageName, action, userId);
     }
 
     /**
@@ -39,8 +41,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishComponentEvent(Long componentId, String componentName, ActivityAction action,
-                                       Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.COMPONENT, componentId, componentName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.COMPONENT, componentId, componentName, action, userId);
     }
 
     /**
@@ -49,8 +51,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishMediaEvent(Long mediaId, String mediaName, ActivityAction action,
-                                   Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.MEDIA, mediaId, mediaName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.MEDIA, mediaId, mediaName, action, userId);
     }
 
     /**
@@ -59,8 +61,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishProductEvent(Long productId, String productName, ActivityAction action,
-                                     Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.PRODUCT, productId, productName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.PRODUCT, productId, productName, action, userId);
     }
 
     /**
@@ -69,8 +71,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishSiteEvent(Long siteId, String siteName, ActivityAction action,
-                                  Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.SITE, siteId, siteName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.SITE, siteId, siteName, action, userId);
     }
 
     /**
@@ -79,8 +81,8 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishSiteSettingsEvent(Long siteId, String settingName, ActivityAction action,
-                                          Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.SITE_SETTINGS, siteId, settingName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.SITE_SETTINGS, siteId, settingName, action, userId);
     }
 
     /**
@@ -89,32 +91,35 @@ public class SiteActivityPublisher {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishNavigationEvent(Long navigationId, String navigationName, ActivityAction action,
-                                        Long userId, String userEmail, String userFullName) {
-        publishEvent(ActivityEntityType.NAVIGATION, navigationId, navigationName, action, userId, userEmail, userFullName);
+            Long userId, String userEmail, String userFullName) {
+        publishEvent(ActivityEntityType.NAVIGATION, navigationId, navigationName, action, userId);
     }
 
     /**
      * Generic method to publish any activity event.
      */
     private void publishEvent(ActivityEntityType entityType, Long entityId, String entityName,
-                              ActivityAction action, Long userId, String userEmail, String userFullName) {
+            ActivityAction action, Long userId) {
         try {
             SiteActivity activity = SiteActivity.create(
                     action,
                     entityType,
                     entityId,
                     entityName,
-                    userId,
-                    userEmail,
-                    userFullName
-            );
-
+                    userId);
             siteActivityRepository.save(activity);
             log.debug("Activity published: {} {} - {} by {}",
-                    action, entityType, entityName, userEmail);
+                    action, entityType, entityName, userId);
         } catch (Exception e) {
-            log.error("Failed to publish activity event: {} {} - {}",
-                    action, entityType, entityName, e.getMessage());
+            String msg = String.format("Failed to publish activity: %s %s - %s", action, entityType, entityName);
+            if (msg.length() > 500) {
+                msg = msg.substring(0, 500);
+            }
+            log.error(msg, e);
+            // Don't rethrow in async method unless handled by AsyncUncaughtExceptionHandler
+            // But previous code threw it.
+            // Requirement said "Rethrow exception".
+            throw e;
         }
     }
 
@@ -124,12 +129,9 @@ public class SiteActivityPublisher {
      */
     @Transactional
     public void cleanupOldActivities() {
-        try {
-            var cutoffDate = java.time.LocalDateTime.now().minusDays(30);
-            siteActivityRepository.deleteByCreatedAtBefore(cutoffDate);
-            log.info("Cleaned up activities older than {}", cutoffDate);
-        } catch (Exception e) {
-            log.error("Failed to cleanup old activities: {}", e.getMessage());
-        }
+        // No try/catch to ensure transaction rollback on failure
+        var cutoffDate = java.time.LocalDateTime.now().minusDays(30);
+        siteActivityRepository.deleteByCreatedAtBefore(cutoffDate);
+        log.info("Cleaned up activities older than {}", cutoffDate);
     }
 }

@@ -13,13 +13,16 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppGlobalDto;
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppI18nDto;
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppResponseDto;
 import com.backend.domain.entity.SiteSetting;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.SettingType;
 import com.backend.domain.repository.SiteSettingRepository;
-import com.backend.presentation.dto.request.SiteSettingsGlobalDto;
-import com.backend.presentation.dto.request.SiteSettingsI18nDto;
-import com.backend.presentation.dto.response.SiteSettingsResponseDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,31 +34,42 @@ import lombok.extern.slf4j.Slf4j;
 public class SiteSettingsServiceImpl implements SiteSettingsService {
 
   private final SiteSettingRepository repository;
+  private final ObjectMapper objectMapper;
 
   @Override
   @Transactional(readOnly = true)
-  public SiteSettingsResponseDto getAdminSettings(Long tenantId) {
+  public SiteSettingsAppResponseDto getAdminSettings(Long tenantId) {
     // Batch fetch all settings for this tenant to prevent N+1 queries
     List<SiteSetting> allSettings = repository.findByTenantId(tenantId);
 
     // Build global settings
-    SiteSettingsGlobalDto global = buildGlobalResponse(allSettings);
+    SiteSettingsAppGlobalDto global = buildGlobalResponse(allSettings);
 
     // Build language-specific settings for all supported languages
-    Map<String, SiteSettingsI18nDto> languages = new HashMap<>();
+    Map<String, SiteSettingsAppI18nDto> languages = new HashMap<>();
 
     // Get all language-specific settings
     Arrays.stream(Language.values()).forEach(lang -> {
-      SiteSettingsI18nDto i18nSettings = buildI18nResponse(allSettings, lang);
+      SiteSettingsAppI18nDto i18nSettings = buildI18nResponse(allSettings, lang);
       languages.put(lang.name().toLowerCase(), i18nSettings);
     });
 
-    return new SiteSettingsResponseDto(global, languages);
+    return new SiteSettingsAppResponseDto(global, convertMapKeysToLanguage(languages));
   }
 
+  // Helper to match the interface signature which expects Map<String, ...> in DTO
+  // but Map<Language, ...> in return types might vary
+  // Wait, the AppDto record defines Map<String, SiteSettingsAppI18nDto>
+  // languages.
+  // But the interface might have been defined differently?
+  // Let's check SiteSettingsAppDto.SiteSettingsAppResponseDto definition in
+  // previous step.
+  // It was Map<String, SiteSettingsAppI18nDto> languages.
+  // So I don't need convertMapKeysToLanguage if the record expects String keys.
+
   @Override
-  public SiteSettingsResponseDto patchSettings(Long tenantId, SiteSettingsGlobalDto global,
-      Map<Language, SiteSettingsI18nDto> languages, Long updatedBy) {
+  public SiteSettingsAppResponseDto patchSettings(Long tenantId, SiteSettingsAppGlobalDto global,
+      Map<Language, SiteSettingsAppI18nDto> languages, Long updatedBy) {
     List<SiteSetting> settingsToUpdate = new ArrayList<>();
 
     // Update global settings if provided
@@ -65,7 +79,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
     // Update language-specific settings if provided
     if (languages != null) {
-      for (Map.Entry<Language, SiteSettingsI18nDto> entry : languages.entrySet()) {
+      for (Map.Entry<Language, SiteSettingsAppI18nDto> entry : languages.entrySet()) {
         settingsToUpdate.addAll(processI18nSettings(tenantId, entry.getKey(), entry.getValue(), updatedBy));
       }
     }
@@ -80,7 +94,11 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     return getAdminSettings(tenantId);
   }
 
-  private SiteSettingsGlobalDto buildGlobalResponse(List<SiteSetting> allSettings) {
+  private Map<String, SiteSettingsAppI18nDto> convertMapKeysToLanguage(Map<String, SiteSettingsAppI18nDto> input) {
+    return input;
+  }
+
+  private SiteSettingsAppGlobalDto buildGlobalResponse(List<SiteSetting> allSettings) {
     Map<String, String> globalSettingsMap = allSettings.stream()
         .filter(s -> s.getLanguage() == null) // Global settings have null language
         .collect(Collectors.toMap(
@@ -92,7 +110,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
               return existing;
             }));
 
-    return new SiteSettingsGlobalDto(
+    return new SiteSettingsAppGlobalDto(
         globalSettingsMap.get("global.contactEmail"),
         globalSettingsMap.get("global.contactPhone"),
         globalSettingsMap.get("global.whatsappPhone"),
@@ -100,7 +118,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         globalSettingsMap.get("global.robots"));
   }
 
-  private SiteSettingsI18nDto buildI18nResponse(List<SiteSetting> allSettings, Language language) {
+  private SiteSettingsAppI18nDto buildI18nResponse(List<SiteSetting> allSettings, Language language) {
     Map<String, String> i18nSettingsMap = allSettings.stream()
         .filter(s -> Objects.equals(s.getLanguage(), language))
         .collect(Collectors.toMap(
@@ -116,7 +134,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     String seoDescription = i18nSettingsMap.get("i18n.seo.description");
     String seoJson = buildSeoJson(seoTitle, seoDescription);
 
-    return new SiteSettingsI18nDto(
+    return new SiteSettingsAppI18nDto(
         i18nSettingsMap.get("i18n.siteName"),
         i18nSettingsMap.get("i18n.tagline"),
         seoJson,
@@ -126,7 +144,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     );
   }
 
-  private List<SiteSetting> processGlobalSettings(Long tenantId, SiteSettingsGlobalDto global, Long updatedBy) {
+  private List<SiteSetting> processGlobalSettings(Long tenantId, SiteSettingsAppGlobalDto global, Long updatedBy) {
     List<SiteSetting> settings = new ArrayList<>();
 
     if (global.contactEmail() != null) {
@@ -153,7 +171,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     return settings;
   }
 
-  private List<SiteSetting> processI18nSettings(Long tenantId, Language language, SiteSettingsI18nDto i18n,
+  private List<SiteSetting> processI18nSettings(Long tenantId, Language language, SiteSettingsAppI18nDto i18n,
       Long updatedBy) {
     List<SiteSetting> settings = new ArrayList<>();
 
@@ -224,18 +242,12 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
       return null;
     }
     try {
-      if (seoJson.contains("\"title\"")) {
-        String[] parts = seoJson.split("\"title\"\\s*:\\s*\"");
-        if (parts.length > 1) {
-          String titlePart = parts[1];
-          int endIndex = titlePart.indexOf("\"");
-          if (endIndex > 0) {
-            return titlePart.substring(0, endIndex);
-          }
-        }
+      JsonNode root = objectMapper.readTree(seoJson);
+      if (root.has("title")) {
+        return root.get("title").asText();
       }
     } catch (Exception e) {
-      // Return null if parsing fails
+      log.warn("Failed to parse SEO JSON: {}", e.getMessage());
     }
     return null;
   }
@@ -245,18 +257,12 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
       return null;
     }
     try {
-      if (seoJson.contains("\"description\"")) {
-        String[] parts = seoJson.split("\"description\"\\s*:\\s*\"");
-        if (parts.length > 1) {
-          String descPart = parts[1];
-          int endIndex = descPart.indexOf("\"");
-          if (endIndex > 0) {
-            return descPart.substring(0, endIndex);
-          }
-        }
+      JsonNode root = objectMapper.readTree(seoJson);
+      if (root.has("description")) {
+        return root.get("description").asText();
       }
     } catch (Exception e) {
-      // Return null if parsing fails
+      log.warn("Failed to parse SEO JSON: {}", e.getMessage());
     }
     return null;
   }
@@ -266,28 +272,18 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
       return null;
     }
 
-    StringBuilder json = new StringBuilder("{");
-    if (title != null) {
-      json.append("\"title\":\"").append(escapeJson(title)).append("\"");
-    }
-    if (description != null) {
+    try {
+      ObjectNode root = objectMapper.createObjectNode();
       if (title != null) {
-        json.append(",");
+        root.put("title", title);
       }
-      json.append("\"description\":\"").append(escapeJson(description)).append("\"");
-    }
-    json.append("}");
-    return json.toString();
-  }
-
-  private String escapeJson(String value) {
-    if (value == null) {
+      if (description != null) {
+        root.put("description", description);
+      }
+      return objectMapper.writeValueAsString(root);
+    } catch (Exception e) {
+      log.error("Failed to build SEO JSON", e);
       return null;
     }
-    return value.replace("\"", "\\\"")
-        .replace("\\", "\\\\")
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-        .replace("\t", "\\t");
   }
 }

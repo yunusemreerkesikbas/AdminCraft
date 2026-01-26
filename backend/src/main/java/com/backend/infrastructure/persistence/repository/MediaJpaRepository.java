@@ -116,5 +116,5 @@ public interface MediaJpaRepository extends JpaRepository<Media, Long> {
     @Query("SELECT COUNT(m) FROM Media m WHERE m.mimeType LIKE CONCAT(:prefix, '%')")
     long countByMimeTypeStartingWith(@Param("prefix") String mimeTypePrefix);
 
-    int countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }

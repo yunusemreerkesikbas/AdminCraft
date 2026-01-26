@@ -157,7 +157,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public int countByCreatedAtAfter(LocalDateTime date) {
+    public long countByCreatedAtAfter(LocalDateTime date) {
         return jpaRepository.countByCreatedAtAfter(date);
     }
 }

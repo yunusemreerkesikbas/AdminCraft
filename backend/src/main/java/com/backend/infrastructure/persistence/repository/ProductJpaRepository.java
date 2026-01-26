@@ -84,7 +84,7 @@ interface ProductJpaRepository extends JpaRepository<Product, Long> {
 
         long countByStatus(ProductStatus status);
 
-        int countByCreatedAtAfter(LocalDateTime date);
+        long countByCreatedAtAfter(LocalDateTime date);
 
         @Query("SELECT COUNT(pcl) FROM ProductCategoryLink pcl WHERE pcl.category.id = :categoryId")
         long countByCategoryId(@Param("categoryId") Long categoryId);

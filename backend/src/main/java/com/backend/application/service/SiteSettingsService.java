@@ -2,10 +2,10 @@ package com.backend.application.service;
 
 import java.util.Map;
 
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppGlobalDto;
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppI18nDto;
+import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppResponseDto;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.request.SiteSettingsGlobalDto;
-import com.backend.presentation.dto.request.SiteSettingsI18nDto;
-import com.backend.presentation.dto.response.SiteSettingsResponseDto;
 
 public interface SiteSettingsService {
 
@@ -15,7 +15,7 @@ public interface SiteSettingsService {
    * @param tenantId the tenant ID for isolation
    * @return global settings and all supported languages
    */
-  SiteSettingsResponseDto getAdminSettings(Long tenantId);
+  SiteSettingsAppResponseDto getAdminSettings(Long tenantId);
 
   /**
    * Partially updates site settings
@@ -26,6 +26,6 @@ public interface SiteSettingsService {
    * @param updatedBy user ID who is making the update
    * @return updated settings
    */
-  SiteSettingsResponseDto patchSettings(Long tenantId, SiteSettingsGlobalDto global,
-      Map<Language, SiteSettingsI18nDto> languages, Long updatedBy);
+  SiteSettingsAppResponseDto patchSettings(Long tenantId, SiteSettingsAppGlobalDto global,
+      Map<Language, SiteSettingsAppI18nDto> languages, Long updatedBy);
 }

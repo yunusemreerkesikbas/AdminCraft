@@ -25,9 +25,9 @@ import lombok.experimental.SuperBuilder;
  */
 @Entity
 @Table(name = "site_activity", indexes = {
-        @Index(name = "idx_site_activity_created_at", columnList = "created_at DESC"),
-        @Index(name = "idx_site_activity_entity_type", columnList = "entity_type"),
-        @Index(name = "idx_site_activity_user_id", columnList = "user_id")
+                @Index(name = "idx_site_activity_created_at", columnList = "created_at DESC"),
+                @Index(name = "idx_site_activity_entity_type", columnList = "entity_type"),
+                @Index(name = "idx_site_activity_user_id", columnList = "user_id")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -36,59 +36,47 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class SiteActivity extends BaseEntity {
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "action", nullable = false, length = 20)
-    private ActivityAction action;
+        @NotNull
+        @Enumerated(EnumType.STRING)
+        @Column(name = "action", nullable = false, length = 20)
+        private ActivityAction action;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "entity_type", nullable = false, length = 20)
-    private ActivityEntityType entityType;
+        @NotNull
+        @Enumerated(EnumType.STRING)
+        @Column(name = "entity_type", nullable = false, length = 20)
+        private ActivityEntityType entityType;
 
-    @Column(name = "entity_id")
-    private Long entityId;
+        @Column(name = "entity_id")
+        private Long entityId;
 
-    @Size(max = 255)
-    @Column(name = "entity_name", length = 255)
-    private String entityName;
+        @Size(max = 255)
+        @Column(name = "entity_name", length = 255)
+        private String entityName;
 
-    @Column(name = "user_id")
-    private Long userId;
+        @Column(name = "user_id")
+        private Long userId;
 
-    @Size(max = 100)
-    @Column(name = "user_email", length = 100)
-    private String userEmail;
+        @Size(max = 500)
+        @Column(name = "description", length = 500)
+        private String description;
 
-    @Size(max = 100)
-    @Column(name = "user_full_name", length = 100)
-    private String userFullName;
-
-    @Size(max = 500)
-    @Column(name = "description", length = 500)
-    private String description;
-
-    /**
-     * Factory method for creating a new activity record.
-     */
-    public static SiteActivity create(
-            ActivityAction action,
-            ActivityEntityType entityType,
-            Long entityId,
-            String entityName,
-            Long userId,
-            String userEmail,
-            String userFullName) {
-        return SiteActivity.builder()
-                .action(action)
-                .entityType(entityType)
-                .entityId(entityId)
-                .entityName(entityName)
-                .userId(userId)
-                .userEmail(userEmail)
-                .userFullName(userFullName)
-                .createdAt(LocalDateTime.now()) // Creating time explicitly or rely on BaseEntity @PrePersist
-                .build();
-    }
-
+        /**
+         * Factory method for creating a new activity record.
+         */
+        public static SiteActivity create(
+                        ActivityAction action,
+                        ActivityEntityType entityType,
+                        Long entityId,
+                        String entityName,
+                        Long userId) {
+                return SiteActivity.builder()
+                                .action(action)
+                                .entityType(entityType)
+                                .entityId(entityId)
+                                .entityName(entityName)
+                                .userId(userId)
+                                .createdAt(LocalDateTime.now()) // Creating time explicitly or rely on BaseEntity
+                                                                // @PrePersist
+                                .build();
+        }
 }

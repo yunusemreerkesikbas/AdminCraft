@@ -67,5 +67,5 @@ public interface ProductRepository {
 
     long countByStatus(ProductStatus status);
 
-    int countByCreatedAtAfter(LocalDateTime date);
+    long countByCreatedAtAfter(LocalDateTime date);
 }

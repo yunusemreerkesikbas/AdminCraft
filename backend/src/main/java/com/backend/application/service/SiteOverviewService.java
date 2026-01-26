@@ -1,6 +1,6 @@
 package com.backend.application.service;
 
-import com.backend.presentation.dto.response.SiteOverviewResponse;
+import com.backend.application.dto.response.SiteOverviewAppDto;
 
 /**
  * Service interface for Site Dashboard Overview operations.
@@ -12,16 +12,16 @@ public interface SiteOverviewService {
      * Get the complete overview data for the Site Dashboard.
      * Includes status, stats, recent activity, and available actions.
      *
-     * @return SiteOverviewResponse containing all dashboard data
+     * @return SiteOverviewAppDto containing all dashboard data
      */
-    SiteOverviewResponse getOverview();
+    SiteOverviewAppDto getOverview();
 
     /**
      * Get only the site stats (pages, components, media, products counts).
      *
-     * @return SiteStatsDto with entity counts
+     * @return SiteStatsAppDto with entity counts
      */
-    SiteOverviewResponse.SiteStatsDto getStats();
+    SiteOverviewAppDto.SiteStatsAppDto getStats();
 
     /**
      * Get recent activity list.
@@ -29,12 +29,12 @@ public interface SiteOverviewService {
      * @param limit maximum number of activities to return
      * @return List of recent activities
      */
-    java.util.List<SiteOverviewResponse.ActivityDto> getRecentActivity(int limit);
+    java.util.List<SiteOverviewAppDto.ActivityAppDto> getRecentActivity(int limit);
 
     /**
      * Get available actions for the site.
      *
-     * @return ActionsDto with available action flags and URLs
+     * @return ActionsAppDto with available action flags and URLs
      */
-    SiteOverviewResponse.ActionsDto getAvailableActions();
+    SiteOverviewAppDto.ActionsAppDto getAvailableActions();
 }

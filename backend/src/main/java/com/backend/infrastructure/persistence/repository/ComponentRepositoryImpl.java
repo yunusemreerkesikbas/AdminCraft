@@ -111,7 +111,7 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     }
 
     @Override
-    public int countByCreatedAtAfter(LocalDateTime date) {
+    public long countByCreatedAtAfter(LocalDateTime date) {
         return jpaRepository.countByCreatedAtAfter(date);
     }
 }

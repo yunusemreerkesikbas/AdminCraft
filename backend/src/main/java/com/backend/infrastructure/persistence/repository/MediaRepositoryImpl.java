@@ -247,7 +247,7 @@ public class MediaRepositoryImpl implements MediaRepository {
     }
 
     @Override
-    public int countByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
+    public long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
         return jpaRepository.countByCreatedAtBetween(start, end);
     }
 }

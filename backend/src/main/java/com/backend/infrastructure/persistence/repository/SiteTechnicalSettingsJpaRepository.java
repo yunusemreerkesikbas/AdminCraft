@@ -1,11 +1,12 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.SiteTechnicalSettings;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.SiteTechnicalSettings;
 
 @Repository
 public interface SiteTechnicalSettingsJpaRepository extends JpaRepository<SiteTechnicalSettings, Long> {
@@ -14,6 +15,8 @@ public interface SiteTechnicalSettingsJpaRepository extends JpaRepository<SiteTe
 
     boolean existsBySiteId(Long siteId);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
     void deleteBySiteId(Long siteId);
 
     List<SiteTechnicalSettings> findByIndexingEnabledTrue();

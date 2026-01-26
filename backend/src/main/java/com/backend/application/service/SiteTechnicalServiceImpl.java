@@ -1,23 +1,30 @@
 package com.backend.application.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
+import com.backend.application.dto.response.SiteTechnicalAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto.CookieConsentAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto.DomainAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto.ScriptsAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppDto;
+import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteTechnicalSettings;
 import com.backend.domain.exception.SiteNotFoundException;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
-import com.backend.presentation.dto.response.SiteTechnicalResponse;
-import com.backend.presentation.dto.response.SiteTechnicalResponse.*;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Implementation of SiteTechnicalService.
- * Manages technical settings for sites including robots.txt, scripts, and verification codes.
+ * Manages technical settings for sites including robots.txt, scripts, and
+ * verification codes.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,8 +38,7 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     private final SiteTechnicalSettingsRepository technicalSettingsRepository;
 
     @Override
-    @Transactional(readOnly = true)
-    public SiteTechnicalResponse getTechnicalSettings() {
+    public SiteTechnicalAppDto getTechnicalSettings() {
         log.debug("Getting technical settings");
 
         Site site = getFirstSite();
@@ -42,7 +48,7 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    public SiteTechnicalResponse patchTechnicalSettings(SiteTechnicalPatchRequest request) {
+    public SiteTechnicalAppDto patchTechnicalSettings(SiteTechnicalPatchRequest request) {
         log.debug("Patching technical settings");
 
         Site site = getFirstSite();
@@ -59,13 +65,15 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
             settings.setIndexingEnabled(request.indexingEnabled());
         }
         if (request.googleVerification() != null) {
-            settings.setGoogleVerification(request.googleVerification().isBlank() ? null : request.googleVerification());
+            settings.setGoogleVerification(
+                    request.googleVerification().isBlank() ? null : request.googleVerification());
         }
         if (request.bingVerification() != null) {
             settings.setBingVerification(request.bingVerification().isBlank() ? null : request.bingVerification());
         }
         if (request.yandexVerification() != null) {
-            settings.setYandexVerification(request.yandexVerification().isBlank() ? null : request.yandexVerification());
+            settings.setYandexVerification(
+                    request.yandexVerification().isBlank() ? null : request.yandexVerification());
         }
         if (request.headScripts() != null) {
             settings.setHeadScripts(request.headScripts().isBlank() ? null : request.headScripts());
@@ -90,7 +98,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public String getRobotsTxt() {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
@@ -98,7 +105,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean isSitemapEnabled() {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
@@ -106,7 +112,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean isIndexingEnabled() {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
@@ -114,7 +119,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public String getHeadScripts() {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
@@ -122,7 +126,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public String getBodyEndScripts() {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
@@ -155,52 +158,46 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
         return technicalSettingsRepository.save(settings);
     }
 
-    private SiteTechnicalResponse buildResponse(Site site, SiteTechnicalSettings settings) {
+    private SiteTechnicalAppDto buildResponse(Site site, SiteTechnicalSettings settings) {
         // Domain info
         String subdomain = site.getDomain();
         String customDomain = site.getCustomDomain();
         String fullUrl = site.getSiteUrl();
 
-        DomainDto domainDto = new DomainDto(
+        DomainAppDto domainDto = new DomainAppDto(
                 subdomain,
                 PLATFORM_DOMAIN,
                 fullUrl,
                 customDomain,
-                site.getSslEnabled()
-        );
+                site.getSslEnabled());
 
         // Search engine info
-        VerificationDto verificationDto = new VerificationDto(
+        VerificationAppDto verificationDto = new VerificationAppDto(
                 settings.getGoogleVerification(),
                 settings.getBingVerification(),
-                settings.getYandexVerification()
-        );
+                settings.getYandexVerification());
 
-        SearchEngineDto searchEngineDto = new SearchEngineDto(
+        SearchEngineAppDto searchEngineDto = new SearchEngineAppDto(
                 settings.getRobotsTxt(),
                 settings.getSitemapEnabled(),
                 settings.getIndexingEnabled(),
-                verificationDto
-        );
+                verificationDto);
 
         // Scripts info
-        ScriptsDto scriptsDto = new ScriptsDto(
+        ScriptsAppDto scriptsDto = new ScriptsAppDto(
                 settings.getHeadScripts(),
                 settings.getBodyStartScripts(),
-                settings.getBodyEndScripts()
-        );
+                settings.getBodyEndScripts());
 
         // Cookie consent info
-        CookieConsentDto cookieConsentDto = new CookieConsentDto(
+        CookieConsentAppDto cookieConsentDto = new CookieConsentAppDto(
                 settings.getCookieConsentEnabled(),
-                settings.getCookieConsentText()
-        );
+                settings.getCookieConsentText());
 
-        return SiteTechnicalResponse.builder()
-                .domain(domainDto)
-                .searchEngine(searchEngineDto)
-                .scripts(scriptsDto)
-                .cookieConsent(cookieConsentDto)
-                .build();
+        return new SiteTechnicalAppDto(
+                domainDto,
+                searchEngineDto,
+                scriptsDto,
+                cookieConsentDto);
     }
 }

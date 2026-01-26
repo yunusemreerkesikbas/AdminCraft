@@ -6,15 +6,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of SiteOverviewService.
- * Provides site dashboard overview data including status, stats, and activity.
- */
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.response.SiteOverviewAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.ActionsAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.ActivityAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.EntityStatsAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.MediaStatsAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.SiteStatsAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.SiteStatusAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.UserAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteActivity;
 import com.backend.domain.enums.ComponentStatus;
@@ -26,18 +30,15 @@ import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.SiteActivityRepository;
 import com.backend.domain.repository.SiteRepository;
-import com.backend.presentation.dto.response.SiteOverviewResponse;
-import com.backend.presentation.dto.response.SiteOverviewResponse.ActionsDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.ActivityDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.EntityStatsDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.MediaStatsDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.SiteStatsDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.SiteStatusDto;
-import com.backend.presentation.dto.response.SiteOverviewResponse.UserDto;
+import com.backend.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of SiteOverviewService.
+ * Provides site dashboard overview data including status, stats, and activity.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -54,21 +55,21 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     private final MediaRepository mediaRepository;
     private final ProductRepository productRepository;
     private final MessageSource messageSource;
+    private final UserRepository userRepository;
 
     @Override
-    public SiteOverviewResponse getOverview() {
+    public SiteOverviewAppDto getOverview() {
         log.debug("Getting site overview");
 
-        return SiteOverviewResponse.builder()
-                .status(getSiteStatus())
-                .stats(getStats())
-                .recentActivity(getRecentActivity(DEFAULT_ACTIVITY_LIMIT))
-                .actions(getAvailableActions())
-                .build();
+        return new SiteOverviewAppDto(
+                getSiteStatus(),
+                getStats(),
+                getRecentActivity(DEFAULT_ACTIVITY_LIMIT),
+                getAvailableActions());
     }
 
     @Override
-    public SiteStatsDto getStats() {
+    public SiteStatsAppDto getStats() {
         log.debug("Getting site stats");
 
         LocalDateTime now = LocalDateTime.now();
@@ -76,21 +77,20 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         LocalDateTime dayAgo = now.minusDays(1);
 
         // Page stats
-        // Optimized: Use count queries instead of findAll
         long totalPages = pageRepository.count();
         long publishedPages = pageRepository.countByStatus(PageStatus.PUBLISHED);
         long draftPages = pageRepository.countByStatus(PageStatus.DRAFT);
-        int weeklyPageChange = pageRepository.countByCreatedAtAfter(weekAgo);
+        long weeklyPageChange = pageRepository.countByCreatedAtAfter(weekAgo);
 
-        EntityStatsDto pageStats = new EntityStatsDto(totalPages, publishedPages, draftPages, weeklyPageChange);
+        EntityStatsAppDto pageStats = new EntityStatsAppDto(totalPages, publishedPages, draftPages, weeklyPageChange);
 
         // Component stats
         long totalComponents = componentRepository.count();
         long publishedComponents = componentRepository.countByStatus(ComponentStatus.PUBLISHED);
         long draftComponents = componentRepository.countByStatus(ComponentStatus.DRAFT);
-        int weeklyComponentChange = componentRepository.countByCreatedAtAfter(weekAgo);
+        long weeklyComponentChange = componentRepository.countByCreatedAtAfter(weekAgo);
 
-        EntityStatsDto componentStats = new EntityStatsDto(totalComponents, publishedComponents, draftComponents,
+        EntityStatsAppDto componentStats = new EntityStatsAppDto(totalComponents, publishedComponents, draftComponents,
                 weeklyComponentChange);
 
         // Media stats
@@ -103,32 +103,49 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         }
         double totalSizeMb = totalMediaSizeBytes / (1024.0 * 1024.0);
 
-        // Optimized: Count only instead of fetching list
-        int dailyMediaChange = mediaRepository.countByCreatedAtBetween(dayAgo, now);
+        long dailyMediaChange = mediaRepository.countByCreatedAtBetween(dayAgo, now);
 
-        MediaStatsDto mediaStats = new MediaStatsDto(totalMedia, Math.round(totalSizeMb * 100.0) / 100.0,
+        MediaStatsAppDto mediaStats = new MediaStatsAppDto(totalMedia, Math.round(totalSizeMb * 100.0) / 100.0,
                 dailyMediaChange);
 
         // Product stats
         long totalProducts = productRepository.count();
         long activeProducts = productRepository.countByStatus(ProductStatus.PUBLISHED);
         long draftProducts = productRepository.countByStatus(ProductStatus.DRAFT);
-        int weeklyProductChange = productRepository.countByCreatedAtAfter(weekAgo);
+        long weeklyProductChange = productRepository.countByCreatedAtAfter(weekAgo);
 
-        EntityStatsDto productStats = new EntityStatsDto(totalProducts, activeProducts, draftProducts,
+        EntityStatsAppDto productStats = new EntityStatsAppDto(totalProducts, activeProducts, draftProducts,
                 weeklyProductChange);
 
-        return new SiteStatsDto(pageStats, componentStats, mediaStats, productStats);
+        return new SiteStatsAppDto(pageStats, componentStats, mediaStats, productStats);
     }
 
     @Override
-    public List<ActivityDto> getRecentActivity(int limit) {
+    public List<ActivityAppDto> getRecentActivity(int limit) {
         log.debug("Getting recent activity with limit: {}", limit);
 
         try {
             List<SiteActivity> activities = siteActivityRepository.findRecentActivities(limit);
+
+            // Collect user IDs
+            java.util.Set<Long> userIds = activities.stream()
+                    .map(SiteActivity::getUserId)
+                    .filter(java.util.Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            // Fetch users
+            java.util.Map<Long, com.backend.domain.entity.User> userMap = java.util.Collections.emptyMap();
+            if (!userIds.isEmpty()) {
+                userMap = userRepository.findByIdIn(new java.util.ArrayList<>(userIds)).stream()
+                        .collect(Collectors.toMap(com.backend.domain.entity.User::getId,
+                                java.util.function.Function.identity()));
+            }
+
+            final java.util.Map<Long, com.backend.domain.entity.User> finalUserMap = userMap;
+
             return activities.stream()
-                    .map(this::toActivityDto)
+                    .map(activity -> toActivityDto(activity,
+                            finalUserMap.get(activity.getUserId())))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Failed to get recent activities: {}", e.getMessage());
@@ -137,12 +154,12 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     }
 
     @Override
-    public ActionsDto getAvailableActions() {
+    public ActionsAppDto getAvailableActions() {
         log.debug("Getting available actions");
 
         Site site = getFirstSite();
         if (site == null) {
-            return new ActionsDto(false, false, false, false, null);
+            return new ActionsAppDto(false, false, false, false, null);
         }
 
         boolean canPublish = site.canBePublished() && !Boolean.TRUE.equals(site.getPublished());
@@ -152,24 +169,31 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
 
         String previewUrl = buildPreviewUrl(site);
 
-        return new ActionsDto(canPublish, canPreview, canEnableMaintenance, canDisableMaintenance, previewUrl);
+        return new ActionsAppDto(canPublish, canPreview, canEnableMaintenance, canDisableMaintenance, previewUrl);
     }
 
-    private SiteStatusDto getSiteStatus() {
+    private SiteStatusAppDto getSiteStatus() {
         Site site = getFirstSite();
         if (site == null) {
-            return new SiteStatusDto("draft", null, null, null);
+            return new SiteStatusAppDto("draft", null, null, null);
         }
 
         String state = determineState(site);
         LocalDateTime lastUpdatedAt = site.getUpdatedAt();
 
-        return new SiteStatusDto(
+        UserAppDto lastUpdatedBy = null;
+        if (site.getUpdatedBy() != null) {
+            com.backend.domain.entity.User user = userRepository.findById(site.getUpdatedBy()).orElse(null);
+            if (user != null) {
+                lastUpdatedBy = new UserAppDto(user.getId(), user.getEmail(), user.getFullName());
+            }
+        }
+
+        return new SiteStatusAppDto(
                 state,
                 site.getPublishedAt(),
                 lastUpdatedAt,
-                null // TODO: Get last updated by user from activity log
-        );
+                lastUpdatedBy);
     }
 
     private Site getFirstSite() {
@@ -193,23 +217,23 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         return protocol + domain + "." + PLATFORM_DOMAIN + "?preview=true";
     }
 
-    private ActivityDto toActivityDto(SiteActivity activity) {
-        UserDto user = null;
-        if (activity.getUserId() != null) {
-            user = new UserDto(
-                    activity.getUserId(),
-                    activity.getUserEmail(),
-                    activity.getUserFullName());
+    private ActivityAppDto toActivityDto(SiteActivity activity, com.backend.domain.entity.User user) {
+        UserAppDto userDto = null;
+        if (user != null) {
+            userDto = new UserAppDto(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFullName());
         }
 
-        return new ActivityDto(
+        return new ActivityAppDto(
                 activity.getId(),
                 activity.getAction().name(),
                 activity.getEntityType().name(),
                 activity.getEntityId(),
                 activity.getEntityName(),
                 getReadableDescription(activity),
-                user,
+                userDto,
                 activity.getCreatedAt());
     }
 
