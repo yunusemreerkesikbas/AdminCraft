@@ -1,7 +1,5 @@
 package com.backend.domain.entity;
 
-import java.time.LocalDateTime;
-
 import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.ActivityEntityType;
 
@@ -75,8 +73,6 @@ public class SiteActivity extends BaseEntity {
                                 .entityId(entityId)
                                 .entityName(entityName)
                                 .userId(userId)
-                                .createdAt(LocalDateTime.now()) // Creating time explicitly or rely on BaseEntity
-                                                                // @PrePersist
                                 .build();
         }
 }

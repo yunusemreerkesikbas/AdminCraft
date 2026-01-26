@@ -99,7 +99,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         try {
             totalMediaSizeBytes = mediaRepository.sumFileSize();
         } catch (Exception e) {
-            log.warn("Failed to get media size sum: {}", e.getMessage());
+            log.warn("Failed to get media size sum", e);
         }
         double totalSizeMb = totalMediaSizeBytes / (1024.0 * 1024.0);
 
@@ -148,7 +148,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
                             finalUserMap.get(activity.getUserId())))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            log.warn("Failed to get recent activities: {}", e.getMessage());
+            log.warn("Failed to get recent activities", e);
             return Collections.emptyList();
         }
     }

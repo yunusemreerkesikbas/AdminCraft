@@ -4,18 +4,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.backend.domain.enums.Language;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.UpdateSiteRequest;
+import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.response.SiteResponse;
 
 public interface SiteService {
 
-    SiteResponse createSite(CreateSiteRequest request, Language displayLanguage);
+    SiteResponse createSite(CreateSiteRequest request, Long userId, Language displayLanguage);
 
     Optional<SiteResponse> getSiteById(Long id, Language displayLanguage);
 
-    SiteResponse updateSite(Long id, UpdateSiteRequest request, Language displayLanguage);
+    SiteResponse updateSite(Long id, UpdateSiteRequest request, Long userId, Language displayLanguage);
 
     void deleteSite(Long id);
 

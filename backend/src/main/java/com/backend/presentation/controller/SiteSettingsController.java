@@ -101,7 +101,7 @@ public class SiteSettingsController {
         dto.seo(),
         dto.footerText(),
         dto.headerTopbarText(),
-        null);
+        dto.addressLocalized());
   }
 
   private SiteSettingsResponseDto toPresentationResponse(SiteSettingsAppResponseDto dto) {

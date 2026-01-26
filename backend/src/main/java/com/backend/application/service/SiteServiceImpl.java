@@ -1,5 +1,15 @@
 package com.backend.application.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.application.dto.request.CreateSiteRequest;
+import com.backend.application.dto.request.UpdateSiteRequest;
 import com.backend.domain.entity.Site;
 import com.backend.domain.enums.Language;
 import com.backend.domain.exception.SiteNotFoundException;
@@ -7,18 +17,10 @@ import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.presentation.dto.mapper.SiteMapper;
-import com.backend.application.dto.request.CreateSiteRequest;
-import com.backend.application.dto.request.UpdateSiteRequest;
 import com.backend.presentation.dto.response.SiteResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class SiteServiceImpl implements SiteService {
     private final com.backend.infrastructure.tenant.TenantContext tenantContext;
 
     @Override
-    public SiteResponse createSite(CreateSiteRequest request, Language displayLanguage) {
+    public SiteResponse createSite(CreateSiteRequest request, Long userId, Language displayLanguage) {
         String tenantIdStr = tenantContext.getTenantId();
         Long tenantId = Long.parseLong(tenantIdStr);
 
@@ -54,6 +56,8 @@ public class SiteServiceImpl implements SiteService {
 
         // Create new site entity
         Site site = siteMapper.toEntity(request);
+        site.setCreatedBy(userId);
+        site.setUpdatedBy(userId);
         site.setCreatedAt(LocalDateTime.now());
         site.setUpdatedAt(LocalDateTime.now());
 
@@ -94,7 +98,7 @@ public class SiteServiceImpl implements SiteService {
     }
 
     @Override
-    public SiteResponse updateSite(Long id, UpdateSiteRequest request, Language displayLanguage) {
+    public SiteResponse updateSite(Long id, UpdateSiteRequest request, Long userId, Language displayLanguage) {
         log.debug("Updating site with ID: {}", id);
 
         Site site = siteRepository.findById(id)
@@ -102,6 +106,7 @@ public class SiteServiceImpl implements SiteService {
 
         // Update site entity
         siteMapper.updateEntity(site, request);
+        site.setUpdatedBy(userId);
         site.setUpdatedAt(LocalDateTime.now());
 
         // Save updated site

@@ -34,6 +34,7 @@ import com.backend.presentation.dto.response.SiteOverviewResponse;
 import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SiteTechnicalResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.shared.common.SecurityHelper;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -52,6 +53,7 @@ public class SiteController {
     private final SiteOverviewService siteOverviewService;
     private final SiteTechnicalService siteTechnicalService;
     private final MessageSource messageSource;
+    private final SecurityHelper securityHelper;
 
     @PostMapping
     public ResponseEntity<ApiResponse<SiteResponse>> createSite(
@@ -59,7 +61,7 @@ public class SiteController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            SiteResponse response = siteService.createSite(request, displayLanguage);
+            SiteResponse response = siteService.createSite(request, securityHelper.getCurrentUserId(), displayLanguage);
             String message = messageSource.getMessage("site.created.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -120,7 +122,8 @@ public class SiteController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-            SiteResponse response = siteService.updateSite(id, request, displayLanguage);
+            SiteResponse response = siteService.updateSite(id, request, securityHelper.getCurrentUserId(),
+                    displayLanguage);
             String message = messageSource.getMessage("site.updated.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
@@ -294,9 +297,11 @@ public class SiteController {
             SiteOverviewResponse response = toSiteOverviewResponse(appDto);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
-            log.error("Error getting site overview: {}", ex.getMessage());
+            log.error("Error getting site overview", ex);
             String message = messageSource.getMessage("site.overview.error", new Object[] { ex.getMessage() },
                     Locale.forLanguageTag(languageCode));
+            if (message.length() > 500)
+                message = message.substring(0, 500);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
         }
@@ -314,9 +319,11 @@ public class SiteController {
             SiteTechnicalResponse response = toSiteTechnicalResponse(appDto);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
-            log.error("Error getting technical settings: {}", ex.getMessage());
+            log.error("Error getting technical settings", ex);
             String message = messageSource.getMessage("site.technical.get.error", new Object[] { ex.getMessage() },
                     Locale.forLanguageTag(languageCode));
+            if (message.length() > 500)
+                message = message.substring(0, 500);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
         }
@@ -337,30 +344,13 @@ public class SiteController {
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
-            log.error("Error updating technical settings: {}", ex.getMessage());
+            log.error("Error updating technical settings", ex);
             String message = messageSource.getMessage("site.technical.update.error", new Object[] { ex.getMessage() },
                     Locale.forLanguageTag(languageCode));
+            if (message.length() > 500)
+                message = message.substring(0, 500);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
-        }
-    }
-
-    /**
-     * Get robots.txt content for the site.
-     * Public endpoint for search engine crawlers.
-     */
-    @GetMapping("/robots.txt")
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<String> getRobotsTxt() {
-        try {
-            String robotsTxt = siteTechnicalService.getRobotsTxt();
-            return ResponseEntity.ok()
-                    .header("Content-Type", "text/plain")
-                    .body(robotsTxt);
-        } catch (Exception ex) {
-            log.error("Error getting robots.txt: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("User-agent: *\nAllow: /");
         }
     }
 
@@ -403,22 +393,21 @@ public class SiteController {
                     dto.stats().pages().total(),
                     dto.stats().pages().published(),
                     dto.stats().pages().draft(),
-                    (int) dto.stats().pages().weeklyChange() // int check
-            );
+                    Math.toIntExact(dto.stats().pages().weeklyChange()));
             SiteOverviewResponse.EntityStatsDto componentStats = new SiteOverviewResponse.EntityStatsDto(
                     dto.stats().components().total(),
                     dto.stats().components().published(),
                     dto.stats().components().draft(),
-                    (int) dto.stats().components().weeklyChange());
+                    Math.toIntExact(dto.stats().components().weeklyChange()));
             SiteOverviewResponse.MediaStatsDto mediaStats = new SiteOverviewResponse.MediaStatsDto(
                     dto.stats().media().totalCount(),
                     dto.stats().media().totalSizeMb(),
-                    (int) dto.stats().media().dailyChange());
+                    Math.toIntExact(dto.stats().media().dailyChange()));
             SiteOverviewResponse.EntityStatsDto productStats = new SiteOverviewResponse.EntityStatsDto(
                     dto.stats().products().total(),
                     dto.stats().products().published(),
                     dto.stats().products().draft(),
-                    (int) dto.stats().products().weeklyChange());
+                    Math.toIntExact(dto.stats().products().weeklyChange()));
             stats = new SiteOverviewResponse.SiteStatsDto(pageStats, componentStats, mediaStats, productStats);
         }
 

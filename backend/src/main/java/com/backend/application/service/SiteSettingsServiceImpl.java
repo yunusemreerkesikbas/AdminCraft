@@ -54,18 +54,10 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
       languages.put(lang.name().toLowerCase(), i18nSettings);
     });
 
-    return new SiteSettingsAppResponseDto(global, convertMapKeysToLanguage(languages));
+    return new SiteSettingsAppResponseDto(global, languages);
   }
 
-  // Helper to match the interface signature which expects Map<String, ...> in DTO
   // but Map<Language, ...> in return types might vary
-  // Wait, the AppDto record defines Map<String, SiteSettingsAppI18nDto>
-  // languages.
-  // But the interface might have been defined differently?
-  // Let's check SiteSettingsAppDto.SiteSettingsAppResponseDto definition in
-  // previous step.
-  // It was Map<String, SiteSettingsAppI18nDto> languages.
-  // So I don't need convertMapKeysToLanguage if the record expects String keys.
 
   @Override
   public SiteSettingsAppResponseDto patchSettings(Long tenantId, SiteSettingsAppGlobalDto global,
@@ -92,10 +84,6 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
     // Return updated settings
     return getAdminSettings(tenantId);
-  }
-
-  private Map<String, SiteSettingsAppI18nDto> convertMapKeysToLanguage(Map<String, SiteSettingsAppI18nDto> input) {
-    return input;
   }
 
   private SiteSettingsAppGlobalDto buildGlobalResponse(List<SiteSetting> allSettings) {
