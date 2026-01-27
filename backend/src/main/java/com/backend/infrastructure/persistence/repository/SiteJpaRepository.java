@@ -16,6 +16,9 @@ public interface SiteJpaRepository extends JpaRepository<Site, Long> {
 
     List<Site> findAllByOrderByCreatedAtDesc();
 
+    @Query("SELECT DISTINCT s FROM Site s LEFT JOIN FETCH s.enabledLanguages")
+    List<Site> findAllWithEnabledLanguages();
+
     Optional<Site> findByDomain(String domain);
     Optional<Site> findByDomainIgnoreCase(String domain);
     Optional<Site> findByCustomDomain(String customDomain);

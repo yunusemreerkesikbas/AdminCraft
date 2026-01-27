@@ -28,9 +28,13 @@ public class SiteTechnicalSettings {
     @Column(name = "site_id")
     private Long siteId;
 
+    /**
+     * Read-only relationship for lazy loading Site data.
+     * The actual FK is managed via siteId field directly.
+     * This avoids "detached entity passed to persist" issues with @MapsId.
+     */
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "site_id")
+    @JoinColumn(name = "site_id", insertable = false, updatable = false)
     private Site site;
 
     // Search Engine Settings

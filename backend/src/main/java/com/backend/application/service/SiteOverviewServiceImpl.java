@@ -61,11 +61,14 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     public SiteOverviewAppDto getOverview() {
         log.debug("Getting site overview");
 
+        // Fetch site once to avoid multiple queries and lazy loading issues
+        Site site = getFirstSite();
+
         return new SiteOverviewAppDto(
-                getSiteStatus(),
+                getSiteStatus(site),
                 getStats(),
                 getRecentActivity(DEFAULT_ACTIVITY_LIMIT),
-                getAvailableActions());
+                getAvailableActions(site));
     }
 
     @Override
@@ -156,8 +159,10 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     @Override
     public ActionsAppDto getAvailableActions() {
         log.debug("Getting available actions");
+        return getAvailableActions(getFirstSite());
+    }
 
-        Site site = getFirstSite();
+    private ActionsAppDto getAvailableActions(Site site) {
         if (site == null) {
             return new ActionsAppDto(false, false, false, false, null);
         }
@@ -172,8 +177,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         return new ActionsAppDto(canPublish, canPreview, canEnableMaintenance, canDisableMaintenance, previewUrl);
     }
 
-    private SiteStatusAppDto getSiteStatus() {
-        Site site = getFirstSite();
+    private SiteStatusAppDto getSiteStatus(Site site) {
         if (site == null) {
             return new SiteStatusAppDto("draft", null, null, null);
         }
@@ -197,8 +201,12 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     }
 
     private Site getFirstSite() {
-        List<Site> sites = siteRepository.findAll();
-        return sites.isEmpty() ? null : sites.get(0);
+        // Use JOIN FETCH to eagerly load enabledLanguages and avoid LazyInitializationException
+        List<Site> sites = siteRepository.findAllWithEnabledLanguages();
+        if (sites.isEmpty()) {
+            return null;
+        }
+        return sites.get(0);
     }
 
     private String determineState(Site site) {

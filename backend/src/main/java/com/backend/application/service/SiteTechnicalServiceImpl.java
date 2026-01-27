@@ -1,5 +1,6 @@
 package com.backend.application.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppD
 import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteTechnicalSettings;
-import com.backend.domain.exception.SiteNotFoundException;
+import com.backend.domain.enums.Language;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
 
@@ -132,12 +133,28 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
         return settings.getBodyEndScripts();
     }
 
-    private Site getFirstSite() {
+    private synchronized Site getFirstSite() {
         List<Site> sites = siteRepository.findAll();
         if (sites.isEmpty()) {
-            throw new SiteNotFoundException("No site found for current tenant");
+            log.warn("No site found for current tenant. Creating default site.");
+            return createDefaultSite();
         }
         return sites.get(0);
+    }
+
+    private synchronized Site createDefaultSite() {
+        List<Site> sites = siteRepository.findAll();
+        if (!sites.isEmpty()) {
+            return sites.get(0);
+        }
+
+        Site site = new Site();
+        site.setSiteName("Default Site");
+        site.setDomain("localhost");
+        site.setDefaultLanguage(Language.EN);
+        site.setEnabledLanguages(Collections.singleton(Language.EN));
+        site.setPublished(true);
+        return siteRepository.save(site);
     }
 
     private SiteTechnicalSettings getOrCreateSettings(Site site) {
@@ -146,9 +163,9 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     private SiteTechnicalSettings createDefaultSettings(Site site) {
+        // Use siteId directly - the site relationship is read-only
         SiteTechnicalSettings settings = SiteTechnicalSettings.builder()
                 .siteId(site.getId())
-                .site(site)
                 .robotsTxt(SiteTechnicalSettings.getDefaultRobotsTxt())
                 .sitemapEnabled(true)
                 .indexingEnabled(true)

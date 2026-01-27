@@ -13,6 +13,12 @@ public interface SiteRepository {
     List<Site> saveAll(Iterable<Site> sites);
     Optional<Site> findById(Long id);
     List<Site> findAll();
+
+    /**
+     * Find all sites with enabledLanguages eagerly loaded.
+     * Use this to avoid LazyInitializationException.
+     */
+    List<Site> findAllWithEnabledLanguages();
     void deleteById(Long id);
     void deleteAll();
     boolean existsById(Long id);
