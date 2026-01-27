@@ -1,15 +1,18 @@
 package com.backend.infrastructure.persistence.repository;
 
-import com.backend.domain.entity.Product;
-import com.backend.domain.enums.ProductStatus;
-import com.backend.domain.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.backend.domain.entity.Product;
+import com.backend.domain.enums.ProductStatus;
+import com.backend.domain.repository.ProductRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
@@ -73,7 +76,8 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<Product> searchWithFilters(String query, Long productTypeId, Long categoryId, ProductStatus status, Pageable pageable) {
+    public Page<Product> searchWithFilters(String query, Long productTypeId, Long categoryId, ProductStatus status,
+            Pageable pageable) {
         return jpaRepository.searchWithFilters(query, productTypeId, categoryId, status, pageable);
     }
 
@@ -140,5 +144,20 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public Page<Product> searchWithFilters(String query, ProductStatus status, Long categoryId, Pageable pageable) {
         return jpaRepository.searchWithStatusAndCategory(query, status, categoryId, pageable);
+    }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
+
+    @Override
+    public long countByStatus(ProductStatus status) {
+        return jpaRepository.countByStatus(status);
+    }
+
+    @Override
+    public long countByCreatedAtAfter(LocalDateTime date) {
+        return jpaRepository.countByCreatedAtAfter(date);
     }
 }

@@ -78,7 +78,7 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate: DEBUG
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [Tenant:%X{tenantId}][Corr:%X{correlationId}] - %msg%n"
 
 ---
 spring:

@@ -24,8 +24,9 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
 Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/ModuleCode.java`](../backend/src/main/java/com/backend/domain/enums/ModuleCode.java).
 
 - Core: [`modules/core.md`](modules/core.md)
+- **Site Dashboard**: [`modules/site-dashboard.md`](modules/site-dashboard.md) - Unified site management interface
 - Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md)
-- Site Settings: [`modules/site-settings.md`](modules/site-settings.md)
+- Site Settings: [`modules/site-settings.md`](modules/site-settings.md) *(integrated into Site Dashboard)*
 - Media Library (DAM): [`modules/media.md`](modules/media.md)
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
 - Component Library: [`modules/component-library.md`](modules/component-library.md)

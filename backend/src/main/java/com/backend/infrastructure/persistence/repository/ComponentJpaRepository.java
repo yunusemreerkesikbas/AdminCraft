@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,4 +76,8 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
 
     @Query("SELECT c FROM Component c WHERE c.responsiveMedia.id = :responsiveMediaId")
     List<Component> findByResponsiveMediaId(@Param("responsiveMediaId") Long responsiveMediaId);
+
+    long countByStatus(ComponentStatus status);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }

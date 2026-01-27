@@ -22,6 +22,7 @@ public final class ValidationConstants {
      * Product Type & Attribute Code Pattern
      * - Must start with lowercase letter
      * - Followed by lowercase letters, digits, or underscores
+     * 
      * @example "product_type_1", "color", "size_xl"
      */
     public static final String CODE_PATTERN = "^[a-z][a-z0-9_]*$";
@@ -30,6 +31,7 @@ public final class ValidationConstants {
      * Category Code Pattern
      * - Must start with lowercase letter
      * - Followed by lowercase letters, digits, underscores, or hyphens
+     * 
      * @example "electronics-main", "clothing_men", "home-decor"
      */
     public static final String CATEGORY_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
@@ -37,6 +39,7 @@ public final class ValidationConstants {
     /**
      * SKU Pattern
      * - Alphanumeric with underscores and hyphens
+     * 
      * @example "SKU-12345", "PROD_001", "ABC123"
      */
     public static final String SKU_PATTERN = "^[A-Za-z0-9_-]+$";
@@ -44,6 +47,7 @@ public final class ValidationConstants {
     /**
      * URL Slug Pattern
      * - Lowercase letters, digits, and hyphens only
+     * 
      * @example "about-us", "contact-page", "product-detail"
      */
     public static final String SLUG_PATTERN = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
@@ -52,6 +56,7 @@ public final class ValidationConstants {
      * UID Pattern
      * - Start with lowercase letter or digit
      * - Lowercase letters, digits, underscores, and hyphens allowed
+     * 
      * @example "page_123", "template-main", "a1"
      */
     public static final String UID_PATTERN = "^[a-z0-9][a-z0-9_-]*$";
@@ -60,6 +65,7 @@ public final class ValidationConstants {
      * Slot Name Pattern
      * - Start with a letter
      * - Letters, digits, underscores, and hyphens allowed
+     * 
      * @example "Header", "Main_Content", "footer-section"
      */
     public static final String SLOT_NAME_PATTERN = "^[A-Za-z][A-Za-z0-9_-]*$";
@@ -68,12 +74,14 @@ public final class ValidationConstants {
      * Media Code Pattern
      * - Must start with lowercase letter
      * - Lowercase letters, digits, underscores, and hyphens allowed
+     * 
      * @example "hero_desktop", "banner-1"
      */
     public static final String MEDIA_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
 
     /**
      * E.164 Phone Number Pattern
+     * 
      * @example "+905551234567", "+12025551234"
      */
     public static final String PHONE_E164_PATTERN = "^\\+[1-9]\\d{1,14}$";
@@ -221,7 +229,16 @@ public final class ValidationConstants {
 
     public static final String MSG_MEDIA_CODE_REQUIRED = "validation.media.code.required";
     public static final String MSG_MEDIA_CODE_SIZE = "validation.media.code.size";
-    public static final String MSG_MEDIA_CODE_PATTERN = "validation.media.code.pattern";
+    public static final String MSG_MEDIA_CODE_PATTERN = "{validation.media.code.pattern}";
+
+    // ============================================================================
+    // SITE TECHNICAL LIMITS
+    // ============================================================================
+
+    public static final int VERIFICATION_CODE_MAX_LENGTH = 100;
+    public static final int ROBOTS_TXT_MAX_LENGTH = 10000;
+    public static final int SITE_SCRIPTS_MAX_LENGTH = 50000;
+    public static final int COOKIE_CONSENT_TEXT_MAX_LENGTH = 2000;
 
     // ============================================================================
     // HELPER METHODS

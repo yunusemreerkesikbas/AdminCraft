@@ -1,5 +1,6 @@
 package com.backend.domain.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,4 +42,10 @@ public interface ComponentRepository {
     List<Component> findByIdIn(List<Long> ids);
 
     List<Component> findByResponsiveMediaId(Long responsiveMediaId);
+
+    long count();
+
+    long countByStatus(ComponentStatus status);
+
+    long countByCreatedAtAfter(LocalDateTime date);
 }
