@@ -1,0 +1,122 @@
+<div class="max-w-3xl">
+    <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.address.title' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.line1' | transloco
+                        "
+                        [labelTooltip]="'line1'"
+                        formControlName="line1"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.addressLine1'
+                                | transloco
+                        "
+                    >
+                    </spa-input>
+                </div>
+
+                <div class="md:col-span-2">
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.line2' | transloco
+                        "
+                        [labelTooltip]="'line2'"
+                        formControlName="line2"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.addressLine2'
+                                | transloco
+                        "
+                    >
+                    </spa-input>
+                </div>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.address.city' | transloco"
+                    [labelTooltip]="'city'"
+                    formControlName="city"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.city' | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.address.state' | transloco"
+                    [labelTooltip]="'state'"
+                    formControlName="state"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.state' | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.address.postalCode' | transloco
+                    "
+                    [labelTooltip]="'postalCode'"
+                    formControlName="postalCode"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.postalCode'
+                            | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.address.country' | transloco"
+                    [labelTooltip]="'country'"
+                    formControlName="country"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.country' | transloco
+                    "
+                >
+                </spa-input>
+
+                <div class="md:col-span-2">
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.mapEmbedUrl'
+                                | transloco
+                        "
+                        [labelTooltip]="'mapEmbedUrl'"
+                        formControlName="mapEmbedUrl"
+                        [placeholder]="'https://www.google.com/maps/embed?...'"
+                        [showErrors]="true"
+                    >
+                    </spa-input>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving"
+            >
+                @if (saving) {
+                    <mat-icon
+                        class="mr-2 animate-spin"
+                        svgIcon="heroicons_outline:arrow-path"
+                    ></mat-icon>
+                }
+                {{ 'common.save' | transloco }}
+            </button>
+        </div>
+    </form>
+</div>

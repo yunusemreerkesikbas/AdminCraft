@@ -58,14 +58,22 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
     @Input() labelTooltip?: string;
     @Input() placeholder?: string;
     @Input() hint?: string;
-    @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' | 'date' = 'text';
+    @Input() type: 'text' | 'email' | 'password' | 'tel' | 'number' | 'date' =
+        'text';
     @Input() styleClasses?: string;
     @Input() fullWidth: boolean = true;
     @Input() textarea: boolean = false;
     @Input() rows: number = 3;
     @Input() readonly: boolean = false;
     @Input() showErrors: boolean = true;
-    @Input() patternType?: 'code' | 'categoryCode' | 'sku' | 'slug' | 'uid' | 'slotName' | 'mediaCode';
+    @Input() patternType?:
+        | 'code'
+        | 'categoryCode'
+        | 'sku'
+        | 'slug'
+        | 'uid'
+        | 'slotName'
+        | 'mediaCode';
 
     @Input() control?: NgControl['control'];
 
@@ -95,7 +103,7 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
 
     get hasError(): boolean {
         const ctrl = this.activeControl;
-        return !!(ctrl && ctrl.invalid && (ctrl.touched || ctrl.dirty));
+        return !!(ctrl && ctrl.invalid && ctrl.touched);
     }
 
     get errorMessage(): string {
@@ -125,6 +133,9 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
         }
         if (errors['email']) {
             return VALIDATION_MESSAGES.EMAIL;
+        }
+        if (errors['serverError']) {
+            return errors['serverError'];
         }
 
         return VALIDATION_MESSAGES.REQUIRED;
@@ -178,7 +189,10 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
         const labelLower = (this.label || '').toLowerCase();
 
         if (labelLower.includes('code') || labelLower.includes('kod')) {
-            if (labelLower.includes('category') || labelLower.includes('kategori')) {
+            if (
+                labelLower.includes('category') ||
+                labelLower.includes('kategori')
+            ) {
                 return VALIDATION_MESSAGES.CATEGORY_CODE_PATTERN;
             }
             return VALIDATION_MESSAGES.CODE_PATTERN;
@@ -256,5 +270,3 @@ export class SpaInputComponent implements ControlValueAccessor, AfterViewInit {
         this.#onTouched();
     }
 }
-
-

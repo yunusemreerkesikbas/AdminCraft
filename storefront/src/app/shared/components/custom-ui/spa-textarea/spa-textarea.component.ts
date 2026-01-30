@@ -48,7 +48,9 @@ class SpaTextareaErrorStateMatcher implements ErrorStateMatcher {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SpaTextareaComponent implements ControlValueAccessor, AfterViewInit {
+export class SpaTextareaComponent
+    implements ControlValueAccessor, AfterViewInit
+{
     #cdr = inject(ChangeDetectorRef);
     #destroyRef = inject(DestroyRef);
 
@@ -107,6 +109,9 @@ export class SpaTextareaComponent implements ControlValueAccessor, AfterViewInit
         }
         if (errors['maxlength']) {
             return VALIDATION_MESSAGES.MAX_LENGTH;
+        }
+        if (errors['serverError']) {
+            return errors['serverError'];
         }
 
         return VALIDATION_MESSAGES.REQUIRED;
@@ -186,5 +191,3 @@ export class SpaTextareaComponent implements ControlValueAccessor, AfterViewInit
         this.#onTouched();
     }
 }
-
-

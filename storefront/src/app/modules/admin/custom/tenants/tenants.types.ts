@@ -14,13 +14,15 @@ export interface Tenant {
     updatedAt?: string;
     activatedAt?: string;
     suspendedAt?: string;
+    fullDomain?: string;
+    storageUsedMb?: number;
 }
 
 export enum TenantStatus {
     PENDING = 'PENDING',
     ACTIVE = 'ACTIVE',
     SUSPENDED = 'SUSPENDED',
-    MAINTENANCE = 'MAINTENANCE'
+    MAINTENANCE = 'MAINTENANCE',
 }
 
 export enum Language {
@@ -28,7 +30,7 @@ export enum Language {
     EN = 'EN',
     ES = 'ES',
     RU = 'RU',
-    AR = 'AR'
+    AR = 'AR',
 }
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
@@ -36,7 +38,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
     [Language.EN]: 'English',
     [Language.ES]: 'Español',
     [Language.RU]: 'Русский',
-    [Language.AR]: 'العربية'
+    [Language.AR]: 'العربية',
 };
 
 export enum Currency {
@@ -46,7 +48,7 @@ export enum Currency {
     GBP = 'GBP',
     JPY = 'JPY',
     AED = 'AED',
-    SAR = 'SAR'
+    SAR = 'SAR',
 }
 
 export const CURRENCY_LABELS: Record<Currency, string> = {
@@ -56,7 +58,7 @@ export const CURRENCY_LABELS: Record<Currency, string> = {
     [Currency.GBP]: 'GBP - British Pound (£)',
     [Currency.JPY]: 'JPY - Japanese Yen (¥)',
     [Currency.AED]: 'AED - UAE Dirham',
-    [Currency.SAR]: 'SAR - Saudi Riyal'
+    [Currency.SAR]: 'SAR - Saudi Riyal',
 };
 
 export interface LanguageResponse {
@@ -166,4 +168,3 @@ export interface SyncJobDto {
     startedAt?: string | null;
     completedAt?: string | null;
 }
-

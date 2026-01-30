@@ -1,0 +1,178 @@
+<div class="max-w-3xl">
+    <form [formGroup]="form" (ngSubmit)="save()">
+        <!-- Global Settings -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.general.contact' | transloco }}
+            </h3>
+
+            <div
+                formGroupName="global"
+                class="grid grid-cols-1 gap-4 md:grid-cols-2"
+            >
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.general.contactEmail' | transloco
+                    "
+                    [labelTooltip]="'contactEmail'"
+                    formControlName="contactEmail"
+                    type="email"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.common.placeholders.email' | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.general.contactPhone' | transloco
+                    "
+                    [labelTooltip]="'contactPhone'"
+                    formControlName="contactPhone"
+                    type="tel"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.common.placeholders.phone' | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.general.whatsappPhone' | transloco
+                    "
+                    [labelTooltip]="'whatsappPhone'"
+                    formControlName="whatsappPhone"
+                    type="tel"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.common.placeholders.phone' | transloco
+                    "
+                >
+                </spa-input>
+            </div>
+        </div>
+
+        <!-- Language-specific Settings -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.general.siteInfo' | transloco }}
+            </h3>
+
+            <!-- Language Tabs -->
+            <div class="mb-4 flex gap-2">
+                @for (lang of languages(); track lang) {
+                    <button
+                        type="button"
+                        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                        [class.bg-primary]="
+                            selectedLanguage() === lang.toLowerCase()
+                        "
+                        [class.text-on-primary]="
+                            selectedLanguage() === lang.toLowerCase()
+                        "
+                        [class.bg-gray-100]="
+                            selectedLanguage() !== lang.toLowerCase()
+                        "
+                        [class.dark:bg-gray-800]="
+                            selectedLanguage() !== lang.toLowerCase()
+                        "
+                        (click)="onLanguageChange(lang.toLowerCase())"
+                    >
+                        {{ lang.toUpperCase() }}
+                    </button>
+                }
+            </div>
+
+            <div formGroupName="languages">
+                @for (lang of languages(); track lang) {
+                    @if (selectedLanguage() === lang.toLowerCase()) {
+                        <div
+                            [formGroupName]="lang.toLowerCase()"
+                            class="space-y-4"
+                        >
+                            <spa-input
+                                [label]="
+                                    'admin.site.dashboard.general.siteName'
+                                        | transloco
+                                "
+                                [labelTooltip]="'siteName'"
+                                formControlName="siteName"
+                                [showErrors]="true"
+                                [placeholder]="
+                                    'admin.common.placeholders.name' | transloco
+                                "
+                            >
+                            </spa-input>
+
+                            <spa-input
+                                [label]="
+                                    'admin.site.dashboard.general.tagline'
+                                        | transloco
+                                "
+                                [labelTooltip]="'tagline'"
+                                formControlName="tagline"
+                                [showErrors]="true"
+                                [placeholder]="
+                                    'admin.site.dashboard.placeholders.tagline'
+                                        | transloco
+                                "
+                            >
+                            </spa-input>
+
+                            <spa-textarea
+                                [label]="
+                                    'admin.site.dashboard.general.footerText'
+                                        | transloco
+                                "
+                                [labelTooltip]="'footerText'"
+                                formControlName="footerText"
+                                [rows]="3"
+                                [showErrors]="true"
+                                [placeholder]="
+                                    'admin.site.dashboard.placeholders.footerText'
+                                        | transloco
+                                "
+                            >
+                            </spa-textarea>
+
+                            <spa-input
+                                [label]="
+                                    'admin.site.dashboard.general.headerTopbarText'
+                                        | transloco
+                                "
+                                [labelTooltip]="'headerTopbarText'"
+                                formControlName="headerTopbarText"
+                                [showErrors]="true"
+                                [placeholder]="
+                                    'admin.site.dashboard.placeholders.headerText'
+                                        | transloco
+                                "
+                            >
+                            </spa-input>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving"
+            >
+                @if (saving) {
+                    <mat-icon
+                        class="mr-2 animate-spin"
+                        svgIcon="heroicons_outline:arrow-path"
+                    ></mat-icon>
+                }
+                {{ 'common.save' | transloco }}
+            </button>
+        </div>
+    </form>
+</div>
