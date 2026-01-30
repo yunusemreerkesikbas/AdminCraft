@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppGlobalDto;
-import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppI18nDto;
+import com.backend.application.dto.SiteSettingsAppDto;
 import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppResponseDto;
 import com.backend.application.service.SiteSettingsService;
 import com.backend.domain.enums.Language;
@@ -53,7 +52,7 @@ public class SiteSettingsController {
     Long userId = securityHelper.getCurrentUserId();
 
     // Convert string keys to Language enum
-    Map<Language, SiteSettingsAppI18nDto> languageMap = null;
+    Map<Language, SiteSettingsAppDto.SiteSettingsAppI18nDto> languageMap = null;
     if (req.languages() != null) {
       languageMap = new HashMap<>();
       for (Map.Entry<String, SiteSettingsI18nDto> entry : req.languages().entrySet()) {
@@ -69,7 +68,7 @@ public class SiteSettingsController {
       }
     }
 
-    SiteSettingsAppGlobalDto globalAppDto = toAppGlobalDto(req.global());
+    SiteSettingsAppDto.SiteSettingsAppGlobalDto globalAppDto = toAppGlobalDto(req.global());
 
     SiteSettingsAppResponseDto responseApp = service.patchSettings(tenantId, globalAppDto, languageMap, userId);
     SiteSettingsResponseDto response = toPresentationResponse(responseApp);
@@ -81,13 +80,13 @@ public class SiteSettingsController {
       Map<String, @Valid SiteSettingsI18nDto> languages) {
   }
 
-  private SiteSettingsAppGlobalDto toAppGlobalDto(SiteSettingsGlobalDto dto) {
+  private SiteSettingsAppDto.SiteSettingsAppGlobalDto toAppGlobalDto(SiteSettingsGlobalDto dto) {
     if (dto == null)
       return null;
 
-    SiteSettingsAppGlobalDto.AddressDto address = null;
+    SiteSettingsAppDto.SiteSettingsAppGlobalDto.AddressDto address = null;
     if (dto.address() != null) {
-      address = new SiteSettingsAppGlobalDto.AddressDto(
+      address = new SiteSettingsAppDto.SiteSettingsAppGlobalDto.AddressDto(
           dto.address().line1(),
           dto.address().line2(),
           dto.address().city(),
@@ -97,9 +96,9 @@ public class SiteSettingsController {
           dto.address().mapEmbedUrl());
     }
 
-    SiteSettingsAppGlobalDto.SocialDto social = null;
+    SiteSettingsAppDto.SiteSettingsAppGlobalDto.SocialDto social = null;
     if (dto.social() != null) {
-      social = new SiteSettingsAppGlobalDto.SocialDto(
+      social = new SiteSettingsAppDto.SiteSettingsAppGlobalDto.SocialDto(
           dto.social().facebook(),
           dto.social().instagram(),
           dto.social().x(),
@@ -108,7 +107,7 @@ public class SiteSettingsController {
           dto.social().tiktok());
     }
 
-    return new SiteSettingsAppGlobalDto(
+    return new SiteSettingsAppDto.SiteSettingsAppGlobalDto(
         dto.contactEmail(),
         dto.contactPhone(),
         dto.whatsappPhone(),
@@ -118,10 +117,10 @@ public class SiteSettingsController {
         social);
   }
 
-  private SiteSettingsAppI18nDto toAppI18nDto(SiteSettingsI18nDto dto) {
+  private SiteSettingsAppDto.SiteSettingsAppI18nDto toAppI18nDto(SiteSettingsI18nDto dto) {
     if (dto == null)
       return null;
-    return new SiteSettingsAppI18nDto(
+    return new SiteSettingsAppDto.SiteSettingsAppI18nDto(
         dto.siteName(),
         dto.tagline(),
         mapSeoToApp(dto.seo()),
@@ -130,10 +129,10 @@ public class SiteSettingsController {
         dto.addressLocalized());
   }
 
-  private SiteSettingsAppI18nDto.SeoDto mapSeoToApp(SiteSettingsI18nDto.SeoDto seoDto) {
+  private SiteSettingsAppDto.SiteSettingsAppI18nDto.SeoDto mapSeoToApp(SiteSettingsI18nDto.SeoDto seoDto) {
     if (seoDto == null)
       return null;
-    return new SiteSettingsAppI18nDto.SeoDto(
+    return new SiteSettingsAppDto.SiteSettingsAppI18nDto.SeoDto(
         seoDto.title(),
         seoDto.description(),
         seoDto.keywords(),
@@ -186,7 +185,7 @@ public class SiteSettingsController {
       languages = dto.languages().entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
           e -> {
-            SiteSettingsAppI18nDto v = e.getValue();
+            SiteSettingsAppDto.SiteSettingsAppI18nDto v = e.getValue();
             return new SiteSettingsI18nDto(
                 v.siteName(),
                 v.tagline(),
@@ -200,7 +199,7 @@ public class SiteSettingsController {
     return new SiteSettingsResponseDto(global, languages);
   }
 
-  private SiteSettingsI18nDto.SeoDto mapSeoToPresentation(SiteSettingsAppI18nDto.SeoDto seoAppDto) {
+  private SiteSettingsI18nDto.SeoDto mapSeoToPresentation(SiteSettingsAppDto.SiteSettingsAppI18nDto.SeoDto seoAppDto) {
     if (seoAppDto == null)
       return null;
     return new SiteSettingsI18nDto.SeoDto(
