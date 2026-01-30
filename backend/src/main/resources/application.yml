@@ -14,6 +14,7 @@ app:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
   tenant:
     auto-sync-on-startup: true # Disable for dev - use manual sync button
+  platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
 
 spring:
   servlet:

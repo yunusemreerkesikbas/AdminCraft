@@ -14,12 +14,6 @@ import jakarta.validation.ConstraintValidatorContext;
 public class SecureUrlValidator implements ConstraintValidator<SecureUrl, String> {
 
   // Whitelisted domains for different URL types
-  private static final Set<String> ALLOWED_DOMAINS = Set.of(
-      "localhost",
-      "127.0.0.1",
-      // Add your production domains here
-      "yourdomain.com",
-      "www.yourdomain.com");
 
   private static final Set<String> ALLOWED_SOCIAL_DOMAINS = Set.of(
       "facebook.com", "www.facebook.com",
@@ -59,10 +53,14 @@ public class SecureUrlValidator implements ConstraintValidator<SecureUrl, String
 
     // Check against appropriate whitelist
     Set<String> allowedDomains = switch (urlType) {
-      case CANONICAL -> ALLOWED_DOMAINS;
       case SOCIAL_MEDIA -> ALLOWED_SOCIAL_DOMAINS;
-      case GENERAL -> Set.of(); // Add general domains if needed
+      default -> null; // Allow all domains for CANONICAL and GENERAL
     };
+
+    // If no whitelist is enforced, we accept the domain
+    if (allowedDomains == null) {
+      return true;
+    }
 
     // Check if domain is in whitelist
     boolean isAllowed = allowedDomains.stream()

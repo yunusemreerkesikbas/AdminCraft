@@ -84,12 +84,38 @@ public class SiteSettingsController {
   private SiteSettingsAppGlobalDto toAppGlobalDto(SiteSettingsGlobalDto dto) {
     if (dto == null)
       return null;
+
+    SiteSettingsAppGlobalDto.AddressDto address = null;
+    if (dto.address() != null) {
+      address = new SiteSettingsAppGlobalDto.AddressDto(
+          dto.address().line1(),
+          dto.address().line2(),
+          dto.address().city(),
+          dto.address().state(),
+          dto.address().postalCode(),
+          dto.address().country(),
+          dto.address().mapEmbedUrl());
+    }
+
+    SiteSettingsAppGlobalDto.SocialDto social = null;
+    if (dto.social() != null) {
+      social = new SiteSettingsAppGlobalDto.SocialDto(
+          dto.social().facebook(),
+          dto.social().instagram(),
+          dto.social().x(),
+          dto.social().linkedin(),
+          dto.social().youtube(),
+          dto.social().tiktok());
+    }
+
     return new SiteSettingsAppGlobalDto(
         dto.contactEmail(),
         dto.contactPhone(),
         dto.whatsappPhone(),
         dto.canonicalBaseUrl(),
-        dto.robots());
+        dto.robots(),
+        address,
+        social);
   }
 
   private SiteSettingsAppI18nDto toAppI18nDto(SiteSettingsI18nDto dto) {
@@ -98,10 +124,22 @@ public class SiteSettingsController {
     return new SiteSettingsAppI18nDto(
         dto.siteName(),
         dto.tagline(),
-        dto.seo(),
+        mapSeoToApp(dto.seo()),
         dto.footerText(),
         dto.headerTopbarText(),
         dto.addressLocalized());
+  }
+
+  private SiteSettingsAppI18nDto.SeoDto mapSeoToApp(SiteSettingsI18nDto.SeoDto seoDto) {
+    if (seoDto == null)
+      return null;
+    return new SiteSettingsAppI18nDto.SeoDto(
+        seoDto.title(),
+        seoDto.description(),
+        seoDto.keywords(),
+        seoDto.ogTitle(),
+        seoDto.ogDescription(),
+        seoDto.twitterCard());
   }
 
   private SiteSettingsResponseDto toPresentationResponse(SiteSettingsAppResponseDto dto) {
@@ -110,12 +148,37 @@ public class SiteSettingsController {
 
     SiteSettingsGlobalDto global = null;
     if (dto.global() != null) {
+      SiteSettingsGlobalDto.AddressDto address = null;
+      if (dto.global().address() != null) {
+        address = new SiteSettingsGlobalDto.AddressDto(
+            dto.global().address().line1(),
+            dto.global().address().line2(),
+            dto.global().address().city(),
+            dto.global().address().state(),
+            dto.global().address().postalCode(),
+            dto.global().address().country(),
+            dto.global().address().mapEmbedUrl());
+      }
+
+      SiteSettingsGlobalDto.SocialDto social = null;
+      if (dto.global().social() != null) {
+        social = new SiteSettingsGlobalDto.SocialDto(
+            dto.global().social().facebook(),
+            dto.global().social().instagram(),
+            dto.global().social().x(),
+            dto.global().social().linkedin(),
+            dto.global().social().youtube(),
+            dto.global().social().tiktok());
+      }
+
       global = new SiteSettingsGlobalDto(
           dto.global().contactEmail(),
           dto.global().contactPhone(),
           dto.global().whatsappPhone(),
           dto.global().canonicalBaseUrl(),
-          dto.global().robots());
+          dto.global().robots(),
+          address,
+          social);
     }
 
     Map<String, SiteSettingsI18nDto> languages = null;
@@ -127,7 +190,7 @@ public class SiteSettingsController {
             return new SiteSettingsI18nDto(
                 v.siteName(),
                 v.tagline(),
-                v.seo(),
+                mapSeoToPresentation(v.seo()),
                 v.footerText(),
                 v.headerTopbarText(),
                 v.addressLocalized());
@@ -135,5 +198,17 @@ public class SiteSettingsController {
     }
 
     return new SiteSettingsResponseDto(global, languages);
+  }
+
+  private SiteSettingsI18nDto.SeoDto mapSeoToPresentation(SiteSettingsAppI18nDto.SeoDto seoAppDto) {
+    if (seoAppDto == null)
+      return null;
+    return new SiteSettingsI18nDto.SeoDto(
+        seoAppDto.title(),
+        seoAppDto.description(),
+        seoAppDto.keywords(),
+        seoAppDto.ogTitle(),
+        seoAppDto.ogDescription(),
+        seoAppDto.twitterCard());
   }
 }

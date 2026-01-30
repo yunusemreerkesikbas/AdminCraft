@@ -1,6 +1,9 @@
 package com.backend.application.dto;
 
+import java.util.List;
 import java.util.Map;
+
+import com.backend.domain.enums.RobotsMetaTag;
 
 /**
  * Application layer DTOs for Site Settings.
@@ -13,16 +16,46 @@ public class SiteSettingsAppDto {
       String contactPhone,
       String whatsappPhone,
       String canonicalBaseUrl,
-      String robots) {
+      RobotsMetaTag robots,
+      AddressDto address,
+      SocialDto social) {
+
+    public record AddressDto(
+        String line1,
+        String line2,
+        String city,
+        String state,
+        String postalCode,
+        String country,
+        String mapEmbedUrl) {
+    }
+
+    public record SocialDto(
+        String facebook,
+        String instagram,
+        String x,
+        String linkedin,
+        String youtube,
+        String tiktok) {
+    }
   }
 
   public record SiteSettingsAppI18nDto(
       String siteName,
       String tagline,
-      String seo,
+      SeoDto seo,
       String footerText,
       String headerTopbarText,
       String addressLocalized) {
+
+    public record SeoDto(
+        String title,
+        String description,
+        List<String> keywords,
+        String ogTitle,
+        String ogDescription,
+        String twitterCard) {
+    }
   }
 
   public record SiteSettingsAppResponseDto(

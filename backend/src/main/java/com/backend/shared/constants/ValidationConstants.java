@@ -80,11 +80,13 @@ public final class ValidationConstants {
     public static final String MEDIA_CODE_PATTERN = "^[a-z][a-z0-9_-]*$";
 
     /**
-     * E.164 Phone Number Pattern
+     * Global Phone Number Pattern (Loose)
+     * - Optional '+' prefix
+     * - 7-15 digits
      * 
-     * @example "+905551234567", "+12025551234"
+     * @example "+905551234567", "05551234567", "905551234567"
      */
-    public static final String PHONE_E164_PATTERN = "^\\+[1-9]\\d{1,14}$";
+    public static final String PHONE_GLOBAL_PATTERN = "^\\+?[0-9]{7,15}$";
 
     /**
      * Subdomain Pattern

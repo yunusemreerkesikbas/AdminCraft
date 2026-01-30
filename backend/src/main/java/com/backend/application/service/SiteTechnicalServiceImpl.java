@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.CookieConsentAppDto;
-import com.backend.application.dto.response.SiteTechnicalAppDto.DomainAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.ScriptsAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppDto;
@@ -32,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional
 public class SiteTechnicalServiceImpl implements SiteTechnicalService {
-
-    private static final String PLATFORM_DOMAIN = "admincraft.com";
 
     private final SiteRepository siteRepository;
     private final SiteTechnicalSettingsRepository technicalSettingsRepository;
@@ -150,7 +147,7 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
 
         Site site = new Site();
         site.setSiteName("Default Site");
-        site.setDomain("localhost");
+        site.setDomain("localhost"); // Default subdomain
         site.setDefaultLanguage(Language.EN);
         site.setEnabledLanguages(Collections.singleton(Language.EN));
         site.setPublished(true);
@@ -176,18 +173,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     private SiteTechnicalAppDto buildResponse(Site site, SiteTechnicalSettings settings) {
-        // Domain info
-        String subdomain = site.getDomain();
-        String customDomain = site.getCustomDomain();
-        String fullUrl = site.getSiteUrl();
-
-        DomainAppDto domainDto = new DomainAppDto(
-                subdomain,
-                PLATFORM_DOMAIN,
-                fullUrl,
-                customDomain,
-                site.getSslEnabled());
-
         // Search engine info
         VerificationAppDto verificationDto = new VerificationAppDto(
                 settings.getGoogleVerification(),
@@ -212,7 +197,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
                 settings.getCookieConsentText());
 
         return new SiteTechnicalAppDto(
-                domainDto,
                 searchEngineDto,
                 scriptsDto,
                 cookieConsentDto);

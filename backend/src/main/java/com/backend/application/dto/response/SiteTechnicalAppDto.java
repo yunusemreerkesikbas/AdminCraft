@@ -5,17 +5,9 @@ package com.backend.application.dto.response;
  * Replaces the dependency on presentation layer SiteTechnicalResponse.
  */
 public record SiteTechnicalAppDto(
-    DomainAppDto domain,
     SearchEngineAppDto searchEngine,
     ScriptsAppDto scripts,
     CookieConsentAppDto cookieConsent) {
-  public record DomainAppDto(
-      String subdomain,
-      String platformDomain,
-      String fullUrl,
-      String customDomain,
-      Boolean sslEnabled) {
-  }
 
   public record SearchEngineAppDto(
       String robotsTxt,

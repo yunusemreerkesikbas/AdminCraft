@@ -1,12 +1,19 @@
 package com.backend.infrastructure.persistence.platform.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tenants", schema = "platform_management")
@@ -60,6 +67,18 @@ public class Tenant {
   @Column(name = "has_admin_user", nullable = false)
   @Builder.Default
   private Boolean hasAdminUser = false;
+
+  @Column(name = "storage_used_mb")
+  private Long storageUsedMb;
+
+  @Column(name = "last_backup_at")
+  private LocalDateTime lastBackupAt;
+
+  @Column(name = "activated_at")
+  private LocalDateTime activatedAt;
+
+  @Column(length = 1000)
+  private String notes;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
