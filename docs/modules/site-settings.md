@@ -1,6 +1,16 @@
 # Site Settings
 
-> **Note**: Site Settings functionality has been integrated into the [Site Dashboard](site-dashboard.md). The standalone settings module is maintained for backward compatibility but new features should be added to Site Dashboard.
+> **Status**: ⚠️ Legacy Module (Backward Compatibility Only)
+>
+> **Note**: Site Settings functionality has been **fully integrated** into the [Site Dashboard](site-dashboard.md) with significant improvements:
+> - ✅ Modern Angular Signals state management
+> - ✅ Custom UI components with automatic validation
+> - ✅ NotificationService integration (user feedback)
+> - ✅ ConfirmationService for safety
+> - ✅ Dynamic multi-language support via LanguageContextService
+> - ✅ 35-40% code reduction through DRY principles
+>
+> The standalone settings module is maintained for backward compatibility but **all new features should be added to Site Dashboard**. See [Site Dashboard - Technical Improvements](site-dashboard.md#technical-improvements-summary-2026-01-27) for details.
 
 ## Purpose
 

@@ -448,16 +448,6 @@ public class SiteController {
         if (dto == null)
             return null;
 
-        SiteTechnicalResponse.DomainDto domain = null;
-        if (dto.domain() != null) {
-            domain = new SiteTechnicalResponse.DomainDto(
-                    dto.domain().subdomain(),
-                    dto.domain().platformDomain(),
-                    dto.domain().fullUrl(),
-                    dto.domain().customDomain(),
-                    dto.domain().sslEnabled());
-        }
-
         SiteTechnicalResponse.SearchEngineDto searchEngine = null;
         if (dto.searchEngine() != null) {
             SiteTechnicalResponse.VerificationDto verification = null;
@@ -490,7 +480,6 @@ public class SiteController {
         }
 
         return SiteTechnicalResponse.builder()
-                .domain(domain)
                 .searchEngine(searchEngine)
                 .scripts(scripts)
                 .cookieConsent(cookieConsent)

@@ -1,47 +1,45 @@
 package com.backend.presentation.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Response DTO for Site Technical Settings.
  * Used in the Technical tab of Site Dashboard.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+
 public record SiteTechnicalResponse(
-    DomainDto domain,
-    SearchEngineDto searchEngine,
-    ScriptsDto scripts,
-    CookieConsentDto cookieConsent
-) {
+        SearchEngineDto searchEngine,
+        ScriptsDto scripts,
+        CookieConsentDto cookieConsent) {
 
-    public record DomainDto(
-        String subdomain,
-        String platformDomain,
-        String fullUrl,
-        String customDomain,
-        Boolean sslEnabled
-    ) {}
-
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record SearchEngineDto(
-        String robotsTxt,
-        Boolean sitemapEnabled,
-        Boolean indexingEnabled,
-        VerificationDto verification
-    ) {}
+            String robotsTxt,
+            Boolean sitemapEnabled,
+            Boolean indexingEnabled,
+            VerificationDto verification) {
+    }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record VerificationDto(
-        String google,
-        String bing,
-        String yandex
-    ) {}
+            String google,
+            String bing,
+            String yandex) {
+    }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ScriptsDto(
-        String headScripts,
-        String bodyStartScripts,
-        String bodyEndScripts
-    ) {}
+            String headScripts,
+            String bodyStartScripts,
+            String bodyEndScripts) {
+    }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CookieConsentDto(
-        Boolean enabled,
-        String text
-    ) {}
+            Boolean enabled,
+            String text) {
+    }
 
     /**
      * Builder for creating SiteTechnicalResponse.
@@ -51,15 +49,9 @@ public record SiteTechnicalResponse(
     }
 
     public static class Builder {
-        private DomainDto domain;
         private SearchEngineDto searchEngine;
         private ScriptsDto scripts;
         private CookieConsentDto cookieConsent;
-
-        public Builder domain(DomainDto domain) {
-            this.domain = domain;
-            return this;
-        }
 
         public Builder searchEngine(SearchEngineDto searchEngine) {
             this.searchEngine = searchEngine;
@@ -77,7 +69,7 @@ public record SiteTechnicalResponse(
         }
 
         public SiteTechnicalResponse build() {
-            return new SiteTechnicalResponse(domain, searchEngine, scripts, cookieConsent);
+            return new SiteTechnicalResponse(searchEngine, scripts, cookieConsent);
         }
     }
 }
