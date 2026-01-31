@@ -6,21 +6,21 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 
 ### Backend (Spring Boot)
 
-| File | Purpose |
-|------|---------|
-| `../../backend/src/main/resources/application.yml` | Base configuration (shared settings) |
-| `../../backend/src/main/resources/application-dev.yml` | Development overrides |
-| `../../backend/src/main/resources/application-stage.yml` | Staging overrides |
-| `../../backend/src/main/resources/application-prod.yml` | Production overrides |
+| File                                                     | Purpose                              |
+| -------------------------------------------------------- | ------------------------------------ |
+| `../../backend/src/main/resources/application.yml`       | Base configuration (shared settings) |
+| `../../backend/src/main/resources/application-dev.yml`   | Development overrides                |
+| `../../backend/src/main/resources/application-stage.yml` | Staging overrides                    |
+| `../../backend/src/main/resources/application-prod.yml`  | Production overrides                 |
 
 ### Frontend (Angular)
 
-| File | Purpose |
-|------|---------|
-| `../../storefront/src/environments/environment.ts` | Development config |
-| `../../storefront/src/environments/environment.stage.ts` | Staging config |
-| `../../storefront/src/environments/environment.prod.ts` | Production config |
-| `../../storefront/angular.json` | Build configurations |
+| File                                                     | Purpose              |
+| -------------------------------------------------------- | -------------------- |
+| `../../storefront/src/environments/environment.ts`       | Development config   |
+| `../../storefront/src/environments/environment.stage.ts` | Staging config       |
+| `../../storefront/src/environments/environment.prod.ts`  | Production config    |
+| `../../storefront/angular.json`                          | Build configurations |
 
 ## Rules and Invariants
 
@@ -41,28 +41,28 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 
 ### Backend
 
-| Setting | Dev | Stage | Prod |
-|---------|-----|-------|------|
-| DB Port | `3307` (Docker) | `3306` | `3306` |
-| DB Credentials | defaults | env vars | env vars |
-| JWT Secret | default | `${JWT_SECRET}` | `${JWT_SECRET}` |
-| SQL Logging | `true` | `false` | `false` |
-| Swagger UI | enabled | enabled | disabled |
-| Log Level | `DEBUG` | `INFO` | `INFO` |
-| Auto-sync | `false` | `true` | `true` |
+| Setting        | Dev      | Stage           | Prod            |
+| -------------- | -------- | --------------- | --------------- |
+| DB Port        | `3306`   | `3306`          | `3306`          |
+| DB Credentials | defaults | env vars        | env vars        |
+| JWT Secret     | default  | `${JWT_SECRET}` | `${JWT_SECRET}` |
+| SQL Logging    | `true`   | `false`         | `false`         |
+| Swagger UI     | enabled  | enabled         | disabled        |
+| Log Level      | `DEBUG`  | `INFO`          | `INFO`          |
+| Auto-sync      | `false`  | `true`          | `true`          |
 
 ### Frontend
 
-| Setting | Dev | Stage | Prod |
-|---------|-----|-------|------|
-| `production` | `false` | `false` | `true` |
-| `apiBaseUrl` | `/api` (proxy) | `https://s1.api.admincraft.com` | `https://api.admincraft.com` |
-| `apiTimeout` | `30000` | `30000` | `30000` |
-| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']` | `['tr', 'en']` |
-| `defaultLanguage` | `en` | `en` | `en` |
-| `maxRetryAttempts` | `0` | `0` | `3` |
-| Source Maps | yes | yes | no |
-| Optimization | no | yes | yes |
+| Setting              | Dev            | Stage                           | Prod                         |
+| -------------------- | -------------- | ------------------------------- | ---------------------------- |
+| `production`         | `false`        | `false`                         | `true`                       |
+| `apiBaseUrl`         | `/api` (proxy) | `https://s1.api.admincraft.com` | `https://api.admincraft.com` |
+| `apiTimeout`         | `30000`        | `30000`                         | `30000`                      |
+| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                  | `['tr', 'en']`               |
+| `defaultLanguage`    | `en`           | `en`                            | `en`                         |
+| `maxRetryAttempts`   | `0`            | `0`                             | `3`                          |
+| Source Maps          | yes            | yes                             | no                           |
+| Optimization         | no             | yes                             | yes                          |
 
 ### Language Configuration
 
@@ -75,11 +75,13 @@ The `supportedLanguages` and `defaultLanguage` values control the Admin UI langu
 ### Adding a New Language
 
 1. **Environment files** - Add to `supportedLanguages`:
+
    ```typescript
    supportedLanguages: ['tr', 'en', 'de'],
    ```
 
 2. **app.config.ts** - Add to `LANGUAGE_CONFIG`:
+
    ```typescript
    de: {
        label: 'Deutsch',
@@ -91,7 +93,7 @@ The `supportedLanguages` and `defaultLanguage` values control the Admin UI langu
 3. **Create translation file** - `storefront/src/app/modules/admin/i18n/langDE.ts`:
    ```typescript
    export const langDE = {
-       // translations...
+     // translations...
    };
    ```
 
@@ -134,16 +136,16 @@ npm run build:prod
 
 ### Stage/Prod Backend
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `JWT_SECRET` | JWT signing key (min 64 chars) | Yes |
-| `DB_USERNAME` | Database username | Yes |
-| `DB_PASSWORD` | Database password | Yes |
-| `DB_HOST` | Database host | Yes |
-| `PLATFORM_DB_URL` | Full JDBC URL for platform DB | Yes |
-| `DB_PORT` | Database port | No (default: 3306) |
-| `APP_FRONTEND_BASE_URL` | Frontend URL pattern | No |
-| `PLATFORM_DOMAIN` | Platform domain | No |
+| Variable                | Description                    | Required           |
+| ----------------------- | ------------------------------ | ------------------ |
+| `JWT_SECRET`            | JWT signing key (min 64 chars) | Yes                |
+| `DB_USERNAME`           | Database username              | Yes                |
+| `DB_PASSWORD`           | Database password              | Yes                |
+| `DB_HOST`               | Database host                  | Yes                |
+| `PLATFORM_DB_URL`       | Full JDBC URL for platform DB  | Yes                |
+| `DB_PORT`               | Database port                  | No (default: 3306) |
+| `APP_FRONTEND_BASE_URL` | Frontend URL pattern           | No                 |
+| `PLATFORM_DOMAIN`       | Platform domain                | No                 |
 
 ### Example Stage Deployment
 
@@ -159,7 +161,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
 
 ## Gotchas
 
-1. **Docker MySQL uses port 3307**: The `docker-compose.yml` maps `3307:3306`, so dev connects to `localhost:3307`
+1. **MySQL standard port (3306)**: Docker and backend both use 3306 by default. If this port is occupied by a local MySQL service, you must stop the local service.
 
 2. **Profile file naming**: Must be exactly `application-{profile}.yml` (e.g., `application-dev.yml`)
 
@@ -171,3 +173,159 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
    - `application.yml` (base)
    - `application-{profile}.yml` (profile-specific)
    - Environment variables (highest priority)
+
+---
+
+## Docker Multi-Environment Setup
+
+AdminCraft uses Docker Compose with environment-specific override files.
+
+### File Structure
+
+```
+AdminCraft/
+├── docker-compose.yml          # Base config (MySQL only)
+├── docker-compose.dev.yml      # Dev overrides (+ phpMyAdmin)
+├── docker-compose.prod.yml     # Prod overrides (+ Backend + Frontend + Traefik)
+├── .env.example                # Environment template
+├── .env.dev                    # Local dev values (gitignored)
+├── .env.prod                   # Production values (gitignored)
+└── docker/
+    ├── mysql/                  # MySQL config (existing)
+    ├── backend/Dockerfile      # Spring Boot image
+    └── frontend/
+        ├── Dockerfile          # Angular + Nginx image
+        └── nginx.conf          # Nginx configuration
+```
+
+### Environment Overview
+
+| Environment    | Services                             | Use Case                                     |
+| -------------- | ------------------------------------ | -------------------------------------------- |
+| **Dev**        | MySQL + phpMyAdmin                   | Local development (Backend/Frontend via IDE) |
+| **Prod/Stage** | MySQL + Backend + Frontend + Traefik | VPS deployment with SSL                      |
+
+### Local Development
+
+Runs MySQL and phpMyAdmin. Backend and Frontend are started via IDE for hot-reload.
+
+```powershell
+# Start infrastructure
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d
+
+# Stop
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+
+# View logs
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
+```
+
+**Access Points:**
+
+- MySQL: `localhost:3306`
+- phpMyAdmin: `http://localhost:8081`
+- Backend (IDE): `http://localhost:8080`
+- Frontend (IDE): `http://localhost:4200`
+
+### Production/Stage Deployment
+
+Runs full stack with automatic SSL via Traefik.
+
+```powershell
+# Build and start (first time or after code changes)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+# Start (without rebuild)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# Stop
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+
+# View logs
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
+
+# Rebuild specific service
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build backend
+```
+
+**Access Points (with example domain):**
+
+- Frontend: `https://admincraft.example.com`
+- Backend API: `https://api.admincraft.example.com`
+
+### Environment Variables
+
+Create `.env.dev` and `.env.prod` from `.env.example`:
+
+```powershell
+# Copy template
+cp .env.example .env.dev
+cp .env.example .env.prod
+```
+
+**Required Variables:**
+
+| Variable         | Dev             | Prod/Stage              |
+| ---------------- | --------------- | ----------------------- |
+| `DB_PASSWORD`    | simple password | strong password         |
+| `JWT_SECRET`     | any 64+ chars   | secure random 64+ chars |
+| `SPRING_PROFILE` | `dev`           | `prod` or `stage`       |
+| `DOMAIN`         | -               | your domain             |
+| `ACME_EMAIL`     | -               | your email (for SSL)    |
+
+### Traefik Configuration
+
+Production uses Traefik v3 for:
+
+- Automatic HTTPS with Let's Encrypt
+- HTTP to HTTPS redirect
+- Reverse proxy to services
+
+**DNS Requirements:**
+
+- `admincraft.example.com` → VPS IP
+- `api.admincraft.example.com` → VPS IP
+
+### Docker Image Build Arguments
+
+**Backend Dockerfile:**
+
+- Uses Maven wrapper for dependency caching
+- Multi-stage build (JDK for build, JRE for runtime)
+- Non-root user for security
+
+**Frontend Dockerfile:**
+
+- `BUILD_ENV` arg controls Angular build config
+- Values: `dev`, `stage`, `prod` (default: `prod`)
+- Multi-stage build (Node for build, Nginx for runtime)
+
+### Troubleshooting
+
+**MySQL won't start:**
+
+```powershell
+# Check if port 3306 is in use
+netstat -ano | findstr 3306
+
+# If occupied by local MySQL service (mysqld.exe), stop it:
+Stop-Service -Name "mysql" -Force
+Set-Service -Name "mysql" -StartupType Manual
+```
+
+**Backend can't connect to MySQL:**
+
+```powershell
+# Verify MySQL is healthy
+docker ps
+docker logs admincraft-mysql
+
+# Wait for MySQL health check
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --wait
+```
+
+**SSL certificate not issued:**
+
+- Verify DNS A records point to VPS IP
+- Check Traefik logs: `docker logs admincraft-traefik`
+- Verify ports 80/443 are open on VPS firewall
