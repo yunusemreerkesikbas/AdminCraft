@@ -1,0 +1,31 @@
+# AdminCraft - Local Development Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d
+#
+# This configuration runs MySQL + phpMyAdmin locally.
+# Backend and Frontend are run separately via IDE/CLI for hot-reload.
+
+services:
+  mysql-db:
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2
+    container_name: admincraft-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql-db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_PASSWORD}
+      PMA_ARBITRARY: 1
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      UPLOAD_LIMIT: 20M
+      MEMORY_LIMIT: 128M
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql-db
+    networks:
+      - admincraft-network
