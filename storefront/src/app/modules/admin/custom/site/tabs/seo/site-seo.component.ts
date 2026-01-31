@@ -89,9 +89,6 @@ export class SpaSiteSeoComponent implements OnChanges, OnDestroy {
             this.form.markAllAsTouched();
             return;
         }
-
-        this.saving = true;
-
         this.saving = true;
         const formValue = this.form.value;
 
@@ -137,7 +134,6 @@ export class SpaSiteSeoComponent implements OnChanges, OnDestroy {
                     this.settingsUpdated.emit(updatedSettings);
                 },
                 error: (err) => {
-                    console.error('Failed to save SEO settings:', err);
                     this.saving = false;
                     this.#notification.alert(
                         'admin.site.dashboard.messages.saveFailed'

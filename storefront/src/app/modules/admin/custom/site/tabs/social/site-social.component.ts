@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take } from 'rxjs';
 import { SiteService } from '../../site.service';
 import { SiteSettingsResponseDto } from '../../site.types';
 
@@ -70,8 +70,6 @@ export class SpaSiteSocialComponent implements OnChanges, OnDestroy {
         }
 
         this.saving = true;
-
-        this.saving = true;
         const formValue = this.form.value;
 
         const payload = {
@@ -89,9 +87,9 @@ export class SpaSiteSocialComponent implements OnChanges, OnDestroy {
 
         this.#siteService
             .patchSiteSettings(payload)
-            .pipe(takeUntil(this.#destroy$))
+            .pipe(take(1))
             .subscribe({
-                next: (updatedSettings) => {
+                next: (updatedSettings: SiteSettingsResponseDto) => {
                     this.saving = false;
                     this.#notificationService.success(
                         'admin.site.dashboard.messages.saveSuccess'

@@ -26,7 +26,9 @@
                     [label]="'admin.site.dashboard.seo.robots' | transloco"
                     formControlName="robots"
                     [options]="robotsOptions"
-                    [placeholder]="'Select Robots Meta Tag'"
+                    [placeholder]="
+                        'admin.site.dashboard.seo.robotsPlaceholder' | transloco
+                    "
                     [hint]="'admin.site.dashboard.seo.robotsHint' | transloco"
                     [showErrors]="true"
                 >

@@ -68,9 +68,6 @@ export class SpaSiteAddressComponent implements OnChanges, OnDestroy {
             this.form.markAllAsTouched();
             return;
         }
-
-        this.saving = true;
-
         this.saving = true;
         const formValue = this.form.value;
 
@@ -100,7 +97,6 @@ export class SpaSiteAddressComponent implements OnChanges, OnDestroy {
                     this.settingsUpdated.emit(updatedSettings);
                 },
                 error: (err) => {
-                    console.error('Failed to save address:', err);
                     this.saving = false;
                     this.#notificationService.alert(
                         'admin.site.dashboard.messages.saveFailed'

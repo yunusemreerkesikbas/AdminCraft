@@ -94,17 +94,15 @@ export class SpaSiteOverviewComponent {
     }
 
     onPreview(): void {
-        if (
-            this.overview?.actions?.previewUrl &&
-            UrlValidator.isValidPreviewUrl(this.overview.actions.previewUrl)
-        ) {
-            window.open(
-                this.overview.actions.previewUrl,
-                '_blank',
-                'noopener,noreferrer'
-            );
+        const previewUrl = this.overview?.actions?.previewUrl;
+        if (!previewUrl) return;
+
+        if (UrlValidator.isValidPreviewUrl(previewUrl)) {
+            window.open(previewUrl, '_blank', 'noopener,noreferrer');
         } else {
-            console.error('Invalid preview URL');
+            this.#notification.alert(
+                'admin.site.dashboard.overview.actions.invalidPreviewUrl'
+            );
         }
     }
 

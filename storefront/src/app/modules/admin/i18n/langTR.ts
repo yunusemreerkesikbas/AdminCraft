@@ -1022,6 +1022,7 @@ export const langTR = {
                     canonicalBaseUrlHint:
                         "Sitenizin kanonik URL'si (örn: https://www.example.com)",
                     robots: 'Robots',
+                    robotsPlaceholder: 'Robots Meta Etiketi Seçin',
                     robotsHint: 'Varsayılan: index, follow',
                     title: 'SEO Başlık',
                     description: 'SEO Açıklama',
@@ -1671,6 +1672,7 @@ export const langTR = {
                         maintenance: 'Bakım Moduna Al',
                         enableMaintenance: 'Bakım Modunu Etkinleştir',
                         disableMaintenance: 'Bakım Modunu Kapat',
+                        invalidPreviewUrl: "Geçersiz önizleme URL'si",
                     },
                 },
             },

@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
 import { TenantModule } from '@core/tenant/tenant.types';
 import { ApiResponse } from '@modules/admin/custom/pages/page-builder.types';
-import { Observable, map, take, tap } from 'rxjs';
+import { Observable, map, switchMap, take, tap } from 'rxjs';
 import { TenantDetailResponse } from '../tenants/tenants.types';
 import {
     Site,
@@ -177,8 +177,12 @@ export class SiteService {
         return this.#apiClient
             .post<ApiResponse<Site>>('siteMaintenance', {}, { id }, { message })
             .pipe(
-                map((response) => response.data),
-                tap(() => this.getOverview().pipe(take(1)).subscribe())
+                switchMap((response) =>
+                    this.getOverview().pipe(
+                        take(1),
+                        map(() => response.data)
+                    )
+                )
             );
     }
 
@@ -189,8 +193,12 @@ export class SiteService {
         return this.#apiClient
             .delete<ApiResponse<Site>>('siteMaintenance', { id })
             .pipe(
-                map((response) => response.data),
-                tap(() => this.getOverview().pipe(take(1)).subscribe())
+                switchMap((response) =>
+                    this.getOverview().pipe(
+                        take(1),
+                        map(() => response.data)
+                    )
+                )
             );
     }
 

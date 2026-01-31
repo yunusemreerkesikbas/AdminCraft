@@ -109,7 +109,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
                     this.technicalUpdated.emit(updatedTechnical);
                 },
                 error: (err) => {
-                    console.error('Failed to save technical settings:', err);
                     this.saving = false;
 
                     if (err.error?.data) {

@@ -1009,6 +1009,7 @@ export const langEN = {
                         maintenance: 'Enter Maintenance Mode',
                         enableMaintenance: 'Enable Maintenance Mode',
                         disableMaintenance: 'Disable Maintenance Mode',
+                        invalidPreviewUrl: 'Invalid preview URL',
                     },
                     thisWeek: 'this week',
                     today: 'today',
@@ -1051,6 +1052,7 @@ export const langEN = {
                     canonicalBaseUrlHint:
                         "Your site's canonical URL (e.g., https://www.example.com)",
                     robots: 'Robots',
+                    robotsPlaceholder: 'Select Robots Meta Tag',
                     robotsHint: 'Default: index, follow',
                     title: 'SEO Title',
                     description: 'SEO Description',

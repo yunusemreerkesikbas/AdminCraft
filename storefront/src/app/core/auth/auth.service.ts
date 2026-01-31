@@ -67,7 +67,7 @@ export class AuthService {
                     };
                     this.#userService.setUser(user);
                     const subFromLogin: string | undefined =
-                        response.data.subdomain || response.data.subdomain;
+                        response.data.subdomain;
                     if (subFromLogin) {
                         this.#tenantContext.setSubdomain(subFromLogin);
                     }

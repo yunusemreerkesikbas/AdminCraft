@@ -105,7 +105,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
             languages: {} as Record<string, any>,
         };
 
-        // Build language-specific payload
         this.languages().forEach((lang) => {
             const langKey = lang.toLowerCase();
             if (formValue.languages[langKey]) {
@@ -131,7 +130,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                     this.settingsUpdated.emit(updatedSettings);
                 },
                 error: (err) => {
-                    console.error('Failed to save settings:', err);
                     this.saving = false;
 
                     if (err.error?.data) {

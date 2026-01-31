@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoModule } from '@jsverse/transloco';
+import { NotificationService } from '@shared/notifications/notification.service';
 import { UserService } from 'app/core/user/user.service';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { SiteService } from './site.service';
@@ -52,6 +53,7 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     readonly #siteService = inject(SiteService);
     readonly #userService = inject(UserService);
     readonly #destroy$ = new Subject<void>();
+    #notificationService = inject(NotificationService);
 
     readonly userSig = this.#userService.user;
     readonly tabs = SITE_DASHBOARD_TABS;
@@ -137,6 +139,9 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                 },
                 error: (err) => {
                     this.loadingSig.set(false);
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
                 },
             });
     }
@@ -153,6 +158,9 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                 },
                 error: (err) => {
                     this.loadingSig.set(false);
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
                 },
             });
     }
@@ -167,7 +175,12 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     this.settingsSig.set(data);
                     this.loadingSig.set(false);
                 },
-                error: (err) => {},
+                error: (err) => {
+                    this.loadingSig.set(false);
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
+                },
             });
     }
 
@@ -181,7 +194,12 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     this.technicalSig.set(data);
                     this.loadingSig.set(false);
                 },
-                error: (err) => {},
+                error: (err) => {
+                    this.loadingSig.set(false);
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
+                },
             });
     }
 }
