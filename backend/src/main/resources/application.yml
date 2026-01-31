@@ -28,13 +28,13 @@ spring:
 
   datasource:
     platform:
-      jdbc-url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      jdbc-url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
       username: ${DB_USERNAME:root}
       password: ${DB_PASSWORD:1234}
       driver-class-name: com.mysql.cj.jdbc.Driver
     tenant:
       host: ${DB_HOST:localhost}
-      port: ${DB_PORT:3307}
+      port: ${DB_PORT:3306}
       username: ${DB_USERNAME:root}
       password: ${DB_PASSWORD:1234}
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -55,7 +55,7 @@ spring:
     locations: classpath:db/platform
     baseline-on-migrate: true
     baseline-version: 0
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     user: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
 
