@@ -1,20 +1,25 @@
 package com.backend.application.service;
 
-import com.backend.domain.entity.User;
-import com.backend.domain.enums.Language;
-import com.backend.domain.enums.UserRole;
-import com.backend.domain.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.backend.application.dto.CreateUserInput;
+import com.backend.application.dto.UpdateUserInput;
+import com.backend.domain.entity.User;
+import com.backend.domain.enums.UserRole;
+import com.backend.domain.exception.UserNotFoundException;
+import com.backend.domain.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordGeneratorService passwordGeneratorService; // Injected
 
     private boolean isBCryptHash(String hash) {
         if (hash == null || hash.length() != 60) {
@@ -33,27 +39,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(User user) {
-        log.debug("Creating new user with email: {}", user.getEmail());
+    public User createUser(CreateUserInput input) {
+        log.debug("Creating new user with email: {}", input.email());
 
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("User with email " + user.getEmail() + " already exists");
+        // Check if email exists
+        if (userRepository.existsByEmail(input.email())) {
+            throw new IllegalArgumentException("Email already exists");
         }
-        if (user.getPasswordHash() != null && !isBCryptHash(user.getPasswordHash())) {
-            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        }
-        if (user.getRole() == null) {
-            user.setRole(UserRole.VIEWER);
-        }
-        if (user.getPreferredLanguage() == null) {
-            user.setPreferredLanguage(Language.TR);
-        }
-        if (user.getIsActive() == null) {
-            user.setIsActive(true);
-        }
-        if (user.getEmailVerified() == null) {
-            user.setEmailVerified(false);
-        }
+
+        User user = new User();
+        user.setEmail(input.email());
+        user.setPasswordHash(passwordEncoder.encode(input.password()));
+        user.setFullName(input.fullName());
+        user.setRole(input.role());
+        user.setFirstName(input.firstName());
+        user.setLastName(input.lastName());
+        user.setPhone(input.phone());
+        user.setJobTitle(input.jobTitle());
+        user.setDepartment(input.department());
+        user.setIsActive(input.isActive());
+        user.setNotes(input.notes());
 
         User savedUser = userRepository.save(user);
         log.info("User created successfully with ID: {}", savedUser.getId());
@@ -67,16 +72,40 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(User user) {
-        log.debug("Updating user with ID: {}", user.getId());
+    public User updateUser(Long id, UpdateUserInput input) {
+        log.debug("Updating user with ID: {}", id);
 
-        User existingUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + user.getId()));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-        if (!existingUser.getEmail().equals(user.getEmail()) &&
-                userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("User with email " + user.getEmail() + " already exists");
+        // Update only provided fields (partial update)
+        if (input.email() != null) {
+            // Check email uniqueness
+            userRepository.findByEmail(input.email()).ifPresent(existing -> {
+                if (!existing.getId().equals(id)) {
+                    throw new IllegalArgumentException("Email already exists");
+                }
+            });
+            user.setEmail(input.email());
         }
+        if (input.fullName() != null)
+            user.setFullName(input.fullName());
+        if (input.role() != null)
+            user.setRole(input.role());
+        if (input.firstName() != null)
+            user.setFirstName(input.firstName());
+        if (input.lastName() != null)
+            user.setLastName(input.lastName());
+        if (input.phone() != null)
+            user.setPhone(input.phone());
+        if (input.jobTitle() != null)
+            user.setJobTitle(input.jobTitle());
+        if (input.department() != null)
+            user.setDepartment(input.department());
+        if (input.isActive() != null)
+            user.setIsActive(input.isActive());
+        if (input.notes() != null)
+            user.setNotes(input.notes());
 
         User updatedUser = userRepository.save(user);
         log.info("User updated successfully with ID: {}", updatedUser.getId());
@@ -103,23 +132,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<User> searchUsers(String search, Pageable pageable) {
+        return userRepository.searchUsers(search, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> findByEmailAndTenantId(String email, Long tenantId) {
-        return userRepository.findByEmailAndTenantId(email, tenantId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean validateUser(String email, String password, Long tenantId) {
-        Optional<User> userOpt = userRepository.findByEmailAndTenantId(email, tenantId);
+    public boolean validateUser(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isEmpty()) {
-            log.debug("User not found with email: {} for tenant: {}", email, tenantId);
+            log.debug("User not found with email: {}", email);
             return false;
         }
 
@@ -137,8 +166,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User authenticate(String email, String password, Long tenantId) {
-        Optional<User> userOpt = userRepository.findByEmailAndTenantId(email, tenantId);
+    public User authenticate(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException("User not found");
@@ -160,8 +189,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void recordLoginAttempt(String email, String ipAddress, boolean success, Long tenantId) {
-        Optional<User> userOpt = userRepository.findByEmailAndTenantId(email, tenantId);
+    public void recordLoginAttempt(String email, String ipAddress, boolean success) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
@@ -207,15 +236,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void resetPassword(String email, Long tenantId) {
-        User user = userRepository.findByEmailAndTenantId(email, tenantId)
+    public String resetPassword(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        String tempPassword = UUID.randomUUID().toString().substring(0, 12);
+
+        String tempPassword = passwordGeneratorService.generate();
         String encodedPassword = passwordEncoder.encode(tempPassword);
 
         user.changePassword(encodedPassword);
         userRepository.save(user);
-        log.info("Password reset for user: {}", email);
+        log.info("Password reset for user ID: {}", userId);
+
+        return tempPassword;
     }
 
     @Override
@@ -306,42 +338,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<User> getUsersByTenantId(Long tenantId) {
-        return userRepository.findByTenantId(tenantId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> getActiveUsersByTenantId(Long tenantId) {
-        return userRepository.findByTenantIdAndIsActive(tenantId, true);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countUsersByTenantId(Long tenantId) {
-        return userRepository.countByTenantId(tenantId);
-    }
-
-    @Override
-    public User createTenantAdmin(String email, String fullName, Long tenantId, Language preferredLanguage) {
-        User admin = new User();
-        admin.setEmail(email);
-        admin.setFullName(fullName);
-        admin.setRole(UserRole.TENANT_ADMIN);
-        admin.setPreferredLanguage(preferredLanguage);
-        admin.setIsActive(true);
-        admin.setEmailVerified(true);
-        String tempPassword = UUID.randomUUID().toString().substring(0, 12);
-        admin.setPasswordHash(passwordEncoder.encode(tempPassword));
-
-        User createdAdmin = userRepository.save(admin);
-        log.info("Tenant admin created for tenant {}: {}", tenantId, email);
-
-        return createdAdmin;
-    }
-
-    @Override
     public void assignRole(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -355,12 +351,6 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public List<User> getUsersByRole(UserRole role) {
         return userRepository.findByRole(role);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> getUsersByTenantIdAndRole(Long tenantId, UserRole role) {
-        return userRepository.findByTenantIdAndRole(tenantId, role);
     }
 
     @Override
@@ -386,45 +376,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updatePreferences(Long userId, Language preferredLanguage, String timezone) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        user.setPreferredLanguage(preferredLanguage);
-        return userRepository.save(user);
-    }
-
-    @Override
-    public User updateUserLanguage(Long userId, Language language) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        user.setPreferredLanguage(language);
-        User savedUser = userRepository.save(user);
-        log.info("Updated language for user {}: {}", userId, language);
-        return savedUser;
-    }
-
-
-    @Override
     @Transactional(readOnly = true)
-    public List<User> searchUsers(Long tenantId, String searchTerm) {
-        List<User> nameResults = userRepository.findByTenantIdAndFullNameContainingIgnoreCase(tenantId, searchTerm);
-        List<User> emailResults = userRepository.findByTenantIdAndEmailContainingIgnoreCase(tenantId, searchTerm);
+    public List<User> searchUsersByTerm(String searchTerm) {
+        List<User> nameResults = userRepository.findByFullNameContainingIgnoreCase(searchTerm);
+        List<User> emailResults = userRepository.findByEmailContainingIgnoreCase(searchTerm);
         nameResults.addAll(emailResults);
         return nameResults.stream().distinct().toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getUsersByDepartment(Long tenantId, String department) {
-        return userRepository.findByTenantIdAndDepartment(tenantId, department);
+    public List<User> getUsersByDepartment(String department) {
+        return userRepository.findByDepartment(department);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getUsersByJobTitle(Long tenantId, String jobTitle) {
-        return userRepository.findByTenantIdAndJobTitle(tenantId, jobTitle);
+    public List<User> getUsersByJobTitle(String jobTitle) {
+        return userRepository.findByJobTitle(jobTitle);
     }
 
     @Override
@@ -435,19 +404,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public long getActiveUsersCount(Long tenantId) {
-        return userRepository.countByTenantIdAndIsActive(tenantId, true);
+    public long getActiveUsersCount() {
+        return userRepository.countByIsActive(true);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long getUsersCountByRole(Long tenantId, UserRole role) {
-        return userRepository.countByTenantIdAndRole(tenantId, role);
+    public long getUsersCountByRole(UserRole role) {
+        return userRepository.countByRole(role);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getRecentlyActiveUsers(Long tenantId, int limit) {
+    public List<User> getRecentlyActiveUsers(int limit) {
         LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
         return userRepository.findByLastLoginAtAfter(cutoffDate)
                 .stream()
@@ -457,8 +426,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getUsersNeverLoggedIn(Long tenantId) {
-        return userRepository.findByTenantIdAndLastLoginAtIsNull(tenantId);
+    public List<User> getUsersNeverLoggedIn() {
+        return userRepository.findByLastLoginAtIsNull();
     }
 
     @Override
@@ -502,7 +471,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> getLockedUsers(Long tenantId) {
+    public List<User> getLockedUsers() {
         LocalDateTime now = LocalDateTime.now();
         return userRepository.findByLockedUntilAfter(now);
     }
@@ -548,40 +517,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(timeout = 60)
-    public void deleteUsersByTenantId(Long tenantId) {
-        userRepository.deleteByTenantId(tenantId);
-        log.info("All users deleted for tenant: {}", tenantId);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsByEmailAndTenantId(String email, Long tenantId) {
-        return userRepository.existsByEmailAndTenantId(email, tenantId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean canUserAccessTenant(Long userId, Long tenantId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-
-        User user = userOpt.get();
-
-        if (user.isSuperAdmin()) {
-            return true;
-        }
-
-        return true;
     }
 
     @Override

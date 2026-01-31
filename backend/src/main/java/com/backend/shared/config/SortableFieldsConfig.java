@@ -90,6 +90,24 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("category,asc", "admin.sort.categoryAsc"),
                         SortOptionDto.of("category,desc", "admin.sort.categoryDesc"));
 
+        // ========== User Entity ==========
+        public static final Set<String> USER_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "fullName", "email", "role", "isActive", "lastLoginAt");
+
+        public static final String USER_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> USER_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("fullName,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("fullName,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
+                        SortOptionDto.of("email,desc", "admin.sort.emailDesc"),
+                        SortOptionDto.of("role,asc", "admin.sort.roleAsc"),
+                        SortOptionDto.of("role,desc", "admin.sort.roleDesc"),
+                        SortOptionDto.of("lastLoginAt,desc", "admin.sort.lastLoginDesc"),
+                        SortOptionDto.of("lastLoginAt,asc", "admin.sort.lastLoginAsc"));
+
         /**
          * Registry mapping entity names to their allowed fields.
          */
@@ -98,19 +116,22 @@ public final class SortableFieldsConfig {
                         "NavigationNode", NAVIGATION_NODE_ALLOWED_FIELDS,
                         "PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS,
                         "Component", COMPONENT_ALLOWED_FIELDS,
-                        "ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS);
+                        "ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS,
+                        "User", USER_ALLOWED_FIELDS);
 
         public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
                         "Media", MEDIA_SORT_OPTIONS,
                         "NavigationNode", NAVIGATION_NODE_SORT_OPTIONS,
                         "PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS,
                         "Component", COMPONENT_SORT_OPTIONS,
-                        "ComponentType", COMPONENT_TYPE_SORT_OPTIONS);
+                        "ComponentType", COMPONENT_TYPE_SORT_OPTIONS,
+                        "User", USER_SORT_OPTIONS);
 
         public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
                         "Media", MEDIA_DEFAULT_SORT,
                         "NavigationNode", NAVIGATION_NODE_DEFAULT_SORT,
                         "PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT,
                         "Component", COMPONENT_DEFAULT_SORT,
-                        "ComponentType", COMPONENT_TYPE_DEFAULT_SORT);
+                        "ComponentType", COMPONENT_TYPE_DEFAULT_SORT,
+                        "User", USER_DEFAULT_SORT);
 }

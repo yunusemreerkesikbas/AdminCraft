@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import org.springframework.web.util.HtmlUtils;
 
-import com.backend.domain.enums.Language;
 import com.backend.domain.enums.UserRole;
 
 import jakarta.persistence.Column;
@@ -73,10 +72,6 @@ public class User {
     @Column(nullable = false)
     private UserRole role = UserRole.VIEWER;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_language", nullable = false)
-    private Language preferredLanguage = Language.TR;
-
     @Size(max = 20, message = "validation.phone.size")
     private String phone;
 
@@ -123,7 +118,7 @@ public class User {
     @Column(name = "updated_by")
     private Long updatedBy;
 
-    @Size(max = 500, message = "validation.notes.size")
+    @Size(max = 500, message = "validation.user.notes.size")
     private String notes;
 
     @PrePersist
@@ -186,6 +181,14 @@ public class User {
 
     public boolean isAccountLocked() {
         return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
+    }
+
+    public int getRemainingLockMinutes() {
+        if (lockedUntil == null || !isAccountLocked()) {
+            return 0;
+        }
+        long minutes = java.time.Duration.between(LocalDateTime.now(), lockedUntil).toMinutes();
+        return (int) Math.max(0, minutes + 1); // +1 to round up
     }
 
     public boolean canLogin() {

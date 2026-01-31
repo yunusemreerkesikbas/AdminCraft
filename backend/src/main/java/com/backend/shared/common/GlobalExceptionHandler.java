@@ -33,6 +33,7 @@ import com.backend.domain.exception.MediaExceptions.UnsupportedFormatException;
 import com.backend.domain.exception.SiteNotFoundException;
 import com.backend.domain.exception.TenantCannotBeActivatedException;
 import com.backend.domain.exception.TenantNotFoundException;
+import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.UserAccountDisabledException;
 import com.backend.domain.exception.UserNotFoundException;
 
@@ -82,6 +83,20 @@ public class GlobalExceptionHandler {
         log.warn("User account disabled exception: {}", ex.getMessage());
         String message = getMessage("auth.account.disabled");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<ApiResponse<?>> handleAccountLocked(AccountLockedException ex) {
+        log.warn("Account locked exception: {}", ex.getMessage());
+        String message = messageSource.getMessage(
+                "auth.account.locked",
+                new Object[] { ex.getRemainingMinutes() },
+                LocaleContextHolder.getLocale());
+        Map<String, Object> data = new HashMap<>();
+        data.put("remainingMinutes", ex.getRemainingMinutes());
+        data.put("errorCode", "ACCOUNT_LOCKED");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, data);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
