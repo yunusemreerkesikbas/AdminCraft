@@ -54,7 +54,7 @@ class AsyncProvisioningExecutorTest {
 
                 // Set test database connection properties
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");
-                ReflectionTestUtils.setField(executor, "dbPort", "3307");
+                ReflectionTestUtils.setField(executor, "dbPort", "3306");
                 ReflectionTestUtils.setField(executor, "dbUsername", "root");
                 ReflectionTestUtils.setField(executor, "dbPassword", "test");
 

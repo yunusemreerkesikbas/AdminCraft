@@ -1,4 +1,4 @@
-# Production Profile - All sensitive values from environment variables
+# Stage Profile - Requires environment variables
 
 spring:
   datasource:
@@ -18,7 +18,6 @@ spring:
       hibernate:
         format_sql: false
         show_sql: false
-        use_sql_comments: false
 
   flyway:
     url: ${PLATFORM_DB_URL}
@@ -29,16 +28,16 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   frontend:
-    base-url: ${APP_FRONTEND_BASE_URL:https://%s.admincraft.com}
+    base-url: ${APP_FRONTEND_BASE_URL:https://%s.stage.admincraft.com}
   tenant:
     auto-sync-on-startup: true
-  platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
+  platform-domain: ${PLATFORM_DOMAIN:stage.admincraft.com}
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
   swagger-ui:
-    enabled: false
+    enabled: true
 
 logging:
   level:

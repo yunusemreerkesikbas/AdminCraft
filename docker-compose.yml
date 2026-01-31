@@ -1,23 +1,31 @@
+# AdminCraft - Base Docker Compose Configuration
+# This file contains shared services used across all environments.
+# Use with environment-specific override files:
+#   - Dev:  docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d
+#   - Prod: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+
 services:
-  # MySQL Database for AdminCraft
   mysql-db:
     image: mysql:8.0
     container_name: admincraft-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: admincraft-db
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: platform_management
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
-      TZ: Europe/Istanbul
-    ports:
-      - "3307:3306"
+      TZ: ${TZ:-Europe/Istanbul}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/conf/my.cnf:/etc/mysql/conf.d/my.cnf
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     networks:
       - admincraft-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: >
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
@@ -26,34 +34,10 @@ services:
       --skip-character-set-client-handshake
       --default-time-zone='+03:00'
 
-  # phpMyAdmin for database management
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:5.2
-    container_name: admincraft-phpmyadmin
-    restart: unless-stopped
-    environment:
-      PMA_HOST: mysql-db
-      PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: 1234
-      PMA_ARBITRARY: 1
-      MYSQL_CHARSET: utf8mb4
-      MYSQL_COLLATION: utf8mb4_unicode_ci
-      UPLOAD_LIMIT: 20M
-      MEMORY_LIMIT: 128M
-    ports:
-      - "8081:80"
-    depends_on:
-      - mysql-db
-    networks:
-      - admincraft-network
-
-# Named volumes for persistent data
 volumes:
   mysql_data:
     driver: local
 
-# Network for all services
 networks:
   admincraft-network:
     driver: bridge

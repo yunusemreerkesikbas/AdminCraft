@@ -49,6 +49,10 @@ logs/
 .env
 .env.local
 .env.*.local
+.env.dev
+.env.prod
+.env.stage
+!.env.example
 
 ### OS ###
 .DS_Store

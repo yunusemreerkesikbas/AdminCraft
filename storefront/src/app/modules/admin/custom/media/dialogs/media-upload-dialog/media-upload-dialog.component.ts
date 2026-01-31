@@ -14,7 +14,6 @@ import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
 import { SpaDialogBase } from '@shared/components/spa-dialog-base';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { UserService } from 'app/core/user/user.service';
-import { environment } from 'environments/environment';
 import { forkJoin, of, take } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { MediaService } from '../../media.service';
@@ -225,8 +224,8 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
     }
 
     #isValidFile(file: File): boolean {
-        const maxSize = environment.media.maxUploadSize;
-        if (file.size > maxSize) {
+        const MAX_UPLOAD_SIZE = 52428800; // 50MB
+        if (file.size > MAX_UPLOAD_SIZE) {
             return false;
         }
         return true;

@@ -3,7 +3,7 @@
     "version": 1,
     "newProjectRoot": "projects",
     "projects": {
-        "fuse": {
+        "admincraft": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:component": {
@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:application",
                     "options": {
-                        "outputPath": "dist/fuse",
+                        "outputPath": "dist/admincraft",
                         "index": "src/index.html",
                         "browser": "src/main.ts",
                         "polyfills": ["zone.js"],
@@ -71,10 +71,55 @@
                                 }
                             ],
                             "outputHashing": "all",
+                            "sourceMap": false,
+                            "optimization": {
+                                "scripts": true,
+                                "styles": {
+                                    "minify": true,
+                                    "inlineCritical": false
+                                },
+                                "fonts": true
+                            },
+                            "namedChunks": false,
+                            "extractLicenses": true,
+                            "aot": true,
                             "fileReplacements": [
                                 {
                                     "replace": "src/environments/environment.ts",
                                     "with": "src/environments/environment.prod.ts"
+                                }
+                            ]
+                        },
+                        "stage": {
+                            "budgets": [
+                                {
+                                    "type": "initial",
+                                    "maximumWarning": "3mb",
+                                    "maximumError": "5mb"
+                                },
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "6kb",
+                                    "maximumError": "10kb"
+                                }
+                            ],
+                            "outputHashing": "all",
+                            "sourceMap": true,
+                            "optimization": {
+                                "scripts": true,
+                                "styles": {
+                                    "minify": true,
+                                    "inlineCritical": false
+                                },
+                                "fonts": true
+                            },
+                            "namedChunks": false,
+                            "extractLicenses": true,
+                            "aot": true,
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.stage.ts"
                                 }
                             ]
                         },
@@ -99,10 +144,13 @@
                     },
                     "configurations": {
                         "production": {
-                            "buildTarget": "fuse:build:production"
+                            "buildTarget": "admincraft:build:production"
+                        },
+                        "stage": {
+                            "buildTarget": "admincraft:build:stage"
                         },
                         "development": {
-                            "buildTarget": "fuse:build:development"
+                            "buildTarget": "admincraft:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
