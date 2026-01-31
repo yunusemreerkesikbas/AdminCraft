@@ -1,0 +1,88 @@
+<div class="max-w-3xl">
+    <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.social.title' | transloco }}
+            </h3>
+            <p class="text-secondary mb-6 text-sm">
+                {{ 'admin.site.dashboard.social.description' | transloco }}
+            </p>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    [label]="'admin.site.dashboard.social.facebook' | transloco"
+                    [labelTooltip]="'facebook'"
+                    formControlName="facebook"
+                    placeholder="https://facebook.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.social.instagram' | transloco
+                    "
+                    [labelTooltip]="'instagram'"
+                    formControlName="instagram"
+                    placeholder="https://instagram.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.social.x' | transloco"
+                    [labelTooltip]="'x'"
+                    formControlName="x"
+                    placeholder="https://x.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.social.linkedin' | transloco"
+                    [labelTooltip]="'linkedin'"
+                    formControlName="linkedin"
+                    placeholder="https://linkedin.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.social.youtube' | transloco"
+                    [labelTooltip]="'youtube'"
+                    formControlName="youtube"
+                    placeholder="https://youtube.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="'admin.site.dashboard.social.tiktok' | transloco"
+                    [labelTooltip]="'tiktok'"
+                    formControlName="tiktok"
+                    placeholder="https://tiktok.com/..."
+                    [showErrors]="true"
+                >
+                </spa-input>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving"
+            >
+                @if (saving) {
+                    <mat-icon
+                        class="mr-2 animate-spin"
+                        svgIcon="heroicons_outline:arrow-path"
+                    ></mat-icon>
+                }
+                {{ 'common.save' | transloco }}
+            </button>
+        </div>
+    </form>
+</div>

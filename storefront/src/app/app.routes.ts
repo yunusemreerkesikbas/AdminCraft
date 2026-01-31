@@ -188,6 +188,15 @@ export const appRoutes: Route[] = [
                     ),
             },
             {
+                path: 'site',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'core' },
+                loadComponent: () =>
+                    import(
+                        'app/modules/admin/custom/site/site-dashboard.component'
+                    ).then((m) => m.SpaSiteDashboardComponent),
+            },
+            {
                 path: 'components',
                 canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'component_library' },

@@ -83,7 +83,7 @@ export class AuthSignInComponent implements OnInit {
                         return;
                     }
                     if (user?.role === 'TENANT_ADMIN') {
-                        this._router.navigateByUrl(`/${lang}/pages/list`);
+                        this._router.navigateByUrl(`/${lang}/site`);
                         return;
                     }
                     const returnUrl =

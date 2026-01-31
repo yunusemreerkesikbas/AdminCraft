@@ -67,9 +67,15 @@ export const SPA_ENDPOINTS_CONFIG = {
     siteActivate: 'sites/${id}/activate',
     siteDeactivate: 'sites/${id}/deactivate',
     siteMenus: 'sites/${siteId}/menus',
+    siteMaintenance: 'sites/${id}/maintenance',
 
     // ----- SITE SETTINGS -----
     siteSettings: 'site-settings',
+
+    // ----- SITE DASHBOARD -----
+    siteOverview: 'sites/overview',
+    siteTechnical: 'sites/technical',
+    siteRobotsTxt: 'sites/robots.txt',
 
     // ----- PAGE BUILDER: PAGES -----
     pages: 'pages',

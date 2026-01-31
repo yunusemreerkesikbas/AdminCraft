@@ -1,0 +1,137 @@
+<div class="flex min-h-full w-full flex-col">
+    <!-- Header -->
+    <div class="bg-card">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
+            <div
+                class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center"
+            >
+                <!-- Title and description -->
+                <div class="flex min-w-0 flex-auto flex-col">
+                    @if (tenantSig(); as tenant) {
+                        <div class="mb-2">
+                            <div
+                                class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
+                            >
+                                {{ tenant.companyName }} ({{
+                                    tenant.subdomain
+                                }})
+                            </div>
+                        </div>
+                    }
+
+                    <h1
+                        class="truncate text-2xl font-bold leading-7 tracking-tight md:text-5xl md:leading-snug"
+                    >
+                        {{ 'admin.site.dashboard.title' | transloco }},
+                        {{ userSig()?.name }}!
+                    </h1>
+                    <p class="text-secondary mt-1 leading-6">
+                        {{ 'admin.site.dashboard.description' | transloco }}
+                    </p>
+
+                    @if (modulesSig().length) {
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @for (mod of modulesSig(); track mod.moduleCode) {
+                                <div
+                                    class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                >
+                                    {{ mod.moduleName || mod.moduleCode }}
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl">
+            <!-- Tabs -->
+            <mat-tab-group
+                class="sm:px-2"
+                mat-stretch-tabs="false"
+                [animationDuration]="'0'"
+                [selectedIndex]="getTabIndex(selectedTabSig())"
+                (selectedIndexChange)="onTabSelectionChange($event)"
+            >
+                @for (tab of tabs; track tab.id) {
+                    <mat-tab>
+                        <ng-template mat-tab-label>
+                            <mat-icon
+                                class="mr-2 icon-size-5"
+                                [svgIcon]="tab.icon"
+                            ></mat-icon>
+                            <span>{{ tab.label | transloco }}</span>
+                        </ng-template>
+                        <ng-template matTabContent>
+                            <div class="flex-1 p-6 sm:p-8">
+                                @if (
+                                    loadingSig() && selectedTabSig() === tab.id
+                                ) {
+                                    <div
+                                        class="flex h-64 items-center justify-center"
+                                    >
+                                        <div
+                                            class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"
+                                        ></div>
+                                    </div>
+                                } @else {
+                                    @switch (tab.id) {
+                                        @case ('overview') {
+                                            <spa-site-overview
+                                                [overview]="overviewSig()"
+                                                (refresh)="refreshOverview()"
+                                            />
+                                        }
+                                        @case ('general') {
+                                            <spa-site-general
+                                                [settings]="settingsSig()"
+                                                (settingsUpdated)="
+                                                    onSettingsUpdated($event)
+                                                "
+                                            />
+                                        }
+                                        @case ('address') {
+                                            <spa-site-address
+                                                [settings]="settingsSig()"
+                                                (settingsUpdated)="
+                                                    onSettingsUpdated($event)
+                                                "
+                                            />
+                                        }
+                                        @case ('social') {
+                                            <spa-site-social
+                                                [settings]="settingsSig()"
+                                                (settingsUpdated)="
+                                                    onSettingsUpdated($event)
+                                                "
+                                            />
+                                        }
+                                        @case ('seo') {
+                                            <spa-site-seo
+                                                [settings]="settingsSig()"
+                                                (settingsUpdated)="
+                                                    onSettingsUpdated($event)
+                                                "
+                                            />
+                                        }
+                                        @case ('technical') {
+                                            <spa-site-technical
+                                                [technical]="technicalSig()"
+                                                (technicalUpdated)="
+                                                    onTechnicalUpdated($event)
+                                                "
+                                            />
+                                        }
+                                    }
+                                }
+                            </div>
+                        </ng-template>
+                    </mat-tab>
+                }
+            </mat-tab-group>
+        </div>
+    </div>
+</div>

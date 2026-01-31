@@ -1,0 +1,248 @@
+<div class="max-w-3xl">
+    <form [formGroup]="form" (ngSubmit)="save()">
+        <!-- Search Engine Settings -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.technical.searchEngine' | transloco }}
+            </h3>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">
+                            {{
+                                'admin.site.dashboard.technical.indexingEnabled'
+                                    | transloco
+                            }}
+                        </p>
+                        <p class="text-secondary text-sm">
+                            {{
+                                'admin.site.dashboard.technical.indexingEnabledDesc'
+                                    | transloco
+                            }}
+                        </p>
+                    </div>
+                    <spa-toggle formControlName="indexingEnabled"></spa-toggle>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">
+                            {{
+                                'admin.site.dashboard.technical.sitemapEnabled'
+                                    | transloco
+                            }}
+                        </p>
+                        <p class="text-secondary text-sm">
+                            {{
+                                'admin.site.dashboard.technical.sitemapEnabledDesc'
+                                    | transloco
+                            }}
+                        </p>
+                    </div>
+                    <spa-toggle formControlName="sitemapEnabled"></spa-toggle>
+                </div>
+
+                <spa-textarea
+                    label="robots.txt"
+                    [labelTooltip]="'robotsTxt'"
+                    formControlName="robotsTxt"
+                    [rows]="6"
+                    styleClasses="font-mono text-sm"
+                    placeholder="User-agent: *&#10;Allow: /&#10;&#10;Sitemap: /sitemap.xml"
+                    [hint]="
+                        'admin.site.dashboard.technical.robotsTxtHint'
+                            | transloco
+                    "
+                    [showErrors]="true"
+                >
+                </spa-textarea>
+            </div>
+        </div>
+
+        <!-- Verification Codes -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.technical.verification' | transloco }}
+            </h3>
+            <p class="text-secondary mb-4 text-sm">
+                {{
+                    'admin.site.dashboard.technical.verificationDesc'
+                        | transloco
+                }}
+            </p>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.technical.googleVerification'
+                                | transloco
+                        "
+                        [labelTooltip]="'googleVerification'"
+                        formControlName="googleVerification"
+                        placeholder="google-site-verification=..."
+                        [showErrors]="true"
+                    >
+                    </spa-input>
+                </div>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.technical.bingVerification'
+                            | transloco
+                    "
+                    [labelTooltip]="'bingVerification'"
+                    formControlName="bingVerification"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.bingVerification'
+                            | transloco
+                    "
+                >
+                </spa-input>
+
+                <spa-input
+                    [label]="
+                        'admin.site.dashboard.technical.yandexVerification'
+                            | transloco
+                    "
+                    [labelTooltip]="'yandexVerification'"
+                    formControlName="yandexVerification"
+                    [showErrors]="true"
+                    [placeholder]="
+                        'admin.site.dashboard.placeholders.yandexVerification'
+                            | transloco
+                    "
+                >
+                </spa-input>
+            </div>
+        </div>
+
+        <!-- Custom Scripts -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.technical.scripts' | transloco }}
+            </h3>
+            <p class="text-secondary mb-4 text-sm">
+                {{ 'admin.site.dashboard.technical.scriptsDesc' | transloco }}
+            </p>
+
+            <div class="space-y-4">
+                <spa-textarea
+                    [label]="
+                        'admin.site.dashboard.technical.headScripts' | transloco
+                    "
+                    [labelTooltip]="'headScripts'"
+                    formControlName="headScripts"
+                    [rows]="4"
+                    styleClasses="font-mono text-sm"
+                    placeholder="<!-- Scripts to inject in <head> -->"
+                    [hint]="
+                        'admin.site.dashboard.technical.headScriptsHint'
+                            | transloco
+                    "
+                    [showErrors]="true"
+                >
+                </spa-textarea>
+
+                <spa-textarea
+                    [label]="
+                        'admin.site.dashboard.technical.bodyStartScripts'
+                            | transloco
+                    "
+                    [labelTooltip]="'bodyStartScripts'"
+                    formControlName="bodyStartScripts"
+                    [rows]="4"
+                    styleClasses="font-mono text-sm"
+                    placeholder="<!-- Scripts to inject at start of <body> -->"
+                    [showErrors]="true"
+                >
+                </spa-textarea>
+
+                <spa-textarea
+                    [label]="
+                        'admin.site.dashboard.technical.bodyEndScripts'
+                            | transloco
+                    "
+                    [labelTooltip]="'bodyEndScripts'"
+                    formControlName="bodyEndScripts"
+                    [rows]="4"
+                    styleClasses="font-mono text-sm"
+                    placeholder="<!-- Scripts to inject at end of <body> -->"
+                    [hint]="
+                        'admin.site.dashboard.technical.bodyEndScriptsHint'
+                            | transloco
+                    "
+                    [showErrors]="true"
+                >
+                </spa-textarea>
+            </div>
+        </div>
+
+        <!-- Cookie Consent -->
+        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
+            <h3 class="mb-4 text-lg font-medium tracking-tight">
+                {{ 'admin.site.dashboard.technical.cookieConsent' | transloco }}
+            </h3>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">
+                            {{
+                                'admin.site.dashboard.technical.cookieConsentEnabled'
+                                    | transloco
+                            }}
+                        </p>
+                        <p class="text-secondary text-sm">
+                            {{
+                                'admin.site.dashboard.technical.cookieConsentEnabledDesc'
+                                    | transloco
+                            }}
+                        </p>
+                    </div>
+                    <spa-toggle
+                        formControlName="cookieConsentEnabled"
+                    ></spa-toggle>
+                </div>
+
+                @if (form.get('cookieConsentEnabled')?.value) {
+                    <spa-textarea
+                        [label]="
+                            'admin.site.dashboard.technical.cookieConsentText'
+                                | transloco
+                        "
+                        [labelTooltip]="'cookieConsentText'"
+                        formControlName="cookieConsentText"
+                        [rows]="3"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.cookieConsentText'
+                                | transloco
+                        "
+                    >
+                    </spa-textarea>
+                }
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving"
+            >
+                @if (saving) {
+                    <mat-icon
+                        class="mr-2 animate-spin"
+                        svgIcon="heroicons_outline:arrow-path"
+                    ></mat-icon>
+                }
+                {{ 'common.save' | transloco }}
+            </button>
+        </div>
+    </form>
+</div>

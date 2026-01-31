@@ -27,7 +27,7 @@ export interface SitePagination {
 
 export enum Language {
     TR = 'TR',
-    EN = 'EN'
+    EN = 'EN',
 }
 
 export interface Menu {
@@ -86,7 +86,14 @@ export interface SiteSettingsGlobalDto {
     businessHours?: BusinessHoursDto | null;
     social?: SocialLinksDto | null;
     canonicalBaseUrl?: string | null;
-    robots?: string | null;
+    robots?: RobotsMetaTag | null;
+}
+
+export enum RobotsMetaTag {
+    INDEX_FOLLOW = 'index,follow',
+    NOINDEX_NOFOLLOW = 'noindex,nofollow',
+    INDEX_NOFOLLOW = 'index,nofollow',
+    NOINDEX_FOLLOW = 'noindex,follow',
 }
 
 export interface SiteSettingsI18nDto {

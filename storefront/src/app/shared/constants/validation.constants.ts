@@ -74,6 +74,14 @@ export const VALIDATION_PATTERNS = {
     PHONE_E164: /^\+[1-9]\d{1,14}$/,
 
     /**
+     * Global Phone Number Pattern (Loose)
+     * - Optional '+' prefix
+     * - 7-15 digits
+     * @example "+905551234567", "05551234567", "905551234567"
+     */
+    PHONE_GLOBAL: /^\+?[0-9]{7,15}$/,
+
+    /**
      * Subdomain Pattern
      * - Start/end with alphanumeric
      * - Middle can contain hyphens
@@ -166,6 +174,18 @@ export const VALIDATION_LIMITS = {
     SLOT_POSITION_MAX: 20,
     SLOT_ALLOWED_TYPES_MAX: 50,
     SLOT_ALLOWED_TYPE_MAX: 100,
+
+    // Site Technical Limits
+    VERIFICATION_CODE_MAX: 100,
+    ROBOTS_TXT_MAX: 10000,
+    SITE_SCRIPTS_MAX: 50000,
+    COOKIE_CONSENT_TEXT_MAX: 2000,
+
+    // Site General Limits (from SiteSettingsI18nDto.java)
+    SITE_NAME_MAX: 100,
+    SITE_TAGLINE_MAX: 160,
+    SITE_FOOTER_TEXT_MAX: 500,
+    SITE_HEADER_TEXT_MAX: 200,
 } as const;
 
 // ============================================================================
