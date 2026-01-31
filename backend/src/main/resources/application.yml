@@ -3,34 +3,32 @@ server:
   servlet:
     context-path: /api
 
-# JWT Token configuration - FOR DEVELOPMENT ONLY
-# Production must use JWT_SECRET environment variable
 app:
   jwt:
     secret: ${JWT_SECRET:MyVerySecureJWTSecretKeyForAdminCraftApplication2024WithMoreThan32Characters!}
-    expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
-    refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
+    expiration: ${JWT_EXPIRATION:86400000}
+    refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
   tenant:
-    auto-sync-on-startup: true # Disable for dev - use manual sync button
+    auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
   platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
   servlet:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+
   application:
     name: AdminCraft
 
-  profiles:
-    active: dev
-
   datasource:
     platform:
-      jdbc-url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+      jdbc-url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
       username: ${DB_USERNAME:root}
       password: ${DB_PASSWORD:1234}
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -48,19 +46,16 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-        show_sql: true
         multiTenancy: DATABASE
         multi_tenant_connection_provider: com.backend.infrastructure.tenant.MultiTenantConnectionProvider
         tenant_identifier_resolver: com.backend.infrastructure.tenant.CurrentTenantIdentifierResolver
-    show-sql: true
 
   flyway:
     enabled: true
     locations: classpath:db/platform
     baseline-on-migrate: true
     baseline-version: 0
-    url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
     user: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
 
@@ -74,87 +69,9 @@ spring:
     locale-resolver: accept-header
 
 logging:
-  level:
-    com.backend: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate: DEBUG
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [Tenant:%X{tenantId}][Corr:%X{correlationId}] - %msg%n"
 
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-
-  datasource:
-    platform:
-      jdbc-url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-      url: jdbc:mysql://localhost:3307/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-      username: root
-      password: 1234
-    tenant:
-      host: localhost
-      port: 3307
-      username: root
-      password: 1234
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
----
-spring:
-  config:
-    activate:
-      on-profile: seed
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:data.sql
-      schema-locations: classpath:schema-page-builder.sql
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-
-  datasource:
-    url: jdbc:mysql://${DB_HOST:mysql-db}:${DB_PORT:3306}/${DB_NAME:admincraft-db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1234}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/admincraft_prod?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
-
-  jpa:
-    hibernate:
-      ddl-auto: update # Production uses validate for safety
-    show-sql: false
-
-logging:
-  level:
-    com.backend: INFO
-    org.springframework.security: WARN
-    org.hibernate: WARN
-
-# Multi-tenant configuration
 admincraft:
   tenant:
     default-schema: public
@@ -175,7 +92,6 @@ admincraft:
       auto-generate-formats: THUMBNAIL,SMALL,MEDIUM
       supported-image-types: image/jpeg,image/png,image/gif,image/webp
 
-# Resilience4j Rate Limiting Configuration
 resilience4j:
   ratelimiter:
     instances:

@@ -1,34 +1,13 @@
 /**
  * Production Environment Configuration
- * Security Note: Use environment variables for sensitive configurations
  */
 export const environment = {
     production: true,
-    
-    // API Configuration - Use environment variables for deployment flexibility
-    apiBaseUrl: (globalThis as any)?.['ENV']?.['API_BASE_URL'] || 
-                '/api', // Fallback for same-domain deployment
-    
-    apiTimeout: 30000, // 30 seconds timeout
-    
-    // Feature Flags
-    enableLogging: false,
-    enableDebugMode: false,
-    
-    // i18n Configuration
+    apiBaseUrl: 'https://api.admincraft.com',
+    apiTimeout: 30000,
     supportedLanguages: ['tr', 'en'],
-    defaultLanguage: 'tr',
-    
-    // Application Metadata
+    defaultLanguage: 'en',
     version: '1.0.0',
     appName: 'AdminCraft',
-    
-    // Security Configuration
-    maxRetryAttempts: 0,
-    tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes before expiry
-    media: {
-        maxUploadSize: 52428800 // 50MB
-    }
+    maxRetryAttempts: 3,
 };
-
-

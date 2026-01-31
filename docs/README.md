@@ -8,6 +8,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
 - Start here for architecture and conventions: [`global/architecture.md`](global/architecture.md)
 - If you are touching security, always read: [`global/security-multi-tenancy.md`](global/security-multi-tenancy.md)
 - For patterns that apply everywhere:
+  - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
   - Backend conventions: [`global/backend-patterns.md`](global/backend-patterns.md)
   - Frontend conventions: [`global/frontend-patterns.md`](global/frontend-patterns.md)
   - Authentication: [`global/authentication.md`](global/authentication.md)

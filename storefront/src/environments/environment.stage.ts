@@ -1,13 +1,13 @@
 /**
- * Development Environment Configuration
+ * Stage Environment Configuration
  */
 export const environment = {
     production: false,
-    apiBaseUrl: '/api',
+    apiBaseUrl: 'https://s1.api.admincraft.com',
     apiTimeout: 30000,
     supportedLanguages: ['tr', 'en'],
     defaultLanguage: 'en',
-    version: '1.0.0-dev',
+    version: '1.0.0-stage',
     appName: 'AdminCraft',
     maxRetryAttempts: 0,
 };

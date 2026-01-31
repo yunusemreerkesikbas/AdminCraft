@@ -11,19 +11,36 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideFuse } from '@fuse';
 import { TranslocoService, provideTransloco } from '@jsverse/transloco';
+import { environment } from '@environments/environment';
 import { appRoutes } from 'app/app.routes';
 import { authInterceptor } from 'app/core/auth/auth.interceptor';
 import { languageInterceptor } from 'app/core/i18n/language.interceptor';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { AuthService } from 'app/core/auth/auth.service';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
-import { SupportedLanguage } from 'app/core/i18n/translation.types';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 
 import { provideToastr } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
+
+const LANGUAGE_CONFIG: Record<string, {
+    label: string;
+    key: string;
+    loader: () => Promise<{ [key: string]: unknown }>;
+}> = {
+    tr: {
+        label: 'Türkçe',
+        key: 'langTR',
+        loader: () => import('@modules/admin/i18n/langTR'),
+    },
+    en: {
+        label: 'English',
+        key: 'langEN',
+        loader: () => import('@modules/admin/i18n/langEN'),
+    },
+};
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -71,26 +88,20 @@ export const appConfig: ApplicationConfig = {
 
         provideTransloco({
             config: {
-                availableLangs: [
-                    {
-                        id: SupportedLanguage.TR,
-                        label: 'Türkçe',
-                    },
-                    {
-                        id: SupportedLanguage.EN,
-                        label: 'English',
-                    },
-                ],
-                defaultLang: SupportedLanguage.EN,
-                fallbackLang: SupportedLanguage.EN, // Always fallback to English
+                availableLangs: environment.supportedLanguages.map((lang) => ({
+                    id: lang,
+                    label: LANGUAGE_CONFIG[lang]?.label || lang,
+                })),
+                defaultLang: environment.defaultLanguage,
+                fallbackLang: environment.defaultLanguage,
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
                 missingHandler: {
-                    useFallbackTranslation: true, // Enable fallback to prevent blank UI
-                    allowEmpty: false, // Don't allow empty translations
-                    logMissingKey: !isDevMode(), // Log only in development
+                    useFallbackTranslation: true,
+                    allowEmpty: false,
+                    logMissingKey: !isDevMode(),
                 },
-                interpolation: ['{{', '}}'], // Consistent with backend i18n
+                interpolation: ['{{', '}}'],
             },
         }),
         provideAppInitializer(() => {
@@ -98,28 +109,19 @@ export const appConfig: ApplicationConfig = {
 
             return (async () => {
                 try {
-                    const [adminTR, adminEN] = await Promise.all([
-                        import('@modules/admin/i18n/langTR'),
-                        import('@modules/admin/i18n/langEN')
-                    ]);
-                    if (adminTR?.langTR) {
-                        translocoService.setTranslation(
-                            adminTR.langTR,
-                            SupportedLanguage.TR,
-                            { merge: true }
-                        );
-                    }
+                    const loadPromises = environment.supportedLanguages
+                        .filter((lang) => LANGUAGE_CONFIG[lang])
+                        .map(async (lang) => {
+                            const config = LANGUAGE_CONFIG[lang];
+                            const module = await config.loader();
+                            const translations = module[config.key];
+                            if (translations) {
+                                translocoService.setTranslation(translations, lang, { merge: true });
+                            }
+                        });
 
-                    if (adminEN?.langEN) {
-                        translocoService.setTranslation(
-                            adminEN.langEN,
-                            SupportedLanguage.EN,
-                            { merge: true }
-                        );
-                    }
-
-                    translocoService.setActiveLang(SupportedLanguage.EN);
-                    
+                    await Promise.all(loadPromises);
+                    translocoService.setActiveLang(environment.defaultLanguage);
                 } catch (error: unknown) {
                     console.error('[i18n] Failed to load translations:', error);
                 }
