@@ -10,29 +10,29 @@ import jakarta.validation.constraints.Size;
 
 @PasswordMatch
 public record CreateUserRequest(
-        @NotBlank(message = "validation.email.required") @Email(message = "validation.email.invalid") String email,
+        @NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email,
 
-        @NotBlank(message = "validation.password.required") @Size(min = 8, max = 128, message = "validation.password.size") String password,
+        @NotBlank(message = "{validation.password.required}") @Size(min = 8, max = 128, message = "{validation.password.size}") String password,
 
-        @NotBlank(message = "validation.password.confirm.required") String confirmPassword,
+        @NotBlank(message = "{validation.password.confirm.required}") String confirmPassword,
 
-        @NotBlank(message = "validation.full.name.required") @Size(max = 100, message = "validation.full.name.size") String fullName,
+        @NotBlank(message = "{validation.full.name.required}") @Size(max = 100, message = "{validation.full.name.size}") String fullName,
 
-        @NotNull(message = "validation.role.required") UserRole role,
+        @NotNull(message = "{validation.role.required}") UserRole role,
 
-        @Size(max = 50, message = "validation.first.name.size") String firstName,
+        @Size(max = 50, message = "{validation.first.name.size}") String firstName,
 
-        @Size(max = 50, message = "validation.last.name.size") String lastName,
+        @Size(max = 50, message = "{validation.last.name.size}") String lastName,
 
-        @Size(max = 20, message = "validation.phone.size") String phone,
+        @Size(max = 20, message = "{validation.phone.size}") String phone,
 
-        @Size(max = 100, message = "validation.job.title.size") String jobTitle,
+        @Size(max = 100, message = "{validation.job.title.size}") String jobTitle,
 
-        @Size(max = 100, message = "validation.department.size") String department,
+        @Size(max = 100, message = "{validation.department.size}") String department,
 
         Boolean isActive,
 
-        @Size(max = 500, message = "validation.user.notes.size") String notes) {
+        @Size(max = 500, message = "{validation.user.notes.size}") String notes) {
     // Apply defaults and trim inputs
     public CreateUserRequest {
         if (isActive == null) {

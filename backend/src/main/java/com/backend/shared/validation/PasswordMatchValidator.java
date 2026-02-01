@@ -1,12 +1,20 @@
 package com.backend.shared.validation;
 
-import com.backend.presentation.dto.request.ChangePasswordRequest;
-import com.backend.presentation.dto.request.CreateUserRequest;
+import java.lang.reflect.Field;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class PasswordMatchValidator implements ConstraintValidator<PasswordMatch, Object> {
+
+    private String passwordField;
+    private String confirmPasswordField;
+
+    @Override
+    public void initialize(PasswordMatch constraintAnnotation) {
+        this.passwordField = constraintAnnotation.passwordField();
+        this.confirmPasswordField = constraintAnnotation.confirmPasswordField();
+    }
 
     @Override
     public boolean isValid(Object request, ConstraintValidatorContext context) {
@@ -14,30 +22,41 @@ public class PasswordMatchValidator implements ConstraintValidator<PasswordMatch
             return true;
         }
 
-        String password = null;
-        String confirmPassword = null;
+        try {
+            String password = getFieldValue(request, passwordField);
+            String confirmPassword = getFieldValue(request, confirmPasswordField);
 
-        if (request instanceof CreateUserRequest r) {
-            password = r.password();
-            confirmPassword = r.confirmPassword();
-        } else if (request instanceof ChangePasswordRequest r) {
-            password = r.password();
-            confirmPassword = r.confirmPassword();
+            if (password == null || confirmPassword == null) {
+                return true;
+            }
+
+            boolean isValid = password.equals(confirmPassword);
+
+            if (!isValid) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
+                        .addPropertyNode(confirmPasswordField)
+                        .addConstraintViolation();
+            }
+
+            return isValid;
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException(
+                    String.format("Fields '%s' or '%s' not found in class %s. Please verify field names in @PasswordMatch annotation.",
+                            passwordField, confirmPasswordField, request.getClass().getName()),
+                    e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(
+                    String.format("Cannot access fields '%s' or '%s' in class %s",
+                            passwordField, confirmPasswordField, request.getClass().getName()),
+                    e);
         }
+    }
 
-        if (password == null || confirmPassword == null) {
-            return true;
-        }
-
-        boolean isValid = password.equals(confirmPassword);
-
-        if (!isValid) {
-            context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(context.getDefaultConstraintMessageTemplate())
-                    .addPropertyNode("confirmPassword")
-                    .addConstraintViolation();
-        }
-
-        return isValid;
+    private String getFieldValue(Object object, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Field field = object.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Object value = field.get(object);
+        return value != null ? value.toString() : null;
     }
 }

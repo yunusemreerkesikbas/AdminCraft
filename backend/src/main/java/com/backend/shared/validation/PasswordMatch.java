@@ -14,6 +14,10 @@ import jakarta.validation.Payload;
 public @interface PasswordMatch {
   String message() default "{validation.password.mismatch}";
 
+  String passwordField() default "password";
+
+  String confirmPasswordField() default "confirmPassword";
+
   Class<?>[] groups() default {};
 
   Class<? extends Payload>[] payload() default {};

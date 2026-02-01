@@ -194,6 +194,13 @@ POST /api/users/{id}/reset-password
 }
 ```
 
+> **Security Note**: The current implementation returns the plaintext password in the API response for administrative convenience (TENANT_ADMIN can immediately share it with the user). This is acceptable in trusted admin contexts but increases exposure risk through browser logs, network proxies, and APM tools. For production environments with strict security requirements, consider implementing a token-based reset flow where:
+> - A one-time reset token is generated and sent via email
+> - The user sets their own password through a secure link
+> - The plaintext password is never transmitted or logged
+>
+> This would require additional infrastructure (email service, token management, frontend reset page).
+
 ### Change Password (Manual)
 
 ```

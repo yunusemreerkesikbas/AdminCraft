@@ -318,6 +318,22 @@ public class UserController {
 
     // ========== Passwords ==========
 
+    /**
+     * Reset user password and generate a new random password.
+     * 
+     * <p><b>Security Note:</b> This endpoint returns the plaintext password in the response
+     * for administrative convenience (TENANT_ADMIN can immediately share it with the user).
+     * This is acceptable in trusted admin contexts but increases exposure risk through
+     * browser logs, network proxies, and APM tools.
+     * 
+     * <p>For production environments with strict security requirements, consider implementing
+     * a token-based reset flow where a one-time reset token is sent via email and the user
+     * sets their own password through a secure link.
+     * 
+     * @param id User ID to reset password for
+     * @param languageCode Language code for response messages
+     * @return Response containing the newly generated password
+     */
     @PostMapping("/{id}/reset-password")
     public ResponseEntity<ApiResponse<ResetPasswordResponse>> resetPassword(
             @PathVariable @Valid @NotNull @Min(1) Long id,
