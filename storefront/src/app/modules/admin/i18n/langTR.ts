@@ -843,7 +843,6 @@ export const langTR = {
             roles: 'Roller',
 
             fields: {
-                fullName: 'Ad Soyad',
                 firstName: 'Ad',
                 lastName: 'Soyad',
                 email: 'E-posta',
@@ -862,7 +861,6 @@ export const langTR = {
                 confirmPassword: 'Şifre Tekrar',
             },
             placeholders: {
-                fullName: 'Örn: Ahmet Yılmaz',
                 email: 'Örn: ahmet@example.com',
                 firstName: 'Örn: Ahmet',
                 lastName: 'Örn: Yılmaz',

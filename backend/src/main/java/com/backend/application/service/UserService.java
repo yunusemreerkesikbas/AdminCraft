@@ -73,7 +73,7 @@ public interface UserService {
     boolean hasPermission(Long userId, UserRole.Permission permission);
 
     // Profile management
-    User updateProfile(Long userId, String fullName, String phone, String jobTitle, String department);
+    User updateProfile(Long userId, String phone, String jobTitle, String department);
 
     // Search and filtering
     List<User> searchUsersByTerm(String searchTerm);

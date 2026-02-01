@@ -203,7 +203,7 @@ public class UserControllerIntegrationTest {
      * 
      * Requirements:
      * - Sort by createdAt (default)
-     * - Sort by fullName
+     * - Sort by email
      * - Sort by email
      * - Sort by role
      * - Sort by isActive
@@ -212,7 +212,7 @@ public class UserControllerIntegrationTest {
     @Test
     @WithMockUser(roles = "TENANT_ADMIN")
     void listUsers_WithDifferentSortFields_ShouldReturnSortedResults() throws Exception {
-        String[] sortFields = { "createdAt,desc", "fullName,asc", "email,desc", "role,asc", "isActive,desc",
+        String[] sortFields = { "createdAt,desc", "email,desc", "role,asc", "isActive,desc",
                 "lastLoginAt,desc" };
 
         for (String sort : sortFields) {

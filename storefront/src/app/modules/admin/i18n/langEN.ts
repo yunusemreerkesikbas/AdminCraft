@@ -845,7 +845,6 @@ export const langEN = {
             permissions: 'Permissions & Status',
             roles: 'Roles',
             fields: {
-                fullName: 'Full Name',
                 firstName: 'First Name',
                 lastName: 'Last Name',
                 email: 'Email',
@@ -864,7 +863,6 @@ export const langEN = {
                 confirmPassword: 'Confirm Password',
             },
             placeholders: {
-                fullName: 'e.g. John Doe',
                 email: 'e.g. john@example.com',
                 firstName: 'e.g. John',
                 lastName: 'e.g. Doe',

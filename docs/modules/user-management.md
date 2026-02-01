@@ -26,7 +26,7 @@ User Management provides tenant-level user administration with role-based access
 | id | BIGINT | Primary key |
 | email | VARCHAR(255) | Unique per tenant |
 | password_hash | VARCHAR(60) | BCrypt hash |
-| full_name | VARCHAR(100) | Display name |
+| full_name | VARCHAR(100) | Derived display name (first/last/email) |
 | first_name | VARCHAR(50) | Optional |
 | last_name | VARCHAR(50) | Optional |
 | role | ENUM | User role |
@@ -66,7 +66,7 @@ GET /api/users?page=0&size=20&sort=createdAt,desc&search=admin
 | page | 0 | Zero-based page index |
 | size | 20 | Items per page (max: 100) |
 | sort | createdAt,desc | Sort expression |
-| search | - | Search across fullName, email, phone, jobTitle, department |
+| search | - | Search across display name, email, phone, jobTitle, department |
 
 **Response**: `PageableResponse<UserResponse>`
 
@@ -87,7 +87,7 @@ GET /api/users?page=0&size=20&sort=createdAt,desc&search=admin
 }
 ```
 
-**Sortable Fields**: `createdAt`, `fullName`, `email`, `role`, `isActive`, `lastLoginAt`
+**Sortable Fields**: `createdAt`, `email`, `role`, `isActive`, `lastLoginAt`
 
 ### Get User by ID
 
@@ -120,7 +120,6 @@ POST /api/users
   "email": "user@example.com",
   "password": "SecurePass123!",
   "confirmPassword": "SecurePass123!",
-  "fullName": "John Doe",
   "firstName": "John",
   "lastName": "Doe",
   "role": "VIEWER",
@@ -137,8 +136,9 @@ POST /api/users
 - Email: Required, valid format, unique per tenant
 - Password: Required, min 8 chars (hashed with BCrypt)
 - Password Match: `password` and `confirmPassword` must be identical (`@PasswordMatch`)
-- FullName: Required, max 100 chars
 - Role: Required enum value
+
+**Note**: `full_name` is derived server-side from first/last name (fallback: email).
 
 **Response**: `UserResponse` (201 Created)
 
@@ -152,7 +152,8 @@ PUT /api/users/{id}
 
 ```json
 {
-  "fullName": "John Smith",
+  "firstName": "John",
+  "lastName": "Smith",
   "jobTitle": "Senior Developer",
   "isActive": false
 }
@@ -231,7 +232,7 @@ POST /api/users/{id}/change-password
 
 Response DTO (excludes `passwordHash` for security):
 
-- id, email, fullName, firstName, lastName, role
+- id, email, firstName, lastName, role
 - phone, jobTitle, department, notes
 - isActive, emailVerified, twoFactorEnabled
 - lastLoginAt, lastLoginIp, failedLoginAttempts, accountLocked

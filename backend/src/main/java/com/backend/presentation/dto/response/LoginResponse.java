@@ -7,7 +7,6 @@ public record LoginResponse(
         Long expiresIn,
         Long userId,
         String email,
-        String fullName,
         String role,
         String subdomain,
         Long tenantId) {

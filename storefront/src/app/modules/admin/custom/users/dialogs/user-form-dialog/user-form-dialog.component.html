@@ -3,7 +3,7 @@
         (mode === 'create' ? 'admin.users.create' : 'admin.users.edit')
             | transloco
     "
-    [subtitle]="data.user?.fullName"
+    [subtitle]="data.user?.displayName"
     (closeClicked)="onCancel()"
 >
 </spa-dialog-header>
@@ -20,17 +20,6 @@
             </h3>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <spa-input
-                    formControlName="fullName"
-                    [label]="'admin.users.fields.fullName' | transloco"
-                    [placeholder]="
-                        'admin.users.placeholders.fullName' | transloco
-                    "
-                    [labelTooltip]="'fullName'"
-                    [required]="true"
-                    icon="person"
-                ></spa-input>
-
                 <spa-input
                     formControlName="email"
                     [label]="'admin.users.fields.email' | transloco"

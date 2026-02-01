@@ -138,7 +138,6 @@ export interface AdminTranslations {
             permissions: string;
             roles: string;
             fields: {
-                fullName: string;
                 email: string;
                 role: string;
                 status: string;

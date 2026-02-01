@@ -60,7 +60,7 @@ export class AuthService {
                     const user: User = {
                         id: response.data.userId,
                         email: response.data.email,
-                        name: response.data.fullName,
+                        name: response.data.email,
                         role: response.data.role,
                         tenantId: response.data.tenantId,
                         preferredLanguage: response.data.preferredLanguage,
@@ -124,7 +124,7 @@ export class AuthService {
                     const user: User = {
                         id: decoded.userId || 0,
                         email: decoded.sub,
-                        name: localStorage.getItem('fullName') || decoded.sub,
+                        name: decoded.sub,
                         role: decoded.role,
                         tenantId: decoded.tenantId || 0,
                     };
@@ -195,9 +195,6 @@ export class AuthService {
                 const subdomain = data.subdomain;
                 localStorage.setItem('currentTenantSubdomain', subdomain);
             }
-            if (data.fullName) {
-                localStorage.setItem('fullName', data.fullName);
-            }
         } catch (error) {}
     }
 
@@ -206,7 +203,6 @@ export class AuthService {
             localStorage.removeItem('userId');
             localStorage.removeItem('tenantId');
             localStorage.removeItem('currentTenantSubdomain');
-            localStorage.removeItem('fullName');
         } catch (error) {}
     }
 }

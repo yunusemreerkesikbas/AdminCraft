@@ -2,7 +2,6 @@ import { CrudEntity } from '@core/crud/api.types';
 
 export interface User extends CrudEntity {
     email: string;
-    fullName: string;
     firstName?: string;
     lastName?: string;
     role: UserRole;
@@ -33,7 +32,6 @@ export enum UserRole {
 
 export interface CreateUserRequest {
     email: string;
-    fullName: string;
     password: string;
     role: UserRole;
     firstName?: string;
@@ -47,7 +45,6 @@ export interface CreateUserRequest {
 
 export interface UpdateUserRequest {
     email?: string;
-    fullName?: string;
     role?: UserRole;
     firstName?: string;
     lastName?: string;

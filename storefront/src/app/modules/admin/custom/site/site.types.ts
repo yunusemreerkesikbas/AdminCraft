@@ -38,7 +38,7 @@ export interface SiteStatusDto {
 export interface UserDto {
     id: number;
     email: string;
-    fullName: string;
+    displayName: string;
 }
 
 export interface SiteStatsDto {

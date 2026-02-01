@@ -92,15 +92,13 @@ public final class SortableFieldsConfig {
 
         // ========== User Entity ==========
         public static final Set<String> USER_ALLOWED_FIELDS = Set.of(
-                        "createdAt", "fullName", "email", "role", "isActive", "lastLoginAt");
+                        "createdAt", "email", "role", "isActive", "lastLoginAt");
 
         public static final String USER_DEFAULT_SORT = "createdAt,desc";
 
         public static final List<SortOptionDto> USER_SORT_OPTIONS = List.of(
                         SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
                         SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
-                        SortOptionDto.of("fullName,asc", "admin.sort.nameAsc"),
-                        SortOptionDto.of("fullName,desc", "admin.sort.nameDesc"),
                         SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
                         SortOptionDto.of("email,desc", "admin.sort.emailDesc"),
                         SortOptionDto.of("role,asc", "admin.sort.roleAsc"),
