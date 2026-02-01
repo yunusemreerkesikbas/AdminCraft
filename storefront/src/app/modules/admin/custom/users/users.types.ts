@@ -21,6 +21,7 @@ export interface User extends CrudEntity {
     displayName: string;
     isSuperAdmin: boolean;
     isTenantAdmin: boolean;
+    notes?: string;
 }
 
 export enum UserRole {

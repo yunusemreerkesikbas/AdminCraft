@@ -81,11 +81,11 @@ export class UserFormDialogComponent implements OnInit {
         .filter((role) => role !== UserRole.SUPER_ADMIN)
         .map((role) => ({
             value: role,
-            label: role,
+            labelKey: 'admin.common.status.' + role.toLowerCase(),
         }));
 
     ngOnInit(): void {
-        this.buildForm();
+        this.#buildForm();
         if (this.mode === 'edit' && this.data.user) {
             this.form.patchValue(this.data.user);
         }
@@ -95,49 +95,7 @@ export class UserFormDialogComponent implements OnInit {
         return this.mode === 'edit';
     }
 
-    private buildForm(): void {
-        this.form = this.#fb.group({
-            email: ['', [Validators.required, Validators.email]],
-            fullName: [
-                '',
-                [
-                    Validators.required,
-                    Validators.maxLength(VALIDATION_LIMITS.USER_FULL_NAME_MAX),
-                ],
-            ],
-            firstName: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.USER_FIRST_NAME_MAX)],
-            ],
-            lastName: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.USER_LAST_NAME_MAX)],
-            ],
-            // Password group for create mode
-            ...(this.mode === 'create'
-                ? {
-                      passwordGroup: this.#fb.group(
-                          {
-                              password: [
-                                  '',
-                                  [
-                                      Validators.required,
-                                      Validators.minLength(
-                                          VALIDATION_LIMITS.USER_PASSWORD_MIN
-                                      ),
-                                      Validators.maxLength(
-                                          VALIDATION_LIMITS.USER_PASSWORD_MAX
-                                      ),
-                                  ],
-                              ],
-                              confirmPassword: ['', [Validators.required]],
-                          },
-                          { validators: this.passwordMatchValidator }
-                      ),
-                  }
-                : {}),
-        });
-
+    #buildForm(): void {
         const baseControls = {
             email: ['', [Validators.required, Validators.email]],
             fullName: [
@@ -193,7 +151,7 @@ export class UserFormDialogComponent implements OnInit {
                     ],
                     confirmPassword: ['', [Validators.required]],
                 },
-                { validators: this.passwordMatchValidator }
+                { validators: this.#passwordMatchValidator }
             );
         } else {
             this.form = this.#fb.group({
@@ -202,7 +160,7 @@ export class UserFormDialogComponent implements OnInit {
         }
     }
 
-    passwordMatchValidator(g: FormGroup) {
+    #passwordMatchValidator(g: FormGroup) {
         const password = g.get('password')?.value;
         const confirmPassword = g.get('confirmPassword')?.value;
         return password === confirmPassword ? null : { mismatch: true };

@@ -835,11 +835,9 @@ export const langTR = {
         },
         users: {
             title: 'Kullanıcı Yönetimi',
-            list: 'Kullanıcı Listesi',
             create: 'Yeni Kullanıcı',
             edit: 'Kullanıcıyı Düzenle',
-            delete: 'Kullanıcı Sil',
-            invite: 'Davet Et',
+            searchPlaceholder: 'Kullanıcı ara...',
             profile: 'Profil Bilgileri',
             permissions: 'Yetki ve Durum',
             roles: 'Roller',
