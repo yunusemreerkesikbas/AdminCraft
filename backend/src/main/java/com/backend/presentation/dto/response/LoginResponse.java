@@ -9,7 +9,6 @@ public record LoginResponse(
         String email,
         String fullName,
         String role,
-        String preferredLanguage,
         String subdomain,
         Long tenantId) {
     public LoginResponse {

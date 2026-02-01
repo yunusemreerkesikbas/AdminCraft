@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.User;
-import com.backend.domain.enums.Language;
 import com.backend.domain.enums.UserRole;
 
 @Repository
@@ -23,9 +22,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     List<User> findByRole(UserRole role);
 
     List<User> findByRoleIn(List<UserRole> roles);
-
-    // Language-based queries
-    List<User> findByPreferredLanguage(Language language);
 
     // Status queries
     List<User> findByIsActive(Boolean isActive);

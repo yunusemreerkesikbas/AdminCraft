@@ -1,10 +1,9 @@
 package com.backend.application.service;
 
-import com.backend.application.command.auth.AuthenticateCommand;
 import com.backend.presentation.dto.response.LoginResponse;
 
 public interface AuthenticationService {
-    LoginResponse authenticate(AuthenticateCommand command);
+    LoginResponse authenticate(String email, String password, Long tenantId, String subdomain);
 
     LoginResponse refreshToken(String refreshToken);
 

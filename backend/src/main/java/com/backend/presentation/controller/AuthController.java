@@ -1,21 +1,26 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.service.AuthenticationService;
-import com.backend.application.command.auth.AuthenticateCommand;
-import com.backend.presentation.dto.request.LoginRequest;
-import com.backend.presentation.dto.response.LoginResponse;
-import com.backend.shared.common.ApiResponse;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Locale;
+
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Locale;
+import com.backend.application.service.AuthenticationService;
+import com.backend.presentation.dto.request.LoginRequest;
+import com.backend.presentation.dto.response.LoginResponse;
+import com.backend.shared.common.ApiResponse;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -42,13 +47,11 @@ public class AuthController {
 
             String effectiveSubdomain = subdomain != null ? subdomain : loginRequest.subdomain();
 
-            AuthenticateCommand command = new AuthenticateCommand(
+            LoginResponse loginResponse = authenticationService.authenticate(
                     loginRequest.email(),
                     loginRequest.password(),
                     tenantId,
-                    effectiveSubdomain,
-                    languageCode);
-            LoginResponse loginResponse = authenticationService.authenticate(command);
+                    effectiveSubdomain);
 
             String message = messageSource.getMessage("auth.login.successful", null,
                     Locale.forLanguageTag(languageCode));
