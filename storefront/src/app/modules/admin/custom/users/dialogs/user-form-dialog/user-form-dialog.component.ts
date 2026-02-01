@@ -195,8 +195,9 @@ export class UserFormDialogComponent implements OnInit {
                         },
                     });
             } else {
+                const { confirmPassword, ...formValue } = this.form.value;
                 const request: CreateUserRequest = {
-                    ...this.form.value,
+                    ...formValue,
                     role: this.form.value.role,
                 };
 

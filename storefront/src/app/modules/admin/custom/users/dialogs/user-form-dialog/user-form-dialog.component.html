@@ -113,7 +113,11 @@
                             matSuffix
                             type="button"
                             (click)="passwordVisible.set(!passwordVisible())"
-                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-label]="
+                                passwordVisible()
+                                    ? 'Hide password'
+                                    : 'Show password'
+                            "
                             [attr.aria-pressed]="passwordVisible()"
                         >
                             <mat-icon>{{
@@ -147,7 +151,11 @@
                                     !confirmPasswordVisible()
                                 )
                             "
-                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-label]="
+                                confirmPasswordVisible()
+                                    ? 'Hide password'
+                                    : 'Show password'
+                            "
                             [attr.aria-pressed]="confirmPasswordVisible()"
                         >
                             <mat-icon>{{

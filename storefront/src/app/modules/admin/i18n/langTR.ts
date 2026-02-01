@@ -841,7 +841,7 @@ export const langTR = {
             profile: 'Profil Bilgileri',
             permissions: 'Yetki ve Durum',
             roles: 'Roller',
-            searchPlaceholder: 'Kullanıcı ara...',
+
             fields: {
                 fullName: 'Ad Soyad',
                 firstName: 'Ad',
