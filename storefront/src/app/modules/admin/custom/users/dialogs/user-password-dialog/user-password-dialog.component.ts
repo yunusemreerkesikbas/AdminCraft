@@ -59,23 +59,34 @@ export class UserPasswordDialogComponent implements OnInit {
 
     ngOnInit(): void {
         if (this.mode === 'change') {
-            this.form = this.#fb.group({
-                currentPassword: ['', [Validators.required]],
-                newPassword: [
-                    '',
-                    [
-                        Validators.required,
-                        Validators.minLength(
-                            VALIDATION_LIMITS.USER_PASSWORD_MIN
-                        ),
-                        Validators.maxLength(
-                            VALIDATION_LIMITS.USER_PASSWORD_MAX
-                        ),
+            this.form = this.#fb.group(
+                {
+                    currentPassword: ['', [Validators.required]],
+                    newPassword: [
+                        '',
+                        [
+                            Validators.required,
+                            Validators.minLength(
+                                VALIDATION_LIMITS.USER_PASSWORD_MIN
+                            ),
+                            Validators.maxLength(
+                                VALIDATION_LIMITS.USER_PASSWORD_MAX
+                            ),
+                        ],
                     ],
-                ],
-                confirmPassword: ['', [Validators.required]],
-            });
+                    confirmPassword: ['', [Validators.required]],
+                },
+                { validators: this.#passwordMatchValidator }
+            );
+        } else {
+            this.form = this.#fb.group({});
         }
+    }
+
+    #passwordMatchValidator(g: FormGroup) {
+        const newPassword = g.get('newPassword')?.value;
+        const confirmPassword = g.get('confirmPassword')?.value;
+        return newPassword === confirmPassword ? null : { mismatch: true };
     }
 
     onSubmit(): void {
@@ -84,10 +95,6 @@ export class UserPasswordDialogComponent implements OnInit {
             this.#dialogRef.close(result);
         } else if (this.form.valid) {
             const formValue = this.form.value;
-            if (formValue.newPassword !== formValue.confirmPassword) {
-                this.form.get('confirmPassword')?.setErrors({ mismatch: true });
-                return;
-            }
             const result: PasswordDialogResult = {
                 mode: 'change',
                 changePasswordData: formValue,

@@ -24,14 +24,6 @@ export class UsersService extends CrudHttpService<
         delete: 'userById',
     };
 
-    listUsers() {
-        return this.list();
-    }
-
-    listUsersPaged(pageRequest: any) {
-        return this.listPaged(pageRequest);
-    }
-
     activateUser(id: number): Observable<User> {
         return this.customPost<User>('userActivate', {}, { id });
     }
