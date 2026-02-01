@@ -1,0 +1,233 @@
+<spa-dialog-header
+    [title]="
+        (mode === 'create' ? 'admin.users.create' : 'admin.users.edit')
+            | transloco
+    "
+    [subtitle]="data.user?.fullName"
+    (closeClicked)="onCancel()"
+>
+</spa-dialog-header>
+
+<spa-dialog-content>
+    <form [formGroup]="form" class="flex flex-col gap-4 p-2">
+        <!-- Basic Info Section -->
+        <div class="flex flex-col gap-3">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">person</mat-icon>
+                {{ 'admin.users.profile' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    formControlName="fullName"
+                    [label]="'admin.users.fields.fullName' | transloco"
+                    [placeholder]="
+                        'admin.users.placeholders.fullName' | transloco
+                    "
+                    [labelTooltip]="'fullName'"
+                    [required]="true"
+                    icon="person"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="email"
+                    [label]="'admin.users.fields.email' | transloco"
+                    [placeholder]="'admin.users.placeholders.email' | transloco"
+                    [labelTooltip]="'email'"
+                    [required]="true"
+                    type="email"
+                    icon="email"
+                ></spa-input>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    formControlName="firstName"
+                    [label]="'admin.users.fields.firstName' | transloco"
+                    [placeholder]="
+                        'admin.users.placeholders.firstName' | transloco
+                    "
+                    [labelTooltip]="'firstName'"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="lastName"
+                    [label]="'admin.users.fields.lastName' | transloco"
+                    [placeholder]="
+                        'admin.users.placeholders.lastName' | transloco
+                    "
+                    [labelTooltip]="'lastName'"
+                ></spa-input>
+            </div>
+        </div>
+
+        <div class="border-t"></div>
+
+        <!-- Security & Role Section -->
+        <div class="flex flex-col gap-4">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">security</mat-icon>
+                {{ 'admin.users.permissions' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-select
+                    formControlName="role"
+                    [label]="'admin.users.fields.role' | transloco"
+                    [labelTooltip]="'role'"
+                    [options]="roleOptions"
+                    [required]="true"
+                ></spa-select>
+
+                @if (mode === 'edit') {
+                    <div class="flex items-center">
+                        <spa-checkbox
+                            formControlName="isActive"
+                            [label]="'admin.users.fields.isActive' | transloco"
+                            [labelTooltip]="'isActive'"
+                            styleClasses="boxed w-full"
+                        ></spa-checkbox>
+                    </div>
+                }
+            </div>
+
+            @if (mode === 'create') {
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <spa-input
+                        formControlName="password"
+                        [label]="'admin.users.fields.password' | transloco"
+                        [placeholder]="
+                            'admin.users.placeholders.password' | transloco
+                        "
+                        [labelTooltip]="'password'"
+                        [required]="true"
+                        [type]="passwordVisible() ? 'text' : 'password'"
+                        icon="lock"
+                    >
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            type="button"
+                            (click)="passwordVisible.set(!passwordVisible())"
+                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-pressed]="passwordVisible()"
+                        >
+                            <mat-icon>{{
+                                passwordVisible()
+                                    ? 'visibility_off'
+                                    : 'visibility'
+                            }}</mat-icon>
+                        </button>
+                    </spa-input>
+
+                    <spa-input
+                        formControlName="confirmPassword"
+                        [label]="
+                            'admin.users.fields.confirmPassword' | transloco
+                        "
+                        [placeholder]="
+                            'admin.users.placeholders.confirmPassword'
+                                | transloco
+                        "
+                        [labelTooltip]="'confirmPassword'"
+                        [required]="true"
+                        [type]="confirmPasswordVisible() ? 'text' : 'password'"
+                        icon="lock"
+                    >
+                        <button
+                            mat-icon-button
+                            matSuffix
+                            type="button"
+                            (click)="
+                                confirmPasswordVisible.set(
+                                    !confirmPasswordVisible()
+                                )
+                            "
+                            [attr.aria-label]="'Hide password'"
+                            [attr.aria-pressed]="confirmPasswordVisible()"
+                        >
+                            <mat-icon>{{
+                                confirmPasswordVisible()
+                                    ? 'visibility_off'
+                                    : 'visibility'
+                            }}</mat-icon>
+                        </button>
+                    </spa-input>
+                </div>
+
+                @if (
+                    form.hasError('mismatch') &&
+                    form.get('confirmPassword')?.touched
+                ) {
+                    <div class="text-xs text-warn">
+                        {{ 'admin.users.password.errors.mismatch' | transloco }}
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="border-t"></div>
+
+        <!-- Professional Info Section -->
+        <div class="flex flex-col gap-4">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">badge</mat-icon>
+                {{ 'admin.users.grid.jobTitle' | transloco }} &
+                {{ 'admin.users.grid.department' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <spa-input
+                    formControlName="phone"
+                    [label]="'admin.users.fields.phone' | transloco"
+                    [placeholder]="'admin.users.placeholders.phone' | transloco"
+                    [labelTooltip]="'phone'"
+                    type="tel"
+                    icon="phone"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="jobTitle"
+                    [label]="'admin.users.fields.jobTitle' | transloco"
+                    [placeholder]="
+                        'admin.users.placeholders.jobTitle' | transloco
+                    "
+                    [labelTooltip]="'jobTitle'"
+                    icon="work"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="department"
+                    [label]="'admin.users.fields.department' | transloco"
+                    [placeholder]="
+                        'admin.users.placeholders.department' | transloco
+                    "
+                    [labelTooltip]="'department'"
+                    icon="business"
+                ></spa-input>
+            </div>
+
+            <spa-textarea
+                formControlName="notes"
+                [label]="'admin.users.fields.notes' | transloco"
+                [placeholder]="'admin.users.placeholders.notes' | transloco"
+                [labelTooltip]="'notes'"
+                [rows]="3"
+            ></spa-textarea>
+        </div>
+    </form>
+</spa-dialog-content>
+
+<spa-dialog-footer
+    [submitDisabled]="form.invalid"
+    submitLabel="admin.common.actions.save"
+    cancelLabel="admin.common.actions.cancel"
+    (cancelClicked)="onCancel()"
+    (submitClicked)="onSubmit()"
+></spa-dialog-footer>

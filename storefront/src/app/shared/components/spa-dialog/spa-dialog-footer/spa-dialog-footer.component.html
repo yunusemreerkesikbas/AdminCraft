@@ -13,7 +13,7 @@
         @if (showSubmit) {
             <button
                 mat-flat-button
-                color="primary"
+                [color]="submitColor"
                 (click)="submitClicked.emit()"
                 [disabled]="submitDisabled || isSubmitting"
             >
