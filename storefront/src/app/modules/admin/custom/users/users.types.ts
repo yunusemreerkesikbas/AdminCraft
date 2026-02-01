@@ -1,24 +1,27 @@
-export interface User {
-    id: number;
+import { CrudEntity } from '@core/crud/api.types';
+
+export interface User extends CrudEntity {
     email: string;
     fullName: string;
+    firstName?: string;
+    lastName?: string;
     role: UserRole;
-    preferredLanguage: Language;
-    tenantId: number;
-    tenantName?: string;
+    phone?: string;
+    jobTitle?: string;
+    department?: string;
     isActive: boolean;
+    emailVerified: boolean;
+    twoFactorEnabled: boolean;
     lastLoginAt?: string;
+    lastLoginIp?: string;
+    failedLoginAttempts: number;
+    accountLocked: boolean;
     createdAt: string;
     updatedAt?: string;
-}
-
-export interface UserPagination {
-    length: number;
-    size: number;
-    page: number;
-    lastPage: number;
-    startIndex: number;
-    endIndex: number;
+    displayName: string;
+    isSuperAdmin: boolean;
+    isTenantAdmin: boolean;
+    notes?: string;
 }
 
 export enum UserRole {
@@ -28,31 +31,39 @@ export enum UserRole {
     VIEWER = 'VIEWER'
 }
 
-export enum Language {
-    TR = 'TR',
-    EN = 'EN'
-}
-
 export interface CreateUserRequest {
     email: string;
     fullName: string;
     password: string;
     role: UserRole;
-    preferredLanguage: Language;
-    tenantId?: number;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    jobTitle?: string;
+    department?: string;
+    isActive?: boolean;
+    notes?: string;
 }
 
 export interface UpdateUserRequest {
     email?: string;
     fullName?: string;
     role?: UserRole;
-    preferredLanguage?: Language;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    jobTitle?: string;
+    department?: string;
     isActive?: boolean;
-    password?: string;
+    notes?: string;
 }
 
 export interface ChangePasswordRequest {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+    newPassword: string;
 }

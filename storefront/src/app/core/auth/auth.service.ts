@@ -100,7 +100,15 @@ export class AuthService {
                     error?.error?.message ||
                     error?.message ||
                     'Authentication failed';
-                this.#notificationService.alert(message);
+                const errorCode = error?.error?.data?.errorCode;
+
+                if (errorCode === 'ACCOUNT_LOCKED') {
+                    this.#notificationService.warning(message, {
+                        durationMs: 10000,
+                    });
+                } else {
+                    this.#notificationService.alert(message);
+                }
                 return of(false);
             })
         );

@@ -186,6 +186,17 @@ export const VALIDATION_LIMITS = {
     SITE_TAGLINE_MAX: 160,
     SITE_FOOTER_TEXT_MAX: 500,
     SITE_HEADER_TEXT_MAX: 200,
+
+    // User Limits
+    USER_FULL_NAME_MAX: 100,
+    USER_FIRST_NAME_MAX: 50,
+    USER_LAST_NAME_MAX: 50,
+    USER_PASSWORD_MIN: 8,
+    USER_PASSWORD_MAX: 128,
+    USER_PHONE_MAX: 20,
+    USER_JOB_TITLE_MAX: 100,
+    USER_DEPARTMENT_MAX: 100,
+    USER_NOTES_MAX: 500,
 } as const;
 
 // ============================================================================
