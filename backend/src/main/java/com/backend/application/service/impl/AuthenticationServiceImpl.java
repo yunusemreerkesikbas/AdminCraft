@@ -49,7 +49,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public LoginResponse authenticate(String email, String password, Long tenantId, String subdomain) {
-        log.info("Authenticating user with email: {}", email);
+        log.info("Processing authentication request");
 
         if (tenantId != null) {
             log.debug("Using X-Tenant-ID based authentication: tenantId={}", tenantId);
@@ -80,7 +80,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             log.debug("TenantContext set: tenantId={}, dbName={}", tenant.getId(), tenant.getDatabaseName());
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> {
-                        log.warn("User not found for email: {}", email);
+                        log.warn("User not found for provided credentials");
                         return new InvalidCredentialsException();
                     });
 
@@ -113,7 +113,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     tenant.getDatabaseName());
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> {
-                        log.warn("User not found for email: {} in subdomain: {}", email, cleanSubdomain);
+                        log.warn("User not found in subdomain: {}", cleanSubdomain);
                         return new InvalidCredentialsException();
                     });
 
@@ -127,8 +127,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private LoginResponse authenticateUser(User user, String password, Long tenantId, String subdomain) {
 
         if (!user.canLogin()) {
-            log.warn("User cannot login - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
-                    user.getEmail(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
+            log.warn("User cannot login - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
+                    user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
             if (!user.getIsActive()) {
                 throw new UserAccountDisabledException();
             } else if (!user.getEmailVerified()) {
@@ -145,15 +145,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!passwordMatches) {
             user.recordFailedLogin();
             userRepository.save(user);
-            log.warn("Password verification failed for user: {}, failed attempts: {}",
-                    user.getEmail(), user.getFailedLoginAttempts());
+            log.warn("Password verification failed for userId: {}, failed attempts: {}",
+                    user.getId(), user.getFailedLoginAttempts());
             if (user.isAccountLocked()) {
                 throw new AccountLockedException(user.getRemainingLockMinutes());
             }
             throw new InvalidCredentialsException();
         }
 
-        // Reset failed login attempts on successful login while preserving existing last login IP
+        // Reset failed login attempts on successful login while preserving existing
+        // last login IP
         user.recordSuccessfulLogin(user.getLastLoginIp());
         userRepository.save(user);
         String accessToken = jwtTokenProvider.createAccessToken(
@@ -163,7 +164,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 tenantId);
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-        log.info("Authentication successful for user: {}", user.getEmail());
+        log.info("Authentication successful for userId: {}", user.getId());
 
         return new LoginResponse(
                 accessToken,
@@ -182,16 +183,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(email)
                 .orElseThrow(InvalidCredentialsException::new);
+
+        // Check if account is locked
+        if (admin.isAccountLocked()) {
+            log.warn("Platform admin account is locked: userId={}", admin.getId());
+            throw new AccountLockedException(admin.getRemainingLockMinutes());
+        }
+
         boolean passwordMatches = passwordEncoder.matches(password, admin.getPasswordHash());
         if (!passwordMatches) {
+            admin.recordFailedLogin();
+            platformAdminUserRepository.save(admin);
+            log.warn("Password verification failed for platform admin userId: {}, failed attempts: {}",
+                    admin.getId(), admin.getFailedLoginAttempts());
+            if (admin.isAccountLocked()) {
+                throw new AccountLockedException(admin.getRemainingLockMinutes());
+            }
             throw new InvalidCredentialsException();
         }
+
+        // Record successful login
+        admin.recordSuccessfulLogin(null); // IP can be added later from request context
+        platformAdminUserRepository.save(admin);
+
         String accessToken = jwtTokenProvider.createAccessToken(
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
                 null);
         String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+
+        log.info("Authentication successful for platform admin userId: {}", admin.getId());
 
         return new LoginResponse(
                 accessToken,

@@ -187,8 +187,8 @@ public class User {
         if (lockedUntil == null || !isAccountLocked()) {
             return 0;
         }
-        long minutes = java.time.Duration.between(LocalDateTime.now(), lockedUntil).toMinutes();
-        return (int) Math.max(0, minutes + 1); // +1 to round up
+        long seconds = java.time.Duration.between(LocalDateTime.now(), lockedUntil).getSeconds();
+        return (int) Math.max(0, (seconds + 59) / 60); // Ceiling calculation
     }
 
     public boolean canLogin() {

@@ -1,5 +1,30 @@
 package com.backend.application.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.application.service.ProductTypeServiceImpl;
 import com.backend.domain.entity.ProductAttributeDefinition;
 import com.backend.domain.entity.ProductType;
@@ -11,15 +36,6 @@ import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.testutil.BaseServiceTest;
 import com.backend.testutil.builders.ProductAttributeDefinitionTestDataBuilder;
 import com.backend.testutil.builders.ProductTypeTestDataBuilder;
-import org.junit.jupiter.api.*;
-import org.mockito.*;
-import org.springframework.data.domain.*;
-
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for ProductTypeServiceImpl.
@@ -88,11 +104,9 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(10L);
             verify(productTypeRepository).existsByCode("new_type");
-            verify(productTypeRepository).save(argThat(pt ->
-                    "new_type".equals(pt.getCode()) &&
+            verify(productTypeRepository).save(argThat(pt -> "new_type".equals(pt.getCode()) &&
                     "New Type".equals(pt.getName()) &&
-                    "category".equals(pt.getCategory())
-            ));
+                    "category".equals(pt.getCategory())));
         }
 
         @Test
@@ -119,13 +133,12 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
             });
 
             // When
-            ProductType result = productTypeService.create("categorized", "Categorized Type", "special_category", TEST_USER_ID);
+            ProductType result = productTypeService.create("categorized", "Categorized Type", "special_category",
+                    TEST_USER_ID);
 
             // Then
             assertThat(result).isNotNull();
-            verify(productTypeRepository).save(argThat(pt ->
-                    "special_category".equals(pt.getCategory())
-            ));
+            verify(productTypeRepository).save(argThat(pt -> "special_category".equals(pt.getCategory())));
         }
 
         @Test
@@ -159,10 +172,8 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(productTypeRepository).save(argThat(pt ->
-                    "Updated Name".equals(pt.getName()) &&
-                    "updated_category".equals(pt.getCategory())
-            ));
+            verify(productTypeRepository).save(argThat(pt -> "Updated Name".equals(pt.getName()) &&
+                    "updated_category".equals(pt.getCategory())));
         }
 
         @Test
@@ -190,7 +201,8 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         }
     }
 
-    // ==================== delete() Tests - CRITICAL BUSINESS RULE ====================
+    // ==================== delete() Tests - CRITICAL BUSINESS RULE
+    // ====================
 
     @Nested
     @DisplayName("delete() Tests - BusinessRuleViolationException")
@@ -290,7 +302,7 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void addAttribute_Success() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(eq(1L), anyString())).thenReturn(false);
             when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> {
                 ProductAttributeDefinition def = inv.getArgument(0);
                 def.setId(100L);
@@ -304,10 +316,8 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(100L);
-            verify(attributeDefinitionRepository).save(argThat(def ->
-                    "New Attribute".equals(def.getName()) &&
-                    def.getFieldType() == ProductFieldType.TEXT
-            ));
+            verify(attributeDefinitionRepository).save(argThat(def -> "New Attribute".equals(def.getName()) &&
+                    def.getFieldType() == ProductFieldType.TEXT));
         }
 
         @Test
@@ -315,18 +325,17 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void addAttribute_GeneratesCodeFromName() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
-            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(eq(1L), anyString())).thenReturn(false);
+            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             // When
             productTypeService.addAttribute(1L, "Auto Sort", ProductFieldType.TEXT);
 
             // Then
-            verify(attributeDefinitionRepository).save(argThat(def ->
-                    "Auto Sort".equals(def.getName()) &&
+            verify(attributeDefinitionRepository).save(argThat(def -> "Auto Sort".equals(def.getName()) &&
                     def.getCode() != null &&
-                    !def.getCode().isEmpty()
-            ));
+                    !def.getCode().isEmpty()));
         }
 
         @Test
@@ -334,17 +343,16 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void addAttribute_WithFieldType() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(false);
-            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(eq(1L), anyString())).thenReturn(false);
+            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             // When
             productTypeService.addAttribute(1L, "Explicit Sort", ProductFieldType.NUMBER);
 
             // Then
-            verify(attributeDefinitionRepository).save(argThat(def ->
-                    "Explicit Sort".equals(def.getName()) &&
-                    def.getFieldType() == ProductFieldType.NUMBER
-            ));
+            verify(attributeDefinitionRepository).save(argThat(def -> "Explicit Sort".equals(def.getName()) &&
+                    def.getFieldType() == ProductFieldType.NUMBER));
         }
 
         @Test
@@ -352,7 +360,7 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
         void addAttribute_ThrowsException_WhenCodeDuplicate() {
             // Given
             when(productTypeRepository.findById(1L)).thenReturn(Optional.of(testProductType));
-            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(1L, anyString())).thenReturn(true);
+            when(attributeDefinitionRepository.existsByProductTypeIdAndCode(eq(1L), anyString())).thenReturn(true);
 
             // When & Then
             assertThatThrownBy(() -> productTypeService.addAttribute(
@@ -386,7 +394,8 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
             // Given
             testAttributeDefinition.setProductType(testProductType);
             when(attributeDefinitionRepository.findById(1L)).thenReturn(Optional.of(testAttributeDefinition));
-            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class))).thenReturn(testAttributeDefinition);
+            when(attributeDefinitionRepository.save(any(ProductAttributeDefinition.class)))
+                    .thenReturn(testAttributeDefinition);
 
             // When
             ProductAttributeDefinition result = productTypeService.updateAttribute(
@@ -394,10 +403,8 @@ class ProductTypeServiceImplTest extends BaseServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(attributeDefinitionRepository).save(argThat(def ->
-                    "Updated Name".equals(def.getName()) &&
-                    def.getFieldType() == ProductFieldType.NUMBER
-            ));
+            verify(attributeDefinitionRepository).save(argThat(def -> "Updated Name".equals(def.getName()) &&
+                    def.getFieldType() == ProductFieldType.NUMBER));
         }
 
         @Test

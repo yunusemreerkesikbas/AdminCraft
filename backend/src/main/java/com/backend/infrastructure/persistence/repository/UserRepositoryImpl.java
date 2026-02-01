@@ -57,51 +57,49 @@ public class UserRepositoryImpl implements UserRepository {
 
         String searchPattern = "%" + search.toLowerCase().trim() + "%";
 
-        // Build ORDER BY clause from Pageable sort
-        StringBuilder orderByClause = new StringBuilder();
+        // Use CriteriaBuilder for type-safe query construction (no string
+        // concatenation)
+        jakarta.persistence.criteria.CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+        // Main query
+        jakarta.persistence.criteria.CriteriaQuery<User> cq = cb.createQuery(User.class);
+        jakarta.persistence.criteria.Root<User> root = cq.from(User.class);
+
+        // Build search predicates
+        jakarta.persistence.criteria.Predicate searchPredicate = cb.or(
+                cb.like(cb.lower(root.get("fullName")), searchPattern),
+                cb.like(cb.lower(root.get("email")), searchPattern),
+                cb.like(cb.lower(root.get("phone")), searchPattern),
+                cb.like(cb.lower(root.get("jobTitle")), searchPattern),
+                cb.like(cb.lower(root.get("department")), searchPattern));
+        cq.where(searchPredicate);
+
+        // Build ORDER BY from Pageable sort using CriteriaBuilder (type-safe)
         if (pageable.getSort().isSorted()) {
-            orderByClause.append(" ORDER BY ");
+            List<jakarta.persistence.criteria.Order> orders = new java.util.ArrayList<>();
             pageable.getSort().forEach(order -> {
-                if (orderByClause.length() > 10) { // More than " ORDER BY "
-                    orderByClause.append(", ");
-                }
-                orderByClause.append("u.").append(order.getProperty())
-                        .append(" ").append(order.getDirection().name());
+                jakarta.persistence.criteria.Path<?> path = root.get(order.getProperty());
+                orders.add(order.isAscending() ? cb.asc(path) : cb.desc(path));
             });
+            cq.orderBy(orders);
         }
 
-        // JPQL query with parameterized search (prevent SQL injection)
-        String jpql = """
-                SELECT u FROM User u
-                WHERE LOWER(u.fullName) LIKE :search
-                   OR LOWER(u.email) LIKE :search
-                   OR LOWER(u.phone) LIKE :search
-                   OR LOWER(u.jobTitle) LIKE :search
-                   OR LOWER(u.department) LIKE :search
-                """ + orderByClause;
-
-        TypedQuery<User> query = entityManager.createQuery(jpql, User.class);
-        query.setParameter("search", searchPattern);
-
-        // Apply pagination
+        TypedQuery<User> query = entityManager.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
-
         List<User> users = query.getResultList();
 
-        // Count query
-        String countJpql = """
-                SELECT COUNT(u) FROM User u
-                WHERE LOWER(u.fullName) LIKE :search
-                   OR LOWER(u.email) LIKE :search
-                   OR LOWER(u.phone) LIKE :search
-                   OR LOWER(u.jobTitle) LIKE :search
-                   OR LOWER(u.department) LIKE :search
-                """;
-
-        TypedQuery<Long> countQuery = entityManager.createQuery(countJpql, Long.class);
-        countQuery.setParameter("search", searchPattern);
-        Long total = countQuery.getSingleResult();
+        // Count query using CriteriaBuilder
+        jakarta.persistence.criteria.CriteriaQuery<Long> countCq = cb.createQuery(Long.class);
+        jakarta.persistence.criteria.Root<User> countRoot = countCq.from(User.class);
+        countCq.select(cb.count(countRoot));
+        countCq.where(cb.or(
+                cb.like(cb.lower(countRoot.get("fullName")), searchPattern),
+                cb.like(cb.lower(countRoot.get("email")), searchPattern),
+                cb.like(cb.lower(countRoot.get("phone")), searchPattern),
+                cb.like(cb.lower(countRoot.get("jobTitle")), searchPattern),
+                cb.like(cb.lower(countRoot.get("department")), searchPattern)));
+        Long total = entityManager.createQuery(countCq).getSingleResult();
 
         return new PageImpl<>(users, pageable, total);
     }
