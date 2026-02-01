@@ -57,6 +57,19 @@ public class UserRepositoryImpl implements UserRepository {
 
         String searchPattern = "%" + search.toLowerCase().trim() + "%";
 
+        // Build ORDER BY clause from Pageable sort
+        StringBuilder orderByClause = new StringBuilder();
+        if (pageable.getSort().isSorted()) {
+            orderByClause.append(" ORDER BY ");
+            pageable.getSort().forEach(order -> {
+                if (orderByClause.length() > 10) { // More than " ORDER BY "
+                    orderByClause.append(", ");
+                }
+                orderByClause.append("u.").append(order.getProperty())
+                        .append(" ").append(order.getDirection().name());
+            });
+        }
+
         // JPQL query with parameterized search (prevent SQL injection)
         String jpql = """
                 SELECT u FROM User u
@@ -65,7 +78,7 @@ public class UserRepositoryImpl implements UserRepository {
                    OR LOWER(u.phone) LIKE :search
                    OR LOWER(u.jobTitle) LIKE :search
                    OR LOWER(u.department) LIKE :search
-                """;
+                """ + orderByClause;
 
         TypedQuery<User> query = entityManager.createQuery(jpql, User.class);
         query.setParameter("search", searchPattern);

@@ -16,13 +16,20 @@ public class PasswordMatchValidator implements ConstraintValidator<PasswordMatch
 
         String password = null;
         String confirmPassword = null;
+        boolean supportedType = false;
 
         if (request instanceof CreateUserRequest r) {
             password = r.password();
             confirmPassword = r.confirmPassword();
+            supportedType = true;
         } else if (request instanceof ChangePasswordRequest r) {
             password = r.password();
             confirmPassword = r.confirmPassword();
+            supportedType = true;
+        }
+
+        if (!supportedType) {
+            throw new IllegalArgumentException("@PasswordMatch is not supported for type: " + request.getClass().getName());
         }
 
         if (password == null || confirmPassword == null) {

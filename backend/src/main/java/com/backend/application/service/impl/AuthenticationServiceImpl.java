@@ -153,8 +153,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
 
-        // Reset failed login attempts on successful login
-        user.recordSuccessfulLogin(null); // IP is handled separately if needed
+        // Reset failed login attempts on successful login while preserving existing last login IP
+        user.recordSuccessfulLogin(user.getLastLoginIp());
         userRepository.save(user);
         String accessToken = jwtTokenProvider.createAccessToken(
                 user.getEmail(),
