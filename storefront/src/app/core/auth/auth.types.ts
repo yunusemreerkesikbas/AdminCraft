@@ -7,7 +7,6 @@ export interface LoginResponseData {
     expiresIn: number;
     userId: number;
     email: string;
-    fullName: string;
     role: string;
     preferredLanguage: string;
     subdomain: string;

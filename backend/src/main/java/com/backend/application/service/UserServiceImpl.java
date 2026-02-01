@@ -31,6 +31,21 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordGeneratorService passwordGeneratorService; // Injected
 
+    private String resolveFullName(String firstName, String lastName, String email) {
+        boolean hasFirstName = firstName != null && !firstName.trim().isEmpty();
+        boolean hasLastName = lastName != null && !lastName.trim().isEmpty();
+        if (hasFirstName && hasLastName) {
+            return (firstName + " " + lastName).trim();
+        }
+        if (hasFirstName) {
+            return firstName.trim();
+        }
+        if (hasLastName) {
+            return lastName.trim();
+        }
+        return email;
+    }
+
     private boolean isBCryptHash(String hash) {
         if (hash == null || hash.length() != 60) {
             return false;
@@ -50,10 +65,10 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setEmail(input.email());
         user.setPasswordHash(passwordEncoder.encode(input.password()));
-        user.setFullName(input.fullName());
         user.setRole(input.role());
         user.setFirstName(input.firstName());
         user.setLastName(input.lastName());
+        user.setFullName(resolveFullName(input.firstName(), input.lastName(), input.email()));
         user.setPhone(input.phone());
         user.setJobTitle(input.jobTitle());
         user.setDepartment(input.department());
@@ -88,14 +103,15 @@ public class UserServiceImpl implements UserService {
             });
             user.setEmail(input.email());
         }
-        if (input.fullName() != null)
-            user.setFullName(input.fullName());
         if (input.role() != null)
             user.setRole(input.role());
         if (input.firstName() != null)
             user.setFirstName(input.firstName());
         if (input.lastName() != null)
             user.setLastName(input.lastName());
+        if (input.firstName() != null || input.lastName() != null || input.email() != null) {
+            user.setFullName(resolveFullName(user.getFirstName(), user.getLastName(), user.getEmail()));
+        }
         if (input.phone() != null)
             user.setPhone(input.phone());
         if (input.jobTitle() != null)
@@ -363,14 +379,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateProfile(Long userId, String fullName, String phone, String jobTitle, String department) {
+    public User updateProfile(Long userId, String phone, String jobTitle, String department) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.setFullName(fullName);
         user.setPhone(phone);
         user.setJobTitle(jobTitle);
         user.setDepartment(department);
+        user.setFullName(resolveFullName(user.getFirstName(), user.getLastName(), user.getEmail()));
 
         return userRepository.save(user);
     }

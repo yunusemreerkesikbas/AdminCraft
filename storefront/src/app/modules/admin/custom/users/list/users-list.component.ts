@@ -74,7 +74,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
 
     protected readonly columns = signal<GridColumn<User>[]>([
         {
-            key: 'fullName',
+            key: 'displayName',
             label: 'admin.users.grid.name',
             type: 'text',
             getSecondaryValue: (user) => user.email,
@@ -313,4 +313,3 @@ export class UsersListComponent extends BasePaginatedListComponent<
             });
     }
 }
-

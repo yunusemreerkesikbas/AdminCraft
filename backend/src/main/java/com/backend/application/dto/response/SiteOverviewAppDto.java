@@ -53,7 +53,7 @@ public record SiteOverviewAppDto(
   public record UserAppDto(
       Long id,
       String email,
-      String fullName) {
+      String displayName) {
   }
 
   public record ActionsAppDto(

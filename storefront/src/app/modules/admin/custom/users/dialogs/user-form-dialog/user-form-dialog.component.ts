@@ -98,13 +98,6 @@ export class UserFormDialogComponent implements OnInit {
     #buildForm(): void {
         const baseControls = {
             email: ['', [Validators.required, Validators.email]],
-            fullName: [
-                '',
-                [
-                    Validators.required,
-                    Validators.maxLength(VALIDATION_LIMITS.USER_FULL_NAME_MAX),
-                ],
-            ],
             firstName: [
                 '',
                 [Validators.maxLength(VALIDATION_LIMITS.USER_FIRST_NAME_MAX)],

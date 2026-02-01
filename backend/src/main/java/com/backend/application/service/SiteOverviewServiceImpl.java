@@ -189,7 +189,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         if (site.getUpdatedBy() != null) {
             com.backend.domain.entity.User user = userRepository.findById(site.getUpdatedBy()).orElse(null);
             if (user != null) {
-                lastUpdatedBy = new UserAppDto(user.getId(), user.getEmail(), user.getFullName());
+                lastUpdatedBy = new UserAppDto(user.getId(), user.getEmail(), user.getDisplayName());
             }
         }
 
@@ -231,7 +231,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
             userDto = new UserAppDto(
                     user.getId(),
                     user.getEmail(),
-                    user.getFullName());
+                    user.getDisplayName());
         }
 
         return new ActivityAppDto(

@@ -8,7 +8,6 @@ import com.backend.domain.enums.UserRole;
 public record UserResponse(
         Long id,
         String email,
-        String fullName,
         String firstName,
         String lastName,
         UserRole role,
@@ -35,7 +34,6 @@ public record UserResponse(
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getFullName(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getRole(),

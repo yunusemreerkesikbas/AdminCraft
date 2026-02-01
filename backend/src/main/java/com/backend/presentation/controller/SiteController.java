@@ -377,7 +377,7 @@ public class SiteController {
                 lastUpdatedBy = new SiteOverviewResponse.UserDto(
                         dto.status().lastUpdatedBy().id(),
                         dto.status().lastUpdatedBy().email(),
-                        dto.status().lastUpdatedBy().fullName());
+                        dto.status().lastUpdatedBy().displayName());
             }
             status = new SiteOverviewResponse.SiteStatusDto(
                     dto.status().state(),
@@ -417,7 +417,7 @@ public class SiteController {
             recentActivity = dto.recentActivity().stream().map(a -> {
                 SiteOverviewResponse.UserDto user = null;
                 if (a.user() != null) {
-                    user = new SiteOverviewResponse.UserDto(a.user().id(), a.user().email(), a.user().fullName());
+                    user = new SiteOverviewResponse.UserDto(a.user().id(), a.user().email(), a.user().displayName());
                 }
                 return new SiteOverviewResponse.ActivityDto(
                         a.id(), a.action(), a.entityType(), a.entityId(), a.entityName(), a.description(), user,

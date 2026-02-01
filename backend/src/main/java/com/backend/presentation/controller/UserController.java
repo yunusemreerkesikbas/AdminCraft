@@ -205,7 +205,6 @@ public class UserController {
                         CreateUserInput input = new CreateUserInput(
                                         request.email(),
                                         request.password(),
-                                        request.fullName(),
                                         request.role(),
                                         request.firstName(),
                                         request.lastName(),
@@ -246,7 +245,6 @@ public class UserController {
                         // Convert Presentation DTO to Application Input
                         UpdateUserInput input = new UpdateUserInput(
                                         request.email(),
-                                        request.fullName(),
                                         request.role(),
                                         request.firstName(),
                                         request.lastName(),

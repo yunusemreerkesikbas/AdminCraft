@@ -5,7 +5,6 @@ import com.backend.domain.enums.UserRole;
 public record CreateUserInput(
         String email,
         String password,
-        String fullName,
         UserRole role,
         String firstName,
         String lastName,

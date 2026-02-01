@@ -8,8 +8,6 @@ import jakarta.validation.constraints.Size;
 public record UpdateUserRequest(
         @Email(message = "validation.email.invalid") String email,
 
-        @Size(max = 100, message = "validation.full.name.size") String fullName,
-
         UserRole role,
 
         @Size(max = 50, message = "validation.first.name.size") String firstName,
@@ -27,7 +25,6 @@ public record UpdateUserRequest(
         @Size(max = 500, message = "validation.user.notes.size") String notes) {
     public UpdateUserRequest {
         email = email != null ? email.trim() : null;
-        fullName = fullName != null ? fullName.trim() : null;
         firstName = firstName != null ? firstName.trim() : null;
         lastName = lastName != null ? lastName.trim() : null;
         phone = phone != null ? phone.trim() : null;

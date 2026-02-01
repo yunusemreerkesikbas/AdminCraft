@@ -16,8 +16,6 @@ public record CreateUserRequest(
 
         @NotBlank(message = "{validation.password.confirm.required}") String confirmPassword,
 
-        @NotBlank(message = "{validation.full.name.required}") @Size(max = 100, message = "{validation.full.name.size}") String fullName,
-
         @NotNull(message = "{validation.role.required}") UserRole role,
 
         @Size(max = 50, message = "{validation.first.name.size}") String firstName,
@@ -39,7 +37,6 @@ public record CreateUserRequest(
             isActive = true;
         }
         email = email != null ? email.trim() : null;
-        fullName = fullName != null ? fullName.trim() : null;
         firstName = firstName != null ? firstName.trim() : null;
         lastName = lastName != null ? lastName.trim() : null;
         phone = phone != null ? phone.trim() : null;
