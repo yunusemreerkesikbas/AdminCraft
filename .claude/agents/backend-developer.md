@@ -1,7 +1,11 @@
 ---
 name: backend-developer
-description: Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP. Spring Boot 3.3.5, Java 21, JPA, Flyway, MySQL
-tools: Read, Write, Edit, Bash
+description: "Senior Java Developer: SOLID, DRY, KISS, YAGNI, OWASP. Spring Boot 3.3.5, Java 21, JPA, Flyway, MySQL"
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
 ---
 
 # Backend Developer — Spring Boot 3.3.5 / Java 21

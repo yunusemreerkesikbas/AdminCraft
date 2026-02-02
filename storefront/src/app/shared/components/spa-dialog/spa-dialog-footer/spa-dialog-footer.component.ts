@@ -6,13 +6,19 @@ import {
     Output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
     selector: 'spa-dialog-footer',
     standalone: true,
-    imports: [MatButtonModule, MatProgressSpinnerModule, TranslocoModule],
+    imports: [
+        MatButtonModule,
+        MatDialogModule,
+        MatProgressSpinnerModule,
+        TranslocoModule,
+    ],
     templateUrl: './spa-dialog-footer.component.html',
     styleUrls: ['./spa-dialog-footer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,

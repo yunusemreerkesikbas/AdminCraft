@@ -1,7 +1,38 @@
+// Enforce correct layout for standard material dialogs when using spa-dialog
+.mat-mdc-dialog-container {
+    overflow: hidden !important;
+
+    .mat-mdc-dialog-surface {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden !important;
+
+        // Ensure the component inside the dialog (e.g. app-user-form-dialog) fills the space
+        & > * {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+        }
+    }
+}
+
+// Fix for spa-dialog host element to ensure it fills the parent component (e.g. app-user-form-dialog)
+spa-dialog {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .spa-dialog {
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
+    height: 100%; // changed from max-height: 90vh to fill the container defined by MatDialog config
+    min-height: 0;
     background: var(--fuse-card);
     border-radius: 0.5rem;
     overflow: hidden;

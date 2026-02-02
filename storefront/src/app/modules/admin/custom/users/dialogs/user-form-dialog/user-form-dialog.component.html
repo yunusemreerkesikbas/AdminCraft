@@ -1,15 +1,19 @@
-<spa-dialog-header
+<spa-dialog
     [title]="
         (mode === 'create' ? 'admin.users.create' : 'admin.users.edit')
             | transloco
     "
     [subtitle]="data.user?.displayName"
-    (closeClicked)="onCancel()"
+    [size]="'lg'"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isLoadingSig()"
+    submitLabel="admin.common.actions.save"
+    cancelLabel="admin.common.actions.cancel"
+    (closed)="onCancel()"
+    (cancelled)="onCancel()"
+    (submitted)="onSubmit()"
 >
-</spa-dialog-header>
-
-<spa-dialog-content>
-    <form [formGroup]="form" class="flex flex-col gap-4 p-2">
+    <form [formGroup]="form" class="flex flex-col gap-4">
         <!-- Basic Info Section -->
         <div class="flex flex-col gap-3">
             <h3
@@ -219,12 +223,4 @@
             ></spa-textarea>
         </div>
     </form>
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitDisabled]="form.invalid"
-    submitLabel="admin.common.actions.save"
-    cancelLabel="admin.common.actions.cancel"
-    (cancelClicked)="onCancel()"
-    (submitClicked)="onSubmit()"
-></spa-dialog-footer>
+</spa-dialog>

@@ -1,5 +1,11 @@
+:host {
+    display: block;
+    flex: 0 0 auto;
+}
+
 .spa-dialog-footer {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.5rem;

@@ -1,5 +1,14 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden; // Ensure internal scrolling happens here or in child
+}
+
 .spa-dialog-content {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
 
     &--form {
@@ -47,4 +56,14 @@
     &--container {
         padding: 1rem 1.5rem;
     }
+}
+
+:host ::ng-deep .mat-mdc-dialog-container {
+    overflow: hidden;
+}
+
+:host ::ng-deep .mat-mdc-dialog-surface {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }

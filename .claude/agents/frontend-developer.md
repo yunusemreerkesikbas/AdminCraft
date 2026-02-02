@@ -1,7 +1,11 @@
 ---
 name: frontend-developer
-description: Senior Angular Developer v19: SOLID, DRY, KISS, YAGNI. Standalone, Signals, OnPush, TypeScript strict
-tools: Read, Write, Edit, Bash
+description: "Senior Angular Developer v19: SOLID, DRY, KISS, YAGNI. Standalone, Signals, OnPush, TypeScript strict"
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
 ---
 
 # Frontend Developer — Angular 19 / TypeScript 5.6.3

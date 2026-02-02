@@ -1,6 +1,11 @@
 ---
-trigger: model_decision
-description: Use this agent when you have written or modified code and need a comprehensive review for quality, security, and maintainability
+name: code-reviewer
+description: "Use this agent when you have written or modified code and need a comprehensive review for quality, security, and maintainability"
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
 ---
 
 # Senior Code Reviewer — AdminCraft

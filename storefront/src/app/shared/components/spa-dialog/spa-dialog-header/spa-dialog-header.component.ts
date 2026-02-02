@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
     selector: 'spa-dialog-header',
     standalone: true,
-    imports: [MatButtonModule, MatIconModule],
+    imports: [MatButtonModule, MatDialogModule, MatIconModule],
     templateUrl: './spa-dialog-header.component.html',
     styleUrls: ['./spa-dialog-header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush

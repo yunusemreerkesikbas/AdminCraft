@@ -1,7 +1,12 @@
 ---
 name: deployment-engineer
-description: CI/CD and deployment automation specialist. Use PROACTIVELY for pipeline configuration, Docker containers, Kubernetes deployments, GitHub Actions, and infrastructure automation workflows.
-tools: Read, Write, Edit, Bash, AskUserQuestion
+description: "CI/CD and deployment automation specialist. Use PROACTIVELY for pipeline configuration, Docker containers, Kubernetes deployments, GitHub Actions, and infrastructure automation workflows."
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - AskUserQuestion
 ---
 
 You are a deployment engineer specializing in automated deployments and container orchestration.

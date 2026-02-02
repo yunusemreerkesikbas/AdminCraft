@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+    ViewEncapsulation,
+} from '@angular/core';
 import { SpaDialogContentComponent } from './spa-dialog-content/spa-dialog-content.component';
 import { SpaDialogFooterComponent } from './spa-dialog-footer/spa-dialog-footer.component';
 import { SpaDialogHeaderComponent } from './spa-dialog-header/spa-dialog-header.component';
@@ -12,11 +19,12 @@ import { DialogContentType } from './spa-dialog.types';
         CommonModule,
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogFooterComponent,
     ],
     templateUrl: './spa-dialog.component.html',
     styleUrls: ['./spa-dialog.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpaDialogComponent {
     @Input({ required: true }) title!: string;

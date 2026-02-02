@@ -1,4 +1,3 @@
-import { SpaDialogContentComponent } from '@/app/shared/components/spa-dialog';
 import { CommonModule } from '@angular/common';
 import {
     Component,
@@ -25,8 +24,7 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dialog-footer/spa-dialog-footer.component';
-import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { take } from 'rxjs';
@@ -57,9 +55,7 @@ export interface UserFormDialogData {
         SpaSelectComponent,
         SpaCheckboxComponent,
         SpaTextareaComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogFooterComponent,
-        SpaDialogContentComponent,
+        SpaDialogComponent,
     ],
     templateUrl: './user-form-dialog.component.html',
     encapsulation: ViewEncapsulation.None,
