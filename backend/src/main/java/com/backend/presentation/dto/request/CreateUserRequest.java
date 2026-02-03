@@ -1,20 +1,14 @@
 package com.backend.presentation.dto.request;
 
 import com.backend.domain.enums.UserRole;
-import com.backend.shared.validation.PasswordMatch;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@PasswordMatch
 public record CreateUserRequest(
         @NotBlank(message = "{validation.email.required}") @Email(message = "{validation.email.invalid}") String email,
-
-        @NotBlank(message = "{validation.password.required}") @Size(min = 8, max = 128, message = "{validation.password.size}") String password,
-
-        @NotBlank(message = "{validation.password.confirm.required}") String confirmPassword,
 
         @NotNull(message = "{validation.role.required}") UserRole role,
 
@@ -31,7 +25,7 @@ public record CreateUserRequest(
         Boolean isActive,
 
         @Size(max = 500, message = "{validation.user.notes.size}") String notes) {
-    // Apply defaults and trim inputs
+
     public CreateUserRequest {
         if (isActive == null) {
             isActive = true;

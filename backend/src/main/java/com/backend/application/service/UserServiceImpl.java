@@ -3,6 +3,7 @@ package com.backend.application.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,22 +15,40 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.CreateUserInput;
 import com.backend.application.dto.UpdateUserInput;
 import com.backend.domain.entity.User;
+import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.UserNotFoundException;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PasswordGeneratorService passwordGeneratorService; // Injected
+    private final PasswordGeneratorService passwordGeneratorService;
+    private final EmailService emailService;
+    private final OtpService otpService;
+    private final TenantContextPort tenantContext;
+
+    public UserServiceImpl(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            PasswordGeneratorService passwordGeneratorService,
+            EmailService emailService,
+            OtpService otpService,
+            TenantContextPort tenantContext) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.passwordGeneratorService = passwordGeneratorService;
+        this.emailService = emailService;
+        this.otpService = otpService;
+        this.tenantContext = tenantContext;
+    }
 
     private String resolveFullName(String firstName, String lastName, String email) {
         boolean hasFirstName = firstName != null && !firstName.trim().isEmpty();
@@ -46,25 +65,19 @@ public class UserServiceImpl implements UserService {
         return email;
     }
 
-    private boolean isBCryptHash(String hash) {
-        if (hash == null || hash.length() != 60) {
-            return false;
-        }
-        return hash.matches("^\\$2[ayb]\\$[0-9]{2}\\$[A-Za-z0-9./]{53}$");
-    }
-
     @Override
     public User createUser(CreateUserInput input) {
         log.debug("Creating new user with email: {}", input.email());
 
-        // Check if email exists
         if (userRepository.existsByEmail(input.email())) {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        String tempPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
+
         User user = new User();
         user.setEmail(input.email());
-        user.setPasswordHash(passwordEncoder.encode(input.password()));
+        user.setPasswordHash(tempPasswordHash);
         user.setRole(input.role());
         user.setFirstName(input.firstName());
         user.setLastName(input.lastName());
@@ -73,10 +86,27 @@ public class UserServiceImpl implements UserService {
         user.setJobTitle(input.jobTitle());
         user.setDepartment(input.department());
         user.setIsActive(input.isActive());
+        user.setEmailVerified(false);
         user.setNotes(input.notes());
 
         User savedUser = userRepository.save(user);
         log.info("User created successfully with ID: {}", savedUser.getId());
+
+        try {
+            VerificationToken token = otpService.createEmailVerificationToken(
+                    savedUser,
+                    input.ipAddress(),
+                    input.userAgent());
+            emailService.sendEmailVerificationEmail(
+                    savedUser.getEmail(),
+                    token.getTargetValue(),
+                    tenantContext.getSubdomain(),
+                    input.language());
+            log.info("Verification email sent to: {}", savedUser.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send verification email to: {}", savedUser.getEmail(), e);
+        }
+
         return savedUser;
     }
 
@@ -93,9 +123,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        // Update only provided fields (partial update)
         if (input.email() != null) {
-            // Check email uniqueness
             userRepository.findByEmail(input.email()).ifPresent(existing -> {
                 if (!existing.getId().equals(id)) {
                     throw new IllegalArgumentException("Email already exists");
@@ -186,7 +214,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
+            throw new UserNotFoundException(email);
         }
 
         User user = userOpt.get();
@@ -238,7 +266,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Current password is incorrect");
@@ -254,7 +282,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String resetPassword(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         String tempPassword = passwordGeneratorService.generate();
         String encodedPassword = passwordEncoder.encode(tempPassword);
@@ -269,7 +297,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updatePasswordHash(Long userId, String newPasswordHash) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.changePassword(newPasswordHash);
         userRepository.save(user);
@@ -279,7 +307,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean isPasswordExpired(Long userId, int maxDays) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         if (user.getPasswordChangedAt() == null) {
             return true;
@@ -291,7 +319,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User activateUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setIsActive(true);
         user.setLockedUntil(null);
@@ -305,7 +333,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User deactivateUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setIsActive(false);
         User savedUser = userRepository.save(user);
@@ -316,7 +344,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void lockUser(Long userId, LocalDateTime until) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setLockedUntil(until);
         userRepository.save(user);
@@ -326,7 +354,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void unlockUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setLockedUntil(null);
         user.setFailedLoginAttempts(0);
@@ -337,7 +365,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void verifyEmail(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setEmailVerified(true);
         userRepository.save(user);
@@ -348,7 +376,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean isUserLocked(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         return user.isAccountLocked();
     }
@@ -356,7 +384,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void assignRole(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setRole(role);
         userRepository.save(user);
@@ -373,7 +401,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean hasPermission(Long userId, UserRole.Permission permission) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         return user.getRole().hasPermission(permission);
     }
@@ -381,7 +409,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateProfile(Long userId, String phone, String jobTitle, String department) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setPhone(phone);
         user.setJobTitle(jobTitle);
@@ -449,7 +477,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void enableTwoFactor(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setTwoFactorEnabled(true);
         userRepository.save(user);
@@ -459,7 +487,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void disableTwoFactor(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setTwoFactorEnabled(false);
         userRepository.save(user);
@@ -470,7 +498,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean isTwoFactorEnabled(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         return user.getTwoFactorEnabled();
     }
@@ -478,7 +506,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void resetFailedLoginAttempts(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setFailedLoginAttempts(0);
         user.setLockedUntil(null);

@@ -13,6 +13,7 @@ Site Dashboard is a unified admin interface that consolidates **Site Management*
 - **Social**: Social media links
 - **SEO**: Meta tags, Open Graph, and search engine settings (per language, dynamic language support)
 - **Technical**: robots.txt, verification codes, custom scripts, cookie consent
+- **Security**: Two-factor authentication policy configuration
 
 ## Architecture
 
@@ -52,6 +53,8 @@ New endpoints under `/api/sites`:
 | `GET`   | `/sites/overview`   | Dashboard overview (status, stats, activity, actions) |
 | `GET`   | `/sites/technical`  | Technical settings                                    |
 | `PATCH` | `/sites/technical`  | Update technical settings                             |
+| `GET`   | `/sites/security`   | Security settings (2FA policy)                        |
+| `PATCH` | `/sites/security`   | Update security settings                              |
 | `GET`   | `/sites/robots.txt` | Public robots.txt endpoint                            |
 
 ### Response DTOs
@@ -123,15 +126,37 @@ New endpoints under `/api/sites`:
 }
 ```
 
+#### SecuritySettingsResponse
+
+```json
+{
+  "twoFactor": {
+    "policy": "DISABLED",
+    "policyDescription": "2FA is disabled for all users"
+  }
+}
+```
+
+**Two-Factor Policy Options**:
+
+| Policy | Description |
+|--------|-------------|
+| `DISABLED` | 2FA not used, standard login for all users |
+| `OPTIONAL` | 2FA only for users who enable it in their profile |
+| `REQUIRED` | 2FA mandatory for all tenant users |
+
+See [authentication.md](../global/authentication.md) for full 2FA documentation.
+
 ## Services
 
 ### Application Layer (Backend)
 
-| Service                 | Purpose                                                                                                         |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `SiteOverviewService`   | Aggregates stats using optimized count queries (avoiding N+1) from Page, Component, Media, Product repositories |
-| `SiteTechnicalService`  | Manages technical settings CRUD                                                                                 |
-| `SiteActivityPublisher` | Async event publisher for activity tracking                                                                     |
+| Service                   | Purpose                                                                                                         |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `SiteOverviewService`     | Aggregates stats using optimized count queries (avoiding N+1) from Page, Component, Media, Product repositories |
+| `SiteTechnicalService`    | Manages technical settings CRUD                                                                                 |
+| `SecuritySettingsService` | Manages tenant 2FA policy configuration                                                                         |
+| `SiteActivityPublisher`   | Async event publisher for activity tracking                                                                     |
 
 ### Activity Tracking
 
@@ -180,9 +205,12 @@ site/
     ├── seo/
     │   ├── site-seo.component.ts        (custom UI components + NotificationService)
     │   └── site-seo.component.html
-    └── technical/
-        ├── site-technical.component.ts  (custom UI components + NotificationService)
-        └── site-technical.component.html
+    ├── technical/
+    │   ├── site-technical.component.ts  (custom UI components + NotificationService)
+    │   └── site-technical.component.html
+    └── security/
+        ├── site-security.component.ts   (2FA policy configuration)
+        └── site-security.component.html
 
 Shared Utilities (Phase 1):
 ├── storefront/src/app/shared/utils/
@@ -209,6 +237,7 @@ Defined in `storefront/src/app/modules/admin/api-endpoints.ts`:
 ```typescript
 siteOverview: 'sites/overview',
 siteTechnical: 'sites/technical',
+siteSecuritySettings: 'sites/security',
 siteRobotsTxt: 'sites/robots.txt',
 ```
 
@@ -275,6 +304,7 @@ Legacy routes (`/sites`, `/settings`) remain functional for backward compatibili
 - [x] Social tab component
 - [x] SEO tab component
 - [x] Technical tab component
+- [x] Security tab component (2FA policy)
 - [x] Routes registered in app.routes.ts
 - [x] API endpoints registered
 

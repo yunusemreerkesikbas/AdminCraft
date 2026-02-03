@@ -14,6 +14,14 @@ springdoc:
   swagger-ui:
     enabled: true
 
+# Email Configuration for Development
+app:
+  email:
+    provider: console
+    log-content: true
+  otp:
+    bypass-code: "123456"
+
 logging:
   level:
     com.backend: DEBUG

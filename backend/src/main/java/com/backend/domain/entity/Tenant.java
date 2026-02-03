@@ -4,6 +4,7 @@ import com.backend.domain.converter.LanguageSetConverter;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.TenantCannotBeActivatedException;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -46,7 +47,11 @@ public class Tenant {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TenantStatus status = TenantStatus.PENDING;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "two_factor_policy")
+    private TwoFactorPolicy twoFactorPolicy = TwoFactorPolicy.DISABLED;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "default_language", nullable = false)
     private Language defaultLanguage = Language.TR;

@@ -13,6 +13,24 @@ app:
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
   platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    provider: ${EMAIL_PROVIDER:console}
+    from-address: ${EMAIL_FROM_ADDRESS:erkesikbasyunusemre@gmail.com}
+    from-name: ${EMAIL_FROM_NAME:AdminCraft}
+    log-content: ${EMAIL_LOG_CONTENT:false}
+  otp:
+    length: ${OTP_LENGTH:6}
+    expiry-seconds: ${OTP_EXPIRY_SECONDS:300}
+    max-attempts: ${OTP_MAX_ATTEMPTS:5}
+    bypass-code: ${OTP_BYPASS_CODE:}
+  password-reset:
+    expiry-seconds: ${PASSWORD_RESET_EXPIRY_SECONDS:3600}
+  email-verification:
+    expiry-seconds: ${EMAIL_VERIFICATION_EXPIRY_SECONDS:86400}
+  trusted-device:
+    expiry-days: ${TRUSTED_DEVICE_EXPIRY_DAYS:30}
+    max-devices-per-user: ${TRUSTED_DEVICE_MAX_PER_USER:5}
 
 spring:
   profiles:

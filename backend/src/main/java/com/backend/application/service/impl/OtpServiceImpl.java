@@ -1,0 +1,256 @@
+package com.backend.application.service.impl;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.application.service.OtpService;
+import com.backend.domain.entity.User;
+import com.backend.domain.entity.VerificationToken;
+import com.backend.domain.enums.TokenStatus;
+import com.backend.domain.enums.TokenType;
+import com.backend.domain.repository.VerificationTokenRepository;
+import com.backend.infrastructure.email.EmailVerificationProperties;
+import com.backend.infrastructure.email.OtpProperties;
+import com.backend.infrastructure.email.PasswordResetProperties;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OtpServiceImpl implements OtpService {
+
+    private final VerificationTokenRepository tokenRepository;
+    private final OtpProperties otpProperties;
+    private final PasswordResetProperties passwordResetProperties;
+    private final EmailVerificationProperties emailVerificationProperties;
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Override
+    public String generateOtp() {
+        int maxValue = (int) Math.pow(10, otpProperties.getLength());
+        int otp = secureRandom.nextInt(maxValue);
+        return String.format("%0" + otpProperties.getLength() + "d", otp);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public VerificationToken createOtpToken(User user, TokenType tokenType, String ipAddress, String userAgent) {
+        tokenRepository.revokeAllActiveTokensForUser(user.getId(), tokenType);
+
+        String otp = generateOtp();
+        String tokenHash = hashToken(otp);
+
+        VerificationToken token = VerificationToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .tokenType(tokenType)
+                .status(TokenStatus.ACTIVE)
+                .targetValue(hashToken(otp))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .attemptCount(0)
+                .maxAttempts(otpProperties.getMaxAttempts())
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        return tokenRepository.save(token);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public LoginOtpResult createLoginOtpToken(User user, String ipAddress, String userAgent) {
+        tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.LOGIN_OTP);
+
+        String otp = generateOtp();
+        String sessionToken = UUID.randomUUID().toString();
+        String sessionTokenHash = hashToken(sessionToken);
+
+        VerificationToken token = VerificationToken.builder()
+                .user(user)
+                .tokenHash(sessionTokenHash)
+                .tokenType(TokenType.LOGIN_OTP)
+                .status(TokenStatus.ACTIVE)
+                .targetValue(hashToken(otp))  // Store hashed OTP for security
+                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .attemptCount(0)
+                .maxAttempts(otpProperties.getMaxAttempts())
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        tokenRepository.save(token);
+
+        return new LoginOtpResult(otp, sessionToken);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public VerificationToken createPasswordResetToken(User user, String ipAddress, String userAgent) {
+        tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.PASSWORD_RESET);
+
+        String token = UUID.randomUUID().toString();
+        String tokenHash = hashToken(token);
+
+        VerificationToken verificationToken = VerificationToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .tokenType(TokenType.PASSWORD_RESET)
+                .status(TokenStatus.ACTIVE)
+                .targetValue(token)
+                .expiresAt(LocalDateTime.now().plusSeconds(passwordResetProperties.getExpirySeconds()))
+                .attemptCount(0)
+                .maxAttempts(1)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        return tokenRepository.save(verificationToken);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public VerificationToken createEmailVerificationToken(User user, String ipAddress, String userAgent) {
+        tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.EMAIL_VERIFY);
+
+        String token = UUID.randomUUID().toString();
+        String tokenHash = hashToken(token);
+
+        VerificationToken verificationToken = VerificationToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .tokenType(TokenType.EMAIL_VERIFY)
+                .status(TokenStatus.ACTIVE)
+                .targetValue(token)
+                .expiresAt(LocalDateTime.now().plusSeconds(emailVerificationProperties.getExpirySeconds()))
+                .attemptCount(0)
+                .maxAttempts(1)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        return tokenRepository.save(verificationToken);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public boolean validateOtp(String tokenHash, String otpCode) {
+        if (otpProperties.getBypassCode() != null && otpCode.equals(otpProperties.getBypassCode())) {
+            log.info("OTP bypass code used");
+            return true;
+        }
+
+        Optional<VerificationToken> tokenOpt = tokenRepository.findByTokenHash(tokenHash);
+
+        if (tokenOpt.isEmpty()) {
+            log.warn("OTP token not found: {}", tokenHash);
+            return false;
+        }
+
+        VerificationToken token = tokenOpt.get();
+
+        if (!token.isUsable()) {
+            log.warn("OTP token is not usable. Status: {}, Expired: {}, Attempts: {}/{}",
+                    token.getStatus(), token.isExpired(), token.getAttemptCount(), token.getMaxAttempts());
+            return false;
+        }
+
+        String expectedHash = hashToken(otpCode);
+        boolean isValid = token.getTargetValue().equals(expectedHash);
+
+        if (!isValid) {
+            token.incrementAttempts();
+            tokenRepository.save(token);
+            log.warn("Invalid OTP attempt. Remaining attempts: {}", token.getRemainingAttempts());
+        }
+
+        return isValid;
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public boolean validateToken(String rawToken) {
+        String tokenHash = hashToken(rawToken);
+        Optional<VerificationToken> tokenOpt = tokenRepository.findByTokenHash(tokenHash);
+
+        if (tokenOpt.isEmpty()) {
+            log.warn("Token not found");
+            return false;
+        }
+
+        VerificationToken token = tokenOpt.get();
+        return token.isUsable();
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public void markTokenAsUsed(String rawToken) {
+        String tokenHash = hashToken(rawToken);
+        tokenRepository.findByTokenHash(tokenHash).ifPresent(token -> {
+            token.markAsUsed();
+            tokenRepository.save(token);
+            log.info("Token marked as used: type={}", token.getTokenType());
+        });
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public void revokeToken(String rawToken) {
+        String tokenHash = hashToken(rawToken);
+        tokenRepository.findByTokenHash(tokenHash).ifPresent(token -> {
+            token.revoke();
+            tokenRepository.save(token);
+            log.info("Token revoked: type={}", token.getTokenType());
+        });
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public void revokeAllUserTokens(Long userId, TokenType tokenType) {
+        tokenRepository.revokeAllActiveTokensForUser(userId, tokenType);
+        log.info("All {} tokens revoked for user: {}", tokenType, userId);
+    }
+
+    @Override
+    public VerificationToken getActiveToken(Long userId, TokenType tokenType) {
+        return tokenRepository.findActiveTokenByUserAndType(userId, tokenType).orElse(null);
+    }
+
+    @Override
+    public String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    @Override
+    public int getRemainingAttempts(String rawToken) {
+        String tokenHash = hashToken(rawToken);
+        return tokenRepository.findByTokenHash(tokenHash)
+                .map(VerificationToken::getRemainingAttempts)
+                .orElse(0);
+    }
+
+    @Override
+    @Transactional("tenantTransactionManager")
+    public void cleanupExpiredTokens() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
+        tokenRepository.deleteExpiredTokens(cutoff);
+        log.info("Cleaned up expired tokens older than {}", cutoff);
+    }
+}

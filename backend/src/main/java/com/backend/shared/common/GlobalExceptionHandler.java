@@ -34,6 +34,7 @@ import com.backend.domain.exception.SiteNotFoundException;
 import com.backend.domain.exception.TenantCannotBeActivatedException;
 import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.exception.AccountLockedException;
+import com.backend.domain.exception.OtpRateLimitExceededException;
 import com.backend.domain.exception.UserAccountDisabledException;
 import com.backend.domain.exception.UserNotFoundException;
 
@@ -98,6 +99,17 @@ public class GlobalExceptionHandler {
         data.put("errorCode", "ACCOUNT_LOCKED");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, data);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(OtpRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handleOtpRateLimitExceeded(OtpRateLimitExceededException ex) {
+        log.warn("OTP rate limit exceeded: {}", ex.getMessage());
+        String message = getMessage("auth.otp.rate.limit.exceeded");
+        Map<String, Object> data = new HashMap<>();
+        data.put("retryAfterSeconds", ex.getRetryAfterSeconds());
+        data.put("errorCode", "OTP_RATE_LIMIT_EXCEEDED");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, data);
+        return new ResponseEntity<>(response, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(InvalidTokenException.class)

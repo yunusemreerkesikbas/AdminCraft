@@ -37,10 +37,13 @@ import com.backend.presentation.dto.response.ResetPasswordResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.UserResponse;
 import com.backend.shared.common.ApiResponse;
+import com.backend.domain.enums.Language;
+import com.backend.shared.common.RequestUtils;
 import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -199,12 +202,15 @@ public class UserController {
         @PostMapping
         public ResponseEntity<ApiResponse<UserResponse>> createUser(
                         @Valid @RequestBody CreateUserRequest request,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+                        HttpServletRequest httpRequest) {
                 try {
-                        // Convert Presentation DTO to Application Input
+                        Language language = RequestUtils.parseLanguage(languageCode);
+                        String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+                        String userAgent = RequestUtils.getUserAgent(httpRequest);
+
                         CreateUserInput input = new CreateUserInput(
                                         request.email(),
-                                        request.password(),
                                         request.role(),
                                         request.firstName(),
                                         request.lastName(),
@@ -212,7 +218,10 @@ public class UserController {
                                         request.jobTitle(),
                                         request.department(),
                                         request.isActive(),
-                                        request.notes());
+                                        request.notes(),
+                                        ipAddress,
+                                        userAgent,
+                                        language);
                         User createdUser = userService.createUser(input);
                         String message = messageSource.getMessage("user.create.success", null,
                                         Locale.forLanguageTag(languageCode));

@@ -13,6 +13,7 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
   private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
 
+  @Override
   public void setTenantId(String tenantId) {
     currentTenantId.set(tenantId);
   }
@@ -22,6 +23,7 @@ public class TenantContext implements TenantContextPort {
     return currentTenantId.get();
   }
 
+  @Override
   public void setTenantDbName(String dbName) {
     currentTenantDbName.set(dbName);
   }
@@ -31,6 +33,7 @@ public class TenantContext implements TenantContextPort {
     return currentTenantDbName.get();
   }
 
+  @Override
   public void setSubdomain(String subdomain) {
     currentSubdomain.set(subdomain);
   }
@@ -40,6 +43,7 @@ public class TenantContext implements TenantContextPort {
     return currentSubdomain.get();
   }
 
+  @Override
   public void setCurrency(Currency currency) {
     currentCurrency.set(currency);
   }
@@ -50,6 +54,7 @@ public class TenantContext implements TenantContextPort {
     return currency != null ? currency : Currency.getDefault();
   }
 
+  @Override
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
@@ -57,16 +62,11 @@ public class TenantContext implements TenantContextPort {
     currentCurrency.remove();
   }
 
+  @Override
   public boolean isSet() {
     return currentTenantId.get() != null && currentTenantDbName.get() != null;
   }
 
-  /**
-   * Validates that tenant context is properly set.
-   * Should be called at the entry point of all tenant-scoped service methods.
-   * 
-   * @throws IllegalStateException if tenant context is not set
-   */
   public static void validateActive() {
     if (currentTenantId.get() == null || currentTenantDbName.get() == null) {
       throw new IllegalStateException(

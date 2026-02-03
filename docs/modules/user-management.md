@@ -118,8 +118,6 @@ POST /api/users
 ```json
 {
   "email": "user@example.com",
-  "password": "SecurePass123!",
-  "confirmPassword": "SecurePass123!",
   "firstName": "John",
   "lastName": "Doe",
   "role": "VIEWER",
@@ -134,9 +132,9 @@ POST /api/users
 **Validation**:
 
 - Email: Required, valid format, unique per tenant
-- Password: Required, min 8 chars (hashed with BCrypt)
-- Password Match: `password` and `confirmPassword` must be identical (`@PasswordMatch`)
 - Role: Required enum value
+
+**Note**: Password is **not** set during user creation. The user receives an email verification link to set their own password. See [Email Verification Flow](#email-verification-new-users) below.
 
 **Note**: `full_name` is derived server-side from first/last name (fallback: email).
 
@@ -177,30 +175,37 @@ POST /api/users/{id}/activate
 POST /api/users/{id}/deactivate
 ```
 
-### Reset Password (System Generated)
+### Reset Password (Admin-Initiated)
 
 ```
 POST /api/users/{id}/reset-password
 ```
 
-**Response**: `ResetPasswordResponse`
+Sends a password reset email to the user with a secure token link.
+
+**Response**:
 
 ```json
 {
   "result": "SUCCESS",
-  "message": "Password reset successfully.",
-  "data": {
-    "newPassword": "Abc123!@#"
-  }
+  "message": "Password reset email sent."
 }
 ```
 
-> **Security Note**: The current implementation returns the plaintext password in the API response for administrative convenience (TENANT_ADMIN can immediately share it with the user). This is acceptable in trusted admin contexts but increases exposure risk through browser logs, network proxies, and APM tools. For production environments with strict security requirements, consider implementing a token-based reset flow where:
-> - A one-time reset token is generated and sent via email
-> - The user sets their own password through a secure link
-> - The plaintext password is never transmitted or logged
->
-> This would require additional infrastructure (email service, token management, frontend reset page).
+The user receives an email with a secure link to set a new password. The token expires after 1 hour.
+
+See [authentication.md](../global/authentication.md#password-reset-token-based) for full password reset documentation.
+
+### Self-Service Password Reset (Forgot Password)
+
+Users can also reset their password via the login page:
+
+```
+POST /api/auth/forgot-password
+{ "email": "user@example.com" }
+```
+
+This is documented in [authentication.md](../global/authentication.md#password-reset-token-based).
 
 ### Change Password (Manual)
 
@@ -221,8 +226,9 @@ POST /api/users/{id}/change-password
 **Validation**:
 
 - Current password must be correct
-- New password and confirm password must match (`@PasswordMatch`)
-- New password must be at least 8 chars
+- New password and confirm password must match (`@AssertTrue isPasswordMatching()`)
+- New password must be at least 8 characters
+- New password must contain at least 1 lowercase, 1 uppercase, and 1 digit
 
 ## DTOs
 
@@ -241,7 +247,7 @@ Response DTO (excludes `passwordHash` for security):
 
 ### CreateUserRequest
 
-Create request with validation including `confirmPassword` and `@PasswordMatch`.
+Create request with email, role, and optional profile fields. Password is **not** included - users set their own password via email verification.
 
 ### UpdateUserRequest
 
@@ -302,6 +308,18 @@ Defined in [`UserRole.java`](../../backend/src/main/java/com/backend/domain/enum
 - Passwords hashed with BCrypt before storage
 - Password hashes **never** exposed in API responses
 - JPQL queries use parameterized search (SQL injection protection)
+- **Password complexity requirements**:
+  - Minimum 8 characters
+  - At least 1 lowercase letter
+  - At least 1 uppercase letter
+  - At least 1 digit
+  - Pattern: `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$`
+
+### Email Verification
+
+- New users must verify their email before login
+- `email_verified` field is checked during authentication
+- Users with `email_verified=false` cannot login (returns `InvalidCredentialsException` for security)
 
 ### Account Lock Mechanism
 
@@ -358,20 +376,28 @@ Automatic account locking protects against brute-force attacks:
 
 1. **Frontend**:
    - User clicks "Create User" → Opens `UserFormDialogComponent`
-   - Form validates: email format, password strength (min 8 chars), required fields
+   - Form validates: email format, required fields (no password fields)
    - On submit → Calls `UsersService.create(CreateUserRequest)`
 
 2. **Backend**:
    - Controller validates DTO (`@Valid CreateUserRequest`)
    - Service checks email uniqueness
-   - Password hashed with BCrypt
-   - User saved to tenant database
-   - Returns `UserResponse` (excludes password hash)
+   - User saved with `email_verified=false`, `password=null`
+   - Verification email sent automatically via `EmailService`
+   - Returns `UserResponse` (201 Created)
 
 3. **Frontend**:
-   - Success notification shown
+   - Success notification shown (includes email sent info)
    - Dialog closes
    - Users list auto-refreshes via `loadItems()`
+
+4. **User Email Verification**:
+   - New user receives verification email with secure link
+   - User clicks link → Set Password page
+   - User sets their password → `email_verified=true`, password saved
+   - User can now login
+
+See [authentication.md](../global/authentication.md#email-verification-new-users) for full email verification documentation.
 
 ### Searching and Sorting Users
 
