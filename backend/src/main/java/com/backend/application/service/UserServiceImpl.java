@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @Transactional
+@lombok.RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -34,21 +35,6 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final OtpService otpService;
     private final TenantContextPort tenantContext;
-
-    public UserServiceImpl(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            PasswordGeneratorService passwordGeneratorService,
-            EmailService emailService,
-            OtpService otpService,
-            TenantContextPort tenantContext) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.passwordGeneratorService = passwordGeneratorService;
-        this.emailService = emailService;
-        this.otpService = otpService;
-        this.tenantContext = tenantContext;
-    }
 
     private String resolveFullName(String firstName, String lastName, String email) {
         boolean hasFirstName = firstName != null && !firstName.trim().isEmpty();
@@ -67,6 +53,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(CreateUserInput input) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context is required to create a user");
+        }
         log.debug("Creating new user with email: {}", input.email());
 
         if (userRepository.existsByEmail(input.email())) {

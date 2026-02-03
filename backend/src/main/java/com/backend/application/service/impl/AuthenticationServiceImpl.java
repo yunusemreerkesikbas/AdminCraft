@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.AuthResult;
@@ -38,10 +37,12 @@ import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
 import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
 import com.backend.infrastructure.security.JwtTokenProvider;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private static final int OTP_RATE_LIMIT_WINDOW_SECONDS = 300; // 5 minutes
@@ -60,34 +61,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final TrustedDeviceService trustedDeviceService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final OtpProperties otpProperties;
-    private final PlatformTransactionManager tenantTransactionManager;
 
-    public AuthenticationServiceImpl(
-            UserRepository userRepository,
-            JwtTokenProvider jwtTokenProvider,
-            PasswordEncoder passwordEncoder,
-            TenantRepository tenantRepository,
-            PlatformAdminUserRepository platformAdminUserRepository,
-            TenantContextPort tenantContext,
-            OtpService otpService,
-            EmailService emailService,
-            TrustedDeviceService trustedDeviceService,
-            VerificationTokenRepository verificationTokenRepository,
-            OtpProperties otpProperties,
-            @Qualifier("tenantTransactionManager") PlatformTransactionManager tenantTransactionManager) {
-        this.userRepository = userRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.passwordEncoder = passwordEncoder;
-        this.tenantRepository = tenantRepository;
-        this.platformAdminUserRepository = platformAdminUserRepository;
-        this.tenantContext = tenantContext;
-        this.otpService = otpService;
-        this.emailService = emailService;
-        this.trustedDeviceService = trustedDeviceService;
-        this.verificationTokenRepository = verificationTokenRepository;
-        this.otpProperties = otpProperties;
-        this.tenantTransactionManager = tenantTransactionManager;
-    }
+    @Qualifier("tenantTransactionManager")
+    private final PlatformTransactionManager tenantTransactionManager;
 
     @Override
     public AuthResult authenticate(String email, String password, Long tenantId, String subdomain) {
@@ -220,7 +196,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Check if 2FA is required
         TwoFactorPolicy twoFactorPolicy = tenant.getTwoFactorPolicy();
         boolean requires2FA = twoFactorPolicy == TwoFactorPolicy.REQUIRED ||
-                (twoFactorPolicy == TwoFactorPolicy.OPTIONAL && user.getTwoFactorEnabled() != null && user.getTwoFactorEnabled());
+                (twoFactorPolicy == TwoFactorPolicy.OPTIONAL && user.getTwoFactorEnabled() != null
+                        && user.getTwoFactorEnabled());
 
         if (requires2FA) {
             // Check if device is trusted
@@ -228,7 +205,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
 
             if (!deviceTrusted) {
-                log.info("2FA required for user: {}, generating OTP", user.getEmail());
+                log.info("2FA required for user: {}, generating OTP", maskEmail(user.getEmail()));
 
                 // Check rate limit before generating OTP
                 checkOtpRateLimit(user.getEmail());
@@ -241,7 +218,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 // Return response with session token (not the OTP)
                 return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), subdomain, tenantId);
             } else {
-                log.info("Device trusted for user: {}, skipping 2FA", user.getEmail());
+                log.info("Device trusted for user: {}, skipping 2FA", user.getId());
                 // Update last used time for trusted device
                 trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
             }
@@ -369,7 +346,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new UserNotFoundException(email));
                 if (!user.canLogin()) {
-                    log.warn("User cannot refresh token - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
+                    log.warn(
+                            "User cannot refresh token - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                             email, user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                     throw new UserAccountDisabledException();
                 }
@@ -446,7 +424,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return authenticateTenantUserById(email, password, tenantId, deviceFingerprint, ipAddress, userAgent);
         } else if (subdomain != null && !subdomain.trim().isEmpty()) {
             log.debug("Using subdomain-based authentication: subdomain={}", subdomain);
-            return authenticateTenantUserBySubdomain(email, password, subdomain, deviceFingerprint, ipAddress, userAgent);
+            return authenticateTenantUserBySubdomain(email, password, subdomain, deviceFingerprint, ipAddress,
+                    userAgent);
         } else {
             log.debug("Using platform admin authentication");
             return authenticatePlatformAdmin(email, password);
@@ -574,6 +553,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenValidationResult validateResetToken(String token) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context is required for token validation");
+        }
+
         String tokenHash = otpService.hashToken(token);
         VerificationToken verificationToken = verificationTokenRepository.findByTokenHash(tokenHash)
                 .orElse(null);
@@ -646,6 +629,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenValidationResult validateEmailVerificationToken(String token) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context is required for token validation");
+        }
+
         String tokenHash = otpService.hashToken(token);
         VerificationToken verificationToken = verificationTokenRepository.findByTokenHash(tokenHash)
                 .orElse(null);

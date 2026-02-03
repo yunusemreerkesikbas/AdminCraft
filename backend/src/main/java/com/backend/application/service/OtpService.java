@@ -10,10 +10,6 @@ public interface OtpService {
 
     VerificationToken createOtpToken(User user, TokenType tokenType, String ipAddress, String userAgent);
 
-    /**
-     * Creates a login OTP token with a separate session identifier.
-     * Returns the OTP code as the first element and the session token as the second element.
-     */
     LoginOtpResult createLoginOtpToken(User user, String ipAddress, String userAgent);
 
     record LoginOtpResult(String otpCode, String sessionToken) {}

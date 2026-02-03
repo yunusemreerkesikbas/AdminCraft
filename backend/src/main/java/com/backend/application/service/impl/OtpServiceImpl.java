@@ -17,6 +17,7 @@ import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.VerificationTokenRepository;
 import com.backend.infrastructure.email.EmailVerificationProperties;
 import com.backend.infrastructure.email.OtpProperties;
@@ -34,6 +35,7 @@ public class OtpServiceImpl implements OtpService {
     private final OtpProperties otpProperties;
     private final PasswordResetProperties passwordResetProperties;
     private final EmailVerificationProperties emailVerificationProperties;
+    private final TenantContextPort tenantContext;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -47,6 +49,9 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public VerificationToken createOtpToken(User user, TokenType tokenType, String ipAddress, String userAgent) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context required");
+        }
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), tokenType);
 
         String otp = generateOtp();
@@ -71,6 +76,9 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public LoginOtpResult createLoginOtpToken(User user, String ipAddress, String userAgent) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context required");
+        }
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.LOGIN_OTP);
 
         String otp = generateOtp();
@@ -98,6 +106,9 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public PasswordResetTokenResult createPasswordResetToken(User user, String ipAddress, String userAgent) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context required");
+        }
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.PASSWORD_RESET);
 
         String plainToken = UUID.randomUUID().toString();
@@ -123,6 +134,9 @@ public class OtpServiceImpl implements OtpService {
     @Override
     @Transactional("tenantTransactionManager")
     public EmailVerificationTokenResult createEmailVerificationToken(User user, String ipAddress, String userAgent) {
+        if (!tenantContext.isSet()) {
+            throw new IllegalStateException("Tenant context required");
+        }
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.EMAIL_VERIFY);
 
         String plainToken = UUID.randomUUID().toString();
@@ -156,7 +170,7 @@ public class OtpServiceImpl implements OtpService {
         Optional<VerificationToken> tokenOpt = tokenRepository.findByTokenHash(tokenHash);
 
         if (tokenOpt.isEmpty()) {
-            log.warn("OTP token not found: {}", tokenHash);
+            log.warn("OTP token not found");
             return false;
         }
 
