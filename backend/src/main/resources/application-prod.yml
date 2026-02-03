@@ -25,7 +25,6 @@ spring:
     user: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-spring:
   mail:
     host: ${SMTP_HOST}
     port: ${SMTP_PORT:587}

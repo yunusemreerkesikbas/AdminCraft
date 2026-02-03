@@ -93,13 +93,13 @@ public class UserServiceImpl implements UserService {
         log.info("User created successfully with ID: {}", savedUser.getId());
 
         try {
-            VerificationToken token = otpService.createEmailVerificationToken(
+            var tokenResult = otpService.createEmailVerificationToken(
                     savedUser,
                     input.ipAddress(),
                     input.userAgent());
             emailService.sendEmailVerificationEmail(
                     savedUser.getEmail(),
-                    token.getTargetValue(),
+                    tokenResult.plainToken(),
                     tenantContext.getSubdomain(),
                     input.language());
             log.info("Verification email sent to: {}", savedUser.getEmail());

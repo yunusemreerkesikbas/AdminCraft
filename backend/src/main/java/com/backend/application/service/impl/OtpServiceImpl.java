@@ -50,14 +50,14 @@ public class OtpServiceImpl implements OtpService {
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), tokenType);
 
         String otp = generateOtp();
-        String tokenHash = hashToken(otp);
+        String otpHash = hashToken(otp);
 
         VerificationToken token = VerificationToken.builder()
                 .user(user)
-                .tokenHash(tokenHash)
+                .tokenHash(otpHash)
                 .tokenType(tokenType)
                 .status(TokenStatus.ACTIVE)
-                .targetValue(hashToken(otp))
+                .targetValue(otpHash)
                 .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
                 .attemptCount(0)
                 .maxAttempts(otpProperties.getMaxAttempts())
@@ -97,18 +97,18 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     @Transactional("tenantTransactionManager")
-    public VerificationToken createPasswordResetToken(User user, String ipAddress, String userAgent) {
+    public PasswordResetTokenResult createPasswordResetToken(User user, String ipAddress, String userAgent) {
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.PASSWORD_RESET);
 
-        String token = UUID.randomUUID().toString();
-        String tokenHash = hashToken(token);
+        String plainToken = UUID.randomUUID().toString();
+        String tokenHash = hashToken(plainToken);
 
         VerificationToken verificationToken = VerificationToken.builder()
                 .user(user)
                 .tokenHash(tokenHash)
                 .tokenType(TokenType.PASSWORD_RESET)
                 .status(TokenStatus.ACTIVE)
-                .targetValue(token)
+                .targetValue(null)
                 .expiresAt(LocalDateTime.now().plusSeconds(passwordResetProperties.getExpirySeconds()))
                 .attemptCount(0)
                 .maxAttempts(1)
@@ -116,23 +116,24 @@ public class OtpServiceImpl implements OtpService {
                 .userAgent(userAgent)
                 .build();
 
-        return tokenRepository.save(verificationToken);
+        VerificationToken savedToken = tokenRepository.save(verificationToken);
+        return new PasswordResetTokenResult(savedToken, plainToken);
     }
 
     @Override
     @Transactional("tenantTransactionManager")
-    public VerificationToken createEmailVerificationToken(User user, String ipAddress, String userAgent) {
+    public EmailVerificationTokenResult createEmailVerificationToken(User user, String ipAddress, String userAgent) {
         tokenRepository.revokeAllActiveTokensForUser(user.getId(), TokenType.EMAIL_VERIFY);
 
-        String token = UUID.randomUUID().toString();
-        String tokenHash = hashToken(token);
+        String plainToken = UUID.randomUUID().toString();
+        String tokenHash = hashToken(plainToken);
 
         VerificationToken verificationToken = VerificationToken.builder()
                 .user(user)
                 .tokenHash(tokenHash)
                 .tokenType(TokenType.EMAIL_VERIFY)
                 .status(TokenStatus.ACTIVE)
-                .targetValue(token)
+                .targetValue(null)
                 .expiresAt(LocalDateTime.now().plusSeconds(emailVerificationProperties.getExpirySeconds()))
                 .attemptCount(0)
                 .maxAttempts(1)
@@ -140,7 +141,8 @@ public class OtpServiceImpl implements OtpService {
                 .userAgent(userAgent)
                 .build();
 
-        return tokenRepository.save(verificationToken);
+        VerificationToken savedToken = tokenRepository.save(verificationToken);
+        return new EmailVerificationTokenResult(savedToken, plainToken);
     }
 
     @Override

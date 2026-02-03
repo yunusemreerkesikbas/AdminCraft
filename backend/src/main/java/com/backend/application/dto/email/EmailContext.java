@@ -40,10 +40,10 @@ public class EmailContext {
                 .to(email)
                 .emailType(EmailType.LOGIN_OTP)
                 .language(language)
-                .variables(Map.of(
+                .variables(new HashMap<>(Map.of(
                         "otpCode", otpCode,
                         "expiryMinutes", 5
-                ));
+                )));
     }
 
     public static EmailContextBuilder forPasswordReset(String email, String resetLink, Language language) {
@@ -51,10 +51,10 @@ public class EmailContext {
                 .to(email)
                 .emailType(EmailType.PASSWORD_RESET)
                 .language(language)
-                .variables(Map.of(
+                .variables(new HashMap<>(Map.of(
                         "resetLink", resetLink,
                         "expiryHours", 1
-                ));
+                )));
     }
 
     public static EmailContextBuilder forEmailVerification(String email, String verificationLink, Language language) {
@@ -62,9 +62,9 @@ public class EmailContext {
                 .to(email)
                 .emailType(EmailType.EMAIL_VERIFY)
                 .language(language)
-                .variables(Map.of(
+                .variables(new HashMap<>(Map.of(
                         "verificationLink", verificationLink,
                         "expiryHours", 1
-                ));
+                )));
     }
 }

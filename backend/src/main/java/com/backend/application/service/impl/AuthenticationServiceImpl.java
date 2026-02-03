@@ -3,6 +3,7 @@ package com.backend.application.service.impl;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -561,8 +562,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     return;
                 }
 
-                VerificationToken token = otpService.createPasswordResetToken(user, ipAddress, userAgent);
-                emailService.sendPasswordResetEmail(email, token.getTargetValue(), tenant.getSubdomain(), language);
+                var tokenResult = otpService.createPasswordResetToken(user, ipAddress, userAgent);
+                emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), tenant.getSubdomain(), language);
 
                 log.info("Password reset email sent to: {}", email);
             });
@@ -636,8 +637,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
             }
 
-            VerificationToken token = otpService.createEmailVerificationToken(user, ipAddress, userAgent);
-            emailService.sendEmailVerificationEmail(user.getEmail(), token.getTargetValue(), subdomain, language);
+            var tokenResult = otpService.createEmailVerificationToken(user, ipAddress, userAgent);
+            emailService.sendEmailVerificationEmail(user.getEmail(), tokenResult.plainToken(), subdomain, language);
 
             log.info("Email verification sent to: {}", user.getEmail());
         });
@@ -734,6 +735,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new OtpRateLimitExceededException(
                     "Too many OTP requests. Please try again later.",
                     (int) Math.max(remainingSeconds, 60));
+        }
+    }
+
+    /**
+     * Scheduled cleanup of expired rate limit entries to prevent memory leaks.
+     * Runs every 5 minutes.
+     */
+    @Scheduled(fixedRate = 300000) // 5 minutes
+    public void cleanupExpiredRateLimiters() {
+        long cutoff = System.currentTimeMillis() - OTP_RATE_LIMIT_WINDOW_SECONDS * 1000L;
+        int removedCount = 0;
+
+        var iterator = otpRateLimiters.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            if (entry.getValue().windowStart < cutoff) {
+                iterator.remove();
+                removedCount++;
+            }
+        }
+
+        if (removedCount > 0) {
+            log.debug("Cleaned up {} expired OTP rate limit entries", removedCount);
         }
     }
 

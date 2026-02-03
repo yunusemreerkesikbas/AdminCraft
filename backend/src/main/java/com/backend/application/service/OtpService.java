@@ -16,11 +16,15 @@ public interface OtpService {
      */
     LoginOtpResult createLoginOtpToken(User user, String ipAddress, String userAgent);
 
-    VerificationToken createPasswordResetToken(User user, String ipAddress, String userAgent);
-
     record LoginOtpResult(String otpCode, String sessionToken) {}
 
-    VerificationToken createEmailVerificationToken(User user, String ipAddress, String userAgent);
+    record PasswordResetTokenResult(VerificationToken token, String plainToken) {}
+
+    record EmailVerificationTokenResult(VerificationToken token, String plainToken) {}
+
+    PasswordResetTokenResult createPasswordResetToken(User user, String ipAddress, String userAgent);
+
+    EmailVerificationTokenResult createEmailVerificationToken(User user, String ipAddress, String userAgent);
 
     boolean validateOtp(String tokenHash, String otpCode);
 

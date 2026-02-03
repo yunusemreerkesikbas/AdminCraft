@@ -165,6 +165,7 @@ Response (success):
 | OTP Expiry | 5 minutes | All |
 | Max Attempts | 5 | All |
 | Request Rate Limit | 3 per 5 minutes | All |
+| Rate Limit Cleanup | Every 5 minutes | All |
 | Bypass Code | `123456` | Dev only (auto-disabled in prod) |
 
 Configuration in `application.yml`:
@@ -329,7 +330,7 @@ CREATE TABLE verification_tokens (
     token_hash VARCHAR(64) NOT NULL,
     token_type ENUM('EMAIL_VERIFY', 'PASSWORD_RESET', 'LOGIN_OTP', 'OPERATION_OTP'),
     status ENUM('ACTIVE', 'USED', 'EXPIRED', 'REVOKED'),
-    target_value VARCHAR(255),  -- Stores SHA-256 hashed OTP code (never plaintext)
+    target_value VARCHAR(255),  -- OTP: SHA-256 hash; PASSWORD_RESET/EMAIL_VERIFY: null
     expires_at DATETIME NOT NULL,
     attempt_count INT DEFAULT 0,
     max_attempts INT DEFAULT 5,
@@ -341,7 +342,9 @@ CREATE TABLE verification_tokens (
 );
 ```
 
-**Note**: For `LOGIN_OTP` and `OPERATION_OTP` tokens, the `target_value` field stores the SHA-256 hash of the OTP code, not the plaintext value. This ensures OTP codes cannot be extracted from the database.
+**Note**:
+- For `LOGIN_OTP` and `OPERATION_OTP` tokens, the `target_value` field stores the SHA-256 hash of the OTP code, not the plaintext value. This ensures OTP codes cannot be extracted from the database.
+- For `PASSWORD_RESET` and `EMAIL_VERIFY` tokens, `target_value` is `null`. The plaintext token is only returned to the caller for email sending and is never stored in the database.
 
 ---
 
@@ -566,7 +569,9 @@ async generateDeviceFingerprint(): Promise<string> {
 
 ### Token Security
 
-- All tokens stored as SHA-256 hashes (plaintext never stored)
+- All tokens stored as SHA-256 hashes in `token_hash` column
+- OTP codes (LOGIN_OTP, OPERATION_OTP): stored as SHA-256 hash in `target_value`
+- PASSWORD_RESET and EMAIL_VERIFY: `target_value` is `null` (plaintext never stored in DB)
 - Tokens are single-use (status changes to USED after consumption)
 - Automatic expiry enforcement
 - Rate limiting on verification attempts (max 5)
@@ -578,6 +583,7 @@ async generateDeviceFingerprint(): Promise<string> {
 - 5-minute expiry window
 - Max 5 verification attempts before token invalidation
 - **Request rate limiting**: Max 3 OTP requests per email per 5-minute window
+- **Rate limiter cleanup**: Scheduled task removes expired entries every 5 minutes (prevents memory leak)
 - IP address and user agent logged
 - **Bypass code protection**: Automatically disabled in non-dev profiles
 
