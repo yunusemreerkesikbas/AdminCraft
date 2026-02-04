@@ -253,37 +253,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePassword(Long userId, String currentPassword, String newPassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
-
-        String encodedNewPassword = passwordEncoder.encode(newPassword);
-        user.changePassword(encodedNewPassword);
-
-        userRepository.save(user);
-        log.info("Password changed for user ID: {}", userId);
-    }
-
-    @Override
-    public String resetPassword(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        String tempPassword = passwordGeneratorService.generate();
-        String encodedPassword = passwordEncoder.encode(tempPassword);
-
-        user.changePassword(encodedPassword);
-        userRepository.save(user);
-        log.info("Password reset for user ID: {}", userId);
-
-        return tempPassword;
-    }
-
-    @Override
     public void updatePasswordHash(Long userId, String newPasswordHash) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));

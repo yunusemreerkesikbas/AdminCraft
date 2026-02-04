@@ -40,10 +40,6 @@ public interface UserService {
     User getCurrentUser();
 
     // Password management
-    void changePassword(Long userId, String currentPassword, String newPassword);
-
-    String resetPassword(Long userId);
-
     void updatePasswordHash(Long userId, String newPasswordHash);
 
     boolean isPasswordExpired(Long userId, int maxDays);

@@ -17,7 +17,16 @@ public record SetInitialPasswordRequest(
         String password,
 
         @NotBlank(message = "validation.password.confirm.required")
-        String confirmPassword
+        String confirmPassword,
+
+        // Optional fields for trusted device
+        @Size(max = 128, message = "validation.device.fingerprint.size")
+        String deviceFingerprint,
+
+        Boolean trustDevice,
+
+        @Size(max = 100, message = "validation.device.name.size")
+        String deviceName
 ) {
     @AssertTrue(message = "validation.password.mismatch")
     public boolean isPasswordMatching() {

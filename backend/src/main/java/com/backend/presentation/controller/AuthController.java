@@ -18,6 +18,9 @@ import com.backend.application.dto.AuthResult;
 import com.backend.application.dto.TokenValidationResult;
 import com.backend.application.service.AuthenticationService;
 import com.backend.domain.enums.Language;
+import com.backend.domain.exception.AccountLockedException;
+import com.backend.domain.exception.InvalidTokenException;
+import com.backend.domain.exception.OtpRateLimitExceededException;
 import com.backend.presentation.dto.request.ForgotPasswordRequest;
 import com.backend.presentation.dto.request.LoginRequest;
 import com.backend.presentation.dto.request.ResetPasswordRequest;
@@ -45,7 +48,7 @@ public class AuthController {
     private final MessageSource messageSource;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(
+    public ResponseEntity<ApiResponse<?>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "X-Tenant-Subdomain", required = false) String subdomain,
@@ -80,6 +83,16 @@ public class AuthController {
 
             log.info("Login successful for email: {}", loginRequest.email());
             return ResponseEntity.ok(response);
+        } catch (AccountLockedException ex) {
+            log.warn("Account locked for email {}: {}", loginRequest.email(), ex.getMessage());
+            String message = messageSource.getMessage("auth.account.locked",
+                    new Object[] { ex.getRemainingMinutes() },
+                    Locale.forLanguageTag(languageCode));
+            ApiResponse<?> response = new ApiResponse<>("ERROR", message,
+                    java.util.Map.of(
+                            "remainingMinutes", ex.getRemainingMinutes(),
+                            "errorCode", "ACCOUNT_LOCKED"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception ex) {
             log.error("Login failed for email {}: {}", loginRequest.email(), ex.getMessage());
             String message = messageSource.getMessage("auth.login.error", new Object[] { ex.getMessage() },
@@ -246,23 +259,47 @@ public class AuthController {
     }
 
     @PostMapping("/set-initial-password")
-    public ResponseEntity<ApiResponse<Void>> setInitialPassword(
+    public ResponseEntity<ApiResponse<LoginResponse>> setInitialPassword(
             @Valid @RequestBody SetInitialPasswordRequest request,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+            HttpServletRequest httpRequest) {
         try {
             log.info("Setting initial password");
 
-            authenticationService.setInitialPassword(request.token(), request.password());
+            // Extract request context
+            String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+            String userAgent = RequestUtils.getUserAgent(httpRequest);
+
+            // Call service with all parameters
+            AuthResult authResult = authenticationService.setInitialPassword(
+                    request.token(),
+                    request.password(),
+                    request.deviceFingerprint(),
+                    request.trustDevice() != null && request.trustDevice(),
+                    request.deviceName(),
+                    ipAddress,
+                    userAgent);
+
+            // Convert to LoginResponse
+            LoginResponse loginResponse = toLoginResponse(authResult);
 
             String message = messageSource.getMessage("auth.email.verify.success", null,
                     Locale.forLanguageTag(languageCode));
-            log.info("Initial password set successfully");
-            return ResponseEntity.ok(ApiResponse.success(message, null));
-        } catch (Exception ex) {
-            log.error("Set initial password failed: {}", ex.getMessage());
+
+            log.info("Initial password set successfully, auto-login completed");
+            return ResponseEntity.ok(ApiResponse.success(message, loginResponse));
+
+        } catch (InvalidTokenException ex) {
+            log.error("Invalid token for initial password: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.email.verify.invalid.token", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        } catch (Exception ex) {
+            log.error("Failed to set initial password: {}", ex.getMessage(), ex);
+            String message = messageSource.getMessage("auth.error.generic", new Object[]{ex.getMessage()},
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
         }
     }

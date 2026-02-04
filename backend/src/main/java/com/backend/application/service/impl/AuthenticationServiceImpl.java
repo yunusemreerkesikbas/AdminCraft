@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.AuthResult;
@@ -550,6 +551,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TokenValidationResult validateResetToken(String token) {
         if (!tenantContext.isSet()) {
             throw new IllegalStateException("Tenant context is required for token validation");
@@ -631,6 +633,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TokenValidationResult validateEmailVerificationToken(String token) {
         if (!tenantContext.isSet()) {
             throw new IllegalStateException("Tenant context is required for token validation");
@@ -652,11 +655,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void setInitialPassword(String token, String password) {
+    public AuthResult setInitialPassword(
+            String token,
+            String password,
+            String deviceFingerprint,
+            boolean trustDevice,
+            String deviceName,
+            String ipAddress,
+            String userAgent) {
+
         log.info("Setting initial password with verification token");
 
-        TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
-        transactionTemplate.executeWithoutResult(status -> {
+        return new TransactionTemplate(tenantTransactionManager).execute(status -> {
+            // 1. Validate token
             String tokenHash = otpService.hashToken(token);
             VerificationToken verificationToken = verificationTokenRepository.findByTokenHash(tokenHash)
                     .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification token"));
@@ -665,18 +676,57 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new InvalidTokenException("Verification token is no longer valid");
             }
 
+            // 2. Set password + verify email
             User user = verificationToken.getUser();
             String passwordHash = passwordEncoder.encode(password);
             user.changePassword(passwordHash);
             user.setEmailVerified(true);
+            user.recordSuccessfulLogin(ipAddress);
             userRepository.save(user);
 
+            // 3. Mark token as used + revoke all email verification tokens
             verificationToken.markAsUsed();
             verificationTokenRepository.save(verificationToken);
-
             otpService.revokeAllUserTokens(user.getId(), TokenType.EMAIL_VERIFY);
 
             log.info("Initial password set and email verified for user: {}", user.getEmail());
+
+            // 4. Register trusted device if requested
+            if (trustDevice && deviceFingerprint != null && !deviceFingerprint.isBlank()) {
+                TrustedDeviceService.DeviceInfo deviceInfo = new TrustedDeviceService.DeviceInfo(
+                        deviceName, null, null, ipAddress);
+                trustedDeviceService.addTrustedDevice(user, deviceFingerprint, deviceInfo);
+                log.info("Device trusted for user: {}", user.getEmail());
+            }
+
+            // 5. Get tenant info
+            String tenantIdStr = tenantContext.getTenantId();
+            if (tenantIdStr == null) {
+                throw new IllegalStateException("Tenant context is not set");
+            }
+            Long tenantId = Long.parseLong(tenantIdStr);
+            Tenant tenant = tenantRepository.findById(tenantId)
+                    .orElseThrow(() -> new IllegalStateException("Tenant not found"));
+
+            // 6. Generate JWT tokens
+            String accessToken = jwtTokenProvider.createAccessToken(
+                    user.getEmail(),
+                    user.getRole().name(),
+                    user.getId(),
+                    tenantId);
+            String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+
+            // 7. Return AuthResult with tokens
+            return AuthResult.success(
+                    accessToken,
+                    refreshToken,
+                    "Bearer",
+                    jwtTokenProvider.getAccessTokenExpiration(),
+                    user.getId(),
+                    user.getEmail(),
+                    user.getRole().name(),
+                    tenant.getSubdomain(),
+                    tenant.getId());
         });
     }
 

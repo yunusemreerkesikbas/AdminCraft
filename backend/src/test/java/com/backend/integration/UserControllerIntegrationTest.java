@@ -117,36 +117,35 @@ public class UserControllerIntegrationTest {
     }
 
     /**
-     * Test 2: Verify reset password returns expected response shape.
+     * Test 2: Verify reset password sends email and returns success.
      * 
      * Requirements:
      * - Returns 200 OK status
-     * - Response contains newPassword field
-     * - newPassword is not empty
-     * - Success message is present
+     * - Response result is SUCCESS
+     * - data field is null (no password returned)
+     * - Success message confirms email was sent
      */
     @Test
     @WithMockUser(roles = "TENANT_ADMIN")
-    void resetPassword_ShouldReturnNewPasswordInResponse() throws Exception {
+    void resetPassword_ShouldSendEmailAndReturnSuccess() throws Exception {
         // Given: A valid user ID
         Long userId = 1L;
 
-        // When: Reset password
+        // When: Reset password (sends email instead of returning password)
         MvcResult result = mockMvc.perform(post("/users/{id}/reset-password", userId)
                 .header("Accept-Language", "en")
                 .header("X-Tenant-ID", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.data.newPassword").exists())
-                .andExpect(jsonPath("$.data.newPassword").isNotEmpty())
+                .andExpect(jsonPath("$.data").doesNotExist())
                 .andReturn();
 
         String responseJson = result.getResponse().getContentAsString();
 
-        // Then: Response should contain the new password
-        assertThat(responseJson).contains("\"newPassword\":");
+        // Then: Response should confirm email was sent (no password in response)
         assertThat(responseJson).contains("\"result\":\"SUCCESS\"");
+        assertThat(responseJson).doesNotContain("\"newPassword\"");
     }
 
     /**
@@ -229,37 +228,7 @@ public class UserControllerIntegrationTest {
     }
 
     /**
-     * Test 5: Verify change password validation.
-     * 
-     * Requirements:
-     * - Password and confirmPassword must match
-     * - Current password must be correct
-     * - New password must meet requirements (min 8 chars)
-     */
-    @Test
-    @WithMockUser(roles = "TENANT_ADMIN")
-    void changePassword_WithMismatchedPasswords_ShouldReturnValidationError() throws Exception {
-        // Given: Password change request with mismatched passwords
-        String changePasswordRequest = """
-                {
-                    "currentPassword": "OldPassword123!",
-                    "password": "NewPassword123!",
-                    "confirmPassword": "DifferentPassword123!"
-                }
-                """;
-
-        // When: Attempt to change password
-        mockMvc.perform(post("/users/{id}/change-password", 1L)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(changePasswordRequest)
-                .header("Accept-Language", "en")
-                .header("X-Tenant-ID", "1"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.result").value("ERROR"));
-    }
-
-    /**
-     * Test 6: Verify pageable response structure.
+     * Test 5: Verify pageable response structure.
      * 
      * Requirements:
      * - Response contains content array
