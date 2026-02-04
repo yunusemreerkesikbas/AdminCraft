@@ -26,8 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.CreateUserInput;
 import com.backend.application.dto.UpdateUserInput;
+import com.backend.application.dto.SecuritySettingsResult;
+import com.backend.application.service.SecuritySettingsService;
 import com.backend.application.service.UserService;
 import com.backend.domain.entity.User;
+import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.UserNotFoundException;
 import com.backend.presentation.dto.request.ChangePasswordRequest;
 import com.backend.presentation.dto.request.CreateUserRequest;
@@ -62,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserController {
 
         private final UserService userService;
+        private final SecuritySettingsService securitySettingsService;
         private final MessageSource messageSource;
         private final SecurityHelper securityHelper;
 
@@ -222,8 +226,13 @@ public class UserController {
                                         ipAddress,
                                         userAgent,
                                         language);
+                        SecuritySettingsResult securitySettings = securitySettingsService.getSecuritySettings();
                         User createdUser = userService.createUser(input);
-                        String message = messageSource.getMessage("user.create.success", null,
+                        String messageKey = "user.create.success";
+                        if (securitySettings.policy() == TwoFactorPolicy.REQUIRED) {
+                                messageKey = "user.create.2fa.info";
+                        }
+                        String message = messageSource.getMessage(messageKey, null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(message, UserResponse.from(createdUser)));

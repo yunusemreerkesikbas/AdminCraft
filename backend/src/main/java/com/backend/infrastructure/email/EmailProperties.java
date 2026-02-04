@@ -15,4 +15,5 @@ public class EmailProperties {
     private String fromAddress = "noreply@admincraft.com";
     private String fromName = "AdminCraft";
     private boolean logContent = false;
+    private boolean logSimplified = true;
 }

@@ -35,9 +35,21 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            String htmlContent = templateRenderer.render(context);
-            String subject = getSubjectForEmailType(context.getEmailType(), context.getLanguage());
+            // Check if console mode + simplified logging
+            boolean isConsoleModeSimplified =
+                "console".equals(emailProperties.getProvider()) &&
+                emailProperties.isLogSimplified();
 
+            String htmlContent;
+            if (isConsoleModeSimplified) {
+                // Skip template rendering, format essential data only
+                htmlContent = formatSimplifiedContent(context);
+            } else {
+                // Normal flow: render full HTML template
+                htmlContent = templateRenderer.render(context);
+            }
+
+            String subject = getSubjectForEmailType(context.getEmailType(), context.getLanguage());
             return emailSender.send(context.getTo(), subject, htmlContent);
 
         } catch (Exception e) {
@@ -98,18 +110,20 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String getSubjectForEmailType(EmailType emailType, Language language) {
+        // Şablon seçimi ile uyumlu olması için konuyu da TR veya EN olarak normalize ediyoruz.
+        Language normalized = (language == Language.TR) ? Language.TR : Language.EN;
         String subjectKey = "email.subject." + emailType.getCode();
-        return templateRenderer.getSubject(subjectKey, language);
+        return templateRenderer.getSubject(subjectKey, normalized);
     }
 
     private String buildPasswordResetLink(String token, String subdomain) {
         String baseUrl = buildBaseUrl(subdomain);
-        return String.format("%s/auth/reset-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
+        return String.format("%s/reset-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
     }
 
     private String buildEmailVerificationLink(String token, String subdomain) {
         String baseUrl = buildBaseUrl(subdomain);
-        return String.format("%s/auth/set-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
+        return String.format("%s/set-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
     }
 
     private String buildBaseUrl(String subdomain) {
@@ -118,5 +132,71 @@ public class EmailServiceImpl implements EmailService {
             return String.format(urlTemplate, subdomain);
         }
         return urlTemplate;
+    }
+
+    private String formatSimplifiedContent(EmailContext context) {
+        Map<String, Object> vars = context.getVariables();
+
+        return switch (context.getEmailType()) {
+            case LOGIN_OTP, OPERATION_OTP -> formatOtpContent(vars);
+            case PASSWORD_RESET -> formatPasswordResetContent(vars);
+            case EMAIL_VERIFY -> formatEmailVerifyContent(vars);
+        };
+    }
+
+    private String formatOtpContent(Map<String, Object> vars) {
+        String code = (String) vars.get("otpCode");
+        Integer expiry = (Integer) vars.get("expiryMinutes");
+
+        return String.format("""
+
+            ┌─────────────────────────────────────┐
+            │  VERIFICATION CODE                  │
+            │                                     │
+            │          %s                   │
+            │                                     │
+            │  Expires in: %d minutes             │
+            └─────────────────────────────────────┘
+
+            💡 Copy code: %s
+            """, code, expiry, code);
+    }
+
+    private String formatPasswordResetContent(Map<String, Object> vars) {
+        String link = (String) vars.get("resetLink");
+        String token = (String) vars.get("resetToken");
+        Integer expiry = (Integer) vars.get("expiryHours");
+
+        return String.format("""
+
+            🔑 PASSWORD RESET
+
+            Reset Link:
+            %s
+
+            Token: %s
+            Expires: %d hour(s)
+
+            💡 Copy and paste link in browser
+            """, link, token, expiry);
+    }
+
+    private String formatEmailVerifyContent(Map<String, Object> vars) {
+        String link = (String) vars.get("verificationLink");
+        String token = (String) vars.get("verificationToken");
+        Integer expiry = (Integer) vars.get("expiryHours");
+
+        return String.format("""
+
+            ✉️ EMAIL VERIFICATION
+
+            Verification Link:
+            %s
+
+            Token: %s
+            Expires: %d hour(s)
+
+            💡 Copy and paste link in browser
+            """, link, token, expiry);
     }
 }

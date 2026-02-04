@@ -84,6 +84,12 @@ public class TenantFilter extends OncePerRequestFilter {
       }
 
       if (tenant == null) {
+        // Allow platform admin login/refresh without tenant context
+        if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/refresh")) {
+          filterChain.doFilter(request, response);
+          return;
+        }
+
         log.warn("Missing or invalid tenant header for request: {}", path);
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
         return;
@@ -229,7 +235,6 @@ public class TenantFilter extends OncePerRequestFilter {
     // production via config.
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
-        path.startsWith("/api/auth") ||
         path.startsWith("/api/swagger-ui") ||
         path.startsWith("/api/v3/api-docs");
   }

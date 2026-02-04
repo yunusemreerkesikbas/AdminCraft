@@ -18,7 +18,8 @@ springdoc:
 app:
   email:
     provider: console
-    log-content: true
+    log-content: false      # Full HTML (verbose, for debugging templates)
+    log-simplified: true    # Essential data only (recommended)
   otp:
     bypass-code: "123456"
 

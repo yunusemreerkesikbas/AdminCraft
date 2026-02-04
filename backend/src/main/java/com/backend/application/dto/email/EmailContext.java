@@ -31,7 +31,7 @@ public class EmailContext {
 
     public String getTemplateName() {
         String typeCode = emailType.getCode().replace("_", "-");
-        String langCode = language.name().toLowerCase();
+        String langCode = (language == Language.TR) ? "tr" : "en";
         return String.format("email/%s-%s", typeCode, langCode);
     }
 
@@ -42,8 +42,7 @@ public class EmailContext {
                 .language(language)
                 .variables(new HashMap<>(Map.of(
                         "otpCode", otpCode,
-                        "expiryMinutes", 5
-                )));
+                        "expiryMinutes", 5)));
     }
 
     public static EmailContextBuilder forPasswordReset(String email, String resetLink, Language language) {
@@ -53,8 +52,7 @@ public class EmailContext {
                 .language(language)
                 .variables(new HashMap<>(Map.of(
                         "resetLink", resetLink,
-                        "expiryHours", 1
-                )));
+                        "expiryHours", 1)));
     }
 
     public static EmailContextBuilder forEmailVerification(String email, String verificationLink, Language language) {
@@ -64,7 +62,6 @@ public class EmailContext {
                 .language(language)
                 .variables(new HashMap<>(Map.of(
                         "verificationLink", verificationLink,
-                        "expiryHours", 1
-                )));
+                        "expiryHours", 1)));
     }
 }
