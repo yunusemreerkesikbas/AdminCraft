@@ -2,6 +2,7 @@ package com.backend.domain.enums;
 
 public enum TwoFactorPolicy {
     DISABLED("disabled", "Devre Dışı", "Disabled"),
+    OPTIONAL("optional", "İsteğe Bağlı", "Optional"),
     REQUIRED("required", "Zorunlu", "Required");
 
     private final String code;
