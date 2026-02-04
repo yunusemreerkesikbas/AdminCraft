@@ -68,7 +68,6 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
     private String getPolicyDescription(TwoFactorPolicy policy) {
         return switch (policy) {
             case DISABLED -> "Two-factor authentication is disabled for all users";
-            case OPTIONAL -> "Two-factor authentication is optional, users can enable it in their profile";
             case REQUIRED -> "Two-factor authentication is required for all users";
         };
     }

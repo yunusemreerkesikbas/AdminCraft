@@ -75,7 +75,6 @@ Configured per tenant via Site Dashboard → Security tab:
 | Policy | Behavior |
 |--------|----------|
 | `DISABLED` | 2FA not used, standard login |
-| `OPTIONAL` | 2FA only for users with `twoFactorEnabled=true` |
 | `REQUIRED` | 2FA mandatory for all tenant users |
 
 ### Login Flow with 2FA
@@ -85,7 +84,6 @@ POST /api/auth/login
 ├── Validate credentials
 ├── Check tenant 2FA policy
 │   └── If DISABLED → Return JWT immediately
-│   └── If OPTIONAL → Check user.twoFactorEnabled
 │   └── If REQUIRED → Always require 2FA
 ├── Check trusted device (if 2FA required)
 │   └── If trusted → Return JWT immediately
