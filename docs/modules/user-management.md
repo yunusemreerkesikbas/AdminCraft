@@ -181,18 +181,23 @@ POST /api/users/{id}/deactivate
 POST /api/users/{id}/reset-password
 ```
 
-Sends a password reset email to the user with a secure token link.
+Sends a password reset email to the user with a secure token link. **Admin never sees the user's password.**
 
 **Response**:
 
 ```json
 {
   "result": "SUCCESS",
-  "message": "Password reset email sent."
+  "message": "Password reset email has been sent to user@example.com"
 }
 ```
 
 The user receives an email with a secure link to set a new password. The token expires after 1 hour.
+
+**Frontend Flow**:
+1. Admin clicks "Send Password Reset Email" button in user menu
+2. Confirmation dialog appears: "Send password reset email to John Doe (john@example.com)?"
+3. On confirm → API call → Success notification with email address
 
 See [authentication.md](../global/authentication.md#password-reset-token-based) for full password reset documentation.
 
@@ -206,29 +211,6 @@ POST /api/auth/forgot-password
 ```
 
 This is documented in [authentication.md](../global/authentication.md#password-reset-token-based).
-
-### Change Password (Manual)
-
-```
-POST /api/users/{id}/change-password
-```
-
-**Request Body**: `ChangePasswordRequest`
-
-```json
-{
-  "currentPassword": "OldPassword123!",
-  "password": "NewPassword123!",
-  "confirmPassword": "NewPassword123!"
-}
-```
-
-**Validation**:
-
-- Current password must be correct
-- New password and confirm password must match (`@AssertTrue isPasswordMatching()`)
-- New password must be at least 8 characters
-- New password must contain at least 1 lowercase, 1 uppercase, and 1 digit
 
 ## DTOs
 
@@ -253,14 +235,6 @@ Create request with email, role, and optional profile fields. Password is **not*
 
 Partial update request (inputs trimmed in constructor).
 
-### ChangePasswordRequest
-
-Password change request with current password verification and `@PasswordMatch`.
-
-### ResetPasswordResponse
-
-Response containing the auto-generated password after a reset.
-
 ## User Roles
 
 Defined in [`UserRole.java`](../../backend/src/main/java/com/backend/domain/enums/UserRole.java):
@@ -279,8 +253,7 @@ Defined in [`UserRole.java`](../../backend/src/main/java/com/backend/domain/enum
 ### Components
 
 - `list/users-list.component.ts` - Main list view with grid, pagination, search, sort
-- `dialogs/user-form-dialog/` - Create/Edit dialog with password visibility toggle
-- `dialogs/user-password-dialog/` - Change/Reset password dialog
+- `dialogs/user-form-dialog/` - Create/Edit dialog (no password fields - users set via email)
 
 ### Services
 
@@ -358,6 +331,7 @@ Automatic account locking protects against brute-force attacks:
 - Detects `ACCOUNT_LOCKED` error code
 - Shows warning notification (yellow) with 10 second duration
 - Message includes remaining lock time
+- Caches lock expiry locally and blocks repeated login requests until the lock expires
 
 **Key Methods** ([`User.java`](../../backend/src/main/java/com/backend/domain/entity/User.java)):
 
