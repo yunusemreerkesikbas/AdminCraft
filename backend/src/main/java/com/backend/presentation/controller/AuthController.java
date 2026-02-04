@@ -50,7 +50,7 @@ public class AuthController {
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "X-Tenant-Subdomain", required = false) String subdomain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) throws OtpRateLimitExceededException {
         try {
             log.info("Login attempt for email: {}", loginRequest.email());
 
@@ -271,7 +271,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) throws OtpRateLimitExceededException {
         try {
             log.info("OTP verification attempt");
 
@@ -294,6 +294,12 @@ public class AuthController {
                     Locale.forLanguageTag(languageCode));
             log.info("OTP verification successful");
             return ResponseEntity.ok(ApiResponse.success(message, loginResponse));
+        } catch (InvalidTokenException ex) {
+            log.error("Invalid token during OTP verification: {}", ex.getMessage());
+            String message = messageSource.getMessage("auth.2fa.otp.invalid", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("OTP verification failed: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.2fa.otp.invalid", null,

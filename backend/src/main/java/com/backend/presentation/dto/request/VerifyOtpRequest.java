@@ -12,6 +12,7 @@ public record VerifyOtpRequest(
 
         @NotBlank(message = "validation.otp.required")
         @Size(min = 6, max = 6, message = "validation.otp.size")
+        @Pattern(regexp = "^\\d{6}$", message = "validation.otp.pattern")
         String otpCode,
 
         boolean trustDevice,

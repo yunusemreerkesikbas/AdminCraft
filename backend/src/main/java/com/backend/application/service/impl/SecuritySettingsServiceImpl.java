@@ -54,7 +54,13 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
             throw new TenantNotFoundException("No tenant context available");
         }
 
-        Long tenantId = Long.parseLong(tenantIdStr);
+        Long tenantId;
+        try {
+            tenantId = Long.parseLong(tenantIdStr);
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid tenant id in context: {}", tenantIdStr);
+            throw new TenantNotFoundException("Invalid tenant id in context: " + tenantIdStr);
+        }
         return tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new TenantNotFoundException(tenantId));
     }

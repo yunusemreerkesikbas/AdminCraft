@@ -611,9 +611,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             if (subdomain == null) {
                 String tenantId = tenantContext.getTenantId();
                 if (tenantId != null) {
-                    Tenant tenant = tenantRepository.findById(Long.parseLong(tenantId)).orElse(null);
-                    if (tenant != null) {
-                        subdomain = tenant.getSubdomain();
+                    try {
+                        long tenantIdLong = Long.parseLong(tenantId);
+                        Tenant tenant = tenantRepository.findById(tenantIdLong).orElse(null);
+                        if (tenant != null) {
+                            subdomain = tenant.getSubdomain();
+                        }
+                    } catch (NumberFormatException ex) {
+                        log.warn("Invalid tenantId format in tenant context: '{}'", tenantId);
                     }
                 }
             }
@@ -701,7 +706,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void checkOtpRateLimit(String email) {
-        String key = email.toLowerCase();
+        // Include tenant context in rate limit key to prevent cross-tenant throttling
+        String tenantKey = tenantContext.getTenantId();
+        if (tenantKey == null) {
+            tenantKey = "platform";
+        }
+        String key = tenantKey + ":" + email.toLowerCase();
         long currentTime = System.currentTimeMillis();
 
         otpRateLimiters.compute(key, (k, entry) -> {

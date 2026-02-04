@@ -16,7 +16,7 @@ app:
   email:
     enabled: ${EMAIL_ENABLED:true}
     provider: ${EMAIL_PROVIDER:console}
-    from-address: ${EMAIL_FROM_ADDRESS:erkesikbasyunusemre@gmail.com}
+    from-address: ${EMAIL_FROM_ADDRESS:noreply@admincraft.com}
     from-name: ${EMAIL_FROM_NAME:AdminCraft}
     log-content: ${EMAIL_LOG_CONTENT:false}
   otp:

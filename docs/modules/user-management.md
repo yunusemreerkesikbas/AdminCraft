@@ -134,7 +134,7 @@ POST /api/users
 - Email: Required, valid format, unique per tenant
 - Role: Required enum value
 
-**Note**: Password is **not** set during user creation. The user receives an email verification link to set their own password. See [Email Verification Flow](#email-verification-new-users) below.
+**Note**: A temporary random password hash is stored during user creation (the user cannot log in with it). The user receives an email verification link to set their own password. Until the email is verified and password is set (`email_verified=false`), the user cannot log in. See [Email Verification Flow](#email-verification-new-users) below.
 
 **Note**: `full_name` is derived server-side from first/last name (fallback: email).
 

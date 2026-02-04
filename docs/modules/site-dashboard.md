@@ -142,7 +142,6 @@ New endpoints under `/api/sites`:
 | Policy | Description |
 |--------|-------------|
 | `DISABLED` | 2FA not used, standard login for all users |
-| `OPTIONAL` | 2FA only for users who enable it in their profile |
 | `REQUIRED` | 2FA mandatory for all tenant users |
 
 See [authentication.md](../global/authentication.md) for full 2FA documentation.
