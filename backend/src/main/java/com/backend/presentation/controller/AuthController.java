@@ -50,7 +50,7 @@ public class AuthController {
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "X-Tenant-Subdomain", required = false) String subdomain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) throws OtpRateLimitExceededException {
         try {
             log.info("Login attempt for email: {}", loginRequest.email());
 
@@ -80,9 +80,6 @@ public class AuthController {
 
             log.info("Login successful for email: {}", loginRequest.email());
             return ResponseEntity.ok(response);
-        } catch (OtpRateLimitExceededException ex) {
-            // Let the exception propagate to GlobalExceptionHandler for proper 429 response
-            throw ex;
         } catch (Exception ex) {
             log.error("Login failed for email {}: {}", loginRequest.email(), ex.getMessage());
             String message = messageSource.getMessage("auth.login.error", new Object[] { ex.getMessage() },
@@ -274,7 +271,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) throws OtpRateLimitExceededException {
         try {
             log.info("OTP verification attempt");
 
@@ -297,9 +294,6 @@ public class AuthController {
                     Locale.forLanguageTag(languageCode));
             log.info("OTP verification successful");
             return ResponseEntity.ok(ApiResponse.success(message, loginResponse));
-        } catch (OtpRateLimitExceededException ex) {
-            // Let the exception propagate to GlobalExceptionHandler for proper 429 response
-            throw ex;
         } catch (InvalidTokenException ex) {
             log.error("Invalid token during OTP verification: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.2fa.otp.invalid", null,
