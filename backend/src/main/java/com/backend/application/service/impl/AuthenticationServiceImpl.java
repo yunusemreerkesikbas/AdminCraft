@@ -195,7 +195,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Check if 2FA is required
         TwoFactorPolicy twoFactorPolicy = tenant.getTwoFactorPolicy();
-        boolean requires2FA = twoFactorPolicy == TwoFactorPolicy.REQUIRED;
+        boolean requires2FA = twoFactorPolicy == TwoFactorPolicy.REQUIRED ||
+                (twoFactorPolicy == TwoFactorPolicy.OPTIONAL && Boolean.TRUE.equals(user.getTwoFactorEnabled()));
 
         if (requires2FA) {
             // Check if device is trusted
