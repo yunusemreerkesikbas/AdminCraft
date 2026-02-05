@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -20,7 +20,7 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
-import { finalize, take } from 'rxjs';
+import { finalize, Subject, take, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'spa-set-password',
@@ -43,7 +43,7 @@ import { finalize, take } from 'rxjs';
         TranslocoModule,
     ],
 })
-export class AuthSetPasswordComponent implements OnInit {
+export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     @ViewChild('setPasswordNgForm') setPasswordNgForm: NgForm;
 
     #authService = inject(AuthService);
@@ -53,6 +53,7 @@ export class AuthSetPasswordComponent implements OnInit {
     #router = inject(Router);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
+    #destroySubject = new Subject<void>();
 
     setPasswordForm: UntypedFormGroup;
     token: string | null = null;
@@ -87,7 +88,7 @@ export class AuthSetPasswordComponent implements OnInit {
         this.#authService
             .verifyEmailToken(this.token, subdomain || undefined)
             .pipe(
-                take(1),
+                takeUntil(this.#destroySubject),
                 finalize(() => this.validatingTokenSig.set(false))
             )
             .subscribe({
@@ -156,7 +157,7 @@ export class AuthSetPasswordComponent implements OnInit {
                 subdomain || undefined
             )
             .pipe(
-                take(1),
+                takeUntil(this.#destroySubject),
                 finalize(() => {
                     this.setPasswordForm.enable();
                 })
@@ -195,5 +196,10 @@ export class AuthSetPasswordComponent implements OnInit {
                     this.showAlertSig.set(true);
                 },
             });
+    }
+
+    ngOnDestroy(): void {
+        this.#destroySubject.next();
+        this.#destroySubject.complete();
     }
 }

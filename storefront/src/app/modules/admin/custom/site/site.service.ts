@@ -85,13 +85,6 @@ export class SiteService {
             );
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Site Security Settings
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Get security settings
-     */
     getSecuritySettings(): Observable<SecuritySettingsResponse> {
         this.loadingSig.set(true);
         return this.#apiClient
@@ -105,9 +98,6 @@ export class SiteService {
             );
     }
 
-    /**
-     * Update security settings (PATCH)
-     */
     patchSecuritySettings(
         twoFactorPolicy: TwoFactorPolicy
     ): Observable<SecuritySettingsResponse> {
@@ -125,9 +115,7 @@ export class SiteService {
             );
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Tenant Info
-    // -----------------------------------------------------------------------------------------------------
+    getTenantInfo(): Observable<TenantInfoResponse> {
 
     getTenantDetail(): Observable<TenantDetailResponse> {
         return this.#apiClient

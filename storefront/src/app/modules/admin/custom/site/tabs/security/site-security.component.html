@@ -71,10 +71,10 @@
                 <button
                     mat-flat-button
                     color="primary"
-                    [disabled]="saving || form.invalid || form.pristine"
+                    [disabled]="savingSig() || form.invalid || form.pristine"
                     (click)="save()"
                 >
-                    @if (saving) {
+                    @if (savingSig()) {
                         <mat-icon
                             class="mr-2 animate-spin icon-size-5"
                             [svgIcon]="'heroicons_outline:arrow-path'"

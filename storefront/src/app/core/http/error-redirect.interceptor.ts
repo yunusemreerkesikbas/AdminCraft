@@ -25,7 +25,6 @@ export const errorRedirectInterceptor = (
             const status = error.status;
             const lang = languageService.currentLanguage || 'tr';
 
-            // Skip redirection for auth endpoints to allow them to handle their own errors (like wrong credentials)
             const isAuthEndpoint = req.url.includes('/auth/login') ||
                                   req.url.includes('/auth/signup') ||
                                   req.url.includes('/auth/forgot-password') ||

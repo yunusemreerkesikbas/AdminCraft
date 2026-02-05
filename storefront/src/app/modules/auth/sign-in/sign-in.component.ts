@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    OnDestroy,
     OnInit,
     ViewChild,
     ViewEncapsulation,
@@ -29,7 +30,7 @@ import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
 import { UserService } from 'app/core/user/user.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
-import { take } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'spa-sign-in',
@@ -52,7 +53,7 @@ import { take } from 'rxjs';
         SpaInputComponent,
     ],
 })
-export class AuthSignInComponent implements OnInit {
+export class AuthSignInComponent implements OnInit, OnDestroy {
     @ViewChild('signInNgForm') signInNgForm: NgForm;
 
     #activatedRoute = inject(ActivatedRoute);
@@ -62,6 +63,7 @@ export class AuthSignInComponent implements OnInit {
     #router = inject(Router);
     #userService = inject(UserService);
     #translocoService = inject(TranslocoService);
+    #destroySubject = new Subject<void>();
 
     signInForm: UntypedFormGroup;
     otpForm: UntypedFormGroup;
@@ -107,7 +109,7 @@ export class AuthSignInComponent implements OnInit {
 
         this.#authService
             .signIn(credentials)
-            .pipe(take(1))
+            .pipe(takeUntil(this.#destroySubject))
             .subscribe({
                 next: (result) => {
                     if (result === 'requires2FA') {
@@ -151,7 +153,7 @@ export class AuthSignInComponent implements OnInit {
 
         this.#authService
             .verifyOtp(request)
-            .pipe(take(1))
+            .pipe(takeUntil(this.#destroySubject))
             .subscribe({
                 next: (success) => {
                     if (success) {
@@ -181,13 +183,11 @@ export class AuthSignInComponent implements OnInit {
         const lang = this.#translocoService.getActiveLang();
         const user = this.#userService.user();
 
-        // Platform yöneticileri tenants sayfasına
         if (user?.role === 'SUPER_ADMIN') {
             this.#router.navigateByUrl(`/${lang}/tenants`);
             return;
         }
 
-        // Diğer tüm roller (Admin, Editor, Viewer) site sayfasına
         const returnUrl =
             this.#activatedRoute.snapshot.queryParamMap.get('redirectURL');
         const safeUrl = this.#getSafeUrl(returnUrl);
@@ -209,5 +209,10 @@ export class AuthSignInComponent implements OnInit {
         } catch {
             return null;
         }
+    }
+
+    ngOnDestroy(): void {
+        this.#destroySubject.next();
+        this.#destroySubject.complete();
     }
 }

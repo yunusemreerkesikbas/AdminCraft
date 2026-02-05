@@ -17,8 +17,6 @@ export const errorToastInterceptor = (
   const notify = inject(NotificationService);
   const deduplication = inject(DeduplicationService);
 
-  // İstek bazında bastırma mekanizması kaldırıldı (HttpContextToken)
-
   return next(req).pipe(
     catchError((error) => {
       if (!(error instanceof HttpErrorResponse)) {
@@ -28,17 +26,14 @@ export const errorToastInterceptor = (
       const status = error.status;
       const url = req.url || '';
 
-      // 401, 403, 500: Redirect interceptor tarafından ele alınır - toast yok
       if (status === 401 || status === 403 || status === 500) {
         return throwError(() => error);
       }
 
-      // 400/422: Form doğrulama gövdesi varsa toast gösterme
       if ((status === 400 || status === 422) && hasValidationBody(error)) {
         return throwError(() => error);
       }
 
-      // 5xx (500 hariç) veya ağ hatası: error toast
       if (status > 500 || status === 0) {
         emitDedup(
           notify,
@@ -50,7 +45,6 @@ export const errorToastInterceptor = (
         return throwError(() => error);
       }
 
-      // Diğer durumlar: bilgi/uyarı
       emitDedup(
         notify,
         deduplication,
@@ -66,8 +60,6 @@ export const errorToastInterceptor = (
 function hasValidationBody(error: HttpErrorResponse): boolean {
   const body = error.error as any;
   if (!body) return false;
-  // Check for validation errors OR custom error message from backend
-  // Backend returns: { result: "ERROR", message: "...", code: 400 }
   return Boolean(body.errors || body.fieldErrors || body.validationErrors || body.message);
 }
 
@@ -90,16 +82,14 @@ function emitDedup(
   const key = `${type}-${messageKey}`;
   
   if (!deduplication.canEmit(key)) {
-    return; // Deduplicated within 2 seconds
+    return;
   }
 
-  // Sanitize source for security (remove sensitive URL params)
   const sanitizedSource = sanitizeUrl(source);
   
   const opts: NotificationOptions = { 
     params: undefined, 
     preventDuplicates: true,
-    // Source is only for internal logging, not exposed to user
     ...(sanitizedSource !== '[invalid-url]' && { source: sanitizedSource })
   };
   

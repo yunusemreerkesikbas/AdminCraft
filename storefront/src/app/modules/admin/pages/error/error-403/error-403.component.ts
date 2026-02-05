@@ -6,15 +6,11 @@ import {
 import { RouterLink } from '@angular/router';
 
 @Component({
-    selector: 'error-403',
+    selector: 'spa-error-403',
+    standalone: true,
     templateUrl: './error-403.component.html',
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink],
 })
-export class Error403Component {
-    /**
-     * Constructor
-     */
-    constructor() {}
-}
+export class Error403Component {}

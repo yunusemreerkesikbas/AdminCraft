@@ -10,6 +10,7 @@ import {
     SimpleChanges,
     ViewEncapsulation,
     inject,
+    signal,
 } from '@angular/core';
 import {
     FormBuilder,
@@ -51,7 +52,7 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
     @Output() securityUpdated = new EventEmitter<SecuritySettingsResponse>();
 
     form: FormGroup;
-    saving = false;
+    protected savingSig = signal(false);
 
     readonly policyOptions: { value: TwoFactorPolicy; label: string; description: string }[] = [
         {
@@ -82,14 +83,14 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
     }
 
     save(): void {
-        if (this.saving) return;
+        if (this.savingSig()) return;
 
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
         }
 
-        this.saving = true;
+        this.savingSig.set(true);
         const policy = this.form.value.twoFactorPolicy as TwoFactorPolicy;
 
         this.#siteService
@@ -97,14 +98,14 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
                 next: (updatedSecurity) => {
-                    this.saving = false;
+                    this.savingSig.set(false);
                     this.#notificationService.success(
                         'admin.site.dashboard.security.messages.saveSuccess'
                     );
                     this.securityUpdated.emit(updatedSecurity);
                 },
                 error: () => {
-                    this.saving = false;
+                    this.savingSig.set(false);
                     this.#notificationService.alert(
                         'admin.site.dashboard.security.messages.saveFailed'
                     );
