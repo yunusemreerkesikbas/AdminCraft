@@ -21,15 +21,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.application.dto.SecuritySettingsResult;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.request.UpdateSiteRequest;
 import com.backend.application.dto.response.SiteOverviewAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto;
+import com.backend.application.service.SecuritySettingsService;
 import com.backend.application.service.SiteOverviewService;
 import com.backend.application.service.SiteService;
 import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
+import com.backend.presentation.dto.request.UpdateSecuritySettingsRequest;
+import com.backend.presentation.dto.response.SecuritySettingsResponse;
 import com.backend.presentation.dto.response.SiteOverviewResponse;
 import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SiteTechnicalResponse;
@@ -52,6 +56,7 @@ public class SiteController {
     private final SiteService siteService;
     private final SiteOverviewService siteOverviewService;
     private final SiteTechnicalService siteTechnicalService;
+    private final SecuritySettingsService securitySettingsService;
     private final MessageSource messageSource;
     private final SecurityHelper securityHelper;
 
@@ -352,6 +357,51 @@ public class SiteController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         }
+    }
+
+    // ========== Security Settings Endpoints ==========
+
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @GetMapping("/security")
+    public ResponseEntity<ApiResponse<SecuritySettingsResponse>> getSecuritySettings(
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SecuritySettingsResult result = securitySettingsService.getSecuritySettings();
+            return ResponseEntity.ok(ApiResponse.success(toSecuritySettingsResponse(result)));
+        } catch (Exception ex) {
+            log.error("Error getting security settings", ex);
+            String message = messageSource.getMessage("site.security.get.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            if (message.length() > 500)
+                message = message.substring(0, 500);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @PatchMapping("/security")
+    public ResponseEntity<ApiResponse<SecuritySettingsResponse>> updateSecuritySettings(
+            @Valid @RequestBody UpdateSecuritySettingsRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            SecuritySettingsResult result = securitySettingsService.updateTwoFactorPolicy(request.twoFactorPolicy());
+            String message = messageSource.getMessage("site.security.updated.success", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, toSecuritySettingsResponse(result)));
+        } catch (Exception ex) {
+            log.error("Error updating security settings", ex);
+            String message = messageSource.getMessage("site.security.update.error", new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            if (message.length() > 500)
+                message = message.substring(0, 500);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        }
+    }
+
+    private SecuritySettingsResponse toSecuritySettingsResponse(SecuritySettingsResult result) {
+        return SecuritySettingsResponse.of(result.policy(), result.policyDescription());
     }
 
     private String sanitizeInput(String input) {

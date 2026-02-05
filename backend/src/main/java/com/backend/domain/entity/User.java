@@ -192,9 +192,9 @@ public class User {
     }
 
     public boolean canLogin() {
-        // For development: Only check isActive and not locked
-        // TODO: Re-enable emailVerified check after fixing data migration
-        return isActive && !isAccountLocked(); // && emailVerified;
+        return isActive != null && isActive
+                && !isAccountLocked()
+                && emailVerified != null && emailVerified;
     }
 
     public void recordFailedLogin() {

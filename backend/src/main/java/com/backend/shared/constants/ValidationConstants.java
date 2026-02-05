@@ -96,6 +96,35 @@ public final class ValidationConstants {
      */
     public static final String SUBDOMAIN_PATTERN = "^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$";
 
+    /**
+     * Password Pattern
+     * - At least 8 characters
+     * - At least one lowercase letter
+     * - At least one uppercase letter
+     * - At least one digit
+     *
+     * @example "Password1", "SecurePass123"
+     */
+    public static final String PASSWORD_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$";
+
+    /**
+     * Device Fingerprint Pattern
+     * - Alphanumeric with underscore and hyphen
+     * - Max 128 characters
+     *
+     * @example "fp_abc123", "device-fingerprint-123"
+     */
+    public static final String DEVICE_FINGERPRINT_PATTERN = "^[A-Za-z0-9_-]*$";
+
+    /**
+     * IP Address Pattern (IPv4 and IPv6)
+     * - Validates both IPv4 (192.168.1.1) and IPv6 addresses
+     */
+    public static final String IP_ADDRESS_PATTERN =
+            "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|" +
+            "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|" +
+            "^::$|^::1$|^([0-9a-fA-F]{1,4}:){1,7}:$|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$";
+
     // ============================================================================
     // SIZE LIMITS (Frontend VALIDATION_LIMITS ile senkronize)
     // ============================================================================

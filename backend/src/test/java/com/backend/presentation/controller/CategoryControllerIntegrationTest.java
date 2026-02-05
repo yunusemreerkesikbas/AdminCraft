@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.application.service.CategoryService;
 import com.backend.domain.entity.Category;
+import com.backend.domain.repository.TenantRepository;
 import com.backend.infrastructure.security.JwtAuthenticationFilter;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.infrastructure.tenant.TenantFilter;
@@ -68,12 +69,15 @@ class CategoryControllerIntegrationTest {
     @MockBean
     private TenantFilter tenantFilter;
 
+    @MockBean
+    private TenantRepository tenantRepository;
+
     private Category testCategory;
     private Category parentCategory;
 
     @BeforeEach
     void setUp() {
-        TenantContext tenantContext = new TenantContext();
+        TenantContext tenantContext = new TenantContext(tenantRepository);
         tenantContext.setTenantId("1");
         tenantContext.setTenantDbName("ac_tenant_1");
 
@@ -95,7 +99,7 @@ class CategoryControllerIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        TenantContext ctx = new TenantContext();
+        TenantContext ctx = new TenantContext(tenantRepository);
         ctx.clear();
         SecurityContextHolder.clearContext();
     }

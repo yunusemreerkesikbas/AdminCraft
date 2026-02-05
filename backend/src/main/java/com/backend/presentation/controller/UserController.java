@@ -25,22 +25,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.CreateUserInput;
+import com.backend.application.dto.SecuritySettingsResult;
 import com.backend.application.dto.UpdateUserInput;
+import com.backend.application.service.AuthenticationService;
+import com.backend.application.service.SecuritySettingsService;
 import com.backend.application.service.UserService;
 import com.backend.domain.entity.User;
+import com.backend.domain.enums.Language;
+import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.UserNotFoundException;
-import com.backend.presentation.dto.request.ChangePasswordRequest;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.presentation.dto.request.CreateUserRequest;
 import com.backend.presentation.dto.request.UpdateUserRequest;
 import com.backend.presentation.dto.response.PageableResponse;
-import com.backend.presentation.dto.response.ResetPasswordResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.UserResponse;
 import com.backend.shared.common.ApiResponse;
-import com.backend.shared.common.SecurityHelper;
+import com.backend.shared.common.RequestUtils;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -59,8 +64,10 @@ import lombok.extern.slf4j.Slf4j;
 public class UserController {
 
         private final UserService userService;
+        private final AuthenticationService authenticationService;
+        private final SecuritySettingsService securitySettingsService;
+        private final TenantContextPort tenantContext;
         private final MessageSource messageSource;
-        private final SecurityHelper securityHelper;
 
         @GetMapping
         public ResponseEntity<ApiResponse<PageableResponse<UserResponse>>> list(
@@ -199,12 +206,15 @@ public class UserController {
         @PostMapping
         public ResponseEntity<ApiResponse<UserResponse>> createUser(
                         @Valid @RequestBody CreateUserRequest request,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+                        HttpServletRequest httpRequest) {
                 try {
-                        // Convert Presentation DTO to Application Input
+                        Language language = RequestUtils.parseLanguage(languageCode);
+                        String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+                        String userAgent = RequestUtils.getUserAgent(httpRequest);
+
                         CreateUserInput input = new CreateUserInput(
                                         request.email(),
-                                        request.password(),
                                         request.role(),
                                         request.firstName(),
                                         request.lastName(),
@@ -212,9 +222,17 @@ public class UserController {
                                         request.jobTitle(),
                                         request.department(),
                                         request.isActive(),
-                                        request.notes());
+                                        request.notes(),
+                                        ipAddress,
+                                        userAgent,
+                                        language);
+                        SecuritySettingsResult securitySettings = securitySettingsService.getSecuritySettings();
                         User createdUser = userService.createUser(input);
-                        String message = messageSource.getMessage("user.create.success", null,
+                        String messageKey = "user.create.success";
+                        if (securitySettings.policy() == TwoFactorPolicy.REQUIRED) {
+                                messageKey = "user.create.2fa.info";
+                        }
+                        String message = messageSource.getMessage(messageKey, null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(message, UserResponse.from(createdUser)));
@@ -321,71 +339,60 @@ public class UserController {
         // ========== Passwords ==========
 
         /**
-         * Reset user password and generate a new random password.
+         * Send password reset email to user.
          * 
          * <p>
-         * <b>Security Note:</b> This endpoint returns the plaintext password in the
-         * response
-         * for administrative convenience (TENANT_ADMIN can immediately share it with
-         * the user).
-         * This is acceptable in trusted admin contexts but increases exposure risk
-         * through
-         * browser logs, network proxies, and APM tools.
+         * Sends a secure password reset link to the user's email address.
+         * The user will set their own password through the link.
          * 
-         * <p>
-         * For production environments with strict security requirements, consider
-         * implementing
-         * a token-based reset flow where a one-time reset token is sent via email and
-         * the user
-         * sets their own password through a secure link.
-         * 
-         * @param id           User ID to reset password for
-         * @param languageCode Language code for response messages
-         * @return Response containing the newly generated password
+         * @param id           User ID to send password reset email
+         * @param languageCode Language code for email content
+         * @param httpRequest  HTTP request for extracting IP and user agent
+         * @return Success response with confirmation message
          */
         @PostMapping("/{id}/reset-password")
-        public ResponseEntity<ApiResponse<ResetPasswordResponse>> resetPassword(
+        public ResponseEntity<ApiResponse<Void>> resetPassword(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+                        HttpServletRequest httpRequest) {
                 try {
                         validateUserAccess(id);
-                        String newPassword = userService.resetPassword(id);
-                        String message = messageSource.getMessage("user.password.reset.success", null,
-                                        Locale.forLanguageTag(languageCode));
-                        return ResponseEntity.ok(ApiResponse.success(message, new ResetPasswordResponse(newPassword)));
-                } catch (Exception ex) {
-                        log.error("Error resetting password", ex);
-                        String message = messageSource.getMessage("user.password.reset.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                        .body(ApiResponse.error(message));
-                }
-        }
 
-        @PostMapping("/{id}/change-password")
-        public ResponseEntity<ApiResponse<Void>> changePassword(
-                        @PathVariable @Valid @NotNull @Min(1) Long id,
-                        @Valid @RequestBody ChangePasswordRequest request,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                try {
-                        validateUserAccess(id);
-                        userService.changePassword(id, request.currentPassword(), request.newPassword());
-                        String message = messageSource.getMessage("user.password.change.success", null,
+                        User user = userService.getUserById(id)
+                                        .orElseThrow(() -> new UserNotFoundException(id));
+
+                        Language language = RequestUtils.parseLanguage(languageCode);
+                        String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+                        String userAgent = RequestUtils.getUserAgent(httpRequest);
+
+                        Long tenantId = Long.valueOf(tenantContext.getTenantId());
+                        String subdomain = tenantContext.getSubdomain();
+
+                        authenticationService.requestPasswordReset(
+                                        user.getEmail(),
+                                        tenantId,
+                                        subdomain,
+                                        ipAddress,
+                                        userAgent,
+                                        language);
+
+                        String message = messageSource.getMessage(
+                                        "user.password.reset.email.sent",
+                                        new Object[] { user.getEmail() },
                                         Locale.forLanguageTag(languageCode));
+
+                        log.info("Password reset email sent for user ID: {}", id);
                         return ResponseEntity.ok(ApiResponse.success(message, null));
-                } catch (IllegalArgumentException ex) {
-                        log.error("Error changing password - validation failed", ex);
-                        String message = messageSource.getMessage("user.password.change.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+
+                } catch (UserNotFoundException ex) {
+                        String message = messageSource.getMessage("user.not.found",
+                                        new Object[] { id }, Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error changing password", ex);
-                        String message = messageSource.getMessage("user.password.change.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        log.error("Error sending password reset email for user ID: {}", id, ex);
+                        String message = messageSource.getMessage("user.password.reset.email.error",
+                                        null, Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }

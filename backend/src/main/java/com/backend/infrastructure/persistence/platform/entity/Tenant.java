@@ -48,6 +48,10 @@ public class Tenant {
   @Column(nullable = false, length = 20)
   private String status;
 
+  @Column(name = "two_factor_policy", length = 20)
+  @Builder.Default
+  private String twoFactorPolicy = "DISABLED";
+
   @Column(name = "default_language", length = 10)
   private String defaultLanguage;
 

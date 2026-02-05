@@ -1,9 +1,12 @@
 package com.backend.infrastructure.tenant;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.enums.Currency;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.repository.TenantRepository;
 
 @Component
 public class TenantContext implements TenantContextPort {
@@ -13,6 +16,13 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
   private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
 
+  private final TenantRepository tenantRepository;
+
+  public TenantContext(@Lazy TenantRepository tenantRepository) {
+    this.tenantRepository = tenantRepository;
+  }
+
+  @Override
   public void setTenantId(String tenantId) {
     currentTenantId.set(tenantId);
   }
@@ -22,6 +32,7 @@ public class TenantContext implements TenantContextPort {
     return currentTenantId.get();
   }
 
+  @Override
   public void setTenantDbName(String dbName) {
     currentTenantDbName.set(dbName);
   }
@@ -31,6 +42,7 @@ public class TenantContext implements TenantContextPort {
     return currentTenantDbName.get();
   }
 
+  @Override
   public void setSubdomain(String subdomain) {
     currentSubdomain.set(subdomain);
   }
@@ -40,6 +52,7 @@ public class TenantContext implements TenantContextPort {
     return currentSubdomain.get();
   }
 
+  @Override
   public void setCurrency(Currency currency) {
     currentCurrency.set(currency);
   }
@@ -50,6 +63,7 @@ public class TenantContext implements TenantContextPort {
     return currency != null ? currency : Currency.getDefault();
   }
 
+  @Override
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
@@ -57,16 +71,27 @@ public class TenantContext implements TenantContextPort {
     currentCurrency.remove();
   }
 
+  @Override
   public boolean isSet() {
     return currentTenantId.get() != null && currentTenantDbName.get() != null;
   }
 
-  /**
-   * Validates that tenant context is properly set.
-   * Should be called at the entry point of all tenant-scoped service methods.
-   * 
-   * @throws IllegalStateException if tenant context is not set
-   */
+  @Override
+  public boolean isActive() {
+    String tenantIdStr = getTenantId();
+    if (tenantIdStr == null) {
+      return false;
+    }
+    try {
+      Long tenantId = Long.parseLong(tenantIdStr);
+      return tenantRepository.findById(tenantId)
+          .map(tenant -> tenant.getStatus() == TenantStatus.ACTIVE)
+          .orElse(false);
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
   public static void validateActive() {
     if (currentTenantId.get() == null || currentTenantDbName.get() == null) {
       throw new IllegalStateException(

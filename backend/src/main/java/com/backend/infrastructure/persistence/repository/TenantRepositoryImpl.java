@@ -179,6 +179,16 @@ public class TenantRepositoryImpl implements TenantRepository {
         }
 
         try {
+            if (source.getTwoFactorPolicy() != null) {
+                target.setTwoFactorPolicy(
+                        com.backend.domain.enums.TwoFactorPolicy.valueOf(source.getTwoFactorPolicy()));
+            }
+        } catch (Exception e) {
+            log.warn("Invalid two factor policy in DB: {}", source.getTwoFactorPolicy());
+            target.setTwoFactorPolicy(com.backend.domain.enums.TwoFactorPolicy.DISABLED);
+        }
+
+        try {
             target.setCurrency(Currency.valueOf(source.getCurrency()));
         } catch (Exception e) {
             target.setCurrency(Currency.TRY);
@@ -230,6 +240,7 @@ public class TenantRepositoryImpl implements TenantRepository {
                 .databaseName(dbName)
                 .customDomain(tenant.getCustomDomain())
                 .status(tenant.getStatus().name())
+                .twoFactorPolicy(tenant.getTwoFactorPolicy() != null ? tenant.getTwoFactorPolicy().name() : "DISABLED")
                 .currency(tenant.getCurrency().name())
                 .defaultLanguage(tenant.getDefaultLanguage().name())
                 .supportedLanguages(languagesJson)
