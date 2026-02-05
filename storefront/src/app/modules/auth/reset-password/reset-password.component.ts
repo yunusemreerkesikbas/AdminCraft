@@ -18,7 +18,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { finalize, Subject, take, takeUntil } from 'rxjs';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-reset-password',
@@ -83,7 +83,7 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
         this.#authService
             .verifyResetToken(this.token)
             .pipe(
-                takeUntil(this.#destroySubject),
+                take(1),
                 finalize(() => this.validatingTokenSig.set(false))
             )
             .subscribe({
@@ -136,7 +136,7 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
         this.#authService
             .resetPassword(this.token, password, passwordConfirm)
             .pipe(
-                takeUntil(this.#destroySubject),
+                take(1),
                 finalize(() => {
                     this.resetPasswordForm.enable();
                     this.showAlertSig.set(true);

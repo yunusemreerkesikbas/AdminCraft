@@ -20,7 +20,7 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
-import { finalize, Subject, take, takeUntil } from 'rxjs';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-set-password',
@@ -88,7 +88,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         this.#authService
             .verifyEmailToken(this.token, subdomain || undefined)
             .pipe(
-                takeUntil(this.#destroySubject),
+                take(1),
                 finalize(() => this.validatingTokenSig.set(false))
             )
             .subscribe({
@@ -157,7 +157,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                 subdomain || undefined
             )
             .pipe(
-                takeUntil(this.#destroySubject),
+                take(1),
                 finalize(() => {
                     this.setPasswordForm.enable();
                 })

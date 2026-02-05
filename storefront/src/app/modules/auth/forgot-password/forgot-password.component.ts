@@ -17,7 +17,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { finalize, Subject, take, takeUntil } from 'rxjs';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-forgot-password',
@@ -75,7 +75,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         this.#authService
             .forgotPassword(email, subdomain)
             .pipe(
-                takeUntil(this.#destroySubject),
+                take(1),
                 finalize(() => {
                     this.forgotPasswordForm.enable();
                     this.forgotPasswordNgForm.resetForm();
