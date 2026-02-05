@@ -60,8 +60,8 @@ export const appConfig: ApplicationConfig = {
             languageInterceptor,
             authInterceptor,
             tenantInterceptor,
-            errorRedirectInterceptor,
-            errorToastInterceptor
+            errorToastInterceptor,
+            errorRedirectInterceptor
         ])),
         provideRouter(
             appRoutes,

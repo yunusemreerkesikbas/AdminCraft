@@ -112,10 +112,8 @@ export class AuthService {
         this.#setAccessToken(response.accessToken);
         this.#authenticatedSig.set(true);
 
-        // Store user and tenant info
         this.#storeUserAndTenantInfo(response);
 
-        // Set user data
         const user: User = {
             id: response.userId,
             email: response.email,
@@ -126,7 +124,6 @@ export class AuthService {
         };
         this.#userService.setUser(user);
 
-        // Set subdomain
         if (response.subdomain) {
             this.#tenantContext.setSubdomain(response.subdomain);
         }

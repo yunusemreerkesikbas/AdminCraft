@@ -4,11 +4,7 @@ import { Injectable } from '@angular/core';
     providedIn: 'root',
 })
 export class DeviceFingerprintService {
-    /**
-     * Generate SHA-256 hash of device characteristics
-     */
     async getDeviceFingerprint(): Promise<string> {
-        // Simple device fingerprint based on browser info
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
         const renderer = gl ? gl.getParameter(gl.RENDERER) : 'unknown';
@@ -33,9 +29,6 @@ export class DeviceFingerprintService {
             .join('');
     }
 
-    /**
-     * Detect device name from User-Agent
-     */
     getDeviceName(): string {
         const ua = navigator.userAgent;
         if (ua.includes('Windows')) return 'Windows PC';

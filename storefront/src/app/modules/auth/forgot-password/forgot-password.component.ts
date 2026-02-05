@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -17,7 +17,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { finalize, take } from 'rxjs';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-forgot-password',
@@ -38,13 +38,14 @@ import { finalize, take } from 'rxjs';
         TranslocoModule,
     ],
 })
-export class AuthForgotPasswordComponent implements OnInit {
+export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     @ViewChild('forgotPasswordNgForm') forgotPasswordNgForm: NgForm;
 
     #authService = inject(AuthService);
     #formBuilder = inject(UntypedFormBuilder);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
+    #destroySubject = new Subject<void>();
 
     forgotPasswordForm: UntypedFormGroup;
 
@@ -95,5 +96,10 @@ export class AuthForgotPasswordComponent implements OnInit {
                     });
                 }
             });
+    }
+
+    ngOnDestroy(): void {
+        this.#destroySubject.next();
+        this.#destroySubject.complete();
     }
 }
