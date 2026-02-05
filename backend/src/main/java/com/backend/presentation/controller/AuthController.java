@@ -55,7 +55,7 @@ public class AuthController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
             HttpServletRequest httpRequest) throws OtpRateLimitExceededException {
         try {
-            log.info("Login attempt for email: {}", loginRequest.email());
+            log.info("Login attempt received");
 
             if (loginRequest.email() == null || loginRequest.email().trim().isEmpty()) {
                 throw new IllegalArgumentException("Email cannot be null or empty");
@@ -81,10 +81,10 @@ public class AuthController {
                     Locale.forLanguageTag(languageCode));
             ApiResponse<LoginResponse> response = ApiResponse.success(message, loginResponse);
 
-            log.info("Login successful for email: {}", loginRequest.email());
+            log.info("Login successful");
             return ResponseEntity.ok(response);
         } catch (AccountLockedException ex) {
-            log.warn("Account locked for email {}: {}", loginRequest.email(), ex.getMessage());
+            log.warn("Account locked: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.account.locked",
                     new Object[] { ex.getRemainingMinutes() },
                     Locale.forLanguageTag(languageCode));
@@ -94,7 +94,7 @@ public class AuthController {
                             "errorCode", "ACCOUNT_LOCKED"));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception ex) {
-            log.error("Login failed for email {}: {}", loginRequest.email(), ex.getMessage());
+            log.error("Login failed: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.login.error", new Object[] { ex.getMessage() },
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -166,7 +166,7 @@ public class AuthController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
             HttpServletRequest httpRequest) {
         try {
-            log.info("Password reset requested for email: {}", request.email());
+            log.info("Password reset requested");
 
             Language language = RequestUtils.parseLanguage(languageCode);
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
@@ -188,7 +188,7 @@ public class AuthController {
 
     @GetMapping("/verify-reset-token")
     public ResponseEntity<ApiResponse<TokenValidationResponse>> verifyResetToken(
-            @RequestParam String token,
+            @RequestParam @NotBlank String token,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             TokenValidationResult result = authenticationService.validateResetToken(token);
@@ -235,7 +235,7 @@ public class AuthController {
 
     @GetMapping("/verify-email-token")
     public ResponseEntity<ApiResponse<TokenValidationResponse>> verifyEmailToken(
-            @RequestParam String token,
+            @RequestParam @NotBlank String token,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             TokenValidationResult result = authenticationService.validateEmailVerificationToken(token);

@@ -1,9 +1,12 @@
 package com.backend.infrastructure.tenant;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.enums.Currency;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.repository.TenantRepository;
 
 @Component
 public class TenantContext implements TenantContextPort {
@@ -12,6 +15,12 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentTenantDbName = new ThreadLocal<>();
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
   private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
+
+  private final TenantRepository tenantRepository;
+
+  public TenantContext(@Lazy TenantRepository tenantRepository) {
+    this.tenantRepository = tenantRepository;
+  }
 
   @Override
   public void setTenantId(String tenantId) {
@@ -65,6 +74,22 @@ public class TenantContext implements TenantContextPort {
   @Override
   public boolean isSet() {
     return currentTenantId.get() != null && currentTenantDbName.get() != null;
+  }
+
+  @Override
+  public boolean isActive() {
+    String tenantIdStr = getTenantId();
+    if (tenantIdStr == null) {
+      return false;
+    }
+    try {
+      Long tenantId = Long.parseLong(tenantIdStr);
+      return tenantRepository.findById(tenantId)
+          .map(tenant -> tenant.getStatus() == TenantStatus.ACTIVE)
+          .orElse(false);
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
   public static void validateActive() {

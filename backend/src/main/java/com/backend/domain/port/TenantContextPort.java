@@ -23,4 +23,6 @@ public interface TenantContextPort {
   void clear();
 
   boolean isSet();
+
+  boolean isActive();
 }

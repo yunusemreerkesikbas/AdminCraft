@@ -2,4 +2,4 @@
 ALTER TABLE page_i18n ADD COLUMN name VARCHAR(200) NULL;
 ALTER TABLE page_i18n ADD COLUMN canonical_url VARCHAR(255) NULL;
 
-ALTER TABLE page_i18n ADD UNIQUE KEY uk_page_i18n_canonical_url (language, canonical_url);
+ALTER TABLE page_i18n ADD UNIQUE KEY idx_page_i18n_language_canonical_url (language, canonical_url);

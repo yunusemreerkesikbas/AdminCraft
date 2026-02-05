@@ -1,9 +1,11 @@
 package com.backend.testutil;
 
+import com.backend.domain.repository.TenantRepository;
 import com.backend.infrastructure.tenant.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -18,11 +20,14 @@ public abstract class BaseServiceTest {
     protected static final String TEST_TENANT_DB_NAME = "ac_tenant_1";
     protected static final Long TEST_USER_ID = 100L;
 
+    @Mock
+    protected TenantRepository tenantRepository;
+
     private TenantContext tenantContext;
 
     @BeforeEach
     void setUpTenantContext() {
-        tenantContext = new TenantContext();
+        tenantContext = new TenantContext(tenantRepository);
         tenantContext.setTenantId(TEST_TENANT_ID);
         tenantContext.setTenantDbName(TEST_TENANT_DB_NAME);
         tenantContext.setSubdomain("test-tenant");
@@ -43,7 +48,7 @@ public abstract class BaseServiceTest {
      * Sets the static ThreadLocal values in TenantContext for validateActive() to pass.
      */
     protected void setStaticTenantContext(String tenantId, String tenantDbName) {
-        TenantContext ctx = new TenantContext();
+        TenantContext ctx = new TenantContext(tenantRepository);
         ctx.setTenantId(tenantId);
         ctx.setTenantDbName(tenantDbName);
     }
@@ -52,7 +57,7 @@ public abstract class BaseServiceTest {
      * Clears the static ThreadLocal values in TenantContext.
      */
     protected void clearStaticTenantContext() {
-        TenantContext ctx = new TenantContext();
+        TenantContext ctx = new TenantContext(tenantRepository);
         ctx.clear();
     }
 

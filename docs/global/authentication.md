@@ -270,7 +270,9 @@ New users created by admin receive a verification email to set their password.
 ```
 1. Admin creates user (no password)
    └── POST /api/users { email, firstName, ... } (no password fields)
-   └── User created with email_verified=false, password=null
+   └── User created with email_verified=false, temporary password hash generated
+   └── Note: Temporary hash is passwordEncoder.encode(UUID.randomUUID().toString())
+   └── User cannot login with temporary password (unknown value)
    └── Verification email sent automatically
 
 2. User clicks email link → Frontend set-password page
@@ -615,4 +617,47 @@ All authentication events are logged with:
 - User agent
 - Timestamp
 - Success/failure status
+
+### PII Protection (GDPR Compliance)
+
+**Logging Policy**:
+- ❌ **No raw email addresses in logs**
+- ✅ **userId** used for user identification
+- ✅ **maskEmail()** used when email display is necessary (e.g., `u***@example.com`)
+- ✅ **MDC Context** populated in all tenant operations:
+  - `tenantId`: Tenant identifier
+  - `tenantDb`: Tenant database name
+  - `correlationId`: Request correlation UUID
+
+**MDC Population**: All TenantContext blocks populate MDC for distributed tracing and log correlation.
+
+**Example Log Output**:
+```
+[tenantId:1][tenantDb:ac_tenant_1][correlationId:7f3a9d2e...] Login successful for userId: 42
+```
+
+### Input Validation
+
+**Query Parameters**:
+- All token query parameters validated with `@NotBlank`
+- Routes: `/verify-reset-token?token=...`, `/verify-email-token?token=...`
+- Invalid/missing tokens return HTTP 400 Bad Request
+
+**Device Fingerprint**:
+- Pattern: `[A-Za-z0-9_-]{1,128}`
+- Max length: 128 characters
+- Alphanumeric with underscore/hyphen only
+
+**IP Address Validation**:
+- X-Forwarded-For header validated against IPv4/IPv6 patterns
+- Invalid IPs rejected or sanitized
+
+### Tenant Security
+
+**Active Status Validation**:
+- Inactive tenants blocked from all token operations:
+  - `refreshToken()`: Checks tenant status before issuing new tokens
+  - `validateResetToken()`: Ensures tenant is ACTIVE before validation
+  - `validateEmailVerificationToken()`: Ensures tenant is ACTIVE before validation
+- Prevents token abuse after tenant suspension
 

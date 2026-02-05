@@ -44,6 +44,7 @@ import com.backend.domain.entity.ProductAttributeDefinition;
 import com.backend.domain.entity.ProductType;
 import com.backend.domain.enums.ProductFieldType;
 import com.backend.domain.exception.BusinessRuleViolationException;
+import com.backend.domain.repository.TenantRepository;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.presentation.config.TestSecurityConfig;
 import com.backend.testutil.builders.ProductAttributeDefinitionTestDataBuilder;
@@ -75,12 +76,15 @@ class ProductTypeControllerIntegrationTest {
         @MockBean
         private com.backend.infrastructure.tenant.TenantFilter tenantFilter;
 
+        @MockBean
+        private TenantRepository tenantRepository;
+
         private ProductType testProductType;
         private ProductAttributeDefinition testAttributeDefinition;
 
         @BeforeEach
         void setUp() {
-                TenantContext tenantContext = new TenantContext();
+                TenantContext tenantContext = new TenantContext(tenantRepository);
                 tenantContext.setTenantId("1");
                 tenantContext.setTenantDbName("ac_tenant_1");
 
@@ -109,7 +113,7 @@ class ProductTypeControllerIntegrationTest {
 
         @AfterEach
         void tearDown() {
-                TenantContext ctx = new TenantContext();
+                TenantContext ctx = new TenantContext(tenantRepository);
                 ctx.clear();
                 SecurityContextHolder.clearContext();
         }

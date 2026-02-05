@@ -134,7 +134,7 @@ POST /api/users
 - Email: Required, valid format, unique per tenant
 - Role: Required enum value
 
-**Note**: A temporary random password hash is stored during user creation (the user cannot log in with it). The user receives an email verification link to set their own password. Until the email is verified and password is set (`email_verified=false`), the user cannot log in. See [Email Verification Flow](#email-verification-new-users) below.
+**Note**: A temporary encoded password hash is generated (via `passwordEncoder.encode(UUID.randomUUID().toString())`) and stored during user creation. The user **cannot log in** with this temporary password. The user receives an email verification link to set their own password. Until the email is verified and password is set (`email_verified=false`), the user cannot log in. See [Email Verification Flow](#email-verification-new-users) below.
 
 **Note**: `full_name` is derived server-side from first/last name (fallback: email).
 
@@ -356,7 +356,7 @@ Automatic account locking protects against brute-force attacks:
 2. **Backend**:
    - Controller validates DTO (`@Valid CreateUserRequest`)
    - Service checks email uniqueness
-   - User saved with `email_verified=false`, `password=null`
+   - User saved with `email_verified=false`, temporary password hash generated
    - Verification email sent automatically via `EmailService`
    - Returns `UserResponse` (201 Created)
 

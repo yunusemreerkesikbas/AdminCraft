@@ -1,7 +1,9 @@
 package com.backend.application.service.impl;
 
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -101,6 +103,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
             tenantContext.setTenantId(String.valueOf(tenant.getId()));
             tenantContext.setTenantDbName(tenant.getDatabaseName());
+
+            // Populate MDC for logging context
+            MDC.put("tenantId", String.valueOf(tenant.getId()));
+            MDC.put("tenantDb", tenant.getDatabaseName());
+            MDC.put("correlationId", UUID.randomUUID().toString());
+
             log.debug("TenantContext set: tenantId={}, dbName={}", tenant.getId(), tenant.getDatabaseName());
 
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
@@ -115,6 +123,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             });
         } finally {
             tenantContext.clear();
+            MDC.remove("tenantId");
+            MDC.remove("tenantDb");
+            MDC.remove("correlationId");
             log.debug("TenantContext cleared");
         }
     }
@@ -157,6 +168,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             });
         } finally {
             tenantContext.clear();
+            MDC.remove("tenantId");
+            MDC.remove("tenantDb");
+            MDC.remove("correlationId");
             log.debug("TenantContext cleared");
         }
     }
@@ -337,17 +351,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             Tenant tenant = tenantRepository.findById(tenantId)
                     .orElseThrow(() -> new InvalidTokenException("Invalid tenant"));
 
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
+                log.warn("Tenant is not active: tenantId={}, status={}", tenantId, tenant.getStatus());
+                throw new InvalidTokenException("Tenant is not active");
+            }
+
             try {
                 tenantContext.setTenantId(String.valueOf(tenant.getId()));
                 tenantContext.setTenantDbName(tenant.getDatabaseName());
                 tenantContext.setSubdomain(tenant.getSubdomain());
 
+                // Populate MDC for logging context
+                MDC.put("tenantId", String.valueOf(tenant.getId()));
+                MDC.put("tenantDb", tenant.getDatabaseName());
+                MDC.put("correlationId", UUID.randomUUID().toString());
+
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new UserNotFoundException(email));
                 if (!user.canLogin()) {
                     log.warn(
-                            "User cannot refresh token - email: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
-                            email, user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
+                            "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
+                            user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                     throw new UserAccountDisabledException();
                 }
                 String newAccessToken = jwtTokenProvider.createAccessToken(
@@ -357,7 +381,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         tenantId);
                 String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-                log.info("Token refresh successful for user: {}, tenantId: {}", user.getEmail(), tenantId);
+                log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
 
                 return AuthResult.success(
                         newAccessToken,
@@ -371,6 +395,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         tenantId);
             } finally {
                 tenantContext.clear();
+                MDC.remove("tenantId");
+                MDC.remove("tenantDb");
+                MDC.remove("correlationId");
             }
         }
     }
@@ -446,6 +473,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             tenantContext.setTenantId(String.valueOf(tenant.getId()));
             tenantContext.setTenantDbName(tenant.getDatabaseName());
 
+            // Populate MDC for logging context
+            MDC.put("tenantId", String.valueOf(tenant.getId()));
+            MDC.put("tenantDb", tenant.getDatabaseName());
+            MDC.put("correlationId", UUID.randomUUID().toString());
+
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
             return transactionTemplate.execute(status -> {
                 String tokenHash = otpService.hashToken(pendingToken);
@@ -468,8 +500,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 if (!isValid) {
                     token.incrementAttempts();
                     verificationTokenRepository.save(token);
-                    log.warn("Invalid OTP attempt for user: {}, remaining attempts: {}",
-                            token.getUser().getEmail(), token.getRemainingAttempts());
+                    log.warn("Invalid OTP attempt for userId: {}, remaining attempts: {}",
+                            token.getUser().getId(), token.getRemainingAttempts());
 
                     if (!token.isUsable()) {
                         throw new InvalidTokenException("OTP session has expired due to too many attempts");
@@ -486,7 +518,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     TrustedDeviceService.DeviceInfo deviceInfo = new TrustedDeviceService.DeviceInfo(
                             deviceName, null, null, ipAddress);
                     trustedDeviceService.addTrustedDevice(user, deviceFingerprint, deviceInfo);
-                    log.info("Device trusted for user: {}", user.getEmail());
+                    log.info("Device trusted for userId: {}", user.getId());
                 }
 
                 user.recordSuccessfulLogin(ipAddress);
@@ -499,7 +531,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         tenant.getId());
                 String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
-                log.info("OTP verification successful for user: {}", user.getEmail());
+                log.info("OTP verification successful for userId: {}", user.getId());
 
                 return AuthResult.success(
                         accessToken,
@@ -514,13 +546,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             });
         } finally {
             tenantContext.clear();
+            MDC.remove("tenantId");
+            MDC.remove("tenantDb");
+            MDC.remove("correlationId");
         }
     }
 
     @Override
     public void requestPasswordReset(String email, Long tenantId, String subdomain,
             String ipAddress, String userAgent, Language language) {
-        log.info("Password reset requested for email: {}", email);
+        log.info("Password reset requested");
 
         Tenant tenant = resolveTenant(tenantId, subdomain);
         if (tenant == null) {
@@ -532,21 +567,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             tenantContext.setTenantId(String.valueOf(tenant.getId()));
             tenantContext.setTenantDbName(tenant.getDatabaseName());
 
+            // Populate MDC for logging context
+            MDC.put("tenantId", String.valueOf(tenant.getId()));
+            MDC.put("tenantDb", tenant.getDatabaseName());
+            MDC.put("correlationId", UUID.randomUUID().toString());
+
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
             transactionTemplate.executeWithoutResult(status -> {
                 User user = userRepository.findByEmail(email).orElse(null);
                 if (user == null) {
-                    log.warn("User not found for password reset: {}", email);
+                    log.warn("User not found for password reset");
                     return;
                 }
 
                 var tokenResult = otpService.createPasswordResetToken(user, ipAddress, userAgent);
                 emailService.sendPasswordResetEmail(email, tokenResult.plainToken(), tenant.getSubdomain(), language);
 
-                log.info("Password reset email sent to: {}", email);
+                log.info("Password reset email sent for userId: {}", user.getId());
             });
         } finally {
             tenantContext.clear();
+            MDC.remove("tenantId");
+            MDC.remove("tenantDb");
+            MDC.remove("correlationId");
         }
     }
 
@@ -555,6 +598,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public TokenValidationResult validateResetToken(String token) {
         if (!tenantContext.isSet()) {
             throw new IllegalStateException("Tenant context is required for token validation");
+        }
+
+        if (!tenantContext.isActive()) {
+            throw new IllegalStateException("Tenant is not active");
         }
 
         String tokenHash = otpService.hashToken(token);
@@ -596,7 +643,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             otpService.revokeAllUserTokens(user.getId(), TokenType.PASSWORD_RESET);
 
-            log.info("Password reset successful for user: {}", user.getEmail());
+            log.info("Password reset successful for userId: {}", user.getId());
         });
     }
 
@@ -628,7 +675,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             var tokenResult = otpService.createEmailVerificationToken(user, ipAddress, userAgent);
             emailService.sendEmailVerificationEmail(user.getEmail(), tokenResult.plainToken(), subdomain, language);
 
-            log.info("Email verification sent to: {}", user.getEmail());
+            log.info("Email verification sent for userId: {}", userId);
         });
     }
 
@@ -637,6 +684,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public TokenValidationResult validateEmailVerificationToken(String token) {
         if (!tenantContext.isSet()) {
             throw new IllegalStateException("Tenant context is required for token validation");
+        }
+
+        if (!tenantContext.isActive()) {
+            throw new IllegalStateException("Tenant is not active");
         }
 
         String tokenHash = otpService.hashToken(token);
@@ -689,14 +740,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             verificationTokenRepository.save(verificationToken);
             otpService.revokeAllUserTokens(user.getId(), TokenType.EMAIL_VERIFY);
 
-            log.info("Initial password set and email verified for user: {}", user.getEmail());
+            log.info("Initial password set and email verified for userId: {}", user.getId());
 
             // 4. Register trusted device if requested
             if (trustDevice && deviceFingerprint != null && !deviceFingerprint.isBlank()) {
                 TrustedDeviceService.DeviceInfo deviceInfo = new TrustedDeviceService.DeviceInfo(
                         deviceName, null, null, ipAddress);
                 trustedDeviceService.addTrustedDevice(user, deviceFingerprint, deviceInfo);
-                log.info("Device trusted for user: {}", user.getEmail());
+                log.info("Device trusted for userId: {}", user.getId());
             }
 
             // 5. Get tenant info
