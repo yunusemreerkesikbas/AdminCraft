@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation, inject, signal } from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -15,13 +15,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { UserService } from 'app/core/user/user.service';
+import { Subject, take, takeUntil } from 'rxjs';
 
 @Component({
-    selector: 'auth-unlock-session',
+    selector: 'spa-unlock-session',
+    standalone: true,
     templateUrl: './unlock-session.component.html',
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
     imports: [
         FuseAlertComponent,
@@ -33,116 +37,80 @@ import { UserService } from 'app/core/user/user.service';
         MatIconModule,
         MatProgressSpinnerModule,
         RouterLink,
+        TranslocoModule,
     ],
 })
-export class AuthUnlockSessionComponent implements OnInit {
+export class AuthUnlockSessionComponent implements OnInit, OnDestroy {
     @ViewChild('unlockSessionNgForm') unlockSessionNgForm: NgForm;
 
-    alert: { type: FuseAlertType; message: string } = {
+    #activatedRoute = inject(ActivatedRoute);
+    #authService = inject(AuthService);
+    #formBuilder = inject(UntypedFormBuilder);
+    #router = inject(Router);
+    #userService = inject(UserService);
+    #translocoService = inject(TranslocoService);
+    #destroy$ = new Subject<void>();
+
+    unlockSessionForm: UntypedFormGroup;
+    #email: string;
+
+    protected nameSig = signal('');
+    protected alertSig = signal<{ type: FuseAlertType; message: string }>({
         type: 'success',
         message: '',
-    };
-    name: string;
-    showAlert: boolean = false;
-    unlockSessionForm: UntypedFormGroup;
-    private _email: string;
+    });
+    protected showAlertSig = signal(false);
 
-    /**
-     * Constructor
-     */
-    constructor(
-        private _activatedRoute: ActivatedRoute,
-        private _authService: AuthService,
-        private _formBuilder: UntypedFormBuilder,
-        private _router: Router,
-        private _userService: UserService
-    ) {}
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Get the user's name
-        this._userService.user$.subscribe((user) => {
-            this.name = user.name;
-            this._email = user.email;
-        });
+        this.#userService.user$
+            .pipe(take(1))
+            .subscribe((user) => {
+                this.nameSig.set(user.name);
+                this.#email = user.email;
+            });
 
-        // Create the form
-        this.unlockSessionForm = this._formBuilder.group({
-            name: [
-                {
-                    value: this.name,
-                    disabled: true,
-                },
-            ],
+        this.unlockSessionForm = this.#formBuilder.group({
+            name: [{ value: this.nameSig(), disabled: true }],
             password: ['', Validators.required],
         });
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Unlock
-     */
     unlock(): void {
-        // Return if the form is invalid
         if (this.unlockSessionForm.invalid) {
             return;
         }
 
-        // Disable the form
         this.unlockSessionForm.disable();
+        this.showAlertSig.set(false);
 
-        // Hide the alert
-        this.showAlert = false;
-
-        this._authService
+        this.#authService
             .unlockSession({
-                email: this._email ?? '',
+                email: this.#email ?? '',
                 password: this.unlockSessionForm.get('password').value,
             })
-            .subscribe(
-                () => {
-                    // Set the redirect url.
-                    // The '/signed-in-redirect' is a dummy url to catch the request and redirect the user
-                    // to the correct page after a successful sign in. This way, that url can be set via
-                    // routing file and we don't have to touch here.
+            .pipe(take(1))
+            .subscribe({
+                next: () => {
                     const redirectURL =
-                        this._activatedRoute.snapshot.queryParamMap.get(
-                            'redirectURL'
-                        ) || '/signed-in-redirect';
-
-                    // Navigate to the redirect url
-                    this._router.navigateByUrl(redirectURL);
+                        this.#activatedRoute.snapshot.queryParamMap.get('redirectURL') || '/signed-in-redirect';
+                    this.#router.navigateByUrl(redirectURL);
                 },
-                (response) => {
-                    // Re-enable the form
+                error: () => {
                     this.unlockSessionForm.enable();
-
-                    // Reset the form
                     this.unlockSessionNgForm.resetForm({
-                        name: {
-                            value: this.name,
-                            disabled: true,
-                        },
+                        name: { value: this.nameSig(), disabled: true },
                     });
-
-                    // Set the alert
-                    this.alert = {
+                    this.alertSig.set({
                         type: 'error',
-                        message: 'Invalid password',
-                    };
-
-                    // Show the alert
-                    this.showAlert = true;
+                        message: this.#translocoService.translate('auth.unlockSession.errors.invalidPassword'),
+                    });
+                    this.showAlertSig.set(true);
                 }
-            );
+            });
+    }
+
+    ngOnDestroy(): void {
+        this.#destroy$.next();
+        this.#destroy$.complete();
     }
 }

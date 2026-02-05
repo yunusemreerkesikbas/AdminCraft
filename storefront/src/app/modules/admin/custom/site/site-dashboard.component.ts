@@ -16,6 +16,7 @@ import { UserService } from 'app/core/user/user.service';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { SiteService } from './site.service';
 import {
+    SecuritySettingsResponse,
     SITE_DASHBOARD_TABS,
     SiteDashboardTab,
     SiteOverviewResponse,
@@ -25,6 +26,7 @@ import {
 import { SpaSiteAddressComponent } from './tabs/address/site-address.component';
 import { SpaSiteGeneralComponent } from './tabs/general/site-general.component';
 import { SpaSiteOverviewComponent } from './tabs/overview/site-overview.component';
+import { SpaSiteSecurityComponent } from './tabs/security/site-security.component';
 import { SpaSiteSeoComponent } from './tabs/seo/site-seo.component';
 import { SpaSiteSocialComponent } from './tabs/social/site-social.component';
 import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.component';
@@ -47,6 +49,7 @@ import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.compo
         SpaSiteSocialComponent,
         SpaSiteSeoComponent,
         SpaSiteTechnicalComponent,
+        SpaSiteSecurityComponent,
     ],
 })
 export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
@@ -61,6 +64,7 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     readonly overviewSig = signal<SiteOverviewResponse | null>(null);
     readonly settingsSig = signal<SiteSettingsResponseDto | null>(null);
     readonly technicalSig = signal<SiteTechnicalResponse | null>(null);
+    readonly securitySig = signal<SecuritySettingsResponse | null>(null);
     readonly tenantSig = this.#siteService.tenantSig;
     readonly modulesSig = this.#siteService.modulesSig;
     readonly loadingSig = signal<boolean>(true);
@@ -106,6 +110,11 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     this.#loadTechnical();
                 }
                 break;
+            case 'security':
+                if (!this.securitySig()) {
+                    this.#loadSecurity();
+                }
+                break;
         }
     }
 
@@ -115,6 +124,10 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
 
     onTechnicalUpdated(technical: SiteTechnicalResponse): void {
         this.technicalSig.set(technical);
+    }
+
+    onSecurityUpdated(security: SecuritySettingsResponse): void {
+        this.securitySig.set(security);
     }
 
     refreshOverview(): void {
@@ -128,13 +141,15 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
             overview: this.#siteService.getOverview(),
             settings: this.#siteService.getSiteSettings(),
             technical: this.#siteService.getTechnicalSettings(),
+            security: this.#siteService.getSecuritySettings(),
         })
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
-                next: ({ overview, settings, technical }) => {
+                next: ({ overview, settings, technical, security }) => {
                     this.overviewSig.set(overview);
                     this.settingsSig.set(settings);
                     this.technicalSig.set(technical);
+                    this.securitySig.set(security);
                     this.loadingSig.set(false);
                 },
                 error: (err) => {
@@ -192,6 +207,25 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (data) => {
                     this.technicalSig.set(data);
+                    this.loadingSig.set(false);
+                },
+                error: (err) => {
+                    this.loadingSig.set(false);
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
+                },
+            });
+    }
+
+    #loadSecurity(): void {
+        this.loadingSig.set(true);
+        this.#siteService
+            .getSecuritySettings()
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe({
+                next: (data) => {
+                    this.securitySig.set(data);
                     this.loadingSig.set(false);
                 },
                 error: (err) => {

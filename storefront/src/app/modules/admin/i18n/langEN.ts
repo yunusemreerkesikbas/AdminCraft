@@ -859,8 +859,6 @@ export const langEN = {
                 notes: 'Notes',
                 preferredLanguage: 'Preferred Language',
                 isActive: 'Active',
-                password: 'Password',
-                confirmPassword: 'Confirm Password',
             },
             placeholders: {
                 email: 'e.g. john@example.com',
@@ -869,23 +867,7 @@ export const langEN = {
                 phone: 'e.g. +1 5XX XXX XX XX',
                 jobTitle: 'e.g. Software Developer',
                 department: 'e.g. Information Technology',
-                password: 'At least 8 characters',
-                confirmPassword: 'Enter password again',
                 notes: 'Additional information about the user...',
-            },
-            password: {
-                changeTitle: 'Change Password',
-                resetTitle: 'Reset Password',
-                updateFor: 'Update password for:',
-                resetFor: 'Reset password for:',
-                current: 'Current Password',
-                new: 'New Password',
-                confirm: 'Confirm Password',
-                resetWarning:
-                    'A new random password will be generated. Make sure to save it securely.',
-                errors: {
-                    mismatch: 'Passwords do not match',
-                },
             },
             inviteSuccess: 'User invitation successfully sent',
             createSuccess: 'User successfully created',
@@ -902,8 +884,7 @@ export const langEN = {
             },
             actions: {
                 edit: 'Edit',
-                changePassword: 'Change Password',
-                resetPassword: 'Reset Password',
+                resetPassword: 'Send Password Reset Email',
                 activate: 'Activate',
                 deactivate: 'Deactivate',
                 delete: 'Delete',
@@ -911,18 +892,20 @@ export const langEN = {
             messages: {
                 activated: 'User activated successfully',
                 deactivated: 'User deactivated successfully',
-                passwordChanged: 'Password changed successfully',
+                passwordResetEmailSent:
+                    'Password reset email sent to {{email}}',
+            },
+            errors: {
+                passwordResetEmailFailed: 'Failed to send password reset email',
             },
             confirm: {
                 deleteTitle: 'Delete User',
                 deleteMsg: 'Are you sure you want to delete user {{name}}?',
                 deleteLabel: 'Delete',
-            },
-            passwordGenerated: {
-                title: 'New Password Generated',
-                message: 'A new password has been generated for the user:',
-                warning:
-                    'This password will only be shown once. Please save it securely.',
+                resetPasswordTitle: 'Send Password Reset Email',
+                resetPasswordMsg:
+                    'Send password reset email to {{name}} ({{email}})?',
+                resetPasswordLabel: 'Send Email',
             },
         },
         sites: {
@@ -1025,6 +1008,26 @@ export const langEN = {
                     social: 'Social Media',
                     seo: 'SEO',
                     technical: 'Technical',
+                    security: 'Security',
+                },
+                security: {
+                    title: 'Security Settings',
+                    subtitle: 'Configure security options for your tenant',
+                    twoFactor: {
+                        title: 'Two-Factor Authentication',
+                        description: 'Control how users authenticate to your site. Two-factor authentication adds an extra layer of security by requiring a verification code sent to the user\'s email.',
+                        info: 'When 2FA is required, users will need to enter a verification code sent to their email during login. Trusted devices can skip this step for 30 days.',
+                    },
+                    policy: {
+                        disabled: 'Disabled',
+                        disabledDesc: 'Two-factor authentication is not available for users',
+                        required: 'Required',
+                        requiredDesc: 'All users must use two-factor authentication',
+                    },
+                    messages: {
+                        saveSuccess: 'Security settings saved successfully',
+                        saveFailed: 'Failed to save security settings',
+                    },
                 },
                 messages: {
                     saveSuccess: 'Settings saved successfully',
@@ -1732,6 +1735,135 @@ export const langEN = {
                 title2: 'our community',
                 description:
                     'Fuse helps developers build organized dashboards full of rich modules. Join us and start building your application today.',
+            },
+            '2fa': {
+                info: 'A verification code has been sent to your email.',
+                otpLabel: 'Verification Code',
+                trustDevice: 'Trust this device',
+                trustDeviceHint: 'Skip verification on this device for 30 days',
+                verify: 'Verify',
+                resend: 'Resend code',
+                resendIn: 'Resend code in {{seconds}}s',
+            },
+        },
+        common: {
+            returnTo: 'Return to',
+            goTo: 'Go to',
+            signIn: 'sign in',
+            signInTitle: 'Sign in',
+            signUp: 'Sign up',
+            alreadyHaveAccount: 'Already have an account?',
+            emailLabel: 'Email address',
+            passwordLabel: 'Password',
+            confirmPasswordLabel: 'Confirm Password',
+            fullNameLabel: 'Full name',
+            companyLabel: 'Company',
+            errors: {
+                emailRequired: 'Email address is required',
+                emailInvalid: 'Please enter a valid email address',
+                passwordRequired: 'Password is required',
+                passwordMinLength: 'Password must be at least {{count}} characters',
+                passwordConfirmRequired: 'Password confirmation is required',
+            },
+            right: {
+                title1: 'Welcome to',
+                title2: 'our community',
+                description:
+                    'Fuse helps developers to build organized and well coded dashboards full of beautiful and rich modules. Join us and start building your application today.',
+                communityStat: "More than 17k people joined us, it's your turn",
+            },
+        },
+        confirmationRequired: {
+            title: 'Confirmation required',
+            message:
+                'A confirmation mail with instructions has been sent to your email address. Follow those instructions to confirm your email address and activate your account.',
+        },
+        forgotPassword: {
+            title: 'Forgot password?',
+            subtitle: 'Fill the form to reset your password',
+            submit: 'Send reset link',
+            alerts: {
+                success:
+                    "Password reset sent! You'll receive an email if you are registered on our system.",
+                error:
+                    'Email does not found! Are you sure you are already a member?',
+            },
+        },
+        resetPassword: {
+            title: 'Reset your password',
+            subtitle: 'Create a new password for your account',
+            verifying: 'Verifying reset token...',
+            confirmLabel: 'Password (Confirm)',
+            submit: 'Reset your password',
+            success:
+                'Your password has been reset successfully. You can now sign in with your new password.',
+            errors: {
+                passwordConfirmRequired: 'Password confirmation is required',
+                passwordsMustMatch: 'Passwords must match',
+                tokenMissing: 'Invalid or missing reset token.',
+                tokenInvalid:
+                    'Reset token is invalid or has expired. Please request a new password reset.',
+                tokenVerifyFailed:
+                    'Unable to verify reset token. Please try again.',
+                resetFailed: 'Failed to reset password. Please try again.',
+            },
+        },
+        setPassword: {
+            title: 'Set your password',
+            subtitle: 'Welcome! Create a password for your account',
+            verifying: 'Verifying your invitation...',
+            submit: 'Set password and continue',
+            trustDevice: 'Remember this device for 30 days',
+            success:
+                'Your password has been set successfully! You can now sign in with your credentials.',
+            successAutoLogin: 'Password set successfully! Logging you in...',
+            right: {
+                title1: 'Welcome to',
+                title2: 'AdminCraft',
+                description:
+                    "You've been invited to join the platform. Set your password to get started and access your dashboard.",
+            },
+            errors: {
+                tokenMissing: 'Invalid or missing verification token.',
+                tokenInvalid:
+                    'Verification token is invalid or has expired. Please contact your administrator.',
+                tokenVerifyFailed:
+                    'Unable to verify token. Please try again or contact your administrator.',
+                passwordsMismatch: 'Passwords do not match.',
+                setFailed:
+                    'Failed to set password. Please try again or contact your administrator.',
+            },
+        },
+        signUp: {
+            title: 'Sign up',
+            submit: 'Create your free account',
+            agreements: {
+                prefix: 'I agree with',
+                and: 'and',
+                terms: 'Terms',
+                privacy: 'Privacy Policy',
+            },
+            errors: {
+                nameRequired: 'Full name is required',
+                signUpFailed: 'Something went wrong, please try again.',
+            },
+        },
+        signOut: {
+            title: 'You have signed out!',
+            redirectingIn: 'Redirecting in',
+            redirected: 'You are now being redirected!',
+            countdown: {
+                one: '# second',
+                other: '# seconds',
+            },
+        },
+        unlockSession: {
+            title: 'Unlock your session',
+            subtitle: 'Your session is locked due to inactivity',
+            submit: 'Unlock your session',
+            notMe: "I'm not",
+            errors: {
+                invalidPassword: 'Invalid password',
             },
         },
     },

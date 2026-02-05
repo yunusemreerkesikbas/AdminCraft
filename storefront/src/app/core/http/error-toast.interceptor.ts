@@ -28,8 +28,8 @@ export const errorToastInterceptor = (
       const status = error.status;
       const url = req.url || '';
 
-      // 401: auth akışı - toast yok
-      if (status === 401) {
+      // 401, 403, 500: Redirect interceptor tarafından ele alınır - toast yok
+      if (status === 401 || status === 403 || status === 500) {
         return throwError(() => error);
       }
 
@@ -38,20 +38,8 @@ export const errorToastInterceptor = (
         return throwError(() => error);
       }
 
-      // 403: yetki uyarısı
-      if (status === 403) {
-        emitDedup(
-          notify,
-          deduplication,
-          'admin.common.errors.forbidden',
-          'alert',
-          url
-        );
-        return throwError(() => error);
-      }
-
-      // 5xx veya ağ hatası: error toast
-      if (status >= 500 || status === 0) {
+      // 5xx (500 hariç) veya ağ hatası: error toast
+      if (status > 500 || status === 0) {
         emitDedup(
           notify,
           deduplication,

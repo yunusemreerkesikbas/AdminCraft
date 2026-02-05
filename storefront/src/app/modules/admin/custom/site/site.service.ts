@@ -5,12 +5,14 @@ import { ApiResponse } from '@modules/admin/custom/pages/page-builder.types';
 import { Observable, map, switchMap, take, tap } from 'rxjs';
 import { TenantDetailResponse } from '../tenants/tenants.types';
 import {
+    SecuritySettingsResponse,
     Site,
     SiteOverviewResponse,
     SiteSettingsPatchRequest,
     SiteSettingsResponseDto,
     SiteTechnicalPatchRequest,
     SiteTechnicalResponse,
+    TwoFactorPolicy,
 } from './site.types';
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +22,7 @@ export class SiteService {
     readonly overviewSig = signal<SiteOverviewResponse | null>(null);
     readonly technicalSig = signal<SiteTechnicalResponse | null>(null);
     readonly settingsSig = signal<SiteSettingsResponseDto | null>(null);
+    readonly securitySig = signal<SecuritySettingsResponse | null>(null);
     readonly tenantSig = signal<TenantDetailResponse | null>(null);
     readonly modulesSig = signal<TenantModule[]>([]);
     readonly loadingSig = signal<boolean>(false);
@@ -77,6 +80,46 @@ export class SiteService {
                 map((response) => response.data),
                 tap((data) => {
                     this.technicalSig.set(data);
+                    this.loadingSig.set(false);
+                })
+            );
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Site Security Settings
+    // -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Get security settings
+     */
+    getSecuritySettings(): Observable<SecuritySettingsResponse> {
+        this.loadingSig.set(true);
+        return this.#apiClient
+            .get<ApiResponse<SecuritySettingsResponse>>('siteSecuritySettings')
+            .pipe(
+                map((response) => response.data),
+                tap((data) => {
+                    this.securitySig.set(data);
+                    this.loadingSig.set(false);
+                })
+            );
+    }
+
+    /**
+     * Update security settings (PATCH)
+     */
+    patchSecuritySettings(
+        twoFactorPolicy: TwoFactorPolicy
+    ): Observable<SecuritySettingsResponse> {
+        this.loadingSig.set(true);
+        return this.#apiClient
+            .patch<ApiResponse<SecuritySettingsResponse>>('siteSecuritySettings', {
+                twoFactorPolicy,
+            })
+            .pipe(
+                map((response) => response.data),
+                tap((data) => {
+                    this.securitySig.set(data);
                     this.loadingSig.set(false);
                 })
             );
@@ -213,6 +256,7 @@ export class SiteService {
         this.overviewSig.set(null);
         this.technicalSig.set(null);
         this.settingsSig.set(null);
+        this.securitySig.set(null);
         this.tenantSig.set(null);
         this.modulesSig.set([]);
         this.loadingSig.set(false);

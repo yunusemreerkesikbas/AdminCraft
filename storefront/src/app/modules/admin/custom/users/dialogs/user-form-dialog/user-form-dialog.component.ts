@@ -70,8 +70,6 @@ export class UserFormDialogComponent implements OnInit {
     form!: FormGroup;
     mode: 'create' | 'edit' = this.data.mode;
     isLoadingSig = signal(false);
-    passwordVisible = signal(false);
-    confirmPasswordVisible = signal(false);
 
     roleOptions = Object.values(UserRole)
         .filter((role) => role !== UserRole.SUPER_ADMIN)
@@ -92,7 +90,7 @@ export class UserFormDialogComponent implements OnInit {
     }
 
     #buildForm(): void {
-        const baseControls = {
+        this.form = this.#fb.group({
             email: ['', [Validators.required, Validators.email]],
             firstName: [
                 '',
@@ -120,39 +118,7 @@ export class UserFormDialogComponent implements OnInit {
                 '',
                 [Validators.maxLength(VALIDATION_LIMITS.USER_NOTES_MAX)],
             ],
-        };
-
-        if (this.mode === 'create') {
-            this.form = this.#fb.group(
-                {
-                    ...baseControls,
-                    password: [
-                        '',
-                        [
-                            Validators.required,
-                            Validators.minLength(
-                                VALIDATION_LIMITS.USER_PASSWORD_MIN
-                            ),
-                            Validators.maxLength(
-                                VALIDATION_LIMITS.USER_PASSWORD_MAX
-                            ),
-                        ],
-                    ],
-                    confirmPassword: ['', [Validators.required]],
-                },
-                { validators: this.#passwordMatchValidator }
-            );
-        } else {
-            this.form = this.#fb.group({
-                ...baseControls,
-            });
-        }
-    }
-
-    #passwordMatchValidator(g: FormGroup) {
-        const password = g.get('password')?.value;
-        const confirmPassword = g.get('confirmPassword')?.value;
-        return password === confirmPassword ? null : { mismatch: true };
+        });
     }
 
     onSubmit(): void {
@@ -184,9 +150,8 @@ export class UserFormDialogComponent implements OnInit {
                         },
                     });
             } else {
-                const { confirmPassword, ...formValue } = this.form.value;
                 const request: CreateUserRequest = {
-                    ...formValue,
+                    ...this.form.value,
                     role: this.form.value.role,
                 };
 

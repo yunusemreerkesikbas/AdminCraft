@@ -857,8 +857,6 @@ export const langTR = {
                 notes: 'Notlar',
                 preferredLanguage: 'Tercih Edilen Dil',
                 isActive: 'Aktif',
-                password: 'Şifre',
-                confirmPassword: 'Şifre Tekrar',
             },
             placeholders: {
                 email: 'Örn: ahmet@example.com',
@@ -867,23 +865,7 @@ export const langTR = {
                 phone: 'Örn: +90 5XX XXX XX XX',
                 jobTitle: 'Örn: Yazılım Geliştirici',
                 department: 'Örn: Bilgi Teknolojileri',
-                password: 'En az 8 karakter',
-                confirmPassword: 'Şifreyi tekrar girin',
                 notes: 'Kullanıcı hakkında ek bilgiler...',
-            },
-            password: {
-                changeTitle: 'Şifre Değiştir',
-                resetTitle: 'Şifreyi Sıfırla',
-                updateFor: 'Şifreyi şunun için güncelle:',
-                resetFor: 'Şifreyi şunun için sıfırla:',
-                current: 'Mevcut Şifre',
-                new: 'Yeni Şifre',
-                confirm: 'Şifre Onayı',
-                resetWarning:
-                    'Yeni bir rastgele şifre oluşturulacaktır. Güvenli bir şekilde kaydettiğinizden emin olun.',
-                errors: {
-                    mismatch: 'Şifreler eşleşmiyor',
-                },
             },
             inviteSuccess: 'Kullanıcı davetiyesi başarıyla gönderildi',
             createSuccess: 'Kullanıcı başarıyla oluşturuldu',
@@ -900,8 +882,7 @@ export const langTR = {
             },
             actions: {
                 edit: 'Düzenle',
-                changePassword: 'Şifre Değiştir',
-                resetPassword: 'Şifre Sıfırla',
+                resetPassword: 'Şifre Sıfırlama E-postası Gönder',
                 activate: 'Aktifleştir',
                 deactivate: 'Pasifleştir',
                 delete: 'Sil',
@@ -909,19 +890,22 @@ export const langTR = {
             messages: {
                 activated: 'Kullanıcı başarıyla aktifleştirildi',
                 deactivated: 'Kullanıcı başarıyla pasifleştirildi',
-                passwordChanged: 'Şifre başarıyla değiştirildi',
+                passwordResetEmailSent:
+                    '{{email}} adresine şifre sıfırlama e-postası gönderildi',
+            },
+            errors: {
+                passwordResetEmailFailed:
+                    'Şifre sıfırlama e-postası gönderilemedi',
             },
             confirm: {
                 deleteTitle: 'Kullanıcıyı Sil',
                 deleteMsg:
                     '{{name}} isimli kullanıcıyı silmek istediğinize emin misiniz?',
                 deleteLabel: 'Sil',
-            },
-            passwordGenerated: {
-                title: 'Yeni Şifre Oluşturuldu',
-                message: 'Kullanıcı için yeni bir şifre oluşturuldu:',
-                warning:
-                    'Bu şifre yalnızca bir kez gösterilir. Lütfen güvenli bir yere kaydedin.',
+                resetPasswordTitle: 'Şifre Sıfırlama E-postası Gönder',
+                resetPasswordMsg:
+                    '{{name}} kullanıcısına ({{email}}) şifre sıfırlama e-postası gönderilsin mi?',
+                resetPasswordLabel: 'E-posta Gönder',
             },
         },
         sites: {
@@ -1024,6 +1008,26 @@ export const langTR = {
                     social: 'Sosyal Medya',
                     seo: 'SEO',
                     technical: 'Teknik',
+                    security: 'Güvenlik',
+                },
+                security: {
+                    title: 'Güvenlik Ayarları',
+                    subtitle: 'Müşteriniz için güvenlik seçeneklerini yapılandırın',
+                    twoFactor: {
+                        title: 'İki Faktörlü Kimlik Doğrulama',
+                        description: 'Kullanıcıların sitenize nasıl giriş yapacağını kontrol edin. İki faktörlü kimlik doğrulama, kullanıcının e-postasına gönderilen bir doğrulama kodu gerektirerek ekstra güvenlik katmanı ekler.',
+                        info: '2FA zorunlu olduğunda, kullanıcıların giriş yaparken e-postalarına gönderilen doğrulama kodunu girmeleri gerekir. Güvenilir cihazlar 30 gün boyunca bu adımı atlayabilir.',
+                    },
+                    policy: {
+                        disabled: 'Devre Dışı',
+                        disabledDesc: 'İki faktörlü kimlik doğrulama kullanıcılar için mevcut değil',
+                        required: 'Zorunlu',
+                        requiredDesc: 'Tüm kullanıcılar iki faktörlü kimlik doğrulama kullanmalıdır',
+                    },
+                    messages: {
+                        saveSuccess: 'Güvenlik ayarları başarıyla kaydedildi',
+                        saveFailed: 'Güvenlik ayarları kaydedilemedi',
+                    },
                 },
                 overview: {
                     status: 'Site Durumu',
@@ -1706,6 +1710,136 @@ export const langTR = {
                 title2: 'hoş geldiniz',
                 description:
                     'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
+            },
+            '2fa': {
+                info: 'E-postanıza bir doğrulama kodu gönderildi.',
+                otpLabel: 'Doğrulama Kodu',
+                trustDevice: 'Bu cihaza güven',
+                trustDeviceHint: '30 gün boyunca bu cihazda doğrulamayı atla',
+                verify: 'Doğrula',
+                resend: 'Kodu tekrar gönder',
+                resendIn: '{{seconds}} saniye sonra tekrar gönder',
+            },
+        },
+        common: {
+            returnTo: 'Geri dön',
+            goTo: 'Git',
+            signIn: 'giriş yap',
+            signInTitle: 'Giriş yap',
+            signUp: 'Kayıt ol',
+            alreadyHaveAccount: 'Zaten hesabın var mı?',
+            emailLabel: 'E-posta adresi',
+            passwordLabel: 'Şifre',
+            confirmPasswordLabel: 'Şifreyi doğrula',
+            fullNameLabel: 'Ad soyad',
+            companyLabel: 'Şirket',
+            errors: {
+                emailRequired: 'E-posta adresi zorunludur',
+                emailInvalid: 'Geçerli bir e-posta adresi girin',
+                passwordRequired: 'Şifre zorunludur',
+                passwordMinLength: 'Şifre en az {{count}} karakter olmalıdır',
+                passwordConfirmRequired: 'Şifre doğrulama zorunludur',
+            },
+            right: {
+                title1: 'Aramıza',
+                title2: 'hoş geldiniz',
+                description:
+                    'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
+                communityStat: "17 binden fazla kişi bize katıldı, sıra sizde",
+            },
+        },
+        confirmationRequired: {
+            title: 'Onay gerekli',
+            message:
+                'Talimatları içeren bir onay e-postası adresinize gönderildi. E-posta adresinizi onaylamak ve hesabınızı etkinleştirmek için bu talimatları takip edin.',
+        },
+        forgotPassword: {
+            title: 'Şifreni mi unuttun?',
+            subtitle: 'Şifreni sıfırlamak için formu doldur',
+            submit: 'Sıfırlama bağlantısı gönder',
+            alerts: {
+                success:
+                    'Şifre sıfırlama gönderildi! Sistemimizde kayıtlıysanız e-posta alacaksınız.',
+                error:
+                    'E-posta bulunamadı! Zaten üye olduğundan emin misin?',
+            },
+        },
+        resetPassword: {
+            title: 'Şifreni sıfırla',
+            subtitle: 'Hesabın için yeni bir şifre oluştur',
+            verifying: 'Sıfırlama anahtarı doğrulanıyor...',
+            confirmLabel: 'Şifreyi doğrula',
+            submit: 'Şifreni sıfırla',
+            success:
+                'Şifren başarıyla sıfırlandı. Artık yeni şifrenle giriş yapabilirsin.',
+            errors: {
+                passwordConfirmRequired: 'Şifre doğrulama zorunludur',
+                passwordsMustMatch: 'Şifreler eşleşmelidir',
+                tokenMissing: 'Geçersiz veya eksik sıfırlama anahtarı.',
+                tokenInvalid:
+                    'Sıfırlama anahtarı geçersiz veya süresi dolmuş. Lütfen yeni bir sıfırlama iste.',
+                tokenVerifyFailed:
+                    'Sıfırlama anahtarı doğrulanamadı. Lütfen tekrar deneyin.',
+                resetFailed:
+                    'Şifre sıfırlanamadı. Lütfen tekrar deneyin.',
+            },
+        },
+        setPassword: {
+            title: 'Şifreni belirle',
+            subtitle: 'Hoş geldin! Hesabın için bir şifre oluştur',
+            verifying: 'Davetin doğrulanıyor...',
+            submit: 'Şifreyi kaydet ve devam et',
+            trustDevice: 'Bu cihazı 30 gün boyunca hatırla',
+            success:
+                'Şifren başarıyla ayarlandı! Artık bilgilerinizle giriş yapabilirsiniz.',
+            successAutoLogin: 'Şifre başarıyla oluşturuldu! Giriş yapılıyor...',
+            right: {
+                title1: 'AdminCraft',
+                title2: 'ekibine hoş geldin',
+                description:
+                    'Platforma katılman için davet edildin. Başlamak ve panele erişmek için şifreni belirle.',
+            },
+            errors: {
+                tokenMissing: 'Geçersiz veya eksik doğrulama anahtarı.',
+                tokenInvalid:
+                    'Doğrulama anahtarı geçersiz veya süresi dolmuş. Lütfen yöneticinizle iletişime geçin.',
+                tokenVerifyFailed:
+                    'Anahtar doğrulanamadı. Lütfen tekrar deneyin veya yöneticinizle iletişime geçin.',
+                passwordsMismatch: 'Şifreler eşleşmiyor.',
+                setFailed:
+                    'Şifre ayarlanamadı. Lütfen tekrar deneyin veya yöneticinizle iletişime geçin.',
+            },
+        },
+        signUp: {
+            title: 'Kayıt ol',
+            submit: 'Ücretsiz hesabını oluştur',
+            agreements: {
+                prefix: 'Şunları kabul ediyorum:',
+                and: 've',
+                terms: 'Şartlar',
+                privacy: 'Gizlilik Politikası',
+            },
+            errors: {
+                nameRequired: 'Ad soyad zorunludur',
+                signUpFailed: 'Bir hata oluştu, lütfen tekrar deneyin.',
+            },
+        },
+        signOut: {
+            title: 'Çıkış yaptınız!',
+            redirectingIn: 'Yönlendiriliyorsunuz',
+            redirected: 'Şimdi yönlendiriliyorsunuz!',
+            countdown: {
+                one: '# saniye',
+                other: '# saniye',
+            },
+        },
+        unlockSession: {
+            title: 'Oturum kilidini aç',
+            subtitle: 'Hareketsizlik nedeniyle oturumunuz kilitlendi',
+            submit: 'Oturum kilidini aç',
+            notMe: 'Ben değilim',
+            errors: {
+                invalidPassword: 'Geçersiz şifre',
             },
         },
         site: {

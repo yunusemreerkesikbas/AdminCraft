@@ -8,6 +8,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -18,12 +19,13 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
+import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
 import { finalize, take } from 'rxjs';
 
 @Component({
-    selector: 'spa-reset-password',
+    selector: 'spa-set-password',
     standalone: true,
-    templateUrl: './reset-password.component.html',
+    templateUrl: './set-password.component.html',
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
@@ -35,22 +37,24 @@ import { finalize, take } from 'rxjs';
         MatInputModule,
         MatButtonModule,
         MatIconModule,
+        MatCheckboxModule,
         MatProgressSpinnerModule,
         RouterLink,
         TranslocoModule,
     ],
 })
-export class AuthResetPasswordComponent implements OnInit {
-    @ViewChild('resetPasswordNgForm') resetPasswordNgForm: NgForm;
+export class AuthSetPasswordComponent implements OnInit {
+    @ViewChild('setPasswordNgForm') setPasswordNgForm: NgForm;
 
     #authService = inject(AuthService);
+    #deviceFingerprintService = inject(DeviceFingerprintService);
     #formBuilder = inject(UntypedFormBuilder);
     #route = inject(ActivatedRoute);
     #router = inject(Router);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
 
-    resetPasswordForm: UntypedFormGroup;
+    setPasswordForm: UntypedFormGroup;
     token: string | null = null;
 
     protected alertSig = signal<{ type: FuseAlertType; message: string }>({
@@ -60,6 +64,7 @@ export class AuthResetPasswordComponent implements OnInit {
     protected showAlertSig = signal(false);
     protected tokenValidSig = signal(false);
     protected validatingTokenSig = signal(true);
+    protected maskedEmailSig = signal('');
 
     ngOnInit(): void {
         this.token = this.#route.snapshot.queryParamMap.get('token');
@@ -73,14 +78,14 @@ export class AuthResetPasswordComponent implements OnInit {
             this.validatingTokenSig.set(false);
             this.alertSig.set({
                 type: 'error',
-                message: this.#translocoService.translate('auth.resetPassword.errors.tokenMissing'),
+                message: this.#translocoService.translate('auth.setPassword.errors.tokenMissing'),
             });
             this.showAlertSig.set(true);
             return;
         }
 
         this.#authService
-            .verifyResetToken(this.token)
+            .verifyEmailToken(this.token, subdomain || undefined)
             .pipe(
                 take(1),
                 finalize(() => this.validatingTokenSig.set(false))
@@ -89,10 +94,11 @@ export class AuthResetPasswordComponent implements OnInit {
                 next: (response) => {
                     if (response.result === 'SUCCESS' && response.data?.valid) {
                         this.tokenValidSig.set(true);
+                        this.maskedEmailSig.set(response.data.email || '');
                     } else {
                         this.alertSig.set({
                             type: 'error',
-                            message: this.#translocoService.translate('auth.resetPassword.errors.tokenInvalid'),
+                            message: this.#translocoService.translate('auth.setPassword.errors.tokenInvalid'),
                         });
                         this.showAlertSig.set(true);
                     }
@@ -100,65 +106,93 @@ export class AuthResetPasswordComponent implements OnInit {
                 error: () => {
                     this.alertSig.set({
                         type: 'error',
-                        message: this.#translocoService.translate('auth.resetPassword.errors.tokenVerifyFailed'),
+                        message: this.#translocoService.translate('auth.setPassword.errors.tokenVerifyFailed'),
                     });
                     this.showAlertSig.set(true);
                 },
             });
 
-        this.resetPasswordForm = this.#formBuilder.group({
+        this.setPasswordForm = this.#formBuilder.group({
             password: ['', [Validators.required, Validators.minLength(8)]],
             passwordConfirm: ['', Validators.required],
+            trustDevice: [true],
         });
     }
 
-    resetPassword(): void {
-        if (this.resetPasswordForm.invalid || !this.token) {
+    async setPassword(): Promise<void> {
+        if (this.setPasswordForm.invalid || !this.token) {
             return;
         }
 
-        const password = this.resetPasswordForm.get('password')?.value;
-        const passwordConfirm = this.resetPasswordForm.get('passwordConfirm')?.value;
+        const password = this.setPasswordForm.get('password')?.value;
+        const passwordConfirm = this.setPasswordForm.get('passwordConfirm')?.value;
+        const trustDevice = this.setPasswordForm.get('trustDevice')?.value || false;
+        const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
 
         if (password !== passwordConfirm) {
             this.alertSig.set({
                 type: 'error',
-                message: this.#translocoService.translate('auth.resetPassword.errors.passwordsMustMatch'),
+                message: this.#translocoService.translate('auth.setPassword.errors.passwordsMismatch'),
             });
             this.showAlertSig.set(true);
             return;
         }
 
-        this.resetPasswordForm.disable();
+        this.setPasswordForm.disable();
         this.showAlertSig.set(false);
 
+        // Generate device fingerprint
+        const deviceFingerprint = await this.#deviceFingerprintService.getDeviceFingerprint();
+        const deviceName = this.#deviceFingerprintService.getDeviceName();
+
         this.#authService
-            .resetPassword(this.token, password, passwordConfirm)
+            .setInitialPassword(
+                this.token,
+                password,
+                passwordConfirm,
+                deviceFingerprint,
+                trustDevice,
+                deviceName,
+                subdomain || undefined
+            )
             .pipe(
                 take(1),
                 finalize(() => {
-                    this.resetPasswordForm.enable();
-                    this.showAlertSig.set(true);
+                    this.setPasswordForm.enable();
                 })
             )
             .subscribe({
-                next: () => {
-                    this.alertSig.set({
-                        type: 'success',
-                        message: this.#translocoService.translate('auth.resetPassword.success'),
-                    });
-                    this.resetPasswordNgForm.resetForm();
+                next: (response) => {
+                    if (response.result === 'SUCCESS' && response.data) {
+                        // Complete sign-in (store tokens)
+                        this.#authService.completeSignInWithResponse(response.data);
 
-                    setTimeout(() => {
-                        this.#router.navigate(['/sign-in']);
-                    }, 3000);
+                        this.alertSig.set({
+                            type: 'success',
+                            message: this.#translocoService.translate('auth.setPassword.successAutoLogin'),
+                        });
+                        this.showAlertSig.set(true);
+
+                        // Redirect to dashboard
+                        const lang = this.#translocoService.getActiveLang();
+                        setTimeout(() => {
+                            this.#router.navigate([`/${lang}/site`]);
+                        }, 1500);
+                    } else {
+                        this.alertSig.set({
+                            type: 'error',
+                            message: this.#translocoService.translate('auth.setPassword.errors.setFailed'),
+                        });
+                        this.showAlertSig.set(true);
+                    }
                 },
                 error: (error) => {
                     this.alertSig.set({
                         type: 'error',
                         message: error?.error?.message
-                            || this.#translocoService.translate('auth.resetPassword.errors.resetFailed'),
+                            || this.#translocoService.translate('auth.setPassword.errors.setFailed'),
                     });
+                    this.showAlertSig.set(true);
                 },
             });
     }

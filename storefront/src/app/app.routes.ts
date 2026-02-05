@@ -50,6 +50,13 @@ export const appRoutes: Route[] = [
                     ),
             },
             {
+                path: 'set-password',
+                loadChildren: () =>
+                    import(
+                        'app/modules/auth/set-password/set-password.routes'
+                    ),
+            },
+            {
                 path: 'sign-in',
                 loadChildren: () =>
                     import('app/modules/auth/sign-in/sign-in.routes'),
@@ -261,7 +268,17 @@ export const appRoutes: Route[] = [
 
                     {
                         path: 'error',
+                        data: {
+                            layout: 'empty',
+                        },
                         children: [
+                            {
+                                path: '403',
+                                loadChildren: () =>
+                                    import(
+                                        'app/modules/admin/pages/error/error-403/error-403.routes'
+                                    ),
+                            },
                             {
                                 path: '404',
                                 loadChildren: () =>
@@ -477,6 +494,9 @@ export const appRoutes: Route[] = [
             {
                 path: '404-not-found',
                 pathMatch: 'full',
+                data: {
+                    layout: 'empty',
+                },
                 loadChildren: () =>
                     import(
                         'app/modules/admin/pages/error/error-404/error-404.routes'
@@ -484,6 +504,9 @@ export const appRoutes: Route[] = [
             },
             {
                 path: '**',
+                data: {
+                    layout: 'empty',
+                },
                 loadChildren: () =>
                     import(
                         'app/modules/admin/pages/error/error-404/error-404.routes'

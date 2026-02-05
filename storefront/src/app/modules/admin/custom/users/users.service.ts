@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@core/crud/api.types';
 import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
 import { Observable } from 'rxjs';
+import { ApiResponse } from '@core/crud/api.types';
 import {
-    ChangePasswordRequest,
     CreateUserRequest,
-    ResetPasswordResponse,
     UpdateUserRequest,
     User,
 } from './users.types';
@@ -32,20 +30,10 @@ export class UsersService extends CrudHttpService<
         return this.customPost<User>('userDeactivate', {}, { id });
     }
 
-    changePassword(
-        id: number,
-        request: ChangePasswordRequest
-    ): Observable<void> {
-        return this.customPost<void>('userChangePassword', request, { id });
+    resetPassword(id: number): Observable<void> {
+        return this.customPost<void>('userResetPassword', {}, { id });
     }
 
-    resetPassword(id: number): Observable<ResetPasswordResponse> {
-        return this.customPost<ResetPasswordResponse>(
-            'userResetPassword',
-            {},
-            { id }
-        );
-    }
     createWithResponse(
         request: CreateUserRequest
     ): Observable<ApiResponse<User>> {

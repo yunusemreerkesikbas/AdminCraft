@@ -1,4 +1,13 @@
-import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    OnInit,
+    ViewChild,
+    ViewEncapsulation,
+    computed,
+    inject,
+    signal,
+} from '@angular/core';
 import {
     FormsModule,
     NgForm,
@@ -17,14 +26,17 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
+import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
 import { UserService } from 'app/core/user/user.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { take } from 'rxjs';
 
 @Component({
-    selector: 'auth-sign-in',
+    selector: 'spa-sign-in',
+    standalone: true,
     templateUrl: './sign-in.component.html',
     encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
     imports: [
         RouterLink,
@@ -43,61 +55,145 @@ import { take } from 'rxjs';
 export class AuthSignInComponent implements OnInit {
     @ViewChild('signInNgForm') signInNgForm: NgForm;
 
-    signInForm: UntypedFormGroup;
-    formSubmitted: boolean = false;
+    #activatedRoute = inject(ActivatedRoute);
+    #authService = inject(AuthService);
+    #deviceFingerprintService = inject(DeviceFingerprintService);
+    #formBuilder = inject(UntypedFormBuilder);
+    #router = inject(Router);
+    #userService = inject(UserService);
+    #translocoService = inject(TranslocoService);
 
-    constructor(
-        private _activatedRoute: ActivatedRoute,
-        private _authService: AuthService,
-        private _formBuilder: UntypedFormBuilder,
-        private _router: Router,
-        private _userService: UserService,
-        private _translocoService: TranslocoService
-    ) {}
+    signInForm: UntypedFormGroup;
+    otpForm: UntypedFormGroup;
+
+    protected formSubmittedSig = signal(false);
+    protected otpSubmittedSig = signal(false);
+
+    readonly requires2FASig = this.#authService.requires2FASig;
+    readonly twoFactorPendingSig = this.#authService.twoFactorPendingSig;
+    readonly showOtpFormSig = computed(() => this.requires2FASig());
 
     ngOnInit(): void {
-        this.signInForm = this._formBuilder.group({
+        this.signInForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
             rememberMe: [''],
         });
+        this.otpForm = this.#formBuilder.group({
+            otpCode: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(6),
+                    Validators.maxLength(6),
+                ],
+            ],
+            trustDevice: [false],
+        });
     }
 
-    signIn(): void {
-        this.formSubmitted = true;
+    async signIn(): Promise<void> {
+        this.formSubmittedSig.set(true);
         this.signInForm.markAllAsTouched();
         if (this.signInForm.invalid) {
             return;
         }
         this.signInForm.disable();
 
-        this._authService
-            .signIn(this.signInForm.value)
+        const credentials = {
+            ...this.signInForm.value,
+            deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
+        };
+
+        this.#authService
+            .signIn(credentials)
             .pipe(take(1))
-            .subscribe((success) => {
-                if (success) {
-                    const lang = this._translocoService.getActiveLang();
-                    const user = this._userService.user();
-                    if (user?.role === 'SUPER_ADMIN') {
-                        this._router.navigateByUrl(`/${lang}/tenants`);
-                        return;
+            .subscribe({
+                next: (result) => {
+                    if (result === 'requires2FA') {
+                        this.formSubmittedSig.set(false);
+                    } else if (result === true) {
+                        this.#navigateAfterLogin();
+                    } else {
+                        this.signInForm.enable();
+                        this.formSubmittedSig.set(false);
                     }
-                    if (user?.role === 'TENANT_ADMIN') {
-                        this._router.navigateByUrl(`/${lang}/site`);
-                        return;
-                    }
-                    const returnUrl =
-                        this._activatedRoute.snapshot.queryParamMap.get(
-                            'redirectURL'
-                        );
-                    const safeUrl = this.#getSafeUrl(returnUrl);
-                    const fallback = `/${lang}/dashboards/project`;
-                    this._router.navigateByUrl(safeUrl || fallback);
-                } else {
+                },
+                error: () => {
                     this.signInForm.enable();
-                    this.formSubmitted = false;
-                }
+                    this.formSubmittedSig.set(false);
+                },
             });
+    }
+
+    async verifyOtp(): Promise<void> {
+        this.otpSubmittedSig.set(true);
+        this.otpForm.markAllAsTouched();
+        if (this.otpForm.invalid) {
+            return;
+        }
+        this.otpForm.disable();
+
+        const pending = this.twoFactorPendingSig();
+        if (!pending) {
+            return;
+        }
+
+        const request = {
+            pendingToken: pending.pendingToken,
+            otpCode: this.otpForm.get('otpCode')?.value,
+            trustDevice: this.otpForm.get('trustDevice')?.value || false,
+            deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
+            deviceName: this.#deviceFingerprintService.getDeviceName(),
+            tenantId: pending.tenantId,
+            subdomain: pending.subdomain,
+        };
+
+        this.#authService
+            .verifyOtp(request)
+            .pipe(take(1))
+            .subscribe({
+                next: (success) => {
+                    if (success) {
+                        this.#navigateAfterLogin();
+                    } else {
+                        this.otpForm.enable();
+                        this.otpSubmittedSig.set(false);
+                    }
+                },
+                error: () => {
+                    this.otpForm.enable();
+                    this.otpSubmittedSig.set(false);
+                },
+            });
+    }
+
+    cancelOtp(): void {
+        this.#authService.cancel2FA();
+        this.signInForm.enable();
+        this.signInForm.reset();
+        this.otpForm.reset();
+        this.formSubmittedSig.set(false);
+        this.otpSubmittedSig.set(false);
+    }
+
+    #navigateAfterLogin(): void {
+        const lang = this.#translocoService.getActiveLang();
+        const user = this.#userService.user();
+
+        // Platform yöneticileri tenants sayfasına
+        if (user?.role === 'SUPER_ADMIN') {
+            this.#router.navigateByUrl(`/${lang}/tenants`);
+            return;
+        }
+
+        // Diğer tüm roller (Admin, Editor, Viewer) site sayfasına
+        const returnUrl =
+            this.#activatedRoute.snapshot.queryParamMap.get('redirectURL');
+        const safeUrl = this.#getSafeUrl(returnUrl);
+        const fallback = `/${lang}/site`;
+
+        this.#router.navigateByUrl(safeUrl || fallback);
     }
 
     #getSafeUrl(url: string | null): string | null {

@@ -32,7 +32,6 @@ export enum UserRole {
 
 export interface CreateUserRequest {
     email: string;
-    password: string;
     role: UserRole;
     firstName?: string;
     lastName?: string;
@@ -53,14 +52,4 @@ export interface UpdateUserRequest {
     department?: string;
     isActive?: boolean;
     notes?: string;
-}
-
-export interface ChangePasswordRequest {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-}
-
-export interface ResetPasswordResponse {
-    newPassword: string;
 }

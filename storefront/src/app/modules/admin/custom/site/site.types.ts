@@ -126,6 +126,23 @@ export interface SiteTechnicalPatchRequest {
     cookieConsentText?: string | null;
 }
 
+// ========== Site Security Types ==========
+
+export type TwoFactorPolicy = 'DISABLED' | 'REQUIRED';
+
+export interface SecuritySettingsResponse {
+    twoFactor: TwoFactorPolicyDto;
+}
+
+export interface TwoFactorPolicyDto {
+    policy: TwoFactorPolicy;
+    policyDescription: string;
+}
+
+export interface UpdateSecuritySettingsRequest {
+    twoFactorPolicy: TwoFactorPolicy;
+}
+
 // ========== Dashboard Tab Types ==========
 
 export type SiteDashboardTab =
@@ -134,7 +151,8 @@ export type SiteDashboardTab =
     | 'address'
     | 'social'
     | 'seo'
-    | 'technical';
+    | 'technical'
+    | 'security';
 
 export interface TabConfig {
     id: SiteDashboardTab;
@@ -172,5 +190,10 @@ export const SITE_DASHBOARD_TABS: TabConfig[] = [
         id: 'technical',
         label: 'admin.site.dashboard.tabs.technical',
         icon: 'heroicons_outline:code-bracket',
+    },
+    {
+        id: 'security',
+        label: 'admin.site.dashboard.tabs.security',
+        icon: 'heroicons_outline:shield-check',
     },
 ];
