@@ -18,7 +18,9 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { finalize, Subject, take } from 'rxjs';
+import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
+import { SiteService } from 'app/modules/admin/custom/site/site.service';
+import { finalize, firstValueFrom, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-reset-password',
@@ -49,6 +51,8 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
     #router = inject(Router);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
+    #recaptchaService = inject(RecaptchaService);
+    #siteService = inject(SiteService);
     #destroySubject = new Subject<void>();
 
     resetPasswordForm: UntypedFormGroup;
@@ -113,7 +117,7 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
         });
     }
 
-    resetPassword(): void {
+    async resetPassword(): Promise<void> {
         if (this.resetPasswordForm.invalid || !this.token) {
             return;
         }
@@ -133,8 +137,24 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
         this.resetPasswordForm.disable();
         this.showAlertSig.set(false);
 
+        let recaptchaToken: string | undefined;
+        try {
+            const security = await firstValueFrom(
+                this.#siteService.getSecuritySettings()
+            );
+
+            if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
+                recaptchaToken = await this.#recaptchaService.execute(
+                    'reset_password',
+                    security.recaptcha.siteKey
+                );
+            }
+        } catch (error) {
+            console.error('reCAPTCHA error:', error);
+        }
+
         this.#authService
-            .resetPassword(this.token, password, passwordConfirm)
+            .resetPassword(this.token, password, passwordConfirm, recaptchaToken)
             .pipe(
                 take(1),
                 finalize(() => {
@@ -150,8 +170,9 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
                     });
                     this.resetPasswordNgForm.resetForm();
 
+                    const lang = this.#translocoService.getActiveLang();
                     setTimeout(() => {
-                        this.#router.navigate(['/sign-in']);
+                        this.#router.navigate([`/${lang}/sign-in`]);
                     }, 3000);
                 },
                 error: (error) => {

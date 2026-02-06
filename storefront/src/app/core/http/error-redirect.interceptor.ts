@@ -25,10 +25,17 @@ export const errorRedirectInterceptor = (
             const status = error.status;
             const lang = languageService.currentLanguage || 'tr';
 
-            const isAuthEndpoint = req.url.includes('/auth/login') ||
-                                  req.url.includes('/auth/signup') ||
-                                  req.url.includes('/auth/forgot-password') ||
-                                  req.url.includes('/auth/reset-password');
+            const authPaths = [
+                '/auth/login',
+                '/auth/signup',
+                '/auth/forgot-password',
+                '/auth/reset-password',
+                '/auth/verify-otp',
+                '/auth/resend-otp',
+            ];
+            const isAuthEndpoint = authPaths.some((path) =>
+                req.url.includes(path)
+            );
 
             if (isAuthEndpoint) {
                 return throwError(() => error);

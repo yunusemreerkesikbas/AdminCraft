@@ -8,8 +8,6 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { TenantContextService } from '@core/tenant';
@@ -17,7 +15,10 @@ import { fuseAnimations } from '@fuse/animations';
 import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
-import { finalize, Subject, take } from 'rxjs';
+import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
+import { SiteService } from 'app/modules/admin/custom/site/site.service';
+import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
+import { finalize, firstValueFrom, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-forgot-password',
@@ -30,12 +31,11 @@ import { finalize, Subject, take } from 'rxjs';
         FuseAlertComponent,
         FormsModule,
         ReactiveFormsModule,
-        MatFormFieldModule,
-        MatInputModule,
         MatButtonModule,
         MatProgressSpinnerModule,
         RouterLink,
         TranslocoModule,
+        SpaInputComponent,
     ],
 })
 export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
@@ -45,6 +45,8 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     #formBuilder = inject(UntypedFormBuilder);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
+    #recaptchaService = inject(RecaptchaService);
+    #siteService = inject(SiteService);
     #destroySubject = new Subject<void>();
 
     forgotPasswordForm: UntypedFormGroup;
@@ -61,7 +63,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         });
     }
 
-    sendResetLink(): void {
+    async sendResetLink(): Promise<void> {
         if (this.forgotPasswordForm.invalid) {
             return;
         }
@@ -69,33 +71,60 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         this.forgotPasswordForm.disable();
         this.showAlertSig.set(false);
 
-        const email = this.forgotPasswordForm.get('email').value;
-        const subdomain = this.#tenantContext.subdomain();
+        try {
+            // Get reCAPTCHA token if enabled
+            let recaptchaToken: string | undefined;
+            try {
+                const security = await firstValueFrom(
+                    this.#siteService.getSecuritySettings()
+                );
 
-        this.#authService
-            .forgotPassword(email, subdomain)
-            .pipe(
-                take(1),
-                finalize(() => {
-                    this.forgotPasswordForm.enable();
-                    this.forgotPasswordNgForm.resetForm();
-                    this.showAlertSig.set(true);
-                })
-            )
-            .subscribe({
-                next: () => {
-                    this.alertSig.set({
-                        type: 'success',
-                        message: this.#translocoService.translate('auth.forgotPassword.alerts.success'),
-                    });
-                },
-                error: () => {
-                    this.alertSig.set({
-                        type: 'error',
-                        message: this.#translocoService.translate('auth.forgotPassword.alerts.error'),
-                    });
+                if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
+                    recaptchaToken = await this.#recaptchaService.execute(
+                        'forgot_password',
+                        security.recaptcha.siteKey
+                    );
                 }
+            } catch (error) {
+                console.error('reCAPTCHA error:', error);
+                // Continue without reCAPTCHA if it fails
+            }
+
+            const email = this.forgotPasswordForm.get('email').value;
+            const subdomain = this.#tenantContext.subdomain();
+
+            this.#authService
+                .forgotPassword(email, subdomain, recaptchaToken)
+                .pipe(
+                    take(1),
+                    finalize(() => {
+                        this.forgotPasswordForm.enable();
+                        this.forgotPasswordNgForm.resetForm();
+                        this.showAlertSig.set(true);
+                    })
+                )
+                .subscribe({
+                    next: () => {
+                        this.alertSig.set({
+                            type: 'success',
+                            message: this.#translocoService.translate('auth.forgotPassword.alerts.success'),
+                        });
+                    },
+                    error: () => {
+                        this.alertSig.set({
+                            type: 'error',
+                            message: this.#translocoService.translate('auth.forgotPassword.alerts.error'),
+                        });
+                    }
+                });
+        } catch (error) {
+            this.forgotPasswordForm.enable();
+            this.showAlertSig.set(true);
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.forgotPassword.alerts.error'),
             });
+        }
     }
 
     ngOnDestroy(): void {

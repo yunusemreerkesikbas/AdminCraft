@@ -20,13 +20,14 @@ export class AuthSignOutComponent implements OnInit, OnDestroy {
     #destroy$ = new Subject<void>();
 
     protected countdownSig = signal(5);
-    protected countdownMapping: any = {
-        '=1': this.#translocoService.translate('auth.signOut.countdown.one'),
-        other: this.#translocoService.translate('auth.signOut.countdown.other'),
-    };
+    protected countdownMapping: Record<string, string> = {};
 
     ngOnInit(): void {
         this.#authService.signOut();
+        this.countdownMapping = {
+            '=1': this.#translocoService.translate('auth.signOut.countdown.one'),
+            other: this.#translocoService.translate('auth.signOut.countdown.other'),
+        };
 
         timer(1000, 1000)
             .pipe(

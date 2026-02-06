@@ -13,4 +13,4 @@ import { RouterLink } from '@angular/router';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink],
 })
-export class Error403Component {}
+export class SpaError403Component {}

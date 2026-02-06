@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
-import { FuseConfirmationService } from '@fuse/services/confirmation';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import {
     GridAction,
@@ -69,7 +69,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
     #dialog = inject(MatDialog);
     #transloco = inject(TranslocoService);
     #notificationService = inject(NotificationService);
-    #confirmationService = inject(FuseConfirmationService);
+    #confirmationService = inject(ConfirmationService);
 
     protected readonly columns = signal<GridColumn<User>[]>([]);
 
@@ -90,9 +90,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
                 type: 'badge',
                 hideOn: 'sm',
                 getValue: (user) =>
-                    this.#transloco.translate(
-                        'admin.common.status.' + user.role.toLowerCase()
-                    ),
+                    this.#transloco.translate('admin.common.status.' + user.role),
                 width: '150px',
             },
             {
@@ -100,7 +98,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
                 label: 'admin.users.grid.status',
                 type: 'status',
                 hideOn: 'sm',
-                getValue: (user) => (user.isActive ? 'ACTIVE' : 'INACTIVE'),
+                getValue: (user) => user.status,
                 width: '120px',
             },
             {
@@ -158,29 +156,15 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     deleteUser(user: User): void {
-        const confirmation = this.#confirmationService.open({
-            title: this.#transloco.translate('admin.users.confirm.deleteTitle'),
-            message: this.#transloco.translate(
+        this.#confirmationService
+            .confirm(
+                'admin.users.confirm.deleteTitle',
                 'admin.users.confirm.deleteMsg',
-                {
-                    name: user.displayName,
-                }
-            ),
-            actions: {
-                confirm: {
-                    label: this.#transloco.translate(
-                        'admin.users.confirm.deleteLabel'
-                    ),
-                    color: 'warn',
-                },
-            },
-        });
-
-        confirmation
-            .afterClosed()
+                'admin.users.confirm.deleteLabel'
+            )
             .pipe(take(1))
-            .subscribe((result) => {
-                if (result === 'confirmed') {
+            .subscribe((confirmed) => {
+                if (confirmed) {
                     this.service
                         .deleteWithResponse(user.id)
                         .pipe(take(1))
@@ -224,32 +208,16 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     resetPassword(user: User): void {
-        const confirmation = this.#confirmationService.open({
-            title: this.#transloco.translate(
-                'admin.users.confirm.resetPasswordTitle'
-            ),
-            message: this.#transloco.translate(
+        this.#confirmationService
+            .confirm(
+                'admin.users.confirm.resetPasswordTitle',
                 'admin.users.confirm.resetPasswordMsg',
-                {
-                    name: user.displayName,
-                    email: user.email,
-                }
-            ),
-            actions: {
-                confirm: {
-                    label: this.#transloco.translate(
-                        'admin.users.confirm.resetPasswordLabel'
-                    ),
-                    color: 'primary',
-                },
-            },
-        });
-
-        confirmation
-            .afterClosed()
+                'admin.users.confirm.resetPasswordLabel',
+                'info'
+            )
             .pipe(take(1))
-            .subscribe((result) => {
-                if (result === 'confirmed') {
+            .subscribe((confirmed) => {
+                if (confirmed) {
                     this.service
                         .resetPassword(user.id)
                         .pipe(take(1))

@@ -5,7 +5,6 @@ import {
     ReactiveFormsModule,
     UntypedFormBuilder,
     UntypedFormGroup,
-    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -20,7 +19,9 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
-import { finalize, Subject, take } from 'rxjs';
+import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
+import { SiteService } from 'app/modules/admin/custom/site/site.service';
+import { finalize, firstValueFrom, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-set-password',
@@ -53,6 +54,8 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     #router = inject(Router);
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
+    #recaptchaService = inject(RecaptchaService);
+    #siteService = inject(SiteService);
     #destroySubject = new Subject<void>();
 
     setPasswordForm: UntypedFormGroup;
@@ -114,14 +117,14 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
             });
 
         this.setPasswordForm = this.#formBuilder.group({
-            password: ['', [Validators.required, Validators.minLength(8)]],
-            passwordConfirm: ['', Validators.required],
+            password: [''],
+            passwordConfirm: [''],
             trustDevice: [true],
         });
     }
 
     async setPassword(): Promise<void> {
-        if (this.setPasswordForm.invalid || !this.token) {
+        if (!this.token) {
             return;
         }
 
@@ -130,19 +133,25 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         const trustDevice = this.setPasswordForm.get('trustDevice')?.value || false;
         const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
 
-        if (password !== passwordConfirm) {
-            this.alertSig.set({
-                type: 'error',
-                message: this.#translocoService.translate('auth.setPassword.errors.passwordsMismatch'),
-            });
-            this.showAlertSig.set(true);
-            return;
-        }
-
         this.setPasswordForm.disable();
         this.showAlertSig.set(false);
 
-        // Generate device fingerprint
+        let recaptchaToken: string | undefined;
+        try {
+            const security = await firstValueFrom(
+                this.#siteService.getSecuritySettings()
+            );
+
+            if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
+                recaptchaToken = await this.#recaptchaService.execute(
+                    'set_password',
+                    security.recaptcha.siteKey
+                );
+            }
+        } catch (error) {
+            console.error('reCAPTCHA error:', error);
+        }
+
         const deviceFingerprint = await this.#deviceFingerprintService.getDeviceFingerprint();
         const deviceName = this.#deviceFingerprintService.getDeviceName();
 
@@ -154,7 +163,8 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                 deviceFingerprint,
                 trustDevice,
                 deviceName,
-                subdomain || undefined
+                subdomain || undefined,
+                recaptchaToken
             )
             .pipe(
                 take(1),
@@ -165,7 +175,6 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (response) => {
                     if (response.result === 'SUCCESS' && response.data) {
-                        // Complete sign-in (store tokens)
                         this.#authService.completeSignInWithResponse(response.data);
 
                         this.alertSig.set({
@@ -174,7 +183,6 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                         });
                         this.showAlertSig.set(true);
 
-                        // Redirect to dashboard
                         const lang = this.#translocoService.getActiveLang();
                         setTimeout(() => {
                             this.#router.navigate([`/${lang}/site`]);

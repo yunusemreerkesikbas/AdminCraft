@@ -67,12 +67,17 @@ export class AuthUnlockSessionComponent implements OnInit, OnDestroy {
             .subscribe((user) => {
                 this.nameSig.set(user.name);
                 this.#email = user.email;
+                if (!this.unlockSessionForm) {
+                    this.unlockSessionForm = this.#formBuilder.group({
+                        name: [{ value: this.nameSig(), disabled: true }],
+                        password: ['', Validators.required],
+                    });
+                } else {
+                    this.unlockSessionForm.patchValue({
+                        name: this.nameSig(),
+                    });
+                }
             });
-
-        this.unlockSessionForm = this.#formBuilder.group({
-            name: [{ value: this.nameSig(), disabled: true }],
-            password: ['', Validators.required],
-        });
     }
 
     unlock(): void {

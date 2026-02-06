@@ -28,8 +28,10 @@ export class LanguageGuard implements CanActivate {
 
         const supportedLang = normalizedLang as SupportedLanguage;
 
-        const activeLang = this.#translocoService.getActiveLang();
-        const normalizedActiveLang = activeLang ? activeLang.toLowerCase() : '';
+        const activeLang: string = this.#translocoService.getActiveLang();
+        const normalizedActiveLang: string = activeLang
+            ? activeLang.toLowerCase()
+            : '';
 
         if (
             normalizedActiveLang !== supportedLang ||
