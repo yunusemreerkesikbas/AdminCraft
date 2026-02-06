@@ -5,13 +5,21 @@
 export const SPA_ENDPOINTS_CONFIG = {
     // ----- AUTH -----
     login: 'auth/login',
+    verifyOtp: 'auth/verify-otp',
+    forgotPassword: 'auth/forgot-password',
+    resetPassword: 'auth/reset-password',
+    verifyResetToken: 'auth/verify-reset-token',
+    verifyEmailToken: 'auth/verify-email-token',
+    setInitialPassword: 'auth/set-initial-password',
+
+    // ----- SITE SECURITY -----
+    siteSecuritySettings: 'sites/security',
 
     // ----- USERS -----
     users: 'users',
     userById: 'users/${id}',
     userActivate: 'users/${id}/activate',
     userDeactivate: 'users/${id}/deactivate',
-    userChangePassword: 'users/${id}/change-password',
     userResetPassword: 'users/${id}/reset-password',
 
     // ----- TENANTS -----

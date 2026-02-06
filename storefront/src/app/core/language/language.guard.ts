@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { SupportedLanguage } from '../i18n/translation.types';
 import { LanguageService } from './language.service';
 
@@ -9,6 +10,7 @@ import { LanguageService } from './language.service';
 export class LanguageGuard implements CanActivate {
     readonly #router = inject(Router);
     readonly #languageService = inject(LanguageService);
+    readonly #translocoService = inject(TranslocoService);
 
     canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
         const lang = route.paramMap.get('lang');
@@ -26,7 +28,15 @@ export class LanguageGuard implements CanActivate {
 
         const supportedLang = normalizedLang as SupportedLanguage;
 
-        if (this.#languageService.currentLanguage !== supportedLang) {
+        const activeLang: string = this.#translocoService.getActiveLang();
+        const normalizedActiveLang: string = activeLang
+            ? activeLang.toLowerCase()
+            : '';
+
+        if (
+            normalizedActiveLang !== supportedLang ||
+            this.#languageService.currentLanguage !== supportedLang
+        ) {
             this.#languageService.setCurrentLanguage(supportedLang);
         }
 

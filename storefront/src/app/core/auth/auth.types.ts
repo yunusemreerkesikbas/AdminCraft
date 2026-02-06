@@ -11,6 +11,25 @@ export interface LoginResponseData {
     preferredLanguage: string;
     subdomain: string;
     tenantId: number;
+    requires2FA: boolean;
+    pendingToken: string;
 }
 
 export type LoginResponse = ApiResponse<LoginResponseData>;
+
+export interface VerifyOtpRequest {
+    pendingToken: string;
+    otpCode: string;
+    trustDevice: boolean;
+    deviceFingerprint: string;
+    deviceName: string;
+    tenantId: number;
+    subdomain: string;
+}
+
+export interface TwoFactorPendingState {
+    pendingToken: string;
+    email: string;
+    tenantId: number;
+    subdomain: string;
+}

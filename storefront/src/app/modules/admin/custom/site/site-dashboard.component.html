@@ -125,6 +125,14 @@
                                                 "
                                             />
                                         }
+                                        @case ('security') {
+                                            <spa-site-security
+                                                [security]="securitySig()"
+                                                (securityUpdated)="
+                                                    onSecurityUpdated($event)
+                                                "
+                                            />
+                                        }
                                     }
                                 }
                             </div>

@@ -1,0 +1,88 @@
+<div class="flex flex-col gap-6">
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+        <mat-icon
+            class="text-primary-500"
+            [svgIcon]="'heroicons_outline:shield-check'"
+        ></mat-icon>
+        <div>
+            <h2 class="text-lg font-semibold">
+                {{ 'admin.site.dashboard.security.title' | transloco }}
+            </h2>
+            <p class="text-sm text-gray-500">
+                {{ 'admin.site.dashboard.security.subtitle' | transloco }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Two-Factor Authentication Section -->
+    <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <h3 class="mb-4 text-base font-medium">
+            {{ 'admin.site.dashboard.security.twoFactor.title' | transloco }}
+        </h3>
+        <p class="mb-6 text-sm text-gray-500">
+            {{ 'admin.site.dashboard.security.twoFactor.description' | transloco }}
+        </p>
+
+        <form [formGroup]="form" class="flex flex-col gap-4">
+            <mat-radio-group
+                formControlName="twoFactorPolicy"
+                class="flex flex-col gap-4"
+            >
+                @for (option of policyOptions; track option.value) {
+                    <div
+                        class="flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors"
+                        [ngClass]="{
+                            'border-primary-500 bg-primary-50 dark:bg-primary-900/20': form.get('twoFactorPolicy')?.value === option.value,
+                            'border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50': form.get('twoFactorPolicy')?.value !== option.value
+                        }"
+                    >
+                        <mat-radio-button
+                            [value]="option.value"
+                            color="primary"
+                        ></mat-radio-button>
+                        <div class="flex-1">
+                            <div class="font-medium">
+                                {{ option.label | transloco }}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ option.description | transloco }}
+                            </div>
+                        </div>
+                    </div>
+                }
+            </mat-radio-group>
+
+            <!-- Info Box -->
+            <div class="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                <div class="flex items-start gap-2">
+                    <mat-icon
+                        class="mt-0.5 icon-size-5"
+                        [svgIcon]="'heroicons_outline:information-circle'"
+                    ></mat-icon>
+                    <div>
+                        {{ 'admin.site.dashboard.security.twoFactor.info' | transloco }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="mt-4 flex justify-end">
+                <button
+                    mat-flat-button
+                    color="primary"
+                    [disabled]="savingSig() || form.invalid || form.pristine"
+                    (click)="save()"
+                >
+                    @if (savingSig()) {
+                        <mat-icon
+                            class="mr-2 animate-spin icon-size-5"
+                            [svgIcon]="'heroicons_outline:arrow-path'"
+                        ></mat-icon>
+                    }
+                    {{ 'common.save' | transloco }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

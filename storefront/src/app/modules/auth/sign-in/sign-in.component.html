@@ -25,92 +25,167 @@
                 </a>
             </div>
 
-            <!-- Sign in form -->
-            <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
-                <!-- Email field -->
-                <spa-input
-                    [label]="'auth.signIn.emailLabel' | transloco"
-                    type="email"
-                    [styleClasses]="'w-full'"
-                    [fullWidth]="true"
-                    formControlName="email"
-                ></spa-input>
+            @if (!showOtpFormSig()) {
+                <!-- Sign in form -->
+                <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">
+                    <!-- Email field -->
+                    <spa-input
+                        [label]="'auth.signIn.emailLabel' | transloco"
+                        type="email"
+                        [styleClasses]="'w-full'"
+                        [fullWidth]="true"
+                        formControlName="email"
+                    ></spa-input>
 
-                <!-- Password field -->
-                <spa-input
-                    #passwordCmp
-                    [label]="'auth.signIn.passwordLabel' | transloco"
-                    [type]="'password'"
-                    [styleClasses]="'w-full'"
-                    [fullWidth]="true"
-                    formControlName="password"
-                >
-                    <button
-                        mat-icon-button
-                        type="button"
-                        (click)="
-                            passwordCmp.type =
-                                passwordCmp.type === 'password'
-                                    ? 'text'
-                                    : 'password'
-                        "
-                        matSuffix
+                    <!-- Password field -->
+                    <spa-input
+                        #passwordCmp
+                        [label]="'auth.signIn.passwordLabel' | transloco"
+                        [type]="'password'"
+                        [styleClasses]="'w-full'"
+                        [fullWidth]="true"
+                        formControlName="password"
                     >
-                        @if (passwordCmp.type === 'password') {
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_solid:eye'"
-                            ></mat-icon>
+                        <button
+                            mat-icon-button
+                            type="button"
+                            (click)="
+                                passwordCmp.type =
+                                    passwordCmp.type === 'password'
+                                        ? 'text'
+                                        : 'password'
+                            "
+                            matSuffix
+                        >
+                            @if (passwordCmp.type === 'password') {
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="'heroicons_solid:eye'"
+                                ></mat-icon>
+                            }
+                            @if (passwordCmp.type === 'text') {
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="'heroicons_solid:eye-slash'"
+                                ></mat-icon>
+                            }
+                        </button>
+                    </spa-input>
+
+                    <!-- Actions -->
+                    <div
+                        class="mt-1.5 inline-flex w-full items-center justify-between"
+                    >
+                        <mat-checkbox
+                            class="-ml-2"
+                            [color]="'primary'"
+                            [formControlName]="'rememberMe'"
+                        >
+                            {{ 'auth.signIn.rememberMe' | transloco }}
+                        </mat-checkbox>
+                        <a
+                            class="text-md font-medium text-primary-500 hover:underline"
+                            [routerLink]="['/forgot-password']"
+                            >{{ 'auth.signIn.forgotPassword' | transloco }}
+                        </a>
+                    </div>
+
+                    <!-- Submit button -->
+                    <button
+                        type="button"
+                        class="fuse-mat-button-large mt-6 w-full"
+                        mat-flat-button
+                        [color]="'primary'"
+                        [disabled]="signInForm.disabled"
+                        (click)="signIn()"
+                    >
+                        @if (!signInForm.disabled) {
+                            <span>
+                                {{ 'auth.signIn.submit' | transloco }}
+                            </span>
                         }
-                        @if (passwordCmp.type === 'text') {
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_solid:eye-slash'"
-                            ></mat-icon>
+                        @if (signInForm.disabled) {
+                            <mat-progress-spinner
+                                [diameter]="24"
+                                [mode]="'indeterminate'"
+                            ></mat-progress-spinner>
                         }
                     </button>
-                </spa-input>
+                </form>
+            }
 
-                <!-- Actions -->
-                <div
-                    class="mt-1.5 inline-flex w-full items-center justify-between"
-                >
-                    <mat-checkbox
-                        class="-ml-2"
-                        [color]="'primary'"
-                        [formControlName]="'rememberMe'"
-                    >
-                        {{ 'auth.signIn.rememberMe' | transloco }}
-                    </mat-checkbox>
-                    <a
-                        class="text-md font-medium text-primary-500 hover:underline"
-                        [routerLink]="['/forgot-password']"
-                        >{{ 'auth.signIn.forgotPassword' | transloco }}
-                    </a>
+            @if (showOtpFormSig()) {
+                <!-- OTP Verification form -->
+                <div class="mt-6 mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                    <div class="flex items-center">
+                        <mat-icon class="mr-2 icon-size-5" [svgIcon]="'heroicons_outline:shield-check'"></mat-icon>
+                        {{ 'auth.signIn.2fa.info' | transloco }}
+                    </div>
+                    <div class="mt-1 text-xs">
+                        {{ twoFactorPendingSig()?.email }}
+                    </div>
                 </div>
 
-                <!-- Submit button -->
-                <button
-                    type="button"
-                    class="fuse-mat-button-large mt-6 w-full"
-                    mat-flat-button
-                    [color]="'primary'"
-                    [disabled]="signInForm.disabled"
-                    (click)="signIn()"
-                >
-                    @if (!signInForm.disabled) {
-                        <span>
-                            {{ 'auth.signIn.submit' | transloco }}
-                        </span>
-                    }
-                    @if (signInForm.disabled) {
-                        <mat-progress-spinner
-                            [diameter]="24"
-                            [mode]="'indeterminate'"
-                        ></mat-progress-spinner>
-                    }
-                </button>
-            </form>
+                <form class="mt-4" [formGroup]="otpForm">
+                    <!-- OTP Code field -->
+                    <spa-input
+                        [label]="'auth.signIn.2fa.otpLabel' | transloco"
+                        type="text"
+                        [styleClasses]="'w-full'"
+                        [fullWidth]="true"
+                        formControlName="otpCode"
+                        [maxLength]="6"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                    ></spa-input>
+
+                    <!-- Trust device checkbox -->
+                    <div class="mt-4">
+                        <mat-checkbox
+                            class="-ml-2"
+                            [color]="'primary'"
+                            [formControlName]="'trustDevice'"
+                        >
+                            {{ 'auth.signIn.2fa.trustDevice' | transloco }}
+                        </mat-checkbox>
+                        <div class="ml-6 text-xs text-gray-500">
+                            {{ 'auth.signIn.2fa.trustDeviceHint' | transloco }}
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="mt-6 flex gap-3">
+                        <button
+                            type="button"
+                            class="flex-1"
+                            mat-stroked-button
+                            (click)="cancelOtp()"
+                        >
+                            {{ 'common.cancel' | transloco }}
+                        </button>
+                        <button
+                            type="button"
+                            class="flex-1"
+                            mat-flat-button
+                            [color]="'primary'"
+                            [disabled]="otpForm.disabled"
+                            (click)="verifyOtp()"
+                        >
+                            @if (!otpForm.disabled) {
+                                <span>
+                                    {{ 'auth.signIn.2fa.verify' | transloco }}
+                                </span>
+                            }
+                            @if (otpForm.disabled) {
+                                <mat-progress-spinner
+                                    [diameter]="24"
+                                    [mode]="'indeterminate'"
+                                ></mat-progress-spinner>
+                            }
+                        </button>
+                    </div>
+                </form>
+            }
         </div>
     </div>
     <div

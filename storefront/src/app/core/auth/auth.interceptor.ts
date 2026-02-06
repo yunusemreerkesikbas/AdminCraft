@@ -32,9 +32,8 @@ export const authInterceptor = (
         catchError((error) => {
             if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint) {
                 authService.signOut();
-                location.reload();
             }
-            return throwError(error);
+            return throwError(() => error);
         })
     );
 };

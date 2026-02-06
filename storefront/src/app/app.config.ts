@@ -17,6 +17,7 @@ import { authInterceptor } from 'app/core/auth/auth.interceptor';
 import { languageInterceptor } from 'app/core/i18n/language.interceptor';
 import { provideAuth } from 'app/core/auth/auth.provider';
 import { AuthService } from 'app/core/auth/auth.service';
+import { errorRedirectInterceptor } from 'app/core/http/error-redirect.interceptor';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
@@ -59,7 +60,8 @@ export const appConfig: ApplicationConfig = {
             languageInterceptor,
             authInterceptor,
             tenantInterceptor,
-            errorToastInterceptor
+            errorToastInterceptor,
+            errorRedirectInterceptor
         ])),
         provideRouter(
             appRoutes,

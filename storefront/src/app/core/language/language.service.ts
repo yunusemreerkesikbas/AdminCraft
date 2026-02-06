@@ -1,4 +1,5 @@
 import { DestroyRef, Injectable, inject } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { TranslationService } from '../i18n/translation.service';
@@ -29,6 +30,7 @@ export class LanguageService {
     readonly #translationService = inject(TranslationService);
     readonly #navigationService = inject(NavigationService);
     readonly #destroyRef = inject(DestroyRef);
+    readonly #translocoService = inject(TranslocoService);
 
     readonly #currentLanguage = new BehaviorSubject<SupportedLanguage>(
         SupportedLanguage.EN
@@ -56,6 +58,13 @@ export class LanguageService {
 
     async setCurrentLanguage(language: SupportedLanguage): Promise<void> {
         try {
+            const activeLang = this.#translocoService.getActiveLang();
+            const normalizedActiveLang = activeLang ? activeLang.toLowerCase() : '';
+
+            if (normalizedActiveLang === language) {
+                this.#navigationService.setLanguage(language);
+                return;
+            }
             await this.#translationService.setUserLanguage(language, true);
             this.#navigationService.setLanguage(language);
         } catch (error) {

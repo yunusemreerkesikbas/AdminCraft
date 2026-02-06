@@ -1,61 +1,48 @@
 import { I18nPluralPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, ViewEncapsulation, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { Subject, finalize, takeUntil, takeWhile, tap, timer } from 'rxjs';
 
 @Component({
-    selector: 'auth-sign-out',
+    selector: 'spa-sign-out',
+    standalone: true,
     templateUrl: './sign-out.component.html',
     encapsulation: ViewEncapsulation.None,
-    imports: [RouterLink, I18nPluralPipe],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [RouterLink, I18nPluralPipe, TranslocoModule],
 })
 export class AuthSignOutComponent implements OnInit, OnDestroy {
-    countdown: number = 5;
-    countdownMapping: any = {
-        '=1': '# second',
-        other: '# seconds',
-    };
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
+    #authService = inject(AuthService);
+    #router = inject(Router);
+    #translocoService = inject(TranslocoService);
+    #destroy$ = new Subject<void>();
 
-    /**
-     * Constructor
-     */
-    constructor(
-        private _authService: AuthService,
-        private _router: Router
-    ) {}
+    protected countdownSig = signal(5);
+    protected countdownMapping: Record<string, string> = {};
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Sign out
-        this._authService.signOut();
+        this.#authService.signOut();
+        this.countdownMapping = {
+            '=1': this.#translocoService.translate('auth.signOut.countdown.one'),
+            other: this.#translocoService.translate('auth.signOut.countdown.other'),
+        };
 
-        // Redirect after the countdown
         timer(1000, 1000)
             .pipe(
                 finalize(() => {
-                    this._router.navigate(['sign-in']);
+                    this.#router.navigate(['sign-in']);
                 }),
-                takeWhile(() => this.countdown > 0),
-                takeUntil(this._unsubscribeAll),
-                tap(() => this.countdown--)
+                takeWhile(() => this.countdownSig() > 0),
+                takeUntil(this.#destroy$),
+                tap(() => this.countdownSig.update(v => v - 1))
             )
             .subscribe();
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
-        this._unsubscribeAll.complete();
+        this.#destroy$.next();
+        this.#destroy$.complete();
     }
 }

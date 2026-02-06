@@ -48,6 +48,25 @@
     </div>
 </div>
 
+<ng-template #infoTemplate let-user>
+    <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex items-center gap-3">
+            <h3 class="truncate text-base font-semibold leading-none">
+                {{ user.displayName }}
+            </h3>
+            <span class="sm:hidden">
+                <spa-status-badge
+                    [status]="user.isActive ? 'ACTIVE' : 'INACTIVE'"
+                    size="sm"
+                ></spa-status-badge>
+            </span>
+        </div>
+        <div class="text-secondary flex items-center gap-2 text-sm">
+            <span class="truncate">{{ user.email }}</span>
+        </div>
+    </div>
+</ng-template>
+
 <ng-template #actionsTemplate let-user>
     <button
         mat-icon-button
@@ -76,12 +95,8 @@
     </button>
 
     <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="openPasswordDialog(user, 'change')">
-            <mat-icon>key</mat-icon>
-            <span>{{ 'admin.users.actions.changePassword' | transloco }}</span>
-        </button>
-        <button mat-menu-item (click)="openPasswordDialog(user, 'reset')">
-            <mat-icon>lock_reset</mat-icon>
+        <button mat-menu-item (click)="resetPassword(user)">
+            <mat-icon>mail_outline</mat-icon>
             <span>{{ 'admin.users.actions.resetPassword' | transloco }}</span>
         </button>
 
