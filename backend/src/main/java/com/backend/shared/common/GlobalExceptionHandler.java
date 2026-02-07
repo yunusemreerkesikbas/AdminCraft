@@ -35,6 +35,7 @@ import com.backend.domain.exception.TenantCannotBeActivatedException;
 import com.backend.domain.exception.TenantNotFoundException;
 import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.OtpRateLimitExceededException;
+import com.backend.domain.exception.RecaptchaVerificationException;
 import com.backend.domain.exception.UserAccountDisabledException;
 import com.backend.domain.exception.UserNotFoundException;
 
@@ -142,6 +143,14 @@ public class GlobalExceptionHandler {
         String message = getMessage("auth.authentication.failed");
         ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(RecaptchaVerificationException.class)
+    public ResponseEntity<ApiResponse<?>> handleRecaptchaVerification(RecaptchaVerificationException ex) {
+        log.warn("reCAPTCHA verification failed: {}", ex.getMessage());
+        String message = getMessage("recaptcha.verification.failed");
+        ApiResponse<?> response = new ApiResponse<>("ERROR", message, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     // Business Logic Exceptions

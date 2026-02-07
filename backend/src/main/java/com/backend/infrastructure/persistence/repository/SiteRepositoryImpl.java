@@ -37,6 +37,11 @@ public class SiteRepositoryImpl implements SiteRepository {
     }
 
     @Override
+    public Optional<Site> findFirstByOrderByIdAsc() {
+        return siteJpaRepository.findFirstByOrderByIdAsc();
+    }
+
+    @Override
     public List<Site> findAllWithEnabledLanguages() {
         return siteJpaRepository.findAllWithEnabledLanguages();
     }

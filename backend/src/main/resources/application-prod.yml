@@ -48,6 +48,8 @@ app:
     from-name: ${EMAIL_FROM_NAME:AdminCraft}
   otp:
     bypass-code:
+  encryption:
+    secret-key: ${RECAPTCHA_MASTER_KEY}
 
 springdoc:
   api-docs:

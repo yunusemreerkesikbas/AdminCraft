@@ -13,6 +13,7 @@ public interface SiteRepository {
     List<Site> saveAll(Iterable<Site> sites);
     Optional<Site> findById(Long id);
     List<Site> findAll();
+    Optional<Site> findFirstByOrderByIdAsc();
 
     /**
      * Find all sites with enabledLanguages eagerly loaded.

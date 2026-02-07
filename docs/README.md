@@ -12,6 +12,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Backend conventions: [`global/backend-patterns.md`](global/backend-patterns.md)
   - Frontend conventions: [`global/frontend-patterns.md`](global/frontend-patterns.md)
   - Authentication: [`global/authentication.md`](global/authentication.md)
+  - Public tenant config (unauthenticated APIs): [`global/public-tenant-config.md`](global/public-tenant-config.md)
   - i18n + composite operations: [`global/i18n-and-composite.md`](global/i18n-and-composite.md)
   - Documentation patterns: [`global/documentation-patterns.md`](global/documentation-patterns.md)
   - Dialogs and shared UI: [`global/dialogs-and-ui.md`](global/dialogs-and-ui.md)

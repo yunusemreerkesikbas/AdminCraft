@@ -26,7 +26,11 @@ public record SetInitialPasswordRequest(
         Boolean trustDevice,
 
         @Size(max = 100, message = "validation.device.name.size")
-        String deviceName
+        String deviceName,
+
+        @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH, message = "validation.recaptcha.token.size")
+        @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_PATTERN, message = "validation.recaptcha.token.invalid")
+        String recaptchaToken
 ) {
     @AssertTrue(message = "validation.password.mismatch")
     public boolean isPasswordMatching() {

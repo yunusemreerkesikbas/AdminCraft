@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface SiteJpaRepository extends JpaRepository<Site, Long> {
 
+    Optional<Site> findFirstByOrderByIdAsc();
+
     List<Site> findAllByOrderByCreatedAtDesc();
 
     @Query("SELECT DISTINCT s FROM Site s LEFT JOIN FETCH s.enabledLanguages")

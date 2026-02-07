@@ -263,6 +263,13 @@ public final class ValidationConstants {
     public static final String MSG_MEDIA_CODE_PATTERN = "{validation.media.code.pattern}";
 
     // ============================================================================
+    // RECAPTCHA
+    // ============================================================================
+
+    public static final String RECAPTCHA_TOKEN_PATTERN = "^[A-Za-z0-9_-]+$";
+    public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 2048;
+
+    // ============================================================================
     // SITE TECHNICAL LIMITS
     // ============================================================================
 

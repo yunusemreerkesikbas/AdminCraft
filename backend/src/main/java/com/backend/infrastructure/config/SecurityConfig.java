@@ -42,6 +42,7 @@ public class SecurityConfig {
                                                 // path
                                                 // "/auth"
                                                 .requestMatchers("/auth/**").permitAll() // Authentication endpoints
+                                                .requestMatchers("/config/public").permitAll() // Public tenant config (unauthenticated)
                                                 .requestMatchers("/health/**").permitAll() // Health check endpoints
                                                 .requestMatchers("/actuator/**").permitAll() // Actuator endpoints for
                                                                                              // monitoring
