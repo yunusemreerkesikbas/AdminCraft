@@ -108,16 +108,18 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
                     })
                 )
                 .subscribe({
-                    next: () => {
+                    next: (response) => {
                         this.alertSig.set({
                             type: 'success',
-                            message: this.#translocoService.translate('auth.forgotPassword.alerts.success'),
+                            message: response?.message
+                                || this.#translocoService.translate('auth.forgotPassword.alerts.success'),
                         });
                     },
-                    error: () => {
+                    error: (error) => {
                         this.alertSig.set({
                             type: 'error',
-                            message: this.#translocoService.translate('auth.forgotPassword.alerts.error'),
+                            message: error?.error?.message
+                                || this.#translocoService.translate('auth.forgotPassword.alerts.error'),
                         });
                     }
                 });

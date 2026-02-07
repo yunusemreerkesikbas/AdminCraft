@@ -5,6 +5,7 @@ import {
     ReactiveFormsModule,
     UntypedFormBuilder,
     UntypedFormGroup,
+    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -22,6 +23,7 @@ import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.servi
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
 import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
 import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { finalize, Subject, take } from 'rxjs';
 
 @Component({
@@ -73,14 +75,31 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     ngOnInit(): void {
-        this.#loadPublicConfig();
-        
-        this.token = this.#route.snapshot.queryParamMap.get('token');
-        const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
+        this.setPasswordForm = this.#formBuilder.group({
+            password: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(VALIDATION_LIMITS.USER_PASSWORD_MIN),
+                    Validators.pattern(VALIDATION_PATTERNS.PASSWORD_COMPLEXITY),
+                ],
+            ],
+            passwordConfirm: ['', Validators.required],
+            trustDevice: [true],
+        });
 
-        if (subdomain) {
-            this.#tenantContext.setSubdomain(subdomain);
+        this.token = this.#route.snapshot.queryParamMap.get('token');
+        const subdomain = this.#resolveSubdomain();
+        if (!subdomain) {
+            this.validatingTokenSig.set(false);
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.setPassword.errors.tokenVerifyFailed'),
+            });
+            this.showAlertSig.set(true);
+            return;
         }
+        this.#loadPublicConfig(subdomain);
 
         if (!this.token) {
             this.validatingTokenSig.set(false);
@@ -93,7 +112,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         }
 
         this.#authService
-            .verifyEmailToken(this.token, subdomain || undefined)
+            .verifyEmailToken(this.token, subdomain)
             .pipe(
                 take(1),
                 finalize(() => this.validatingTokenSig.set(false))
@@ -119,16 +138,18 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                     this.showAlertSig.set(true);
                 },
             });
-
-        this.setPasswordForm = this.#formBuilder.group({
-            password: [''],
-            passwordConfirm: [''],
-            trustDevice: [true],
-        });
     }
 
-    #loadPublicConfig(): void {
-        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+    #resolveSubdomain(): string | null {
+        const hostSubdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (hostSubdomain && hostSubdomain !== 'admin') {
+            this.#tenantContext.setSubdomain(hostSubdomain);
+            return hostSubdomain;
+        }
+        return null;
+    }
+
+    #loadPublicConfig(subdomain: string | undefined): void {
         if (!subdomain) return;
 
         this.#publicConfigService
@@ -145,21 +166,53 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     }
 
     async setPassword(): Promise<void> {
-        if (!this.token) {
+        this.setPasswordForm.markAllAsTouched();
+        if (!this.token || this.setPasswordForm.invalid) {
             return;
         }
 
         const password = this.setPasswordForm.get('password')?.value;
         const passwordConfirm = this.setPasswordForm.get('passwordConfirm')?.value;
         const trustDevice = this.setPasswordForm.get('trustDevice')?.value || false;
-        const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
+        const subdomain = this.#tenantContext.subdomain();
+        if (!subdomain) {
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.setPassword.errors.tokenVerifyFailed'),
+            });
+            this.showAlertSig.set(true);
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.setPassword.errors.passwordsMismatch'),
+            });
+            this.showAlertSig.set(true);
+            return;
+        }
 
         this.setPasswordForm.disable();
         this.showAlertSig.set(false);
 
-        const recaptchaToken = await this.#getRecaptchaToken();
-        const deviceFingerprint = await this.#deviceFingerprintService.getDeviceFingerprint();
-        const deviceName = this.#deviceFingerprintService.getDeviceName();
+        let recaptchaToken: string | undefined;
+        let deviceFingerprint: string;
+        let deviceName: string;
+
+        try {
+            recaptchaToken = await this.#getRecaptchaToken();
+            deviceFingerprint = await this.#deviceFingerprintService.getDeviceFingerprint();
+            deviceName = this.#deviceFingerprintService.getDeviceName();
+        } catch {
+            this.setPasswordForm.enable();
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.setPassword.errors.setFailed'),
+            });
+            this.showAlertSig.set(true);
+            return;
+        }
 
         this.#authService
             .setInitialPassword(
@@ -169,7 +222,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                 deviceFingerprint,
                 trustDevice,
                 deviceName,
-                subdomain || undefined,
+                subdomain,
                 recaptchaToken
             )
             .pipe(
@@ -180,23 +233,23 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
             )
             .subscribe({
                 next: (response) => {
-                    if (response.result === 'SUCCESS' && response.data) {
-                        this.#authService.completeSignInWithResponse(response.data);
-
+                    if (response.result === 'SUCCESS' || response.success) {
                         this.alertSig.set({
                             type: 'success',
-                            message: this.#translocoService.translate('auth.setPassword.successAutoLogin'),
+                            message: response.message
+                                || this.#translocoService.translate('auth.setPassword.success'),
                         });
                         this.showAlertSig.set(true);
 
                         const lang = this.#translocoService.getActiveLang();
                         setTimeout(() => {
-                            this.#router.navigate([`/${lang}/site`]);
-                        }, 1500);
+                            this.#router.navigate([`/${lang}/sign-in`]);
+                        }, 3000);
                     } else {
                         this.alertSig.set({
                             type: 'error',
-                            message: this.#translocoService.translate('auth.setPassword.errors.setFailed'),
+                            message: response.message
+                                || this.#translocoService.translate('auth.setPassword.errors.setFailed'),
                         });
                         this.showAlertSig.set(true);
                     }

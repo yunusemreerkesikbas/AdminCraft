@@ -172,6 +172,8 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
 
         const pending = this.twoFactorPendingSig();
         if (!pending) {
+            this.otpForm.enable();
+            this.otpSubmittedSig.set(false);
             return;
         }
 

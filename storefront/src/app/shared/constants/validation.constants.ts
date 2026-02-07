@@ -89,6 +89,21 @@ export const VALIDATION_PATTERNS = {
      * @backend ^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$
      */
     SUBDOMAIN: /^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])$/,
+
+    /**
+     * User Password Pattern
+     * - At least one lowercase, one uppercase and one digit
+     * - Minimum 8 characters
+     * @backend ^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$
+     */
+    PASSWORD_COMPLEXITY: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+
+    /**
+     * reCAPTCHA Key Pattern
+     * - Exactly 40 chars, letters/digits/_/-
+     * @backend ^[A-Za-z0-9_-]{40}$
+     */
+    RECAPTCHA_KEY: /^[A-Za-z0-9_-]{40}$/,
 } as const;
 
 // ============================================================================
@@ -197,6 +212,10 @@ export const VALIDATION_LIMITS = {
     USER_JOB_TITLE_MAX: 100,
     USER_DEPARTMENT_MAX: 100,
     USER_NOTES_MAX: 500,
+
+    // Site Security Limits
+    RECAPTCHA_KEY_LENGTH: 40,
+    RECAPTCHA_TOKEN_MAX: 2048,
 } as const;
 
 // ============================================================================

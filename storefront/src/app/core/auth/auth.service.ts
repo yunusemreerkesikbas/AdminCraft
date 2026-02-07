@@ -34,7 +34,6 @@ export class AuthService {
     readonly #userService = inject(UserService);
     readonly #tenantContext = inject(TenantContextService);
     readonly #notificationService = inject(NotificationService);
-    readonly #LOCK_STORAGE_PREFIX = 'accountLockUntil:';
 
     #setAccessToken(token: string): void {
         localStorage.setItem('accessToken', token);
@@ -137,16 +136,6 @@ export class AuthService {
             this.#notificationService.alert('User is already logged in.');
             return of(false);
         }
-        const remainingMinutes = this.#getLocalLockRemainingMinutes(
-            credentials.email
-        );
-        if (remainingMinutes > 0) {
-            this.#notificationService.warning(
-                `Account is locked. Try again in ${remainingMinutes} minutes.`,
-                { durationMs: 10000 }
-            );
-            return of(false);
-        }
         return this.#apiClient.post<LoginResponse>('login', credentials).pipe(
             switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
@@ -179,18 +168,6 @@ export class AuthService {
                 const errorCode = error?.error?.data?.errorCode;
 
                 if (errorCode === 'ACCOUNT_LOCKED') {
-                    const remainingFromServer = Number(
-                        error?.error?.data?.remainingMinutes
-                    );
-                    if (
-                        Number.isFinite(remainingFromServer) &&
-                        remainingFromServer > 0
-                    ) {
-                        this.#setLocalLock(
-                            credentials.email,
-                            remainingFromServer
-                        );
-                    }
                     this.#notificationService.warning(message, {
                         durationMs: 10000,
                     });
@@ -235,7 +212,6 @@ export class AuthService {
         data: LoginResponseData,
         message: string | undefined
     ): Observable<boolean> {
-        this.#clearLocalLock(data.email);
         this.#setAccessToken(data.accessToken);
         this.#authenticatedSig.set(true);
         this.#storeUserAndTenantInfo(data);
@@ -267,47 +243,6 @@ export class AuthService {
                 return of(true);
             })
         );
-    }
-
-    #getLocalLockRemainingMinutes(email: string): number {
-        const lockUntilRaw = localStorage.getItem(
-            this.#getLockStorageKey(email)
-        );
-        if (!lockUntilRaw) {
-            return 0;
-        }
-        const lockUntil = Number(lockUntilRaw);
-        if (!Number.isFinite(lockUntil)) {
-            localStorage.removeItem(this.#getLockStorageKey(email));
-            return 0;
-        }
-        const remainingMs = lockUntil - Date.now();
-        if (remainingMs <= 0) {
-            localStorage.removeItem(this.#getLockStorageKey(email));
-            return 0;
-        }
-        return Math.ceil(remainingMs / 60000);
-    }
-
-    #setLocalLock(email: string, remainingMinutes: number): void {
-        if (!Number.isFinite(remainingMinutes) || remainingMinutes <= 0) {
-            return;
-        }
-        const lockUntil = Date.now() + remainingMinutes * 60 * 1000;
-        localStorage.setItem(
-            this.#getLockStorageKey(email),
-            String(lockUntil)
-        );
-    }
-
-    #clearLocalLock(email: string): void {
-        localStorage.removeItem(this.#getLockStorageKey(email));
-    }
-
-    #getLockStorageKey(email: string): string {
-        const normalizedEmail = email.trim().toLowerCase();
-        const host = window.location.host || 'default';
-        return `${this.#LOCK_STORAGE_PREFIX}${host}:${normalizedEmail}`;
     }
 
     signInUsingToken(): Observable<boolean> {
