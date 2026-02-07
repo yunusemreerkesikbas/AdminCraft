@@ -48,9 +48,9 @@ export class AuthService {
         return this.#getAccessToken();
     }
 
-    forgotPassword(email: string, subdomain?: string): Observable<any> {
+    forgotPassword(email: string, subdomain?: string, recaptchaToken?: string): Observable<any> {
         return this.#apiClient.custom('POST', 'forgotPassword', {
-            body: { email },
+            body: { email, recaptchaToken },
             customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
         });
     }
@@ -66,10 +66,11 @@ export class AuthService {
         token: string,
         password: string,
         confirmPassword: string,
-        subdomain?: string
+        subdomain?: string,
+        recaptchaToken?: string
     ): Observable<any> {
         return this.#apiClient.custom('POST', 'resetPassword', {
-            body: { token, password, confirmPassword },
+            body: { token, password, confirmPassword, recaptchaToken },
             customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
         });
     }
@@ -88,7 +89,8 @@ export class AuthService {
         deviceFingerprint?: string,
         trustDevice?: boolean,
         deviceName?: string,
-        subdomain?: string
+        subdomain?: string,
+        recaptchaToken?: string
     ): Observable<LoginResponse> {
         return this.#apiClient.custom<LoginResponse>('POST', 'setInitialPassword', {
             body: {
@@ -98,17 +100,13 @@ export class AuthService {
                 deviceFingerprint,
                 trustDevice,
                 deviceName,
+                recaptchaToken,
             },
             customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
         });
     }
 
-    /**
-     * Complete sign-in process after receiving auth response
-     * Stores tokens and updates user state
-     */
     completeSignInWithResponse(response: LoginResponseData): void {
-        // Store tokens
         this.#setAccessToken(response.accessToken);
         this.#authenticatedSig.set(true);
 
@@ -133,6 +131,7 @@ export class AuthService {
         email: string;
         password: string;
         deviceFingerprint?: string;
+        recaptchaToken?: string;
     }): Observable<boolean | 'requires2FA'> {
         if (this.#authenticatedSig()) {
             this.#notificationService.alert('User is already logged in.');
@@ -165,12 +164,10 @@ export class AuthService {
                         );
                         return of('requires2FA' as const);
                     }
-
-                    // Normal login success
                     return this.#completeSignIn(response.data, response.message);
                 } else {
                     this.#notificationService.alert(
-                        response.message || 'Authentication failed'
+                        response.message
                     );
                     return of(false);
                 }
@@ -178,8 +175,7 @@ export class AuthService {
             catchError((error) => {
                 const message =
                     error?.error?.message ||
-                    error?.message ||
-                    'Authentication failed';
+                    error?.message;
                 const errorCode = error?.error?.data?.errorCode;
 
                 if (errorCode === 'ACCOUNT_LOCKED') {
@@ -210,11 +206,8 @@ export class AuthService {
         return this.#apiClient.post<LoginResponse>('verifyOtp', request).pipe(
             switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
-                    // Clear 2FA state
                     this.#requires2FASig.set(false);
                     this.#twoFactorPendingSig.set(null);
-
-                    // Complete login
                     return this.#completeSignIn(response.data, response.message);
                 } else {
                     this.#notificationService.alert(
@@ -226,8 +219,7 @@ export class AuthService {
             catchError((error) => {
                 const message =
                     error?.error?.message ||
-                    error?.message ||
-                    'OTP verification failed';
+                    error?.message;
                 this.#notificationService.alert(message);
                 return of(false);
             })

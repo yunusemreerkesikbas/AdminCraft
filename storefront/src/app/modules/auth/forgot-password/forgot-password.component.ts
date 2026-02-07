@@ -16,9 +16,10 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
-import { SiteService } from 'app/modules/admin/custom/site/site.service';
+import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
+import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
-import { finalize, firstValueFrom, Subject, take } from 'rxjs';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-forgot-password',
@@ -46,7 +47,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
     #recaptchaService = inject(RecaptchaService);
-    #siteService = inject(SiteService);
+    #publicConfigService = inject(PublicTenantConfigService);
     #destroySubject = new Subject<void>();
 
     forgotPasswordForm: UntypedFormGroup;
@@ -56,11 +57,31 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         message: '',
     });
     protected showAlertSig = signal(false);
+    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     ngOnInit(): void {
+        this.#loadPublicConfig();
+        
         this.forgotPasswordForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
         });
+    }
+
+    #loadPublicConfig(): void {
+        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (!subdomain) return;
+
+        this.#publicConfigService
+            .loadConfig(subdomain)
+            .pipe(take(1))
+            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
+    }
+
+    async #getRecaptchaToken(): Promise<string | undefined> {
+        const config = this.recaptchaConfigSig();
+        if (!config?.enabled || !config.siteKey) return undefined;
+
+        return await this.#recaptchaService.execute('forgot_password', config.siteKey);
     }
 
     async sendResetLink(): Promise<void> {
@@ -72,24 +93,7 @@ export class AuthForgotPasswordComponent implements OnInit, OnDestroy {
         this.showAlertSig.set(false);
 
         try {
-            // Get reCAPTCHA token if enabled
-            let recaptchaToken: string | undefined;
-            try {
-                const security = await firstValueFrom(
-                    this.#siteService.getSecuritySettings()
-                );
-
-                if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
-                    recaptchaToken = await this.#recaptchaService.execute(
-                        'forgot_password',
-                        security.recaptcha.siteKey
-                    );
-                }
-            } catch (error) {
-                console.error('reCAPTCHA error:', error);
-                // Continue without reCAPTCHA if it fails
-            }
-
+            const recaptchaToken = await this.#getRecaptchaToken();
             const email = this.forgotPasswordForm.get('email').value;
             const subdomain = this.#tenantContext.subdomain();
 

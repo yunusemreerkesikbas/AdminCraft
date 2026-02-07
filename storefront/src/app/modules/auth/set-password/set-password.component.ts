@@ -20,8 +20,9 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
-import { SiteService } from 'app/modules/admin/custom/site/site.service';
-import { finalize, firstValueFrom, Subject, take } from 'rxjs';
+import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
+import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-set-password',
@@ -55,7 +56,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
     #recaptchaService = inject(RecaptchaService);
-    #siteService = inject(SiteService);
+    #publicConfigService = inject(PublicTenantConfigService);
     #destroySubject = new Subject<void>();
 
     setPasswordForm: UntypedFormGroup;
@@ -69,8 +70,11 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     protected tokenValidSig = signal(false);
     protected validatingTokenSig = signal(true);
     protected maskedEmailSig = signal('');
+    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     ngOnInit(): void {
+        this.#loadPublicConfig();
+        
         this.token = this.#route.snapshot.queryParamMap.get('token');
         const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
 
@@ -123,6 +127,23 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         });
     }
 
+    #loadPublicConfig(): void {
+        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (!subdomain) return;
+
+        this.#publicConfigService
+            .loadConfig(subdomain)
+            .pipe(take(1))
+            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
+    }
+
+    async #getRecaptchaToken(): Promise<string | undefined> {
+        const config = this.recaptchaConfigSig();
+        if (!config?.enabled || !config.siteKey) return undefined;
+
+        return await this.#recaptchaService.execute('set_password', config.siteKey);
+    }
+
     async setPassword(): Promise<void> {
         if (!this.token) {
             return;
@@ -136,22 +157,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         this.setPasswordForm.disable();
         this.showAlertSig.set(false);
 
-        let recaptchaToken: string | undefined;
-        try {
-            const security = await firstValueFrom(
-                this.#siteService.getSecuritySettings()
-            );
-
-            if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
-                recaptchaToken = await this.#recaptchaService.execute(
-                    'set_password',
-                    security.recaptcha.siteKey
-                );
-            }
-        } catch (error) {
-            console.error('reCAPTCHA error:', error);
-        }
-
+        const recaptchaToken = await this.#getRecaptchaToken();
         const deviceFingerprint = await this.#deviceFingerprintService.getDeviceFingerprint();
         const deviceName = this.#deviceFingerprintService.getDeviceName();
 

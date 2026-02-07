@@ -132,6 +132,7 @@ export type TwoFactorPolicy = 'DISABLED' | 'REQUIRED';
 
 export interface SecuritySettingsResponse {
     twoFactor: TwoFactorPolicyDto;
+    recaptcha: RecaptchaDto;
 }
 
 export interface TwoFactorPolicyDto {
@@ -139,8 +140,18 @@ export interface TwoFactorPolicyDto {
     policyDescription: string;
 }
 
+export interface RecaptchaDto {
+    enabled: boolean;
+    siteKey: string | null;
+    threshold: number;
+}
+
 export interface UpdateSecuritySettingsRequest {
     twoFactorPolicy: TwoFactorPolicy;
+    recaptchaEnabled?: boolean;
+    recaptchaSiteKey?: string | null;
+    recaptchaSecretKey?: string | null;
+    recaptchaThreshold?: number;
 }
 
 // ========== Dashboard Tab Types ==========
