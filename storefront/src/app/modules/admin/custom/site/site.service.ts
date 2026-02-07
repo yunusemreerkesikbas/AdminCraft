@@ -85,13 +85,20 @@ export class SiteService {
     patchSecuritySettings(
         payload: UpdateSecuritySettingsRequest
     ): Observable<SecuritySettingsResponse> {
+        return this.patchSecuritySettingsWithResponse(payload).pipe(
+            map((response) => response.data)
+        );
+    }
+
+    patchSecuritySettingsWithResponse(
+        payload: UpdateSecuritySettingsRequest
+    ): Observable<ApiResponse<SecuritySettingsResponse>> {
         this.loadingSig.set(true);
         return this.#apiClient
             .patch<ApiResponse<SecuritySettingsResponse>>('siteSecuritySettings', payload)
             .pipe(
-                map((response) => response.data),
-                tap((data) => {
-                    this.securitySig.set(data);
+                tap((response) => {
+                    this.securitySig.set(response.data);
                 }),
                 finalize(() => this.loadingSig.set(false))
             );

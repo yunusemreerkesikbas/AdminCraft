@@ -66,8 +66,92 @@
                 </div>
             </div>
 
+        </form>
+    </div>
+
+    <!-- reCAPTCHA Section -->
+    <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <h3 class="mb-4 text-base font-medium">
+            {{ 'admin.site.dashboard.security.recaptcha.title' | transloco }}
+        </h3>
+        <p class="mb-6 text-sm text-gray-500">
+            {{ 'admin.site.dashboard.security.recaptcha.description' | transloco }}
+        </p>
+
+        <form [formGroup]="form" class="flex flex-col gap-6">
+            <!-- Enable Toggle -->
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <div class="font-medium">
+                        {{ 'admin.site.dashboard.security.recaptcha.enabled' | transloco }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        {{ 'admin.site.dashboard.security.recaptcha.enabledHint' | transloco }}
+                    </div>
+                </div>
+                <mat-slide-toggle
+                    formControlName="recaptchaEnabled"
+                    color="primary"
+                ></mat-slide-toggle>
+            </div>
+
+            <!-- Configuration Fields (shown only when enabled) -->
+            @if (form.get('recaptchaEnabled')?.value) {
+                <div class="flex flex-col gap-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50">
+                    <!-- Site Key -->
+                    <spa-input
+                        formControlName="recaptchaSiteKey"
+                        [label]="'admin.site.dashboard.security.recaptcha.siteKey' | transloco"
+                        [hint]="'admin.site.dashboard.security.recaptcha.siteKeyHint' | transloco"
+                        [required]="form.get('recaptchaEnabled')?.value"
+                    ></spa-input>
+
+                    <!-- Secret Key -->
+                    <spa-input
+                        formControlName="recaptchaSecretKey"
+                        type="password"
+                        [label]="'admin.site.dashboard.security.recaptcha.secretKey' | transloco"
+                        [hint]="'admin.site.dashboard.security.recaptcha.secretKeyHint' | transloco"
+                        [placeholder]="'admin.site.dashboard.security.recaptcha.secretKeyPlaceholder' | transloco"
+                    ></spa-input>
+
+                    <!-- Threshold Slider -->
+                    <div>
+                        <label class="mb-2 block text-sm font-medium">
+                            {{ 'admin.site.dashboard.security.recaptcha.threshold' | transloco }}
+                            ({{ form.get('recaptchaThreshold')?.value }})
+                        </label>
+                        <mat-slider
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            discrete
+                            class="w-full"
+                        >
+                            <input matSliderThumb formControlName="recaptchaThreshold" />
+                        </mat-slider>
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ 'admin.site.dashboard.security.recaptcha.thresholdHint' | transloco }}
+                        </p>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="rounded-lg bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+                        <div class="flex items-start gap-2">
+                            <mat-icon
+                                class="mt-0.5 icon-size-5"
+                                [svgIcon]="'heroicons_outline:information-circle'"
+                            ></mat-icon>
+                            <div>
+                                {{ 'admin.site.dashboard.security.recaptcha.info' | transloco }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Save Button -->
-            <div class="mt-4 flex justify-end">
+            <div class="flex justify-end">
                 <button
                     mat-flat-button
                     color="primary"

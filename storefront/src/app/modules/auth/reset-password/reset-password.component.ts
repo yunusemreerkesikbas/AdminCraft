@@ -19,8 +19,10 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
-import { SiteService } from 'app/modules/admin/custom/site/site.service';
-import { finalize, firstValueFrom, Subject, take } from 'rxjs';
+import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
+import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
+import { finalize, Subject, take } from 'rxjs';
 
 @Component({
     selector: 'spa-reset-password',
@@ -52,7 +54,7 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
     #recaptchaService = inject(RecaptchaService);
-    #siteService = inject(SiteService);
+    #publicConfigService = inject(PublicTenantConfigService);
     #destroySubject = new Subject<void>();
 
     resetPasswordForm: UntypedFormGroup;
@@ -65,14 +67,33 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
     protected showAlertSig = signal(false);
     protected tokenValidSig = signal(false);
     protected validatingTokenSig = signal(true);
+    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     ngOnInit(): void {
-        this.token = this.#route.snapshot.queryParamMap.get('token');
-        const subdomain = this.#route.snapshot.queryParamMap.get('subdomain');
+        this.resetPasswordForm = this.#formBuilder.group({
+            password: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(VALIDATION_LIMITS.USER_PASSWORD_MIN),
+                    Validators.pattern(VALIDATION_PATTERNS.PASSWORD_COMPLEXITY),
+                ],
+            ],
+            passwordConfirm: ['', Validators.required],
+        });
 
-        if (subdomain) {
-            this.#tenantContext.setSubdomain(subdomain);
+        this.token = this.#route.snapshot.queryParamMap.get('token');
+        const subdomain = this.#resolveSubdomain();
+        if (!subdomain) {
+            this.validatingTokenSig.set(false);
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.resetPassword.errors.tokenVerifyFailed'),
+            });
+            this.showAlertSig.set(true);
+            return;
         }
+        this.#loadPublicConfig(subdomain);
 
         if (!this.token) {
             this.validatingTokenSig.set(false);
@@ -85,7 +106,7 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
         }
 
         this.#authService
-            .verifyResetToken(this.token)
+            .verifyResetToken(this.token, subdomain)
             .pipe(
                 take(1),
                 finalize(() => this.validatingTokenSig.set(false))
@@ -110,14 +131,35 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
                     this.showAlertSig.set(true);
                 },
             });
+    }
 
-        this.resetPasswordForm = this.#formBuilder.group({
-            password: ['', [Validators.required, Validators.minLength(8)]],
-            passwordConfirm: ['', Validators.required],
-        });
+    #resolveSubdomain(): string | null {
+        const hostSubdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (hostSubdomain && hostSubdomain !== 'admin') {
+            this.#tenantContext.setSubdomain(hostSubdomain);
+            return hostSubdomain;
+        }
+        return null;
+    }
+
+    #loadPublicConfig(subdomain: string | undefined): void {
+        if (!subdomain) return;
+
+        this.#publicConfigService
+            .loadConfig(subdomain)
+            .pipe(take(1))
+            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
+    }
+
+    async #getRecaptchaToken(): Promise<string | undefined> {
+        const config = this.recaptchaConfigSig();
+        if (!config?.enabled || !config.siteKey) return undefined;
+
+        return await this.#recaptchaService.execute('reset_password', config.siteKey);
     }
 
     async resetPassword(): Promise<void> {
+        this.resetPasswordForm.markAllAsTouched();
         if (this.resetPasswordForm.invalid || !this.token) {
             return;
         }
@@ -139,22 +181,29 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
 
         let recaptchaToken: string | undefined;
         try {
-            const security = await firstValueFrom(
-                this.#siteService.getSecuritySettings()
-            );
+            recaptchaToken = await this.#getRecaptchaToken();
+        } catch {
+            this.resetPasswordForm.enable();
+            this.showAlertSig.set(true);
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.resetPassword.errors.resetFailed'),
+            });
+            return;
+        }
 
-            if (security.recaptcha?.enabled && security.recaptcha.siteKey) {
-                recaptchaToken = await this.#recaptchaService.execute(
-                    'reset_password',
-                    security.recaptcha.siteKey
-                );
-            }
-        } catch (error) {
-            console.error('reCAPTCHA error:', error);
+        const subdomain = this.#tenantContext.subdomain();
+        if (!subdomain) {
+            this.showAlertSig.set(true);
+            this.alertSig.set({
+                type: 'error',
+                message: this.#translocoService.translate('auth.resetPassword.errors.tokenVerifyFailed'),
+            });
+            return;
         }
 
         this.#authService
-            .resetPassword(this.token, password, passwordConfirm, recaptchaToken)
+            .resetPassword(this.token, password, passwordConfirm, subdomain, recaptchaToken)
             .pipe(
                 take(1),
                 finalize(() => {
@@ -163,10 +212,11 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
                 })
             )
             .subscribe({
-                next: () => {
+                next: (response) => {
                     this.alertSig.set({
                         type: 'success',
-                        message: this.#translocoService.translate('auth.resetPassword.success'),
+                        message: response?.message
+                            || this.#translocoService.translate('auth.resetPassword.success'),
                     });
                     this.resetPasswordNgForm.resetForm();
 

@@ -28,6 +28,10 @@ import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
+import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
+import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
+import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { Subject, take, takeUntil } from 'rxjs';
@@ -59,11 +63,16 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     #activatedRoute = inject(ActivatedRoute);
     #authService = inject(AuthService);
     #deviceFingerprintService = inject(DeviceFingerprintService);
+    #recaptchaService = inject(RecaptchaService);
+    #publicConfigService = inject(PublicTenantConfigService);
+    #tenantContext = inject(TenantContextService);
     #formBuilder = inject(UntypedFormBuilder);
     #router = inject(Router);
     #userService = inject(UserService);
     #translocoService = inject(TranslocoService);
     #destroySubject = new Subject<void>();
+
+    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     signInForm: UntypedFormGroup;
     otpForm: UntypedFormGroup;
@@ -92,6 +101,25 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             ],
             trustDevice: [false],
         });
+
+        this.#loadPublicConfig();
+    }
+
+    #loadPublicConfig(): void {
+        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (!subdomain) return;
+
+        this.#publicConfigService
+            .loadConfig(subdomain)
+            .pipe(take(1))
+            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
+    }
+
+    async #getRecaptchaToken(): Promise<string | undefined> {
+        const config = this.recaptchaConfigSig();
+        if (!config?.enabled || !config.siteKey) return undefined;
+
+        return await this.#recaptchaService.execute('login', config.siteKey);
     }
 
     async signIn(): Promise<void> {
@@ -102,30 +130,36 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         }
         this.signInForm.disable();
 
-        const credentials = {
-            ...this.signInForm.value,
-            deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
-        };
+        try {
+            const credentials = {
+                ...this.signInForm.value,
+                deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
+                recaptchaToken: await this.#getRecaptchaToken(),
+            };
 
-        this.#authService
-            .signIn(credentials)
-            .pipe(takeUntil(this.#destroySubject))
-            .subscribe({
-                next: (result) => {
-                    if (result === 'requires2FA') {
-                        this.formSubmittedSig.set(false);
-                    } else if (result === true) {
-                        this.#navigateAfterLogin();
-                    } else {
+            this.#authService
+                .signIn(credentials)
+                .pipe(takeUntil(this.#destroySubject))
+                .subscribe({
+                    next: (result) => {
+                        if (result === 'requires2FA') {
+                            this.formSubmittedSig.set(false);
+                        } else if (result === true) {
+                            this.#navigateAfterLogin();
+                        } else {
+                            this.signInForm.enable();
+                            this.formSubmittedSig.set(false);
+                        }
+                    },
+                    error: () => {
                         this.signInForm.enable();
                         this.formSubmittedSig.set(false);
-                    }
-                },
-                error: () => {
-                    this.signInForm.enable();
-                    this.formSubmittedSig.set(false);
-                },
-            });
+                    },
+                });
+        } catch (error) {
+            this.signInForm.enable();
+            this.formSubmittedSig.set(false);
+        }
     }
 
     async verifyOtp(): Promise<void> {
@@ -138,6 +172,8 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
 
         const pending = this.twoFactorPendingSig();
         if (!pending) {
+            this.otpForm.enable();
+            this.otpSubmittedSig.set(false);
             return;
         }
 

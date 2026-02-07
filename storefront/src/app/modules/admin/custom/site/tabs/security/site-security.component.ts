@@ -25,6 +25,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
+import {
+    VALIDATION_LIMITS,
+    VALIDATION_PATTERNS,
+} from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { Subject, takeUntil } from 'rxjs';
 import { SiteService } from '../../site.service';
@@ -112,23 +116,24 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
         }
 
         this.#siteService
-            .patchSecuritySettings(payload)
+            .patchSecuritySettingsWithResponse(payload)
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
-                next: (updatedSecurity) => {
+                next: (response) => {
                     this.savingSig.set(false);
                     this.#notificationService.success(
-                        'admin.site.dashboard.security.messages.saveSuccess'
+                        response.message || 'admin.site.dashboard.security.messages.saveSuccess'
                     );
-                    this.securityUpdated.emit(updatedSecurity);
+                    this.securityUpdated.emit(response.data);
 
                     // Clear secret key field after successful save
                     this.form.patchValue({ recaptchaSecretKey: '' });
                 },
-                error: () => {
+                error: (error) => {
                     this.savingSig.set(false);
                     this.#notificationService.alert(
-                        'admin.site.dashboard.security.messages.saveFailed'
+                        error?.error?.message
+                            || 'admin.site.dashboard.security.messages.saveFailed'
                     );
                 },
             });
@@ -140,8 +145,20 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
 
             // reCAPTCHA fields
             recaptchaEnabled: [false],
-            recaptchaSiteKey: ['', [Validators.maxLength(100)]],
-            recaptchaSecretKey: ['', [Validators.maxLength(100)]],
+            recaptchaSiteKey: [
+                '',
+                [
+                    Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
+                    Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
+                ],
+            ],
+            recaptchaSecretKey: [
+                '',
+                [
+                    Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
+                    Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
+                ],
+            ],
             recaptchaThreshold: [0.5, [Validators.min(0), Validators.max(1)]],
         });
     }

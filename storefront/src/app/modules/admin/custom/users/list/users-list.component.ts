@@ -89,8 +89,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
                 label: 'admin.users.grid.role',
                 type: 'badge',
                 hideOn: 'sm',
-                getValue: (user) =>
-                    this.#transloco.translate('admin.common.status.' + user.role),
+                getValue: (user) => user.role,
                 width: '150px',
             },
             {
@@ -98,7 +97,7 @@ export class UsersListComponent extends BasePaginatedListComponent<
                 label: 'admin.users.grid.status',
                 type: 'status',
                 hideOn: 'sm',
-                getValue: (user) => user.status,
+                getValue: (user) => user.isActive ? 'ACTIVE' : 'INACTIVE',
                 width: '120px',
             },
             {

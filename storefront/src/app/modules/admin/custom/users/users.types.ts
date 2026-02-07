@@ -5,7 +5,6 @@ export interface User extends CrudEntity {
     firstName?: string;
     lastName?: string;
     role: UserRole;
-    status: 'ACTIVE' | 'INACTIVE';
     phone?: string;
     jobTitle?: string;
     department?: string;

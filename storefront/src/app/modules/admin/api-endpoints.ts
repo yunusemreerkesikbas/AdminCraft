@@ -12,6 +12,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     verifyEmailToken: 'auth/verify-email-token',
     setInitialPassword: 'auth/set-initial-password',
 
+    // ----- PUBLIC CONFIG -----
+    publicTenantConfig: 'config/public',
+
     // ----- SITE SECURITY -----
     siteSecuritySettings: 'sites/security',
 

@@ -61,7 +61,37 @@ storefront/nul
 
 ### Claude ###
 .claude/settings.local.json
+.claude/
+
+### Serena ###
+.serena/
 
 ### Uploads ###
 backend/uploads/
 uploads/
+
+### AI & Agents Temp Files ###
+# Serena (Memory and Cache are personal)
+.serena/memories/
+.serena/cache/
+
+# Gemini
+.gemini/tmp/
+.gemini/history/
+
+# General AI Cache/Temp
+**/*cache/
+**/tmp/
+
+.gemini/
+gha-creds-*.json
+
+### Codex ###
+.codex/
+
+### Agents/Skills (personal) ###
+.agents/
+.agent/
+
+### MCP (may contain secrets) ###
+.mcp.json
