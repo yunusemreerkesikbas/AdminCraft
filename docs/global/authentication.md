@@ -661,3 +661,134 @@ All authentication events are logged with:
   - `validateEmailVerificationToken()`: Ensures tenant is ACTIVE before validation
 - Prevents token abuse after tenant suspension
 
+---
+
+## reCAPTCHA v3 Protection
+
+AdminCraft provides **per-tenant reCAPTCHA v3** bot protection for authentication endpoints. Each tenant configures their own Google keys via Site Dashboard.
+
+> **See also**: [`public-tenant-config.md`](public-tenant-config.md) for frontend integration patterns.
+
+### Architecture Overview
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant PublicConfigAPI as /api/config/public
+    participant AuthAPI as /api/auth/login
+    participant Google as Google reCAPTCHA
+
+    User->>Frontend: Navigate to login page
+    Frontend->>PublicConfigAPI: GET (with X-Tenant-Subdomain)
+    PublicConfigAPI-->>Frontend: { recaptcha: { enabled, siteKey } }
+    Frontend->>Frontend: Cache config in sessionStorage
+    
+    User->>Frontend: Submit credentials
+    Frontend->>Google: Execute reCAPTCHA (if enabled)
+    Google-->>Frontend: Token
+    Frontend->>AuthAPI: POST { email, password, recaptchaToken }
+    AuthAPI->>Google: Verify token with secret key
+    Google-->>AuthAPI: { success, score, action }
+    AuthAPI-->>Frontend: JWT or Error
+```
+
+### Database Schema
+
+reCAPTCHA settings stored in `sites` table:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `recaptcha_enabled` | BOOLEAN | Master switch (default: false) |
+| `recaptcha_site_key` | VARCHAR(100) | Public key (visible to frontend) |
+| `recaptcha_secret_key_encrypted` | VARCHAR(255) | AES-256 encrypted private key |
+| `recaptcha_threshold` | DECIMAL(3,2) | Min score 0.0-1.0 (default: 0.5) |
+
+**Migration**: [`V30__add_recaptcha_to_sites.sql`](../../backend/src/main/resources/db/tenant/core/V30__add_recaptcha_to_sites.sql)
+
+**Security**: Secret keys encrypted via `EncryptionService` with master key from `app.encryption.secret-key` env var.
+
+### Protected Endpoints
+
+| Endpoint | Action | Behavior |
+|----------|--------|----------|
+| `POST /api/auth/login` | `login` | Requires token if enabled |
+| `POST /api/auth/forgot-password` | `forgot_password` | Requires token if enabled |
+| `POST /api/auth/reset-password` | `reset_password` | Requires token if enabled |
+| `POST /api/auth/set-initial-password` | `set_password` | Requires token if enabled |
+
+### Configuration
+
+**Admin UI**: Site Dashboard → Security Tab → reCAPTCHA Protection
+
+**Get keys**: https://www.google.com/recaptcha/admin
+
+### Backend Implementation
+
+**Service**: `RecaptchaServiceImpl`
+- Checks if enabled for tenant's site
+- Decrypts secret key
+- Calls Google API: `https://www.google.com/recaptcha/api/siteverify`
+- Validates: `success=true`, `score >= threshold`, `action` matches
+
+**Fail Strategy**:
+- Config loading: **Fail-open** (return disabled config if API fails)
+- Verification: **Fail-closed** (block request if enabled but token missing/invalid)
+
+### Frontend Implementation
+
+**Minimal Example**:
+
+```typescript
+// 1. Load config in ngOnInit
+ngOnInit(): void {
+    const subdomain = this.#tenantContext.extractSubdomainFromHost();
+    this.#publicConfigService.loadConfig(subdomain)
+        .pipe(take(1))
+        .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
+}
+
+// 2. Generate token before login
+async #getRecaptchaToken(): Promise<string | undefined> {
+    const config = this.recaptchaConfigSig();
+    if (!config?.enabled || !config.siteKey) return undefined;
+    
+    return await this.#recaptchaService.execute('login', config.siteKey);
+}
+
+// 3. Send with credentials
+const credentials = {
+    email, password,
+    recaptchaToken: await this.#getRecaptchaToken()
+};
+```
+
+**Services**:
+- `PublicTenantConfigService`: Loads config from `/api/config/public`, caches in sessionStorage
+- `RecaptchaService`: Loads Google script, executes reCAPTCHA, returns token
+
+### Testing
+
+**Development** (Google test keys - always pass):
+```
+Site Key:   6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+Secret Key: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+```
+
+**Production**:
+1. Create keys at Google reCAPTCHA console
+2. Configure in Site Dashboard
+3. Monitor scores and adjust threshold (start at 0.5)
+
+### Monitoring
+
+**Backend Logs**:
+```
+INFO  - reCAPTCHA verification passed: action=login, score=0.9, threshold=0.5
+WARN  - reCAPTCHA verification failed: action=login, score=0.3, threshold=0.5
+```
+
+**Google Console**: Track requests, score distribution, suspicious patterns
+
+---
+

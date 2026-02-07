@@ -41,6 +41,8 @@ These endpoints bypass tenant resolution entirely (see `isPublicNoTenantRequired
 - `/api/swagger-ui/**`
 - `/api/v3/api-docs/**`
 
+**Note:** `/api/config/public` is **NOT** in this list. It requires tenant resolution but no authentication. See: [`public-tenant-config.md`](public-tenant-config.md)
+
 Authentication details: [`authentication.md`](authentication.md)
 
 ### 2) Platform endpoints (SUPER_ADMIN only)
