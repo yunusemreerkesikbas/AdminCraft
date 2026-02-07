@@ -437,25 +437,27 @@ app:
 
 **Features**:
 - Extracts token from URL query parameter (`?token=...`)
+- Resolves tenant from hostname (`extractSubdomainFromHost()`) only
 - Validates token on component init
 - Shows loading state during validation
 - Password form with confirmation
 - Password visibility toggle
-- Min 8 characters validation
+- Backend-aligned password validation (`min 8 + uppercase + lowercase + digit`)
 - Auto-redirect to sign-in after success (3 seconds)
 
 **Implementation**:
 ```typescript
 ngOnInit():
   - Extract token from route.snapshot.queryParamMap
-  - Call authService.verifyResetToken(token)
+  - Resolve tenant subdomain from host (fail-closed if unavailable)
+  - Call authService.verifyResetToken(token, subdomain)
   - If valid → Show password form
   - If invalid → Show error alert
 
 resetPassword():
   - Validate passwords match
-  - Call authService.resetPassword(token, password, confirmPassword)
-  - On success → Show success message → Redirect to /sign-in
+  - Call authService.resetPassword(token, password, confirmPassword, subdomain, recaptchaToken)
+  - On success → Show `response.message` (fallback i18n) → Redirect to /sign-in
 ```
 
 ### Set Password Component (New Users)
@@ -464,25 +466,27 @@ resetPassword():
 
 **Features**:
 - Extracts token from URL query parameter (`?token=...`)
+- Resolves tenant from hostname (`extractSubdomainFromHost()`) only
 - Validates email verification token on component init
 - Shows masked email address
 - Password form with confirmation
 - Password visibility toggle
-- Min 8 characters validation
+- Backend-aligned password validation (`min 8 + uppercase + lowercase + digit`)
 - Auto-redirect to sign-in after success (3 seconds)
 
 **Implementation**:
 ```typescript
 ngOnInit():
   - Extract token from route.snapshot.queryParamMap
-  - Call authService.verifyEmailToken(token)
+  - Resolve tenant subdomain from host (fail-closed if unavailable)
+  - Call authService.verifyEmailToken(token, subdomain)
   - If valid → Show password form + masked email
   - If invalid → Show error alert
 
 setPassword():
   - Validate passwords match
-  - Call authService.setInitialPassword(token, password, confirmPassword)
-  - On success → Show success message → Redirect to /sign-in
+  - Call authService.setInitialPassword(token, password, confirmPassword, ..., subdomain, recaptchaToken)
+  - On success → Show `response.message` (fallback i18n) → Redirect to /sign-in
 ```
 
 ### Forgot Password Component
@@ -492,15 +496,15 @@ setPassword():
 **Features**:
 - Email input form
 - Email validation
-- Success message (always shown for security)
+- Shows backend `response.message` (fallback i18n)
 - Loading state during API call
 
 **Implementation**:
 ```typescript
 sendResetLink():
   - Validate email format
-  - Call authService.forgotPassword(email)
-  - Show generic success message (even if email not found)
+  - Call authService.forgotPassword(email, subdomain, recaptchaToken)
+  - Show backend `response.message` (or fallback i18n)
   - Reset form
 ```
 
@@ -510,19 +514,26 @@ sendResetLink():
 
 ```typescript
 // Password Reset
-forgotPassword(email: string): Observable<any>
-verifyResetToken(token: string): Observable<any>
-resetPassword(token: string, password: string, confirmPassword: string): Observable<any>
+forgotPassword(email: string, subdomain?: string, recaptchaToken?: string): Observable<any>
+verifyResetToken(token: string, subdomain?: string): Observable<any>
+resetPassword(token: string, password: string, confirmPassword: string, subdomain?: string, recaptchaToken?: string): Observable<any>
 
 // Email Verification
-verifyEmailToken(token: string): Observable<any>
-setInitialPassword(token: string, password: string, confirmPassword: string): Observable<any>
+verifyEmailToken(token: string, subdomain?: string): Observable<any>
+setInitialPassword(token: string, password: string, confirmPassword: string, deviceFingerprint?: string, trustDevice?: boolean, deviceName?: string, subdomain?: string, recaptchaToken?: string): Observable<any>
 
 // 2FA
 signIn(credentials): Observable<boolean | 'requires2FA'>
 verifyOtp(request: VerifyOtpRequest): Observable<boolean>
 cancel2FA(): void
 ```
+
+### Account Lock Handling (Frontend)
+
+- Frontend **does not** cache lock state locally.
+- Every sign-in attempt is sent to backend.
+- Backend is source of truth for lock checks and `remainingMinutes`.
+- Frontend only displays backend error/message (`ACCOUNT_LOCKED`).
 
 ### Device Fingerprint Generation
 
@@ -592,6 +603,7 @@ async generateDeviceFingerprint(): Promise<string> {
 - Minimum 8 characters required
 - **Complexity requirements**: At least 1 lowercase, 1 uppercase, and 1 digit
 - Pattern: `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$`
+- Frontend form validators are aligned with backend pattern
 - BCrypt hashing for storage
 - Password confirmation validated at DTO layer via `@AssertTrue`
 
@@ -704,7 +716,7 @@ reCAPTCHA settings stored in `sites` table:
 | `recaptcha_secret_key_encrypted` | VARCHAR(255) | AES-256 encrypted private key |
 | `recaptcha_threshold` | DECIMAL(3,2) | Min score 0.0-1.0 (default: 0.5) |
 
-**Migration**: [`V30__add_recaptcha_to_sites.sql`](../../backend/src/main/resources/db/tenant/core/V30__add_recaptcha_to_sites.sql)
+**Migration**: [`V34__add_recaptcha_to_sites.sql`](../../backend/src/main/resources/db/tenant/core/V34__add_recaptcha_to_sites.sql)
 
 **Security**: Secret keys encrypted via `EncryptionService` with master key from `app.encryption.secret-key` env var.
 
@@ -743,6 +755,8 @@ reCAPTCHA settings stored in `sites` table:
 // 1. Load config in ngOnInit
 ngOnInit(): void {
     const subdomain = this.#tenantContext.extractSubdomainFromHost();
+    if (!subdomain || subdomain === 'admin') return; // fail-closed on invalid tenant host
+
     this.#publicConfigService.loadConfig(subdomain)
         .pipe(take(1))
         .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
@@ -770,7 +784,7 @@ const credentials = {
 ### Testing
 
 **Development** (Google test keys - always pass):
-```
+```text
 Site Key:   6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
 Secret Key: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
 ```
@@ -783,7 +797,7 @@ Secret Key: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
 ### Monitoring
 
 **Backend Logs**:
-```
+```text
 INFO  - reCAPTCHA verification passed: action=login, score=0.9, threshold=0.5
 WARN  - reCAPTCHA verification failed: action=login, score=0.3, threshold=0.5
 ```
@@ -791,4 +805,3 @@ WARN  - reCAPTCHA verification failed: action=login, score=0.3, threshold=0.5
 **Google Console**: Track requests, score distribution, suspicious patterns
 
 ---
-

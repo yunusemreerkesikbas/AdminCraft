@@ -200,6 +200,8 @@ export const VALIDATION_PATTERNS = {
     UID: /^[a-z0-9][a-z0-9_-]*$/,
     SLOT_NAME: /^[A-Za-z][A-Za-z0-9_-]*$/,
     MEDIA_CODE: /^[a-z][a-z0-9_-]*$/,
+    PASSWORD_COMPLEXITY: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+    RECAPTCHA_KEY: /^[A-Za-z0-9_-]{40}$/,
 } as const;
 
 // Size limits
@@ -214,6 +216,8 @@ export const VALIDATION_LIMITS = {
     UID_TEMPLATE_MAX: 50,
     SLOT_NAME_MAX: 50,
     MEDIA_CODE_MAX: 100,
+    USER_PASSWORD_MIN: 8,
+    RECAPTCHA_KEY_LENGTH: 40,
 } as const;
 
 // Numeric limits
@@ -254,6 +258,28 @@ this.form = this.fb.group({
         Validators.maxLength(VALIDATION_LIMITS.CODE_MAX),
         Validators.pattern(VALIDATION_PATTERNS.CODE)
     ]],
+});
+```
+
+### Auth & Security Validation
+
+```typescript
+this.form = this.fb.group({
+    password: [
+        '',
+        [
+            Validators.required,
+            Validators.minLength(VALIDATION_LIMITS.USER_PASSWORD_MIN),
+            Validators.pattern(VALIDATION_PATTERNS.PASSWORD_COMPLEXITY),
+        ],
+    ],
+    recaptchaSiteKey: [
+        '',
+        [
+            Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
+            Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
+        ],
+    ],
 });
 ```
 

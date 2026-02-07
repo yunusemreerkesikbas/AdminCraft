@@ -28,7 +28,8 @@ public record SetInitialPasswordRequest(
         @Size(max = 100, message = "validation.device.name.size")
         String deviceName,
 
-        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "Invalid reCAPTCHA token format")
+        @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH, message = "validation.recaptcha.token.size")
+        @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_PATTERN, message = "validation.recaptcha.token.invalid")
         String recaptchaToken
 ) {
     @AssertTrue(message = "validation.password.mismatch")

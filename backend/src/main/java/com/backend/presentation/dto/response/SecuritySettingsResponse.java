@@ -4,9 +4,6 @@ import com.backend.domain.enums.TwoFactorPolicy;
 
 import java.math.BigDecimal;
 
-/**
- * Response DTO for tenant security settings.
- */
 public record SecuritySettingsResponse(
     TwoFactorPolicyDto twoFactor,
     RecaptchaDto recaptcha

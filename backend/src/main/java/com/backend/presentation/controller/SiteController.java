@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.SecuritySettingsResult;
+import com.backend.application.dto.UpdateSecuritySettingsCommand;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.request.UpdateSiteRequest;
@@ -385,7 +386,7 @@ public class SiteController {
             @Valid @RequestBody UpdateSecuritySettingsRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            var command = new com.backend.application.dto.UpdateSecuritySettingsCommand(
+            var command = new UpdateSecuritySettingsCommand(
                     request.twoFactorPolicy(),
                     request.recaptchaEnabled(),
                     request.recaptchaSiteKey(),

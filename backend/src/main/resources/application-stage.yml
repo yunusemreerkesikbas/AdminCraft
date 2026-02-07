@@ -32,8 +32,6 @@ app:
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:stage.admincraft.com}
-  recaptcha:
-    secret-key: ${RECAPTCHA_SECRET_KEY}
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 

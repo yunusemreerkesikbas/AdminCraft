@@ -91,9 +91,10 @@ public class EncryptionService {
         }
     }
 
+    // TODO: Remove legacy ECB fallback once all stored secrets are re-encrypted with GCM
     private String decryptLegacy(String encryptedText) {
         try {
-            Cipher cipher = Cipher.getInstance("AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedText));
             return new String(decryptedBytes, StandardCharsets.UTF_8);

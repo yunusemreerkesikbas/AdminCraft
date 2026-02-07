@@ -22,8 +22,6 @@ app:
     log-simplified: true    # Essential data only (recommended)
   otp:
     bypass-code: "123456"
-  recaptcha:
-    secret-key: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"  # Google test key
 
 logging:
   level:

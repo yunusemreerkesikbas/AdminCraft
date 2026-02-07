@@ -18,6 +18,7 @@ import com.backend.infrastructure.security.EncryptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -50,7 +51,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
             getPolicyDescription(policy),
             site.getRecaptchaEnabled(),
             site.getRecaptchaSiteKey(),
-            site.getRecaptchaThreshold()
+            site.getRecaptchaThreshold() != null ? site.getRecaptchaThreshold() : new BigDecimal("0.5")
         );
     }
 
@@ -119,7 +120,7 @@ public class SecuritySettingsServiceImpl implements SecuritySettingsService {
                 getPolicyDescription(policy),
                 site.getRecaptchaEnabled(),
                 site.getRecaptchaSiteKey(),
-                site.getRecaptchaThreshold()
+                site.getRecaptchaThreshold() != null ? site.getRecaptchaThreshold() : new BigDecimal("0.5")
         );
     }
 

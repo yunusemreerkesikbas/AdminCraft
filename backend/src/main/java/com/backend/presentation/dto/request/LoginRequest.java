@@ -11,9 +11,11 @@ public record LoginRequest(
 
         @NotBlank(message = "Password is required") @Size(min = 8, message = "Password must be at least 8 characters long") String password,
         @Pattern(regexp = ValidationConstants.SUBDOMAIN_PATTERN, message = "Subdomain must contain only lowercase letters, numbers, and hyphens") String subdomain,
+        @Size(max = 128, message = "validation.device.fingerprint.size")
         String deviceFingerprint,
 
-        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "Invalid reCAPTCHA token format")
+        @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH, message = "validation.recaptcha.token.size")
+        @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_PATTERN, message = "validation.recaptcha.token.invalid")
         String recaptchaToken) {
     public LoginRequest {
         if (email == null || email.trim().isEmpty()) {

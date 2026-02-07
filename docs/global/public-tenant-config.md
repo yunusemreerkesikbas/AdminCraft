@@ -62,7 +62,10 @@ public class PublicTenantConfigServiceImpl implements PublicTenantConfigService 
 
     public PublicTenantConfigResult getPublicConfig() {
         return siteRepository.findFirstByOrderByIdAsc()
-            .map(site -> PublicTenantConfigResult.of(site))
+            .map(site -> PublicTenantConfigResult.of(
+                site.getRecaptchaEnabled(),
+                site.getRecaptchaSiteKey(),
+                site.getRecaptchaThreshold()))
             .orElse(PublicTenantConfigResult.disabled());
     }
 }
@@ -71,7 +74,7 @@ public class PublicTenantConfigServiceImpl implements PublicTenantConfigService 
 **Controller** (Presentation Layer):
 ```java
 @RestController
-@RequestMapping("/api/config")
+@RequestMapping("/config")
 public class PublicConfigController {
     private final PublicTenantConfigService service;
 
@@ -84,7 +87,7 @@ public class PublicConfigController {
             ));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.success(
-                PublicTenantConfigResponse.disabled()
+                PublicTenantConfigResponse.from(PublicTenantConfigResult.disabled())
             ));
         }
     }
@@ -121,6 +124,8 @@ export class SignInComponent implements OnInit {
 
     ngOnInit(): void {
         const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        if (!subdomain || subdomain === 'admin') return;
+
         this.#publicConfigService.loadConfig(subdomain)
             .pipe(take(1))
             .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
@@ -136,6 +141,7 @@ export class SignInComponent implements OnInit {
 | **Tenant context** | Endpoint public but needs tenant | Still requires `X-Tenant-Subdomain` header |
 | **Cache stale data** | Config not updated after change | Call `clearCache()` on tenant switch |
 | **Hardcoded subdomain** | Using `getCurrentSubdomain()` before auth | Use `extractSubdomainFromHost()` instead |
+| **Query subdomain fallback** | Accepting `?subdomain=` on auth pages can cause tenant ambiguity | Use hostname-only tenant resolution (fail-closed if host invalid) |
 
 ### Extensibility
 

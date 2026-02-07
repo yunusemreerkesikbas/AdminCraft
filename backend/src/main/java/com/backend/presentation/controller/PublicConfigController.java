@@ -26,7 +26,7 @@ public class PublicConfigController {
             PublicTenantConfigResponse response = PublicTenantConfigResponse.from(result);
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
-            log.error("Error getting public tenant config", ex);
+            log.warn("Error getting public tenant config", ex);
             return ResponseEntity.ok(
                 ApiResponse.success(PublicTenantConfigResponse.from(PublicTenantConfigResult.disabled()))
             );

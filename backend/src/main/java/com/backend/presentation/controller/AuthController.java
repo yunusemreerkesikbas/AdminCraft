@@ -66,7 +66,7 @@ public class AuthController {
 
             String effectiveSubdomain = subdomain != null ? subdomain : loginRequest.subdomain();
 
-            validateRecaptchaIfEnabled(loginRequest.recaptchaToken(), "login", tenantId, languageCode);
+            validateRecaptchaIfEnabled(loginRequest.recaptchaToken(), "login");
 
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
@@ -179,7 +179,7 @@ public class AuthController {
         try {
             log.info("Password reset requested");
 
-            validateRecaptchaIfEnabled(request.recaptchaToken(), "forgot_password", tenantId, languageCode);
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "forgot_password");
 
             Language language = RequestUtils.parseLanguage(languageCode);
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
@@ -238,7 +238,7 @@ public class AuthController {
         try {
             log.info("Password reset attempt");
 
-            validateRecaptchaIfEnabled(request.recaptchaToken(), "reset_password", tenantId, languageCode);
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "reset_password");
 
             authenticationService.resetPassword(request.token(), request.password());
 
@@ -295,7 +295,7 @@ public class AuthController {
         try {
             log.info("Setting initial password");
 
-            validateRecaptchaIfEnabled(request.recaptchaToken(), "set_password", tenantId, languageCode);
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "set_password");
 
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
@@ -380,15 +380,7 @@ public class AuthController {
         }
     }
 
-    private void validateRecaptchaIfEnabled(String token, String action, Long tenantId, String languageCode) {
-        if (tenantId == null || !recaptchaService.isEnabled()) {
-            return;
-        }
-        if (token == null || token.isBlank()) {
-            String message = messageSource.getMessage("recaptcha.verification.required", null,
-                    Locale.forLanguageTag(languageCode));
-            throw new RecaptchaVerificationException(message);
-        }
+    private void validateRecaptchaIfEnabled(String token, String action) {
         recaptchaService.verifyToken(token, action);
     }
 
