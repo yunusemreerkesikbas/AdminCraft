@@ -31,6 +31,11 @@ app:
   trusted-device:
     expiry-days: ${TRUSTED_DEVICE_EXPIRY_DAYS:30}
     max-devices-per-user: ${TRUSTED_DEVICE_MAX_PER_USER:5}
+  recaptcha:
+    verify-url: https://www.google.com/recaptcha/api/siteverify
+    timeout-seconds: 5
+  encryption:
+    secret-key: ${RECAPTCHA_MASTER_KEY:CHANGE_THIS_TO_32_CHAR_KEY_IN_PROD}
 
 spring:
   profiles:

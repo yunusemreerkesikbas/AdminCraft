@@ -1,5 +1,6 @@
 package com.backend.domain.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -123,6 +124,19 @@ public class Site {
 
     @Column(name = "updated_by")
     private Long updatedBy;
+
+    // reCAPTCHA Configuration
+    @Column(name = "recaptcha_enabled")
+    private Boolean recaptchaEnabled = false;
+
+    @Column(name = "recaptcha_site_key", length = 255)
+    private String recaptchaSiteKey;
+
+    @Column(name = "recaptcha_secret_key_encrypted", columnDefinition = "TEXT")
+    private String recaptchaSecretKeyEncrypted;
+
+    @Column(name = "recaptcha_threshold", precision = 3, scale = 2)
+    private BigDecimal recaptchaThreshold = new BigDecimal("0.5");
 
     // Business Methods
     public boolean isLanguageEnabled(Language language) {

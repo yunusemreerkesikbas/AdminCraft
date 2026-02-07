@@ -385,7 +385,15 @@ public class SiteController {
             @Valid @RequestBody UpdateSecuritySettingsRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            SecuritySettingsResult result = securitySettingsService.updateTwoFactorPolicy(request.twoFactorPolicy());
+            var command = new com.backend.application.dto.UpdateSecuritySettingsCommand(
+                    request.twoFactorPolicy(),
+                    request.recaptchaEnabled(),
+                    request.recaptchaSiteKey(),
+                    request.recaptchaSecretKey(),
+                    request.recaptchaThreshold()
+            );
+
+            SecuritySettingsResult result = securitySettingsService.updateSecuritySettings(command);
             String message = messageSource.getMessage("site.security.updated.success", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, toSecuritySettingsResponse(result)));
@@ -401,7 +409,13 @@ public class SiteController {
     }
 
     private SecuritySettingsResponse toSecuritySettingsResponse(SecuritySettingsResult result) {
-        return SecuritySettingsResponse.of(result.policy(), result.policyDescription());
+        return SecuritySettingsResponse.of(
+            result.policy(),
+            result.policyDescription(),
+            result.recaptchaEnabled(),
+            result.recaptchaSiteKey(),
+            result.recaptchaThreshold()
+        );
     }
 
     private String sanitizeInput(String input) {

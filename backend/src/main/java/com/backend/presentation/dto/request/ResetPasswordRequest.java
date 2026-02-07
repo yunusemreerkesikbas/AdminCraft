@@ -17,7 +17,10 @@ public record ResetPasswordRequest(
         String password,
 
         @NotBlank(message = "validation.password.confirm.required")
-        String confirmPassword
+        String confirmPassword,
+
+        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "Invalid reCAPTCHA token format")
+        String recaptchaToken
 ) {
     @AssertTrue(message = "validation.password.mismatch")
     public boolean isPasswordMatching() {

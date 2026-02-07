@@ -11,7 +11,10 @@ public record LoginRequest(
 
         @NotBlank(message = "Password is required") @Size(min = 8, message = "Password must be at least 8 characters long") String password,
         @Pattern(regexp = ValidationConstants.SUBDOMAIN_PATTERN, message = "Subdomain must contain only lowercase letters, numbers, and hyphens") String subdomain,
-        String deviceFingerprint) {
+        String deviceFingerprint,
+
+        @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "Invalid reCAPTCHA token format")
+        String recaptchaToken) {
     public LoginRequest {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");

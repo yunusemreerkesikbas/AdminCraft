@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.application.dto.AuthResult;
 import com.backend.application.dto.TokenValidationResult;
 import com.backend.application.service.AuthenticationService;
+import com.backend.application.service.RecaptchaService;
 import com.backend.domain.enums.Language;
 import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.InvalidTokenException;
 import com.backend.domain.exception.OtpRateLimitExceededException;
+import com.backend.domain.exception.RecaptchaVerificationException;
 import com.backend.presentation.dto.request.ForgotPasswordRequest;
 import com.backend.presentation.dto.request.LoginRequest;
 import com.backend.presentation.dto.request.ResetPasswordRequest;
@@ -46,6 +48,7 @@ public class AuthController {
 
     private final AuthenticationService authenticationService;
     private final MessageSource messageSource;
+    private final RecaptchaService recaptchaService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(
@@ -62,6 +65,8 @@ public class AuthController {
             }
 
             String effectiveSubdomain = subdomain != null ? subdomain : loginRequest.subdomain();
+
+            validateRecaptchaIfEnabled(loginRequest.recaptchaToken(), "login", tenantId, languageCode);
 
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
@@ -93,9 +98,15 @@ public class AuthController {
                             "remainingMinutes", ex.getRemainingMinutes(),
                             "errorCode", "ACCOUNT_LOCKED"));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } catch (RecaptchaVerificationException ex) {
+            log.warn("reCAPTCHA verification failed: {}", ex.getMessage());
+            String message = messageSource.getMessage("recaptcha.verification.failed", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Login failed: {}", ex.getMessage());
-            String message = messageSource.getMessage("auth.login.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("auth.login.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(message));
@@ -126,7 +137,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             log.error("Token refresh failed: {}", ex.getMessage());
-            String message = messageSource.getMessage("auth.refresh.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("auth.refresh.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(message));
@@ -151,7 +162,7 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
             log.error("Logout failed: {}", ex.getMessage());
-            String message = messageSource.getMessage("auth.logout.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("auth.logout.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
@@ -168,6 +179,8 @@ public class AuthController {
         try {
             log.info("Password reset requested");
 
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "forgot_password", tenantId, languageCode);
+
             Language language = RequestUtils.parseLanguage(languageCode);
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
@@ -178,6 +191,12 @@ public class AuthController {
             String message = messageSource.getMessage("auth.password.reset.sent", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.ok(ApiResponse.success(message, null));
+        } catch (RecaptchaVerificationException ex) {
+            log.warn("reCAPTCHA verification failed for forgot password: {}", ex.getMessage());
+            String message = messageSource.getMessage("recaptcha.verification.failed", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Password reset request failed: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.password.reset.sent", null,
@@ -214,9 +233,12 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request,
+            @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
             log.info("Password reset attempt");
+
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "reset_password", tenantId, languageCode);
 
             authenticationService.resetPassword(request.token(), request.password());
 
@@ -224,6 +246,12 @@ public class AuthController {
                     Locale.forLanguageTag(languageCode));
             log.info("Password reset successful");
             return ResponseEntity.ok(ApiResponse.success(message, null));
+        } catch (RecaptchaVerificationException ex) {
+            log.warn("reCAPTCHA verification failed for reset password: {}", ex.getMessage());
+            String message = messageSource.getMessage("recaptcha.verification.failed", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Password reset failed: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.password.reset.invalid.token", null,
@@ -261,16 +289,17 @@ public class AuthController {
     @PostMapping("/set-initial-password")
     public ResponseEntity<ApiResponse<LoginResponse>> setInitialPassword(
             @Valid @RequestBody SetInitialPasswordRequest request,
+            @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
             HttpServletRequest httpRequest) {
         try {
             log.info("Setting initial password");
 
-            // Extract request context
+            validateRecaptchaIfEnabled(request.recaptchaToken(), "set_password", tenantId, languageCode);
+
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
 
-            // Call service with all parameters
             AuthResult authResult = authenticationService.setInitialPassword(
                     request.token(),
                     request.password(),
@@ -280,7 +309,6 @@ public class AuthController {
                     ipAddress,
                     userAgent);
 
-            // Convert to LoginResponse
             LoginResponse loginResponse = toLoginResponse(authResult);
 
             String message = messageSource.getMessage("auth.email.verify.success", null,
@@ -295,9 +323,15 @@ public class AuthController {
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
+        } catch (RecaptchaVerificationException ex) {
+            log.warn("reCAPTCHA verification failed for set initial password: {}", ex.getMessage());
+            String message = messageSource.getMessage("recaptcha.verification.failed", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Failed to set initial password: {}", ex.getMessage(), ex);
-            String message = messageSource.getMessage("auth.error.generic", new Object[]{ex.getMessage()},
+            String message = messageSource.getMessage("auth.error.generic", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -344,6 +378,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(message));
         }
+    }
+
+    private void validateRecaptchaIfEnabled(String token, String action, Long tenantId, String languageCode) {
+        if (tenantId == null || !recaptchaService.isEnabled()) {
+            return;
+        }
+        if (token == null || token.isBlank()) {
+            String message = messageSource.getMessage("recaptcha.verification.required", null,
+                    Locale.forLanguageTag(languageCode));
+            throw new RecaptchaVerificationException(message);
+        }
+        recaptchaService.verifyToken(token, action);
     }
 
     private LoginResponse toLoginResponse(AuthResult authResult) {
