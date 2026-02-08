@@ -22,6 +22,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@jsverse/transloco';
+import { QuillEditorComponent, QuillModule } from 'ngx-quill';
 import { VALIDATION_MESSAGES } from '@shared/constants/validation.constants';
 import { merge, Observable } from 'rxjs';
 
@@ -42,6 +43,7 @@ class SpaTextareaErrorStateMatcher implements ErrorStateMatcher {
         MatInputModule,
         MatTooltipModule,
         TranslocoModule,
+        QuillModule,
     ],
     templateUrl: './spa-textarea.component.html',
     styleUrls: ['./spa-textarea.component.scss'],
@@ -63,10 +65,22 @@ export class SpaTextareaComponent
     @Input() rows = 3;
     @Input() styleClasses?: string;
     @Input() showErrors: boolean = true;
+    @Input() useRichText: boolean = false;
 
     @Input() control?: NgControl['control'];
 
     @Output() inputChange = new EventEmitter<string | null>();
+
+    protected quillModules = {
+        toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ header: [1, 2, 3, 4, 5, 6, false] }],
+            ['link'],
+            ['clean'],
+        ],
+    };
 
     value: string | null = null;
     disabled = false;
@@ -183,6 +197,13 @@ export class SpaTextareaComponent
     onInput(event: Event): void {
         const target = event.target as HTMLTextAreaElement;
         this.value = target.value;
+        this.#onChange(this.value);
+        this.inputChange.emit(this.value);
+    }
+
+    onContentChanged(event: any): void {
+        const content = event.html;
+        this.value = content;
         this.#onChange(this.value);
         this.inputChange.emit(this.value);
     }

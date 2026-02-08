@@ -256,6 +256,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 jwtTokenProvider.getAccessTokenExpiration(),
                 user.getId(),
                 user.getEmail(),
+                user.getFullName(),
                 user.getRole().name(),
                 subdomain,
                 tenantId);
@@ -304,6 +305,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 jwtTokenProvider.getAccessTokenExpiration(),
                 admin.getId(),
                 admin.getEmail(),
+                admin.getFullName(),
                 "SUPER_ADMIN",
                 null,
                 null);
@@ -341,6 +343,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     jwtTokenProvider.getAccessTokenExpiration(),
                     admin.getId(),
                     admin.getEmail(),
+                    admin.getFullName(),
                     "SUPER_ADMIN",
                     null,
                     null);
@@ -390,6 +393,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         jwtTokenProvider.getAccessTokenExpiration(),
                         user.getId(),
                         user.getEmail(),
+                        user.getFullName(),
                         user.getRole().name(),
                         tenant.getSubdomain(),
                         tenantId);
@@ -540,6 +544,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         jwtTokenProvider.getAccessTokenExpiration(),
                         user.getId(),
                         user.getEmail(),
+                        user.getFullName(),
                         user.getRole().name(),
                         tenant.getSubdomain(),
                         tenant.getId());
@@ -775,6 +780,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     jwtTokenProvider.getAccessTokenExpiration(),
                     user.getId(),
                     user.getEmail(),
+                    user.getFullName(),
                     user.getRole().name(),
                     tenant.getSubdomain(),
                     tenant.getId());

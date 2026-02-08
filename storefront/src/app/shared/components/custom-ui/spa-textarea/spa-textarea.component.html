@@ -1,28 +1,52 @@
-<mat-form-field
-    class="w-full"
-    [class]="styleClasses"
-    [subscriptSizing]="'dynamic'"
-    [floatLabel]="'always'"
->
-    @if (label) {
-        <mat-label [matTooltip]="labelTooltip || ''">{{ label }}</mat-label>
-    }
-    <textarea
-        matInput
-        [rows]="rows"
-        [placeholder]="placeholder || ''"
-        [disabled]="disabled"
-        [errorStateMatcher]="errorStateMatcher"
-        (input)="onInput($event)"
-        (blur)="onBlur()"
-        >{{ value ?? '' }}</textarea
-    >
-    @if (hint && !hasError) {
-        <mat-hint>{{ hint }}</mat-hint>
-    }
-</mat-form-field>
-@if (showErrors && hasError) {
-    <div class="text-sm mat-mdc-form-field-error">
-        {{ errorMessage | transloco:errorParams }}
+@if (useRichText) {
+    <div class="spa-textarea-rich-editor" [class]="styleClasses">
+        @if (label) {
+            <label class="spa-textarea-label" [matTooltip]="labelTooltip || ''">{{ label }}</label>
+        }
+        <quill-editor
+            [placeholder]="placeholder || ''"
+            [modules]="quillModules"
+            [styles]="{ minHeight: rows * 30 + 'px' }"
+            [formControl]="$any(activeControl)"
+            (onContentChanged)="onContentChanged($event)"
+            (onBlur)="onBlur()"
+        ></quill-editor>
+        @if (hint && !hasError) {
+            <div class="spa-textarea-hint">{{ hint }}</div>
+        }
+        @if (showErrors && hasError) {
+            <div class="text-sm mat-mdc-form-field-error">
+                {{ errorMessage | transloco:errorParams }}
+            </div>
+        }
     </div>
+} @else {
+    <mat-form-field
+        class="w-full"
+        [class]="styleClasses"
+        [subscriptSizing]="'dynamic'"
+        [floatLabel]="'always'"
+    >
+        @if (label) {
+            <mat-label [matTooltip]="labelTooltip || ''">{{ label }}</mat-label>
+        }
+        <textarea
+            matInput
+            [rows]="rows"
+            [placeholder]="placeholder || ''"
+            [disabled]="disabled"
+            [errorStateMatcher]="errorStateMatcher"
+            (input)="onInput($event)"
+            (blur)="onBlur()"
+            >{{ value ?? '' }}</textarea
+        >
+        @if (hint && !hasError) {
+            <mat-hint>{{ hint }}</mat-hint>
+        }
+    </mat-form-field>
+    @if (showErrors && hasError) {
+        <div class="text-sm mat-mdc-form-field-error">
+            {{ errorMessage | transloco:errorParams }}
+        </div>
+    }
 }

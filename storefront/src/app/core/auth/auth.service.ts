@@ -114,7 +114,7 @@ export class AuthService {
         const user: User = {
             id: response.userId,
             email: response.email,
-            name: response.email,
+            name: response.fullName ?? response.email,
             role: response.role,
             tenantId: response.tenantId,
             preferredLanguage: response.preferredLanguage,
@@ -218,7 +218,7 @@ export class AuthService {
         const user: User = {
             id: data.userId,
             email: data.email,
-            name: data.email,
+            name: data.fullName ?? data.email,
             role: data.role,
             tenantId: data.tenantId,
             preferredLanguage: data.preferredLanguage,

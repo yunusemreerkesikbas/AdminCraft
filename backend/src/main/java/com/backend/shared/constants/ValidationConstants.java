@@ -267,7 +267,7 @@ public final class ValidationConstants {
     // ============================================================================
 
     public static final String RECAPTCHA_TOKEN_PATTERN = "^[A-Za-z0-9_-]+$";
-    public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 2048;
+    public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 4096;
 
     // ============================================================================
     // SITE TECHNICAL LIMITS

@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
+import { TranslocoService } from '@jsverse/transloco';
 import { User } from 'app/core/user/user.types';
 import { AdminCraftNavigationItem } from './navigation.types';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationFilterService {
+    #transloco = inject(TranslocoService);
 
     filterAndUpdateLinks(
         items: AdminCraftNavigationItem[],
@@ -18,6 +20,7 @@ export class NavigationFilterService {
             userRole,
             enabledModules
         );
+        filtered = this.#removeEmptyGroups(filtered);
         filtered = this.#updateLinksWithLanguage(filtered, language);
         return filtered;
     }
@@ -64,6 +67,21 @@ export class NavigationFilterService {
             .filter((item) => item !== null) as AdminCraftNavigationItem[];
     }
 
+    #removeEmptyGroups(
+        items: AdminCraftNavigationItem[]
+    ): AdminCraftNavigationItem[] {
+        return items.filter((item) => {
+            if (item.children?.length) {
+                item.children = this.#removeEmptyGroups(item.children);
+                return item.children.length > 0;
+            }
+            if (Array.isArray(item.children) && item.children.length === 0) {
+                return false;
+            }
+            return true;
+        });
+    }
+
     #updateLinksWithLanguage(
         items: AdminCraftNavigationItem[],
         language: string
@@ -76,6 +94,20 @@ export class NavigationFilterService {
                 !itemCopy.externalLink
             ) {
                 itemCopy.link = `/${language}/${itemCopy.link}`;
+            }
+            if (itemCopy.title && typeof itemCopy.title === 'string') {
+                itemCopy.title = this.#transloco.translate(
+                    itemCopy.title,
+                    {},
+                    language
+                );
+            }
+            if (itemCopy.subtitle && typeof itemCopy.subtitle === 'string') {
+                itemCopy.subtitle = this.#transloco.translate(
+                    itemCopy.subtitle,
+                    {},
+                    language
+                );
             }
             if (itemCopy.children?.length) {
                 itemCopy.children = this.#updateLinksWithLanguage(
