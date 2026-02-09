@@ -1,7 +1,7 @@
 package com.backend.application.service;
 
-import com.backend.presentation.dto.response.PlatformDashboardResponse;
+import com.backend.application.dto.response.PlatformDashboardData;
 
 public interface PlatformDashboardService {
-    PlatformDashboardResponse getDashboardData();
+    PlatformDashboardData getDashboardData();
 }

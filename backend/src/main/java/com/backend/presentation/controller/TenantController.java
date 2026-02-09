@@ -32,8 +32,6 @@ import com.backend.application.usecase.CreateTenantUseCase;
 import com.backend.application.usecase.GenerateTenantAdminUserUseCase;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
-import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
-import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.presentation.dto.response.ProvisioningJobResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
@@ -64,7 +62,6 @@ public class TenantController {
         private final GenerateTenantAdminUserUseCase generateTenantAdminUserUseCase;
         private final SecurityHelper securityHelper;
         private final com.backend.infrastructure.tenant.TenantContext tenantContext;
-        private final ProvisioningJobRepository provisioningJobRepository;
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         @PostMapping
@@ -130,14 +127,6 @@ public class TenantController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
-                } catch (Exception ex) {
-                        log.error("Error listing tenants", ex);
-                        String message = messageSource.getMessage(
-                                        "tenant.list.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body(ApiResponse.error(message));
                 }
         }
 
@@ -198,8 +187,7 @@ public class TenantController {
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         public ResponseEntity<ApiResponse<List<ProvisioningJobResponse>>> getTenantProvisioningJobs(
                         @PathVariable @NotNull @Min(1) Long tenantId) {
-                List<ProvisioningJob> jobs = provisioningJobRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
-                List<ProvisioningJobResponse> response = jobs.stream()
+                List<ProvisioningJobResponse> response = tenantService.getTenantProvisioningJobs(tenantId).stream()
                                 .map(ProvisioningJobResponse::from)
                                 .toList();
                 return ResponseEntity.ok(ApiResponse.success(response));

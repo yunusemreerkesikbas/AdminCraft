@@ -42,7 +42,7 @@ Closes #
 
 ### Backend (Java/Spring Boot)
 - [ ] Constructor injection only (no @Autowired)
-- [ ] Using jakarta.* packages (not javax.*)
+- [ ] Using `jakarta.*` packages (not `javax.*`)
 - [ ] DTOs have Request/Response suffix
 - [ ] @Valid on controller parameters
 - [ ] JPQL uses parameterized queries
@@ -50,7 +50,7 @@ Closes #
 - [ ] @Transactional for multi-step operations
 
 ### Frontend (Angular/TypeScript)
-- [ ] Using Angular 19 control flow (@if, @for, not *ngIf/*ngFor)
+- [ ] Using Angular 19 control flow (`@if`, `@for`, not `*ngIf`/`*ngFor`/`*ngSwitch`)
 - [ ] Signals for state management
 - [ ] OnPush change detection
 - [ ] Standalone components (no NgModules)

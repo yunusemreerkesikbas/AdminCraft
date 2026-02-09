@@ -4,30 +4,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.PatchPlatformSettingsRequest;
+import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
 import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
-import com.backend.presentation.dto.response.PlatformSettingsResponse;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional(readOnly = true)
 public class PlatformSettingsServiceImpl implements PlatformSettingsService {
 
     private final PlatformSettingsRepository platformSettingsRepository;
 
     @Override
-    public PlatformSettingsResponse getSettings() {
+    public PlatformSettingsData getSettings() {
         PlatformSettings entity = platformSettingsRepository.getSingleton();
-        return PlatformSettingsResponse.from(entity);
+        return toData(entity);
     }
 
     @Override
     @Transactional
-    public PlatformSettingsResponse patchSettings(PatchPlatformSettingsRequest request) {
+    public PlatformSettingsData patchSettings(PatchPlatformSettingsRequest request) {
         PlatformSettings entity = platformSettingsRepository.getSingleton();
 
         if (request.platformName() != null) {
@@ -47,6 +45,15 @@ public class PlatformSettingsServiceImpl implements PlatformSettingsService {
         }
 
         PlatformSettings saved = platformSettingsRepository.save(entity);
-        return PlatformSettingsResponse.from(saved);
+        return toData(saved);
+    }
+
+    private PlatformSettingsData toData(PlatformSettings entity) {
+        return new PlatformSettingsData(
+                entity.getPlatformName(),
+                entity.getDefaultLanguage(),
+                entity.getDefaultCurrency(),
+                entity.getEmailFromAddress(),
+                entity.getEmailFromName());
     }
 }

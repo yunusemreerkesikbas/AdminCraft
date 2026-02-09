@@ -54,11 +54,11 @@ Controller: [`backend/.../controller/PlatformDashboardController.java`](../../ba
 
 Response DTO: [`PlatformDashboardResponse`](../../backend/src/main/java/com/backend/presentation/dto/response/PlatformDashboardResponse.java)
 
-```
+```json
 {
   "summary": { "total", "active", "pending", "suspended", "totalStorageMb" },
   "recentTenants": [{ "id", "companyName", "subdomain", "status", "createdAt" }],
-  "recentJobs": [{ "id", "tenantId", "tenantSubdomain", "type", "status", "createdAt" }],
+  "recentJobs": [{ "id", "tenantId", "tenantSubdomain", "type", "status", "createdAt", "error" }],
   "moduleDistribution": [{ "moduleCode", "moduleName", "enabledCount" }]
 }
 ```
@@ -85,12 +85,25 @@ Controller: [`backend/.../controller/PlatformSettingsController.java`](../../bac
 | PATCH  | `/api/platform/settings` | Update platform settings   |
 
 PATCH uses null-skip semantics: only non-null fields in the request body are applied to the singleton row.
+Validation rules in [`PatchPlatformSettingsRequest`](../../backend/src/main/java/com/backend/application/dto/request/PatchPlatformSettingsRequest.java):
+
+- `platformName`: max 100 chars
+- `defaultLanguage`: 2-10 chars, letters/hyphen pattern
+- `defaultCurrency`: exactly 3 letters
+- `emailFromAddress`: valid email, max 255 chars
+- `emailFromName`: max 100 chars
+
+Schema note: `platform_settings.default_language` is currently `VARCHAR(2)` in migration/entity, so persisted values are bounded by column length.
 
 Response DTO: [`PlatformSettingsResponse`](../../backend/src/main/java/com/backend/presentation/dto/response/PlatformSettingsResponse.java)
 
 Request DTO: [`PatchPlatformSettingsRequest`](../../backend/src/main/java/com/backend/application/dto/request/PatchPlatformSettingsRequest.java)
 
 Service: [`PlatformSettingsService`](../../backend/src/main/java/com/backend/application/service/PlatformSettingsService.java) / [`PlatformSettingsServiceImpl`](../../backend/src/main/java/com/backend/application/service/PlatformSettingsServiceImpl.java)
+
+## Public delivery APIs
+
+Not applicable. Platform Admin endpoints are control-plane APIs and require `ROLE_SUPER_ADMIN`.
 
 ## Frontend integration
 
@@ -104,8 +117,11 @@ All routes are guarded by `superAdminGuard` and lazy-loaded.
 | Component | [`storefront/.../platform-dashboard/platform-dashboard.component.ts`](../../storefront/src/app/modules/admin/custom/platform-dashboard/platform-dashboard.component.ts) |
 | Service | [`storefront/.../platform-dashboard/platform-dashboard.service.ts`](../../storefront/src/app/modules/admin/custom/platform-dashboard/platform-dashboard.service.ts) |
 | Types | [`storefront/.../platform-dashboard/platform-dashboard.types.ts`](../../storefront/src/app/modules/admin/custom/platform-dashboard/platform-dashboard.types.ts) |
+| Error Dialog | [`storefront/.../platform-dashboard/job-error-dialog.component.ts`](../../storefront/src/app/modules/admin/custom/platform-dashboard/job-error-dialog.component.ts) |
 
 URL: `/:lang/platform-dashboard`
+
+**Error display**: Failed provisioning jobs show a red error icon next to the status badge in the Recent Jobs table. Clicking the icon opens a Material Dialog displaying the full error message (up to 500 characters, truncated at storage time per OWASP security guidelines) along with job metadata (tenant subdomain, type, created date). Error text is displayed in monospace font within a red-tinted container for better readability of technical error messages.
 
 ### Tenant Detail
 
@@ -169,6 +185,7 @@ Keys added under `admin.platform.dashboard.*`, `admin.platform.settings.*`, and 
 2. Frontend calls `GET /api/platform/dashboard`
 3. Backend aggregates counts, recent tenants/jobs, and module distribution from platform DB
 4. Dashboard renders summary cards, recent activity tables, and module distribution bars
+5. For failed jobs with errors, a red error icon appears next to the status badge; clicking it opens a dialog with the full error message and job context
 
 ### View tenant detail
 

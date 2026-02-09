@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -28,4 +29,12 @@ public interface TenantModuleRepository extends JpaRepository<TenantModule, Long
          "AND EXISTS (SELECT 1 FROM Tenant t WHERE t.id = tm.tenantId) " +
          "GROUP BY tm.moduleCode, mc.name ORDER BY COUNT(DISTINCT tm.tenantId) DESC")
   List<Object[]> findModuleDistribution();
+
+  @Query("""
+      SELECT tm.tenantId, COUNT(tm)
+      FROM TenantModule tm
+      WHERE tm.tenantId IN :tenantIds AND tm.status = 'enabled'
+      GROUP BY tm.tenantId
+      """)
+  List<Object[]> countEnabledModulesByTenantIds(@Param("tenantIds") Collection<Long> tenantIds);
 }

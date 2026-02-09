@@ -22,6 +22,7 @@ public class PlatformDashboardController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PlatformDashboardResponse>> getDashboard() {
-        return ResponseEntity.ok(ApiResponse.success(service.getDashboardData()));
+        return ResponseEntity.ok(ApiResponse.success(
+                PlatformDashboardResponse.from(service.getDashboardData())));
     }
 }

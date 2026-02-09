@@ -5,23 +5,21 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.application.dto.response.PlatformDashboardData;
+import com.backend.application.dto.response.PlatformDashboardData.ModuleDistributionData;
+import com.backend.application.dto.response.PlatformDashboardData.RecentJobData;
+import com.backend.application.dto.response.PlatformDashboardData.RecentTenantData;
+import com.backend.application.dto.response.PlatformDashboardData.SummaryStats;
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.Tenant;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-import com.backend.presentation.dto.response.PlatformDashboardResponse;
-import com.backend.presentation.dto.response.PlatformDashboardResponse.ModuleDistributionDto;
-import com.backend.presentation.dto.response.PlatformDashboardResponse.RecentJobDto;
-import com.backend.presentation.dto.response.PlatformDashboardResponse.RecentTenantDto;
-import com.backend.presentation.dto.response.PlatformDashboardResponse.SummaryStats;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional(readOnly = true)
 public class PlatformDashboardServiceImpl implements PlatformDashboardService {
 
@@ -30,13 +28,13 @@ public class PlatformDashboardServiceImpl implements PlatformDashboardService {
     private final TenantModuleRepository tenantModuleRepository;
 
     @Override
-    public PlatformDashboardResponse getDashboardData() {
+    public PlatformDashboardData getDashboardData() {
         SummaryStats summary = buildSummaryStats();
-        List<RecentTenantDto> recentTenants = buildRecentTenants();
-        List<RecentJobDto> recentJobs = buildRecentJobs();
-        List<ModuleDistributionDto> moduleDistribution = buildModuleDistribution();
+        List<RecentTenantData> recentTenants = buildRecentTenants();
+        List<RecentJobData> recentJobs = buildRecentJobs();
+        List<ModuleDistributionData> moduleDistribution = buildModuleDistribution();
 
-        return new PlatformDashboardResponse(summary, recentTenants, recentJobs, moduleDistribution);
+        return new PlatformDashboardData(summary, recentTenants, recentJobs, moduleDistribution);
     }
 
     private SummaryStats buildSummaryStats() {
@@ -49,11 +47,11 @@ public class PlatformDashboardServiceImpl implements PlatformDashboardService {
         return new SummaryStats(total, active, pending, suspended, totalStorageMb);
     }
 
-    private List<RecentTenantDto> buildRecentTenants() {
+    private List<RecentTenantData> buildRecentTenants() {
         List<Tenant> tenants = tenantPlatformRepository.findTop5ByOrderByCreatedAtDesc();
 
         return tenants.stream()
-                .map(t -> new RecentTenantDto(
+                .map(t -> new RecentTenantData(
                         t.getId(),
                         t.getCompanyName(),
                         t.getSubdomain(),
@@ -62,39 +60,35 @@ public class PlatformDashboardServiceImpl implements PlatformDashboardService {
                 .toList();
     }
 
-    private List<RecentJobDto> buildRecentJobs() {
+    private List<RecentJobData> buildRecentJobs() {
         List<ProvisioningJob> jobs = provisioningJobRepository.findTop5ByOrderByCreatedAtDesc();
 
         return jobs.stream()
                 .map(job -> {
-                    String subdomain = tenantPlatformRepository.findById(job.getTenantId())
-                            .map(Tenant::getSubdomain)
-                            .orElse("unknown");
+                    String subdomain = job.getTenant() != null
+                            ? job.getTenant().getSubdomain()
+                            : "unknown";
 
-                    return new RecentJobDto(
+                    return new RecentJobData(
                             job.getId(),
                             job.getTenantId(),
                             subdomain,
                             job.getType(),
                             job.getStatus(),
-                            job.getCreatedAt().toString());
+                            job.getCreatedAt().toString(),
+                            job.getError());
                 })
                 .toList();
     }
 
-    private List<ModuleDistributionDto> buildModuleDistribution() {
+    private List<ModuleDistributionData> buildModuleDistribution() {
         List<Object[]> distribution = tenantModuleRepository.findModuleDistribution();
 
-        log.info("=== Module Distribution Debug ===");
-        distribution.forEach(row -> {
-            log.info("Module: {} - Name: {} - Count: {}", row[0], row[1], row[2]);
-        });
-
         return distribution.stream()
-                .map(row -> new ModuleDistributionDto(
+                .map(row -> new ModuleDistributionData(
                         (String) row[0],
                         (String) row[1],
-                        (Long) row[2]))
+                        ((Number) row[2]).longValue()))
                 .toList();
     }
 }

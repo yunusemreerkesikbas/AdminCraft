@@ -2,6 +2,7 @@ package com.backend.application.service;
 
 import com.backend.application.dto.request.CreateTenantRequest;
 import com.backend.application.dto.request.UpdateTenantRequest;
+import com.backend.application.dto.response.TenantProvisioningJobData;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
@@ -22,6 +23,8 @@ public interface TenantService {
     boolean hasAccessToTenant(String currentUserEmail, Long tenantId);
 
     List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage);
+
+    List<TenantProvisioningJobData> getTenantProvisioningJobs(Long tenantId);
 
     TenantDetailResponse createTenantWithDetail(CreateTenantRequest request, Language displayLanguage);
 

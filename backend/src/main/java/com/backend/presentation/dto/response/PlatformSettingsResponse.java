@@ -1,6 +1,6 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
+import com.backend.application.dto.response.PlatformSettingsData;
 
 public record PlatformSettingsResponse(
     String platformName,
@@ -9,13 +9,13 @@ public record PlatformSettingsResponse(
     String emailFromAddress,
     String emailFromName
 ) {
-    public static PlatformSettingsResponse from(PlatformSettings entity) {
+    public static PlatformSettingsResponse from(PlatformSettingsData entity) {
         return new PlatformSettingsResponse(
-            entity.getPlatformName(),
-            entity.getDefaultLanguage(),
-            entity.getDefaultCurrency(),
-            entity.getEmailFromAddress(),
-            entity.getEmailFromName()
+            entity.platformName(),
+            entity.defaultLanguage(),
+            entity.defaultCurrency(),
+            entity.emailFromAddress(),
+            entity.emailFromName()
         );
     }
 }

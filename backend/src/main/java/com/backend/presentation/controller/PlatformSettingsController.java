@@ -26,12 +26,14 @@ public class PlatformSettingsController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PlatformSettingsResponse>> getSettings() {
-        return ResponseEntity.ok(ApiResponse.success(service.getSettings()));
+        return ResponseEntity.ok(ApiResponse.success(
+                PlatformSettingsResponse.from(service.getSettings())));
     }
 
     @PatchMapping
     public ResponseEntity<ApiResponse<PlatformSettingsResponse>> patchSettings(
             @Valid @RequestBody PatchPlatformSettingsRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(service.patchSettings(request)));
+        return ResponseEntity.ok(ApiResponse.success(
+                PlatformSettingsResponse.from(service.patchSettings(request))));
     }
 }

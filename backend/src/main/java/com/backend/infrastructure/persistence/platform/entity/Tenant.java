@@ -1,6 +1,7 @@
 package com.backend.infrastructure.persistence.platform.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -94,10 +95,12 @@ public class Tenant {
   private LocalDateTime updatedAt;
 
   @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<TenantModule> modules;
+  @Builder.Default
+  private List<TenantModule> modules = new ArrayList<>();
 
   @OneToMany(mappedBy = "tenant")
-  private List<ProvisioningJob> provisioningJobs;
+  @Builder.Default
+  private List<ProvisioningJob> provisioningJobs = new ArrayList<>();
 
   @PrePersist
   protected void onCreate() {
