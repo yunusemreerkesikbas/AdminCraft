@@ -1,9 +1,14 @@
 package com.backend.application.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -11,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.request.CreateTenantRequest;
 import com.backend.application.dto.request.UpdateTenantRequest;
+import com.backend.application.dto.response.TenantProvisioningJobData;
 import com.backend.application.dto.tenant.TenantModuleResponse;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.User;
@@ -172,12 +178,7 @@ public class TenantServiceImpl implements TenantService {
     @Override
     public List<TenantModuleResponse> getTenantModules(Long tenantId, Language displayLanguage) {
         log.debug("Fetching modules for tenant: {}", tenantId);
-        String savedTenantId = tenantContext.getTenantId();
-        String savedTenantDbName = tenantContext.getTenantDbName();
-        String savedSubdomain = tenantContext.getSubdomain();
-
-        try {
-            tenantContext.clear();
+        return withPlatformContext(() -> {
             log.debug("Cleared tenant context to access platform database for tenant: {}", tenantId);
 
             tenantRepository.findById(tenantId)
@@ -196,60 +197,62 @@ public class TenantServiceImpl implements TenantService {
                             .installedAt(tm.getInstalledAt())
                             .build())
                     .toList();
-        } finally {
-            if (savedTenantId != null) {
-                tenantContext.setTenantId(savedTenantId);
-            }
-            if (savedTenantDbName != null) {
-                tenantContext.setTenantDbName(savedTenantDbName);
-            }
-            if (savedSubdomain != null) {
-                tenantContext.setSubdomain(savedSubdomain);
-            }
-            log.debug("Restored tenant context after platform database query");
-        }
+        });
+    }
+
+    @Override
+    public List<TenantProvisioningJobData> getTenantProvisioningJobs(Long tenantId) {
+        return withPlatformContext(() -> provisioningJobRepository.findByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+                .map(job -> new TenantProvisioningJobData(
+                        job.getId(),
+                        job.getTenantId(),
+                        job.getType(),
+                        job.getStatus(),
+                        job.getProgress(),
+                        job.getError(),
+                        job.getCreatedAt(),
+                        job.getStartedAt(),
+                        job.getCompletedAt()))
+                .toList());
     }
 
     @Override
     public TenantListResponse getTenantListById(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new TenantNotFoundException(id));
-        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
-        Integer modulesCount = countProvisionedModules(id);
-        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        return withPlatformContext(() -> {
+            Tenant tenant = tenantRepository.findById(id)
+                    .orElseThrow(() -> new TenantNotFoundException(id));
+            ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
+            Integer modulesCount = countProvisionedModules(id);
+            return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        });
     }
 
     @Override
     public List<TenantListResponse> getAllTenantsAsList(Language displayLanguage) {
-        return tenantRepository.findAll().stream()
-                .map(tenant -> {
-                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
-                    Integer modulesCount = countProvisionedModules(tenant.getId());
-                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-                })
-                .toList();
+        return withPlatformContext(() -> {
+            List<Tenant> tenants = tenantRepository.findAll();
+            TenantMetrics metrics = loadTenantMetrics(tenants.stream().map(Tenant::getId).toList());
+            return tenants.stream()
+                    .map(tenant -> toTenantListResponse(tenant, displayLanguage, metrics))
+                    .toList();
+        });
     }
 
     @Override
     public List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage) {
-        return tenantRepository.findByStatus(status).stream()
-                .map(tenant -> {
-                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
-                    Integer modulesCount = countProvisionedModules(tenant.getId());
-                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-                })
-                .toList();
+        return withPlatformContext(() -> {
+            List<Tenant> tenants = tenantRepository.findByStatus(status);
+            TenantMetrics metrics = loadTenantMetrics(tenants.stream().map(Tenant::getId).toList());
+            return tenants.stream()
+                    .map(tenant -> toTenantListResponse(tenant, displayLanguage, metrics))
+                    .toList();
+        });
     }
 
     @Override
     public TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage) {
         log.debug("Fetching tenant detail for tenant: {}", id);
-        String savedTenantId = tenantContext.getTenantId();
-        String savedTenantDbName = tenantContext.getTenantDbName();
-        String savedSubdomain = tenantContext.getSubdomain();
-
-        try {
-            tenantContext.clear();
+        return withPlatformContext(() -> {
             log.debug("Cleared tenant context to access platform database for tenant: {}", id);
 
             Tenant tenant = tenantRepository.findById(id)
@@ -257,18 +260,23 @@ public class TenantServiceImpl implements TenantService {
             ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
             Integer modulesCount = countProvisionedModules(id);
             return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-        } finally {
-            if (savedTenantId != null) {
-                tenantContext.setTenantId(savedTenantId);
-            }
-            if (savedTenantDbName != null) {
-                tenantContext.setTenantDbName(savedTenantDbName);
-            }
-            if (savedSubdomain != null) {
-                tenantContext.setSubdomain(savedSubdomain);
-            }
-            log.debug("Restored tenant context after platform database query");
-        }
+        });
+    }
+
+    @Override
+    public Page<TenantListResponse> searchTenants(
+            String search,
+            TenantStatus status,
+            Pageable pageable,
+            Language displayLanguage) {
+        return withPlatformContext(() -> {
+            Page<Tenant> page = tenantRepository.searchTenants(search, status, pageable);
+            TenantMetrics metrics = loadTenantMetrics(page.getContent().stream().map(Tenant::getId).toList());
+            List<TenantListResponse> mapped = page.getContent().stream()
+                    .map(tenant -> toTenantListResponse(tenant, displayLanguage, metrics))
+                    .toList();
+            return new PageImpl<>(mapped, pageable, page.getTotalElements());
+        });
     }
 
     private ProvisioningStatus calculateProvisioningStatus(Long tenantId) {
@@ -279,17 +287,78 @@ public class TenantServiceImpl implements TenantService {
             return ProvisioningStatus.IDLE;
         }
 
-        String jobStatus = latestJob.get().getStatus();
-        return switch (jobStatus) {
-            case "pending", "running" -> ProvisioningStatus.PROVISIONING;
-            case "failed" -> ProvisioningStatus.FAILED;
-            case "succeeded" -> ProvisioningStatus.IDLE;
-            default -> ProvisioningStatus.IDLE;
-        };
+        return mapProvisioningStatus(latestJob.get().getStatus());
     }
 
     private Integer countProvisionedModules(Long tenantId) {
         Integer count = tenantModuleRepository.countEnabledModulesByTenantId(tenantId);
         return count != null ? count : 0;
+    }
+
+    private TenantListResponse toTenantListResponse(Tenant tenant, Language displayLanguage, TenantMetrics metrics) {
+        ProvisioningStatus provisioningStatus = metrics.provisioningStatusByTenantId()
+                .getOrDefault(tenant.getId(), ProvisioningStatus.IDLE);
+        Integer modulesCount = metrics.moduleCountByTenantId().getOrDefault(tenant.getId(), 0);
+        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    private TenantMetrics loadTenantMetrics(List<Long> tenantIds) {
+        if (tenantIds.isEmpty()) {
+            return new TenantMetrics(Map.of(), Map.of());
+        }
+
+        Map<Long, ProvisioningStatus> provisioningStatusByTenantId = new HashMap<>();
+        List<Object[]> latestStatuses = provisioningJobRepository.findLatestStatusesByTenantIds(tenantIds);
+        for (Object[] row : latestStatuses) {
+            Long tenantId = ((Number) row[0]).longValue();
+            String status = (String) row[1];
+            provisioningStatusByTenantId.putIfAbsent(tenantId, mapProvisioningStatus(status));
+        }
+
+        Map<Long, Integer> moduleCountByTenantId = new HashMap<>();
+        List<Object[]> moduleCounts = tenantModuleRepository.countEnabledModulesByTenantIds(tenantIds);
+        for (Object[] row : moduleCounts) {
+            Long tenantId = ((Number) row[0]).longValue();
+            Integer moduleCount = ((Number) row[1]).intValue();
+            moduleCountByTenantId.put(tenantId, moduleCount);
+        }
+
+        return new TenantMetrics(provisioningStatusByTenantId, moduleCountByTenantId);
+    }
+
+    private ProvisioningStatus mapProvisioningStatus(String status) {
+        return switch (status) {
+            case "pending", "running" -> ProvisioningStatus.PROVISIONING;
+            case "failed" -> ProvisioningStatus.FAILED;
+            default -> ProvisioningStatus.IDLE;
+        };
+    }
+
+    private <T> T withPlatformContext(Supplier<T> action) {
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
+
+        try {
+            tenantContext.clear();
+            return action.get();
+        } finally {
+            tenantContext.clear();
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
+            }
+            log.debug("Restored tenant context after platform database query");
+        }
+    }
+
+    private record TenantMetrics(
+            Map<Long, ProvisioningStatus> provisioningStatusByTenantId,
+            Map<Long, Integer> moduleCountByTenantId) {
     }
 }

@@ -6,6 +6,9 @@ import com.backend.domain.enums.TenantStatus;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface TenantRepository {
     
     // Basic CRUD operations
@@ -41,4 +44,6 @@ public interface TenantRepository {
     List<Tenant> findTenantsExceedingStorageThreshold(Long threshold);
 
     long countTenantsActivatedToday();
+
+    Page<Tenant> searchTenants(String search, TenantStatus status, Pageable pageable);
 }

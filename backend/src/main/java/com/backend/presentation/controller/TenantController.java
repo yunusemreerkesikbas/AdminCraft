@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,12 +32,18 @@ import com.backend.application.usecase.CreateTenantUseCase;
 import com.backend.application.usecase.GenerateTenantAdminUserUseCase;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.presentation.dto.response.ProvisioningJobResponse;
+import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -78,14 +88,46 @@ public class TenantController {
 
         @GetMapping
         @PreAuthorize("hasRole('SUPER_ADMIN')")
-        public ResponseEntity<ApiResponse<List<TenantListResponse>>> getAllTenants(
+        public ResponseEntity<ApiResponse<PageableResponse<TenantListResponse>>> listTenants(
+                        @RequestParam(defaultValue = "0") @Min(0) int page,
+                        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+                        @RequestParam(required = false) String sort,
+                        @RequestParam(required = false) String search,
                         @RequestParam(required = false) TenantStatus status,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                Language displayLanguage = Language.fromCodeOrDefault(languageCode);
-                List<TenantListResponse> response = status != null
-                                ? tenantService.getTenantsByStatusAsList(status, displayLanguage)
-                                : tenantService.getAllTenantsAsList(displayLanguage);
-                return ResponseEntity.ok(ApiResponse.success(response));
+                try {
+                        String effectiveSort = SortParseUtil.getEffectiveSortCode(
+                                        sort,
+                                        SortableFieldsConfig.TENANT_DEFAULT_SORT);
+                        Sort sortObj = SortParseUtil.parse(
+                                        effectiveSort,
+                                        SortableFieldsConfig.TENANT_ALLOWED_FIELDS,
+                                        SortableFieldsConfig.TENANT_DEFAULT_SORT);
+
+                        Pageable pageable = PageRequest.of(page, size, sortObj);
+                        Language displayLanguage = Language.fromCodeOrDefault(languageCode);
+                        Page<TenantListResponse> tenantPage = tenantService.searchTenants(
+                                        search,
+                                        status,
+                                        pageable,
+                                        displayLanguage);
+
+                        SortConfig sortConfig = SortConfig.of(
+                                        effectiveSort,
+                                        SortableFieldsConfig.TENANT_SORT_OPTIONS);
+                        PageableResponse<TenantListResponse> response = PageableResponse.from(
+                                        tenantPage,
+                                        sortConfig);
+
+                        return ResponseEntity.ok(ApiResponse.success(response));
+                } catch (IllegalArgumentException ex) {
+                        String message = messageSource.getMessage(
+                                        "tenant.sort.invalid",
+                                        new Object[] { ex.getMessage() },
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                }
         }
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -139,6 +181,16 @@ public class TenantController {
                         return ResponseEntity.status(HttpStatus.CONFLICT)
                                         .body(ApiResponse.<AdminUserResponse>error(HttpStatus.CONFLICT.value(), msg));
                 }
+        }
+
+        @GetMapping("/{tenantId}/provisioning-jobs")
+        @PreAuthorize("hasRole('SUPER_ADMIN')")
+        public ResponseEntity<ApiResponse<List<ProvisioningJobResponse>>> getTenantProvisioningJobs(
+                        @PathVariable @NotNull @Min(1) Long tenantId) {
+                List<ProvisioningJobResponse> response = tenantService.getTenantProvisioningJobs(tenantId).stream()
+                                .map(ProvisioningJobResponse::from)
+                                .toList();
+                return ResponseEntity.ok(ApiResponse.success(response));
         }
 
         @GetMapping("/current/modules")
