@@ -28,17 +28,29 @@ export enum TenantStatus {
 export enum Language {
     TR = 'TR',
     EN = 'EN',
+    ZH = 'ZH',
+    HI = 'HI',
     ES = 'ES',
+    FR = 'FR',
     RU = 'RU',
     AR = 'AR',
+    BN = 'BN',
+    PT = 'PT',
+    UR = 'UR',
 }
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
     [Language.TR]: 'Türkçe',
     [Language.EN]: 'English',
+    [Language.ZH]: '中文',
+    [Language.HI]: 'हिन्दी',
     [Language.ES]: 'Español',
+    [Language.FR]: 'Français',
     [Language.RU]: 'Русский',
     [Language.AR]: 'العربية',
+    [Language.BN]: 'বাংলা',
+    [Language.PT]: 'Português',
+    [Language.UR]: 'اردو',
 };
 
 export enum Currency {
@@ -157,6 +169,18 @@ export interface AdminUserResponse {
  * Response from sync migrations and provisioning job endpoints
  * Uses jobId (number) and lowercase status values
  */
+export interface ProvisioningJobResponse {
+    id: number;
+    tenantId: number;
+    type: string;
+    status: string;
+    progress?: number;
+    error?: string;
+    createdAt: string;
+    startedAt?: string;
+    completedAt?: string;
+}
+
 export interface SyncJobDto {
     jobId: number;
     tenantId: number;

@@ -1,0 +1,75 @@
+<div class="flex min-h-full w-full flex-col">
+    <!-- Header -->
+    <div class="bg-card">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
+            <div class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-auto flex-col">
+                    <button mat-button (click)="goBack()" class="mb-4 -ml-2 self-start">
+                        <mat-icon [svgIcon]="'heroicons_outline:arrow-left'" class="mr-1 icon-size-5"></mat-icon>
+                        {{ 'admin.tenants.detail.back' | transloco }}
+                    </button>
+                    @if (tenantSig(); as tenant) {
+                        <div class="mb-2">
+                            <div class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
+                                [class]="tenant.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                                         tenant.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                         tenant.status === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                                         'bg-blue-100 text-blue-800'">
+                                {{ 'admin.tenants.status.' + tenant.status | transloco }}
+                            </div>
+                        </div>
+                        <h1 class="truncate text-2xl font-bold leading-7 tracking-tight md:text-5xl md:leading-snug">
+                            {{ tenant.companyName }}
+                        </h1>
+                        <p class="text-secondary mt-1 leading-6">
+                            {{ tenant.subdomain }}.admincraft.com
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl">
+            @if (loadingSig()) {
+                <div class="flex h-64 items-center justify-center">
+                    <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+                </div>
+            } @else {
+                <mat-tab-group
+                    class="sm:px-2"
+                    mat-stretch-tabs="false"
+                    [animationDuration]="'0'"
+                    [selectedIndex]="getTabIndex(selectedTabSig())"
+                    (selectedIndexChange)="onTabSelectionChange($event)"
+                >
+                    @for (tab of tabs; track tab.id) {
+                        <mat-tab>
+                            <ng-template mat-tab-label>
+                                <mat-icon class="mr-2 icon-size-5" [svgIcon]="tab.icon"></mat-icon>
+                                <span>{{ tab.label | transloco }}</span>
+                            </ng-template>
+                            <ng-template matTabContent>
+                                <div class="flex-1 p-6 sm:p-8">
+                                    @switch (tab.id) {
+                                        @case ('overview') {
+                                            <spa-tenant-overview [tenant]="tenantSig()" />
+                                        }
+                                        @case ('modules') {
+                                            <spa-tenant-modules [modules]="modulesSig()" />
+                                        }
+                                        @case ('jobs') {
+                                            <spa-tenant-jobs [jobs]="jobsSig()" />
+                                        }
+                                    }
+                                </div>
+                            </ng-template>
+                        </mat-tab>
+                    }
+                </mat-tab-group>
+            }
+        </div>
+    </div>
+</div>

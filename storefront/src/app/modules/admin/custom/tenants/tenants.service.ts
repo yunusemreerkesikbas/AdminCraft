@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { TenantModule } from 'app/core/tenant/tenant.types';
-import { Observable, interval, switchMap, takeWhile } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { ApiResponse } from '@core/crud/api.types';
 import {
     AdminUserResponse,
     CreateTenantRequest,
     ProvisionLanguagesRequest,
     ProvisioningJobDto,
+    ProvisioningJobResponse,
     SyncJobDto,
     Tenant,
+    TenantDetailResponse,
     TenantLanguagesDto,
     UpdateTenantLanguagesRequest,
     UpdateTenantRequest
@@ -46,19 +49,29 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
         return this.customGet<SyncJobDto>('provisioningJob', { jobId });
     }
 
-    pollProvisioningJob(jobUuid: string, intervalMs: number = 2000): Observable<ProvisioningJobDto> {
-        return interval(intervalMs).pipe(
-            switchMap(() => this.getProvisioningJob(jobUuid)),
-            takeWhile((job) => job.status === 'PENDING' || job.status === 'RUNNING', true)
-        );
-    }
-
     getLanguageProvisioningJobStatus(jobUuid: string): Observable<ProvisioningJobDto> {
         return this.getProvisioningJob(jobUuid);
     }
 
     getAllTenants(): Observable<Tenant[]> {
-        return this.list();
+        return this.listPaged({ page: 0, size: 500, sort: 'companyName,asc' }).pipe(
+            map((page) => page.content || [])
+        );
+    }
+
+    createWithResponse(
+        request: CreateTenantRequest
+    ): Observable<ApiResponse<Tenant>> {
+        return this.api.post<ApiResponse<Tenant>>(this.endpoints.create, request);
+    }
+
+    updateWithResponse(
+        id: number,
+        request: UpdateTenantRequest
+    ): Observable<ApiResponse<Tenant>> {
+        return this.api.put<ApiResponse<Tenant>>(this.endpoints.update, request, {
+            id,
+        });
     }
 
     getTenantModules(tenantId: number): Observable<TenantModule[]> {
@@ -71,5 +84,13 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
 
     syncMigrations(tenantId: number): Observable<SyncJobDto> {
         return this.customPost<SyncJobDto>('provisioningSyncMigrations', {}, { tenantId });
+    }
+
+    getTenantDetail(tenantId: number): Observable<TenantDetailResponse> {
+        return this.customGet<TenantDetailResponse>('tenantById', { id: tenantId });
+    }
+
+    getTenantProvisioningJobs(tenantId: number): Observable<ProvisioningJobResponse[]> {
+        return this.customGet<ProvisioningJobResponse[]>('tenantProvisioningJobs', { tenantId });
     }
 }

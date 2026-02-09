@@ -1,0 +1,104 @@
+<spa-dialog
+    [title]="
+        (mode === 'create' ? 'admin.tenants.create' : 'admin.tenants.edit')
+            | transloco
+    "
+    [subtitle]="data.tenant?.companyName"
+    [size]="'lg'"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isLoadingSig()"
+    submitLabel="admin.common.actions.save"
+    cancelLabel="admin.common.actions.cancel"
+    (closed)="onCancel()"
+    (cancelled)="onCancel()"
+    (submitted)="onSubmit()"
+>
+    <form [formGroup]="form" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-3">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">domain</mat-icon>
+                {{ 'admin.tenants.sections.general' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    formControlName="companyName"
+                    [label]="'admin.tenants.fields.companyName' | transloco"
+                    [placeholder]="'Acme Inc.'"
+                    [required]="true"
+                ></spa-input>
+
+                <spa-input
+                    formControlName="subdomain"
+                    [label]="'admin.tenants.fields.subdomain' | transloco"
+                    [placeholder]="'acme'"
+                    [required]="!isEditMode"
+                    [readonly]="isEditMode"
+                ></spa-input>
+            </div>
+        </div>
+
+        <div class="border-t"></div>
+
+        <div class="flex flex-col gap-4">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">language</mat-icon>
+                {{ 'admin.tenants.sections.preferences' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-select
+                    formControlName="supportedLanguages"
+                    [label]="'admin.tenants.fields.supportedLanguages' | transloco"
+                    [options]="languageOptions"
+                    [multiple]="true"
+                    [required]="true"
+                ></spa-select>
+
+                <spa-select
+                    formControlName="defaultLanguage"
+                    [label]="'admin.tenants.fields.defaultLanguage' | transloco"
+                    [options]="languageOptions"
+                    [required]="true"
+                ></spa-select>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-select
+                    formControlName="currency"
+                    [label]="'admin.tenants.fields.currency' | transloco"
+                    [options]="currencyOptions"
+                ></spa-select>
+            </div>
+        </div>
+
+        <div class="border-t"></div>
+
+        <div class="flex flex-col gap-4">
+            <h3
+                class="text-secondary flex items-center gap-2 text-base font-medium"
+            >
+                <mat-icon class="icon-size-5">tune</mat-icon>
+                {{ 'admin.tenants.sections.additional' | transloco }}
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    formControlName="customDomain"
+                    [label]="'admin.tenants.fields.customDomain' | transloco"
+                    [placeholder]="'example.com'"
+                ></spa-input>
+            </div>
+
+            <spa-textarea
+                formControlName="notes"
+                [label]="'admin.tenants.fields.notes' | transloco"
+                [rows]="3"
+            ></spa-textarea>
+        </div>
+    </form>
+</spa-dialog>

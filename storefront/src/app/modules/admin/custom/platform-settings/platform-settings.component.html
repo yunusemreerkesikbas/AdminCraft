@@ -1,0 +1,92 @@
+<div class="flex min-h-full w-full flex-col">
+    <!-- Header -->
+    <div class="bg-card">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
+            <div class="my-8 flex min-w-0 flex-auto flex-col sm:my-12">
+                <h1 class="truncate text-2xl font-bold leading-7 tracking-tight md:text-5xl md:leading-snug">
+                    {{ 'admin.platform.settings.title' | transloco }}
+                </h1>
+                <p class="text-secondary mt-1 leading-6">
+                    {{ 'admin.platform.settings.subtitle' | transloco }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl px-6 sm:px-8">
+            @if (loadingSig()) {
+                <div class="flex h-64 items-center justify-center">
+                    <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+                </div>
+            } @else {
+                <form [formGroup]="form" (ngSubmit)="onSave()" class="space-y-8">
+                    <!-- General Section -->
+                    <div class="rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-800">
+                        <h3 class="mb-6 text-lg font-semibold">{{ 'admin.platform.settings.sections.general' | transloco }}</h3>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <spa-input
+                                [label]="'admin.platform.settings.fields.platformName' | transloco"
+                                formControlName="platformName"
+                                [showErrors]="true"
+                                placeholder="AdminCraft"
+                            ></spa-input>
+                            <mat-form-field class="w-full" appearance="outline">
+                                <mat-label>{{ 'admin.platform.settings.fields.defaultLanguage' | transloco }}</mat-label>
+                                <mat-select formControlName="defaultLanguage">
+                                    @for (lang of languages; track lang.value) {
+                                        <mat-option [value]="lang.value">{{ lang.label }}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field class="w-full" appearance="outline">
+                                <mat-label>{{ 'admin.platform.settings.fields.defaultCurrency' | transloco }}</mat-label>
+                                <mat-select formControlName="defaultCurrency">
+                                    @for (curr of currencies; track curr.value) {
+                                        <mat-option [value]="curr.value">{{ curr.label }}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <!-- Email Display Section -->
+                    <div class="rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-800">
+                        <h3 class="mb-6 text-lg font-semibold">{{ 'admin.platform.settings.sections.emailDisplay' | transloco }}</h3>
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <spa-input
+                                [label]="'admin.platform.settings.fields.emailFromAddress' | transloco"
+                                formControlName="emailFromAddress"
+                                type="email"
+                                [showErrors]="true"
+                                placeholder="noreply@admincraft.com"
+                            ></spa-input>
+                            <spa-input
+                                [label]="'admin.platform.settings.fields.emailFromName' | transloco"
+                                formControlName="emailFromName"
+                                [showErrors]="true"
+                                placeholder="AdminCraft Platform"
+                            ></spa-input>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div class="flex justify-end pb-8">
+                        <button
+                            mat-flat-button
+                            [color]="'primary'"
+                            type="submit"
+                            [disabled]="form.pristine || form.invalid || savingSig()"
+                        >
+                            @if (savingSig()) {
+                                <div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            }
+                            {{ 'common.save' | transloco }}
+                        </button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

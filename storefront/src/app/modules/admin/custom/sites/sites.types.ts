@@ -28,6 +28,15 @@ export interface SitePagination {
 export enum Language {
     TR = 'TR',
     EN = 'EN',
+    ZH = 'ZH',
+    HI = 'HI',
+    ES = 'ES',
+    FR = 'FR',
+    AR = 'AR',
+    BN = 'BN',
+    RU = 'RU',
+    PT = 'PT',
+    UR = 'UR',
 }
 
 export interface Menu {

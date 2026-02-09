@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { TranslationService } from '../i18n/translation.service';
 import { SupportedLanguage } from '../i18n/translation.types';
 import { NavigationService } from '../navigation/navigation.service';
+import { environment } from '@environments/environment';
 
 export interface LanguageDefinition {
     id: SupportedLanguage;
@@ -25,6 +26,12 @@ const AVAILABLE_LANGUAGES: readonly LanguageDefinition[] = [
     },
 ] as const;
 
+const DEFAULT_LANGUAGE: SupportedLanguage = Object.values(SupportedLanguage).includes(
+    environment.defaultLanguage as SupportedLanguage
+)
+    ? (environment.defaultLanguage as SupportedLanguage)
+    : SupportedLanguage.EN;
+
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
     readonly #translationService = inject(TranslationService);
@@ -33,7 +40,7 @@ export class LanguageService {
     readonly #translocoService = inject(TranslocoService);
 
     readonly #currentLanguage = new BehaviorSubject<SupportedLanguage>(
-        SupportedLanguage.EN
+        DEFAULT_LANGUAGE
     );
 
     constructor() {

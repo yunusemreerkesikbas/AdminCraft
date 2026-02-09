@@ -77,7 +77,7 @@ Not applicable. Provisioning endpoints are authenticated control-plane APIs.
 
 Provisioning-related admin UI is integrated through tenant management views:
 
-- Tenants list route: [`storefront/src/app/modules/admin/custom/tenants/tenants.routes.ts`](../../storefront/src/app/modules/admin/custom/tenants/tenants.routes.ts)
+- Tenants list route: [`storefront/src/app/app.routes.ts`](../../storefront/src/app/app.routes.ts) (under `tenants` path)
 - Tenants service: [`storefront/src/app/modules/admin/custom/tenants/tenants.service.ts`](../../storefront/src/app/modules/admin/custom/tenants/tenants.service.ts)
 - Tenant detail jobs tab: [`storefront/src/app/modules/admin/custom/tenants/detail/tabs/tenant-jobs.component.ts`](../../storefront/src/app/modules/admin/custom/tenants/detail/tabs/tenant-jobs.component.ts)
 

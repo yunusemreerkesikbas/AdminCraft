@@ -16,8 +16,7 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
                 durationMs: 5000,
             });
 
-            const currentLang = route.paramMap.get('lang') || 'tr';
-            router.navigateByUrl(`/${currentLang}/sign-in`);
+            router.navigateByUrl('/sign-in');
             return false;
         }
 

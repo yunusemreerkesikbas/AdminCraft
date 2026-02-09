@@ -4,6 +4,7 @@ import { Language } from 'app/modules/admin/custom/tenants/tenants.types';
 import { BehaviorSubject, Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { TenantContextService } from '../tenant/tenant-context.service';
+import { environment } from '@environments/environment';
 import {
     SupportedLanguage,
     TenantLanguageSettings,
@@ -11,6 +12,12 @@ import {
     TranslationLoadError,
     UserLanguagePreference
 } from './translation.types';
+
+const DEFAULT_LANGUAGE: SupportedLanguage = Object.values(SupportedLanguage).includes(
+    environment.defaultLanguage as SupportedLanguage
+)
+    ? (environment.defaultLanguage as SupportedLanguage)
+    : SupportedLanguage.EN;
 
 @Injectable({
     providedIn: 'root'
@@ -20,8 +27,8 @@ export class TranslationService {
     private readonly _tenantContextService = inject(TenantContextService);
 
     private readonly _config$ = new BehaviorSubject<TranslationConfig>({
-        defaultLang: SupportedLanguage.TR,
-        fallbackLang: SupportedLanguage.EN,
+        defaultLang: DEFAULT_LANGUAGE,
+        fallbackLang: DEFAULT_LANGUAGE,
         supportedLanguages: [SupportedLanguage.TR, SupportedLanguage.EN],
         enableFallback: true,
         logMissingKeys: true
@@ -241,7 +248,7 @@ export class TranslationService {
             case 'EN':
                 return SupportedLanguage.EN;
             default:
-                return SupportedLanguage.TR;
+                return DEFAULT_LANGUAGE;
         }
     }
 

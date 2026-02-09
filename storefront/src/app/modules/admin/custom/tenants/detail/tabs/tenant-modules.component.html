@@ -1,0 +1,37 @@
+@if (modules.length > 0) {
+    <div class="overflow-x-auto rounded-lg border bg-white shadow-sm dark:bg-gray-800">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 font-medium">{{ 'admin.tenants.detail.modules.moduleCode' | transloco }}</th>
+                    <th class="px-6 py-3 font-medium">{{ 'admin.tenants.detail.modules.moduleName' | transloco }}</th>
+                    <th class="px-6 py-3 font-medium">{{ 'admin.tenants.detail.modules.status' | transloco }}</th>
+                    <th class="hidden px-6 py-3 font-medium md:table-cell">{{ 'admin.tenants.detail.modules.installedAt' | transloco }}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @for (mod of modules; track mod.moduleCode) {
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-3 font-mono text-sm">{{ mod.moduleCode }}</td>
+                        <td class="px-6 py-3">{{ mod.moduleName || mod.moduleCode }}</td>
+                        <td class="px-6 py-3">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                [ngClass]="{
+                                    'bg-green-100 text-green-800': mod.status === 'enabled',
+                                    'bg-gray-100 text-gray-800': mod.status === 'disabled',
+                                    'bg-yellow-100 text-yellow-800': mod.status === 'pending'
+                                }">
+                                {{ 'admin.common.status.' + mod.status | transloco }}
+                            </span>
+                        </td>
+                        <td class="hidden px-6 py-3 text-secondary md:table-cell">{{ mod.installedAt | date:'shortDate' }}</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+} @else {
+    <div class="rounded-lg border bg-white p-8 text-center shadow-sm dark:bg-gray-800">
+        <p class="text-secondary">{{ 'admin.tenants.detail.modules.noModules' | transloco }}</p>
+    </div>
+}
