@@ -72,6 +72,42 @@ export const appRoutes: Route[] = [
         ],
     },
     {
+        path: ':lang',
+        canActivate: [LanguageGuard],
+        component: LayoutComponent,
+        data: {
+            layout: 'empty',
+        },
+        children: [
+            {
+                path: 'pages/error',
+                children: [
+                    {
+                        path: '403',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/pages/error/error-403/error-403.routes'
+                            ),
+                    },
+                    {
+                        path: '404',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/pages/error/error-404/error-404.routes'
+                            ),
+                    },
+                    {
+                        path: '500',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/pages/error/error-500/error-500.routes'
+                            ),
+                    },
+                ],
+            },
+        ],
+    },
+    {
         path: '',
         canActivate: [AuthGuard],
         canActivateChild: [AuthGuard],
@@ -297,36 +333,6 @@ export const appRoutes: Route[] = [
                             import(
                                 'app/modules/admin/pages/coming-soon/coming-soon.routes'
                             ),
-                    },
-
-                    {
-                        path: 'error',
-                        data: {
-                            layout: 'empty',
-                        },
-                        children: [
-                            {
-                                path: '403',
-                                loadChildren: () =>
-                                    import(
-                                        'app/modules/admin/pages/error/error-403/error-403.routes'
-                                    ),
-                            },
-                            {
-                                path: '404',
-                                loadChildren: () =>
-                                    import(
-                                        'app/modules/admin/pages/error/error-404/error-404.routes'
-                                    ),
-                            },
-                            {
-                                path: '500',
-                                loadChildren: () =>
-                                    import(
-                                        'app/modules/admin/pages/error/error-500/error-500.routes'
-                                    ),
-                            },
-                        ],
                     },
 
                     {

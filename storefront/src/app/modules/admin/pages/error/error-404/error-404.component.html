@@ -65,8 +65,8 @@
             The page you requested could not be found.
         </div>
         <a
-            class="mt-12 font-medium text-primary-500 underline"
-            [routerLink]="['/sign-in']"
+            class="mt-12 cursor-pointer font-medium text-primary-500 underline"
+            (click)="navigateToDashboard()"
         >
             Back to Dashboard
         </a>
