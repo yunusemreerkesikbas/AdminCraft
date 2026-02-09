@@ -215,7 +215,7 @@ export const VALIDATION_LIMITS = {
 
     // Site Security Limits
     RECAPTCHA_KEY_LENGTH: 40,
-    RECAPTCHA_TOKEN_MAX: 2048,
+    RECAPTCHA_TOKEN_MAX: 4096,
 } as const;
 
 // ============================================================================

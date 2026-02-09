@@ -66,7 +66,9 @@ public class AuthController {
 
             String effectiveSubdomain = subdomain != null ? subdomain : loginRequest.subdomain();
 
-            validateRecaptchaIfEnabled(loginRequest.recaptchaToken(), "login");
+            if (!isPlatformLoginAttempt(tenantId, effectiveSubdomain)) {
+                validateRecaptchaIfEnabled(loginRequest.recaptchaToken(), "login");
+            }
 
             String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
             String userAgent = RequestUtils.getUserAgent(httpRequest);
@@ -384,6 +386,18 @@ public class AuthController {
         recaptchaService.verifyToken(token, action);
     }
 
+    private boolean isPlatformLoginAttempt(Long tenantId, String subdomain) {
+        if (tenantId != null) {
+            return false;
+        }
+
+        if (subdomain == null || subdomain.isBlank()) {
+            return true;
+        }
+
+        return "admin".equalsIgnoreCase(subdomain.trim());
+    }
+
     private LoginResponse toLoginResponse(AuthResult authResult) {
         if (authResult.requires2FA()) {
             return LoginResponse.requiring2FA(
@@ -399,9 +413,12 @@ public class AuthController {
                 authResult.expiresIn(),
                 authResult.userId(),
                 authResult.email(),
+                authResult.fullName(),
                 authResult.role(),
                 authResult.subdomain(),
-                authResult.tenantId());
+                authResult.tenantId(),
+                false,
+                null);
     }
 
     private TokenValidationResponse toTokenValidationResponse(TokenValidationResult result) {

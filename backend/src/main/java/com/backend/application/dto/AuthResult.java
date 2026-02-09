@@ -7,6 +7,7 @@ public record AuthResult(
         Long expiresIn,
         Long userId,
         String email,
+        String fullName,
         String role,
         String subdomain,
         Long tenantId,
@@ -23,13 +24,13 @@ public record AuthResult(
             String role,
             String subdomain,
             Long tenantId) {
-        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, role, subdomain, tenantId, false, null);
+        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, null, role, subdomain, tenantId, false, null);
     }
 
     public static AuthResult requiring2FA(String email, String pendingToken, String subdomain, Long tenantId) {
         return new AuthResult(
                 null, null, null, null, null,
-                email, null, subdomain, tenantId,
+                email, null, null, subdomain, tenantId,
                 true, pendingToken);
     }
 
@@ -40,11 +41,12 @@ public record AuthResult(
             Long expiresIn,
             Long userId,
             String email,
+            String fullName,
             String role,
             String subdomain,
             Long tenantId) {
         return new AuthResult(
                 accessToken, refreshToken, tokenType, expiresIn,
-                userId, email, role, subdomain, tenantId, false, null);
+                userId, email, fullName, role, subdomain, tenantId, false, null);
     }
 }

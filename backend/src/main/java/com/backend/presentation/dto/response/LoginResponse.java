@@ -7,6 +7,7 @@ public record LoginResponse(
         Long expiresIn,
         Long userId,
         String email,
+        String fullName,
         String role,
         String subdomain,
         Long tenantId,
@@ -23,7 +24,7 @@ public record LoginResponse(
             String role,
             String subdomain,
             Long tenantId) {
-        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, role, subdomain, tenantId, false, null);
+        this(accessToken, refreshToken, tokenType, expiresIn, userId, email, null, role, subdomain, tenantId, false, null);
     }
 
     public LoginResponse {
@@ -47,7 +48,7 @@ public record LoginResponse(
     public static LoginResponse requiring2FA(String email, String pendingToken, String subdomain, Long tenantId) {
         return new LoginResponse(
                 null, null, null, null, null,
-                email, null, subdomain, tenantId,
+                email, null, null, subdomain, tenantId,
                 true, pendingToken
         );
     }
