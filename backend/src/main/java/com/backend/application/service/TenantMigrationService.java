@@ -18,8 +18,11 @@ public class TenantMigrationService {
   /**
    * CRITICAL: Module execution order for Flyway migrations.
    * This order ensures that FK dependencies are satisfied:
-   * - media creates responsive_media_set before component_library references it
-   * - component_library creates components before pagebuilder references them
+   * - core creates base tables (users, sites)
+   * - media creates responsive_media_set
+   * - component_library creates components/entries and adds FK to responsive_media_set
+   * - pagebuilder creates pages/slots and references components
+   * - product creates product catalog
    * See docs/global/migrations.md for full documentation.
    */
   private static final List<String> MODULE_ORDER = List.of(
