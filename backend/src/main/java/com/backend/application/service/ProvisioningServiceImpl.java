@@ -32,19 +32,22 @@ public class ProvisioningServiceImpl implements ProvisioningService {
   private final ProvisioningJobRepository jobRepository;
   private final ObjectMapper objectMapper;
   private final AsyncProvisioningExecutor asyncExecutor;
+  private final TenantMigrationService migrationService;
 
   public ProvisioningServiceImpl(TenantPlatformRepository tenantRepository,
       ModuleCatalogRepository moduleCatalogRepository,
       TenantModuleRepository tenantModuleRepository,
       ProvisioningJobRepository jobRepository,
       ObjectMapper objectMapper,
-      AsyncProvisioningExecutor asyncExecutor) {
+      AsyncProvisioningExecutor asyncExecutor,
+      TenantMigrationService migrationService) {
     this.tenantRepository = tenantRepository;
     this.moduleCatalogRepository = moduleCatalogRepository;
     this.tenantModuleRepository = tenantModuleRepository;
     this.jobRepository = jobRepository;
     this.objectMapper = objectMapper;
     this.asyncExecutor = asyncExecutor;
+    this.migrationService = migrationService;
   }
 
   @Override
@@ -54,6 +57,10 @@ public class ProvisioningServiceImpl implements ProvisioningService {
         .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
 
     validateModules(request.getModules());
+
+    // CRITICAL: Reorder modules according to FK dependencies
+    List<String> orderedModules = migrationService.getOrderedModules(request.getModules());
+    log.info("Modules reordered for tenant {}: {} -> {}", tenantId, request.getModules(), orderedModules);
 
     String correlationId = UUID.randomUUID().toString();
 
@@ -74,7 +81,7 @@ public class ProvisioningServiceImpl implements ProvisioningService {
       // Ensure async execution starts AFTER the surrounding transaction commits
       final Long fJobId = job.getId();
       final Tenant fTenant = tenant;
-      final java.util.List<String> fModules = request.getModules();
+      final java.util.List<String> fModules = orderedModules;
       final String fCorrelationId = correlationId;
 
       if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -118,6 +125,10 @@ public class ProvisioningServiceImpl implements ProvisioningService {
       }
     }
 
+    // CRITICAL: Reorder modules according to FK dependencies
+    List<String> orderedModules = migrationService.getOrderedModules(modulesToSync);
+    log.info("Modules reordered for sync migrations tenant {}: {} -> {}", tenantId, modulesToSync, orderedModules);
+
     String correlationId = UUID.randomUUID().toString();
     try {
       String payload = objectMapper.writeValueAsString(request);
@@ -133,7 +144,7 @@ public class ProvisioningServiceImpl implements ProvisioningService {
       job = jobRepository.save(job);
       final Long fJobId = job.getId();
       final Tenant fTenant = tenant;
-      final List<String> fModules = modulesToSync;
+      final List<String> fModules = orderedModules;
       final String fCorrelationId = correlationId;
       if (TransactionSynchronizationManager.isSynchronizationActive()) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

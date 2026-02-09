@@ -115,7 +115,7 @@ public class TenantMigrationService {
    * Modules not in MODULE_ORDER are appended at the end (for forward
    * compatibility).
    */
-  private List<String> getOrderedModules(List<String> requestedModules) {
+  public List<String> getOrderedModules(List<String> requestedModules) {
     List<String> ordered = new java.util.ArrayList<>();
 
     // Add modules in the correct order
