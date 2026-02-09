@@ -10,6 +10,9 @@ import com.backend.presentation.dto.response.TenantListResponse;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface TenantService {
 
     void deleteTenant(Long id);
@@ -31,4 +34,10 @@ public interface TenantService {
     List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage);
 
     TenantDetailResponse getTenantDetailById(Long id, Language displayLanguage);
+
+    Page<TenantListResponse> searchTenants(
+            String search,
+            TenantStatus status,
+            Pageable pageable,
+            Language displayLanguage);
 }

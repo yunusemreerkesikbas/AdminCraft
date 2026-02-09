@@ -39,6 +39,7 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 Platform features are not tenant modules, but they are critical for operating the system.
 
 - Tenants, provisioning, module enablement, migration sync: [`modules/platform-provisioning.md`](modules/platform-provisioning.md)
+- Platform Dashboard, Tenant Detail, Platform Settings: [`modules/platform-admin.md`](modules/platform-admin.md)
 
 ## Public delivery APIs (storefront)
 

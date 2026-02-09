@@ -50,6 +50,10 @@ public class ProvisioningJob {
   @Column(name = "completed_at")
   private LocalDateTime completedAt;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tenant_id", insertable = false, updatable = false)
+  private Tenant tenant;
+
   @PrePersist
   protected void onCreate() {
     createdAt = LocalDateTime.now();

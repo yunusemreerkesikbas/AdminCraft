@@ -7,6 +7,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.entity.Tenant;
@@ -150,6 +153,23 @@ public class TenantRepositoryImpl implements TenantRepository {
     @Override
     public long countTenantsActivatedToday() {
         return tenantPlatformRepository.countTenantsActivatedToday();
+    }
+
+    @Override
+    public Page<Tenant> searchTenants(String search, TenantStatus status, Pageable pageable) {
+        String normalizedSearch = search != null && !search.trim().isEmpty()
+                ? search.trim()
+                : null;
+        String statusValue = status != null ? status.name() : null;
+
+        Page<com.backend.infrastructure.persistence.platform.entity.Tenant> page = tenantPlatformRepository
+                .searchTenants(statusValue, normalizedSearch, pageable);
+
+        List<Tenant> mapped = page.getContent().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(mapped, pageable, page.getTotalElements());
     }
 
     private Tenant toDomain(com.backend.infrastructure.persistence.platform.entity.Tenant source) {

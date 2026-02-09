@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -212,33 +215,84 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     public TenantListResponse getTenantListById(Long id, Language displayLanguage) {
-        Tenant tenant = tenantRepository.findById(id)
-                .orElseThrow(() -> new TenantNotFoundException(id));
-        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
-        Integer modulesCount = countProvisionedModules(id);
-        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
+
+        try {
+            tenantContext.clear();
+            Tenant tenant = tenantRepository.findById(id)
+                    .orElseThrow(() -> new TenantNotFoundException(id));
+            ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
+            Integer modulesCount = countProvisionedModules(id);
+            return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
+            }
+        }
     }
 
     @Override
     public List<TenantListResponse> getAllTenantsAsList(Language displayLanguage) {
-        return tenantRepository.findAll().stream()
-                .map(tenant -> {
-                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
-                    Integer modulesCount = countProvisionedModules(tenant.getId());
-                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-                })
-                .toList();
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
+
+        try {
+            tenantContext.clear();
+            return tenantRepository.findAll().stream()
+                    .map(tenant -> {
+                        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                        Integer modulesCount = countProvisionedModules(tenant.getId());
+                        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                    })
+                    .toList();
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
+            }
+        }
     }
 
     @Override
     public List<TenantListResponse> getTenantsByStatusAsList(TenantStatus status, Language displayLanguage) {
-        return tenantRepository.findByStatus(status).stream()
-                .map(tenant -> {
-                    ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
-                    Integer modulesCount = countProvisionedModules(tenant.getId());
-                    return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
-                })
-                .toList();
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
+
+        try {
+            tenantContext.clear();
+            return tenantRepository.findByStatus(status).stream()
+                    .map(tenant -> {
+                        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                        Integer modulesCount = countProvisionedModules(tenant.getId());
+                        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                    })
+                    .toList();
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
+            }
+        }
     }
 
     @Override
@@ -268,6 +322,40 @@ public class TenantServiceImpl implements TenantService {
                 tenantContext.setSubdomain(savedSubdomain);
             }
             log.debug("Restored tenant context after platform database query");
+        }
+    }
+
+    @Override
+    public Page<TenantListResponse> searchTenants(
+            String search,
+            TenantStatus status,
+            Pageable pageable,
+            Language displayLanguage) {
+        String savedTenantId = tenantContext.getTenantId();
+        String savedTenantDbName = tenantContext.getTenantDbName();
+        String savedSubdomain = tenantContext.getSubdomain();
+
+        try {
+            tenantContext.clear();
+            Page<Tenant> page = tenantRepository.searchTenants(search, status, pageable);
+            List<TenantListResponse> mapped = page.getContent().stream()
+                    .map(tenant -> {
+                        ProvisioningStatus provisioningStatus = calculateProvisioningStatus(tenant.getId());
+                        Integer modulesCount = countProvisionedModules(tenant.getId());
+                        return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+                    })
+                    .toList();
+            return new PageImpl<>(mapped, pageable, page.getTotalElements());
+        } finally {
+            if (savedTenantId != null) {
+                tenantContext.setTenantId(savedTenantId);
+            }
+            if (savedTenantDbName != null) {
+                tenantContext.setTenantDbName(savedTenantDbName);
+            }
+            if (savedSubdomain != null) {
+                tenantContext.setSubdomain(savedSubdomain);
+            }
         }
     }
 

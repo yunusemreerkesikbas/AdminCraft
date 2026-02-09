@@ -21,4 +21,11 @@ public interface TenantModuleRepository extends JpaRepository<TenantModule, Long
 
   @Query("SELECT COUNT(tm) FROM TenantModule tm WHERE tm.tenantId = :tenantId AND tm.status = 'enabled'")
   Integer countEnabledModulesByTenantId(@Param("tenantId") Long tenantId);
+
+  @Query("SELECT tm.moduleCode, mc.name, COUNT(DISTINCT tm.tenantId) FROM TenantModule tm " +
+         "JOIN tm.moduleCatalog mc " +
+         "WHERE tm.status = 'enabled' " +
+         "AND EXISTS (SELECT 1 FROM Tenant t WHERE t.id = tm.tenantId) " +
+         "GROUP BY tm.moduleCode, mc.name ORDER BY COUNT(DISTINCT tm.tenantId) DESC")
+  List<Object[]> findModuleDistribution();
 }

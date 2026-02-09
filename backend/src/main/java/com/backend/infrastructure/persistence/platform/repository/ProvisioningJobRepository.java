@@ -15,4 +15,6 @@ public interface ProvisioningJobRepository extends JpaRepository<ProvisioningJob
   List<ProvisioningJob> findByStatus(String status);
 
   Optional<ProvisioningJob> findFirstByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+  List<ProvisioningJob> findTop5ByOrderByCreatedAtDesc();
 }

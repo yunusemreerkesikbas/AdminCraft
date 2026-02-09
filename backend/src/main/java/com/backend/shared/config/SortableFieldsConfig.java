@@ -106,6 +106,22 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("lastLoginAt,desc", "admin.sort.lastLoginDesc"),
                         SortOptionDto.of("lastLoginAt,asc", "admin.sort.lastLoginAsc"));
 
+        // ========== Tenant Entity ==========
+        public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "companyName", "subdomain", "status");
+
+        public static final String TENANT_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> TENANT_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("companyName,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("companyName,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("subdomain,asc", "admin.sort.subdomainAsc"),
+                        SortOptionDto.of("subdomain,desc", "admin.sort.subdomainDesc"),
+                        SortOptionDto.of("status,asc", "admin.sort.statusAsc"),
+                        SortOptionDto.of("status,desc", "admin.sort.statusDesc"));
+
         /**
          * Registry mapping entity names to their allowed fields.
          */
@@ -115,7 +131,8 @@ public final class SortableFieldsConfig {
                         "PageTemplate", PAGE_TEMPLATE_ALLOWED_FIELDS,
                         "Component", COMPONENT_ALLOWED_FIELDS,
                         "ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS,
-                        "User", USER_ALLOWED_FIELDS);
+                        "User", USER_ALLOWED_FIELDS,
+                        "Tenant", TENANT_ALLOWED_FIELDS);
 
         public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
                         "Media", MEDIA_SORT_OPTIONS,
@@ -123,7 +140,8 @@ public final class SortableFieldsConfig {
                         "PageTemplate", PAGE_TEMPLATE_SORT_OPTIONS,
                         "Component", COMPONENT_SORT_OPTIONS,
                         "ComponentType", COMPONENT_TYPE_SORT_OPTIONS,
-                        "User", USER_SORT_OPTIONS);
+                        "User", USER_SORT_OPTIONS,
+                        "Tenant", TENANT_SORT_OPTIONS);
 
         public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
                         "Media", MEDIA_DEFAULT_SORT,
@@ -131,5 +149,6 @@ public final class SortableFieldsConfig {
                         "PageTemplate", PAGE_TEMPLATE_DEFAULT_SORT,
                         "Component", COMPONENT_DEFAULT_SORT,
                         "ComponentType", COMPONENT_TYPE_DEFAULT_SORT,
-                        "User", USER_DEFAULT_SORT);
+                        "User", USER_DEFAULT_SORT,
+                        "Tenant", TENANT_DEFAULT_SORT);
 }

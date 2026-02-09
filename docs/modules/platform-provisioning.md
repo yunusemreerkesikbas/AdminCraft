@@ -23,6 +23,7 @@ Base path: `/api/tenants`
 - `PUT /api/tenants/{id}` (update)
 - `DELETE /api/tenants/{id}` (delete)
 - `GET /api/tenants/{tenantId}/modules` (module enablement list)
+- `GET /api/tenants/{tenantId}/provisioning-jobs` (provisioning job history)
 - `POST /api/tenants/{id}/generate-admin` (generate tenant admin credentials)
 
 Tenant-scoped access for tenant admins (guarded by tenant header matching):
