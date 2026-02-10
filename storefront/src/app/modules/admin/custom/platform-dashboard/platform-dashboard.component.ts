@@ -14,7 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { Subject, catchError, retry, takeUntil, throwError } from 'rxjs';
+import { EMPTY, Subject, catchError, retry, takeUntil } from 'rxjs';
 import { StatusUtils, TenantStatus, SyncJobStatus } from '@shared/types/platform.types';
 import { PlatformDashboardService } from './platform-dashboard.service';
 import { PlatformDashboardResponse, RecentJobDto } from './platform-dashboard.types';
@@ -42,32 +42,32 @@ export class SpaPlatformDashboardComponent implements OnInit, OnDestroy {
     readonly #dialog = inject(MatDialog);
     readonly #destroy$ = new Subject<void>();
 
-    readonly dashboardSig = signal<PlatformDashboardResponse | null>(null);
-    readonly loadingSig = signal<boolean>(true);
+    protected readonly dashboardSig = signal<PlatformDashboardResponse | null>(null);
+    protected readonly loadingSig = signal<boolean>(true);
 
     ngOnInit(): void {
         this.#loadData();
     }
 
-    onRefresh(): void {
+    protected onRefresh(): void {
         this.#notify.info('admin.common.messages.refreshing');
         this.#loadData();
     }
 
-    viewTenant(tenantId: number): void {
+    protected viewTenant(tenantId: number): void {
         const lang = this.#transloco.getActiveLang();
         this.#router.navigate(['/', lang, 'tenants', tenantId]);
     }
 
-    getStatusClass(status: TenantStatus): string {
+    protected getStatusClass(status: TenantStatus): string {
         return StatusUtils.getTenantStatusClass(status);
     }
 
-    getJobStatusClass(status: SyncJobStatus): string {
+    protected getJobStatusClass(status: SyncJobStatus): string {
         return StatusUtils.getJobStatusClass(status);
     }
 
-    showJobError(job: RecentJobDto): void {
+    protected showJobError(job: RecentJobDto): void {
         if (!job.error) return;
 
         this.#dialog.open<JobErrorDialogComponent, JobErrorDialogData>(JobErrorDialogComponent, {
@@ -94,11 +94,10 @@ export class SpaPlatformDashboardComponent implements OnInit, OnDestroy {
             .pipe(
                 retry({ count: 2, delay: 1000 }),
                 takeUntil(this.#destroy$),
-                catchError((err) => {
-                    console.error('[PlatformDashboard] Load failed:', err);
+                catchError(() => {
                     this.loadingSig.set(false);
                     this.#notify.alert('admin.platform.dashboard.messages.loadFailed');
-                    return throwError(() => err);
+                    return EMPTY;
                 })
             )
             .subscribe({

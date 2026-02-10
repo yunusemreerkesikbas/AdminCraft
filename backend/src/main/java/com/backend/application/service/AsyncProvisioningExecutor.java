@@ -12,12 +12,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.entity.TenantModule;
-import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
+import com.backend.domain.entity.ProvisioningJob;
+import com.backend.domain.entity.Tenant;
+import com.backend.domain.entity.TenantModule;
+import com.backend.domain.repository.ProvisioningJobRepository;
+import com.backend.domain.repository.TenantModuleRepository;
+import com.backend.domain.repository.TenantRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @lombok.RequiredArgsConstructor
 public class AsyncProvisioningExecutor {
 
-  private final TenantPlatformRepository tenantRepository;
+  private final TenantRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
   private final TenantMigrationService tenantMigrationService;
@@ -46,34 +46,34 @@ public class AsyncProvisioningExecutor {
   private String dbPassword;
 
   @Async
-  public void executeProvisioning(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
+  public void executeProvisioning(Long jobId, Long tenantId, String dbName, List<String> modules, String correlationId) {
     log.info("Async provisioning started on thread: {}", Thread.currentThread().getName());
 
     MDC.put("correlationId", correlationId);
-    MDC.put("tenantId", String.valueOf(tenant.getId()));
+    MDC.put("tenantId", String.valueOf(tenantId));
 
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
 
-      log.info("Starting provisioning for tenant {} with modules: {}", tenant.getId(), modules);
+      log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
       updateJobProgress(jobId, 20);
-      createDatabaseIfNotExists(tenant.getDatabaseName());
+      createDatabaseIfNotExists(dbName);
 
       updateJobProgress(jobId, 60);
-      tenantMigrationService.migrateTenant(tenant.getDatabaseName(), modules);
+      tenantMigrationService.migrateTenant(dbName, modules);
 
       updateJobProgress(jobId, 90);
-      insertTenantModules(tenant.getId(), modules);
+      insertTenantModules(tenantId, modules);
 
-      updateTenantStatus(tenant.getId(), "ACTIVE");
+      updateTenantStatus(tenantId, "ACTIVE");
       updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
 
       log.info("Provisioning completed successfully for tenant {} on thread: {}",
-          tenant.getId(), Thread.currentThread().getName());
+          tenantId, Thread.currentThread().getName());
 
     } catch (Exception e) {
-      log.error("Provisioning failed for tenant {}", tenant.getId(), e);
+      log.error("Provisioning failed for tenant {}", tenantId, e);
       String errorMessage = buildDetailedErrorMessage(e);
       updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
@@ -82,21 +82,21 @@ public class AsyncProvisioningExecutor {
   }
 
   @Async
-  public void executeSyncMigrations(Long jobId, Tenant tenant, List<String> modules, String correlationId) {
+  public void executeSyncMigrations(Long jobId, Long tenantId, String dbName, List<String> modules, String correlationId) {
     log.info("Async sync migrations started on thread: {}", Thread.currentThread().getName());
     MDC.put("correlationId", correlationId);
-    MDC.put("tenantId", String.valueOf(tenant.getId()));
+    MDC.put("tenantId", String.valueOf(tenantId));
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
-      log.info("Starting migration sync for tenant {} with modules: {}", tenant.getId(), modules);
+      log.info("Starting migration sync for tenant {} with modules: {}", tenantId, modules);
       updateJobProgress(jobId, 30);
-      tenantMigrationService.migrateTenant(tenant.getDatabaseName(), modules);
+      tenantMigrationService.migrateTenant(dbName, modules);
       updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
       log.info("Migration sync completed successfully for tenant {} on thread: {}",
-          tenant.getId(), Thread.currentThread().getName());
+          tenantId, Thread.currentThread().getName());
 
     } catch (Exception e) {
-      log.error("Migration sync failed for tenant {}", tenant.getId(), e);
+      log.error("Migration sync failed for tenant {}", tenantId, e);
       String errorMessage = buildDetailedErrorMessage(e);
       updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
@@ -148,7 +148,7 @@ public class AsyncProvisioningExecutor {
       job.setCompletedAt(completedAt);
 
     jobRepository.save(job);
-    jobRepository.flush(); // Force immediate persistence
+    jobRepository.flush();
     log.info("Job {} status updated to: {} (progress: {})", jobId, status, job.getProgress());
   }
 
@@ -166,7 +166,7 @@ public class AsyncProvisioningExecutor {
   public void updateTenantStatus(Long tenantId, String status) {
     Tenant tenant = tenantRepository.findById(tenantId)
         .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
-    tenant.setStatus(status);
+    tenant.setStatus(com.backend.domain.enums.TenantStatus.valueOf(status));
     tenantRepository.save(tenant);
     log.info("Tenant {} status updated to: {}", tenantId, status);
   }
@@ -191,7 +191,6 @@ public class AsyncProvisioningExecutor {
         continue;
       }
 
-      // Defensive: validate module codes although FE/BE coordinate via enums
       try {
         com.backend.domain.enums.ModuleCode.fromCode(moduleCode);
       } catch (IllegalArgumentException ex) {

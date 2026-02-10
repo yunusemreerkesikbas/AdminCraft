@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { TenantDetailResponse } from '../../tenants.types';
@@ -11,5 +11,5 @@ import { TenantDetailResponse } from '../../tenants.types';
     imports: [TranslocoModule, DatePipe, NgClass],
 })
 export class SpaTenantOverviewComponent {
-    @Input() tenant: TenantDetailResponse | null = null;
+    tenant = input<TenantDetailResponse | null>(null);
 }

@@ -1,9 +1,7 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     OnInit,
-    ViewEncapsulation,
     inject,
     signal,
 } from '@angular/core';
@@ -56,7 +54,6 @@ export interface TenantFormDialogResult {
     selector: 'spa-tenant-form-dialog',
     standalone: true,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatDialogModule,
         MatButtonModule,
@@ -68,7 +65,6 @@ export interface TenantFormDialogResult {
         SpaDialogComponent,
     ],
     templateUrl: './tenant-form-dialog.component.html',
-    encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TenantFormDialogComponent implements OnInit {
@@ -114,9 +110,7 @@ export class TenantFormDialogComponent implements OnInit {
         }
     }
 
-    get isEditMode(): boolean {
-        return this.mode === 'edit';
-    }
+    readonly isEditMode = this.data.mode === 'edit';
 
     #buildForm(): void {
         this.form = this.#fb.group({
@@ -183,10 +177,10 @@ export class TenantFormDialogComponent implements OnInit {
                 notes: formValue.notes,
             };
 
-            Object.keys(payload).forEach(
+            (Object.keys(payload) as Array<keyof UpdateTenantRequest>).forEach(
                 (k) =>
-                    (payload as any)[k] === '' &&
-                    delete (payload as any)[k]
+                    payload[k] === '' &&
+                    delete payload[k]
             );
 
             this.#tenantsService

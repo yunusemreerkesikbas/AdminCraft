@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +17,7 @@ import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './mod
     selector: 'spa-module-provision-dialog',
     standalone: true,
     imports: [
-        CommonModule,
+        NgClass,
         MatButtonModule,
         MatCheckboxModule,
         MatProgressBarModule,

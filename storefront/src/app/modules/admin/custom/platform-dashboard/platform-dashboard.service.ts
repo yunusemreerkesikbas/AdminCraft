@@ -1,13 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
+import { ApiResponse } from '@core/crud/api.types';
 import { Observable, map } from 'rxjs';
 import { PlatformDashboardResponse } from './platform-dashboard.types';
-
-interface ApiResponse<T> {
-    result: string;
-    message: string;
-    data: T;
-}
 
 @Injectable({ providedIn: 'root' })
 export class PlatformDashboardService {

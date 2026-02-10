@@ -42,6 +42,10 @@ CREATE TABLE component_media_links (
     INDEX idx_cml_entry (entry_id),
     INDEX idx_cml_responsive_set (responsive_set_id),
 
-    -- Prevent duplicate links
-    UNIQUE KEY uk_cml_component_media_type (component_id, media_id, link_type, entry_id)
+    -- Generated column to make UNIQUE constraint work with NULL entry_id
+    -- MySQL treats NULLs as distinct in unique keys, so we coalesce to 0
+    entry_id_key BIGINT GENERATED ALWAYS AS (COALESCE(entry_id, 0)) STORED,
+
+    -- Prevent duplicate links (uses entry_id_key to handle NULL correctly)
+    UNIQUE KEY uk_cml_component_media_type (component_id, media_id, link_type, entry_id_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
