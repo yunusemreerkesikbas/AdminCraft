@@ -1,3 +1,7 @@
+import { Language, LANGUAGE_LABELS, TenantStatus } from '@shared/types/platform.types';
+
+export { Language, LANGUAGE_LABELS, TenantStatus };
+
 export interface Tenant {
     id: number;
     subdomain: string;
@@ -17,29 +21,6 @@ export interface Tenant {
     fullDomain?: string;
     storageUsedMb?: number;
 }
-
-export enum TenantStatus {
-    PENDING = 'PENDING',
-    ACTIVE = 'ACTIVE',
-    SUSPENDED = 'SUSPENDED',
-    MAINTENANCE = 'MAINTENANCE',
-}
-
-export enum Language {
-    TR = 'TR',
-    EN = 'EN',
-    ES = 'ES',
-    RU = 'RU',
-    AR = 'AR',
-}
-
-export const LANGUAGE_LABELS: Record<Language, string> = {
-    [Language.TR]: 'Türkçe',
-    [Language.EN]: 'English',
-    [Language.ES]: 'Español',
-    [Language.RU]: 'Русский',
-    [Language.AR]: 'العربية',
-};
 
 export enum Currency {
     TRY = 'TRY',
@@ -157,6 +138,18 @@ export interface AdminUserResponse {
  * Response from sync migrations and provisioning job endpoints
  * Uses jobId (number) and lowercase status values
  */
+export interface ProvisioningJobResponse {
+    id: number;
+    tenantId: number;
+    type: string;
+    status: string;
+    progress?: number;
+    error?: string;
+    createdAt: string;
+    startedAt?: string;
+    completedAt?: string;
+}
+
 export interface SyncJobDto {
     jobId: number;
     tenantId: number;

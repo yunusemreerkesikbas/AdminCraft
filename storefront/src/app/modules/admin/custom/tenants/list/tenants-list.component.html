@@ -1,202 +1,115 @@
 <div
-    class="bg-card flex min-w-0 flex-auto flex-col sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+    class="bg-card flex min-w-0 flex-auto flex-col overflow-hidden sm:absolute sm:inset-0 dark:bg-transparent"
 >
-    <div
-        class="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    <admin-page-header
+        [title]="'admin.tenants.title' | transloco"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.tenants.create' | transloco"
+        (createClick)="createTenant()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.tenants.searchPlaceholder' | transloco"
+        (search)="onSearchInput($event)"
+        [isLoading]="store.isLoading()"
     >
-        @if (store.isLoading()) {
-            <div class="absolute inset-x-0 bottom-0">
-                <mat-progress-bar [mode]="'indeterminate'"></mat-progress-bar>
-            </div>
-        }
-        <div class="text-4xl font-extrabold tracking-tight">
-            {{ 'admin.tenants.title' | transloco }}
-        </div>
-        <div class="mt-6 flex shrink-0 items-center sm:ml-4 sm:mt-0">
-            <button
-                class="ml-4"
-                mat-flat-button
-                [color]="'primary'"
-                (click)="createTenant()"
+        <ng-container actions>
+            <spa-admin-sort-dropdown
+                [availableSorts]="store.sortConfig()?.availableSorts || []"
+                [sortCode]="sortCodeSig()"
+                (sortChange)="onSortChange($event)"
             >
-                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                <span class="ml-2 mr-1">{{
-                    'admin.tenants.create' | transloco
-                }}</span>
-            </button>
+            </spa-admin-sort-dropdown>
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="store.items()"
+                [columns]="columnsSig()"
+                [actions]="actionsSig()"
+                [isLoading]="store.isLoading()"
+                [emptyTitle]="'admin.tenants.grid.noData' | transloco"
+                [actionsTemplate]="actionsTemplate"
+                (rowClick)="viewTenantDetail($event)"
+            >
+            </spa-admin-grid>
         </div>
-    </div>
 
-    <div class="flex flex-auto overflow-hidden">
-        <div
-            class="flex flex-auto flex-col overflow-hidden sm:mb-18 sm:overflow-y-auto"
-        >
-            @if (filtered(); as tenants) {
-                @if (tenants.length > 0) {
-                    <div class="grid">
-                        <div
-                            class="inventory-grid text-secondary sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold shadow md:px-8 dark:bg-black dark:bg-opacity-5"
-                        >
-                            <div></div>
-                            <div class="hidden md:block">
-                                {{
-                                    'admin.tenants.fields.subdomain' | transloco
-                                }}
-                            </div>
-                            <div>
-                                {{
-                                    'admin.tenants.fields.companyName'
-                                        | transloco
-                                }}
-                            </div>
-                            <div class="hidden sm:block">
-                                {{ 'admin.common.fields.status' | transloco }}
-                            </div>
-
-                            <div class="hidden lg:block">
-                                {{
-                                    'admin.common.fields.createdAt' | transloco
-                                }}
-                            </div>
-                            <div class="hidden sm:block">
-                                {{ 'admin.common.grid.details' | transloco }}
-                            </div>
-                        </div>
-                        @for (tenant of tenants; track tenant.id) {
-                            <div
-                                class="inventory-grid grid items-center gap-4 border-b px-6 py-3 md:px-8"
-                            >
-                                <div class="flex items-center">
-                                    <div
-                                        class="relative mr-6 flex h-12 w-12 flex-0 items-center justify-center overflow-hidden rounded-full border bg-gray-100"
-                                    >
-                                        <div
-                                            class="flex h-full w-full items-center justify-center text-center text-xs font-semibold uppercase leading-none"
-                                        >
-                                            {{
-                                                tenant.companyName.substring(
-                                                    0,
-                                                    2
-                                                )
-                                            }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="hidden truncate md:block">
-                                    {{ tenant.subdomain }}
-                                </div>
-
-                                <div class="truncate">
-                                    {{ tenant.companyName }}
-                                </div>
-                                <div class="hidden sm:block">
-                                    <div
-                                        class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                                        [ngClass]="{
-                                            'bg-green-100 text-green-800':
-                                                tenant.status === 'ACTIVE',
-                                            'bg-yellow-100 text-yellow-800':
-                                                tenant.status === 'PENDING',
-                                            'bg-red-100 text-red-800':
-                                                tenant.status === 'SUSPENDED',
-                                            'bg-blue-100 text-blue-800':
-                                                tenant.status === 'MAINTENANCE',
-                                        }"
-                                    >
-                                        {{
-                                            'admin.tenants.status.' +
-                                                tenant.status | transloco
-                                        }}
-                                    </div>
-                                </div>
-
-                                <div class="hidden lg:block">
-                                    {{ tenant.createdAt | date: 'shortDate' }}
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button
-                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
-                                        mat-stroked-button
-                                        [matTooltip]="
-                                            'admin.provisioning.manualProvision'
-                                                | transloco
-                                        "
-                                        (click)="provisionTenant(tenant)"
-                                    >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_outline:server-stack'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                    <button
-                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
-                                        mat-stroked-button
-                                        [matTooltip]="
-                                            'admin.tenants.actions.syncMigrations'
-                                                | transloco
-                                        "
-                                        [disabled]="tenant.status !== 'ACTIVE'"
-                                        (click)="syncMigrations(tenant)"
-                                    >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_outline:arrow-path'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                    <button
-                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
-                                        mat-stroked-button
-                                        [matTooltip]="
-                                            tenant.hasAdminUser
-                                                ? ('admin.tenants.actions.adminExists'
-                                                  | transloco)
-                                                : ('admin.tenants.actions.generateAdmin'
-                                                  | transloco)
-                                        "
-                                        [disabled]="
-                                            tenant.hasAdminUser ||
-                                            tenant.status !== 'ACTIVE'
-                                        "
-                                        (click)="generateAdminUser(tenant)"
-                                    >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                tenant.hasAdminUser
-                                                    ? 'heroicons_outline:check-circle'
-                                                    : 'heroicons_outline:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                    <button
-                                        class="h-7 min-h-7 min-w-10 px-2 leading-6"
-                                        mat-stroked-button
-                                        (click)="editTenant(tenant)"
-                                    >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_outline:pencil-square'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                } @else {
-                    <div
-                        class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
-                    >
-                        {{ 'admin.common.messages.noData' | transloco }}
-                    </div>
-                }
-            }
-        </div>
+        @if (store.totalElements() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [pageIndex]="pageIndexSig()"
+                [pageSize]="pageSizeSig()"
+                [length]="store.totalElements()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
     </div>
 </div>
+
+<ng-template #infoTemplate let-tenant>
+    <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex items-center gap-3">
+            <h3 class="truncate text-base font-semibold leading-none">
+                {{ tenant.companyName }}
+            </h3>
+            <span class="sm:hidden">
+                <spa-status-badge
+                    [status]="tenant.status"
+                    size="sm"
+                ></spa-status-badge>
+            </span>
+        </div>
+        <div class="text-secondary flex items-center gap-2 text-sm">
+            <span class="truncate">{{ tenant.subdomain }}</span>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #actionsTemplate let-tenant>
+    <button
+        mat-icon-button
+        [matTooltip]="'admin.provisioning.manualProvision' | transloco"
+        (click)="$event.stopPropagation(); provisionTenant(tenant)"
+    >
+        <mat-icon svgIcon="heroicons_outline:server-stack"></mat-icon>
+    </button>
+
+    <button
+        mat-icon-button
+        [matTooltip]="'admin.tenants.actions.syncMigrations' | transloco"
+        [disabled]="tenant.status !== 'ACTIVE'"
+        (click)="$event.stopPropagation(); syncMigrations(tenant)"
+    >
+        <mat-icon svgIcon="heroicons_outline:arrow-path"></mat-icon>
+    </button>
+
+    <button
+        mat-icon-button
+        [matTooltip]="
+            tenant.hasAdminUser
+                ? ('admin.tenants.actions.adminExists' | transloco)
+                : ('admin.tenants.actions.generateAdmin' | transloco)
+        "
+        [disabled]="tenant.hasAdminUser || tenant.status !== 'ACTIVE'"
+        (click)="$event.stopPropagation(); generateAdminUser(tenant)"
+    >
+        <mat-icon
+            [svgIcon]="
+                tenant.hasAdminUser
+                    ? 'heroicons_outline:check-circle'
+                    : 'heroicons_outline:user-plus'
+            "
+        ></mat-icon>
+    </button>
+
+    <button
+        mat-icon-button
+        color="primary"
+        [matTooltip]="'admin.common.actions.edit' | transloco"
+        (click)="$event.stopPropagation(); editTenant(tenant)"
+    >
+        <mat-icon svgIcon="heroicons_outline:pencil-square"></mat-icon>
+    </button>
+</ng-template>

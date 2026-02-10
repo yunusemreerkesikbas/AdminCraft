@@ -1,3 +1,7 @@
+import { Language } from '@shared/types/platform.types';
+
+export { Language };
+
 export interface Site {
     id: number;
     siteName: string;
@@ -23,11 +27,6 @@ export interface SitePagination {
     lastPage: number;
     startIndex: number;
     endIndex: number;
-}
-
-export enum Language {
-    TR = 'TR',
-    EN = 'EN',
 }
 
 export interface Menu {

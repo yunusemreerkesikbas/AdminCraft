@@ -1,7 +1,8 @@
+import { Language } from '@shared/types/platform.types';
 
-export type Language = 'TR' | 'EN' | 'ES' | 'RU' | 'AR';
+export { Language };
 
-export const AVAILABLE_LANGUAGES: readonly Language[] = ['TR', 'EN', 'ES', 'RU', 'AR'] as const;
+export const AVAILABLE_LANGUAGES: readonly Language[] = [Language.TR, Language.EN, Language.ES, Language.RU, Language.AR] as const;
 
 export enum SlotPosition {
     TOP = 'TOP',

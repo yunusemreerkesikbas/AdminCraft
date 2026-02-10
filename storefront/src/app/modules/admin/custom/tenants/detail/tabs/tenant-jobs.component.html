@@ -1,0 +1,61 @@
+@if (jobs().length > 0) {
+    <div class="overflow-x-auto rounded-lg border bg-white shadow-sm dark:bg-gray-800">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 font-medium">{{ 'admin.tenants.detail.jobs.type' | transloco }}</th>
+                    <th class="px-6 py-3 font-medium">{{ 'admin.tenants.detail.jobs.status' | transloco }}</th>
+                    <th class="hidden px-6 py-3 font-medium sm:table-cell">{{ 'admin.tenants.detail.jobs.progress' | transloco }}</th>
+                    <th class="hidden px-6 py-3 font-medium md:table-cell">{{ 'admin.tenants.detail.jobs.createdAt' | transloco }}</th>
+                    <th class="hidden px-6 py-3 font-medium lg:table-cell">{{ 'admin.tenants.detail.jobs.completedAt' | transloco }}</th>
+                    <th class="hidden px-6 py-3 font-medium xl:table-cell">{{ 'admin.tenants.detail.jobs.error' | transloco }}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @for (job of jobs(); track job.id) {
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-3 font-medium">{{ job.type }}</td>
+                        <td class="px-6 py-3">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                [ngClass]="{
+                                    'bg-green-100 text-green-800': job.status === 'succeeded' || job.status === 'COMPLETED',
+                                    'bg-yellow-100 text-yellow-800': job.status === 'pending' || job.status === 'PENDING',
+                                    'bg-blue-100 text-blue-800': job.status === 'running' || job.status === 'RUNNING',
+                                    'bg-red-100 text-red-800': job.status === 'failed' || job.status === 'FAILED'
+                                }">
+                                {{ job.status }}
+                            </span>
+                        </td>
+                        <td class="hidden px-6 py-3 sm:table-cell">
+                            @if (job.progress != null) {
+                                <div class="flex items-center gap-2">
+                                    <div class="h-2 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                        <div class="h-full rounded-full bg-primary" [style.width.%]="job.progress"></div>
+                                    </div>
+                                    <span class="text-secondary text-xs">{{ job.progress }}%</span>
+                                </div>
+                            } @else {
+                                <span class="text-secondary">-</span>
+                            }
+                        </td>
+                        <td class="hidden px-6 py-3 text-secondary md:table-cell">{{ job.createdAt | date:'short' }}</td>
+                        <td class="hidden px-6 py-3 text-secondary lg:table-cell">
+                            {{ job.completedAt ? (job.completedAt | date:'short') : '-' }}
+                        </td>
+                        <td class="hidden px-6 py-3 xl:table-cell">
+                            @if (job.error) {
+                                <span class="text-sm text-red-600">{{ job.error }}</span>
+                            } @else {
+                                <span class="text-secondary">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+} @else {
+    <div class="rounded-lg border bg-white p-8 text-center shadow-sm dark:bg-gray-800">
+        <p class="text-secondary">{{ 'admin.tenants.detail.jobs.noJobs' | transloco }}</p>
+    </div>
+}

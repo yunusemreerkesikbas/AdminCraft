@@ -1,9 +1,7 @@
 -- =====================================================
--- V24: Fix link_type column type
--- Convert ENUM to VARCHAR for JPA compatibility
--- NOTE: This migration is now redundant as V23 was updated to use VARCHAR.
--- It is kept for backward compatibility with systems where V23 ran with ENUM.
+-- V24: Fix link_type column type (NO-OP)
+-- This migration is now redundant: component_media_links table
+-- was moved to component_library module (V15) with correct VARCHAR type.
+-- Kept as empty migration to preserve Flyway version history.
 -- =====================================================
-
-ALTER TABLE component_media_links
-    MODIFY COLUMN link_type VARCHAR(20) NOT NULL DEFAULT 'ENTRY_MEDIA';
+SELECT 1;

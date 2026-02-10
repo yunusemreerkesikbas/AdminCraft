@@ -1,4 +1,5 @@
 import { Route } from '@angular/router';
+import { environment } from '@environments/environment';
 import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { moduleGuard } from 'app/core/auth/guards/module.guard';
@@ -10,8 +11,10 @@ import {
 import { LanguageGuard } from 'app/core/language/language.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
 
+const DEFAULT_LANGUAGE = environment.defaultLanguage;
+
 export const appRoutes: Route[] = [
-    { path: '', pathMatch: 'full', redirectTo: '/tr' },
+    { path: '', pathMatch: 'full', redirectTo: `/${DEFAULT_LANGUAGE}` },
 
     {
         path: 'signed-in-redirect',
@@ -150,10 +153,40 @@ export const appRoutes: Route[] = [
             },
             { path: 'apps', children: [{ path: '**', redirectTo: 'pages' }] },
             {
-                path: 'tenants',
+                path: 'platform-dashboard',
                 canActivate: [superAdminGuard],
                 loadChildren: () =>
-                    import('app/modules/admin/custom/tenants/tenants.routes'),
+                    import(
+                        'app/modules/admin/custom/platform-dashboard/platform-dashboard.routes'
+                    ),
+            },
+            {
+                path: 'tenants',
+                canActivate: [superAdminGuard],
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/tenants/list/tenants-list.component'
+                            ).then((m) => m.TenantsListComponent),
+                    },
+                    {
+                        path: ':id',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/tenants/detail/tenant-detail.component'
+                            ).then((m) => m.SpaTenantDetailComponent),
+                    },
+                ],
+            },
+            {
+                path: 'platform-settings',
+                canActivate: [superAdminGuard],
+                loadChildren: () =>
+                    import(
+                        'app/modules/admin/custom/platform-settings/platform-settings.routes'
+                    ),
             },
             {
                 path: 'media',

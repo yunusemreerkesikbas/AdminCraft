@@ -153,6 +153,11 @@ export const SPA_ENDPOINTS_CONFIG = {
     componentEntryComposite: 'components/entries/composite',
     componentEntryCompositeById: 'components/entries/${id}/composite',
 
+    // ----- PLATFORM -----
+    platformDashboard: 'platform/dashboard',
+    platformSettings: 'platform/settings',
+    tenantProvisioningJobs: 'tenants/${tenantId}/provisioning-jobs',
+
     // ----- PROVISIONING -----
     provisioningModulesCatalog: 'provisioning/modules/catalog',
     provisioningTenantProvision: 'provisioning/tenants/${tenantId}/provision',

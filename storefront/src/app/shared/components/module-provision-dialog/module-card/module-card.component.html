@@ -1,22 +1,36 @@
-<div
-    class="flex items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:hover:bg-gray-800"
->
-    <mat-checkbox
-        [checked]="isSelected()"
-        [disabled]="isDisabled()"
-        (change)="onToggle.emit()"
-    ></mat-checkbox>
+<div class="flex items-center gap-4 py-4 border-b border-slate-200 dark:border-slate-700 last:border-0 transition-opacity duration-200"
+     [class.opacity-50]="isDisabled()"
+     (click)="!isDisabled() && onToggle.emit()">
+    
+    <mat-checkbox [checked]="isSelected()" [disabled]="isDisabled()" (click)="$event.stopPropagation()" (change)="onToggle.emit()"></mat-checkbox>
+
+    <div class="w-12 h-12 rounded-xl border-2 transition-colors duration-200 flex items-center justify-center"
+         [class.border-blue-500]="isSelected()"
+         [class.border-slate-200]="!isSelected()"
+         [class.dark:border-blue-400]="isSelected()"
+         [class.dark:border-slate-700]="!isSelected()">
+        <ng-icon [name]="isSelected() ? 'heroCheckCircle' : 'heroCube'" 
+                 size="24" 
+                 [class.text-blue-600]="isSelected()" 
+                 [class.dark:text-blue-400]="isSelected()"
+                 [class.text-slate-400]="!isSelected()"
+                 [class.dark:text-slate-500]="!isSelected()"></ng-icon>
+    </div>
+
     <div class="flex-1">
-        <div class="font-medium">{{ module().name }}</div>
-        <div class="text-secondary text-sm">{{ module().description }}</div>
+        <h4 class="font-semibold text-base">{{ module().name }}</h4>
+        <p class="text-sm text-slate-600">{{ module().description }}</p>
+        
         @if (module().deps?.length) {
-            <div class="mt-2 flex flex-wrap gap-1">
+            <div class="flex gap-1 mt-2">
                 @for (dep of module().deps; track dep) {
-                    <mat-chip class="text-xs" disabled>
-                        Requires: {{ dep }}
-                    </mat-chip>
+                    <span class="text-xs px-2 py-1 border border-slate-200 dark:border-slate-700 rounded">{{ dep }}</span>
                 }
             </div>
         }
     </div>
+
+    @if (isSelected()) {
+        <ng-icon name="heroCheckCircle" size="20" class="text-blue-500 dark:text-blue-400"></ng-icon>
+    }
 </div>

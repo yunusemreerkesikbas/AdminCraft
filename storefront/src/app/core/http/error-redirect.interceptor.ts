@@ -7,6 +7,7 @@ import {
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LanguageService } from 'app/core/language/language.service';
+import { environment } from '@environments/environment';
 import { Observable, catchError, throwError } from 'rxjs';
 
 export const errorRedirectInterceptor = (
@@ -23,7 +24,7 @@ export const errorRedirectInterceptor = (
             }
 
             const status = error.status;
-            const lang = languageService.currentLanguage || 'tr';
+            const lang = languageService.currentLanguage || environment.defaultLanguage;
 
             const authPaths = [
                 '/auth/login',

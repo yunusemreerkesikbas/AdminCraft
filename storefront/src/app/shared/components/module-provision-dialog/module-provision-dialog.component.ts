@@ -1,12 +1,14 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, Inject, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { interval, switchMap, takeWhile } from 'rxjs';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { heroCheckCircle, heroXCircle, heroExclamationTriangle } from '@ng-icons/heroicons/outline';
 import { ModuleCardComponent } from './module-card/module-card.component';
 import { ModuleProvisionService } from './module-provision.service';
 import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './module-provision.types';
@@ -15,78 +17,100 @@ import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './mod
     selector: 'spa-module-provision-dialog',
     standalone: true,
     imports: [
-        CommonModule,
-        MatDialogModule,
+        NgClass,
         MatButtonModule,
         MatCheckboxModule,
         MatProgressBarModule,
         TranslocoPipe,
-        ModuleCardComponent
+        ModuleCardComponent,
+        NgIconComponent
     ],
     templateUrl: './module-provision-dialog.component.html',
     styleUrls: ['./module-provision-dialog.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    viewProviders: [
+        provideIcons({ heroCheckCircle, heroXCircle, heroExclamationTriangle })
+    ]
 })
-export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
+export class ModuleProvisionDialogComponent implements OnInit {
     #service = inject(ModuleProvisionService);
     #destroyRef = inject(DestroyRef);
+    #dialogRef = inject(MatDialogRef<ModuleProvisionDialogComponent>);
+    #data = inject<ModuleProvisionDialogData>(MAT_DIALOG_DATA);
 
-    protected modules = signal<ModuleCatalog[]>([]);
-    protected selectedModules = signal<Set<string>>(new Set());
-    protected currentJob = signal<ProvisioningJob | null>(null);
-    protected isLoading = signal<boolean>(false);
-    protected isProvisioning = signal<boolean>(false);
-    protected error = signal<string | null>(null);
+    protected modulesSig = signal<ModuleCatalog[]>([]);
+    protected selectedModulesSig = signal<Set<string>>(new Set());
+    protected currentJobSig = signal<ProvisioningJob | null>(null);
+    protected isLoadingSig = signal<boolean>(false);
+    protected isProvisioningSig = signal<boolean>(false);
+    protected errorSig = signal<string | null>(null);
+    protected statusAnimationClassSig = signal<string>('');
 
-    protected canStart = computed(() =>
-        this.selectedModules().size > 0 &&
-        !this.isProvisioning() &&
-        !this.currentJob()
+    protected canStartSig = computed(() =>
+        this.selectedModulesSig().size > 0 &&
+        !this.isProvisioningSig() &&
+        !this.currentJobSig()
     );
 
-    protected showProgress = computed(() => this.currentJob() !== null);
+    protected showProgressSig = computed(() => this.currentJobSig() !== null);
 
-    protected progressValue = computed(() => this.currentJob()?.progress || 0);
+    protected progressValueSig = computed(() => this.currentJobSig()?.progress || 0);
 
-    protected statusClass = computed(() => {
-        const status = this.currentJob()?.status;
-        if (status === 'succeeded') return 'text-green-600';
-        if (status === 'failed') return 'text-red-600';
-        return 'text-blue-600';
+    protected statusClassSig = computed(() => {
+        const status = this.currentJobSig()?.status;
+        if (status === 'succeeded') return 'text-green-600 dark:text-green-400';
+        if (status === 'failed') return 'text-red-600 dark:text-red-400';
+        return 'text-blue-600 dark:text-blue-400';
     });
 
-    protected progressMode = computed(() =>
-        this.progressValue() === 0 ? 'indeterminate' : 'determinate'
+    protected statusIconSig = computed(() => {
+        const status = this.currentJobSig()?.status;
+        if (status === 'succeeded') return 'heroCheckCircle';
+        if (status === 'failed') return 'heroXCircle';
+        return 'heroExclamationTriangle';
+    });
+
+    protected progressModeSig = computed(() =>
+        this.progressValueSig() === 0 ? 'indeterminate' : 'determinate'
     );
 
-    protected progressColor = computed(() =>
-        this.currentJob()?.status === 'failed' ? 'warn' : 'primary'
+    protected progressColorSig = computed(() =>
+        this.currentJobSig()?.status === 'failed' ? 'warn' : 'primary'
     );
 
-    protected canClose = computed(() =>
-        this.currentJob()?.status !== 'running'
+    protected canCloseSig = computed(() =>
+        this.currentJobSig()?.status !== 'running'
     );
 
-    constructor(
-        private dialogRef: MatDialogRef<ModuleProvisionDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: ModuleProvisionDialogData
-    ) {}
-
-    ngOnInit(): void {
-        setTimeout(() => this.#loadModules(), 0);
+    protected get tenantName(): string {
+        return this.#data.tenantName;
     }
 
-    ngOnDestroy(): void {
+    constructor() {
+        effect(() => {
+            const status = this.currentJobSig()?.status;
+            if (status === 'succeeded') {
+                this.statusAnimationClassSig.set('status-success');
+            } else if (status === 'failed') {
+                this.statusAnimationClassSig.set('status-error');
+            } else {
+                this.statusAnimationClassSig.set('');
+            }
+        });
+    }
+
+    ngOnInit(): void {
+        this.#loadModules();
     }
 
     #loadModules(): void {
-        this.isLoading.set(true);
+        this.isLoadingSig.set(true);
 
         this.#service.getModulesCatalog()
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe({
                 next: (response) => {
-                    this.modules.set(response.data || []);
+                    this.modulesSig.set(response.data || []);
 
                     const defaultModules = new Set<string>();
                     response.data?.forEach(module => {
@@ -94,19 +118,19 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
                             defaultModules.add(module.code);
                         }
                     });
-                    this.selectedModules.set(defaultModules);
+                    this.selectedModulesSig.set(defaultModules);
 
-                    this.isLoading.set(false);
+                    this.isLoadingSig.set(false);
                 },
                 error: () => {
-                    this.error.set('Failed to load modules catalog');
-                    this.isLoading.set(false);
+                    this.errorSig.set('Failed to load modules catalog');
+                    this.isLoadingSig.set(false);
                 }
             });
     }
 
     protected toggleModule(code: string): void {
-        const selected = new Set(this.selectedModules());
+        const selected = new Set(this.selectedModulesSig());
 
         if (selected.has(code)) {
             if (code === 'core') {
@@ -116,11 +140,11 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
         } else {
             selected.add(code);
 
-            const module = this.modules().find(m => m.code === code);
+            const module = this.modulesSig().find(m => m.code === code);
             module?.deps?.forEach(dep => selected.add(dep));
         }
 
-        this.selectedModules.set(selected);
+        this.selectedModulesSig.set(selected);
     }
 
     protected isModuleDisabled(code: string): boolean {
@@ -128,26 +152,26 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
     }
 
     protected startProvisioning(): void {
-        const modules = Array.from(this.selectedModules());
+        const modules = Array.from(this.selectedModulesSig());
 
-        this.isProvisioning.set(true);
-        this.error.set(null);
+        this.isProvisioningSig.set(true);
+        this.errorSig.set(null);
 
-        this.#service.provisionTenant(this.data.tenantId, { modules })
+        this.#service.provisionTenant(this.#data.tenantId, { modules })
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe({
                 next: (response) => {
                     if (response.result === 'SUCCESS' && response.data) {
-                        this.currentJob.set(response.data);
+                        this.currentJobSig.set(response.data);
                         this.#startPolling(response.data.jobId);
                     } else {
-                        this.error.set(response.message || 'Failed to start provisioning');
-                        this.isProvisioning.set(false);
+                        this.errorSig.set(response.message || 'Failed to start provisioning');
+                        this.isProvisioningSig.set(false);
                     }
                 },
                 error: (err) => {
-                    this.error.set(err.error?.message || 'Failed to start provisioning');
-                    this.isProvisioning.set(false);
+                    this.errorSig.set(err.error?.message || 'Failed to start provisioning');
+                    this.isProvisioningSig.set(false);
                 }
             });
     }
@@ -165,27 +189,27 @@ export class ModuleProvisionDialogComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (response) => {
                     if (response.result === 'SUCCESS' && response.data) {
-                        this.currentJob.set(response.data);
+                        this.currentJobSig.set(response.data);
 
                         if (response.data.status === 'succeeded' || response.data.status === 'failed') {
-                            this.isProvisioning.set(false);
+                            this.isProvisioningSig.set(false);
                         }
                     }
                 },
                 error: () => {
-                    this.error.set('Failed to poll job status');
-                    this.isProvisioning.set(false);
+                    this.errorSig.set('Failed to poll job status');
+                    this.isProvisioningSig.set(false);
                 }
             });
     }
 
     protected retry(): void {
-        this.currentJob.set(null);
-        this.error.set(null);
+        this.currentJobSig.set(null);
+        this.errorSig.set(null);
         this.startProvisioning();
     }
 
     protected close(): void {
-        this.dialogRef.close(this.currentJob()?.status === 'succeeded');
+        this.#dialogRef.close(this.currentJobSig()?.status === 'succeeded');
     }
 }

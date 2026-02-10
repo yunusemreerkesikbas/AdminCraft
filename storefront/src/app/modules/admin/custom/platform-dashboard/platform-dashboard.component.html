@@ -1,0 +1,215 @@
+<div class="flex min-h-full w-full flex-col">
+    <!-- Header -->
+    <div class="bg-card">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
+            <div class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 flex-auto flex-col">
+                    <h1 class="truncate text-2xl font-bold leading-7 tracking-tight md:text-5xl md:leading-snug">
+                        {{ 'admin.platform.dashboard.title' | transloco }}
+                    </h1>
+                    <p class="text-secondary mt-1 leading-6">
+                        {{ 'admin.platform.dashboard.subtitle' | transloco }}
+                    </p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <button mat-flat-button [color]="'primary'" (click)="onRefresh()">
+                        <mat-icon [svgIcon]="'heroicons_outline:arrow-path'"></mat-icon>
+                        <span class="ml-2">{{ 'admin.platform.dashboard.refresh' | transloco }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl px-6 sm:px-8">
+            @if (loadingSig()) {
+                <div class="flex h-64 items-center justify-center">
+                    <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+                </div>
+            } @else {
+              @if (dashboardSig(); as dashboard) {
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+                    <!-- Total Tenants -->
+                    <div class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800">
+                        <div class="relative z-10">
+                            <p class="text-secondary text-sm font-medium">{{ 'admin.platform.dashboard.summary.total' | transloco }}</p>
+                            <p class="mt-2 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">{{ dashboard.summary.total }}</p>
+                        </div>
+                        <mat-icon
+                            class="absolute -bottom-4 -right-4 transform text-gray-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
+                            svgIcon="heroicons_outline:building-office"
+                        ></mat-icon>
+                    </div>
+
+                    <!-- Active -->
+                    <div class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800">
+                        <div class="relative z-10">
+                            <p class="text-secondary text-sm font-medium">{{ 'admin.platform.dashboard.summary.active' | transloco }}</p>
+                            <p class="mt-2 text-4xl font-extrabold tracking-tight text-green-600 dark:text-green-400">{{ dashboard.summary.active }}</p>
+                        </div>
+                        <mat-icon
+                            class="absolute -bottom-4 -right-4 transform text-green-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
+                            svgIcon="heroicons_outline:check-circle"
+                        ></mat-icon>
+                    </div>
+
+                    <!-- Pending -->
+                    <div class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800">
+                        <div class="relative z-10">
+                            <p class="text-secondary text-sm font-medium">{{ 'admin.platform.dashboard.summary.pending' | transloco }}</p>
+                            <p class="mt-2 text-4xl font-extrabold tracking-tight text-yellow-600 dark:text-yellow-400">{{ dashboard.summary.pending }}</p>
+                        </div>
+                        <mat-icon
+                            class="absolute -bottom-4 -right-4 transform text-yellow-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
+                            svgIcon="heroicons_outline:clock"
+                        ></mat-icon>
+                    </div>
+
+                    <!-- Suspended -->
+                    <div class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800">
+                        <div class="relative z-10">
+                            <p class="text-secondary text-sm font-medium">{{ 'admin.platform.dashboard.summary.suspended' | transloco }}</p>
+                            <p class="mt-2 text-4xl font-extrabold tracking-tight text-red-600 dark:text-red-400">{{ dashboard.summary.suspended }}</p>
+                        </div>
+                        <mat-icon
+                            class="absolute -bottom-4 -right-4 transform text-red-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
+                            svgIcon="heroicons_outline:x-circle"
+                        ></mat-icon>
+                    </div>
+
+                    <!-- Storage -->
+                    <div class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800">
+                        <div class="relative z-10">
+                            <p class="text-secondary text-sm font-medium">{{ 'admin.platform.dashboard.summary.storage' | transloco }}</p>
+                            <p class="mt-2 text-4xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400">{{ dashboard.summary.totalStorageMb }} <span class="text-2xl">MB</span></p>
+                        </div>
+                        <mat-icon
+                            class="absolute -bottom-4 -right-4 transform text-indigo-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
+                            svgIcon="heroicons_outline:circle-stack"
+                        ></mat-icon>
+                    </div>
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <!-- Recent Tenants -->
+                    <div class="rounded-lg border bg-white shadow-sm dark:bg-gray-800">
+                        <div class="border-b px-6 py-4">
+                            <h3 class="text-lg font-semibold">{{ 'admin.platform.dashboard.recentTenants.title' | transloco }}</h3>
+                        </div>
+                        @if (dashboard.recentTenants.length > 0) {
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-3 font-medium">{{ 'admin.platform.dashboard.recentTenants.companyName' | transloco }}</th>
+                                            <th class="hidden px-4 py-3 font-medium sm:table-cell">{{ 'admin.platform.dashboard.recentTenants.subdomain' | transloco }}</th>
+                                            <th class="px-4 py-3 font-medium">{{ 'admin.platform.dashboard.recentTenants.status' | transloco }}</th>
+                                            <th class="hidden px-4 py-3 font-medium md:table-cell">{{ 'admin.platform.dashboard.recentTenants.createdAt' | transloco }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        @for (tenant of dashboard.recentTenants; track tenant.id) {
+                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <td class="px-4 py-3">
+                                                    <span class="cursor-pointer text-primary hover:underline" (click)="viewTenant(tenant.id)">
+                                                        {{ tenant.companyName }}
+                                                    </span>
+                                                </td>
+                                                <td class="hidden px-4 py-3 text-secondary sm:table-cell">{{ tenant.subdomain }}</td>
+                                                <td class="px-4 py-3">
+                                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                                        [ngClass]="getStatusClass(tenant.status)">
+                                                        {{ 'admin.tenants.status.' + tenant.status | transloco }}
+                                                    </span>
+                                                </td>
+                                                <td class="hidden px-4 py-3 text-secondary md:table-cell">{{ tenant.createdAt | date:'shortDate' }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        } @else {
+                            <div class="p-8 text-center text-secondary">{{ 'admin.platform.dashboard.recentTenants.noData' | transloco }}</div>
+                        }
+                    </div>
+
+                    <!-- Recent Jobs -->
+                    <div class="rounded-lg border bg-white shadow-sm dark:bg-gray-800">
+                        <div class="border-b px-6 py-4">
+                            <h3 class="text-lg font-semibold">{{ 'admin.platform.dashboard.recentJobs.title' | transloco }}</h3>
+                        </div>
+                        @if (dashboard.recentJobs.length > 0) {
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th class="px-4 py-3 font-medium">{{ 'admin.platform.dashboard.recentJobs.tenantSubdomain' | transloco }}</th>
+                                            <th class="px-4 py-3 font-medium">{{ 'admin.platform.dashboard.recentJobs.type' | transloco }}</th>
+                                            <th class="px-4 py-3 font-medium">{{ 'admin.platform.dashboard.recentJobs.status' | transloco }}</th>
+                                            <th class="hidden px-4 py-3 font-medium md:table-cell">{{ 'admin.platform.dashboard.recentJobs.createdAt' | transloco }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y">
+                                        @for (job of dashboard.recentJobs; track job.id) {
+                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <td class="px-4 py-3">{{ job.tenantSubdomain }}</td>
+                                                <td class="px-4 py-3">{{ job.type }}</td>
+                                                <td class="px-4 py-3">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                                            [ngClass]="getJobStatusClass(job.status)">
+                                                            {{ job.status }}
+                                                        </span>
+                                                        @if (job.status === 'failed' && job.error) {
+                                                            <button mat-icon-button
+                                                                    class="!h-8 !w-8 !min-h-8 !min-w-8"
+                                                                    (click)="showJobError(job)"
+                                                                    [matTooltip]="'admin.platform.dashboard.recentJobs.viewError' | transloco">
+                                                                <mat-icon class="!h-5 !w-5 text-red-600 dark:text-red-400">error</mat-icon>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td class="hidden px-4 py-3 text-secondary md:table-cell">{{ job.createdAt | date:'shortDate' }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        } @else {
+                            <div class="p-8 text-center text-secondary">{{ 'admin.platform.dashboard.recentJobs.noData' | transloco }}</div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Module Distribution -->
+                <div class="mt-8 rounded-lg border bg-white shadow-sm dark:bg-gray-800">
+                    <div class="border-b px-6 py-4">
+                        <h3 class="text-lg font-semibold">{{ 'admin.platform.dashboard.moduleDistribution.title' | transloco }}</h3>
+                    </div>
+                    @if (dashboard.moduleDistribution.length > 0) {
+                        <div class="divide-y">
+                            @for (mod of dashboard.moduleDistribution; track mod.moduleCode) {
+                                <div class="flex items-center justify-between px-6 py-3">
+                                    <span class="font-medium">{{ mod.moduleName }}</span>
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                            <div class="h-full rounded-full bg-primary" [style.width.%]="dashboard.summary.total > 0 ? (mod.enabledCount / dashboard.summary.total) * 100 : 0"></div>
+                                        </div>
+                                        <span class="text-secondary min-w-[2rem] text-right text-sm">{{ mod.enabledCount }}</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    } @else {
+                        <div class="p-8 text-center text-secondary">{{ 'admin.platform.dashboard.moduleDistribution.noData' | transloco }}</div>
+                    }
+                </div>
+              }
+            }
+        </div>
+    </div>
+</div>

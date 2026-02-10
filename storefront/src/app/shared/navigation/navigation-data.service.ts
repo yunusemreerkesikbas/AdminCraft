@@ -11,6 +11,7 @@ import { cloneDeep } from 'lodash-es';
 import { DEFAULT_NAVIGATION_ITEMS } from './navigation-data.constants';
 import { NavigationFilterService } from './navigation-filter.service';
 import { AdminCraftNavigationItem } from './navigation.types';
+import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationDataService {
@@ -59,6 +60,6 @@ export class NavigationDataService {
     }
 
     #detectLanguage(): string {
-        return navigator.language?.startsWith('en') ? 'en' : 'tr';
+        return environment.defaultLanguage;
     }
 }

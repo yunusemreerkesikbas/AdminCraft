@@ -14,19 +14,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.backend.infrastructure.persistence.platform.entity.Tenant;
-import com.backend.infrastructure.persistence.platform.entity.TenantModule;
-import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
-
-//...
+import com.backend.domain.entity.TenantModule;
+import com.backend.domain.repository.ProvisioningJobRepository;
+import com.backend.domain.repository.TenantModuleRepository;
+import com.backend.domain.repository.TenantRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AsyncProvisioningExecutorTest {
 
         @Mock
-        private TenantPlatformRepository tenantRepository;
+        private TenantRepository tenantRepository;
 
         @Mock
         private ProvisioningJobRepository jobRepository;
@@ -42,7 +39,7 @@ class AsyncProvisioningExecutorTest {
 
         private AsyncProvisioningExecutor executor;
 
-        private Tenant testTenant;
+        private Long testTenantId;
 
         @BeforeEach
         void setUp() {
@@ -52,27 +49,20 @@ class AsyncProvisioningExecutorTest {
                                 tenantModuleRepository,
                                 tenantMigrationService);
 
-                // Set test database connection properties
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");
                 ReflectionTestUtils.setField(executor, "dbPort", "3306");
                 ReflectionTestUtils.setField(executor, "dbUsername", "root");
                 ReflectionTestUtils.setField(executor, "dbPassword", "test");
 
-                testTenant = Tenant.builder()
-                                .id(1L)
-                                .subdomain("test-tenant")
-                                .companyName("Test Company")
-                                .databaseName("ac_tenant_1")
-                                .status("PROVISIONING")
-                                .build();
+                testTenantId = 1L;
         }
 
         @Test
         void shouldInsertTenantModulesWithCorrectData() {
-                List<String> modules = Arrays.asList("core", "pagebuilder", "site_settings");
+                List<String> modules = Arrays.asList("core", "pagebuilder", "media");
                 List<TenantModule> expectedModules = modules.stream()
                                 .map(code -> TenantModule.builder()
-                                                .tenantId(testTenant.getId())
+                                                .tenantId(testTenantId)
                                                 .moduleCode(code)
                                                 .status("enabled")
                                                 .build())
@@ -80,7 +70,7 @@ class AsyncProvisioningExecutorTest {
 
                 assertThat(expectedModules).hasSize(3);
                 assertThat(expectedModules).extracting(TenantModule::getModuleCode)
-                                .containsExactlyInAnyOrder("core", "pagebuilder", "site_settings");
+                                .containsExactlyInAnyOrder("core", "pagebuilder", "media");
                 assertThat(expectedModules).allMatch(tm -> tm.getTenantId().equals(1L));
                 assertThat(expectedModules).allMatch(tm -> tm.getStatus().equals("enabled"));
         }
@@ -89,10 +79,9 @@ class AsyncProvisioningExecutorTest {
         void shouldCreateTenantModuleForEachModule() {
                 List<String> modules = Arrays.asList("core", "pagebuilder");
 
-                // When
                 List<TenantModule> tenantModules = modules.stream()
                                 .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenant.getId())
+                                                .tenantId(testTenantId)
                                                 .moduleCode(moduleCode)
                                                 .status("enabled")
                                                 .build())
@@ -120,7 +109,7 @@ class AsyncProvisioningExecutorTest {
                 List<String> modules = List.of();
                 List<TenantModule> tenantModules = modules.stream()
                                 .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenant.getId())
+                                                .tenantId(testTenantId)
                                                 .moduleCode(moduleCode)
                                                 .status("enabled")
                                                 .build())
@@ -131,22 +120,19 @@ class AsyncProvisioningExecutorTest {
 
         @Test
         void shouldPreserveModuleOrderInList() {
-                // Given
-                List<String> modules = Arrays.asList("core", "pagebuilder", "site_settings");
+                List<String> modules = Arrays.asList("core", "pagebuilder", "media");
 
-                // When
                 List<TenantModule> tenantModules = modules.stream()
                                 .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenant.getId())
+                                                .tenantId(testTenantId)
                                                 .moduleCode(moduleCode)
                                                 .status("enabled")
                                                 .build())
                                 .toList();
 
-                // Then
                 assertThat(tenantModules).hasSize(3);
                 assertThat(tenantModules.get(0).getModuleCode()).isEqualTo("core");
                 assertThat(tenantModules.get(1).getModuleCode()).isEqualTo("pagebuilder");
-                assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("site_settings");
+                assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("media");
         }
 }
