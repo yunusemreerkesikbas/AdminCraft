@@ -66,16 +66,24 @@ The refresh flow detects whether the token belongs to a platform admin or a tena
 
 ## Two-Factor Authentication (2FA)
 
-AdminCraft supports tenant-level 2FA with email OTP and trusted device management.
+AdminCraft supports:
+- **Tenant-level 2FA** with email OTP and trusted device management
+- **Platform admin (SUPER_ADMIN) 2FA** with email OTP (always OTP when policy is required, no trusted-device bypass)
 
 ### 2FA Policy Levels
 
-Configured per tenant via Site Dashboard → Security tab:
+Configured per scope:
+- Tenant users: Site Dashboard → Security tab
+- SUPER_ADMIN users: Platform Settings → Security section
 
 | Policy | Behavior |
 |--------|----------|
 | `DISABLED` | 2FA not used, standard login |
 | `REQUIRED` | 2FA mandatory for all tenant users |
+
+For SUPER_ADMIN, the same policy values are used globally from platform settings:
+- `DISABLED`: platform login behaves as standard email/password
+- `REQUIRED`: platform login always returns `requires2FA` and requires OTP verification
 
 ### Login Flow with 2FA
 
@@ -677,7 +685,9 @@ All authentication events are logged with:
 
 ## reCAPTCHA v3 Protection
 
-AdminCraft provides **per-tenant reCAPTCHA v3** bot protection for authentication endpoints. Each tenant configures their own Google keys via Site Dashboard.
+AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in two scopes:
+- **Tenant scope**: configured per tenant in Site Dashboard
+- **Platform scope (SUPER_ADMIN login)**: configured globally in Platform Settings
 
 > **See also**: [`public-tenant-config.md`](public-tenant-config.md) for frontend integration patterns.
 
@@ -728,6 +738,10 @@ reCAPTCHA settings stored in `sites` table:
 | `POST /api/auth/forgot-password` | `forgot_password` | Requires token if enabled |
 | `POST /api/auth/reset-password` | `reset_password` | Requires token if enabled |
 | `POST /api/auth/set-initial-password` | `set_password` | Requires token if enabled |
+
+Notes:
+- SUPER_ADMIN flow uses reCAPTCHA on `POST /api/auth/login`
+- SUPER_ADMIN forgot/reset/set-initial flows are not part of the active platform UX
 
 ### Configuration
 

@@ -78,6 +78,11 @@ public class TenantFilter extends OncePerRequestFilter {
         return;
       }
 
+      if (isAdminPublicConfigRequest(request)) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
       Tenant tenant = resolveTenantFromHeaders(request);
       if (tenant == null) {
         tenant = resolveTenantFromHostname(request);
@@ -237,6 +242,46 @@ public class TenantFilter extends OncePerRequestFilter {
         path.startsWith("/api/health") ||
         path.startsWith("/api/swagger-ui") ||
         path.startsWith("/api/v3/api-docs");
+  }
+
+  private boolean isAdminPublicConfigRequest(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    if (!path.startsWith("/api/config/public")) {
+      return false;
+    }
+
+    String subdomainHeader = request.getHeader(TENANT_SUBDOMAIN_HEADER);
+    if (subdomainHeader != null && "admin".equalsIgnoreCase(subdomainHeader.trim())) {
+      return true;
+    }
+
+    String hostname = null;
+    String forwardedHost = request.getHeader("X-Forwarded-Host");
+    if (forwardedHost != null && !forwardedHost.isBlank()) {
+      hostname = forwardedHost.split(",")[0].trim();
+    }
+
+    if (hostname == null) {
+      hostname = extractHostFromUrl(request.getHeader("Origin"));
+    }
+
+    if (hostname == null) {
+      hostname = request.getServerName();
+    }
+
+    String subdomain = extractSubdomain(hostname);
+    return "admin".equalsIgnoreCase(subdomain);
+  }
+
+  private String extractSubdomain(String hostname) {
+    if (hostname == null || hostname.isBlank() || "localhost".equalsIgnoreCase(hostname)) {
+      return null;
+    }
+    int firstDot = hostname.indexOf('.');
+    if (firstDot <= 0) {
+      return null;
+    }
+    return hostname.substring(0, firstDot);
   }
 
   private boolean isPlatformEndpoint(String path) {

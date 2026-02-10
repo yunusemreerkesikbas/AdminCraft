@@ -2,8 +2,11 @@ package com.backend.application.service.impl;
 
 import com.backend.application.service.RecaptchaService;
 import com.backend.domain.entity.Site;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.RecaptchaVerificationException;
 import com.backend.domain.repository.SiteRepository;
+import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
+import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
 import com.backend.infrastructure.security.EncryptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,8 @@ import java.util.Map;
 public class RecaptchaServiceImpl implements RecaptchaService {
 
     private final SiteRepository siteRepository;
+    private final PlatformSettingsRepository platformSettingsRepository;
+    private final TenantContextPort tenantContext;
     private final EncryptionService encryptionService;
     private final RestTemplate restTemplate;
 
@@ -33,10 +38,10 @@ public class RecaptchaServiceImpl implements RecaptchaService {
 
     @Override
     public boolean verifyToken(String token, String action) {
-        Site site = getFirstSite();
+        RecaptchaContext context = resolveRecaptchaContext();
 
-        if (!Boolean.TRUE.equals(site.getRecaptchaEnabled())) {
-            log.debug("reCAPTCHA not enabled for site {}", site.getId());
+        if (!context.enabled()) {
+            log.debug("reCAPTCHA is not enabled for {}", context.scope());
             return true;
         }
 
@@ -45,10 +50,10 @@ public class RecaptchaServiceImpl implements RecaptchaService {
             throw new RecaptchaVerificationException("reCAPTCHA token is required");
         }
 
-        String encryptedSecretKey = site.getRecaptchaSecretKeyEncrypted();
+        String encryptedSecretKey = context.encryptedSecretKey();
 
         if (encryptedSecretKey == null || encryptedSecretKey.isBlank()) {
-            log.error("No secret key configured for reCAPTCHA verification (siteId: {})", site.getId());
+            log.error("No secret key configured for reCAPTCHA verification ({})", context.scope());
             throw new RecaptchaVerificationException("reCAPTCHA configuration error");
         }
 
@@ -82,23 +87,23 @@ public class RecaptchaServiceImpl implements RecaptchaService {
         Object successObj = responseBody.get("success");
 
         if (!(successObj instanceof Boolean success) || !success) {
-            log.warn("reCAPTCHA verification failed for siteId: {}, errors: {}",
-                    site.getId(), responseBody.get("error-codes"));
+            log.warn("reCAPTCHA verification failed for {}, errors: {}",
+                    context.scope(), responseBody.get("error-codes"));
             throw new RecaptchaVerificationException("reCAPTCHA verification failed");
         }
 
         Object scoreObj = responseBody.get("score");
         if (scoreObj == null) {
-            log.warn("No score returned from reCAPTCHA API for siteId: {}", site.getId());
+            log.warn("No score returned from reCAPTCHA API for {}", context.scope());
             throw new RecaptchaVerificationException("Invalid reCAPTCHA response");
         }
 
         if (!(scoreObj instanceof Number scoreNum)) {
-            log.warn("Invalid reCAPTCHA response: missing or invalid score for siteId: {}", site.getId());
+            log.warn("Invalid reCAPTCHA response: missing or invalid score for {}", context.scope());
             throw new RecaptchaVerificationException("Invalid reCAPTCHA response: missing score");
         }
         double score = scoreNum.doubleValue();
-        BigDecimal threshold = site.getRecaptchaThreshold();
+        BigDecimal threshold = context.threshold();
 
         if (threshold == null) {
             threshold = new BigDecimal("0.5");
@@ -107,16 +112,16 @@ public class RecaptchaServiceImpl implements RecaptchaService {
         if (action != null) {
             Object actionObj = responseBody.get("action");
             if (!(actionObj instanceof String returnedAction) || !action.equals(returnedAction)) {
-                log.warn("reCAPTCHA action mismatch. Expected: {}, Got: {} (siteId: {})",
-                        action, actionObj, site.getId());
+                log.warn("reCAPTCHA action mismatch. Expected: {}, Got: {} ({})",
+                        action, actionObj, context.scope());
                 throw new RecaptchaVerificationException("reCAPTCHA action mismatch");
             }
         }
 
         boolean passed = score >= threshold.doubleValue();
 
-        log.info("reCAPTCHA verification for siteId: {}, action: {}, score: {}, threshold: {}, passed: {}",
-                site.getId(), action, score, threshold, passed);
+        log.info("reCAPTCHA verification for {}, action: {}, score: {}, threshold: {}, passed: {}",
+                context.scope(), action, score, threshold, passed);
 
         if (!passed) {
             throw new RecaptchaVerificationException("reCAPTCHA score below threshold");
@@ -125,8 +130,29 @@ public class RecaptchaServiceImpl implements RecaptchaService {
         return true;
     }
 
-    private Site getFirstSite() {
-        return siteRepository.findFirstByOrderByIdAsc()
-                .orElseThrow(() -> new RecaptchaVerificationException("No site configured for tenant"));
+    private RecaptchaContext resolveRecaptchaContext() {
+        if (tenantContext.isSet()) {
+            Site site = siteRepository.findFirstByOrderByIdAsc()
+                    .orElseThrow(() -> new RecaptchaVerificationException("No site configured for tenant"));
+            return new RecaptchaContext(
+                    "tenant siteId=" + site.getId(),
+                    Boolean.TRUE.equals(site.getRecaptchaEnabled()),
+                    site.getRecaptchaSecretKeyEncrypted(),
+                    site.getRecaptchaThreshold());
+        }
+
+        PlatformSettings platformSettings = platformSettingsRepository.getSingleton();
+        return new RecaptchaContext(
+                "platform settings",
+                Boolean.TRUE.equals(platformSettings.getRecaptchaEnabled()),
+                platformSettings.getRecaptchaSecretKeyEncrypted(),
+                platformSettings.getRecaptchaThreshold());
+    }
+
+    private record RecaptchaContext(
+            String scope,
+            boolean enabled,
+            String encryptedSecretKey,
+            BigDecimal threshold) {
     }
 }

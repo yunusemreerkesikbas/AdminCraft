@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.application.service.PlatformSettingsService;
+import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.presentation.config.TestSecurityConfig;
 
 @WebMvcTest(PlatformSettingsController.class)
@@ -45,7 +46,16 @@ class PlatformSettingsControllerIntegrationTest {
     @WithMockUser(roles = "SUPER_ADMIN")
     void getSettings_ShouldReturnSuccess() throws Exception {
         when(platformSettingsService.getSettings()).thenReturn(
-                new PlatformSettingsData("AdminCraft", "TR", "TRY", "noreply@admincraft.com", "AdminCraft"));
+                new PlatformSettingsData(
+                        "AdminCraft",
+                        "TR",
+                        "TRY",
+                        "noreply@admincraft.com",
+                        "AdminCraft",
+                        TwoFactorPolicy.DISABLED,
+                        false,
+                        null,
+                        new java.math.BigDecimal("0.5")));
 
         mockMvc.perform(get("/platform/settings"))
                 .andExpect(status().isOk())
@@ -63,13 +73,22 @@ class PlatformSettingsControllerIntegrationTest {
                         && request.defaultLanguage() == null
                         && request.defaultCurrency() == null
                         && request.emailFromAddress() == null
-                        && request.emailFromName() == null)))
+                        && request.emailFromName() == null
+                        && request.twoFactorPolicy() == null
+                        && request.recaptchaEnabled() == null
+                        && request.recaptchaSiteKey() == null
+                        && request.recaptchaSecretKey() == null
+                        && request.recaptchaThreshold() == null)))
                 .thenReturn(new PlatformSettingsData(
                         "Acme Platform",
                         "TR",
                         "TRY",
                         "noreply@admincraft.com",
-                        "AdminCraft"));
+                        "AdminCraft",
+                        TwoFactorPolicy.DISABLED,
+                        false,
+                        null,
+                        new java.math.BigDecimal("0.5")));
 
         mockMvc.perform(patch("/platform/settings")
                 .contentType(MediaType.APPLICATION_JSON)

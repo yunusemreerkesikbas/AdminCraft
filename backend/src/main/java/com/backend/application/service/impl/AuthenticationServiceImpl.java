@@ -2,6 +2,7 @@ package com.backend.application.service.impl;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.time.LocalDateTime;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,6 +24,7 @@ import com.backend.domain.entity.User;
 import com.backend.domain.entity.VerificationToken;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.exception.AccountLockedException;
@@ -37,7 +39,10 @@ import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
 import com.backend.infrastructure.email.OtpProperties;
 import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
+import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
+import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
 import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
+import com.backend.infrastructure.persistence.platform.repository.PlatformVerificationTokenRepository;
 import com.backend.infrastructure.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -58,6 +63,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
     private final PlatformAdminUserRepository platformAdminUserRepository;
+    private final PlatformSettingsRepository platformSettingsRepository;
+    private final PlatformVerificationTokenRepository platformVerificationTokenRepository;
     private final TenantContextPort tenantContext;
     private final OtpService otpService;
     private final EmailService emailService;
@@ -80,7 +87,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return authenticateTenantUserBySubdomain(email, password, subdomain);
         } else {
             log.debug("Using platform admin authentication");
-            return authenticatePlatformAdmin(email, password);
+            return authenticatePlatformAdmin(email, password, null, null);
         }
     }
 
@@ -140,7 +147,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String cleanSubdomain = subdomain.trim().toLowerCase();
             if ("admin".equals(cleanSubdomain)) {
                 log.debug("Subdomain 'admin' detected, redirecting to platform admin authentication");
-                return authenticatePlatformAdmin(email, password);
+                return authenticatePlatformAdmin(email, password, ipAddress, userAgent);
             }
             Tenant tenant = tenantRepository.findBySubdomain(cleanSubdomain)
                     .orElseThrow(() -> {
@@ -262,7 +269,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 tenantId);
     }
 
-    private AuthResult authenticatePlatformAdmin(String email, String password) {
+    private AuthResult authenticatePlatformAdmin(String email, String password, String ipAddress, String userAgent) {
         PlatformAdminUser admin = platformAdminUserRepository
                 .findByEmailAndIsActiveTrue(email)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -285,8 +292,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidCredentialsException();
         }
 
+        if (isPlatformTwoFactorRequired()) {
+            checkOtpRateLimit(admin.getEmail());
+            PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
+            Language language = resolvePlatformLanguage();
+            emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
+            return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
+        }
+
         // Record successful login
-        admin.recordSuccessfulLogin(null);
+        admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
         String accessToken = jwtTokenProvider.createAccessToken(
@@ -458,7 +473,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     userAgent);
         } else {
             log.debug("Using platform admin authentication");
-            return authenticatePlatformAdmin(email, password);
+            return authenticatePlatformAdmin(email, password, ipAddress, userAgent);
         }
     }
 
@@ -467,6 +482,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             String deviceFingerprint, String deviceName, String ipAddress, String userAgent,
             Long tenantId, String subdomain) {
         log.info("Verifying OTP");
+
+        if (isPlatformOtpRequest(tenantId, subdomain)) {
+            return verifyPlatformOtp(pendingToken, otpCode, ipAddress);
+        }
 
         Tenant tenant = resolveTenant(tenantId, subdomain);
         if (tenant == null) {
@@ -555,6 +574,65 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             MDC.remove("tenantDb");
             MDC.remove("correlationId");
         }
+    }
+
+    private AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress) {
+        String tokenHash = otpService.hashToken(pendingToken);
+        PlatformVerificationToken token = platformVerificationTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired OTP session"));
+
+        if (!token.isUsable()) {
+            throw new InvalidTokenException("OTP session has expired or is no longer valid");
+        }
+
+        boolean isBypassCode = otpProperties.getBypassCode() != null &&
+                otpProperties.getBypassCode().equals(otpCode);
+        String otpHash = otpService.hashToken(otpCode);
+        boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
+
+        if (!isValid) {
+            token.incrementAttempts();
+            platformVerificationTokenRepository.save(token);
+            log.warn("Invalid OTP attempt for platform admin userId: {}, remaining attempts: {}",
+                    token.getAdminUser().getId(), token.getRemainingAttempts());
+
+            if (!token.isUsable()) {
+                throw new InvalidTokenException("OTP session has expired due to too many attempts");
+            }
+            throw new InvalidCredentialsException();
+        }
+
+        token.markAsUsed();
+        platformVerificationTokenRepository.save(token);
+
+        PlatformAdminUser admin = token.getAdminUser();
+        if (admin == null || !Boolean.TRUE.equals(admin.getIsActive())) {
+            throw new InvalidTokenException("Platform admin account is not active");
+        }
+
+        admin.recordSuccessfulLogin(ipAddress);
+        platformAdminUserRepository.save(admin);
+
+        String accessToken = jwtTokenProvider.createAccessToken(
+                admin.getEmail(),
+                "SUPER_ADMIN",
+                admin.getId(),
+                null);
+        String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+
+        log.info("OTP verification successful for platform admin userId: {}", admin.getId());
+
+        return AuthResult.success(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                jwtTokenProvider.getAccessTokenExpiration(),
+                admin.getId(),
+                admin.getEmail(),
+                admin.getFullName(),
+                "SUPER_ADMIN",
+                null,
+                null);
     }
 
     @Override
@@ -787,6 +865,55 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         });
     }
 
+    private boolean isPlatformTwoFactorRequired() {
+        TwoFactorPolicy policy = platformSettingsRepository.getSingleton().getTwoFactorPolicy();
+        return policy == TwoFactorPolicy.REQUIRED;
+    }
+
+    private Language resolvePlatformLanguage() {
+        String languageCode = platformSettingsRepository.getSingleton().getDefaultLanguage();
+        return Language.fromCodeOrDefault(languageCode, Language.TR);
+    }
+
+    private PlatformLoginOtpResult createPlatformLoginOtpToken(
+            PlatformAdminUser admin,
+            String ipAddress,
+            String userAgent) {
+        platformVerificationTokenRepository.revokeAllActiveTokensForAdmin(admin.getId(), TokenType.LOGIN_OTP);
+
+        String otp = otpService.generateOtp();
+        String sessionToken = UUID.randomUUID().toString();
+        String sessionTokenHash = otpService.hashToken(sessionToken);
+
+        PlatformVerificationToken token = PlatformVerificationToken.builder()
+                .adminUser(admin)
+                .tokenHash(sessionTokenHash)
+                .tokenType(TokenType.LOGIN_OTP)
+                .status(TokenStatus.ACTIVE)
+                .targetValue(otpService.hashToken(otp))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .attemptCount(0)
+                .maxAttempts(otpProperties.getMaxAttempts())
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        platformVerificationTokenRepository.save(token);
+        return new PlatformLoginOtpResult(otp, sessionToken);
+    }
+
+    private boolean isPlatformOtpRequest(Long tenantId, String subdomain) {
+        if (tenantId != null) {
+            return false;
+        }
+
+        if (subdomain == null || subdomain.isBlank()) {
+            return true;
+        }
+
+        return "admin".equalsIgnoreCase(subdomain.trim());
+    }
+
     private Tenant resolveTenant(Long tenantId, String subdomain) {
         if (tenantId != null) {
             return tenantRepository.findById(tenantId)
@@ -871,5 +998,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             this.windowStart = windowStart;
             this.requestCount = requestCount;
         }
+    }
+
+    private record PlatformLoginOtpResult(String otpCode, String sessionToken) {
     }
 }

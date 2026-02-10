@@ -73,6 +73,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     #destroySubject = new Subject<void>();
 
     protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
+    protected isPlatformHostSig = signal(false);
 
     signInForm: UntypedFormGroup;
     otpForm: UntypedFormGroup;
@@ -85,6 +86,9 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     readonly showOtpFormSig = computed(() => this.requires2FASig());
 
     ngOnInit(): void {
+        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        this.isPlatformHostSig.set(subdomain === 'admin');
+
         this.signInForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
@@ -102,15 +106,15 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             trustDevice: [false],
         });
 
-        this.#loadPublicConfig();
+        this.#loadPublicConfig(subdomain);
     }
 
-    #loadPublicConfig(): void {
-        const subdomain = this.#tenantContext.extractSubdomainFromHost();
-        if (!subdomain) return;
+    #loadPublicConfig(subdomain?: string | null): void {
+        const resolvedSubdomain = subdomain ?? this.#tenantContext.extractSubdomainFromHost();
+        if (!resolvedSubdomain) return;
 
         this.#publicConfigService
-            .loadConfig(subdomain)
+            .loadConfig(resolvedSubdomain)
             .pipe(take(1))
             .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
     }
@@ -177,12 +181,16 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             return;
         }
 
+        const trustDevice = this.isPlatformHostSig()
+            ? false
+            : this.otpForm.get('trustDevice')?.value || false;
+
         const request = {
             pendingToken: pending.pendingToken,
             otpCode: this.otpForm.get('otpCode')?.value,
-            trustDevice: this.otpForm.get('trustDevice')?.value || false,
+            trustDevice,
             deviceFingerprint: await this.#deviceFingerprintService.getDeviceFingerprint(),
-            deviceName: this.#deviceFingerprintService.getDeviceName(),
+            deviceName: this.isPlatformHostSig() ? undefined : this.#deviceFingerprintService.getDeviceName(),
             tenantId: pending.tenantId,
             subdomain: pending.subdomain,
         };
