@@ -9,9 +9,15 @@ public enum Language {
     TR("tr", "tur", "Turkish", "Türkçe", false),
 
     EN("en", "eng", "English", "English", false),
+    ZH("zh", "zho", "Chinese", "中文", false),
+    HI("hi", "hin", "Hindi", "हिन्दी", false),
     ES("es", "spa", "Spanish", "Español", false),
+    FR("fr", "fra", "French", "Français", false),
+    AR("ar", "ara", "Arabic", "العربية", true),
+    BN("bn", "ben", "Bengali", "বাংলা", false),
     RU("ru", "rus", "Russian", "Русский", false),
-    AR("ar", "ara", "Arabic", "العربية", true);
+    PT("pt", "por", "Portuguese", "Português", false),
+    UR("ur", "urd", "Urdu", "اردو", true);
 
     private final String code;
 

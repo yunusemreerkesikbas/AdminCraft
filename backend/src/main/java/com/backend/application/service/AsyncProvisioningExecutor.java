@@ -74,10 +74,7 @@ public class AsyncProvisioningExecutor {
 
     } catch (Exception e) {
       log.error("Provisioning failed for tenant {}", tenantId, e);
-      String errorMessage = e.getMessage();
-      if (errorMessage != null && errorMessage.length() > 500) {
-        errorMessage = errorMessage.substring(0, 497) + "...";
-      }
+      String errorMessage = buildDetailedErrorMessage(e);
       updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
       MDC.clear();
@@ -100,10 +97,7 @@ public class AsyncProvisioningExecutor {
 
     } catch (Exception e) {
       log.error("Migration sync failed for tenant {}", tenantId, e);
-      String errorMessage = e.getMessage();
-      if (errorMessage != null && errorMessage.length() > 500) {
-        errorMessage = errorMessage.substring(0, 497) + "...";
-      }
+      String errorMessage = buildDetailedErrorMessage(e);
       updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
       MDC.clear();
@@ -220,6 +214,55 @@ public class AsyncProvisioningExecutor {
     } else {
       log.info("No new modules to insert for tenant {} - all modules already exist", tenantId);
     }
+  }
+
+  private String buildDetailedErrorMessage(Exception e) {
+    StringBuilder errorMsg = new StringBuilder();
+
+    errorMsg.append(e.getClass().getSimpleName()).append(": ");
+
+    String message = e.getMessage();
+    if (message != null && !message.isEmpty()) {
+      errorMsg.append(message);
+    } else {
+      errorMsg.append("No message provided");
+    }
+
+    Throwable rootCause = e;
+    while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+      rootCause = rootCause.getCause();
+    }
+
+    if (rootCause != e && rootCause.getMessage() != null) {
+      errorMsg.append(" | Root cause: ")
+          .append(rootCause.getClass().getSimpleName())
+          .append(": ")
+          .append(rootCause.getMessage());
+    }
+
+    StackTraceElement[] stackTrace = e.getStackTrace();
+    if (stackTrace != null && stackTrace.length > 0) {
+      errorMsg.append(" | at ");
+      int limit = Math.min(2, stackTrace.length);
+      for (int i = 0; i < limit; i++) {
+        if (i > 0) errorMsg.append(" -> ");
+        StackTraceElement element = stackTrace[i];
+        errorMsg.append(element.getClassName())
+            .append(".")
+            .append(element.getMethodName())
+            .append("(")
+            .append(element.getFileName())
+            .append(":")
+            .append(element.getLineNumber())
+            .append(")");
+      }
+    }
+
+    String result = errorMsg.toString();
+    if (result.length() > 500) {
+      return result.substring(0, 497) + "...";
+    }
+    return result;
   }
 
 }
