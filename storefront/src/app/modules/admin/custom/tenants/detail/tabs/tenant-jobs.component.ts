@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { TranslocoModule } from '@jsverse/transloco';
 import { ProvisioningJobResponse } from '../../tenants.types';
@@ -11,5 +11,5 @@ import { ProvisioningJobResponse } from '../../tenants.types';
     imports: [TranslocoModule, DatePipe, NgClass],
 })
 export class SpaTenantJobsComponent {
-    @Input() jobs: ProvisioningJobResponse[] = [];
+    jobs = input<ProvisioningJobResponse[]>([]);
 }

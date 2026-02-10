@@ -82,11 +82,11 @@ export class TenantsListComponent extends BasePaginatedListComponent<
     #router = inject(Router);
 
 
-    protected readonly columns = signal<GridColumn<Tenant>[]>([]);
-    protected readonly actions = signal<GridAction<Tenant>[]>([]);
+    protected readonly columnsSig = signal<GridColumn<Tenant>[]>([]);
+    protected readonly actionsSig = signal<GridAction<Tenant>[]>([]);
 
     protected override onInit(): void {
-        this.columns.set([
+        this.columnsSig.set([
             {
                 key: 'info',
                 label: 'admin.tenants.fields.companyName',

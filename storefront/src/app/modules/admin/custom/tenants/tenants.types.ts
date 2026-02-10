@@ -1,3 +1,7 @@
+import { Language, LANGUAGE_LABELS, TenantStatus } from '@shared/types/platform.types';
+
+export { Language, LANGUAGE_LABELS, TenantStatus };
+
 export interface Tenant {
     id: number;
     subdomain: string;
@@ -17,41 +21,6 @@ export interface Tenant {
     fullDomain?: string;
     storageUsedMb?: number;
 }
-
-export enum TenantStatus {
-    PENDING = 'PENDING',
-    ACTIVE = 'ACTIVE',
-    SUSPENDED = 'SUSPENDED',
-    MAINTENANCE = 'MAINTENANCE',
-}
-
-export enum Language {
-    TR = 'TR',
-    EN = 'EN',
-    ZH = 'ZH',
-    HI = 'HI',
-    ES = 'ES',
-    FR = 'FR',
-    RU = 'RU',
-    AR = 'AR',
-    BN = 'BN',
-    PT = 'PT',
-    UR = 'UR',
-}
-
-export const LANGUAGE_LABELS: Record<Language, string> = {
-    [Language.TR]: 'Türkçe',
-    [Language.EN]: 'English',
-    [Language.ZH]: '中文',
-    [Language.HI]: 'हिन्दी',
-    [Language.ES]: 'Español',
-    [Language.FR]: 'Français',
-    [Language.RU]: 'Русский',
-    [Language.AR]: 'العربية',
-    [Language.BN]: 'বাংলা',
-    [Language.PT]: 'Português',
-    [Language.UR]: 'اردو',
-};
 
 export enum Currency {
     TRY = 'TRY',

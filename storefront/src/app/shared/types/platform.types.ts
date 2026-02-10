@@ -1,13 +1,37 @@
-/**
- * Platform-wide enum definitions for type safety
- */
-
 export enum TenantStatus {
     PENDING = 'PENDING',
     ACTIVE = 'ACTIVE',
     SUSPENDED = 'SUSPENDED',
     MAINTENANCE = 'MAINTENANCE'
 }
+
+export enum Language {
+    TR = 'TR',
+    EN = 'EN',
+    ZH = 'ZH',
+    HI = 'HI',
+    ES = 'ES',
+    FR = 'FR',
+    RU = 'RU',
+    AR = 'AR',
+    BN = 'BN',
+    PT = 'PT',
+    UR = 'UR',
+}
+
+export const LANGUAGE_LABELS: Record<Language, string> = {
+    [Language.TR]: 'Türkçe',
+    [Language.EN]: 'English',
+    [Language.ZH]: '中文',
+    [Language.HI]: 'हिन्दी',
+    [Language.ES]: 'Español',
+    [Language.FR]: 'Français',
+    [Language.RU]: 'Русский',
+    [Language.AR]: 'العربية',
+    [Language.BN]: 'বাংলা',
+    [Language.PT]: 'Português',
+    [Language.UR]: 'اردو',
+};
 
 export enum ProvisioningJobStatus {
     PENDING = 'PENDING',

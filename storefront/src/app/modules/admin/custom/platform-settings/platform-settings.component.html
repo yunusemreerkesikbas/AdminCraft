@@ -32,22 +32,16 @@
                                 [showErrors]="true"
                                 placeholder="AdminCraft"
                             ></spa-input>
-                            <mat-form-field class="w-full" appearance="outline">
-                                <mat-label>{{ 'admin.platform.settings.fields.defaultLanguage' | transloco }}</mat-label>
-                                <mat-select formControlName="defaultLanguage">
-                                    @for (lang of languages; track lang.value) {
-                                        <mat-option [value]="lang.value">{{ lang.label }}</mat-option>
-                                    }
-                                </mat-select>
-                            </mat-form-field>
-                            <mat-form-field class="w-full" appearance="outline">
-                                <mat-label>{{ 'admin.platform.settings.fields.defaultCurrency' | transloco }}</mat-label>
-                                <mat-select formControlName="defaultCurrency">
-                                    @for (curr of currencies; track curr.value) {
-                                        <mat-option [value]="curr.value">{{ curr.label }}</mat-option>
-                                    }
-                                </mat-select>
-                            </mat-form-field>
+                            <spa-select
+                                [label]="'admin.platform.settings.fields.defaultLanguage' | transloco"
+                                formControlName="defaultLanguage"
+                                [options]="languages"
+                            ></spa-select>
+                            <spa-select
+                                [label]="'admin.platform.settings.fields.defaultCurrency' | transloco"
+                                formControlName="defaultCurrency"
+                                [options]="currencies"
+                            ></spa-select>
                         </div>
                     </div>
 
