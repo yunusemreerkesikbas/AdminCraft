@@ -15,9 +15,17 @@ export class PublicTenantConfigService {
             return of(this.#getDefaultConfig());
         }
 
-        const cached = this.#getCachedConfig(subdomain);
-        if (cached) {
-            return of(cached);
+        const isPlatformSubdomain = this.#isPlatformSubdomain(subdomain);
+
+        // Platform security settings can be changed at runtime from Platform Settings.
+        // Bypass cache for admin host to avoid stale reCAPTCHA configuration during login.
+        if (isPlatformSubdomain) {
+            this.clearCache(subdomain);
+        } else {
+            const cached = this.#getCachedConfig(subdomain);
+            if (cached) {
+                return of(cached);
+            }
         }
 
         return this.#apiClient
@@ -27,13 +35,15 @@ export class PublicTenantConfigService {
             .pipe(
                 map(response => response.data),
                 tap(config => {
-                    if (config) {
+                    if (config && !isPlatformSubdomain) {
                         this.#setCachedConfig(subdomain, config);
                     }
                 }),
                 catchError(() => {
                     const defaultConfig = this.#getDefaultConfig();
-                    this.#setCachedConfig(subdomain, defaultConfig);
+                    if (!isPlatformSubdomain) {
+                        this.#setCachedConfig(subdomain, defaultConfig);
+                    }
                     return of(defaultConfig);
                 })
             );
@@ -84,5 +94,9 @@ export class PublicTenantConfigService {
                 threshold: 0.5
             }
         };
+    }
+
+    #isPlatformSubdomain(subdomain: string): boolean {
+        return subdomain.trim().toLowerCase() === 'admin';
     }
 }

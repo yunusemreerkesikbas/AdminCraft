@@ -5,42 +5,30 @@
 DELETE FROM modules_catalog;
 
 -- Core module (required for all tenants)
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
-    'core', 
-    'Core Module', 
-    'core', 
-    '1.0.0', 
-    NULL, 
+    'core',
+    'Core Module',
+    'core',
+    '1.0.0',
+    NULL,
     TRUE,
-    'Essential tables: users, roles, site_settings. Required for all tenants.'
+    'Core tenant capabilities umbrella: users, roles, sites, navigation, pages, media, and component management.'
 );
 
--- Page Builder module
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
+-- Core capability module: Page Builder
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
-    'pagebuilder', 
-    'Page Builder', 
-    'core', 
-    '1.0.0', 
+    'pagebuilder',
+    'Page Builder',
+    'core',
+    '1.0.0',
     '["core"]',
-    TRUE,
-    'Visual page builder with multi-language support. Includes pages, page_i18n, page_categories, sections, and blocks.'
+    FALSE,
+    'Core capability: visual page builder with multi-language support.'
 );
 
--- Site Settings module
-INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description) 
-VALUES (
-    'site_settings', 
-    'Site Settings', 
-    'core', 
-    '1.0.0', 
-    '["core"]',
-    TRUE,
-    'Global and language-specific site configuration settings.'
-);
-
--- Media Library module
+-- Core capability module: Media Library
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
     'media',
@@ -48,10 +36,11 @@ VALUES (
     'core',
     '1.0.0',
     '["core"]',
-    TRUE,
-    'Media file management with multi-language alt text support.'
+    FALSE,
+    'Core capability: media file management with responsive media support.'
 );
 
+-- Core capability module: Component Library
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
     'component_library',
@@ -60,17 +49,17 @@ VALUES (
     '1.0.0',
     '["core"]',
     FALSE,
-    'Dynamic component management system for reusable UI components with multi-language support.'
+    'Core capability: reusable component and entry management.'
 );
 
--- Product Catalog module
+-- Product Catalog module (optional)
 INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
 VALUES (
     'product',
     'Product Catalog',
     'b2c',
     '1.0.0',
-    '["core", "media"]',
+    '["core"]',
     FALSE,
-    'Product catalog management with dynamic attributes, categories, and multi-language support.'
+    'Optional product catalog management module.'
 );

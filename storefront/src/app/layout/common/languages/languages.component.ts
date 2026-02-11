@@ -45,27 +45,13 @@ export class LanguagesComponent implements OnInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Get the available languages from transloco
         this.availableLangs = this._translocoService.getAvailableLangs();
 
-        // Ensure active language matches URL
-        const urlLangMatch = this._router.url.match(/^\/(tr|en)(?:\/|$)/);
-        const urlLang = urlLangMatch ? urlLangMatch[1] : null;
-        const activeLang = this._translocoService.getActiveLang();
-        if (urlLang && urlLang !== activeLang) {
-            this._translocoService.setActiveLang(urlLang);
-        }
-
-        // Subscribe to language changes
         this._translocoService.langChanges$.subscribe((activeLang) => {
-            // Get the active lang
             this.activeLang = activeLang;
-
-            // Update the navigation
             this._updateNavigation(activeLang);
         });
 
-        // Set the country iso codes for languages for flags
         this.flagCodes = {
             tr: 'tr',
             en: 'us',

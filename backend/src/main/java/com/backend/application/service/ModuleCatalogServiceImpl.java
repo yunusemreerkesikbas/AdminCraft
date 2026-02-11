@@ -10,11 +10,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class ModuleCatalogServiceImpl implements ModuleCatalogService {
+
+  private static final List<String> PROVISIONING_CATALOG_CODES = List.of("core", "product");
 
   private final ModuleCatalogRepository moduleCatalogRepository;
   private final ObjectMapper objectMapper;
@@ -27,7 +32,14 @@ public class ModuleCatalogServiceImpl implements ModuleCatalogService {
 
   @Override
   public List<ModuleCatalogResponse> getAllModules() {
-    return moduleCatalogRepository.findAll().stream()
+    Map<String, ModuleCatalog> catalogByCode = moduleCatalogRepository.findAll().stream()
+        .collect(Collectors.toMap(
+            ModuleCatalog::getCode,
+            Function.identity(),
+            (existing, replacement) -> existing));
+    return PROVISIONING_CATALOG_CODES.stream()
+        .map(catalogByCode::get)
+        .filter(Objects::nonNull)
         .map(this::mapToResponse)
         .collect(Collectors.toList());
   }
@@ -55,4 +67,3 @@ public class ModuleCatalogServiceImpl implements ModuleCatalogService {
         .build();
   }
 }
-
