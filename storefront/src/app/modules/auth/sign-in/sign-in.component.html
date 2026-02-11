@@ -83,11 +83,13 @@
                         >
                             {{ 'auth.signIn.rememberMe' | transloco }}
                         </mat-checkbox>
-                        <a
-                            class="text-md font-medium text-primary-500 hover:underline"
-                            [routerLink]="['/forgot-password']"
-                            >{{ 'auth.signIn.forgotPassword' | transloco }}
-                        </a>
+                        @if (!isPlatformHostSig()) {
+                            <a
+                                class="text-md font-medium text-primary-500 hover:underline"
+                                [routerLink]="['/forgot-password']"
+                                >{{ 'auth.signIn.forgotPassword' | transloco }}
+                            </a>
+                        }
                     </div>
 
                     <!-- Submit button -->
@@ -140,18 +142,20 @@
                     ></spa-input>
 
                     <!-- Trust device checkbox -->
-                    <div class="mt-4">
-                        <mat-checkbox
-                            class="-ml-2"
-                            [color]="'primary'"
-                            [formControlName]="'trustDevice'"
-                        >
-                            {{ 'auth.signIn.2fa.trustDevice' | transloco }}
-                        </mat-checkbox>
-                        <div class="ml-6 text-xs text-gray-500">
-                            {{ 'auth.signIn.2fa.trustDeviceHint' | transloco }}
+                    @if (!isPlatformHostSig()) {
+                        <div class="mt-4">
+                            <mat-checkbox
+                                class="-ml-2"
+                                [color]="'primary'"
+                                [formControlName]="'trustDevice'"
+                            >
+                                {{ 'auth.signIn.2fa.trustDevice' | transloco }}
+                            </mat-checkbox>
+                            <div class="ml-6 text-xs text-gray-500">
+                                {{ 'auth.signIn.2fa.trustDeviceHint' | transloco }}
+                            </div>
                         </div>
-                    </div>
+                    }
 
                     <!-- Buttons -->
                     <div class="mt-6 flex gap-3">

@@ -266,8 +266,34 @@ public final class ValidationConstants {
     // RECAPTCHA
     // ============================================================================
 
+    /**
+     * reCAPTCHA Key Pattern (Site Key and Secret Key)
+     * - Exactly 40 alphanumeric characters with optional hyphens and underscores
+     * 
+     * @example "6LdZU2UqAAAAAG9Y7vX_abcdefghijklmnopqrst"
+     */
+    public static final String RECAPTCHA_KEY_PATTERN = "^[A-Za-z0-9_-]{40}$";
+    public static final int RECAPTCHA_KEY_LENGTH = 40;
+    
+    /**
+     * reCAPTCHA Token Pattern
+     * - Alphanumeric with underscores and hyphens
+     */
     public static final String RECAPTCHA_TOKEN_PATTERN = "^[A-Za-z0-9_-]+$";
     public static final int RECAPTCHA_TOKEN_MAX_LENGTH = 4096;
+    
+    /**
+     * reCAPTCHA Threshold (Score between 0.0 and 1.0)
+     */
+    public static final int RECAPTCHA_THRESHOLD_SCALE = 2;
+
+    // Message Keys for reCAPTCHA
+    public static final String MSG_RECAPTCHA_KEYS_REQUIRED = "validation.recaptcha.keys.required";
+    public static final String MSG_RECAPTCHA_SITE_KEY_INVALID = "validation.recaptcha.siteKey.invalid";
+    public static final String MSG_RECAPTCHA_SECRET_KEY_INVALID = "validation.recaptcha.secretKey.invalid";
+    public static final String MSG_RECAPTCHA_THRESHOLD_MIN = "validation.recaptcha.threshold.min";
+    public static final String MSG_RECAPTCHA_THRESHOLD_MAX = "validation.recaptcha.threshold.max";
+
 
     // ============================================================================
     // SITE TECHNICAL LIMITS

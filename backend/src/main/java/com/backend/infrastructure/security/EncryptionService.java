@@ -1,5 +1,6 @@
 package com.backend.infrastructure.security;
 
+import com.backend.domain.port.EncryptionServicePort;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,7 @@ import java.util.Base64;
 
 @Slf4j
 @Component
-public class EncryptionService {
+public class EncryptionService implements EncryptionServicePort {
 
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final String KEY_ALGORITHM = "AES";

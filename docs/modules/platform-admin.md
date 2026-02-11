@@ -6,7 +6,7 @@ Platform admin features provide SUPER_ADMIN users with:
 
 - **Platform Dashboard** -- aggregated statistics across all tenants (counts, storage, recent activity, module distribution)
 - **Tenant Detail** -- tab-based view of a single tenant (overview, modules, provisioning jobs)
-- **Platform Settings** -- global configuration (platform name, default language/currency, email display settings)
+- **Platform Settings** -- global configuration (platform name, default language/currency, email display settings, SUPER_ADMIN security policy)
 
 These features read exclusively from the `platform_management` database. No cross-DB queries or tenant DB access.
 
@@ -14,7 +14,9 @@ These features read exclusively from the `platform_management` database. No cros
 
 ### Platform Settings table
 
-Migration: [`backend/src/main/resources/db/platform/V38__platform_settings.sql`](../../backend/src/main/resources/db/platform/V38__platform_settings.sql)
+Migrations:
+- [`backend/src/main/resources/db/platform/V38__platform_settings.sql`](../../backend/src/main/resources/db/platform/V38__platform_settings.sql)
+- [`backend/src/main/resources/db/platform/V41__extend_platform_settings_security.sql`](../../backend/src/main/resources/db/platform/V41__extend_platform_settings_security.sql)
 
 Singleton pattern -- the table always contains exactly one row (`id = 1`).
 
@@ -25,10 +27,21 @@ Singleton pattern -- the table always contains exactly one row (`id = 1`).
 | `default_currency`   | VARCHAR(3)   | `TRY`                  |
 | `email_from_address` | VARCHAR(255) | `noreply@admincraft.com` |
 | `email_from_name`    | VARCHAR(100) | `AdminCraft`           |
+| `two_factor_policy`  | ENUM         | `DISABLED`             |
+| `recaptcha_enabled`  | BOOLEAN      | `false`                |
+| `recaptcha_site_key` | VARCHAR(255) | `null`                 |
+| `recaptcha_secret_key_encrypted` | TEXT | `null`           |
+| `recaptcha_threshold`| DECIMAL(3,2) | `0.50`                |
 
 Entity: [`backend/.../entity/PlatformSettings.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/entity/PlatformSettings.java)
 
 Repository: [`backend/.../repository/PlatformSettingsRepository.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/repository/PlatformSettingsRepository.java) -- `getSingleton()` default method reads row 1.
+
+### Platform verification tokens table
+
+Migration: [`backend/src/main/resources/db/platform/V42__create_platform_verification_tokens.sql`](../../backend/src/main/resources/db/platform/V42__create_platform_verification_tokens.sql)
+
+Used for SUPER_ADMIN login OTP sessions when platform 2FA policy is `REQUIRED`.
 
 ### Existing tables used
 
@@ -92,6 +105,10 @@ Validation rules in [`PatchPlatformSettingsRequest`](../../backend/src/main/java
 - `defaultCurrency`: exactly 3 letters
 - `emailFromAddress`: valid email, max 255 chars
 - `emailFromName`: max 100 chars
+- `twoFactorPolicy`: `DISABLED` or `REQUIRED`
+- `recaptchaSiteKey`: 40 chars, `[A-Za-z0-9_-]` pattern
+- `recaptchaSecretKey`: 40 chars, `[A-Za-z0-9_-]` pattern
+- `recaptchaThreshold`: 0.0-1.0
 
 Schema note: `platform_settings.default_language` is currently `VARCHAR(2)` in migration/entity, so persisted values are bounded by column length.
 

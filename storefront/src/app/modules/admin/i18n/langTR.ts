@@ -70,6 +70,21 @@ export const langTR = {
                     'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
             },
         },
+        recaptcha: {
+            keys: {
+                required: 'reCAPTCHA etkinleştirildiğinde site key ve secret key gereklidir',
+            },
+            siteKey: {
+                invalid: 'Geçersiz reCAPTCHA site key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+            },
+            secretKey: {
+                invalid: 'Geçersiz reCAPTCHA secret key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+            },
+            threshold: {
+                min: 'reCAPTCHA threshold minimum 0.0 olmalıdır',
+                max: 'reCAPTCHA threshold maksimum 1.0 olmalıdır',
+            },
+        },
     },
     admin: {
         common: {
@@ -1843,6 +1858,7 @@ export const langTR = {
                 sections: {
                     general: 'Genel',
                     emailDisplay: 'E-posta Görünümü',
+                    security: 'Güvenlik',
                 },
                 fields: {
                     platformName: 'Platform Adı',
@@ -1850,6 +1866,31 @@ export const langTR = {
                     defaultCurrency: 'Varsayılan Para Birimi',
                     emailFromAddress: 'Gönderici E-posta Adresi',
                     emailFromName: 'Gönderici Görünen Adı',
+                },
+                security: {
+                    twoFactor: {
+                        title: 'İki Faktörlü Kimlik Doğrulama',
+                        description: 'Super admin girişleri için OTP politikasını yapılandırın.',
+                        policy: {
+                            disabled: 'Kapalı',
+                            disabledDesc: 'Super admin kullanıcıları yalnızca e-posta ve şifre ile giriş yapar.',
+                            required: 'Zorunlu',
+                            requiredDesc: 'Tüm super admin kullanıcıları her girişte OTP doğrulaması yapmalıdır.',
+                        },
+                    },
+                    recaptcha: {
+                        title: 'reCAPTCHA Koruması',
+                        description: 'Super admin girişi için Google reCAPTCHA v3 yapılandırması.',
+                        enabled: 'reCAPTCHA Etkinleştir',
+                        enabledHint: 'Platform girişinde bot doğrulaması zorunlu olsun.',
+                        siteKey: 'Site Key',
+                        siteKeyHint: 'Frontend tarafından kullanılan public anahtar.',
+                        secretKey: 'Secret Key',
+                        secretKeyHint: 'Backend doğrulaması için private anahtar.',
+                        secretKeyPlaceholder: 'Mevcut anahtarı korumak için boş bırakın',
+                        threshold: 'Skor Eşiği',
+                        thresholdHint: '0.0 = esnek, 1.0 = sıkı. Önerilen: 0.5',
+                    },
                 },
                 messages: {
                     loadFailed: 'Platform ayarları yüklenemedi',

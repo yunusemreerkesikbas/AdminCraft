@@ -73,6 +73,21 @@ export const langEN = {
                     'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
             },
         },
+        recaptcha: {
+            keys: {
+                required: 'reCAPTCHA site key and secret key are required when reCAPTCHA is enabled',
+            },
+            siteKey: {
+                invalid: 'Invalid reCAPTCHA site key format (40 alphanumeric characters, hyphens and underscores)',
+            },
+            secretKey: {
+                invalid: 'Invalid reCAPTCHA secret key format (40 alphanumeric characters, hyphens and underscores)',
+            },
+            threshold: {
+                min: 'reCAPTCHA threshold must be at least 0.0',
+                max: 'reCAPTCHA threshold cannot exceed 1.0',
+            },
+        },
     },
     admin: {
         common: {
@@ -1868,6 +1883,7 @@ export const langEN = {
                 sections: {
                     general: 'General',
                     emailDisplay: 'Email Display',
+                    security: 'Security',
                 },
                 fields: {
                     platformName: 'Platform Name',
@@ -1875,6 +1891,31 @@ export const langEN = {
                     defaultCurrency: 'Default Currency',
                     emailFromAddress: 'From Email Address',
                     emailFromName: 'From Display Name',
+                },
+                security: {
+                    twoFactor: {
+                        title: 'Two-Factor Authentication',
+                        description: 'Configure super admin OTP policy for platform login.',
+                        policy: {
+                            disabled: 'Disabled',
+                            disabledDesc: 'Super admins can sign in with email and password only.',
+                            required: 'Required',
+                            requiredDesc: 'All super admins must complete OTP verification on each login.',
+                        },
+                    },
+                    recaptcha: {
+                        title: 'reCAPTCHA Protection',
+                        description: 'Configure Google reCAPTCHA v3 for super admin login.',
+                        enabled: 'Enable reCAPTCHA',
+                        enabledHint: 'Require bot verification on platform sign-in.',
+                        siteKey: 'Site Key',
+                        siteKeyHint: 'Public key used by frontend.',
+                        secretKey: 'Secret Key',
+                        secretKeyHint: 'Private key used by backend verification.',
+                        secretKeyPlaceholder: 'Leave empty to keep existing key',
+                        threshold: 'Score Threshold',
+                        thresholdHint: '0.0 = lenient, 1.0 = strict. Recommended: 0.5',
+                    },
                 },
                 messages: {
                     loadFailed: 'Failed to load platform settings',
