@@ -42,7 +42,7 @@ import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
 import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
 import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
 import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
-import com.backend.infrastructure.persistence.platform.repository.PlatformVerificationTokenRepository;
+import com.backend.domain.repository.PlatformVerificationTokenRepository;
 import com.backend.infrastructure.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -576,6 +576,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+    @Transactional("platformTransactionManager")
     private AuthResult verifyPlatformOtp(String pendingToken, String otpCode, String ipAddress) {
         String tokenHash = otpService.hashToken(pendingToken);
         PlatformVerificationToken token = platformVerificationTokenRepository.findByTokenHash(tokenHash)
@@ -875,6 +876,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return Language.fromCodeOrDefault(languageCode, Language.TR);
     }
 
+    @Transactional("platformTransactionManager")
     private PlatformLoginOtpResult createPlatformLoginOtpToken(
             PlatformAdminUser admin,
             String ipAddress,
@@ -902,6 +904,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new PlatformLoginOtpResult(otp, sessionToken);
     }
 
+    /**
+     * Determines if the OTP verification request is for platform admin.
+     * 
+     * <p><b>Platform Routing Rules:</b></p>
+     * <ul>
+     *   <li><b>Platform Admin:</b> {@code tenantId == null} AND 
+     *       ({@code subdomain == null} OR {@code subdomain == "admin"})</li>
+     *   <li><b>Tenant User:</b> {@code tenantId != null}</li>
+     * </ul>
+     * 
+     * <p><b>Client Contract:</b></p>
+     * Clients must provide consistent {@code tenantId} and {@code subdomain} values 
+     * across authentication flow:
+     * <ul>
+     *   <li>Platform: Send {@code tenantId=null} and {@code subdomain="admin"}</li>
+     *   <li>Tenant: Send valid {@code tenantId} and {@code subdomain}</li>
+     * </ul>
+     * 
+     * @param tenantId tenant ID from request (null for platform admin)
+     * @param subdomain subdomain from request (null/blank/"admin" for platform admin)
+     * @return true if platform OTP request, false if tenant OTP request
+     * 
+     * @see #authenticatePlatformAdmin
+     * @see #authenticateTenantUser
+     */
     private boolean isPlatformOtpRequest(Long tenantId, String subdomain) {
         if (tenantId != null) {
             return false;

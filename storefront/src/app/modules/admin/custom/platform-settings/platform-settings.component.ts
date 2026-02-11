@@ -179,7 +179,9 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.#destroy$))
             .subscribe((enabled) => {
                 const siteKeyControl = this.form.get('recaptchaSiteKey');
-                if (!siteKeyControl) {
+                const secretKeyControl = this.form.get('recaptchaSecretKey');
+                
+                if (!siteKeyControl || !secretKeyControl) {
                     return;
                 }
 
@@ -194,6 +196,9 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
 
                 siteKeyControl.setValidators(validators);
                 siteKeyControl.updateValueAndValidity({ emitEvent: false });
+                
+                secretKeyControl.setValidators(validators);
+                secretKeyControl.updateValueAndValidity({ emitEvent: false });
             });
     }
 }

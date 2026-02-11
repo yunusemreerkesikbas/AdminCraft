@@ -55,6 +55,46 @@ Platform admins are stored in the platform database (`platform_management`) and 
 - `role = SUPER_ADMIN`
 - `tenantId = null`
 
+### OTP Verification Routing Rules
+
+The `POST /api/auth/verify-otp` endpoint handles both platform admin and tenant user OTP verification. The system determines the routing based on request parameters:
+
+**Platform Admin OTP:**
+- `tenantId == null` AND (`subdomain == null` OR `subdomain == "admin"`)
+- Routes to platform admin verification flow
+- Validates OTP against `platform_verification_tokens` table
+
+**Tenant User OTP:**
+- `tenantId != null`
+- Routes to tenant user verification flow
+- Validates OTP against tenant database `verification_tokens` table
+
+**Client Contract:**
+Clients MUST send consistent `tenantId` and `subdomain` values across the entire authentication flow (`POST /api/auth/login` → `POST /api/auth/verify-otp`):
+- **Platform Admin:** Always send `tenantId=null` and `subdomain="admin"`
+- **Tenant User:** Always send the same `tenantId` and `subdomain` used in initial login
+
+**Example Requests:**
+```json
+// Platform Admin
+POST /api/auth/verify-otp
+{
+  "tenantId": null,
+  "subdomain": "admin",
+  "pendingToken": "...",
+  "otpCode": "123456"
+}
+
+// Tenant User
+POST /api/auth/verify-otp
+{
+  "tenantId": 42,
+  "subdomain": "acme",
+  "pendingToken": "...",
+  "otpCode": "123456"
+}
+```
+
 ## Refresh Token
 
 Token refresh uses the Authorization header:
@@ -741,7 +781,42 @@ reCAPTCHA settings stored in `sites` table:
 
 Notes:
 - SUPER_ADMIN flow uses reCAPTCHA on `POST /api/auth/login`
-- SUPER_ADMIN forgot/reset/set-initial flows are not part of the active platform UX
+- **SUPER_ADMIN password management:**
+  - ❌ Forgot/reset/set-initial-password flows are **not implemented** for platform admins
+  - Platform admin passwords can only be managed via direct database access by DevOps team
+  - **Rationale:** Platform admins are system administrators with full database access
+  - **Alternative:** Contact DevOps team for password reset requests
+- **Tenant user flows:** All password management endpoints are fully implemented for tenant users
+
+### Platform Admin reCAPTCHA Settings
+
+Platform admin login (`POST /api/auth/login` with subdomain="admin") can be protected with Google reCAPTCHA v3.
+
+**Database:** `platform_settings` table (schema: `platform_management`)
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `recaptcha_enabled` | BOOLEAN | FALSE | Enable reCAPTCHA protection for platform admin login |
+| `recaptcha_site_key` | VARCHAR(255) | NULL | Google reCAPTCHA v3 site key (public key) |
+| `recaptcha_secret_key_encrypted` | TEXT | NULL | Secret key encrypted with AES-256-GCM |
+| `recaptcha_threshold` | DECIMAL(3,2) | 0.5 | Score threshold (0.0 = likely bot, 1.0 = likely human) |
+
+**Migration:** `V41__extend_platform_settings_security.sql`  
+**Configuration UI:** Platform Settings → Security → reCAPTCHA Protection  
+**Scope:** Platform admin login only (tenant-level reCAPTCHA configured separately per site)
+
+**Example Configuration:**
+```json
+{
+  "recaptchaEnabled": true,
+  "recaptchaSiteKey": "6LdZU2UqAAAAAG9Y7vX_...",
+  "recaptchaThreshold": 0.5
+}
+```
+
+**Security Note:** Secret key is encrypted at rest using the application's master encryption key (`app.encryption.secret-key`).
+
+### Tenant Site reCAPTCHA Settings (Multi-Tenant)
 
 ### Configuration
 

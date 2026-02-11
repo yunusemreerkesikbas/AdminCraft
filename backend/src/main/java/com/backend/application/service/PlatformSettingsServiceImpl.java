@@ -8,9 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.request.PatchPlatformSettingsRequest;
 import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.domain.enums.TwoFactorPolicy;
+import com.backend.domain.port.EncryptionServicePort;
+import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
 import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
-import com.backend.infrastructure.security.EncryptionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,19 +20,20 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class PlatformSettingsServiceImpl implements PlatformSettingsService {
 
+    private final PlatformSettingsPort platformSettingsPort;
     private final PlatformSettingsRepository platformSettingsRepository;
-    private final EncryptionService encryptionService;
+    private final EncryptionServicePort encryptionService;
 
     @Override
     public PlatformSettingsData getSettings() {
-        PlatformSettings entity = platformSettingsRepository.getSingleton();
+        PlatformSettings entity = platformSettingsPort.getSingleton();
         return toData(entity);
     }
 
     @Override
     @Transactional
     public PlatformSettingsData patchSettings(PatchPlatformSettingsRequest request) {
-        PlatformSettings entity = platformSettingsRepository.getSingleton();
+        PlatformSettings entity = platformSettingsPort.getSingleton();
 
         if (request.platformName() != null) {
             entity.setPlatformName(request.platformName());
@@ -81,10 +83,7 @@ public class PlatformSettingsServiceImpl implements PlatformSettingsService {
             return;
         }
 
-        if (entity.getRecaptchaSiteKey() == null || entity.getRecaptchaSiteKey().isBlank()
-                || entity.getRecaptchaSecretKeyEncrypted() == null || entity.getRecaptchaSecretKeyEncrypted().isBlank()) {
-            throw new IllegalArgumentException("validation.recaptcha.keys.required");
-        }
+        // Bean Validation handles reCAPTCHA key validation (@RecaptchaKeysValid annotation)
 
         if (entity.getTwoFactorPolicy() == null) {
             entity.setTwoFactorPolicy(TwoFactorPolicy.DISABLED);

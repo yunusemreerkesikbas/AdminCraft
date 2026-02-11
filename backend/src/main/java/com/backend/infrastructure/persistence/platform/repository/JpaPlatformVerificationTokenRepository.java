@@ -1,5 +1,6 @@
 package com.backend.infrastructure.persistence.platform.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,8 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.domain.enums.TokenType;
 import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
 
+/**
+ * JPA repository interface for PlatformVerificationToken entity.
+ * Internal infrastructure component - use domain repository from Application layer.
+ */
 @Repository
-public interface PlatformVerificationTokenRepository extends JpaRepository<PlatformVerificationToken, Long> {
+interface JpaPlatformVerificationTokenRepository extends JpaRepository<PlatformVerificationToken, Long> {
 
     Optional<PlatformVerificationToken> findByTokenHash(String tokenHash);
 
@@ -29,4 +34,12 @@ public interface PlatformVerificationTokenRepository extends JpaRepository<Platf
     int revokeAllActiveTokensForAdmin(
             @Param("adminUserId") Long adminUserId,
             @Param("tokenType") TokenType tokenType);
+    
+    @Modifying
+    @Transactional("platformTransactionManager")
+    @Query("""
+            DELETE FROM PlatformVerificationToken t
+            WHERE t.expiresAt < :now
+            """)
+    int deleteExpiredTokens(@Param("now") LocalDateTime now);
 }

@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 
 import com.backend.application.dto.PublicTenantConfigResult;
 import com.backend.application.service.PublicTenantConfigService;
+import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.SiteRepository;
-import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,19 +18,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class PublicTenantConfigServiceImpl implements PublicTenantConfigService {
 
     private final SiteRepository siteRepository;
-    private final PlatformSettingsRepository platformSettingsRepository;
+    private final PlatformSettingsPort platformSettings;
     private final TenantContextPort tenantContext;
 
     @Override
     @Transactional(readOnly = true)
     public PublicTenantConfigResult getPublicConfig() {
         if (!tenantContext.isSet()) {
-            var platformSettings = platformSettingsRepository.getSingleton();
+            var settings = platformSettings.getSingleton();
             return PublicTenantConfigResult.of(
-                    platformSettings.getRecaptchaEnabled() != null ? platformSettings.getRecaptchaEnabled() : false,
-                    platformSettings.getRecaptchaSiteKey(),
-                    platformSettings.getRecaptchaThreshold() != null
-                            ? platformSettings.getRecaptchaThreshold()
+                    settings.getRecaptchaEnabled() != null ? settings.getRecaptchaEnabled() : false,
+                    settings.getRecaptchaSiteKey(),
+                    settings.getRecaptchaThreshold() != null
+                            ? settings.getRecaptchaThreshold()
                             : new BigDecimal("0.5"));
         }
 

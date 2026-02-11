@@ -70,6 +70,21 @@ export const langTR = {
                     'Küçük harf ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
             },
         },
+        recaptcha: {
+            keys: {
+                required: 'reCAPTCHA etkinleştirildiğinde site key ve secret key gereklidir',
+            },
+            siteKey: {
+                invalid: 'Geçersiz reCAPTCHA site key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+            },
+            secretKey: {
+                invalid: 'Geçersiz reCAPTCHA secret key formatı (40 karakter alfanumerik, tire ve alt çizgi)',
+            },
+            threshold: {
+                min: 'reCAPTCHA threshold minimum 0.0 olmalıdır',
+                max: 'reCAPTCHA threshold maksimum 1.0 olmalıdır',
+            },
+        },
     },
     admin: {
         common: {

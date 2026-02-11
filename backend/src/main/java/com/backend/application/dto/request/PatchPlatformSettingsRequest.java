@@ -3,6 +3,7 @@ package com.backend.application.dto.request;
 import java.math.BigDecimal;
 
 import com.backend.domain.enums.TwoFactorPolicy;
+import com.backend.shared.validation.RecaptchaKeysValid;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@RecaptchaKeysValid
 public record PatchPlatformSettingsRequest(
     @Size(max = 100) String platformName,
     @Size(min = 2, max = 10)

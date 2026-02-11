@@ -73,6 +73,21 @@ export const langEN = {
                     'Must start with a lowercase letter, only lowercase letters, digits, underscores and hyphens allowed',
             },
         },
+        recaptcha: {
+            keys: {
+                required: 'reCAPTCHA site key and secret key are required when reCAPTCHA is enabled',
+            },
+            siteKey: {
+                invalid: 'Invalid reCAPTCHA site key format (40 alphanumeric characters, hyphens and underscores)',
+            },
+            secretKey: {
+                invalid: 'Invalid reCAPTCHA secret key format (40 alphanumeric characters, hyphens and underscores)',
+            },
+            threshold: {
+                min: 'reCAPTCHA threshold must be at least 0.0',
+                max: 'reCAPTCHA threshold cannot exceed 1.0',
+            },
+        },
     },
     admin: {
         common: {

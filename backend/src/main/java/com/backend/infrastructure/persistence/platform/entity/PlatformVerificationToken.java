@@ -1,6 +1,7 @@
 package com.backend.infrastructure.persistence.platform.entity;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
@@ -20,8 +21,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(schema = "platform_management", name = "platform_verification_tokens", indexes = {
@@ -30,7 +32,8 @@ import lombok.NoArgsConstructor;
         @Index(columnList = "token_type, status", name = "idx_platform_token_type_status"),
         @Index(columnList = "expires_at", name = "idx_platform_token_expires_at")
 })
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -118,5 +121,17 @@ public class PlatformVerificationToken {
     public void markAsUsed() {
         status = TokenStatus.USED;
         usedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PlatformVerificationToken that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

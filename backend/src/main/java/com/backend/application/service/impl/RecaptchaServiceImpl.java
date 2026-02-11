@@ -2,12 +2,11 @@ package com.backend.application.service.impl;
 
 import com.backend.application.service.RecaptchaService;
 import com.backend.domain.entity.Site;
+import com.backend.domain.port.EncryptionServicePort;
+import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.RecaptchaVerificationException;
 import com.backend.domain.repository.SiteRepository;
-import com.backend.infrastructure.persistence.platform.entity.PlatformSettings;
-import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
-import com.backend.infrastructure.security.EncryptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +27,9 @@ import java.util.Map;
 public class RecaptchaServiceImpl implements RecaptchaService {
 
     private final SiteRepository siteRepository;
-    private final PlatformSettingsRepository platformSettingsRepository;
+    private final PlatformSettingsPort platformSettings;
     private final TenantContextPort tenantContext;
-    private final EncryptionService encryptionService;
+    private final EncryptionServicePort encryptionService;
     private final RestTemplate restTemplate;
 
     @Value("${app.recaptcha.verify-url:https://www.google.com/recaptcha/api/siteverify}")
@@ -141,12 +140,12 @@ public class RecaptchaServiceImpl implements RecaptchaService {
                     site.getRecaptchaThreshold());
         }
 
-        PlatformSettings platformSettings = platformSettingsRepository.getSingleton();
+        var settings = platformSettings.getSingleton();
         return new RecaptchaContext(
                 "platform settings",
-                Boolean.TRUE.equals(platformSettings.getRecaptchaEnabled()),
-                platformSettings.getRecaptchaSecretKeyEncrypted(),
-                platformSettings.getRecaptchaThreshold());
+                Boolean.TRUE.equals(settings.getRecaptchaEnabled()),
+                settings.getRecaptchaSecretKeyEncrypted(),
+                settings.getRecaptchaThreshold());
     }
 
     private record RecaptchaContext(
