@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotsWrapper;
@@ -34,6 +33,8 @@ import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.PageType;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
@@ -55,7 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
-        private static final int MAX_BATCH_SIZE = 50;
         private static final Set<String> RESERVED_FIELDS = Set.of(
                         "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -74,152 +74,89 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         private final MediaFieldExpander mediaFieldExpander;
 
         @Override
-        public Optional<PageDeliveryResponse> getPageByUid(String uid, Language lang) {
-                Optional<Page> pageOpt = pageRepository.findByUid(uid);
-                if (pageOpt.isEmpty()) {
-                        return Optional.empty();
+        public Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId,
+                        String code, Language lang) {
+                Optional<Page> pageOpt;
+                String normalizedPageLabelOrId = normalizePageLabelOrId(pageLabelOrId);
+                String normalizedCode = normalizeParam(code);
+
+                if (pageType == null || pageType.isBlank()) {
+                        pageOpt = resolveHomepage();
+                } else {
+                        pageOpt = switch (pageType) {
+                                case "ContentPage" -> normalizedPageLabelOrId != null
+                                                ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
+                                                : Optional.empty();
+                                case "ProductPage" -> normalizedCode != null
+                                                ? resolveUniqueTemplatePage(PageType.PRODUCT)
+                                                : Optional.empty();
+                                case "CategoryPage" -> normalizedCode != null
+                                                ? resolveUniqueTemplatePage(PageType.CATEGORY)
+                                                : Optional.empty();
+                                case "SearchResultPage" -> resolveUniqueTemplatePage(PageType.SEARCH);
+                                case "LandingPage" -> normalizedPageLabelOrId != null
+                                                ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
+                                                : Optional.empty();
+                                default -> Optional.empty();
+                        };
                 }
 
-                Page page = pageOpt.get();
-                return Optional.of(buildPageDeliveryResponse(page, lang));
+                return pageOpt.map(page -> buildPageDeliveryResponse(page, lang));
         }
 
-        @Override
-        public BatchPageDeliveryResponse getPagesByUids(List<String> uids, Language lang) {
-                List<String> limitedUids = uids.size() > MAX_BATCH_SIZE
-                                ? uids.subList(0, MAX_BATCH_SIZE)
-                                : uids;
-
-                List<Page> pages = pageRepository.findByUidIn(limitedUids);
-                Map<String, Page> pageMap = pages.stream()
-                                .collect(Collectors.toMap(Page::getUid, p -> p));
-
-                List<Long> pageIds = pages.stream().map(Page::getId).toList();
-
-                Map<Long, PageI18n> pageI18nMap = pageI18nRepository
-                                .findByPageIdInAndLanguage(pageIds, lang)
-                                .stream()
-                                .collect(Collectors.toMap(PageI18n::getPageId, i -> i));
-
-                List<PageSlot> allSlots = new ArrayList<>();
-                for (Long pageId : pageIds) {
-                        allSlots.addAll(pageSlotRepository.findByPageId(pageId));
+        private Optional<Page> resolveHomepage() {
+                long publishedHomeCount = pageRepository.countByIsHomeTrueAndStatus(PageStatus.PUBLISHED);
+                if (publishedHomeCount > 1) {
+                        log.warn("Multiple published homepages found (count={}), first one will be used",
+                                        publishedHomeCount);
                 }
-                List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
-                allSlots.addAll(sharedSlots);
+                return pageRepository.findByIsHomeTrueAndStatus(PageStatus.PUBLISHED);
+        }
 
-                List<Long> slotIds = allSlots.stream().map(PageSlot::getId).distinct().toList();
-
-                List<SlotComponent> allSlotComponents = slotComponentRepository.findBySlotIdIn(slotIds);
-                Map<Long, List<SlotComponent>> componentsBySlotId = allSlotComponents.stream()
-                                .collect(Collectors.groupingBy(SlotComponent::getSlotId));
-
-                List<Long> allComponentIds = allSlotComponents.stream()
-                                .map(SlotComponent::getComponentId)
-                                .distinct()
-                                .toList();
-
-                Map<Long, Component> componentMap = allComponentIds.isEmpty()
-                                ? Map.of()
-                                : componentRepository.findByIdIn(allComponentIds).stream()
-                                                .filter(c -> c.getStatus() == ComponentStatus.PUBLISHED)
-                                                .collect(Collectors.toMap(Component::getId, c -> c));
-
-                List<Long> publishedComponentIds = componentMap.keySet().stream().toList();
-
-                Map<Long, ComponentI18n> componentI18nMap = publishedComponentIds.isEmpty()
-                                ? Map.of()
-                                : componentI18nRepository.findByComponentIdInAndLanguage(publishedComponentIds, lang)
-                                                .stream()
-                                                .collect(Collectors.toMap(ComponentI18n::getComponentId, i -> i));
-
-                List<Long> typeIds = componentMap.values().stream()
-                                .map(Component::getComponentTypeId)
-                                .filter(id -> id != null)
-                                .distinct()
-                                .toList();
-
-                Map<Long, ComponentType> typeMap = typeIds.isEmpty()
-                                ? Map.of()
-                                : componentTypeRepository.findByIdIn(typeIds).stream()
-                                                .collect(Collectors.toMap(ComponentType::getId, t -> t));
-
-                // Batch fetch responsive media sets with eagerly loaded media and translations
-                List<Long> responsiveMediaIds = componentMap.values().stream()
-                                .map(Component::getResponsiveMedia)
-                                .filter(r -> r != null)
-                                .map(ResponsiveMediaSet::getId)
-                                .distinct()
-                                .toList();
-                Map<Long, ResponsiveMediaSet> responsiveMediaMap = responsiveMediaIds.isEmpty()
-                                ? Map.of()
-                                : responsiveMediaSetRepository.findByIdInWithMedia(responsiveMediaIds).stream()
-                                                .collect(Collectors.toMap(ResponsiveMediaSet::getId, r -> r));
-                Map<Long, List<ComponentEntry>> entriesByComponentId = publishedComponentIds.isEmpty()
-                                ? Map.of()
-                                : componentEntryRepository
-                                                .findByComponentIdInAndStatusOrderBySortOrder(publishedComponentIds,
-                                                                ComponentStatus.PUBLISHED)
-                                                .stream()
-                                                .collect(Collectors.groupingBy(ComponentEntry::getComponentId));
-
-                List<Long> entryIds = entriesByComponentId.values().stream()
-                                .flatMap(List::stream)
-                                .map(ComponentEntry::getId)
-                                .toList();
-
-                Map<Long, ComponentEntryI18n> entryI18nMap = entryIds.isEmpty()
-                                ? Map.of()
-                                : componentEntryI18nRepository.findByEntryIdInAndLanguage(entryIds, lang)
-                                                .stream()
-                                                .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
-
-                Map<Long, List<PageSlot>> slotsByPageId = allSlots.stream()
-                                .filter(s -> s.getPageId() != null)
-                                .collect(Collectors.groupingBy(PageSlot::getPageId));
-
-                Map<String, PageDeliveryResponse> data = new LinkedHashMap<>();
-                List<String> notFound = new ArrayList<>();
-
-                for (String pageUid : limitedUids) {
-                        Page page = pageMap.get(pageUid);
-                        if (page == null) {
-                                notFound.add(pageUid);
-                                continue;
-                        }
-
-                        PageI18n i18n = pageI18nMap.get(page.getId());
-
-                        List<PageSlot> pageSlots = new ArrayList<>(sharedSlots);
-                        pageSlots.addAll(slotsByPageId.getOrDefault(page.getId(), List.of()));
-
-                        Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-                                        pageSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap,
-                                        responsiveMediaMap,
-                                        entriesByComponentId, entryI18nMap, lang);
-
-                        PageDeliveryResponse response = PageDeliveryResponse.builder()
-                                        .uid(page.getUid())
-                                        .name(i18n != null ? i18n.getName() : null)
-                                        .title(i18n != null ? i18n.getTitle() : null)
-                                        .description(i18n != null ? i18n.getDescription() : null)
-                                        .robotTag(page.getRobotTag().name())
-                                        .canonicalUrl(i18n != null ? i18n.getCanonicalUrl() : null)
-                                        .styleClasses(page.getStyleClasses())
-                                        .slots(slotsMap)
-                                        .build();
-
-                        data.put(pageUid, response);
+        private Optional<Page> resolveUniqueTemplatePage(PageType pageType) {
+                long publishedTypeCount = pageRepository.countByPageTypeAndStatus(pageType, PageStatus.PUBLISHED);
+                if (publishedTypeCount > 1) {
+                        log.warn("Multiple published {} templates found (count={}), lowest id will be used", pageType,
+                                        publishedTypeCount);
                 }
+                return pageRepository.findFirstByPageTypeAndStatusOrderByIdAsc(pageType, PageStatus.PUBLISHED);
+        }
 
-                return BatchPageDeliveryResponse.builder()
-                                .data(data)
-                                .meta(BatchPageDeliveryResponse.BatchMeta.builder()
-                                                .requested(limitedUids.size())
-                                                .found(data.size())
-                                                .notFound(notFound)
-                                                .build())
-                                .build();
+        private Optional<Page> resolvePublishedPageByCanonicalUrl(Language lang, String canonicalUrl, PageType pageType) {
+                return pageI18nRepository.findPublishedByCanonicalUrl(lang, canonicalUrl)
+                                .flatMap(i18n -> pageRepository.findByIdAndStatus(i18n.getPageId(), PageStatus.PUBLISHED))
+                                .filter(page -> pageType == page.getPageType());
+        }
+
+        private String normalizeParam(String value) {
+                if (value == null) {
+                        return null;
+                }
+                String trimmed = value.trim();
+                return trimmed.isEmpty() ? null : trimmed;
+        }
+
+        private String normalizePageLabelOrId(String value) {
+                String normalized = normalizeParam(value);
+                if (normalized == null) {
+                        return null;
+                }
+                if (normalized.startsWith("/")) {
+                        return normalized;
+                }
+                return "/" + normalized;
+        }
+
+        private String resolveTypeCode(PageType pageType) {
+                if (pageType == null) return "ContentPage";
+                return switch (pageType) {
+                        case PRODUCT -> "ProductPage";
+                        case CATEGORY -> "CategoryPage";
+                        case SEARCH -> "SearchResultPage";
+                        case LANDING -> "LandingPage";
+                        case ERROR -> "ErrorPage";
+                        default -> "ContentPage";
+                };
         }
 
         private PageDeliveryResponse buildPageDeliveryResponse(Page page, Language lang) {
@@ -322,6 +259,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 PageI18n i18n = i18nOpt.orElse(null);
 
+                String typeCode = resolveTypeCode(page.getPageType());
+
                 return PageDeliveryResponse.builder()
                                 .uid(page.getUid())
                                 .name(i18n != null ? i18n.getName() : null)
@@ -331,7 +270,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .canonicalUrl(i18n != null ? i18n.getCanonicalUrl() : null)
                                 .styleClasses(page.getStyleClasses())
                                 .template(templateUid)
-                                .typeCode("ContentPage")
+                                .typeCode(typeCode)
                                 .contentSlots(contentSlots)
                                 .slots(slotsMap)
                                 .build();

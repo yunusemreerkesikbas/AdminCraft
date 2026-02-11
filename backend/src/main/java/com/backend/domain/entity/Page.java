@@ -3,6 +3,7 @@ package com.backend.domain.entity;
 import java.time.LocalDateTime;
 
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.PageType;
 import com.backend.domain.enums.RobotTag;
 
 import jakarta.persistence.Column;
@@ -35,6 +36,13 @@ public class Page extends BaseEntity {
     @Column(nullable = false)
     @NotNull
     private PageStatus status = PageStatus.DRAFT;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "page_type", length = 20)
+    private PageType pageType = PageType.CONTENT;
+
+    @Column(name = "is_home")
+    private Boolean isHome = false;
 
     @Column(name = "style_classes", length = 255)
     private String styleClasses;

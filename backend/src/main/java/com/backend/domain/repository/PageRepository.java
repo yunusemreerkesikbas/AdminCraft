@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.Page;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.PageType;
 
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long> {
@@ -26,4 +27,18 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     long countByStatus(PageStatus status);
 
     int countByCreatedAtAfter(LocalDateTime date);
+
+    Optional<Page> findByIsHomeTrue();
+
+    Optional<Page> findFirstByPageType(PageType pageType);
+
+    Optional<Page> findByIsHomeTrueAndStatus(PageStatus status);
+
+    Optional<Page> findFirstByPageTypeAndStatusOrderByIdAsc(PageType pageType, PageStatus status);
+
+    Optional<Page> findByIdAndStatus(Long id, PageStatus status);
+
+    long countByIsHomeTrueAndStatus(PageStatus status);
+
+    long countByPageTypeAndStatus(PageType pageType, PageStatus status);
 }

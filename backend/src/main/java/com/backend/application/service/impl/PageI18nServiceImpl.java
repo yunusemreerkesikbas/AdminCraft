@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.request.PageI18nRequest;
 import com.backend.application.dto.request.PagePublishRequest;
 import com.backend.application.service.PageI18nService;
+import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
+import com.backend.domain.enums.PageType;
 import com.backend.domain.exception.PageCannotBePublishedException;
 import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
@@ -73,6 +75,8 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Transactional
     public PageI18nResponse publishPageI18n(Long pageId, Language language, PagePublishRequest request) {
         validatePageExists(pageId);
+        Page page = pageRepository.findById(pageId)
+                .orElseThrow(() -> new PageNotFoundException(pageId));
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
@@ -82,25 +86,22 @@ public class PageI18nServiceImpl implements PageI18nService {
         validateCanPublish(pageI18n);
 
         if (request.isImmediatePublish()) {
+            validateSinglePublishedTemplatePerType(page);
             pageI18n.publish();
 
             // Update Parent Page PublishedAt
-            pageRepository.findById(pageId).ifPresent(p -> {
-                p.setPublishedAt(LocalDateTime.now());
-                p.setScheduledAt(null);
-                p.setStatus(PageStatus.PUBLISHED);
-                pageRepository.save(p);
-            });
+            page.setPublishedAt(LocalDateTime.now());
+            page.setScheduledAt(null);
+            page.setStatus(PageStatus.PUBLISHED);
+            pageRepository.save(page);
 
         } else {
             // Schedule logic
             pageI18n.schedule(request.scheduledAt());
 
-            pageRepository.findById(pageId).ifPresent(p -> {
-                p.setScheduledAt(request.scheduledAt());
-                p.setStatus(PageStatus.SCHEDULED);
-                pageRepository.save(p);
-            });
+            page.setScheduledAt(request.scheduledAt());
+            page.setStatus(PageStatus.SCHEDULED);
+            pageRepository.save(page);
         }
 
         pageI18n = pageI18nRepository.save(pageI18n);
@@ -165,6 +166,26 @@ public class PageI18nServiceImpl implements PageI18nService {
                     "PageI18n cannot be published. Missing required fields: title and/or canonicalUrl. " +
                             "PageId: " + pageI18n.getPageId() + ", Language: " + pageI18n.getLanguage());
         }
+    }
+
+    private void validateSinglePublishedTemplatePerType(Page page) {
+        PageType pageType = page.getPageType();
+        if (pageType == null || !isTemplateSingletonType(pageType)) {
+            return;
+        }
+
+        pageRepository.findFirstByPageTypeAndStatusOrderByIdAsc(pageType, PageStatus.PUBLISHED)
+                .filter(existingPublishedPage -> !existingPublishedPage.getId().equals(page.getId()))
+                .ifPresent(existingPublishedPage -> {
+                    throw new PageCannotBePublishedException(
+                            "Only one published page is allowed for pageType=" + pageType +
+                                    ". Existing page id=" + existingPublishedPage.getId() +
+                                    ", attempted page id=" + page.getId());
+                });
+    }
+
+    private boolean isTemplateSingletonType(PageType pageType) {
+        return pageType == PageType.PRODUCT || pageType == PageType.CATEGORY || pageType == PageType.SEARCH;
     }
 
     private PageI18nResponse getFallbackLanguageI18n(Long pageId) {

@@ -58,7 +58,7 @@ public class AsyncProvisioningExecutor {
       log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
       updateJobProgress(jobId, 20);
-      createDatabaseIfNotExists(dbName);
+      prepareDatabaseForProvisioning(tenantId, dbName);
 
       updateJobProgress(jobId, 60);
       tenantMigrationService.migrateTenant(dbName, modules);
@@ -105,6 +105,10 @@ public class AsyncProvisioningExecutor {
   }
 
   private void createDatabaseIfNotExists(String dbName) {
+    createDatabaseIfNotExists(dbName, false);
+  }
+
+  private void createDatabaseIfNotExists(String dbName, boolean recreateIfExists) {
     String jdbcUrl = String.format("jdbc:mysql://%s:%s?useSSL=false&allowPublicKeyRetrieval=true",
         dbHost, dbPort);
 
@@ -118,6 +122,19 @@ public class AsyncProvisioningExecutor {
         Connection conn = ds.getConnection();
         Statement stmt = conn.createStatement()) {
 
+      boolean exists = databaseExists(conn, dbName);
+      boolean hasTables = exists && databaseHasTables(conn, dbName);
+
+      if (hasTables) {
+        if (recreateIfExists) {
+          log.warn("Database {} already contains tables. Dropping for clean provisioning.", dbName);
+          stmt.execute(String.format("DROP DATABASE IF EXISTS %s", dbName));
+        } else {
+          throw new IllegalStateException(
+              "Tenant database already initialized: " + dbName + ". Use sync migrations instead of full provision.");
+        }
+      }
+
       String createDbSql = String.format(
           "CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
           dbName);
@@ -128,6 +145,47 @@ public class AsyncProvisioningExecutor {
     } catch (Exception e) {
       log.error("Failed to create database: {}", dbName, e);
       throw new RuntimeException("Database creation failed", e);
+    }
+  }
+
+  private void prepareDatabaseForProvisioning(Long tenantId, String dbName) {
+    boolean allowRecreate = canRecreateDatabase(tenantId);
+    createDatabaseIfNotExists(dbName, allowRecreate);
+  }
+
+  private boolean canRecreateDatabase(Long tenantId) {
+    Tenant tenant = tenantRepository.findById(tenantId)
+        .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
+    boolean hasModules = !tenantModuleRepository.findByTenantId(tenantId).isEmpty();
+
+    // Only allow destructive reset for tenants that are still pending and have no installed modules.
+    return tenant.getStatus() == com.backend.domain.enums.TenantStatus.PENDING && !hasModules;
+  }
+
+  private boolean databaseExists(Connection conn, String dbName) {
+    String sql = "SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME = ?";
+    try (var ps = conn.prepareStatement(sql)) {
+      ps.setString(1, dbName);
+      try (var rs = ps.executeQuery()) {
+        return rs.next();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to check database existence", e);
+    }
+  }
+
+  private boolean databaseHasTables(Connection conn, String dbName) {
+    String sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ?";
+    try (var ps = conn.prepareStatement(sql)) {
+      ps.setString(1, dbName);
+      try (var rs = ps.executeQuery()) {
+        if (!rs.next()) {
+          return false;
+        }
+        return rs.getInt(1) > 0;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to check database tables", e);
     }
   }
 

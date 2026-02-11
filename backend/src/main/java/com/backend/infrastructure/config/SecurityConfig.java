@@ -1,7 +1,10 @@
 package com.backend.infrastructure.config;
 
 import java.util.Arrays;
+import java.util.List;
+// Arrays still used for allowedMethods, allowedHeaders, allowedOriginPatterns, exposedHeaders
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,6 +26,9 @@ import com.backend.infrastructure.tenant.TenantFilter;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true) // Enable @PreAuthorize and @PostAuthorize annotations
 public class SecurityConfig {
+
+        @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:4201,http://localhost:3000,http://localhost:8080,http://localhost:8081}")
+        private List<String> corsAllowedOrigins;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -66,19 +72,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                // Includes subdomain-based origins for multi-tenant authentication (Sprint 17)
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:4200", // Angular dev server (default)
-                                "http://localhost:4201", // Angular dev server (current project)
-                                "http://localhost:3000", // React dev server
-                                "http://localhost:8080", // Backend server
-                                "http://localhost:8081", // Alternative backend server
-                                "https://localhost:4200", // HTTPS Angular dev server (default)
-                                "https://localhost:4201", // HTTPS Angular dev server (current project)
-                                "https://localhost:3000", // HTTPS React dev server
-                                "https://localhost:8080", // HTTPS Backend server
-                                "https://localhost:8081" // HTTPS Alternative backend server
-                ));
+                configuration.setAllowedOrigins(corsAllowedOrigins);
                 configuration.setAllowedOriginPatterns(Arrays.asList(
                                 "http://*.localhost:4200",
                                 "http://*.localhost:4201",

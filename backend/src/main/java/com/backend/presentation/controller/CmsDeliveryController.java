@@ -9,17 +9,17 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PathVariable; // kept for navigation endpoint
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
-import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
+import com.backend.application.dto.delivery.SiteDeliveryResponse;
 import com.backend.application.service.CmsDeliveryService;
 import com.backend.application.service.NavigationService;
 import com.backend.domain.enums.Language;
@@ -109,9 +109,11 @@ public class CmsDeliveryController {
         ApiResponse.success(messageSource.getMessage("cms.components.found", null, locale), response));
   }
 
-  @GetMapping("/pages/{uid}")
-  public ResponseEntity<ApiResponse<PageDeliveryResponse>> getPageByUid(
-      @PathVariable String uid,
+  @GetMapping("/pages")
+  public ResponseEntity<ApiResponse<PageDeliveryResponse>> resolvePage(
+      @RequestParam(required = false) String pageType,
+      @RequestParam(required = false) String pageLabelOrId,
+      @RequestParam(required = false) String code,
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
@@ -122,43 +124,35 @@ public class CmsDeliveryController {
     }
 
     Language resolvedLang = resolveLanguage(lang, acceptLanguage);
-    log.debug("CMS Delivery: Fetching page uid={}, lang={}", uid, resolvedLang);
+    log.debug("CMS Delivery: Resolving page pageType={}, pageLabelOrId={}, code={}, lang={}",
+        pageType, pageLabelOrId, code, resolvedLang);
 
-    return cmsDeliveryService.getPageByUid(uid, resolvedLang)
+    return cmsDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, resolvedLang)
         .map(response -> ResponseEntity.ok(
-            ApiResponse.success("Page found", response)))
+            ApiResponse.success(messageSource.getMessage("cms.page.found", null, locale), response)))
         .orElseGet(() -> ResponseEntity.ok(
-            ApiResponse.error("Page not found")));
+            ApiResponse.error(messageSource.getMessage("cms.page.not.found", null, locale))));
   }
 
-  @GetMapping("/pages")
-  public ResponseEntity<ApiResponse<BatchPageDeliveryResponse>> getPagesByUids(
-      @RequestParam List<String> uids,
-      @RequestParam(required = false) Language lang,
+  @GetMapping("/site")
+  public ResponseEntity<ApiResponse<SiteDeliveryResponse>> getSiteConfig(
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
     Locale locale = Locale.forLanguageTag(acceptLanguage);
-    ResponseEntity<ApiResponse<BatchPageDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
+    ResponseEntity<ApiResponse<SiteDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
     if (rateLimitResponse != null) {
       return rateLimitResponse;
     }
 
-    if (uids == null || uids.isEmpty()) {
-      return ResponseEntity.badRequest().body(
-          ApiResponse.error("UIDs parameter is required"));
+    log.debug("CMS Delivery: Fetching site config");
+
+    SiteDeliveryResponse response = cmsDeliveryService.getSiteForDelivery();
+    if (response == null) {
+      return ResponseEntity.ok(ApiResponse.error(messageSource.getMessage("cms.site.not.found", null, locale)));
     }
 
-    if (uids.size() > MAX_BATCH_SIZE) {
-      return ResponseEntity.badRequest().body(
-          ApiResponse.error("Maximum " + MAX_BATCH_SIZE + " UIDs allowed"));
-    }
-
-    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
-    log.debug("CMS Delivery: Fetching {} pages, lang={}", uids.size(), resolvedLang);
-
-    BatchPageDeliveryResponse response = cmsDeliveryService.getPagesByUids(uids, resolvedLang);
-
-    return ResponseEntity.ok(ApiResponse.success("Pages found", response));
+    return ResponseEntity.ok(
+        ApiResponse.success(messageSource.getMessage("cms.site.found", null, locale), response));
   }
 
   @GetMapping("/navigation/{uid}")
