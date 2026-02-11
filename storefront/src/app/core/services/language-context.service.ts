@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { TenantsService } from '@modules/admin/custom/tenants/tenants.service';
 import { Observable, catchError, finalize, map, of, shareReplay, take } from 'rxjs';
 import { TenantContextService } from '../tenant/tenant-context.service';
+import { environment } from '@environments/environment';
 
 @Injectable({
     providedIn: 'root'
@@ -9,7 +10,7 @@ import { TenantContextService } from '../tenant/tenant-context.service';
 export class LanguageContextService {
     readonly #tenantContextService = inject(TenantContextService);
     readonly #tenantsService = inject(TenantsService);
-    supportedLanguages = signal<string[]>(['TR', 'EN']);
+    supportedLanguages = signal<string[]>(environment.supportedLanguages.map(l => l.toUpperCase()));
     #languagesLoaded = false;
     #cachedTenantId: number | null = null;
     #pendingRequest$: Observable<string[]> | null = null;
@@ -91,7 +92,7 @@ export class LanguageContextService {
 
     getDefaultLanguage(): string {
         const languages = this.supportedLanguages();
-        return languages.length > 0 ? languages[0] : 'TR';
+        return languages.length > 0 ? languages[0] : environment.defaultLanguage.toUpperCase();
     }
 
     reset(): void {

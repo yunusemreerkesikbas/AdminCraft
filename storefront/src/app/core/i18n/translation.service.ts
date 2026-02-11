@@ -57,16 +57,17 @@ export class TranslationService {
             this._config$
         ]).pipe(
             map(([tenant, userPreference, config]) => {
-                // Priority: User preference > Tenant default > System default
-                if (userPreference?.language && this.isLanguageSupported(userPreference.language, tenant)) {
-                    return userPreference.language;
-                }
+                let effectiveLang = config.defaultLang;
                 
                 if (tenant?.defaultLanguage) {
-                    return this.mapTenantLanguageToSupported(tenant.defaultLanguage);
+                    effectiveLang = this.mapTenantLanguageToSupported(tenant.defaultLanguage);
                 }
                 
-                return config.defaultLang;
+                if (userPreference?.manuallySet && userPreference?.language && this.isLanguageSupported(userPreference.language, tenant)) {
+                    effectiveLang = userPreference.language;
+                }
+                
+                return effectiveLang;
             })
         );
     }
@@ -100,9 +101,10 @@ export class TranslationService {
             }
             if (persistPreference) {
                 const userPreference: UserLanguagePreference = {
-                    userId: this.getCurrentUserId(), // This should come from user context
+                    userId: this.getCurrentUserId(),
                     language,
-                    fallbackLanguage: this._config$.getValue().fallbackLang
+                    fallbackLanguage: this._config$.getValue().fallbackLang,
+                    manuallySet: true
                 };
                 this._userPreference$.next(userPreference);
                 this.persistUserLanguagePreference(userPreference);
@@ -210,7 +212,9 @@ export class TranslationService {
         if (stored) {
             try {
                 const preference = JSON.parse(stored) as UserLanguagePreference;
-                this._userPreference$.next(preference);
+                if (preference.manuallySet) {
+                    this._userPreference$.next(preference);
+                }
             } catch (error) {
             }
         }

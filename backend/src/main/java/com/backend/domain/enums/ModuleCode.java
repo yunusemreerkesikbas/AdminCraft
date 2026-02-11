@@ -3,7 +3,6 @@ package com.backend.domain.enums;
 public enum ModuleCode {
     CORE("core", "Core"),
     PAGEBUILDER("pagebuilder", "Page Builder"),
-    SITE_SETTINGS("site_settings", "Site Settings"),
     MEDIA("media", "Media Library"),
     COMPONENT_LIBRARY("component_library", "Component Library"),
     PRODUCT_CATALOG("product", "Product Catalog");

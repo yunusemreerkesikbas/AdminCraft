@@ -28,11 +28,14 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - Core: [`modules/core.md`](modules/core.md)
 - User Management: [`modules/user-management.md`](modules/user-management.md)
 - **Site Dashboard**: [`modules/site-dashboard.md`](modules/site-dashboard.md) - Unified site management interface
-- Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md)
-- Site Settings: [`modules/site-settings.md`](modules/site-settings.md) *(integrated into Site Dashboard)*
-- Media Library (DAM): [`modules/media.md`](modules/media.md)
+- Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md) *(core-managed capability in provisioning)*
+- Site Settings: [`modules/site-settings.md`](modules/site-settings.md) *(integrated into Site Dashboard; not a provisioning module)*
+- Media Library (DAM): [`modules/media.md`](modules/media.md) *(core-managed capability in provisioning)*
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
-- Component Library: [`modules/component-library.md`](modules/component-library.md)
+- Component Library: [`modules/component-library.md`](modules/component-library.md) *(core-managed capability in provisioning)*
+
+Provisioning catalog note:
+Core and Product are the only selectable modules in `/api/provisioning/modules/catalog`. Core expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
 
 ## Platform features (control-plane)
 

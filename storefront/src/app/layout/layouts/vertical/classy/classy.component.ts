@@ -18,7 +18,6 @@ import { MessagesComponent } from 'app/layout/common/messages/messages.component
 import { SearchComponent } from 'app/layout/common/search/search.component';
 import { ShortcutsComponent } from 'app/layout/common/shortcuts/shortcuts.component';
 import { UserComponent } from 'app/layout/common/user/user.component';
-import { TenantSelectorComponent } from 'app/shared/components/tenant-selector';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -37,7 +36,6 @@ import { Subject, takeUntil } from 'rxjs';
         ShortcutsComponent,
         MessagesComponent,
         RouterOutlet,
-        TenantSelectorComponent,
     ],
 })
 export class ClassyLayoutComponent implements OnInit, OnDestroy {

@@ -20,7 +20,7 @@ Site Dashboard is a unified admin interface that consolidates **Site Management*
 The Site Dashboard merges functionality from:
 
 - `sites` module (Site entity and basic CRUD)
-- `site-settings` module (SiteSetting key-value configuration)
+- `site-settings` capability (SiteSetting key-value configuration, not a provisioning module)
 - New `site_technical_settings` table for technical configurations
 - New `site_activity` table for activity tracking
 

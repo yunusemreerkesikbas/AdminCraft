@@ -11,32 +11,36 @@ class ModuleCodeTest {
     void shouldReturnCorrectCodeForEachModule() {
         assertThat(ModuleCode.CORE.getCode()).isEqualTo("core");
         assertThat(ModuleCode.PAGEBUILDER.getCode()).isEqualTo("pagebuilder");
-        assertThat(ModuleCode.SITE_SETTINGS.getCode()).isEqualTo("site_settings");
         assertThat(ModuleCode.MEDIA.getCode()).isEqualTo("media");
+        assertThat(ModuleCode.COMPONENT_LIBRARY.getCode()).isEqualTo("component_library");
+        assertThat(ModuleCode.PRODUCT_CATALOG.getCode()).isEqualTo("product");
     }
 
     @Test
     void shouldReturnCorrectNameForEachModule() {
         assertThat(ModuleCode.CORE.getName()).isEqualTo("Core");
         assertThat(ModuleCode.PAGEBUILDER.getName()).isEqualTo("Page Builder");
-        assertThat(ModuleCode.SITE_SETTINGS.getName()).isEqualTo("Site Settings");
         assertThat(ModuleCode.MEDIA.getName()).isEqualTo("Media Library");
+        assertThat(ModuleCode.COMPONENT_LIBRARY.getName()).isEqualTo("Component Library");
+        assertThat(ModuleCode.PRODUCT_CATALOG.getName()).isEqualTo("Product Catalog");
     }
 
     @Test
     void shouldFindModuleByCode() {
         assertThat(ModuleCode.fromCode("core")).isEqualTo(ModuleCode.CORE);
         assertThat(ModuleCode.fromCode("pagebuilder")).isEqualTo(ModuleCode.PAGEBUILDER);
-        assertThat(ModuleCode.fromCode("site_settings")).isEqualTo(ModuleCode.SITE_SETTINGS);
         assertThat(ModuleCode.fromCode("media")).isEqualTo(ModuleCode.MEDIA);
+        assertThat(ModuleCode.fromCode("component_library")).isEqualTo(ModuleCode.COMPONENT_LIBRARY);
+        assertThat(ModuleCode.fromCode("product")).isEqualTo(ModuleCode.PRODUCT_CATALOG);
     }
 
     @Test
     void shouldFindModuleByCodeCaseInsensitive() {
         assertThat(ModuleCode.fromCode("CORE")).isEqualTo(ModuleCode.CORE);
         assertThat(ModuleCode.fromCode("PageBuilder")).isEqualTo(ModuleCode.PAGEBUILDER);
-        assertThat(ModuleCode.fromCode("Site_Settings")).isEqualTo(ModuleCode.SITE_SETTINGS);
         assertThat(ModuleCode.fromCode("MEDIA")).isEqualTo(ModuleCode.MEDIA);
+        assertThat(ModuleCode.fromCode("Component_Library")).isEqualTo(ModuleCode.COMPONENT_LIBRARY);
+        assertThat(ModuleCode.fromCode("PRODUCT")).isEqualTo(ModuleCode.PRODUCT_CATALOG);
     }
 
     @Test
@@ -57,8 +61,9 @@ class ModuleCodeTest {
     void shouldValidateValidCodes() {
         assertThat(ModuleCode.isValidCode("core")).isTrue();
         assertThat(ModuleCode.isValidCode("pagebuilder")).isTrue();
-        assertThat(ModuleCode.isValidCode("site_settings")).isTrue();
         assertThat(ModuleCode.isValidCode("media")).isTrue();
+        assertThat(ModuleCode.isValidCode("component_library")).isTrue();
+        assertThat(ModuleCode.isValidCode("product")).isTrue();
     }
 
     @Test
@@ -66,6 +71,8 @@ class ModuleCodeTest {
         assertThat(ModuleCode.isValidCode("CORE")).isTrue();
         assertThat(ModuleCode.isValidCode("PageBuilder")).isTrue();
         assertThat(ModuleCode.isValidCode("MEDIA")).isTrue();
+        assertThat(ModuleCode.isValidCode("Component_Library")).isTrue();
+        assertThat(ModuleCode.isValidCode("PRODUCT")).isTrue();
     }
 
     @Test
@@ -78,11 +85,10 @@ class ModuleCodeTest {
     @Test
     void shouldReturnAllModuleCodes() {
         ModuleCode[] allModules = ModuleCode.values();
-        assertThat(allModules).hasSize(6);
+        assertThat(allModules).hasSize(5);
         assertThat(allModules).contains(
                 ModuleCode.CORE,
                 ModuleCode.PAGEBUILDER,
-                ModuleCode.SITE_SETTINGS,
                 ModuleCode.MEDIA,
                 ModuleCode.COMPONENT_LIBRARY,
                 ModuleCode.PRODUCT_CATALOG);

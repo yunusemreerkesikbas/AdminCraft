@@ -227,7 +227,7 @@ export const appRoutes: Route[] = [
             {
                 path: 'media',
                 canActivate: [tenantAdminGuard, moduleGuard],
-                data: { requiredModule: 'media' },
+                data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import('app/modules/admin/custom/media/media.routes'),
             },
@@ -248,7 +248,7 @@ export const appRoutes: Route[] = [
             {
                 path: 'pages',
                 canActivate: [tenantAdminGuard, moduleGuard],
-                data: { requiredModule: 'pagebuilder' },
+                data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
                         'app/modules/admin/custom/pages/page-builder.routes'
@@ -257,7 +257,7 @@ export const appRoutes: Route[] = [
             {
                 path: 'settings',
                 canActivate: [tenantAdminGuard, moduleGuard],
-                data: { requiredModule: 'site_settings' },
+                data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
                         'app/modules/admin/custom/settings/site-settings.routes'
@@ -275,7 +275,7 @@ export const appRoutes: Route[] = [
             {
                 path: 'components',
                 canActivate: [tenantAdminGuard, moduleGuard],
-                data: { requiredModule: 'component_library' },
+                data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
                         'app/modules/admin/custom/components/component-library.routes'
@@ -291,7 +291,7 @@ export const appRoutes: Route[] = [
             {
                 path: 'page-templates',
                 canActivate: [tenantAdminGuard, moduleGuard],
-                data: { requiredModule: 'pagebuilder' },
+                data: { requiredModule: 'core' },
                 loadComponent: () =>
                     import(
                         'app/modules/admin/custom/templates/list/page-template-list.component'

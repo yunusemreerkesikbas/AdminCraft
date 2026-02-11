@@ -123,7 +123,9 @@ export const appConfig: ApplicationConfig = {
                         });
 
                     await Promise.all(loadPromises);
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     translocoService.setActiveLang(environment.defaultLanguage);
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 } catch (error: unknown) {
                     console.error('[i18n] Failed to load translations:', error);
                 }

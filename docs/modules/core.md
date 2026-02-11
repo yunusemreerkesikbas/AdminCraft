@@ -9,6 +9,13 @@ Core is the required tenant module that provides foundational tenant data-plane 
 - **Navigation storage** - See [`navigation.md`](navigation.md)
 - **Sites** - Site configuration and activity tracking. See [`site-dashboard.md`](site-dashboard.md)
 
+Provisioning semantics:
+
+- In provisioning catalog, `core` is the umbrella selection.
+- Runtime migration execution expands core provisioning to:
+  - `core`, `media`, `component_library`, `pagebuilder`
+- `product` remains the only optional catalog module outside core umbrella.
+
 ## Database
 
 **Migrations**: `backend/src/main/resources/db/tenant/core/`
@@ -67,6 +74,10 @@ Admin features built on core data:
 | User Management | `storefront/src/app/modules/admin/custom/users/` |
 | Site Dashboard | `storefront/src/app/modules/admin/custom/site/` |
 | Navigation | `storefront/src/app/modules/admin/custom/navigation/` |
+| Page Builder | `storefront/src/app/modules/admin/custom/pages/` |
+| Media Library | `storefront/src/app/modules/admin/custom/media/` |
+| Component Library | `storefront/src/app/modules/admin/custom/components/` |
+| Site Settings (integrated) | `storefront/src/app/modules/admin/custom/settings/` |
 
 ## Security & Tenant Isolation
 

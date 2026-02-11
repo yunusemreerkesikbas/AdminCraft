@@ -246,6 +246,7 @@ export interface UserLanguagePreference {
     userId: number;
     language: SupportedLanguage;
     fallbackLanguage?: SupportedLanguage;
+    manuallySet?: boolean;
 }
 
 export interface TenantLanguageSettings {

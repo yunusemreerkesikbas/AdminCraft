@@ -1,7 +1,7 @@
 export interface ModuleCatalog {
     code: string;
     name: string;
-    type: 'core';
+    type: string;
     version: string;
     deps: string[];
     enabledByDefault: boolean;

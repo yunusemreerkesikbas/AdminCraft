@@ -96,18 +96,24 @@ export class NavigationFilterService {
                 itemCopy.link = `/${language}/${itemCopy.link}`;
             }
             if (itemCopy.title && typeof itemCopy.title === 'string') {
-                itemCopy.title = this.#transloco.translate(
+                const translated = this.#transloco.translate(
                     itemCopy.title,
                     {},
                     language
                 );
+                if (translated && translated !== itemCopy.title) {
+                    itemCopy.title = translated;
+                }
             }
             if (itemCopy.subtitle && typeof itemCopy.subtitle === 'string') {
-                itemCopy.subtitle = this.#transloco.translate(
+                const translated = this.#transloco.translate(
                     itemCopy.subtitle,
                     {},
                     language
                 );
+                if (translated && translated !== itemCopy.subtitle) {
+                    itemCopy.subtitle = translated;
+                }
             }
             if (itemCopy.children?.length) {
                 itemCopy.children = this.#updateLinksWithLanguage(

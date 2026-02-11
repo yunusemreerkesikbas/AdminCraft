@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { UserService } from 'app/core/user/user.service';
+import { environment } from '@environments/environment';
 
 export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state) => {
     const userService = inject(UserService);
@@ -21,7 +22,7 @@ export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state)
         `This feature requires the "${requiredModule}" module. Please contact your administrator.`,
         { durationMs: 5000 }
     );
-    const currentLang = route.paramMap.get('lang') || 'tr';
+    const currentLang = route.paramMap.get('lang') || environment.defaultLanguage;
     router.navigate([`/${currentLang}/pages`]);
 
     return false;

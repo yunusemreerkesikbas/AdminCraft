@@ -62,6 +62,11 @@ Base path: `/api/provisioning`
 - `GET /api/provisioning/jobs/{jobId}` (poll status)
 - `POST /api/provisioning/tenants/{tenantId}/sync-migrations` (sync missing migrations)
 
+Module catalog behavior:
+
+- `GET /api/provisioning/modules/catalog` returns only provisioning-selectable modules: `core` and `product`.
+- `modules_catalog` still stores execution modules (`media`, `component_library`, `pagebuilder`) for migration ordering and tenant module history joins.
+
 Authorization note:
 
 - Tenant management endpoints in `TenantController` are guarded with `@PreAuthorize("hasRole('SUPER_ADMIN')")`.
@@ -108,9 +113,17 @@ Job identifier:
 Request/response shape (high level):
 
 - Provision request body:
-  - `{ "modules": ["core", "media"] }`
+  - `{ "modules": ["core"] }`
+  - `{ "modules": ["core", "product"] }`
 - Job status response contains:
   - `jobId`, `tenantId`, `type`, `status`, `progress`, `error`, `createdAt`, `startedAt`, `completedAt`
+
+Provisioning module canonicalization:
+
+- `core` is required for full provision.
+- When request includes `core`, backend expands execution set to:
+  - `core`, `media`, `component_library`, `pagebuilder`
+- `product` remains optional and is appended only when requested.
 
 DTO references (source of truth):
 
@@ -142,3 +155,7 @@ Quick reference (files you will typically touch):
 2. Poll until the job completes:
    - `GET /api/provisioning/jobs/{jobId}`
 
+Sync behavior note:
+
+- `sync-migrations` applies the same module normalization logic as full provisioning.
+- If tenant has `core`, requests for core-covered modules (`media`, `component_library`, `pagebuilder`) are treated as covered.

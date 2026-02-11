@@ -24,7 +24,7 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:rectangle-stack',
                 link: 'pages',
-                requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
+                requiredModule: NAVIGATION_MODULES.CORE,
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {
@@ -33,7 +33,7 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:document-duplicate',
                 link: 'page-templates',
-                requiredModule: NAVIGATION_MODULES.PAGEBUILDER,
+                requiredModule: NAVIGATION_MODULES.CORE,
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {
@@ -60,7 +60,7 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:photo',
                 link: 'media',
-                requiredModule: NAVIGATION_MODULES.MEDIA,
+                requiredModule: NAVIGATION_MODULES.CORE,
                 excludedRoles: ['SUPER_ADMIN'],
             },
             {
@@ -69,7 +69,7 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 type: 'basic',
                 icon: 'heroicons_outline:cube',
                 link: 'components',
-                requiredModule: NAVIGATION_MODULES.COMPONENT_LIBRARY,
+                requiredModule: NAVIGATION_MODULES.CORE,
                 excludedRoles: ['SUPER_ADMIN'],
             },
         ],

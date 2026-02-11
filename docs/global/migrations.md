@@ -50,6 +50,13 @@ private static final List<String> MODULE_ORDER = List.of(
 );
 ```
 
+Provisioning request mapping:
+
+- Provisioning catalog exposes `core` and `product` as selectable modules.
+- Before `MODULE_ORDER` is applied, backend canonicalizes `core` selection to execution modules:
+  - `core`, `media`, `component_library`, `pagebuilder`
+- Optional `product` is appended when requested.
+
 ---
 
 ## Migration Rules
