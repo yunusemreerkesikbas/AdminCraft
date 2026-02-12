@@ -1,10 +1,5 @@
--- =====================================================
--- V13: Add Responsive Media to Components
--- Sprint 37: Component-Media Integration
--- =====================================================
+-- Repair responsive media links for product module (idempotent)
 
--- Add responsive_id to components table
--- This links a component to its Desktop/Mobile image pair
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddColumnIfNotExists(
@@ -27,11 +22,11 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddColumnIfNotExists(DATABASE(), 'components', 'responsive_id', 'BIGINT NULL AFTER style_classes');
+CALL AddColumnIfNotExists(DATABASE(), 'responsive_media_set', 'temp_pm_id', 'BIGINT');
+CALL AddColumnIfNotExists(DATABASE(), 'product_media', 'responsive_media_set_id', 'BIGINT');
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 
--- Add FK + index (guarded)
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddIndexIfNotExists(
@@ -54,21 +49,36 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddIndexIfNotExists(DATABASE(), 'components', 'idx_component_responsive', 'responsive_id');
+CALL AddIndexIfNotExists(DATABASE(), 'responsive_media_set', 'idx_temp_pm', 'temp_pm_id');
+CALL AddIndexIfNotExists(DATABASE(), 'product_media', 'idx_pm_responsive_set', 'responsive_media_set_id');
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 
--- FK (guarded by existence check on INFORMATION_SCHEMA)
+-- FK guard
 SET @fk_exists = (
     SELECT COUNT(*)
     FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
     WHERE CONSTRAINT_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'components'
-      AND CONSTRAINT_NAME = 'fk_component_responsive'
+      AND TABLE_NAME = 'product_media'
+      AND CONSTRAINT_NAME = 'fk_product_media_responsive_set'
 );
-
 SET @ddl = IF(@fk_exists = 0,
-    'ALTER TABLE components ADD CONSTRAINT fk_component_responsive FOREIGN KEY (responsive_id) REFERENCES responsive_media_set(id) ON DELETE SET NULL',
+    'ALTER TABLE product_media ADD CONSTRAINT fk_product_media_responsive_set FOREIGN KEY (responsive_media_set_id) REFERENCES responsive_media_set(id) ON DELETE SET NULL',
+    'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Unique guard
+SET @idx_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'product_media'
+      AND INDEX_NAME = 'uk_product_media'
+);
+SET @ddl = IF(@idx_exists = 0,
+    'ALTER TABLE product_media ADD CONSTRAINT uk_product_media UNIQUE (product_id, responsive_media_set_id)',
     'SELECT 1');
 PREPARE stmt FROM @ddl;
 EXECUTE stmt;

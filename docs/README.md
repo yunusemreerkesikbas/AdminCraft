@@ -19,6 +19,8 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - List views (pagination/sort/search): [`global/list-pagination-search.md`](global/list-pagination-search.md)
   - Validation framework: [`global/validation.md`](global/validation.md)
   - Database migrations: [`global/migrations.md`](global/migrations.md)
+  - Migration governance: [`global/migration-governance.md`](global/migration-governance.md)
+  - Migration runbook: [`global/migration-runbook.md`](global/migration-runbook.md)
   - Testing patterns: [`global/testing.md`](global/testing.md)
 
 ## Modules (admin APIs)

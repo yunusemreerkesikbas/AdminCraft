@@ -146,13 +146,11 @@ public class CmsDeliveryController {
 
     log.debug("CMS Delivery: Fetching site config");
 
-    SiteDeliveryResponse response = cmsDeliveryService.getSiteForDelivery();
-    if (response == null) {
-      return ResponseEntity.ok(ApiResponse.error(messageSource.getMessage("cms.site.not.found", null, locale)));
-    }
-
-    return ResponseEntity.ok(
-        ApiResponse.success(messageSource.getMessage("cms.site.found", null, locale), response));
+    return cmsDeliveryService.getSiteForDelivery()
+        .map(response -> ResponseEntity.ok(
+            ApiResponse.success(messageSource.getMessage("cms.site.found", null, locale), response)))
+        .orElseGet(() -> ResponseEntity.ok(
+            ApiResponse.error(messageSource.getMessage("cms.site.not.found", null, locale))));
   }
 
   @GetMapping("/navigation/{uid}")

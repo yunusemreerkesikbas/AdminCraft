@@ -11,3 +11,6 @@ SET p.page_type = CASE pt.uid
     WHEN 'NotFoundPageTemplate' THEN 'ERROR'
     ELSE 'CONTENT'
 END;
+
+CREATE INDEX idx_page_type_status ON pages(page_type, status);
+CREATE INDEX idx_page_is_home_status ON pages(is_home, status);

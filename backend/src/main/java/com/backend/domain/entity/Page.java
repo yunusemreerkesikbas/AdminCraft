@@ -21,7 +21,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "pages", indexes = {
         @Index(columnList = "status", name = "idx_page_status"),
-        @Index(columnList = "template_id", name = "idx_page_template")
+        @Index(columnList = "template_id", name = "idx_page_template"),
+        @Index(columnList = "page_type, status", name = "idx_page_type_status"),
+        @Index(columnList = "is_home, status", name = "idx_page_is_home_status")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

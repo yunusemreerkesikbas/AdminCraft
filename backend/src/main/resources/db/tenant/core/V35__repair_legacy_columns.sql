@@ -1,10 +1,5 @@
--- =====================================================
--- V13: Add Responsive Media to Components
--- Sprint 37: Component-Media Integration
--- =====================================================
+-- Repair legacy core columns and indexes (idempotent)
 
--- Add responsive_id to components table
--- This links a component to its Desktop/Mobile image pair
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddColumnIfNotExists(
@@ -27,11 +22,18 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddColumnIfNotExists(DATABASE(), 'components', 'responsive_id', 'BIGINT NULL AFTER style_classes');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'created_by', 'BIGINT NULL');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'updated_by', 'BIGINT NULL');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'recaptcha_enabled', 'BOOLEAN DEFAULT FALSE');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'recaptcha_site_key', 'VARCHAR(255)');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'recaptcha_secret_key_encrypted', 'TEXT');
+CALL AddColumnIfNotExists(DATABASE(), 'sites', 'recaptcha_threshold', 'DECIMAL(3,2) DEFAULT 0.5');
+
+CALL AddColumnIfNotExists(DATABASE(), 'site_activity', 'created_by', 'BIGINT NULL');
+CALL AddColumnIfNotExists(DATABASE(), 'site_activity', 'updated_by', 'BIGINT NULL');
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 
--- Add FK + index (guarded)
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddIndexIfNotExists(
@@ -54,22 +56,6 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddIndexIfNotExists(DATABASE(), 'components', 'idx_component_responsive', 'responsive_id');
+CALL AddIndexIfNotExists(DATABASE(), 'sites', 'idx_sites_recaptcha_enabled', 'recaptcha_enabled');
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
-
--- FK (guarded by existence check on INFORMATION_SCHEMA)
-SET @fk_exists = (
-    SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
-    WHERE CONSTRAINT_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'components'
-      AND CONSTRAINT_NAME = 'fk_component_responsive'
-);
-
-SET @ddl = IF(@fk_exists = 0,
-    'ALTER TABLE components ADD CONSTRAINT fk_component_responsive FOREIGN KEY (responsive_id) REFERENCES responsive_media_set(id) ON DELETE SET NULL',
-    'SELECT 1');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;

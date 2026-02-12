@@ -1,10 +1,7 @@
 package com.backend.infrastructure.config;
 
 import java.util.Arrays;
-import java.util.List;
-// Arrays still used for allowedMethods, allowedHeaders, allowedOriginPatterns, exposedHeaders
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -27,8 +24,11 @@ import com.backend.infrastructure.tenant.TenantFilter;
 @EnableMethodSecurity(prePostEnabled = true) // Enable @PreAuthorize and @PostAuthorize annotations
 public class SecurityConfig {
 
-        @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:4201,http://localhost:3000,http://localhost:8080,http://localhost:8081}")
-        private List<String> corsAllowedOrigins;
+        private final CorsProperties corsProperties;
+
+        public SecurityConfig(CorsProperties corsProperties) {
+                this.corsProperties = corsProperties;
+        }
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -72,7 +72,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(corsAllowedOrigins);
+                configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
                 configuration.setAllowedOriginPatterns(Arrays.asList(
                                 "http://*.localhost:4200",
                                 "http://*.localhost:4201",

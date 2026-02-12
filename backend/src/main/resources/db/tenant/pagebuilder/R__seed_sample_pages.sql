@@ -1,11 +1,12 @@
 -- System pages seed — runs on every checksum change (repeatable migration)
 -- These pages are created in every tenant DB at provisioning time.
 -- Storefront requires these pages to be present for CMS delivery to work.
+-- Uses ON DUPLICATE KEY UPDATE so checksum changes reconcile seed data in existing tenants.
 
 -- ============================================
 -- 1. HOMEPAGE (is_home=true, type=LANDING)
 -- ============================================
-INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag)
+INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT
     'f0000001-0000-0000-0000-000000000001',
     'homepage',
@@ -13,8 +14,10 @@ SELECT
     'PUBLISHED',
     'LANDING',
     TRUE,
-    'INDEX_FOLLOW'
-WHERE NOT EXISTS (SELECT 1 FROM pages WHERE uid = 'homepage');
+    'INDEX_FOLLOW',
+    NULL
+ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
+    page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -26,7 +29,8 @@ SELECT
     'Hoş Geldiniz',
     '/',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'homepage-tr');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -38,12 +42,13 @@ SELECT
     'Welcome',
     '/',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'homepage-en');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 -- ============================================
 -- 2. PRODUCT PAGE TEMPLATE (type=PRODUCT)
 -- ============================================
-INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag)
+INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT
     'f0000002-0000-0000-0000-000000000001',
     'productPage',
@@ -51,8 +56,10 @@ SELECT
     'PUBLISHED',
     'PRODUCT',
     FALSE,
-    'INDEX_FOLLOW'
-WHERE NOT EXISTS (SELECT 1 FROM pages WHERE uid = 'productPage');
+    'INDEX_FOLLOW',
+    NULL
+ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
+    page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -64,7 +71,8 @@ SELECT
     'Ürün Detayı',
     '/products/{code}',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'productPage-tr');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -76,12 +84,13 @@ SELECT
     'Product Details',
     '/products/{code}',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'productPage-en');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 -- ============================================
 -- 3. CATEGORY PAGE TEMPLATE (type=CATEGORY)
 -- ============================================
-INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag)
+INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT
     'f0000003-0000-0000-0000-000000000001',
     'categoryPage',
@@ -89,8 +98,10 @@ SELECT
     'PUBLISHED',
     'CATEGORY',
     FALSE,
-    'INDEX_FOLLOW'
-WHERE NOT EXISTS (SELECT 1 FROM pages WHERE uid = 'categoryPage');
+    'INDEX_FOLLOW',
+    NULL
+ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
+    page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -102,7 +113,8 @@ SELECT
     'Ürünler',
     '/c/{code}',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'categoryPage-tr');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -114,12 +126,13 @@ SELECT
     'Products',
     '/c/{code}',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'categoryPage-en');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 -- ============================================
 -- 4. SEARCH PAGE TEMPLATE (type=SEARCH)
 -- ============================================
-INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag)
+INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT
     'f0000004-0000-0000-0000-000000000001',
     'searchResultsPage',
@@ -127,8 +140,10 @@ SELECT
     'PUBLISHED',
     'SEARCH',
     FALSE,
-    'NOINDEX_FOLLOW'
-WHERE NOT EXISTS (SELECT 1 FROM pages WHERE uid = 'searchResultsPage');
+    'NOINDEX_FOLLOW',
+    NULL
+ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
+    page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -140,7 +155,8 @@ SELECT
     'Arama Sonuçları',
     '/search',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'searchResultsPage-tr');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
 SELECT
@@ -152,4 +168,5 @@ SELECT
     'Search Results',
     '/search',
     'PUBLISHED'
-WHERE NOT EXISTS (SELECT 1 FROM page_i18n WHERE uid = 'searchResultsPage-en');
+ON DUPLICATE KEY UPDATE page_id = VALUES(page_id), name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);

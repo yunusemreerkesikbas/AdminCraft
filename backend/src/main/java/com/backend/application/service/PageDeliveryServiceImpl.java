@@ -35,6 +35,7 @@ import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.enums.PageType;
+import com.backend.domain.enums.RobotTag;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
@@ -79,29 +80,45 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 Optional<Page> pageOpt;
                 String normalizedPageLabelOrId = normalizePageLabelOrId(pageLabelOrId);
                 String normalizedCode = normalizeParam(code);
+                final String[] codeToInclude = { null };
 
                 if (pageType == null || pageType.isBlank()) {
                         pageOpt = resolveHomepage();
                 } else {
-                        pageOpt = switch (pageType) {
-                                case "ContentPage" -> normalizedPageLabelOrId != null
-                                                ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
-                                                : Optional.empty();
-                                case "ProductPage" -> normalizedCode != null
-                                                ? resolveUniqueTemplatePage(PageType.PRODUCT)
-                                                : Optional.empty();
-                                case "CategoryPage" -> normalizedCode != null
-                                                ? resolveUniqueTemplatePage(PageType.CATEGORY)
-                                                : Optional.empty();
-                                case "SearchResultPage" -> resolveUniqueTemplatePage(PageType.SEARCH);
-                                case "LandingPage" -> normalizedPageLabelOrId != null
-                                                ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
-                                                : Optional.empty();
-                                default -> Optional.empty();
-                        };
+                        Optional<PageType> resolvedType = PageType.fromTypeCode(pageType);
+                        if (resolvedType.isEmpty()) {
+                                pageOpt = Optional.empty();
+                        } else {
+                                switch (resolvedType.get()) {
+                                        case CONTENT -> pageOpt = normalizedPageLabelOrId != null
+                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.CONTENT)
+                                                        : Optional.empty();
+                                        case PRODUCT -> {
+                                                if (normalizedCode != null) {
+                                                        pageOpt = resolveUniqueTemplatePage(PageType.PRODUCT);
+                                                        codeToInclude[0] = normalizedCode;
+                                                } else {
+                                                        pageOpt = Optional.empty();
+                                                }
+                                        }
+                                        case CATEGORY -> {
+                                                if (normalizedCode != null) {
+                                                        pageOpt = resolveUniqueTemplatePage(PageType.CATEGORY);
+                                                        codeToInclude[0] = normalizedCode;
+                                                } else {
+                                                        pageOpt = Optional.empty();
+                                                }
+                                        }
+                                        case SEARCH -> pageOpt = resolveUniqueTemplatePage(PageType.SEARCH);
+                                        case LANDING -> pageOpt = normalizedPageLabelOrId != null
+                                                        ? resolvePublishedPageByCanonicalUrl(lang, normalizedPageLabelOrId, PageType.LANDING)
+                                                        : Optional.empty();
+                                        default -> pageOpt = Optional.empty();
+                                }
+                        }
                 }
 
-                return pageOpt.map(page -> buildPageDeliveryResponse(page, lang));
+                return pageOpt.map(page -> buildPageDeliveryResponse(page, lang, codeToInclude[0]));
         }
 
         private Optional<Page> resolveHomepage() {
@@ -149,17 +166,10 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private String resolveTypeCode(PageType pageType) {
                 if (pageType == null) return "ContentPage";
-                return switch (pageType) {
-                        case PRODUCT -> "ProductPage";
-                        case CATEGORY -> "CategoryPage";
-                        case SEARCH -> "SearchResultPage";
-                        case LANDING -> "LandingPage";
-                        case ERROR -> "ErrorPage";
-                        default -> "ContentPage";
-                };
+                return pageType.getTypeCode();
         }
 
-        private PageDeliveryResponse buildPageDeliveryResponse(Page page, Language lang) {
+        private PageDeliveryResponse buildPageDeliveryResponse(Page page, Language lang, String code) {
                 Optional<PageI18n> i18nOpt = pageI18nRepository.findByPageIdAndLanguage(page.getId(), lang);
 
                 // Fetch template info if assigned
@@ -259,18 +269,20 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 PageI18n i18n = i18nOpt.orElse(null);
 
-                String typeCode = resolveTypeCode(page.getPageType());
+        String typeCode = resolveTypeCode(page.getPageType());
+        RobotTag robotTag = page.getRobotTag() != null ? page.getRobotTag() : RobotTag.INDEX_FOLLOW;
 
                 return PageDeliveryResponse.builder()
                                 .uid(page.getUid())
                                 .name(i18n != null ? i18n.getName() : null)
                                 .title(i18n != null ? i18n.getTitle() : null)
                                 .description(i18n != null ? i18n.getDescription() : null)
-                                .robotTag(page.getRobotTag().name())
+                                .robotTag(robotTag.name())
                                 .canonicalUrl(i18n != null ? i18n.getCanonicalUrl() : null)
                                 .styleClasses(page.getStyleClasses())
                                 .template(templateUid)
                                 .typeCode(typeCode)
+                                .code(code)
                                 .contentSlots(contentSlots)
                                 .slots(slotsMap)
                                 .build();

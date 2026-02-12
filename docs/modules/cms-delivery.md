@@ -95,7 +95,6 @@ DTO references (source of truth):
 - `backend/src/main/java/com/backend/application/dto/delivery/ComponentDeliveryResponse.java`
 - `backend/src/main/java/com/backend/application/dto/delivery/BatchDeliveryResponse.java`
 - `backend/src/main/java/com/backend/application/dto/delivery/PageDeliveryResponse.java`
-- `backend/src/main/java/com/backend/application/dto/delivery/BatchPageDeliveryResponse.java`
 - `backend/src/main/java/com/backend/application/dto/delivery/SiteDeliveryResponse.java`
 
 ## Frontend integration

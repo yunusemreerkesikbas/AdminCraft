@@ -155,23 +155,36 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
 
       // Recreate links with updated media references
       if (responsiveSet.getDesktopMedia() != null) {
-        linkRepository.save(ComponentMediaLink.forComponentResponsive(
+        ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
             componentId,
             responsiveSet.getDesktopMedia().getId(),
             responsiveSet.getId(),
-            true));
+            true);
+        saveLinkIfMissing(link);
       }
       if (responsiveSet.getMobileMedia() != null) {
-        linkRepository.save(ComponentMediaLink.forComponentResponsive(
+        ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
             componentId,
             responsiveSet.getMobileMedia().getId(),
             responsiveSet.getId(),
-            false));
+            false);
+        saveLinkIfMissing(link);
       }
     }
 
     log.info("Updated media links for {} components using responsive set {}",
         componentIds.size(), responsiveSet.getId());
+  }
+
+  private void saveLinkIfMissing(ComponentMediaLink link) {
+    boolean exists = linkRepository.existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+        link.getComponentId(),
+        link.getMediaId(),
+        link.getLinkType(),
+        link.getEntryId());
+    if (!exists) {
+      linkRepository.save(link);
+    }
   }
 
   @Override

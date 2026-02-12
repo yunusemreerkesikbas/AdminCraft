@@ -22,6 +22,12 @@ public interface JpaComponentMediaLinkRepository extends JpaRepository<Component
 
   List<ComponentMediaLink> findByResponsiveSetId(Long responsiveSetId);
 
+  boolean existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+      Long componentId,
+      Long mediaId,
+      ComponentMediaLink.LinkType linkType,
+      Long entryId);
+
   @Modifying
   @Query("DELETE FROM ComponentMediaLink c WHERE c.componentId = :componentId")
   void deleteByComponentId(@Param("componentId") Long componentId);

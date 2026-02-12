@@ -20,5 +20,5 @@ public interface CmsDeliveryService {
 
   Language getDefaultLanguage();
 
-  SiteDeliveryResponse getSiteForDelivery();
+  Optional<SiteDeliveryResponse> getSiteForDelivery();
 }

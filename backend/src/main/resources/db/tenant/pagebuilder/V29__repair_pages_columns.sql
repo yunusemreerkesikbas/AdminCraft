@@ -1,10 +1,5 @@
--- =====================================================
--- V13: Add Responsive Media to Components
--- Sprint 37: Component-Media Integration
--- =====================================================
+-- Repair legacy pages columns and indexes (idempotent)
 
--- Add responsive_id to components table
--- This links a component to its Desktop/Mobile image pair
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddColumnIfNotExists(
@@ -27,11 +22,30 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddColumnIfNotExists(DATABASE(), 'components', 'responsive_id', 'BIGINT NULL AFTER style_classes');
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'template_id', 'BIGINT NULL');
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'robot_tag', "ENUM('INDEX_FOLLOW', 'NOINDEX_FOLLOW', 'INDEX_NOFOLLOW', 'NOINDEX_NOFOLLOW') DEFAULT 'INDEX_FOLLOW'");
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'published_at', 'datetime(6)');
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'scheduled_at', 'datetime(6)');
+CALL AddColumnIfNotExists(DATABASE(), 'pages', 'page_type', "VARCHAR(20) DEFAULT 'CONTENT'");
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 
--- Add FK + index (guarded)
+-- Some legacy tenants still have pages.created_by as NOT NULL,
+-- while seeds insert pages without created_by.
+SET @created_by_nullable = (
+    SELECT IS_NULLABLE
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'pages'
+      AND COLUMN_NAME = 'created_by'
+);
+SET @ddl = IF(@created_by_nullable = 'NO',
+    'ALTER TABLE pages MODIFY COLUMN created_by BIGINT NULL',
+    'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 DELIMITER //
 CREATE PROCEDURE AddIndexIfNotExists(
@@ -54,22 +68,7 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL AddIndexIfNotExists(DATABASE(), 'components', 'idx_component_responsive', 'responsive_id');
+CALL AddIndexIfNotExists(DATABASE(), 'pages', 'idx_page_template', 'template_id');
+CALL AddIndexIfNotExists(DATABASE(), 'pages', 'idx_page_type_status', 'page_type, status');
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
-
--- FK (guarded by existence check on INFORMATION_SCHEMA)
-SET @fk_exists = (
-    SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
-    WHERE CONSTRAINT_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'components'
-      AND CONSTRAINT_NAME = 'fk_component_responsive'
-);
-
-SET @ddl = IF(@fk_exists = 0,
-    'ALTER TABLE components ADD CONSTRAINT fk_component_responsive FOREIGN KEY (responsive_id) REFERENCES responsive_media_set(id) ON DELETE SET NULL',
-    'SELECT 1');
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;

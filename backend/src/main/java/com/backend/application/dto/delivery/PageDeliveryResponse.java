@@ -21,6 +21,7 @@ public record PageDeliveryResponse(
     // Hybris-compatible fields
     String template,
     String typeCode,
+    String code,
     ContentSlotsWrapper contentSlots,
 
     // Legacy format

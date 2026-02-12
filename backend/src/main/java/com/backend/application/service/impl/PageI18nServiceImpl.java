@@ -34,7 +34,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Override
     @Transactional(readOnly = true)
     public PageI18nResponse getPageI18n(Long pageId, Language language) {
-        validatePageExists(pageId);
+        getPageOrThrow(pageId);
 
         return pageI18nRepository.findByPageIdAndLanguage(pageId, language)
                 .map(PageI18nResponse::from)
@@ -44,7 +44,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Override
     @Transactional
     public PageI18nResponse upsertPageI18n(Long pageId, Language language, PageI18nRequest request) {
-        validatePageExists(pageId);
+        getPageOrThrow(pageId);
         validateLanguageMatch(language, request.language());
 
         if (request.canonicalUrl() != null && !request.canonicalUrl().trim().isEmpty()) {
@@ -63,7 +63,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Override
     @Transactional(readOnly = true)
     public List<PageI18nResponse> getAllPageI18n(Long pageId) {
-        validatePageExists(pageId);
+        getPageOrThrow(pageId);
 
         return pageI18nRepository.findByPageId(pageId)
                 .stream()
@@ -74,9 +74,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Override
     @Transactional
     public PageI18nResponse publishPageI18n(Long pageId, Language language, PagePublishRequest request) {
-        validatePageExists(pageId);
-        Page page = pageRepository.findById(pageId)
-                .orElseThrow(() -> new PageNotFoundException(pageId));
+        Page page = getPageOrThrow(pageId);
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
@@ -111,7 +109,7 @@ public class PageI18nServiceImpl implements PageI18nService {
     @Override
     @Transactional
     public PageI18nResponse unpublishPageI18n(Long pageId, Language language) {
-        validatePageExists(pageId);
+        Page page = getPageOrThrow(pageId);
 
         PageI18n pageI18n = pageI18nRepository
                 .findByPageIdAndLanguage(pageId, language)
@@ -120,13 +118,10 @@ public class PageI18nServiceImpl implements PageI18nService {
 
         pageI18n.unpublish();
 
-        // Update Parent Page
-        pageRepository.findById(pageId).ifPresent(p -> {
-            p.setPublishedAt(null);
-            p.setScheduledAt(null);
-            p.setStatus(PageStatus.DRAFT);
-            pageRepository.save(p);
-        });
+        page.setPublishedAt(null);
+        page.setScheduledAt(null);
+        page.setStatus(PageStatus.DRAFT);
+        pageRepository.save(page);
 
         pageI18n = pageI18nRepository.save(pageI18n);
         return PageI18nResponse.from(pageI18n);
@@ -138,8 +133,8 @@ public class PageI18nServiceImpl implements PageI18nService {
         pageI18nRepository.deleteByPageId(pageId);
     }
 
-    private void validatePageExists(Long pageId) {
-        pageRepository.findById(pageId)
+    private Page getPageOrThrow(Long pageId) {
+        return pageRepository.findById(pageId)
                 .orElseThrow(() -> new PageNotFoundException(pageId));
     }
 

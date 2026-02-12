@@ -1,6 +1,5 @@
 package com.backend.application.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,8 +10,6 @@ import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.dto.delivery.SiteDeliveryResponse;
-import com.backend.application.dto.delivery.SiteDeliveryResponse.LanguageInfo;
-import com.backend.domain.entity.Site;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
 import com.backend.domain.port.TenantContextPort;
@@ -54,35 +51,9 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   }
 
   @Override
-  public SiteDeliveryResponse getSiteForDelivery() {
-    Site site = siteRepository.findFirstByOrderByIdAsc().orElse(null);
-    if (site == null) {
-      return null;
-    }
-
-    List<LanguageInfo> enabledLanguages = new ArrayList<>();
-    for (Language lang : site.getEnabledLanguages()) {
-      enabledLanguages.add(new LanguageInfo(lang.name(), lang.getNativeName(), lang.isRightToLeft()));
-    }
-
-    return new SiteDeliveryResponse(
-        site.getSiteName(),
-        site.getSiteTitle(),
-        site.getSiteDescription(),
-        site.getSiteKeywords(),
-        site.getOgImageUrl(),
-        site.getDefaultLanguage().name(),
-        enabledLanguages,
-        site.getThemeName(),
-        site.getMaintenanceMode(),
-        site.getMaintenanceMessage(),
-        site.getGoogleAnalyticsId(),
-        site.getGoogleTagManagerId(),
-        site.getTwitterHandle(),
-        site.getFacebookPageUrl(),
-        site.getDomain(),
-        site.getCustomDomain(),
-        site.getSslEnabled());
+  public Optional<SiteDeliveryResponse> getSiteForDelivery() {
+    return siteRepository.findFirstByOrderByIdAsc()
+        .map(SiteDeliveryResponse::from);
   }
 
   @Override
