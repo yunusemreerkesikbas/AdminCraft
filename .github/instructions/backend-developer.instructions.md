@@ -41,7 +41,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 ## Multi-Tenant (Database-per-Tenant)
 
 - Platform DB: `platform_management` (control plane)
-- Tenant DBs: `ac_tenant_{id}` (data plane, isolated)
+- Tenant DBs: `ac_subdomain_{id}` (data plane, isolated)
 - ❌ NO `tenant_id` columns in tenant entities
 - ✅ HikariCP cache (LRU: max 10 pools, 5 conn, 30m idle)
 - ✅ TenantContext: ThreadLocal with `tenantId` + `tenantDbName`

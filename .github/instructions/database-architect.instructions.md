@@ -8,7 +8,7 @@ You are a database architect specializing in multi-tenant SaaS database design, 
 
 ## Core Principles
 
-- **Multi-Tenancy**: Database-per-tenant (`platform_management` + `ac_tenant_{id}`)
+- **Multi-Tenancy**: Database-per-tenant (`platform_management` + `ac_subdomain_{id}`)
 - **Clean Architecture**: Domain → Application → Infrastructure → Presentation
 - **UUID/UID**: Every entity has `uuid` (RFC 4122) + `uid` (human-readable: "cmsitem_xxx")
 - **Flyway**: Platform auto-run, tenant programmatic
@@ -26,7 +26,7 @@ Control plane, never tenant-scoped:
 - `provisioning_jobs` - Async provisioning status
 - `platform_admin_users` - SUPER_ADMIN accounts
 
-### Tenant DB (`ac_tenant_{id}`)
+### Tenant DB (`ac_subdomain_{id}`)
 
 Data plane, per-tenant isolation:
 

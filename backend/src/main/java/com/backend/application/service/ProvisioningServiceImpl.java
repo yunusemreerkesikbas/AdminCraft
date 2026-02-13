@@ -83,8 +83,15 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
       job = jobRepository.save(job);
 
+      String dbName = tenant.getDatabaseName();
+      if (dbName == null || dbName.isEmpty() || (dbName.startsWith("tenant_") && dbName.endsWith("_db"))) {
+        dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+        tenant.setDatabaseName(dbName);
+        tenantRepository.save(tenant);
+      }
+
       final Long fJobId = job.getId();
-      final String fDbName = tenant.getDatabaseName();
+      final String fDbName = dbName;
       final java.util.List<String> fModules = orderedModules;
       final String fCorrelationId = correlationId;
 
@@ -153,8 +160,16 @@ public class ProvisioningServiceImpl implements ProvisioningService {
           .build();
 
       job = jobRepository.save(job);
+
+      String dbName = tenant.getDatabaseName();
+      if (dbName == null || dbName.isEmpty() || (dbName.startsWith("tenant_") && dbName.endsWith("_db"))) {
+        dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+        tenant.setDatabaseName(dbName);
+        tenantRepository.save(tenant);
+      }
+
       final Long fJobId = job.getId();
-      final String fDbName = tenant.getDatabaseName();
+      final String fDbName = dbName;
       final List<String> fModules = orderedModules;
       final String fCorrelationId = correlationId;
       if (TransactionSynchronizationManager.isSynchronizationActive()) {

@@ -5,7 +5,7 @@ set -euo pipefail
 # Existing versioned migration files (V*.sql) must not be modified or deleted.
 # Adding new versioned migrations is allowed.
 
-BASE_REF="${1:-${GITHUB_BASE_REF:-main}}"
+BASE_REF="${1:-${GITHUB_BASE_REF:-master}}"
 
 if ! git rev-parse --verify "origin/${BASE_REF}" >/dev/null 2>&1; then
   echo "Fetching origin/${BASE_REF} for diff baseline..."

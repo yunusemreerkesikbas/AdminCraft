@@ -20,7 +20,6 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Validation framework: [`global/validation.md`](global/validation.md)
   - Database migrations: [`global/migrations.md`](global/migrations.md)
   - Migration governance: [`global/migration-governance.md`](global/migration-governance.md)
-  - Migration runbook: [`global/migration-runbook.md`](global/migration-runbook.md)
   - Testing patterns: [`global/testing.md`](global/testing.md)
 
 ## Modules (admin APIs)
@@ -30,11 +29,11 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - Core: [`modules/core.md`](modules/core.md)
 - User Management: [`modules/user-management.md`](modules/user-management.md)
 - **Site Dashboard**: [`modules/site-dashboard.md`](modules/site-dashboard.md) - Unified site management interface
-- Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md) *(core-managed capability in provisioning)*
-- Site Settings: [`modules/site-settings.md`](modules/site-settings.md) *(integrated into Site Dashboard; not a provisioning module)*
-- Media Library (DAM): [`modules/media.md`](modules/media.md) *(core-managed capability in provisioning)*
+- Page Builder: [`modules/pagebuilder.md`](modules/pagebuilder.md) _(core-managed capability in provisioning)_
+- Site Settings: [`modules/site-settings.md`](modules/site-settings.md) _(integrated into Site Dashboard; not a provisioning module)_
+- Media Library (DAM): [`modules/media.md`](modules/media.md) _(core-managed capability in provisioning)_
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
-- Component Library: [`modules/component-library.md`](modules/component-library.md) *(core-managed capability in provisioning)*
+- Component Library: [`modules/component-library.md`](modules/component-library.md) _(core-managed capability in provisioning)_
 
 Provisioning catalog note:
 Core and Product are the only selectable modules in `/api/provisioning/modules/catalog`. Core expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
@@ -51,6 +50,15 @@ Platform features are not tenant modules, but they are critical for operating th
 Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but **do not require authentication**.
 
 - CMS delivery (`/api/cms/**`): [`modules/cms-delivery.md`](modules/cms-delivery.md)
+
+### Headless storefront (`storefront-nextjs/`)
+
+Next.js 16 App Router storefront consuming the CMS delivery APIs.
+
+- Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
+- SSR by default; static export mode available via `NEXT_OUTPUT=export`
+- Multi-environment scripts: `yarn dev`, `yarn dev:stage`, `yarn build`, `yarn build:static`, `yarn start:stage`, etc.
+- Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ## Cross-cutting features
 

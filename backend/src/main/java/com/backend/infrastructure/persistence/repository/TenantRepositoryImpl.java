@@ -250,7 +250,7 @@ public class TenantRepositoryImpl implements TenantRepository {
 
         String dbName = tenant.getDatabaseName();
         if (dbName == null || dbName.isEmpty()) {
-            dbName = "tenant_" + tenant.getSubdomain() + "_db";
+            dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
         }
 
         return com.backend.infrastructure.persistence.platform.entity.Tenant.builder()

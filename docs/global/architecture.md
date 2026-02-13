@@ -10,7 +10,7 @@
 
 - **Multi-tenancy**: database-per-tenant
   - Platform DB: `platform_management` (control-plane)
-  - Tenant DBs: `ac_tenant_{id}` (data-plane, physically isolated)
+  - Tenant DBs: `ac_subdomain_{id}` (data-plane, physically isolated)
 
 ## Backend request path
 

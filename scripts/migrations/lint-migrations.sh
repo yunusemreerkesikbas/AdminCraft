@@ -18,7 +18,7 @@ fi
 # 2) Guard against known strict schema issue: pages.created_by is required in some tenants.
 #    Any repeatable seed inserting into pages must provide created_by.
 PAGE_INSERTS_WITHOUT_CREATED_BY="$(
-  rg -n --glob '**/R__*.sql' 'INSERT\s+INTO\s+pages\s*\((?:(?!created_by).)*\)' "${ROOT}" -U || true
+  rg -n -P --glob '**/R__*.sql' 'INSERT\s+INTO\s+pages\s*\((?:(?!created_by).)*\)' "${ROOT}" -U || true
 )"
 if [[ -n "${PAGE_INSERTS_WITHOUT_CREATED_BY}" ]]; then
   echo "ERROR: INSERT INTO pages in repeatable seeds must include created_by."

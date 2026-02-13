@@ -14,6 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
+import java.util.Locale;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -100,10 +101,22 @@ public class Tenant {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (databaseName == null || databaseName.isEmpty()) {
-            databaseName = "tenant_" + subdomain + "_db";
+            databaseName = formatDatabaseName(subdomain, 0L);
         }
     }
-    
+
+    @PostPersist
+    protected void onPostPersist() {
+        if (id != null && databaseName != null && databaseName.endsWith("_0")) {
+            databaseName = formatDatabaseName(subdomain, id);
+        }
+    }
+
+    public static String formatDatabaseName(String subdomain, Long tenantId) {
+        String safe = subdomain == null ? "" : subdomain.replaceAll("[^a-zA-Z0-9]", "_").toLowerCase(Locale.ROOT);
+        return "ac_" + safe + "_" + (tenantId != null ? tenantId : 0);
+    }
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

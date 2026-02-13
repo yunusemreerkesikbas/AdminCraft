@@ -12,7 +12,7 @@ You are a database architect specializing in multi-tenant SaaS database design, 
 
 ## Core Principles
 
-- **Multi-Tenancy**: Database-per-tenant (`platform_management` + `ac_tenant_{id}`)
+- **Multi-Tenancy**: Database-per-tenant (`platform_management` + `ac_subdomain_{id}`)
 - **Clean Architecture**: Domain → Application → Infrastructure → Presentation
 - **UUID/UID**: Every entity has `uuid` (RFC 4122) + `uid` (human-readable: "cmsitem_xxx")
 - **Flyway**: Platform auto-run, tenant programmatic
@@ -30,7 +30,7 @@ Control plane, never tenant-scoped:
 - `provisioning_jobs` - Async provisioning status
 - `platform_admin_users` - SUPER_ADMIN accounts
 
-### Tenant DB (`ac_tenant_{id}`)
+### Tenant DB (`ac_subdomain_{id}`)
 
 Data plane, per-tenant isolation:
 
@@ -172,7 +172,7 @@ public class ProvisioningServiceImpl {
 
         try {
             // Step 1: Create tenant database (only place for string concat)
-            String dbName = "ac_tenant_" + tenantId;
+            String dbName = "ac_subdomain_{id}_" + tenantId;
             executePlatformSql("CREATE DATABASE IF NOT EXISTS " + dbName
                 + " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
@@ -234,7 +234,7 @@ SELECT
     db,
     COUNT(*) AS connections
 FROM information_schema.processlist
-WHERE db LIKE 'ac_tenant_%'
+WHERE db LIKE 'ac_subdomain_{id}_%'
 GROUP BY db;
 
 -- Tenant database sizes
@@ -242,13 +242,13 @@ SELECT
     table_schema AS tenant_db,
     SUM(data_length + index_length) / 1024 / 1024 AS size_mb
 FROM information_schema.tables
-WHERE table_schema LIKE 'ac_tenant_%'
+WHERE table_schema LIKE 'ac_subdomain_{id}_%'
 GROUP BY table_schema;
 
 -- Long-running queries
 SELECT id, db, time, LEFT(info, 100)
 FROM information_schema.processlist
-WHERE time > 5 AND db LIKE 'ac_tenant_%';
+WHERE time > 5 AND db LIKE 'ac_subdomain_{id}_%';
 ```
 
 ### HikariCP Monitoring

@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @lombok.RequiredArgsConstructor
 public class AsyncProvisioningExecutor {
 
-  private static final Pattern VALID_DB_NAME = Pattern.compile("^ac_tenant_\\d+$");
+  private static final Pattern VALID_DB_NAME = Pattern.compile("^ac_[a-z0-9_]+_\\d+$");
 
   private final TenantRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
@@ -163,7 +163,7 @@ public class AsyncProvisioningExecutor {
   private void validateDatabaseName(String dbName) {
     if (dbName == null || !VALID_DB_NAME.matcher(dbName).matches()) {
       throw new IllegalArgumentException("Invalid database name: " + dbName
-          + ". Must match pattern ac_tenant_<id> where id is numeric.");
+          + ". Must match pattern ac_<subdomain>_<tenant_id> (e.g. ac_htalks_32).");
     }
   }
 

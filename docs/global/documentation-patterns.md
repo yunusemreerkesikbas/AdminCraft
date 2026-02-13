@@ -81,5 +81,5 @@ Use this section order:
 - Titles: clear product names (e.g. “Media Library (DAM)”)
 - Use the system terms consistently:
   - Platform DB: `platform_management`
-  - Tenant DBs: `ac_tenant_{id}`
+  - Tenant DBs: `ac_subdomain_{id}`
   - Tenant resolution: headers/hostname via `TenantFilter`

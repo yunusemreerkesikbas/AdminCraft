@@ -8,7 +8,7 @@ on:
       - ".github/workflows/migration-guardrails.yml"
   push:
     branches:
-      - main
+      - master
     paths:
       - "backend/src/main/resources/db/**"
       - "scripts/migrations/**"

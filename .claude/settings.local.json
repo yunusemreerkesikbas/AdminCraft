@@ -57,7 +57,11 @@
       "Bash(Remove-Item \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\AdminCraft\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\backend\\\\shared\\\\validation\\\\PasswordMatchValidator.class\" -Force)",
       "Bash(ls:*)",
       "mcp__sequential-thinking__sequentialthinking",
-      "Bash(npx ng build:*)"
+      "Bash(npx ng build:*)",
+      "Bash(git merge:*)",
+      "Bash(git fetch:*)",
+      "Bash(yarn add:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": [],

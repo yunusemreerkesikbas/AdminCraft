@@ -15,7 +15,7 @@ BEGIN
         AND TABLE_NAME = tableName
         AND COLUMN_NAME = colName) = 0 THEN
 
-        SET @ddl = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
+        SET @ddl = CONCAT('ALTER TABLE `', REPLACE(tableName, '`', '``'), '` ADD COLUMN `', REPLACE(colName, '`', '``'), '` ', colDef);
         PREPARE stmt FROM @ddl;
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;

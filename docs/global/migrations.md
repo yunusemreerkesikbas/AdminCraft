@@ -117,7 +117,6 @@ Provisioning request mapping:
 ## Governance
 
 - Policy and CI guardrails: [`migration-governance.md`](migration-governance.md)
-- Operational rollout and triage: [`migration-runbook.md`](migration-runbook.md)
 
 ---
 
@@ -125,10 +124,10 @@ Provisioning request mapping:
 
 ### Common Errors
 
-| Error                                     | Cause                                    | Solution                                          |
-| ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| `Failed to open the referenced table 'X'` | FK references table from later module    | Move migration to the module that creates table X |
-| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update R\__seed_\*.sql to match current schema    |
+| Error                                     | Cause                                    | Solution                                            |
+| ----------------------------------------- | ---------------------------------------- | --------------------------------------------------- |
+| `Failed to open the referenced table 'X'` | FK references table from later module    | Move migration to the module that creates table X   |
+| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update R\__seed_\*.sql to match current schema      |
 | `Duplicate column name 'X'`               | Legacy drift / partial previous schema   | Add forward-only `V*__repair_*.sql` guard migration |
 
 ### Repair Failed Migration (Forward-Only)
@@ -162,6 +161,7 @@ Before committing a new migration:
    ```
 
 3. **Verify all modules migrated**
+
    ```powershell
    docker exec -it admincraft-mysql mysql -u root -p1234 -e \
      "USE tenant_democompany_db; SHOW TABLES LIKE 'flyway_%';"
@@ -171,10 +171,10 @@ Before committing a new migration:
 
 ## Version Bundles (Current State)
 
-| Version Range | Module            | Notes                                                             |
-| ------------- | ----------------- | ----------------------------------------------------------------- |
-| V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair       |
-| V1-V16        | component_library | Baseline + responsive links + legacy repair                       |
-| V1-V30        | pagebuilder       | Baseline + templates + page type + legacy page repair             |
-| V20-V24       | media             | Baseline + responsive media + link type alignment                 |
-| V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair           |
+| Version Range | Module            | Notes                                                       |
+| ------------- | ----------------- | ----------------------------------------------------------- |
+| V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair |
+| V1-V16        | component_library | Baseline + responsive links + legacy repair                 |
+| V1-V30        | pagebuilder       | Baseline + templates + page type + legacy page repair       |
+| V20-V24       | media             | Baseline + responsive media + link type alignment           |
+| V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

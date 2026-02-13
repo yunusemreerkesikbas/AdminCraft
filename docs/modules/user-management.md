@@ -273,7 +273,7 @@ Defined in [`UserRole.java`](../../backend/src/main/java/com/backend/domain/enum
 ### Access Control
 
 - All endpoints require `@PreAuthorize("hasRole('TENANT_ADMIN')")`
-- Users are scoped to tenant database (`ac_tenant_{id}`)
+- Users are scoped to tenant database (`ac_subdomain_{id}`)
 - Email uniqueness enforced per tenant
 
 ### Password Security

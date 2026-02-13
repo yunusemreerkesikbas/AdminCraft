@@ -269,8 +269,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 PageI18n i18n = i18nOpt.orElse(null);
 
-        String typeCode = resolveTypeCode(page.getPageType());
-        RobotTag robotTag = page.getRobotTag() != null ? page.getRobotTag() : RobotTag.INDEX_FOLLOW;
+                String typeCode = resolveTypeCode(page.getPageType());
+                RobotTag robotTag = page.getRobotTag() != null ? page.getRobotTag() : RobotTag.INDEX_FOLLOW;
 
                 return PageDeliveryResponse.builder()
                                 .uid(page.getUid())
