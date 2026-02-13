@@ -1,6 +1,9 @@
 // Most styles are handled by Tailwind utility classes in the HTML
 :host {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 // Override MatTab styles if needed

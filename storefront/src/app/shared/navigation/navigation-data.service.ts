@@ -79,8 +79,10 @@ export class NavigationDataService {
         if (activeLang) {
             const translation = this.#translocoService.getTranslation(activeLang);
             if (translation && Object.keys(translation).length > 0) {
-                this.#translationsLoadedSig.set(true);
-                this.reload();
+                queueMicrotask(() => {
+                    this.#translationsLoadedSig.set(true);
+                    this.reload();
+                });
             }
         }
     }

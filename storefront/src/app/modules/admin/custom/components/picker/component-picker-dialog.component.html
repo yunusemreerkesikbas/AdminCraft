@@ -1,17 +1,17 @@
-<spa-dialog-header
+<spa-dialog
     [title]="'admin.common.selectComponent' | transloco"
-    (closeClicked)="cancel()"
+    [size]="'xl'"
+    [contentType]="'picker'"
+    [showSubmit]="false"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
 >
-</spa-dialog-header>
-
-<spa-dialog-content type="picker" class="flex h-full flex-col overflow-hidden">
-    <spa-component-list
-        mode="picker"
-        (componentSelected)="select($event)"
-        class="block h-full min-h-0"
-    >
-    </spa-component-list>
-</spa-dialog-content>
-
-<spa-dialog-footer [showSubmit]="false" (cancelClicked)="cancel()">
-</spa-dialog-footer>
+    <div class="flex h-full flex-col overflow-hidden">
+        <spa-component-list
+            mode="picker"
+            (componentSelected)="select($event)"
+            class="block h-full min-h-0"
+        >
+        </spa-component-list>
+    </div>
+</spa-dialog>

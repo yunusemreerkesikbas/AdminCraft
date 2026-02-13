@@ -4,7 +4,14 @@ import { ApiResponse } from '@core/crud';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { Language } from '@shared/types/common.types';
 import { map, Observable, take } from 'rxjs';
-import { BatchDeliveryResponse, BatchPageDeliveryResponse, ComponentDeliveryResponse, PageDeliveryResponse } from './cms-delivery.types';
+import { BatchDeliveryResponse, ComponentDeliveryResponse, PageDeliveryResponse, SiteDeliveryResponse } from './cms-delivery.types';
+
+export interface PageResolveParams {
+    pageType?: string;
+    pageLabelOrId?: string;
+    code?: string;
+    lang?: Language;
+}
 
 @Injectable({ providedIn: 'root' })
 export class CmsDeliveryService {
@@ -47,14 +54,19 @@ export class CmsDeliveryService {
         );
     }
 
-    getPageByUid(uid: string, lang?: Language): Observable<PageDeliveryResponse> {
-        const language = lang ?? this.#getDefaultLanguage();
+    resolvePage(params?: PageResolveParams): Observable<PageDeliveryResponse> {
+        const language = params?.lang ?? this.#getDefaultLanguage();
+        const queryParams: Record<string, string | undefined> = { lang: language };
+
+        if (params?.pageType) queryParams['pageType'] = params.pageType;
+        if (params?.pageLabelOrId) queryParams['pageLabelOrId'] = params.pageLabelOrId;
+        if (params?.code) queryParams['code'] = params.code;
 
         return this.#api
             .getPublic<ApiResponse<PageDeliveryResponse>>(
                 'cmsPage',
-                { uid },
-                { lang: language }
+                undefined,
+                queryParams
             )
             .pipe(
                 take(1),
@@ -62,14 +74,12 @@ export class CmsDeliveryService {
             );
     }
 
-    getPagesByUids(uids: string[], lang?: Language): Observable<BatchPageDeliveryResponse> {
-        const language = lang ?? this.#getDefaultLanguage();
-
+    getSiteConfig(): Observable<SiteDeliveryResponse> {
         return this.#api
-            .getPublic<ApiResponse<BatchPageDeliveryResponse>>(
-                'cmsPagesBatch',
+            .getPublic<ApiResponse<SiteDeliveryResponse>>(
+                'cmsSite',
                 undefined,
-                { uids: uids.join(','), lang: language }
+                undefined
             )
             .pipe(
                 take(1),

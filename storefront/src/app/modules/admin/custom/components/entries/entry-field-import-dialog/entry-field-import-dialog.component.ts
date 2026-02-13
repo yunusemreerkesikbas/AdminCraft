@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -32,9 +32,7 @@ interface DialogData extends SpaDialogData {
         MatIconModule,
         TranslocoModule,
         SpaTextareaComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogComponent
     ]
 })
 export class EntryFieldImportDialogComponent extends SpaFormDialog<boolean, DialogData> {

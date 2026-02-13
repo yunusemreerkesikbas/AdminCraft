@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent, SpaSelectComponent, SpaSelectOption, SpaToggleComponent } from '@shared/components/custom-ui';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaFormDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
@@ -33,9 +33,7 @@ export interface PageSlotFormDialogResult {
         SpaInputComponent,
         SpaSelectComponent,
         SpaToggleComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogComponent
     ]
 })
 export class PageSlotFormDialogComponent extends SpaFormDialog<PageSlotFormDialogResult, PageSlotFormDialogData> {

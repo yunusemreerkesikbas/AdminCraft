@@ -1,15 +1,24 @@
-<spa-dialog-header
+<spa-dialog
     [title]="
         (mode() === 'create'
             ? 'admin.components.entries.create'
             : 'admin.components.entries.edit'
         ) | transloco
     "
-    (closeClicked)="cancel()"
+    [contentType]="'tabbed'"
+    [submitDisabled]="!canSave()"
+    [isSubmitting]="isSubmitting()"
+    [submitLabel]="
+        (mode() === 'create'
+            ? 'admin.dialog.actions.create'
+            : 'admin.dialog.actions.save'
+        ) | transloco
+    "
+    cancelLabel="admin.dialog.actions.close"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
 >
-</spa-dialog-header>
-
-<spa-dialog-content type="tabbed">
     @if (isLoading()) {
         <div class="flex flex-col items-center justify-center py-12">
             <mat-spinner diameter="40"></mat-spinner>
@@ -239,19 +248,4 @@
             }
         </spa-tab-container>
     }
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitDisabled]="!canSave()"
-    [isSubmitting]="isSubmitting()"
-    [submitLabel]="
-        (mode() === 'create'
-            ? 'admin.dialog.actions.create'
-            : 'admin.dialog.actions.save'
-        ) | transloco
-    "
-    cancelLabel="admin.dialog.actions.close"
-    (cancelClicked)="cancel()"
-    (submitClicked)="save()"
->
-</spa-dialog-footer>
+</spa-dialog>

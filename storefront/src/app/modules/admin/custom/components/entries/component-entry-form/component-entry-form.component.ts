@@ -25,11 +25,7 @@ import { DynamicFieldConfig } from 'app/shared/components/custom-ui/spa-dynamic-
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import {
-    SpaDialogContentComponent,
-    SpaDialogFooterComponent,
-    SpaDialogHeaderComponent,
-} from 'app/shared/components/spa-dialog';
+import { SpaDialogComponent } from 'app/shared/components/spa-dialog';
 import { map, Observable, of, switchMap, take } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../../media/components/spa-media-picker/spa-media-picker.component';
 import { MediaService } from '../../../media/media.service';
@@ -71,9 +67,7 @@ interface ComponentEntryFormData {
         SpaSelectComponent,
         SpaTextareaComponent,
         SpaCheckboxComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent,
+        SpaDialogComponent,
         SpaMediaPickerComponent,
         SpaTabContainerComponent,
         SpaTabContentDirective,

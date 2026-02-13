@@ -1,41 +1,52 @@
-<spa-dialog-header
+<spa-dialog
     [title]="
         isCreateMode()
             ? ('admin.pageTemplates.dialog.create' | transloco)
             : ('admin.pageTemplates.dialog.edit' | transloco)
     "
-    (closeClicked)="cancel()"
+    [size]="'xl'"
+    [submitLabel]="
+        isCreateMode()
+            ? ('admin.common.create' | transloco)
+            : ('admin.common.save' | transloco)
+    "
+    [submitDisabled]="form.invalid || isSystemTemplate()"
+    [isSubmitting]="isSubmitting()"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
 >
-</spa-dialog-header>
+    <div class="flex flex-col gap-4">
+        <form [formGroup]="form" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <spa-input
+                    [label]="'admin.common.fields.name' | transloco"
+                    placeholder="Homepage Template"
+                    formControlName="name"
+                />
 
-<spa-dialog-content type="form">
-    <form [formGroup]="form" class="flex flex-col gap-4">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <spa-input
-                [label]="'admin.common.fields.name' | transloco"
-                placeholder="Homepage Template"
-                formControlName="name"
+                <spa-input
+                    [label]="'admin.common.fields.uid' | transloco"
+                    placeholder="homepage-template"
+                    formControlName="uid"
+                    patternType="uid"
+                    [readonly]="isEditMode()"
+                />
+            </div>
+
+            <spa-textarea
+                [label]="'admin.common.fields.description' | transloco"
+                placeholder="Describe the template purpose"
+                formControlName="description"
+                [rows]="2"
             />
 
-            <spa-input
-                [label]="'admin.common.fields.uid' | transloco"
-                placeholder="homepage-template"
-                formControlName="uid"
-                patternType="uid"
+            <spa-toggle
+                [label]="'admin.common.fields.active' | transloco"
+                formControlName="isActive"
             />
-        </div>
+        </form>
 
-        <spa-textarea
-            [label]="'admin.common.fields.description' | transloco"
-            placeholder="Describe the template purpose"
-            formControlName="description"
-            [rows]="2"
-        />
-
-        <spa-toggle
-            [label]="'admin.common.fields.active' | transloco"
-            formControlName="isActive"
-        />
         <div class="mt-6 border-t pt-4">
             <div class="mb-4 flex items-center justify-between">
                 <h3 class="text-lg font-medium">
@@ -45,7 +56,7 @@
                     mat-stroked-button
                     type="button"
                     (click)="addSlot()"
-                    [disabled]="isSubmitting()"
+                    [disabled]="isSubmitting() || isSystemTemplate()"
                 >
                     <mat-icon class="mr-2 icon-size-5">add</mat-icon>
                     {{ 'admin.pageTemplates.slots.add' | transloco }}
@@ -55,7 +66,7 @@
             @if (slotsSig().length > 0) {
                 <spa-reorder-list
                     [items]="slotsSig()"
-                    [disabled]="isSubmitting()"
+                    [disabled]="isSubmitting() || isSystemTemplate()"
                     (reorder)="onSlotsReorder($event)"
                 >
                     <ng-template #itemTemplate let-slot let-i="index">
@@ -67,8 +78,8 @@
                                     'admin.pageTemplates.slots.columns.name'
                                         | transloco
                                 "
-                                [(ngModel)]="slot.slotName"
-                                [ngModelOptions]="{ standalone: true }"
+                                [value]="slot.slotName"
+                                (changed)="updateSlotName(i, $event)"
                                 [options]="availableSlotsSig()"
                                 [placeholder]="'Select Slot'"
                             />
@@ -78,8 +89,8 @@
                                     'admin.pageTemplates.slots.columns.position'
                                         | transloco
                                 "
-                                [(ngModel)]="slot.position"
-                                [ngModelOptions]="{ standalone: true }"
+                                [value]="slot.position"
+                                (changed)="updateSlotPosition(i, $event)"
                                 [options]="slotPositionOptions"
                             />
                         </div>
@@ -89,7 +100,7 @@
                             color="warn"
                             type="button"
                             (click)="removeSlot(i)"
-                            [disabled]="isSubmitting()"
+                            [disabled]="isSubmitting() || isSystemTemplate()"
                         >
                             <mat-icon
                                 svgIcon="heroicons_outline:trash"
@@ -111,18 +122,5 @@
                 </div>
             }
         </div>
-    </form>
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitLabel]="
-        isCreateMode()
-            ? ('admin.common.create' | transloco)
-            : ('admin.common.save' | transloco)
-    "
-    [submitDisabled]="!form.valid"
-    [isSubmitting]="isSubmitting()"
-    (cancelClicked)="cancel()"
-    (submitClicked)="save()"
->
-</spa-dialog-footer>
+    </div>
+</spa-dialog>

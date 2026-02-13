@@ -1,11 +1,10 @@
-<spa-dialog-header
+<spa-dialog
     [title]="'admin.pageSlots.dialogTitle' | transloco"
     [subtitle]="pageUid"
-    (closeClicked)="cancel()"
+    [size]="'xl'"
+    [showFooter]="false"
+    (closed)="cancel()"
 >
-</spa-dialog-header>
-
-<spa-dialog-content>
     <div class="flex h-full flex-col overflow-hidden">
         <!-- Minimal Header with Actions -->
         <div class="flex items-center justify-between py-2">
@@ -202,4 +201,4 @@
             </div>
         }
     </div>
-</spa-dialog-content>
+</spa-dialog>

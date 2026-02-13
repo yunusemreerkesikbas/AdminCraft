@@ -57,7 +57,7 @@ export class PageTemplateService extends CrudHttpService<PageTemplate, CreatePag
 
     reorderSlots(templateId: number, slotNames: string[]): Observable<void> {
         return this.api
-            .put<ApiResponse<void>>('pageTemplateSlotsReorder', { slotNames }, { id: templateId })
+            .put<ApiResponse<void>>('pageTemplateSlotsReorder', { items: slotNames }, { id: templateId })
             .pipe(
                 take(1),
                 map(() => void 0)

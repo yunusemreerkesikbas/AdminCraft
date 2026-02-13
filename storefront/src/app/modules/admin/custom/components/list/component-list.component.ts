@@ -29,7 +29,7 @@ import { ComponentTypesListComponent } from '../types/component-types-list.compo
 
 const DIALOG_CONFIG = {
     COMPONENT_FORM: { width: '800px', height: 'auto' },
-    TYPES_MANAGER: { width: '1200px', height: '80vh' }
+    TYPES_MANAGER: { width: '900px', height: '80vh' }
 };
 
 @Component({

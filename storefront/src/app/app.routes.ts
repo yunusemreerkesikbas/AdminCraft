@@ -8,13 +8,19 @@ import {
     superAdminGuard,
     tenantAdminGuard,
 } from 'app/core/auth/guards/role.guard';
+import { rootRedirectGuard } from 'app/core/auth/guards/root-redirect.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
 
 const DEFAULT_LANGUAGE = environment.defaultLanguage;
 
 export const appRoutes: Route[] = [
-    { path: '', pathMatch: 'full', redirectTo: `/${DEFAULT_LANGUAGE}` },
+    { 
+        path: '', 
+        pathMatch: 'full', 
+        canActivate: [rootRedirectGuard],
+        children: []
+    },
 
     {
         path: 'signed-in-redirect',

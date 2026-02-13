@@ -2,14 +2,13 @@ import { SpaLocalizedFormDialogData } from '@/app/shared/components/spa-dialog-b
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, ViewEncapsulation } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import { SpaTabContainerComponent, SpaTabContentDirective, TabDefinition } from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
@@ -32,16 +31,13 @@ export interface PageEditDialogData extends SpaLocalizedFormDialogData<PageDetai
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        MatButtonModule,
         MatIconModule,
         TranslocoModule,
         UpperCasePipe,
         SpaInputComponent,
         SpaSelectComponent,
         SpaTextareaComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent,
+        SpaDialogComponent,
         SpaTabContainerComponent,
         SpaTabContentDirective
     ],

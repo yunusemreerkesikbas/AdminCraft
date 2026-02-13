@@ -8,7 +8,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
@@ -39,9 +39,7 @@ interface DialogData extends SpaDialogData {
         EntryFieldsBuilderComponent,
         SpaInputComponent,
         SpaSelectComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogComponent
     ]
 })
 export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTypeDto, DialogData> implements OnInit {

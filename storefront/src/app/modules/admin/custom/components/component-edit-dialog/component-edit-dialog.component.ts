@@ -15,11 +15,7 @@ import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
-import {
-    SpaDialogContentComponent,
-    SpaDialogFooterComponent,
-    SpaDialogHeaderComponent,
-} from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import {
     SpaTabContainerComponent,
@@ -64,9 +60,7 @@ export interface ComponentEditDialogData
         SpaCheckboxComponent,
         SpaTextareaComponent,
         ComponentEntryListComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent,
+        SpaDialogComponent,
         SpaMediaPickerComponent,
         SpaTabContainerComponent,
         SpaTabContentDirective,

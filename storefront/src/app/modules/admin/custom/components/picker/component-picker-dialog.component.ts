@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaDialogBase } from '@shared/components/spa-dialog-base';
 import { ComponentListComponent } from '../list/component-list.component';
 import { ComponentDto } from '../models/component-library.types';
@@ -13,9 +13,7 @@ import { ComponentDto } from '../models/component-library.types';
         CommonModule,
         ComponentListComponent,
         TranslocoModule,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogComponent
     ],
     templateUrl: './component-picker-dialog.component.html',
     styleUrls: ['./component-picker-dialog.component.scss'],
