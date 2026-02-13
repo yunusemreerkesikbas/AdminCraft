@@ -1,6 +1,6 @@
 -- SAP Commerce Cloud Hybris Style Page Templates
 -- Updated: Removed cart/checkout/order templates, PascalCase UIDs, random UUIDs
--- System templates that cannot be deleted (is_system = TRUE)
+-- Default templates editable by tenant admins (is_system = FALSE)
 -- i18n compatible (V19+)
 
 -- ============================================
@@ -9,17 +9,17 @@
 INSERT INTO page_templates (uuid, uid, is_system, is_active)
 VALUES
     -- Core Content Templates
-    ('a1b2c3d4-e5f6-7890-abcd-ef1234567001', 'LandingPageTemplate', TRUE, TRUE),
-    ('b2c3d4e5-f6a7-8901-bcde-f12345678002', 'ContentPageTemplate', TRUE, TRUE),
-    ('c3d4e5f6-a7b8-9012-cdef-123456789003', 'CategoryPageTemplate', TRUE, TRUE),
-    ('d4e5f6a7-b8c9-0123-def0-234567890004', 'ProductDetailsPageTemplate', TRUE, TRUE),
-    ('e5f6a7b8-c9d0-1234-ef01-345678901005', 'SearchResultsPageTemplate', TRUE, TRUE),
+    ('a1b2c3d4-e5f6-7890-abcd-ef1234567001', 'LandingPageTemplate', FALSE, TRUE),
+    ('b2c3d4e5-f6a7-8901-bcde-f12345678002', 'ContentPageTemplate', FALSE, TRUE),
+    ('c3d4e5f6-a7b8-9012-cdef-123456789003', 'CategoryPageTemplate', FALSE, TRUE),
+    ('d4e5f6a7-b8c9-0123-def0-234567890004', 'ProductDetailsPageTemplate', FALSE, TRUE),
+    ('e5f6a7b8-c9d0-1234-ef01-345678901005', 'SearchResultsPageTemplate', FALSE, TRUE),
     -- Account & Auth
-    ('f6a7b8c9-d0e1-2345-f012-456789012006', 'AccountPageTemplate', TRUE, TRUE),
-    ('a7b8c9d0-e1f2-3456-0123-567890123007', 'LoginPageTemplate', TRUE, TRUE),
+    ('f6a7b8c9-d0e1-2345-f012-456789012006', 'AccountPageTemplate', FALSE, TRUE),
+    ('a7b8c9d0-e1f2-3456-0123-567890123007', 'LoginPageTemplate', FALSE, TRUE),
     -- Error Pages
-    ('b8c9d0e1-f2a3-4567-1234-678901234008', 'ErrorPageTemplate', TRUE, TRUE),
-    ('c9d0e1f2-a3b4-5678-2345-789012345009', 'NotFoundPageTemplate', TRUE, TRUE)
+    ('b8c9d0e1-f2a3-4567-1234-678901234008', 'ErrorPageTemplate', FALSE, TRUE),
+    ('c9d0e1f2-a3b4-5678-2345-789012345009', 'NotFoundPageTemplate', FALSE, TRUE)
 ON DUPLICATE KEY UPDATE is_system = VALUES(is_system), is_active = VALUES(is_active);
 
 -- ============================================

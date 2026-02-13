@@ -81,17 +81,20 @@ Provisioning request mapping:
 
 4. **Update seed files after schema changes**
    - When removing/adding columns, update corresponding `R__seed_*.sql` files
+5. **Use forward-only repair migrations for legacy drift**
+   - Do not edit old released `V*.sql`
+   - Add a new `V*__repair_*.sql` with `INFORMATION_SCHEMA` guards
 
 ### ❌ DON'T
 
-1. **No idempotent DDL syntax** (MySQL doesn't fully support it)
+1. **No direct `IF NOT EXISTS` on `ALTER TABLE`** (MySQL support is limited/inconsistent)
 
    ```sql
    -- ❌ Wrong (MySQL doesn't support this for ALTER)
    ALTER TABLE pages ADD COLUMN IF NOT EXISTS robot_tag VARCHAR(50);
 
-   -- ✅ Correct (Flyway tracks execution, no need for IF NOT EXISTS)
-   ALTER TABLE pages ADD COLUMN robot_tag VARCHAR(50);
+   -- ✅ Correct (for legacy drift): use forward-only repair migration with INFORMATION_SCHEMA guards
+   -- e.g. AddColumnIfNotExists procedure in V*__repair_*.sql
    ```
 
 2. **No cross-module foreign keys in wrong order**
@@ -106,6 +109,14 @@ Provisioning request mapping:
 
 3. **No assumptions about column existence**
    - If a column was removed in migration VN, update all R\_\_ files that reference it
+4. **Do not modify historical versioned migrations**
+   - This causes checksum drift and unstable sync behavior in legacy tenants
+
+---
+
+## Governance
+
+- Policy and CI guardrails: [`migration-governance.md`](migration-governance.md)
 
 ---
 
@@ -113,22 +124,21 @@ Provisioning request mapping:
 
 ### Common Errors
 
-| Error                                     | Cause                                    | Solution                                          |
-| ----------------------------------------- | ---------------------------------------- | ------------------------------------------------- |
-| `Failed to open the referenced table 'X'` | FK references table from later module    | Move migration to the module that creates table X |
-| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update R\__seed_\*.sql to match current schema    |
-| `Duplicate column name 'X'`               | Column already exists                    | Remove ADD COLUMN or check if already migrated    |
+| Error                                     | Cause                                    | Solution                                            |
+| ----------------------------------------- | ---------------------------------------- | --------------------------------------------------- |
+| `Failed to open the referenced table 'X'` | FK references table from later module    | Move migration to the module that creates table X   |
+| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update R\__seed_\*.sql to match current schema      |
+| `Duplicate column name 'X'`               | Legacy drift / partial previous schema   | Add forward-only `V*__repair_*.sql` guard migration |
 
-### Repair Failed Migration
+### Repair Failed Migration (Forward-Only)
 
 ```powershell
 # Check migration history
 docker exec -it admincraft-mysql mysql -u root -p1234 -e \
   "USE tenant_democompany_db; SELECT * FROM flyway_<module>_history ORDER BY installed_rank DESC LIMIT 5;"
 
-# Delete failed migration record
-docker exec -it admincraft-mysql mysql -u root -p1234 -e \
-  "USE tenant_democompany_db; DELETE FROM flyway_<module>_history WHERE version = 'X' AND success = 0;"
+# Prefer: add a new repair migration and rerun sync.
+# Avoid editing old migration files.
 ```
 
 ---
@@ -151,6 +161,7 @@ Before committing a new migration:
    ```
 
 3. **Verify all modules migrated**
+
    ```powershell
    docker exec -it admincraft-mysql mysql -u root -p1234 -e \
      "USE tenant_democompany_db; SHOW TABLES LIKE 'flyway_%';"
@@ -160,10 +171,10 @@ Before committing a new migration:
 
 ## Version Bundles (Current State)
 
-| Version Range | Module            | Tables Created                                                    |
-| ------------- | ----------------- | ----------------------------------------------------------------- |
-| V1-V2         | core              | users, sites, site_languages                                      |
-| V10-V12       | component_library | components, component_types, entries                              |
-| V12-V26       | pagebuilder       | pages, page_slots, slot_components                                |
-| V20-V26       | media             | media, media_formats, responsive_media_set, component_media_links |
-| V27-V33       | product           | products, product_types, product_attributes                       |
+| Version Range | Module            | Notes                                                       |
+| ------------- | ----------------- | ----------------------------------------------------------- |
+| V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair |
+| V1-V16        | component_library | Baseline + responsive links + legacy repair                 |
+| V1-V30        | pagebuilder       | Baseline + templates + page type + legacy page repair       |
+| V20-V24       | media             | Baseline + responsive media + link type alignment           |
+| V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

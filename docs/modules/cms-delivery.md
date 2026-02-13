@@ -24,8 +24,23 @@ Base path: `/api/cms`
 
 ### Pages
 
-- `GET /api/cms/pages/{uid}?lang=TR`
-- `GET /api/cms/pages?uids=uid1&uids=uid2&lang=TR` (max 50)
+- `GET /api/cms/pages?lang=TR` (homepage)
+- `GET /api/cms/pages?pageType=ContentPage&pageLabelOrId=/about&lang=TR`
+- `GET /api/cms/pages?pageType=ProductPage&code=123&lang=TR`
+- `GET /api/cms/pages?pageType=CategoryPage&code=electronics&lang=TR`
+- `GET /api/cms/pages?pageType=SearchResultPage&lang=TR`
+- `GET /api/cms/pages?pageType=LandingPage&pageLabelOrId=/campaign&lang=TR`
+
+Public delivery resolution rules:
+
+- Only `PUBLISHED` pages and translations are returned.
+- `pageType=ProductPage` and `pageType=CategoryPage` require `code` parameter.
+- `pageType=ContentPage` and `pageType=LandingPage` require `pageLabelOrId` parameter.
+- `PRODUCT`, `CATEGORY`, `SEARCH` resolve to one published template per tenant (if misconfigured with multiple published templates, the lowest `id` is used).
+
+### Site
+
+- `GET /api/cms/site`
 
 ### Navigation
 
@@ -75,18 +90,62 @@ From `CmsDeliveryController` and `CmsMediaDeliveryController`:
   - `meta`: `{ requested, found, notFound[] }`
 - Max batch size is enforced server-side (**50**).
 
+### Page not found behavior
+
+`GET /api/cms/pages` does **not** return HTTP 404 when no matching page exists.
+It returns **HTTP 200** with `result: "ERROR"` and a localized not-found message:
+
+```json
+{ "result": "ERROR", "message": "Page not found", "data": null }
+```
+
+Frontend clients must check `payload.result === "ERROR"` (not response status) to detect a missing page and handle it as `null` — not as a thrown error.
+
+### ContentSlot component list field name
+
+`ContentSlotDeliveryResponse.ComponentsWrapper` serializes the component array as **`component`** (not `componentList`), matching the SAP Commerce / Hybris OCC contract:
+
+```json
+{
+  "contentSlots": {
+    "contentSlot": [
+      {
+        "slotId": "HeroSlot",
+        "components": {
+          "component": [ ... ]
+        }
+      }
+    ]
+  }
+}
+```
+
+Source: `backend/src/main/java/com/backend/application/dto/delivery/ContentSlotDeliveryResponse.java`
+
 DTO references (source of truth):
 
 - `backend/src/main/java/com/backend/application/dto/delivery/ComponentDeliveryResponse.java`
 - `backend/src/main/java/com/backend/application/dto/delivery/BatchDeliveryResponse.java`
 - `backend/src/main/java/com/backend/application/dto/delivery/PageDeliveryResponse.java`
-- `backend/src/main/java/com/backend/application/dto/delivery/BatchPageDeliveryResponse.java`
+- `backend/src/main/java/com/backend/application/dto/delivery/SiteDeliveryResponse.java`
 
 ## Frontend integration
 
-Frontend client code exists for CMS component delivery (and can be extended for other delivery endpoints):
+### Admin Angular storefront
 
 - `storefront/src/app/cms/` (delivery service + types)
+
+### Next.js headless storefront (`storefront-nextjs/`)
+
+- API client: `storefront-nextjs/lib/cms-client.ts`
+- Type definitions: `storefront-nextjs/lib/types.ts`
+- CMS rendering components: `storefront-nextjs/components/cms/`
+
+Key patterns used in the Next.js client:
+
+- `resolvePage` and `fetchSiteConfig` are wrapped with React `cache()` to deduplicate identical calls within a single SSR render cycle (e.g. `generateMetadata` + page component both calling the same endpoint).
+- `resolvePage` uses flat primitive arguments (`lang, pageType, pageLabelOrId, code`) instead of an object — required for `cache()` identity comparison to work correctly.
+- HTTP 200 + `result: "ERROR"` is treated as `null` (not an error throw), matching the backend's page-not-found contract.
 
 ## Security & tenant isolation
 

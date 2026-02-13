@@ -24,6 +24,12 @@ import com.backend.infrastructure.tenant.TenantFilter;
 @EnableMethodSecurity(prePostEnabled = true) // Enable @PreAuthorize and @PostAuthorize annotations
 public class SecurityConfig {
 
+        private final CorsProperties corsProperties;
+
+        public SecurityConfig(CorsProperties corsProperties) {
+                this.corsProperties = corsProperties;
+        }
+
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder(12); // Higher rounds for better security
@@ -66,19 +72,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                // Includes subdomain-based origins for multi-tenant authentication (Sprint 17)
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:4200", // Angular dev server (default)
-                                "http://localhost:4201", // Angular dev server (current project)
-                                "http://localhost:3000", // React dev server
-                                "http://localhost:8080", // Backend server
-                                "http://localhost:8081", // Alternative backend server
-                                "https://localhost:4200", // HTTPS Angular dev server (default)
-                                "https://localhost:4201", // HTTPS Angular dev server (current project)
-                                "https://localhost:3000", // HTTPS React dev server
-                                "https://localhost:8080", // HTTPS Backend server
-                                "https://localhost:8081" // HTTPS Alternative backend server
-                ));
+                configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
                 configuration.setAllowedOriginPatterns(Arrays.asList(
                                 "http://*.localhost:4200",
                                 "http://*.localhost:4201",

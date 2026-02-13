@@ -50,6 +50,16 @@ public class ComponentMediaLinkRepositoryImpl implements ComponentMediaLinkRepos
   }
 
   @Override
+  public boolean existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+      Long componentId,
+      Long mediaId,
+      ComponentMediaLink.LinkType linkType,
+      Long entryId) {
+    return jpaRepository.existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+        componentId, mediaId, linkType, entryId);
+  }
+
+  @Override
   @Transactional
   public void deleteByComponentId(Long componentId) {
     jpaRepository.deleteByComponentId(componentId);

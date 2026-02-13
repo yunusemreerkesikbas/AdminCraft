@@ -36,6 +36,16 @@ public interface ComponentMediaLinkRepository {
   List<ComponentMediaLink> findByResponsiveSetId(Long responsiveSetId);
 
   /**
+   * Check if a link already exists for the given component + media + link type + entry.
+   * Used to prevent duplicate links when DB uniqueness is relaxed for NULL entry_id.
+   */
+  boolean existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+      Long componentId,
+      Long mediaId,
+      ComponentMediaLink.LinkType linkType,
+      Long entryId);
+
+  /**
    * Delete all links for a component.
    */
   void deleteByComponentId(Long componentId);

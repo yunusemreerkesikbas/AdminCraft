@@ -9,7 +9,7 @@ AdminCraft is a **multi-tenant SaaS platform** built with Clean Architecture pri
 - Frontend: Angular 19, TypeScript 5.6.3, Signals, RxJS
 - Architecture: Clean Architecture with strict layer boundaries
 
-**Key Principle:** Physical tenant isolation via separate databases (`ac_tenant_{id}`), NO `tenant_id` columns.
+**Key Principle:** Physical tenant isolation via separate databases (`ac_subdomain_{id}`), NO `tenant_id` columns.
 
 ---
 

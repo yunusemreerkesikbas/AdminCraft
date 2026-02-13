@@ -323,18 +323,20 @@ public class ComponentServiceImpl implements ComponentService {
             componentMediaLinkRepository.deleteByComponentId(componentId);
 
             if (responsiveMedia.getDesktopMedia() != null) {
-                componentMediaLinkRepository.save(ComponentMediaLink.forComponentResponsive(
+                ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
                         componentId,
                         responsiveMedia.getDesktopMedia().getId(),
                         responsiveMedia.getId(),
-                        true));
+                        true);
+                saveMediaLinkIfMissing(link);
             }
             if (responsiveMedia.getMobileMedia() != null) {
-                componentMediaLinkRepository.save(ComponentMediaLink.forComponentResponsive(
+                ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
                         componentId,
                         responsiveMedia.getMobileMedia().getId(),
                         responsiveMedia.getId(),
-                        false));
+                        false);
+                saveMediaLinkIfMissing(link);
             }
 
         } else {
@@ -349,6 +351,17 @@ public class ComponentServiceImpl implements ComponentService {
         }
 
         return saved;
+    }
+
+    private void saveMediaLinkIfMissing(ComponentMediaLink link) {
+        boolean exists = componentMediaLinkRepository.existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
+                link.getComponentId(),
+                link.getMediaId(),
+                link.getLinkType(),
+                link.getEntryId());
+        if (!exists) {
+            componentMediaLinkRepository.save(link);
+        }
     }
 
 }

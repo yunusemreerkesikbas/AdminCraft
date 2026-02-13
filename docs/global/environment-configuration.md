@@ -13,7 +13,7 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 | `../../backend/src/main/resources/application-stage.yml` | Staging overrides                    |
 | `../../backend/src/main/resources/application-prod.yml`  | Production overrides                 |
 
-### Frontend (Angular)
+### Frontend — Admin (Angular)
 
 | File                                                     | Purpose              |
 | -------------------------------------------------------- | -------------------- |
@@ -21,6 +21,15 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 | `../../storefront/src/environments/environment.stage.ts` | Staging config       |
 | `../../storefront/src/environments/environment.prod.ts`  | Production config    |
 | `../../storefront/angular.json`                          | Build configurations |
+
+### Frontend — Headless Storefront (Next.js)
+
+| File                                    | Purpose                                        |
+| --------------------------------------- | ---------------------------------------------- |
+| `../../storefront-nextjs/.env.development` | Development config (loaded by `next dev`)   |
+| `../../storefront-nextjs/.env.staging`     | Staging config (loaded via `dotenv-cli`)    |
+| `../../storefront-nextjs/.env.production`  | Production config (loaded by `next build`)  |
+| `../../storefront-nextjs/.env.local`       | Local overrides — highest priority, gitignored |
 
 ## Rules and Invariants
 
@@ -31,11 +40,18 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 3. **Credentials**: Dev uses defaults, Stage/Prod require environment variables
 4. **No defaults for sensitive values in Stage/Prod**: `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD` must be set
 
-### Frontend
+### Frontend — Angular
 
 1. **File replacement**: Angular replaces `environment.ts` with profile-specific file at build time
 2. **Consistent structure**: All environment files must have the same properties
 3. **No runtime configuration**: API URLs are baked in at build time
+
+### Frontend — Next.js Storefront
+
+1. **Next.js env loading order**: `.env.local` > `.env.{NODE_ENV}` > `.env`
+2. **Staging**: Not a native `NODE_ENV` value — use `dotenv-cli` (`dotenv -e .env.staging -- next ...`)
+3. **`.env.local` always wins**: Use this for local overrides (tenant ID, API URL, etc.) — never commit it
+4. **SSR vs Static export**: Default mode is SSR (`next start`). Set `NEXT_OUTPUT=export` for static HTML export (no server required, but server-only features like `cache()` and `revalidate` are disabled)
 
 ## Environment Comparison
 
@@ -51,7 +67,7 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 | Log Level      | `DEBUG`  | `INFO`          | `INFO`          |
 | Auto-sync      | `false`  | `true`          | `true`          |
 
-### Frontend
+### Frontend — Angular
 
 | Setting              | Dev            | Stage                           | Prod                         |
 | -------------------- | -------------- | ------------------------------- | ---------------------------- |
@@ -63,6 +79,30 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 | `maxRetryAttempts`   | `0`            | `0`                             | `3`                          |
 | Source Maps          | yes            | yes                             | no                           |
 | Optimization         | no             | yes                             | yes                          |
+
+### Frontend — Next.js Storefront
+
+| Variable                       | Dev                             | Stage                                  | Prod                             |
+| ------------------------------ | ------------------------------- | -------------------------------------- | -------------------------------- |
+| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://api-staging.admincraft.io/api`| `https://api.admincraft.io/api`  |
+| `TENANT_SUBDOMAIN`             | `demo`                          | tenant subdomain                       | tenant subdomain                 |
+| `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
+| `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
+| `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
+
+Available scripts:
+
+| Script                   | Description                                    |
+| ------------------------ | ---------------------------------------------- |
+| `yarn dev`               | Dev server with `.env.development`             |
+| `yarn dev:stage`         | Dev server with `.env.staging`                 |
+| `yarn build`             | SSR production build                           |
+| `yarn build:dev`         | SSR build with `.env.development`              |
+| `yarn build:stage`       | SSR build with `.env.staging`                  |
+| `yarn build:static`      | Static export (CSR) with `.env.production`     |
+| `yarn start`             | SSR production server                          |
+| `yarn start:stage`       | SSR server with `.env.staging`                 |
+| `yarn start:static`      | Serve `out/` folder (for static export builds) |
 
 ### Language Configuration
 
@@ -106,9 +146,13 @@ The `supportedLanguages` and `defaultLanguage` values control the Admin UI langu
 cd backend
 mvn spring-boot:run
 
-# Frontend (uses development config)
+# Admin Angular storefront (uses development config)
 cd storefront
 npm run start:dev
+
+# Next.js headless storefront (uses .env.development + .env.local)
+cd storefront-nextjs
+yarn dev
 ```
 
 ### Running with Specific Profile
@@ -117,8 +161,11 @@ npm run start:dev
 # Backend with stage profile
 mvn spring-boot:run -Dspring-boot.run.profiles=stage
 
-# Frontend with stage config
+# Angular with stage config
 npm run start:stage
+
+# Next.js with stage config
+yarn dev:stage
 ```
 
 ### Build for Production
@@ -128,8 +175,14 @@ npm run start:stage
 mvn clean package -DskipTests
 java -jar target/*.jar --spring.profiles.active=prod
 
-# Frontend (optimized build)
+# Angular (optimized build)
 npm run build:prod
+
+# Next.js SSR build
+yarn build
+
+# Next.js static (CSR) build
+yarn build:static
 ```
 
 ## Required Environment Variables

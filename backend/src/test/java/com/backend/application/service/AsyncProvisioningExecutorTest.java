@@ -1,9 +1,16 @@
 package com.backend.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
+import org.springframework.core.env.Profiles;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,9 +19,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.TenantModule;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.ProvisioningJobRepository;
 import com.backend.domain.repository.TenantModuleRepository;
 import com.backend.domain.repository.TenantRepository;
@@ -34,6 +44,9 @@ class AsyncProvisioningExecutorTest {
         @Mock
         private TenantMigrationService tenantMigrationService;
 
+        @Mock
+        private Environment environment;
+
         @Captor
         private ArgumentCaptor<List<TenantModule>> tenantModulesCaptor;
 
@@ -47,7 +60,8 @@ class AsyncProvisioningExecutorTest {
                                 tenantRepository,
                                 jobRepository,
                                 tenantModuleRepository,
-                                tenantMigrationService);
+                                tenantMigrationService,
+                                environment);
 
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");
                 ReflectionTestUtils.setField(executor, "dbPort", "3306");
@@ -134,5 +148,74 @@ class AsyncProvisioningExecutorTest {
                 assertThat(tenantModules.get(0).getModuleCode()).isEqualTo("core");
                 assertThat(tenantModules.get(1).getModuleCode()).isEqualTo("pagebuilder");
                 assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("media");
+        }
+
+        @Test
+        void canRecreateDatabase_returnsTrue_whenPendingTenantNoModules_andDevProfile() {
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(true);
+                Tenant tenant = new Tenant();
+                tenant.setStatus(TenantStatus.PENDING);
+                when(tenantRepository.findById(testTenantId)).thenReturn(Optional.of(tenant));
+                when(tenantModuleRepository.findByTenantId(testTenantId)).thenReturn(List.of());
+
+                boolean result = ReflectionTestUtils.invokeMethod(executor, "canRecreateDatabase", testTenantId);
+
+                assertThat(result).isTrue();
+        }
+
+        @Test
+        void canRecreateDatabase_returnsFalse_whenTenantHasModules() {
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(true);
+                Tenant tenant = new Tenant();
+                tenant.setStatus(TenantStatus.PENDING);
+                when(tenantRepository.findById(testTenantId)).thenReturn(Optional.of(tenant));
+                when(tenantModuleRepository.findByTenantId(testTenantId))
+                                .thenReturn(List.of(TenantModule.builder().tenantId(testTenantId).moduleCode("core").build()));
+
+                boolean result = ReflectionTestUtils.invokeMethod(executor, "canRecreateDatabase", testTenantId);
+
+                assertThat(result).isFalse();
+        }
+
+        @Test
+        void canRecreateDatabase_returnsFalse_whenTenantNotPending() {
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(true);
+                Tenant tenant = new Tenant();
+                tenant.setStatus(TenantStatus.ACTIVE);
+                when(tenantRepository.findById(testTenantId)).thenReturn(Optional.of(tenant));
+                when(tenantModuleRepository.findByTenantId(testTenantId)).thenReturn(List.of());
+
+                boolean result = ReflectionTestUtils.invokeMethod(executor, "canRecreateDatabase", testTenantId);
+
+                assertThat(result).isFalse();
+        }
+
+        @Test
+        void canRecreateDatabase_returnsFalse_whenNotDevOrTestProfile() {
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(false);
+
+                boolean result = ReflectionTestUtils.invokeMethod(executor, "canRecreateDatabase", testTenantId);
+
+                assertThat(result).isFalse();
+        }
+
+        @Test
+        void validateDatabaseName_throwsForInvalidName() {
+                assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(executor, "validateDatabaseName", "invalid_db"))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("Invalid database name");
+        }
+
+        @Test
+        void validateDatabaseName_throwsForNull() {
+                assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(executor, "validateDatabaseName", new Object[] { null }))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("Invalid database name");
+        }
+
+        @Test
+        void validateDatabaseName_acceptsValidName() {
+                ReflectionTestUtils.invokeMethod(executor, "validateDatabaseName", "ac_tenant_1");
+                ReflectionTestUtils.invokeMethod(executor, "validateDatabaseName", "ac_tenant_123");
         }
 }

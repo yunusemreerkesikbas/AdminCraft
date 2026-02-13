@@ -1,0 +1,39 @@
+name: Migration Guardrails
+
+on:
+  pull_request:
+    paths:
+      - "backend/src/main/resources/db/**"
+      - "scripts/migrations/**"
+      - ".github/workflows/migration-guardrails.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "backend/src/main/resources/db/**"
+      - "scripts/migrations/**"
+      - ".github/workflows/migration-guardrails.yml"
+
+jobs:
+  migration-guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run versioned migration immutability check
+        run: bash scripts/migrations/check-versioned-immutability.sh
+
+      - name: Run migration lint
+        run: bash scripts/migrations/lint-migrations.sh
+
+      - name: Backend compile sanity
+        run: ./mvnw -q -pl backend -DskipTests compile

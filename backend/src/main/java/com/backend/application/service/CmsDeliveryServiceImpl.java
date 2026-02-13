@@ -7,12 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
-import com.backend.application.dto.delivery.BatchPageDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
+import com.backend.application.dto.delivery.SiteDeliveryResponse;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Language;
 import com.backend.domain.port.TenantContextPort;
+import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.TenantRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   private final PageDeliveryService pageDeliveryService;
   private final TenantContextPort tenantContext;
   private final TenantRepository tenantRepository;
+  private final SiteRepository siteRepository;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -42,15 +44,16 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   }
 
   @Override
-  public Optional<PageDeliveryResponse> getPageByUid(String uid, Language lang) {
+  public Optional<PageDeliveryResponse> resolvePageForDelivery(String pageType, String pageLabelOrId, String code,
+      Language lang) {
     Language resolvedLang = lang != null ? lang : getDefaultLanguage();
-    return pageDeliveryService.getPageByUid(uid, resolvedLang);
+    return pageDeliveryService.resolvePageForDelivery(pageType, pageLabelOrId, code, resolvedLang);
   }
 
   @Override
-  public BatchPageDeliveryResponse getPagesByUids(List<String> uids, Language lang) {
-    Language resolvedLang = lang != null ? lang : getDefaultLanguage();
-    return pageDeliveryService.getPagesByUids(uids, resolvedLang);
+  public Optional<SiteDeliveryResponse> getSiteForDelivery() {
+    return siteRepository.findFirstByOrderByIdAsc()
+        .map(SiteDeliveryResponse::from);
   }
 
   @Override

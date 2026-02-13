@@ -5,7 +5,27 @@
 
 -- ComponentMediaLinks: Track which components/entries use which media
 -- Enables "Linked Components" feature in Media Detail dialog
-CREATE TABLE component_media_links (
+DROP PROCEDURE IF EXISTS CreateTableIfNotExists;
+DELIMITER //
+CREATE PROCEDURE CreateTableIfNotExists(
+    IN dbName VARCHAR(100),
+    IN tableName VARCHAR(100),
+    IN tableDef TEXT
+)
+BEGIN
+    IF (SELECT count(*) FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = dbName
+        AND TABLE_NAME = tableName) = 0 THEN
+
+        SET @ddl = CONCAT('CREATE TABLE ', tableName, ' ', tableDef);
+        PREPARE stmt FROM @ddl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
+
+CALL CreateTableIfNotExists(DATABASE(), 'component_media_links', '(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
     -- Component reference (always required)
@@ -15,7 +35,7 @@ CREATE TABLE component_media_links (
     media_id BIGINT NOT NULL,
 
     -- Link type for categorization (VARCHAR for JPA compatibility)
-    link_type VARCHAR(20) NOT NULL DEFAULT 'ENTRY_MEDIA',
+    link_type VARCHAR(20) NOT NULL DEFAULT ''ENTRY_MEDIA'',
 
     -- Entry reference (NULL for component-level links)
     entry_id BIGINT NULL,
@@ -42,10 +62,9 @@ CREATE TABLE component_media_links (
     INDEX idx_cml_entry (entry_id),
     INDEX idx_cml_responsive_set (responsive_set_id),
 
-    -- Generated column to make UNIQUE constraint work with NULL entry_id
-    -- MySQL treats NULLs as distinct in unique keys, so we coalesce to 0
-    entry_id_key BIGINT GENERATED ALWAYS AS (COALESCE(entry_id, 0)) STORED,
+    -- Prevent duplicate links per component/entry
+    -- Note: NULL entry_id will allow multiple component-level links.
+    UNIQUE KEY uk_cml_component_media_type (component_id, media_id, link_type, entry_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-    -- Prevent duplicate links (uses entry_id_key to handle NULL correctly)
-    UNIQUE KEY uk_cml_component_media_type (component_id, media_id, link_type, entry_id_key)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP PROCEDURE IF EXISTS CreateTableIfNotExists;

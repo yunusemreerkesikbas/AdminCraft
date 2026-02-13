@@ -5,9 +5,11 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 @lombok.RequiredArgsConstructor
 public class AsyncProvisioningExecutor {
 
+  private static final Pattern VALID_DB_NAME = Pattern.compile("^ac_[a-z0-9_]+_\\d+$");
+
   private final TenantRepository tenantRepository;
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
   private final TenantMigrationService tenantMigrationService;
+  private final Environment environment;
 
   @Value("${spring.datasource.tenant.host}")
   private String dbHost;
@@ -58,7 +63,7 @@ public class AsyncProvisioningExecutor {
       log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
       updateJobProgress(jobId, 20);
-      createDatabaseIfNotExists(dbName);
+      prepareDatabaseForProvisioning(tenantId, dbName);
 
       updateJobProgress(jobId, 60);
       tenantMigrationService.migrateTenant(dbName, modules);
@@ -105,6 +110,13 @@ public class AsyncProvisioningExecutor {
   }
 
   private void createDatabaseIfNotExists(String dbName) {
+    createDatabaseIfNotExists(dbName, false);
+  }
+
+  private void createDatabaseIfNotExists(String dbName, boolean recreateIfExists) {
+    validateDatabaseName(dbName);
+    String quotedDbName = "`" + dbName + "`";
+
     String jdbcUrl = String.format("jdbc:mysql://%s:%s?useSSL=false&allowPublicKeyRetrieval=true",
         dbHost, dbPort);
 
@@ -118,9 +130,21 @@ public class AsyncProvisioningExecutor {
         Connection conn = ds.getConnection();
         Statement stmt = conn.createStatement()) {
 
-      String createDbSql = String.format(
-          "CREATE DATABASE IF NOT EXISTS %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
-          dbName);
+      boolean exists = databaseExists(conn, dbName);
+      boolean hasTables = exists && databaseHasTables(conn, dbName);
+
+      if (hasTables) {
+        if (recreateIfExists) {
+          log.warn("Database {} already contains tables. Dropping for clean provisioning.", dbName);
+          stmt.execute("DROP DATABASE IF EXISTS " + quotedDbName);
+        } else {
+          throw new IllegalStateException(
+              "Tenant database already initialized: " + dbName + ". Use sync migrations instead of full provision.");
+        }
+      }
+
+      String createDbSql = "CREATE DATABASE IF NOT EXISTS " + quotedDbName
+          + " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
       stmt.execute(createDbSql);
 
       log.info("Database created or already exists: {}", dbName);
@@ -128,6 +152,61 @@ public class AsyncProvisioningExecutor {
     } catch (Exception e) {
       log.error("Failed to create database: {}", dbName, e);
       throw new RuntimeException("Database creation failed", e);
+    }
+  }
+
+  private void prepareDatabaseForProvisioning(Long tenantId, String dbName) {
+    boolean allowRecreate = canRecreateDatabase(tenantId);
+    createDatabaseIfNotExists(dbName, allowRecreate);
+  }
+
+  private void validateDatabaseName(String dbName) {
+    if (dbName == null || !VALID_DB_NAME.matcher(dbName).matches()) {
+      throw new IllegalArgumentException("Invalid database name: " + dbName
+          + ". Must match pattern ac_<subdomain>_<tenant_id> (e.g. ac_htalks_32).");
+    }
+  }
+
+  private boolean canRecreateDatabase(Long tenantId) {
+    if (!isDestructiveRecreateAllowed()) {
+      return false;
+    }
+    Tenant tenant = tenantRepository.findById(tenantId)
+        .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
+    boolean hasModules = !tenantModuleRepository.findByTenantId(tenantId).isEmpty();
+
+    return tenant.getStatus() == com.backend.domain.enums.TenantStatus.PENDING && !hasModules;
+  }
+
+  private boolean isDestructiveRecreateAllowed() {
+    return environment.acceptsProfiles(
+        org.springframework.core.env.Profiles.of("dev", "test"));
+  }
+
+  private boolean databaseExists(Connection conn, String dbName) {
+    String sql = "SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME = ?";
+    try (var ps = conn.prepareStatement(sql)) {
+      ps.setString(1, dbName);
+      try (var rs = ps.executeQuery()) {
+        return rs.next();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to check database existence", e);
+    }
+  }
+
+  private boolean databaseHasTables(Connection conn, String dbName) {
+    String sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ?";
+    try (var ps = conn.prepareStatement(sql)) {
+      ps.setString(1, dbName);
+      try (var rs = ps.executeQuery()) {
+        if (!rs.next()) {
+          return false;
+        }
+        return rs.getInt(1) > 0;
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to check database tables", e);
     }
   }
 

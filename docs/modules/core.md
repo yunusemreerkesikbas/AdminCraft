@@ -81,7 +81,7 @@ Admin features built on core data:
 
 ## Security & Tenant Isolation
 
-- Core data lives in tenant databases (`ac_tenant_{id}`) and is always tenant-scoped
+- Core data lives in tenant databases (`ac_subdomain_{id}`) and is always tenant-scoped
 - Tenant resolution is enforced by [`TenantFilter.java`](../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java)
 - User management security details in [`user-management.md`](user-management.md#security--tenant-isolation)
 
