@@ -9,10 +9,9 @@
     [submitDisabled]="!canSave()"
     [isSubmitting]="isSubmitting()"
     [submitLabel]="
-        (mode() === 'create'
+        mode() === 'create'
             ? 'admin.dialog.actions.create'
             : 'admin.dialog.actions.save'
-        ) | transloco
     "
     cancelLabel="admin.dialog.actions.close"
     (closed)="cancel()"

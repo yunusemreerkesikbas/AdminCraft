@@ -1,5 +1,5 @@
 import { SpaLocalizedFormDialogData } from '@/app/shared/components/spa-dialog-base';
-import { CommonModule, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, ViewEncapsulation } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,7 +29,6 @@ export interface PageEditDialogData extends SpaLocalizedFormDialogData<PageDetai
     selector: 'spa-page-edit-dialog',
     standalone: true,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatIconModule,
         TranslocoModule,

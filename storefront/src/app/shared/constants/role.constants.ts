@@ -1,0 +1,2 @@
+export const SUPER_ADMIN_ROLE = 'SUPER_ADMIN';
+export const TENANT_ADMIN_ROLE = 'TENANT_ADMIN';

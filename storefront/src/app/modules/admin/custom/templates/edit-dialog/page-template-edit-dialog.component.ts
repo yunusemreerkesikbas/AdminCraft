@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     computed,
@@ -48,7 +47,6 @@ export interface PageTemplateEditDialogData {
     styleUrls: ['./page-template-edit-dialog.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatButtonModule,
 
@@ -141,7 +139,7 @@ export class PageTemplateEditDialogComponent
                         }))
                     );
                 },
-                error: () => console.error('Failed to load slots'),
+                error: () => this.notify.alert('admin.pageTemplates.messages.loadFailed'),
             });
     }
 
@@ -209,7 +207,8 @@ export class PageTemplateEditDialogComponent
     save(): void {
         if (this.isSystemTemplate()) {
             this.notify.alert(
-                `Cannot modify system template: ${this.data?.template?.uid ?? ''}`
+                'admin.pageTemplates.messages.systemTemplateCannotModify',
+                { params: { templateUid: this.data?.template?.uid ?? '' } }
             );
             return;
         }
@@ -268,7 +267,7 @@ export class PageTemplateEditDialogComponent
             .subscribe({
                 next: () => this.#onCreateSuccess(),
                 error: () => {
-                    this.notify.success(
+                    this.notify.warning(
                         'admin.pageTemplates.messages.createPartial'
                     );
                     this.setSubmitting(false);
@@ -316,8 +315,12 @@ export class PageTemplateEditDialogComponent
     }
 
     #syncTemplateSlots(templateId: number) {
-        const existingSlotNames = new Set(
-            (this.data?.template?.slots ?? []).map((slot) => slot.slotName)
+        const existingSlots = this.data?.template?.slots ?? [];
+        const existingSlotMap = new Map(
+            existingSlots.map((slot) => [
+                slot.slotName,
+                { position: slot.position, isRequired: slot.isRequired, sortOrder: slot.sortOrder }
+            ])
         );
         const currentSlots = this.slotsSig()
             .map((slot, index) => ({
@@ -329,9 +332,17 @@ export class PageTemplateEditDialogComponent
         const currentSlotNames = currentSlots.map((slot) => slot.slotName);
 
         const slotsToCreate = currentSlots.filter(
-            (slot) => !existingSlotNames.has(slot.slotName)
+            (slot) => !existingSlotMap.has(slot.slotName)
         );
-        const slotsToDelete = (this.data?.template?.slots ?? [])
+        const slotsToUpdate = currentSlots.filter((slot) => {
+            if (!existingSlotMap.has(slot.slotName)) return false;
+            const existing = existingSlotMap.get(slot.slotName)!;
+            return (
+                existing.position !== slot.position ||
+                existing.isRequired !== slot.isRequired
+            );
+        });
+        const slotsToDelete = existingSlots
             .map((slot) => slot.slotName)
             .filter((slotName) => !currentSlotNames.includes(slotName));
 
@@ -348,6 +359,17 @@ export class PageTemplateEditDialogComponent
               )
             : of([]);
 
+        const updateSlots$ = slotsToUpdate.length
+            ? forkJoin(
+                  slotsToUpdate.map((slot) =>
+                      this.#templateService.updateSlot(templateId, slot.slotName, {
+                          position: slot.position,
+                          isRequired: slot.isRequired,
+                      })
+                  )
+              )
+            : of([]);
+
         const deleteSlots$ = slotsToDelete.length
             ? forkJoin(
                   slotsToDelete.map((slotName) =>
@@ -357,6 +379,7 @@ export class PageTemplateEditDialogComponent
             : of([]);
 
         return addSlots$.pipe(
+            switchMap(() => updateSlots$),
             switchMap(() => deleteSlots$),
             switchMap(() =>
                 currentSlotNames.length

@@ -659,6 +659,7 @@ export const langTR = {
                 deleteSuccess: 'Sayfa şablonu başarıyla silindi',
                 deleteFailed: 'Sayfa şablonu silinemedi',
                 loadFailed: 'Sayfa şablonları yüklenemedi',
+                systemTemplateCannotModify: 'Sistem şablonu değiştirilemez: {{templateUid}}',
             },
             confirmDelete:
                 '"{{name}}" şablonunu silmek istediğinize emin misiniz?',

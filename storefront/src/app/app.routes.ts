@@ -1,5 +1,4 @@
 import { Route } from '@angular/router';
-import { environment } from '@environments/environment';
 import { initialDataResolver } from 'app/app.resolvers';
 import { AuthGuard } from 'app/core/auth/guards/auth.guard';
 import { moduleGuard } from 'app/core/auth/guards/module.guard';
@@ -11,8 +10,6 @@ import {
 import { rootRedirectGuard } from 'app/core/auth/guards/root-redirect.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
 import { LayoutComponent } from 'app/layout/layout.component';
-
-const DEFAULT_LANGUAGE = environment.defaultLanguage;
 
 export const appRoutes: Route[] = [
     { 

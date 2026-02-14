@@ -123,6 +123,7 @@ export const langEN = {
             edit: 'Edit',
             close: 'Close',
             clearAll: 'Clear All',
+            select: 'Select',
             selectComponent: 'Select Component',
             selected: 'selected',
             status: {
@@ -662,6 +663,7 @@ export const langEN = {
                 deleteSuccess: 'Page template deleted successfully',
                 deleteFailed: 'Failed to delete page template',
                 loadFailed: 'Failed to load page templates',
+                systemTemplateCannotModify: 'Cannot modify system template: {{templateUid}}',
             },
             confirmDelete: 'Are you sure you want to delete "{{name}}"?',
         },
