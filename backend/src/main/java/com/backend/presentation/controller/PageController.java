@@ -27,10 +27,10 @@ import com.backend.application.dto.request.UpdatePageCompositeRequest;
 import com.backend.application.service.PageI18nService;
 import com.backend.application.service.PageService;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.response.PageDetailResponse;
-import com.backend.presentation.dto.response.PageI18nResponse;
-import com.backend.presentation.dto.response.PageListResponse;
-import com.backend.presentation.dto.response.PageResponse;
+import com.backend.application.dto.response.PageDetailResponse;
+import com.backend.application.dto.response.PageI18nResponse;
+import com.backend.application.dto.response.PageListResponse;
+import com.backend.application.dto.response.PageResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 

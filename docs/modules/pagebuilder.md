@@ -12,6 +12,9 @@ Tenant migrations:
   - `V12__page_slots.sql`
   - `V15__page_templates.sql`
   - `V16__remove_page_categories.sql`
+  - `V33__backfill_page_slots_from_templates.sql` (template/page slot alignment backfill)
+  - `R__zz_seed_page_slots.sql` (active repeatable slot seed; runs after template/page seeds)
+  - `R__seed_page_slots.sql` is kept as deprecated no-op to avoid ordering issues in fresh tenants
   - (and other evolutions under the same folder)
 
 ## Admin API (tenant-scoped, authenticated)
@@ -27,6 +30,15 @@ Base path: `/api/pages`
 - `GET /api/pages/{id}` (supports `?include=translations`)
 - `PUT /api/pages/{id}`
 - `DELETE /api/pages/{id}`
+- `GET /api/pages/{id}/slots`
+- `POST /api/pages/{id}/slots`
+- `PUT /api/pages/{id}/slots/{slotName}`
+- `DELETE /api/pages/{id}/slots/{slotName}`
+- `POST /api/pages/{id}/slots/{slotName}/components`
+- `DELETE /api/pages/{id}/slots/{slotName}/components/{componentId}`
+- `PUT /api/pages/{id}/slots/{slotName}/reorder` (`ReorderRequest.items`)
+- `GET /api/pages/shared/slots`
+- `POST /api/pages/shared/slots`
 
 i18n:
 
@@ -41,6 +53,19 @@ Composite operations:
 - `PUT /api/pages/{id}/composite`
 
 These endpoints are the **atomic-write** path for base + translations in one request.
+
+Slots contract (`GET /api/pages/{id}/slots`):
+
+- `GET /api/pages/{id}` returns page metadata/translation info; slot tree is read from the dedicated `/slots` endpoint.
+- If the page has a template, returned slots are **template-driven effective slots**.
+- Slot list/order/position are sourced from `template_slots`.
+- Component source priority for each template slot:
+  - page-specific slot (`page_slots.page_id = {id}`)
+  - shared slot fallback (`page_slots.page_id IS NULL AND is_shared = true`)
+- This matches Hybris-style behavior where `PageTemplate` defines the content-slot skeleton.
+- When component operations target a template/shared fallback slot that is not yet materialized in `page_slots`,
+  backend auto-materializes a page-specific slot first, then applies the component mutation.
+- Template-managed slot structure cannot be changed from page slot endpoints (create/update/delete); use template slot APIs.
 
 ### Page templates
 
@@ -61,6 +86,13 @@ Base path: `/api/page-templates`
 - i18n:
   - `GET /api/page-templates/{id}/i18n/{language}`
   - `PUT /api/page-templates/{id}/i18n/{language}`
+
+Template-to-page propagation:
+
+- Adding a template slot creates the missing page slots for all pages assigned to that template.
+- Removing a template slot removes the corresponding page slots from assigned pages.
+- Reordering template slots propagates sort order to existing page slots of assigned pages.
+- Assigning/changing a page template synchronizes page slot structure with template slots.
 
 ## Frontend integration (Admin)
 

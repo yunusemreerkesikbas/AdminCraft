@@ -62,7 +62,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
         .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
 
     List<String> resolvedModules = resolveProvisioningModules(request.getModules());
-
     List<String> orderedModules = migrationService.getOrderedModules(resolvedModules);
     log.info("Modules reordered for tenant {}: requested={}, resolved={}, ordered={}",
         tenantId, request.getModules(), resolvedModules, orderedModules);
@@ -83,16 +82,16 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
       job = jobRepository.save(job);
 
-      String dbName = tenant.getDatabaseName();
-      if (dbName == null || dbName.isEmpty() || (dbName.startsWith("tenant_") && dbName.endsWith("_db"))) {
-        dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+      String dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+      if (tenant.getDatabaseName() == null || tenant.getDatabaseName().isEmpty()
+          || !dbName.equals(tenant.getDatabaseName())) {
         tenant.setDatabaseName(dbName);
         tenantRepository.save(tenant);
       }
 
       final Long fJobId = job.getId();
       final String fDbName = dbName;
-      final java.util.List<String> fModules = orderedModules;
+      final java.util.List<String> fModules = List.copyOf(orderedModules);
       final String fCorrelationId = correlationId;
 
       if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -161,16 +160,16 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
       job = jobRepository.save(job);
 
-      String dbName = tenant.getDatabaseName();
-      if (dbName == null || dbName.isEmpty() || (dbName.startsWith("tenant_") && dbName.endsWith("_db"))) {
-        dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+      String dbName = Tenant.formatDatabaseName(tenant.getSubdomain(), tenant.getId());
+      if (tenant.getDatabaseName() == null || tenant.getDatabaseName().isEmpty()
+          || !dbName.equals(tenant.getDatabaseName())) {
         tenant.setDatabaseName(dbName);
         tenantRepository.save(tenant);
       }
 
       final Long fJobId = job.getId();
       final String fDbName = dbName;
-      final List<String> fModules = orderedModules;
+      final List<String> fModules = List.copyOf(orderedModules);
       final String fCorrelationId = correlationId;
       if (TransactionSynchronizationManager.isSynchronizationActive()) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

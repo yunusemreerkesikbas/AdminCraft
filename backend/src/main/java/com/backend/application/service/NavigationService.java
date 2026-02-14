@@ -63,5 +63,7 @@ public interface NavigationService {
 
   NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request);
 
+  Optional<NavigationDeliveryResponse> getNavigationById(Long id);
+
   Optional<NavigationDeliveryResponse> getNavigationByUid(String uid);
 }

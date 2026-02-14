@@ -112,9 +112,11 @@ public class Tenant {
         }
     }
 
+    /** Database name format: ac_{subdomain}_{id}, id from 10000 (e.g. ac_mulayim_10034). */
     public static String formatDatabaseName(String subdomain, Long tenantId) {
         String safe = subdomain == null ? "" : subdomain.replaceAll("[^a-zA-Z0-9]", "_").toLowerCase(Locale.ROOT);
-        return "ac_" + safe + "_" + (tenantId != null ? tenantId : 0);
+        long id = tenantId != null ? tenantId : 0;
+        return "ac_" + safe + "_" + (10000 + id);
     }
 
     @PreUpdate

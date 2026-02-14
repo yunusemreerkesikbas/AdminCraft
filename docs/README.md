@@ -1,6 +1,6 @@
 # AdminCraft Documentation
 
-AdminCraft is a multi-tenant SaaS CMS platform built with **Spring Boot (Java 21)** and **Angular 19**.
+AdminCraft is a platform for **customizable project solutions** built with **Spring Boot (Java 21)** and **Angular 19**.
 The platform uses **database-per-tenant** isolation (`platform_management` + `ac_tenant_{id}`) and a Clean Architecture layout.
 
 ## How to use these docs
@@ -57,7 +57,9 @@ Next.js 16 App Router storefront consuming the CMS delivery APIs.
 
 - Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
-- Multi-environment scripts: `yarn dev`, `yarn dev:stage`, `yarn build`, `yarn build:static`, `yarn start:stage`, etc.
+- Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
+- UI chrome translations via `next-intl`; CMS content translations via `lang` API param
+- Multi-environment scripts: `npm run dev`, `npm run dev:stage`, `npm run build`, `npm run build:static`, `npm run start:stage`, etc.
 - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ## Cross-cutting features

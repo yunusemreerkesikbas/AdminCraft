@@ -534,6 +534,21 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Override
   @Transactional(readOnly = true)
+  public Optional<NavigationDeliveryResponse> getNavigationById(Long id) {
+    List<NavigationNode> nodes = nodeRepository.findSubtreeByRootId(id);
+    if (nodes.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Optional<NavigationNode> rootOpt = nodes.stream()
+        .filter(n -> id.equals(n.getId()))
+        .findFirst();
+
+    return buildDeliveryTreeResponse(rootOpt, nodes);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public Optional<NavigationDeliveryResponse> getNavigationByUid(String uid) {
     List<NavigationNode> nodes = nodeRepository.findSubtreeByRootUid(uid);
     if (nodes.isEmpty()) {
@@ -544,6 +559,24 @@ public class NavigationServiceImpl implements NavigationService {
         .filter(n -> uid.equals(n.getUid()))
         .findFirst();
 
+    return buildDeliveryTreeResponse(rootOpt, nodes);
+  }
+
+  // ==================== Private Helpers ====================
+
+  private NavigationNode findNodeOrThrow(Long id) {
+    return nodeRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("NavigationNode", id));
+  }
+
+  private NavigationEntry findEntryOrThrow(Long id) {
+    return entryRepository.findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("NavigationEntry", id));
+  }
+
+  private Optional<NavigationDeliveryResponse> buildDeliveryTreeResponse(
+      Optional<NavigationNode> rootOpt,
+      List<NavigationNode> nodes) {
     if (rootOpt.isEmpty() || !Boolean.TRUE.equals(rootOpt.get().getIsVisible())) {
       return Optional.empty();
     }
@@ -558,18 +591,6 @@ public class NavigationServiceImpl implements NavigationService {
 
     NavigationDeliveryResponse response = buildDeliveryResponse(rootOpt.get(), childrenByParentId, entriesByNodeId);
     return Optional.of(response);
-  }
-
-  // ==================== Private Helpers ====================
-
-  private NavigationNode findNodeOrThrow(Long id) {
-    return nodeRepository.findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("NavigationNode", id));
-  }
-
-  private NavigationEntry findEntryOrThrow(Long id) {
-    return entryRepository.findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("NavigationEntry", id));
   }
 
   private void validateUidNotExists(String uid) {

@@ -3,20 +3,17 @@ package com.backend.application.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.dto.request.CreatePageCompositeRequest;
 import com.backend.application.dto.request.PageCreateRequest;
 import com.backend.application.dto.request.PageI18nCompositeRequest;
 import com.backend.application.dto.request.PageI18nRequest;
 import com.backend.application.dto.request.UpdatePageCompositeRequest;
-import com.backend.application.dto.slot.PageSlotDto;
-import com.backend.application.dto.template.PageTemplateDto;
-import com.backend.application.dto.template.TemplateSlotDto;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
 import com.backend.domain.enums.Language;
@@ -26,8 +23,9 @@ import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.util.UuidUidGenerator;
-import com.backend.presentation.dto.response.PageDetailResponse;
-import com.backend.presentation.dto.response.PageResponse;
+import com.backend.application.dto.response.PageDetailResponse;
+import com.backend.application.dto.response.PageListResponse;
+import com.backend.application.dto.response.PageResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,7 +37,6 @@ public class PageServiceImpl implements PageService {
     private final PageI18nRepository pageI18nRepository;
     private final PageI18nService pageI18nService;
     private final PageTemplateService pageTemplateService;
-    private final PageSlotService pageSlotService;
 
     @Override
     @Transactional
@@ -57,6 +54,10 @@ public class PageServiceImpl implements PageService {
         page.setUpdatedBy(userId);
 
         page = pageRepository.save(page);
+        if (request.templateId() != null) {
+            pageTemplateService.assignTemplateToPage(page.getId(), request.templateId());
+            page = pageRepository.findById(page.getId()).orElse(page);
+        }
         return PageResponse.from(page);
     }
 
@@ -90,13 +91,13 @@ public class PageServiceImpl implements PageService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<com.backend.presentation.dto.response.PageListResponse> getAllPagesWithTranslations() {
+    public List<PageListResponse> getAllPagesWithTranslations() {
         List<Page> pages = pageRepository.findAll();
         List<PageI18n> allTranslations = pageI18nRepository.findAll();
-        java.util.Map<Long, List<PageI18n>> translationsByPage = allTranslations.stream()
+        Map<Long, List<PageI18n>> translationsByPage = allTranslations.stream()
                 .collect(Collectors.groupingBy(PageI18n::getPageId));
         return pages.stream()
-                .map(page -> com.backend.presentation.dto.response.PageListResponse.from(
+                .map(page -> PageListResponse.from(
                         page,
                         translationsByPage.getOrDefault(page.getId(), java.util.Collections.emptyList())))
                 .collect(Collectors.toList());
@@ -107,6 +108,9 @@ public class PageServiceImpl implements PageService {
     public PageResponse updatePage(Long id, PageCreateRequest request, Long userId) {
         Page page = pageRepository.findById(id)
                 .orElseThrow(() -> new PageNotFoundException(id));
+
+        Long oldTemplateId = page.getTemplateId();
+        Long newTemplateId = request.templateId();
 
         page.setTemplateId(request.templateId());
         if (request.status() != null)
@@ -120,6 +124,10 @@ public class PageServiceImpl implements PageService {
         page.setUpdatedBy(userId);
 
         page = pageRepository.save(page);
+        if (!Objects.equals(oldTemplateId, newTemplateId)) {
+            pageTemplateService.assignTemplateToPage(id, newTemplateId);
+            page = pageRepository.findById(id).orElse(page);
+        }
         return PageResponse.from(page);
     }
 
@@ -154,7 +162,6 @@ public class PageServiceImpl implements PageService {
         // 2. Assign template and create slots (if templateId provided)
         if (request.templateId() != null) {
             pageTemplateService.assignTemplateToPage(pageId, request.templateId());
-            copyTemplateSlotsToPage(pageId, request.templateId());
             // Refresh page to get updated templateId
             page = pageRepository.findById(pageId).orElse(page);
         }
@@ -194,7 +201,6 @@ public class PageServiceImpl implements PageService {
                 || (newTemplateId == null && oldTemplateId != null);
         if (templateChanged) {
             pageTemplateService.assignTemplateToPage(id, newTemplateId);
-            copyTemplateSlotsToPage(id, newTemplateId);
             // Refresh page to get updated templateId
             page = pageRepository.findById(id).orElse(page);
         }
@@ -262,31 +268,5 @@ public class PageServiceImpl implements PageService {
             }
         } while (pageRepository.existsByUid(uid));
         return uid;
-    }
-
-    private void copyTemplateSlotsToPage(Long pageId, Long templateId) {
-        if (templateId == null)
-            return;
-
-        PageTemplateDto template = pageTemplateService.getById(templateId);
-        List<PageSlotDto> existingSlots = pageSlotService.getSlotsByPageId(pageId);
-        List<String> existingSlotNames = existingSlots.stream()
-                .map(PageSlotDto::slotName)
-                .toList();
-
-        if (template.getSlots() != null) {
-            for (TemplateSlotDto templateSlot : template.getSlots()) {
-                if (!existingSlotNames.contains(templateSlot.getSlotName())) {
-                    CreatePageSlotCommand command = new CreatePageSlotCommand(
-                            null,
-                            templateSlot.getSlotName(),
-                            templateSlot.getPosition(),
-                            templateSlot.getSortOrder(),
-                            false // Assuming template slots are not shared by default
-                    );
-                    pageSlotService.createSlot(pageId, command);
-                }
-            }
-        }
     }
 }

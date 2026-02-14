@@ -26,4 +26,6 @@ public interface PageSlotRepository {
   void delete(PageSlot pageSlot);
 
   boolean existsByPageIdAndSlotName(Long pageId, String slotName);
+
+  List<PageSlot> findByPageIdInAndSlotName(List<Long> pageIds, String slotName);
 }

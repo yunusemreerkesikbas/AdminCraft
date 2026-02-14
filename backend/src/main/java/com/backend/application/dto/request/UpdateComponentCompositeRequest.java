@@ -10,15 +10,25 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public record UpdateComponentCompositeRequest(
-        @Size(max = 100, message = "Name must be at most 100 characters") String name,
+        @Size(max = 100, message = "validation.component.name.size") String name,
 
         Integer displayOrder,
 
         Boolean isVisible,
 
-        @Size(max = 500, message = "Style classes must be at most 500 characters") String styleClasses,
+        @Size(max = 500, message = "validation.component.style.classes.size") String styleClasses,
+
+        Long navigationNodeId,
+
+        Long navigationLinkNodeId,
+
+        @Size(max = 50, message = "validation.component.navigation.type.size") String navigationType,
+
+        Boolean searchBox,
+
+        Integer wrapAfter,
 
         ComponentStatus status,
 
-        @NotEmpty(message = "At least one translation is required") @Valid Map<Language, ComponentI18nCommand> translations) {
+        @NotEmpty(message = "validation.component.translations.required") @Valid Map<Language, ComponentI18nCommand> translations) {
 }

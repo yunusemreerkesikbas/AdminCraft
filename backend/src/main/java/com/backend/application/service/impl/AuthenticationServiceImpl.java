@@ -27,6 +27,7 @@ import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.enums.TokenStatus;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.enums.TwoFactorPolicy;
+import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
@@ -188,12 +189,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Long tenantId = tenant.getId();
         String subdomain = tenant.getSubdomain();
 
-        if (!user.canLogin()) {
+        boolean loginAllowed = user.getRole() == UserRole.TENANT_ADMIN
+                ? (Boolean.TRUE.equals(user.getIsActive()) && !user.isAccountLocked())
+                : user.canLogin();
+        if (!loginAllowed) {
             log.warn("User cannot login - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                     user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
-            if (!user.getIsActive()) {
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
                 throw new UserAccountDisabledException();
-            } else if (!user.getEmailVerified()) {
+            } else if (user.getRole() != UserRole.TENANT_ADMIN && !Boolean.TRUE.equals(user.getEmailVerified())) {
                 throw new InvalidCredentialsException();
             } else if (user.isAccountLocked()) {
                 throw new AccountLockedException(user.getRemainingLockMinutes());
@@ -386,7 +390,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new UserNotFoundException(email));
-                if (!user.canLogin()) {
+                boolean refreshAllowed = user.getRole() == UserRole.TENANT_ADMIN
+                        ? (Boolean.TRUE.equals(user.getIsActive()) && !user.isAccountLocked())
+                        : user.canLogin();
+                if (!refreshAllowed) {
                     log.warn(
                             "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
                             user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());

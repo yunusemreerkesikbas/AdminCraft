@@ -92,7 +92,7 @@ class ProvisioningServiceImplTest {
 
     List<String> expected = List.of("core", "media", "component_library", "pagebuilder");
     verify(migrationService).getOrderedModules(eq(expected));
-    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq("ac_tenant_1"), eq(expected), anyString());
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)), eq(expected), anyString());
   }
 
   @Test
@@ -106,7 +106,7 @@ class ProvisioningServiceImplTest {
 
     List<String> expected = List.of("core", "media", "component_library", "pagebuilder", "product");
     verify(migrationService).getOrderedModules(eq(expected));
-    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq("ac_tenant_1"), eq(expected), anyString());
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)), eq(expected), anyString());
   }
 
   @Test

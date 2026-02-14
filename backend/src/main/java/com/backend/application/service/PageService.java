@@ -5,9 +5,9 @@ import java.util.List;
 import com.backend.application.dto.request.CreatePageCompositeRequest;
 import com.backend.application.dto.request.PageCreateRequest;
 import com.backend.application.dto.request.UpdatePageCompositeRequest;
-import com.backend.presentation.dto.response.PageDetailResponse;
-import com.backend.presentation.dto.response.PageListResponse;
-import com.backend.presentation.dto.response.PageResponse;
+import com.backend.application.dto.response.PageDetailResponse;
+import com.backend.application.dto.response.PageListResponse;
+import com.backend.application.dto.response.PageResponse;
 
 public interface PageService {
     PageResponse createPage(PageCreateRequest request, Long userId);

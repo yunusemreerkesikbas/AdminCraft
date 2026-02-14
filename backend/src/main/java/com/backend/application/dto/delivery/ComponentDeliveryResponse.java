@@ -14,6 +14,11 @@ public record ComponentDeliveryResponse(
     String description,
     Boolean isVisible,
     String styleClasses,
+    String navigationType,
+    Boolean searchBox,
+    Integer wrapAfter,
+    NavigationDeliveryResponse navigationNode,
+    NavigationDeliveryResponse navigationLinkNode,
     ResponsiveMediaDeliveryResponse responsive,
     List<EntryDeliveryResponse> entries) {
 }

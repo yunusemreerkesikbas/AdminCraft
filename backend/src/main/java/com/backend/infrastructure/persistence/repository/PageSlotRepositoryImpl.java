@@ -65,4 +65,9 @@ public class PageSlotRepositoryImpl implements PageSlotRepository {
   public boolean existsByPageIdAndSlotName(Long pageId, String slotName) {
     return jpaRepository.existsByPageIdAndSlotName(pageId, slotName);
   }
+
+  @Override
+  public List<PageSlot> findByPageIdInAndSlotName(List<Long> pageIds, String slotName) {
+    return jpaRepository.findByPageIdInAndSlotName(pageIds, slotName);
+  }
 }

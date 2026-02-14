@@ -260,7 +260,7 @@ public class PageSlotControllerIntegrationTest {
     void reorderComponents_ShouldUpdateSortOrder() throws Exception {
       String requestBody = """
           {
-            "componentIds": [2, 1, 3]
+            "items": [2, 1, 3]
           }
           """;
 
@@ -344,4 +344,3 @@ public class PageSlotControllerIntegrationTest {
     }
   }
 }
-

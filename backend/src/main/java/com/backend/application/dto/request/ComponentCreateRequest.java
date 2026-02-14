@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.request;
+package com.backend.application.dto.request;
 
 import com.backend.domain.enums.ComponentStatus;
 
@@ -10,18 +10,29 @@ import static com.backend.shared.constants.ValidationConstants.COMPONENT_NAME_MA
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_STYLE_CLASSES_MAX_LENGTH;
 
 public record ComponentCreateRequest(
-        @NotNull(message = "validation.component.type.id.required") Long componentTypeId,
+        @NotNull(message = "{validation.component.type.id.required}") Long componentTypeId,
 
-        @NotBlank(message = "validation.component.name.required")
-        @Size(max = COMPONENT_NAME_MAX_LENGTH, message = "validation.component.name.size")
+        @NotBlank(message = "{validation.component.name.required}")
+        @Size(max = COMPONENT_NAME_MAX_LENGTH, message = "{validation.component.name.size}")
         String name,
 
         Integer displayOrder,
 
         Boolean isVisible,
 
-        @Size(max = COMPONENT_STYLE_CLASSES_MAX_LENGTH)
+        @Size(max = COMPONENT_STYLE_CLASSES_MAX_LENGTH, message = "{validation.component.style.classes.size}")
         String styleClasses,
+
+        Long navigationNodeId,
+
+        Long navigationLinkNodeId,
+
+        @Size(max = 50, message = "{validation.component.navigation.type.size}")
+        String navigationType,
+
+        Boolean searchBox,
+
+        Integer wrapAfter,
 
         ComponentStatus status) {
     public ComponentCreateRequest {

@@ -185,6 +185,15 @@ public class TenantServiceImpl implements TenantService {
                     .orElseThrow(() -> new TenantNotFoundException(tenantId));
             List<TenantModule> tenantModules = tenantModuleRepository.findByTenantIdAndStatus(tenantId, "enabled");
 
+            if (tenantModules.isEmpty()) {
+                log.warn("Tenant {} has no tenant_modules records; returning default core module for dashboard access", tenantId);
+                return List.of(TenantModuleResponse.builder()
+                        .moduleCode("core")
+                        .moduleName("Core Module")
+                        .status("enabled")
+                        .build());
+            }
+
             return tenantModules.stream()
                     .map(tm -> TenantModuleResponse.builder()
                             .id(tm.getId())

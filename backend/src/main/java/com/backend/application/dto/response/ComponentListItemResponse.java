@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response;
+package com.backend.application.dto.response;
 
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;

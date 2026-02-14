@@ -25,18 +25,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.application.command.ComponentCommands.CreateComponentCommand;
-import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
-import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
 import com.backend.application.command.ComponentI18nCommands.PublishComponentI18nCommand;
 import com.backend.application.command.ComponentI18nCommands.UpsertComponentI18nCommand;
+import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.ComponentCompositeResponse;
+import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentI18nQueries.GetComponentI18nQuery;
-import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
-import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
-import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.service.ComponentI18nService;
 import com.backend.application.service.ComponentService;
@@ -45,11 +41,9 @@ import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.enums.Language;
-import com.backend.presentation.dto.request.ComponentCreateRequest;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
-import com.backend.presentation.dto.response.ComponentListItemResponse;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
@@ -84,17 +78,7 @@ public class ComponentController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
                         Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-
-                        CreateComponentCommand command = new CreateComponentCommand(
-                                        request.componentTypeId(),
-                                        request.name(),
-                                        request.displayOrder(),
-                                        request.isVisible(),
-                                        request.styleClasses(),
-                                        request.status(),
-                                        userId);
-
-                        Component result = componentService.createComponent(command);
+                        Component result = componentService.createComponent(request, userId);
                         ComponentResponse response = ComponentResponse.from(result);
 
                         String successMessage = messageSource.getMessage("component.create.success",
@@ -116,9 +100,8 @@ public class ComponentController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
                         if (include != null && include.contains("translations")) {
-                                GetComponentWithI18nQuery query = new GetComponentWithI18nQuery(id);
                                 Map<Component, List<ComponentI18n>> resultMap = componentService
-                                                .getComponentWithI18n(query);
+                                                .getComponentWithI18n(id);
 
                                 Map.Entry<Component, List<ComponentI18n>> entry = resultMap.entrySet().iterator()
                                                 .next();
@@ -156,8 +139,7 @@ public class ComponentController {
                                 return ResponseEntity.ok(ApiResponse.success(response));
                         }
 
-                        GetComponentByIdQuery query = new GetComponentByIdQuery(id);
-                        Component result = componentService.getComponentById(query);
+                        Component result = componentService.getComponentById(id);
                         ComponentResponse response = ComponentResponse.from(result);
 
                         return ResponseEntity.ok(ApiResponse.success(response));
@@ -213,18 +195,7 @@ public class ComponentController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
                         Long userId = SecurityUtil.getCurrentUserIdOrThrow();
-
-                        UpdateComponentCommand command = new UpdateComponentCommand(
-                                        id,
-                                        request.componentTypeId(),
-                                        request.name(),
-                                        request.displayOrder(),
-                                        request.isVisible(),
-                                        request.styleClasses(),
-                                        request.status(),
-                                        userId);
-
-                        Component result = componentService.updateComponent(command);
+                        Component result = componentService.updateComponent(id, request, userId);
                         ComponentResponse response = ComponentResponse.from(result);
 
                         String successMessage = messageSource.getMessage("component.update.success",
@@ -244,8 +215,7 @@ public class ComponentController {
                         @PathVariable @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
-                        DeleteComponentCommand command = new DeleteComponentCommand(id);
-                        componentService.deleteComponent(command);
+                        componentService.deleteComponent(id);
 
                         String successMessage = messageSource.getMessage("component.delete.success",
                                         null, Locale.forLanguageTag(lang));

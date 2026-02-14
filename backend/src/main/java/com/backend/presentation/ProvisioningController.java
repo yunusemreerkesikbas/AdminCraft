@@ -70,6 +70,7 @@ public class ProvisioningController {
 
     try {
       log.info("Provisioning request for tenant {} with modules: {}", tenantId, request.getModules());
+      log.warn("[PROVISION] CONTROLLER tenantId={} modules={}", tenantId, request.getModules());
 
       ProvisioningJobResponse response = provisioningService.provisionTenant(tenantId, request);
 

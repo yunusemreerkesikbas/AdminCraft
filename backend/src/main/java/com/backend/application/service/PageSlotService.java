@@ -5,6 +5,7 @@ import java.util.List;
 import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
+import com.backend.application.dto.request.UpdatePageSlotRequest;
 import com.backend.application.dto.slot.PageSlotDto;
 
 public interface PageSlotService {
@@ -14,6 +15,8 @@ public interface PageSlotService {
   List<PageSlotDto> getSlotsByPageId(Long pageId);
 
   List<PageSlotDto> getSharedSlots();
+
+  PageSlotDto updateSlot(Long pageId, String slotName, UpdatePageSlotRequest request);
 
   void deleteSlot(Long pageId, String slotName);
 

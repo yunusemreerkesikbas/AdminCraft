@@ -26,7 +26,9 @@ import lombok.NoArgsConstructor;
 }, indexes = {
         @Index(columnList = "component_type_id", name = "idx_component_type"),
         @Index(columnList = "status", name = "idx_component_status"),
-        @Index(columnList = "responsive_id", name = "idx_component_responsive")
+        @Index(columnList = "responsive_id", name = "idx_component_responsive"),
+        @Index(columnList = "navigation_node_id", name = "idx_component_navigation_node"),
+        @Index(columnList = "navigation_link_node_id", name = "idx_component_navigation_link_node")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -66,4 +68,20 @@ public class Component extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "responsive_id")
     private ResponsiveMediaSet responsiveMedia;
+
+    @Column(name = "navigation_node_id")
+    private Long navigationNodeId;
+
+    @Column(name = "navigation_link_node_id")
+    private Long navigationLinkNodeId;
+
+    @Size(max = 50)
+    @Column(name = "navigation_type", length = 50)
+    private String navigationType;
+
+    @Column(name = "search_box")
+    private Boolean searchBox;
+
+    @Column(name = "wrap_after")
+    private Integer wrapAfter;
 }

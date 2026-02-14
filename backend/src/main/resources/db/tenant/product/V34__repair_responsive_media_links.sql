@@ -54,6 +54,21 @@ CALL AddIndexIfNotExists(DATABASE(), 'product_media', 'idx_pm_responsive_set', '
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
 
+-- If V28 ran: column is NOT NULL and fk_pm_responsive_set exists. ON DELETE SET NULL requires nullable column.
+SET @old_fk = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'product_media' AND CONSTRAINT_NAME = 'fk_pm_responsive_set');
+SET @ddl = IF(@old_fk > 0, 'ALTER TABLE product_media DROP FOREIGN KEY fk_pm_responsive_set', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @is_nullable = (SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'product_media' AND COLUMN_NAME = 'responsive_media_set_id');
+SET @ddl = IF(@is_nullable = 'NO', 'ALTER TABLE product_media MODIFY COLUMN responsive_media_set_id BIGINT NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- FK guard
 SET @fk_exists = (
     SELECT COUNT(*)

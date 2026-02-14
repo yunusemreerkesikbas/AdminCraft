@@ -17,6 +17,7 @@ import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotsWrapper;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
+import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.util.MediaFieldExpander;
@@ -31,6 +32,7 @@ import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.entity.SlotComponent;
+import com.backend.domain.entity.TemplateSlot;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
@@ -47,6 +49,7 @@ import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.PageTemplateRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.domain.repository.SlotComponentRepository;
+import com.backend.domain.repository.TemplateSlotRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
+        private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
         private static final Set<String> RESERVED_FIELDS = Set.of(
                         "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -64,6 +68,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         private final PageI18nRepository pageI18nRepository;
         private final PageSlotRepository pageSlotRepository;
         private final PageTemplateRepository pageTemplateRepository;
+        private final TemplateSlotRepository templateSlotRepository;
         private final SlotComponentRepository slotComponentRepository;
         private final ComponentRepository componentRepository;
         private final ComponentTypeRepository componentTypeRepository;
@@ -72,6 +77,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         private final ComponentEntryI18nRepository componentEntryI18nRepository;
         private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
         private final ResponsiveMediaService responsiveMediaService;
+        private final NavigationService navigationService;
         private final MediaFieldExpander mediaFieldExpander;
 
         @Override
@@ -181,19 +187,19 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 List<PageSlot> pageSlots = pageSlotRepository.findByPageId(page.getId());
                 List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
-
-                List<PageSlot> allSlots = new ArrayList<>(sharedSlots);
-                allSlots.addAll(pageSlots);
-
-                List<PageSlot> activeSlots = allSlots.stream()
+                List<PageSlot> effectiveSlots = resolveEffectiveSlotsForDelivery(page, pageSlots, sharedSlots);
+                List<PageSlot> activeSlots = effectiveSlots.stream()
                                 .filter(s -> Boolean.TRUE.equals(s.getIsActive()))
                                 .toList();
 
                 List<Long> slotIds = activeSlots.stream()
                                 .map(PageSlot::getId)
+                                .filter(id -> id != null)
                                 .toList();
 
-                List<SlotComponent> allSlotComponents = slotComponentRepository.findBySlotIdIn(slotIds);
+                List<SlotComponent> allSlotComponents = slotIds.isEmpty()
+                                ? List.of()
+                                : slotComponentRepository.findBySlotIdIn(slotIds);
                 Map<Long, List<SlotComponent>> componentsBySlotId = allSlotComponents.stream()
                                 .collect(Collectors.groupingBy(SlotComponent::getSlotId));
 
@@ -368,13 +374,18 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 return ComponentDeliveryResponse.builder()
                                 .uid(comp.getUid())
-                                .type(type != null ? type.getName() : null)
+                                .type(type != null ? (type.getUid() != null ? type.getUid() : type.getName()) : null)
                                 .category(type != null ? type.getCategory() : null)
                                 .title(compI18n != null ? compI18n.getTitle() : null)
                                 .subtitle(compI18n != null ? compI18n.getSubtitle() : null)
                                 .description(compI18n != null ? compI18n.getDescription() : null)
                                 .isVisible(comp.getIsVisible())
                                 .styleClasses(comp.getStyleClasses())
+                                .navigationType(resolveNavigationType(type, comp))
+                                .searchBox(resolveSearchBox(type, comp))
+                                .wrapAfter(resolveWrapAfter(type, comp))
+                                .navigationNode(resolveNavigationNode(type, comp))
+                                .navigationLinkNode(resolveNavigationLinkNode(type, comp))
                                 .responsive(responsive)
                                 .entries(entryResponses)
                                 .build();
@@ -404,6 +415,116 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .build();
         }
 
+        private String resolveNavigationType(ComponentType type, Component component) {
+                if (!isCategoryNavigationComponent(type)) {
+                        return null;
+                }
+                return component.getNavigationType();
+        }
+
+        private Boolean resolveSearchBox(ComponentType type, Component component) {
+                if (!isCategoryNavigationComponent(type)) {
+                        return null;
+                }
+                return component.getSearchBox();
+        }
+
+        private Integer resolveWrapAfter(ComponentType type, Component component) {
+                if (!isCategoryNavigationComponent(type)) {
+                        return null;
+                }
+                return component.getWrapAfter();
+        }
+
+        private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
+                if (!isCategoryNavigationComponent(type) || component.getNavigationNodeId() == null) {
+                        return null;
+                }
+                return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
+        }
+
+        private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
+                if (!isCategoryNavigationComponent(type) || component.getNavigationLinkNodeId() == null) {
+                        return null;
+                }
+                return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
+        }
+
+        private boolean isCategoryNavigationComponent(ComponentType type) {
+                return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
+        }
+
+        private List<PageSlot> resolveEffectiveSlotsForDelivery(
+                        Page page,
+                        List<PageSlot> pageSlots,
+                        List<PageSlot> sharedSlots) {
+                if (page.getTemplateId() == null) {
+                        return mergeSlotsWithoutTemplate(pageSlots, sharedSlots);
+                }
+
+                List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(page.getTemplateId());
+                if (templateSlots.isEmpty()) {
+                        return mergeSlotsWithoutTemplate(pageSlots, sharedSlots);
+                }
+
+                Map<String, PageSlot> pageBySlotName = pageSlots.stream()
+                                .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
+                Map<String, PageSlot> sharedBySlotName = sharedSlots.stream()
+                                .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
+
+                List<PageSlot> effective = new ArrayList<>();
+                for (TemplateSlot templateSlot : templateSlots) {
+                        PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
+                        if (source == null) {
+                                source = sharedBySlotName.get(templateSlot.getSlotName());
+                        }
+                        effective.add(buildEffectiveSlot(page.getId(), templateSlot, source));
+                }
+                return effective;
+        }
+
+        private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots) {
+                Map<String, PageSlot> bySlotName = new LinkedHashMap<>();
+                for (PageSlot shared : sharedSlots) {
+                        bySlotName.putIfAbsent(shared.getSlotName(), shared);
+                }
+                for (PageSlot pageSlot : pageSlots) {
+                        bySlotName.put(pageSlot.getSlotName(), pageSlot);
+                }
+                return bySlotName.values().stream()
+                                .sorted(Comparator
+                                                .comparingInt((PageSlot slot) -> slot.getSortOrder() != null
+                                                                ? slot.getSortOrder()
+                                                                : 0)
+                                                .thenComparing(PageSlot::getSlotName, String.CASE_INSENSITIVE_ORDER))
+                                .toList();
+        }
+
+        private PageSlot buildEffectiveSlot(Long pageId, TemplateSlot templateSlot, PageSlot source) {
+                PageSlot effective = new PageSlot();
+                if (source != null) {
+                        effective.setId(source.getId());
+                        effective.setUuid(source.getUuid());
+                        effective.setUid(source.getUid());
+                        effective.setCreatedAt(source.getCreatedAt());
+                        effective.setUpdatedAt(source.getUpdatedAt());
+                        effective.setCreatedBy(source.getCreatedBy());
+                        effective.setUpdatedBy(source.getUpdatedBy());
+                        effective.setIsActive(source.getIsActive());
+                        effective.setIsShared(source.getIsShared());
+                } else {
+                        effective.setUid("template-slot-" + pageId + "-" + templateSlot.getId());
+                        effective.setIsActive(true);
+                        effective.setIsShared(false);
+                }
+
+                effective.setPageId(pageId);
+                effective.setSlotName(templateSlot.getSlotName());
+                effective.setPosition(templateSlot.getPosition());
+                effective.setSortOrder(templateSlot.getSortOrder());
+                return effective;
+        }
+
         /**
          * Builds Hybris-compatible contentSlots wrapper with structured slot metadata.
          */
@@ -428,7 +549,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         ContentSlotDeliveryResponse contentSlot = ContentSlotDeliveryResponse.builder()
                                         .slotId(slot.getSlotName() + "Slot")
                                         .slotUuid(slot.getUuid())
-                                        .position(slot.getSlotName())
+                                        .position(slot.getPosition())
                                         .name(slot.getSlotName() + " Content Slot")
                                         .slotShared(Boolean.TRUE.equals(slot.getIsShared()))
                                         .components(ContentSlotDeliveryResponse.ComponentsWrapper.of(compResponses))

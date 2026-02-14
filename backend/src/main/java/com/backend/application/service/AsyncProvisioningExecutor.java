@@ -57,10 +57,10 @@ public class AsyncProvisioningExecutor {
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenantId));
 
+    log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
+
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
-
-      log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
       updateJobProgress(jobId, 20);
       prepareDatabaseForProvisioning(tenantId, dbName);
@@ -138,8 +138,8 @@ public class AsyncProvisioningExecutor {
           log.warn("Database {} already contains tables. Dropping for clean provisioning.", dbName);
           stmt.execute("DROP DATABASE IF EXISTS " + quotedDbName);
         } else {
-          throw new IllegalStateException(
-              "Tenant database already initialized: " + dbName + ". Use sync migrations instead of full provision.");
+          log.info("Tenant database already initialized: {}. Skipping creation, continuing with migrations and module registration.", dbName);
+          return;
         }
       }
 
@@ -253,13 +253,14 @@ public class AsyncProvisioningExecutor {
   @Transactional("platformTransactionManager")
   public void insertTenantModules(Long tenantId, List<String> modules) {
     log.info("Inserting tenant_modules records for tenant {} with modules: {}", tenantId, modules);
+    log.warn("[PROVISION] insertTenantModules tenantId={} modules.size()={} modules={}", tenantId, modules != null ? modules.size() : 0, modules);
 
     List<TenantModule> existingModules = tenantModuleRepository.findByTenantId(tenantId);
     List<String> existingModuleCodes = existingModules.stream()
         .map(TenantModule::getModuleCode)
         .toList();
 
-    log.debug("Tenant {} already has modules: {}", tenantId, existingModuleCodes);
+    log.warn("[PROVISION] insertTenantModules existingModuleCodes={}", existingModuleCodes);
 
     List<TenantModule> newModules = new ArrayList<>();
     LocalDateTime now = LocalDateTime.now();
@@ -273,7 +274,7 @@ public class AsyncProvisioningExecutor {
       try {
         com.backend.domain.enums.ModuleCode.fromCode(moduleCode);
       } catch (IllegalArgumentException ex) {
-        log.warn("Skipping unknown module code during provisioning: {}", moduleCode);
+        log.warn("Skipping unknown module code during provisioning: {} - {}", moduleCode, ex.getMessage());
         continue;
       }
 
@@ -290,8 +291,10 @@ public class AsyncProvisioningExecutor {
     if (!newModules.isEmpty()) {
       tenantModuleRepository.saveAll(newModules);
       log.info("Successfully inserted {} new tenant_modules records for tenant {}", newModules.size(), tenantId);
+      log.warn("[PROVISION] insertTenantModules INSERTED count={} codes={}", newModules.size(), newModules.stream().map(TenantModule::getModuleCode).toList());
     } else {
       log.info("No new modules to insert for tenant {} - all modules already exist", tenantId);
+      log.warn("[PROVISION] insertTenantModules INSERTED 0 (all already exist or skipped)");
     }
   }
 

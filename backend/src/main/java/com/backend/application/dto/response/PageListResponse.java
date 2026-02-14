@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response;
+package com.backend.application.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
