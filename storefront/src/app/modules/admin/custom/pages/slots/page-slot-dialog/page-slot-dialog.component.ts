@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { SpaDialogContentComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaDialogBase } from '@shared/components/spa-dialog-base';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -41,8 +41,7 @@ export interface PageSlotDialogData extends SpaDialogData {
         MatDialogModule,
         MatTooltipModule,
         TranslocoModule,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
+        SpaDialogComponent,
         SpaReorderListComponent
     ]
 })
@@ -164,7 +163,7 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
 
     addComponent(slot: PageSlotResponse): void {
         const dialogRef = this.#dialog.open(ComponentPickerDialogComponent, {
-            width: '1000px',
+            width: '900px',
             maxWidth: '95vw',
             height: '80vh',
             panelClass: 'spa-dialog-panel'

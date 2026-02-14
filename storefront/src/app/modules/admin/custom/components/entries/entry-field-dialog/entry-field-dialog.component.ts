@@ -7,7 +7,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { SpaDialogContentComponent, SpaDialogFooterComponent, SpaDialogHeaderComponent } from '@shared/components/spa-dialog';
+import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
 
 @Component({
@@ -25,9 +25,7 @@ import { SpaFormDialog } from '@shared/components/spa-form-dialog';
         SpaInputComponent,
         SpaSelectComponent,
         SpaCheckboxComponent,
-        SpaDialogHeaderComponent,
-        SpaDialogContentComponent,
-        SpaDialogFooterComponent
+        SpaDialogComponent
     ]
 })
 export class EntryFieldDialogComponent extends SpaFormDialog implements OnInit {

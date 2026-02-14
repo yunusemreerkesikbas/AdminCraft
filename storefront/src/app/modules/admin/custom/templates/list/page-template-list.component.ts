@@ -102,7 +102,8 @@ export class PageTemplateListComponent extends BasePaginatedListComponent<PageTe
           {
               action: 'edit',
               icon: 'heroicons_outline:pencil',
-              label: 'admin.common.edit'
+              label: 'admin.common.edit',
+              show: (item) => !item.isSystem
           },
           {
               action: 'delete',

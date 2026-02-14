@@ -6,7 +6,8 @@ import {
     CreateTemplateSlotDto,
     PageTemplate,
     TemplateSlot,
-    UpdatePageTemplateDto
+    UpdatePageTemplateDto,
+    UpdateTemplateSlotDto
 } from './page-template.types';
 
 @Injectable({ providedIn: 'root' })
@@ -46,6 +47,15 @@ export class PageTemplateService extends CrudHttpService<PageTemplate, CreatePag
             );
     }
 
+    updateSlot(templateId: number, slotName: string, dto: UpdateTemplateSlotDto): Observable<TemplateSlot> {
+        return this.api
+            .put<ApiResponse<TemplateSlot>>('pageTemplateSlot', dto, { id: templateId, slotName })
+            .pipe(
+                take(1),
+                map(response => response.data)
+            );
+    }
+
     assignToPage(templateId: number, pageId: number): Observable<void> {
         return this.api
             .post<ApiResponse<void>>('pageTemplateAssign', {}, { id: templateId, pageId })
@@ -57,7 +67,7 @@ export class PageTemplateService extends CrudHttpService<PageTemplate, CreatePag
 
     reorderSlots(templateId: number, slotNames: string[]): Observable<void> {
         return this.api
-            .put<ApiResponse<void>>('pageTemplateSlotsReorder', { slotNames }, { id: templateId })
+            .put<ApiResponse<void>>('pageTemplateSlotsReorder', { items: slotNames }, { id: templateId })
             .pipe(
                 take(1),
                 map(() => void 0)

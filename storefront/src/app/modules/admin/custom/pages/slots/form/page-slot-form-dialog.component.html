@@ -1,7 +1,12 @@
-<spa-dialog-header [title]="dialogTitle()" (closeClicked)="cancel()">
-</spa-dialog-header>
-
-<spa-dialog-content type="form">
+<spa-dialog
+    [title]="dialogTitle()"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    [submitLabel]="submitButtonLabel()"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
     <form [formGroup]="form" class="flex flex-col gap-4">
         <spa-input
             formControlName="uid"
@@ -40,13 +45,4 @@
             </spa-toggle>
         </div>
     </form>
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitDisabled]="form.invalid"
-    [isSubmitting]="isSubmitting()"
-    [submitLabel]="submitButtonLabel()"
-    (cancelClicked)="cancel()"
-    (submitClicked)="save()"
->
-</spa-dialog-footer>
+</spa-dialog>

@@ -1,7 +1,15 @@
-<spa-dialog-header [title]="dialogTitle" (closeClicked)="cancel()">
-</spa-dialog-header>
-
-<spa-dialog-content type="tabbed">
+<spa-dialog
+    [title]="dialogTitle"
+    [size]="'lg'"
+    [contentType]="'tabbed'"
+    [submitDisabled]="generalForm.invalid"
+    [isSubmitting]="isSubmitting()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.close"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
     <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
         <ng-template spaTabContent="general">
             <form [formGroup]="generalForm" class="flex flex-col gap-6">
@@ -149,14 +157,4 @@
             </ng-template>
         }
     </spa-tab-container>
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitDisabled]="generalForm.invalid"
-    [isSubmitting]="isSubmitting()"
-    submitLabel="admin.dialog.actions.save"
-    cancelLabel="admin.dialog.actions.close"
-    (cancelClicked)="cancel()"
-    (submitClicked)="save()"
->
-</spa-dialog-footer>
+</spa-dialog>

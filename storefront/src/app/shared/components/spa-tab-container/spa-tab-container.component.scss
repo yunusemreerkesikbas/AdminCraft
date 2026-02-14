@@ -1,7 +1,9 @@
 spa-tab-container {
     display: block;
+    min-height: 0;
 
     .mat-mdc-tab-body-content {
-        overflow: visible;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 }

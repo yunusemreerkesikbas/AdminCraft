@@ -1,11 +1,14 @@
-<spa-dialog-header
+<spa-dialog
     [title]="'admin.components.entryFields.addField' | transloco"
     [subtitle]="'admin.components.entryFields.types.text' | transloco"
-    (closeClicked)="cancel()"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmitting()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
 >
-</spa-dialog-header>
-
-<spa-dialog-content type="form">
     <form [formGroup]="form" class="flex flex-col gap-6">
         <div class="flex flex-col gap-5">
             <h3
@@ -116,14 +119,4 @@
             </div>
         }
     </form>
-</spa-dialog-content>
-
-<spa-dialog-footer
-    [submitDisabled]="form.invalid"
-    [isSubmitting]="isSubmitting()"
-    submitLabel="admin.dialog.actions.save"
-    cancelLabel="admin.dialog.actions.cancel"
-    (cancelClicked)="cancel()"
-    (submitClicked)="save()"
->
-</spa-dialog-footer>
+</spa-dialog>

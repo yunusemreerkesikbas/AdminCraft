@@ -35,6 +35,13 @@ export interface UpdatePageTemplateDto {
     isActive?: boolean;
 }
 
+export interface UpdateTemplateSlotDto {
+    position?: SlotPosition;
+    isRequired?: boolean;
+    maxComponents?: number;
+    allowedTypes?: string[];
+}
+
 export interface CreateTemplateSlotDto {
     slotName: string;
     position: SlotPosition;

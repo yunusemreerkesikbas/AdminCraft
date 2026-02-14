@@ -31,21 +31,55 @@ export interface BatchDeliveryResponse {
     meta: BatchMeta;
 }
 
+export interface ContentSlotDeliveryResponse {
+    slotId: string;
+    slotUuid: string;
+    position: string;
+    name: string;
+    slotShared: boolean;
+    components: { componentList: ComponentDeliveryResponse[] };
+}
+
+export interface ContentSlotsWrapper {
+    contentSlot: ContentSlotDeliveryResponse[];
+}
+
 export interface PageDeliveryResponse {
     uid: string;
+    name: string;
     title: string;
-    subtitle: string;
     description: string;
-    metaTitle: string;
-    metaDescription: string;
     robotTag: string;
-    urlPath: string;
-    featuredImage: string;
+    canonicalUrl: string;
     styleClasses: string;
+    template: string;
+    typeCode: string;
+    contentSlots: ContentSlotsWrapper;
     slots: Record<string, ComponentDeliveryResponse[]>;
 }
 
-export interface BatchPageDeliveryResponse {
-    data: Record<string, PageDeliveryResponse>;
-    meta: BatchMeta;
+export interface LanguageInfo {
+    code: string;
+    nativeName: string;
+    isRtl: boolean;
+}
+
+export interface SiteDeliveryResponse {
+    siteName: string;
+    siteTitle: string;
+    siteDescription: string;
+    siteKeywords: string;
+    ogImageUrl: string;
+    defaultLanguage: string;
+    enabledLanguages: LanguageInfo[];
+    themeName: string;
+    maintenanceMode: boolean;
+    maintenanceMessage: string;
+    googleAnalyticsId: string;
+    googleTagManagerId: string;
+    twitterHandle: string;
+    facebookPageUrl: string;
+    domain: string;
+    customDomain: string;
+    sslEnabled: boolean;
 }

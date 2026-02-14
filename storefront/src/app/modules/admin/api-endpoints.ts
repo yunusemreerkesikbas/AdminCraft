@@ -169,8 +169,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- CMS DELIVERY API (PUBLIC) -----
     cmsComponent: 'cms/components/${uid}',
     cmsComponentsBatch: 'cms/components',
-    cmsPage: 'cms/pages/${uid}',
-    cmsPagesBatch: 'cms/pages',
+    cmsPage: 'cms/pages',
+    cmsSite: 'cms/site',
 
     // ----- PAGE TEMPLATES -----
     pageTemplates: 'page-templates',
