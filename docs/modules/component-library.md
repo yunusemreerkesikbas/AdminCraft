@@ -11,7 +11,8 @@ Tenant migrations:
 
 - `backend/src/main/resources/db/tenant/component_library/`
   - `V1__component_library_baseline.sql`
-  - `R__seed_component_types.sql`
+  - `V17__add_component_navigation_bindings.sql` (CategoryNavigationComponent navigation bindings)
+  - `R__seed_component_types.sql` (idempotent upsert; does not truncate component tables)
   - `R__seed_entry_field_definitions.sql`
 
 ## Admin API (tenant-scoped, authenticated)
@@ -95,6 +96,32 @@ Composite:
 Responsive media assignment:
 
 - `PATCH /api/components/{id}/responsive-media?responsiveMediaId={id}`
+
+### CategoryNavigationComponent bindings
+
+When component type is `CategoryNavigationComponent`, component-level navigation binding fields are enabled:
+
+- `navigationNodeId` (required)
+- `navigationLinkNodeId` (optional)
+- `navigationType` (optional, defaults to `MAINMENU`)
+- `searchBox` (optional, defaults to `false`)
+
+Validation and mapping source-of-truth:
+
+- `backend/src/main/java/com/backend/application/service/ComponentServiceImpl.java`
+- `backend/src/main/java/com/backend/presentation/controller/ComponentController.java`
+- `backend/src/main/java/com/backend/application/dto/request/CreateComponentCompositeRequest.java`
+- `backend/src/main/java/com/backend/application/dto/request/UpdateComponentCompositeRequest.java`
+- `backend/src/main/java/com/backend/application/dto/response/ComponentCompositeResponse.java`
+
+Delivery behavior:
+
+- CMS delivery includes `navigationType`, `searchBox`, `navigationNode`, `navigationLinkNode`.
+- `navigationNode` and `navigationLinkNode` are delivered as full navigation tree objects when IDs are set.
+- Source-of-truth:
+  - `backend/src/main/java/com/backend/application/service/ComponentDeliveryServiceImpl.java`
+  - `backend/src/main/java/com/backend/application/service/PageDeliveryServiceImpl.java`
+  - `backend/src/main/java/com/backend/application/service/NavigationServiceImpl.java`
 
 ### Component entries
 

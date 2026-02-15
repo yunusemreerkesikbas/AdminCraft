@@ -3,7 +3,7 @@ package com.backend.application.service;
 import com.backend.domain.enums.Language;
 import com.backend.application.dto.request.PageI18nRequest;
 import com.backend.application.dto.request.PagePublishRequest;
-import com.backend.presentation.dto.response.PageI18nResponse;
+import com.backend.application.dto.response.PageI18nResponse;
 import java.util.List;
 
 public interface PageI18nService {

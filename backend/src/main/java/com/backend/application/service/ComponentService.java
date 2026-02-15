@@ -7,41 +7,34 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.backend.application.command.ComponentCommands.CreateComponentCommand;
-import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
-import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.ComponentCompositeResponse;
-import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
-import com.backend.application.query.ComponentQueries.GetAllComponentsWithTranslationsQuery;
-import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
-import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
-import com.backend.application.query.ComponentQueries.GetComponentsByTypeIdQuery;
+import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
-import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 public interface ComponentService {
-    Component createComponent(CreateComponentCommand command);
+    Component createComponent(ComponentCreateRequest request, Long userId);
 
-    Component getComponentById(GetComponentByIdQuery query);
+    Component getComponentById(Long id);
 
-    Map<Component, List<ComponentI18n>> getComponentWithI18n(GetComponentWithI18nQuery query);
+    Map<Component, List<ComponentI18n>> getComponentWithI18n(Long id);
 
-    List<Component> getAllComponents(GetAllComponentsQuery query);
+    List<Component> getAllComponents();
 
-    Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations(GetAllComponentsWithTranslationsQuery query);
+    Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations();
 
-    List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query);
+    List<ComponentListItemResponse> getAllComponentsWithTypeNames();
 
     Page<ComponentListItemResponse> searchComponents(Pageable pageable, String searchQuery);
 
-    List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query);
+    List<Component> getComponentsByTypeId(Long typeId);
 
-    Component updateComponent(UpdateComponentCommand command);
+    Component updateComponent(Long id, ComponentCreateRequest request, Long userId);
 
-    void deleteComponent(DeleteComponentCommand command);
+    void deleteComponent(Long id);
 
     ComponentCompositeResponse createComposite(CreateComponentCompositeRequest request);
 
@@ -49,12 +42,5 @@ public interface ComponentService {
 
     Optional<ComponentCompositeResponse> getComposite(Long id);
 
-    /**
-     * Assign or update responsive media (Desktop/Mobile images) for a component.
-     * 
-     * @param componentId       Component ID
-     * @param responsiveMediaId ResponsiveMediaSet ID (null to remove)
-     * @return Updated component
-     */
     Component assignResponsiveMedia(Long componentId, Long responsiveMediaId);
 }

@@ -12,18 +12,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.application.command.ComponentCommands.CreateComponentCommand;
-import com.backend.application.command.ComponentCommands.DeleteComponentCommand;
-import com.backend.application.command.ComponentCommands.UpdateComponentCommand;
+import com.backend.application.dto.request.ComponentCreateRequest;
 import com.backend.application.dto.request.ComponentI18nCommand;
 import com.backend.application.dto.request.CreateComponentCompositeRequest;
 import com.backend.application.dto.request.UpdateComponentCompositeRequest;
 import com.backend.application.dto.response.ComponentCompositeResponse;
-import com.backend.application.query.ComponentQueries.GetAllComponentsQuery;
-import com.backend.application.query.ComponentQueries.GetAllComponentsWithTranslationsQuery;
-import com.backend.application.query.ComponentQueries.GetComponentByIdQuery;
-import com.backend.application.query.ComponentQueries.GetComponentWithI18nQuery;
-import com.backend.application.query.ComponentQueries.GetComponentsByTypeIdQuery;
+import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
@@ -31,13 +25,15 @@ import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
+import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
+import com.backend.domain.repository.NavigationNodeRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
-import com.backend.presentation.dto.response.ComponentListItemResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,45 +42,52 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ComponentServiceImpl implements ComponentService {
+    private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
+    private static final NavigationType DEFAULT_NAVIGATION_TYPE = NavigationType.MAINMENU;
 
     private final ComponentRepository componentRepository;
     private final ComponentI18nRepository componentI18nRepository;
     private final ComponentTypeService componentTypeService;
     private final ComponentTypeRepository componentTypeRepository;
+    private final NavigationNodeRepository navigationNodeRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final ComponentMediaLinkRepository componentMediaLinkRepository;
 
     @Override
     @Transactional
-    public Component createComponent(CreateComponentCommand command) {
-        componentTypeService.getComponentTypeById(new GetComponentTypeByIdQuery(command.componentTypeId()));
+    public Component createComponent(ComponentCreateRequest request, Long userId) {
+        ComponentType componentType = componentTypeService
+                .getComponentTypeById(new GetComponentTypeByIdQuery(request.componentTypeId()));
 
         Component component = new Component();
-        component.setComponentTypeId(command.componentTypeId());
-        component.setName(command.name());
-        component.setDisplayOrder(command.displayOrder() != null ? command.displayOrder() : 0);
-        component.setIsVisible(command.isVisible() != null ? command.isVisible() : true);
-        component.setStyleClasses(command.styleClasses());
-        component.setStatus(command.status() != null ? command.status() : ComponentStatus.DRAFT);
-        component.setCreatedBy(command.userId());
-        component.setUpdatedBy(command.userId());
+        component.setComponentTypeId(request.componentTypeId());
+        component.setName(request.name());
+        component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
+        component.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
+        component.setStyleClasses(request.styleClasses());
+        component.setStatus(request.status() != null ? request.status() : ComponentStatus.DRAFT);
+        applyNavigationBinding(component, componentType.getUid(), request.navigationNodeId(),
+                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
+                false);
+        component.setCreatedBy(userId);
+        component.setUpdatedBy(userId);
 
         return componentRepository.save(component);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Component getComponentById(GetComponentByIdQuery query) {
-        return componentRepository.findById(query.id())
-                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + query.id()));
+    public Component getComponentById(Long id) {
+        return componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Component, List<ComponentI18n>> getComponentWithI18n(GetComponentWithI18nQuery query) {
-        Component component = componentRepository.findById(query.id())
-                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + query.id()));
-        List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(query.id());
+    public Map<Component, List<ComponentI18n>> getComponentWithI18n(Long id) {
+        Component component = componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
+        List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(id);
 
         Map<Component, List<ComponentI18n>> result = new HashMap<>();
         result.put(component, i18nList);
@@ -93,14 +96,13 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Component> getAllComponents(GetAllComponentsQuery query) {
+    public List<Component> getAllComponents() {
         return componentRepository.findAll();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations(
-            GetAllComponentsWithTranslationsQuery query) {
+    public Map<Component, List<ComponentI18n>> getAllComponentsWithTranslations() {
         List<Component> components = componentRepository.findAll();
         List<ComponentI18n> allTranslations = componentI18nRepository.findAll();
 
@@ -116,7 +118,7 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ComponentListItemResponse> getAllComponentsWithTypeNames(GetAllComponentsQuery query) {
+    public List<ComponentListItemResponse> getAllComponentsWithTypeNames() {
         List<Object[]> results = componentRepository.findAllWithTypeNamesAndEntryCount();
 
         return results.stream()
@@ -152,38 +154,40 @@ public class ComponentServiceImpl implements ComponentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Component> getComponentsByTypeId(GetComponentsByTypeIdQuery query) {
-        return componentRepository.findByComponentTypeId(query.typeId());
+    public List<Component> getComponentsByTypeId(Long typeId) {
+        return componentRepository.findByComponentTypeId(typeId);
     }
 
     @Override
     @Transactional
-    public Component updateComponent(UpdateComponentCommand command) {
-        Component component = componentRepository.findById(command.id())
-                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
+    public Component updateComponent(Long id, ComponentCreateRequest request, Long userId) {
+        Component component = componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
 
-        componentTypeService.getComponentTypeById(new GetComponentTypeByIdQuery(command.componentTypeId()));
+        ComponentType componentType = componentTypeService
+                .getComponentTypeById(new GetComponentTypeByIdQuery(request.componentTypeId()));
 
-        component.setComponentTypeId(command.componentTypeId());
-        component.setName(command.name());
-        component
-                .setDisplayOrder(command.displayOrder() != null ? command.displayOrder() : component.getDisplayOrder());
-        component.setIsVisible(command.isVisible() != null ? command.isVisible() : component.getIsVisible());
-        component
-                .setStyleClasses(command.styleClasses() != null ? command.styleClasses() : component.getStyleClasses());
-        if (command.status() != null) {
-            component.setStatus(command.status());
+        component.setComponentTypeId(request.componentTypeId());
+        component.setName(request.name());
+        component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : component.getDisplayOrder());
+        component.setIsVisible(request.isVisible() != null ? request.isVisible() : component.getIsVisible());
+        component.setStyleClasses(request.styleClasses() != null ? request.styleClasses() : component.getStyleClasses());
+        applyNavigationBinding(component, componentType.getUid(), request.navigationNodeId(),
+                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
+                true);
+        if (request.status() != null) {
+            component.setStatus(request.status());
         }
-        component.setUpdatedBy(command.userId());
+        component.setUpdatedBy(userId);
 
         return componentRepository.save(component);
     }
 
     @Override
     @Transactional
-    public void deleteComponent(DeleteComponentCommand command) {
-        Component component = componentRepository.findById(command.id())
-                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + command.id()));
+    public void deleteComponent(Long id) {
+        Component component = componentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
 
         // Component deletion will cascade to media links via ON DELETE CASCADE
         componentRepository.delete(component);
@@ -193,8 +197,7 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     public ComponentCompositeResponse createComposite(CreateComponentCompositeRequest request) {
         ComponentType type = componentTypeRepository.findById(request.componentTypeId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Component type not found with id: " + request.componentTypeId()));
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", request.componentTypeId()));
 
         Component component = new Component();
         component.setComponentTypeId(request.componentTypeId());
@@ -203,6 +206,8 @@ public class ComponentServiceImpl implements ComponentService {
         component.setIsVisible(request.isVisible());
         component.setStyleClasses(request.styleClasses());
         component.setStatus(request.status());
+        applyNavigationBinding(component, type.getUid(), request.navigationNodeId(), request.navigationLinkNodeId(),
+                request.navigationType(), request.searchBox(), false);
 
         Component savedComponent = componentRepository.save(component);
 
@@ -233,7 +238,7 @@ public class ComponentServiceImpl implements ComponentService {
     @Transactional
     public ComponentCompositeResponse updateComposite(Long id, UpdateComponentCompositeRequest request) {
         Component component = componentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Component not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Component", id));
 
         if (request.name() != null) {
             component.setName(request.name());
@@ -251,11 +256,14 @@ public class ComponentServiceImpl implements ComponentService {
             component.setStatus(request.status());
         }
 
+        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId()).orElse(null);
+        String typeUid = componentType != null ? componentType.getUid() : null;
+        applyNavigationBinding(component, typeUid, request.navigationNodeId(), request.navigationLinkNodeId(),
+                request.navigationType(), request.searchBox(), true);
+
         Component savedComponent = componentRepository.save(component);
 
-        String typeName = componentTypeRepository.findById(component.getComponentTypeId())
-                .map(ComponentType::getName)
-                .orElse(null);
+        String typeName = componentType != null ? componentType.getName() : null;
 
         List<ComponentI18n> i18nList = new ArrayList<>();
         for (var entry : request.translations().entrySet()) {
@@ -362,6 +370,69 @@ public class ComponentServiceImpl implements ComponentService {
         if (!exists) {
             componentMediaLinkRepository.save(link);
         }
+    }
+
+    private void applyNavigationBinding(
+            Component component,
+            String componentTypeUid,
+            Long requestedNavigationNodeId,
+            Long requestedNavigationLinkNodeId,
+            NavigationType requestedNavigationType,
+            Boolean requestedSearchBox,
+            boolean partialUpdate) {
+        if (!isCategoryNavigationComponent(componentTypeUid)) {
+            component.setNavigationNodeId(null);
+            component.setNavigationLinkNodeId(null);
+            component.setNavigationType(null);
+            component.setSearchBox(null);
+            return;
+        }
+
+        Long effectiveNavigationNodeId = resolveValue(
+                component.getNavigationNodeId(), requestedNavigationNodeId, partialUpdate);
+        Long effectiveNavigationLinkNodeId = resolveValue(
+                component.getNavigationLinkNodeId(), requestedNavigationLinkNodeId, partialUpdate);
+        NavigationType effectiveNavigationType = resolveValue(
+                component.getNavigationType(), requestedNavigationType, partialUpdate);
+        Boolean effectiveSearchBox = resolveValue(
+                component.getSearchBox(), requestedSearchBox, partialUpdate);
+
+        if (effectiveNavigationNodeId == null) {
+            throw new BusinessRuleViolationException("component.navigation.node.required");
+        }
+        validateNavigationNodeExists(effectiveNavigationNodeId, "component.navigation.node.not.found");
+        if (effectiveNavigationLinkNodeId != null) {
+            validateNavigationNodeExists(effectiveNavigationLinkNodeId, "component.navigation.link.node.not.found");
+        }
+
+        component.setNavigationNodeId(effectiveNavigationNodeId);
+        component.setNavigationLinkNodeId(effectiveNavigationLinkNodeId);
+        component.setNavigationType(normalizeNavigationType(effectiveNavigationType));
+        component.setSearchBox(effectiveSearchBox != null ? effectiveSearchBox : Boolean.FALSE);
+    }
+
+    private void validateNavigationNodeExists(Long nodeId, String errorKey) {
+        if (navigationNodeRepository.findById(nodeId).isEmpty()) {
+            throw new EntityNotFoundException(errorKey);
+        }
+    }
+
+    private NavigationType normalizeNavigationType(NavigationType value) {
+        if (value == null) {
+            return DEFAULT_NAVIGATION_TYPE;
+        }
+        return value;
+    }
+
+    private boolean isCategoryNavigationComponent(String componentTypeUid) {
+        return CATEGORY_NAVIGATION_COMPONENT_UID.equals(componentTypeUid);
+    }
+
+    private <T> T resolveValue(T current, T requested, boolean partialUpdate) {
+        if (!partialUpdate) {
+            return requested;
+        }
+        return requested != null ? requested : current;
     }
 
 }

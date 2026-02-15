@@ -19,6 +19,7 @@ import com.backend.application.command.PageSlotCommands.AddComponentToSlotComman
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
 import com.backend.application.dto.request.ReorderRequest;
+import com.backend.application.dto.request.UpdatePageSlotRequest;
 import com.backend.application.dto.slot.PageSlotDto;
 import com.backend.application.dto.slot.SlotComponentDto;
 import com.backend.application.service.PageSlotService;
@@ -86,6 +87,15 @@ public class PageSlotController {
       @PathVariable @NotBlank String slotName) {
     pageSlotService.deleteSlot(pageId, slotName);
     return ResponseEntity.ok(ApiResponse.success("Slot deleted successfully", null));
+  }
+
+  @PutMapping("/{pageId}/slots/{slotName}")
+  public ResponseEntity<ApiResponse<PageSlotResponse>> updateSlot(
+      @PathVariable @NotNull @Min(1) Long pageId,
+      @PathVariable @NotBlank String slotName,
+      @Valid @RequestBody UpdatePageSlotRequest request) {
+    PageSlotDto slot = pageSlotService.updateSlot(pageId, slotName, request);
+    return ResponseEntity.ok(ApiResponse.success("Slot updated successfully", mapToResponse(slot)));
   }
 
   @PostMapping("/{pageId}/slots/{slotName}/components")

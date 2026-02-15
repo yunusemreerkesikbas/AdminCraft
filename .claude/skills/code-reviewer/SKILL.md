@@ -16,6 +16,26 @@ Expertise: Java 21/Spring Boot 3.3.5, Angular 19/TypeScript 5.6.3, Clean Archite
 
 ---
 
+## Codebase documentation (references)
+
+For detailed rules and module information: [docs/README.md](docs/README.md).
+
+Documents to consult during review by topic:
+
+- **Architecture / layers** → [docs/global/architecture.md](docs/global/architecture.md)
+- **Security / multi-tenancy** → [docs/global/security-multi-tenancy.md](docs/global/security-multi-tenancy.md)
+- **Backend patterns** (API path, response wrapper, async jobs) → [docs/global/backend-patterns.md](docs/global/backend-patterns.md)
+- **Frontend patterns** (module locations, dialogs) → [docs/global/frontend-patterns.md](docs/global/frontend-patterns.md)
+- **Migrations** (order, naming, governance) → [docs/global/migrations.md](docs/global/migrations.md), [docs/global/migration-governance.md](docs/global/migration-governance.md)
+- **Validation** (backend/frontend sync) → [docs/global/validation.md](docs/global/validation.md)
+- **Dialogs and shared UI** → [docs/global/dialogs-and-ui.md](docs/global/dialogs-and-ui.md)
+- **List views** (pagination, sort, search) → [docs/global/list-pagination-search.md](docs/global/list-pagination-search.md)
+- **Testing** → [docs/global/testing.md](docs/global/testing.md)
+- **i18n and composite** → [docs/global/i18n-and-composite.md](docs/global/i18n-and-composite.md)
+- **Auth / public config** → [docs/global/authentication.md](docs/global/authentication.md), [docs/global/public-tenant-config.md](docs/global/public-tenant-config.md)
+
+---
+
 ## Version Compatibility
 
 ### Backend: Spring Boot 3.3.5 / Java 21
@@ -54,7 +74,7 @@ Expertise: Java 21/Spring Boot 3.3.5, Angular 19/TypeScript 5.6.3, Clean Archite
 
 ### Layer Boundaries
 
-```
+```text
 Presentation → Application → Domain ← Infrastructure
 ```
 
@@ -82,12 +102,14 @@ import com.backend.infrastructure.persistence.*; // in Application layer
 
 ### Package Structure
 
-```
-com.backend.presentation     → Controllers, Request/Response DTOs
-com.backend.application      → Services, Use Cases
+```text
+com.backend.presentation     → Controllers, presentation Request/Response DTOs
+com.backend.application      → Services, Use Cases, application.dto (request/response/delivery)
 com.backend.domain           → Entities, Repository Interfaces, Enums
 com.backend.infrastructure   → Repository Implementations, Config
 ```
+
+Application layer must not import `com.backend.presentation`; it may use its own `application.dto.*` for service contracts.
 
 ### Layer Responsibilities
 
@@ -116,6 +138,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 - ✅ `utf8mb4` / `utf8mb4_unicode_ci`
 - ❌ NO idempotent DDL logic in migrations
 - ❌ Only `CREATE DATABASE` can use string concatenation
+- 🚨 **Module execution order (CRITICAL)**: Tenant migration order is `core → media → component_library → pagebuilder → product`. When adding a new module, update `MODULE_ORDER` in [TenantMigrationService](backend/src/main/java/com/backend/application/service/TenantMigrationService.java) and [docs/global/migrations.md](docs/global/migrations.md). Full checklist: [docs/modules/platform-provisioning.md](docs/modules/platform-provisioning.md) (Add a new tenant module).
 
 ---
 
@@ -126,6 +149,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 - ✅ Bean Validation on all request DTOs: `@NotNull`, `@Size`, `@Pattern`
 - ✅ Sanitize HTML content with Jsoup
 - ✅ Use `@Valid` on controller method params
+- ✅ **Validation consistency**: Backend `ValidationConstants.java` and frontend `storefront/src/app/shared/constants/validation.constants.ts` must stay in sync; custom annotations (`@Code`, `@Slug`, `@Uid`, etc.) and limits should be single-source. Details: [docs/global/validation.md](docs/global/validation.md).
 
 ### SQL Injection Prevention
 
@@ -161,6 +185,10 @@ com.backend.infrastructure   → Repository Implementations, Config
 - ❌ No `System.out.println`, `e.printStackTrace()`
 - ❌ No code comments except essential single-line
 - ❌ No defensive programming (let exceptions propagate)
+
+### API & Response
+
+- ✅ **API response filtering**: Use `ResponseValueFilter` in DTO factory methods to exclude empty strings/collections/maps from responses; see [docs/global/backend-patterns.md](docs/global/backend-patterns.md). Jackson `NON_NULL` is global.
 
 ### Frontend Standards
 
@@ -221,7 +249,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 
 ## Performance
 
-### Backend
+### Backend (performance)
 
 - ✅ `@EntityGraph` for eager loading relationships
 - ✅ Batch loading: `findByIdIn()`
@@ -230,7 +258,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 - ✅ LRU eviction: max 10 pools, 30m idle
 - ❌ No N+1 query patterns
 
-### Frontend
+### Frontend (performance)
 
 - ✅ `trackBy` function for `@for` loops (or `track item.id`)
 - ✅ OnPush change detection
@@ -242,14 +270,14 @@ com.backend.infrastructure   → Repository Implementations, Config
 
 ## Async & Subscriptions
 
-### Backend
+### Backend (async)
 
 - ✅ `@Async` on provisioning methods
 - ✅ Job lifecycle: `pending → running → succeeded/failed`
 - ✅ Progress tracking (10% → 100%)
 - ✅ Error messages truncated (500 chars)
 
-### Frontend
+### Frontend (subscriptions)
 
 - ✅ One-time ops: `.pipe(take(1))`
 - ✅ Long-lived: `.pipe(takeUntil(this.#destroy$))`
@@ -307,11 +335,19 @@ export class FeatureService extends CrudHttpService<Feature, CreateDto, UpdateDt
 }
 ```
 
+### List views
+
+- ✅ Use `BasePaginatedListComponent` (not `BaseCrudListComponent`) for server-side pagination/sort/search, with `CrudStore`, `CrudHttpService`, and shared UI (`SpaAdminGrid`, `SpaAdminPaginator`, `SpaAdminSortDropdown`). Avoid heavy client-side filtering. Use `BaseCrudListComponent` for simple non-paginated lists. Examples: [docs/global/list-pagination-search.md](docs/global/list-pagination-search.md).
+
+### Dialogs
+
+- ✅ Prefer `SpaDialogBase` / `SpaFormDialog` / `SpaLocalizedFormDialog` and the `spa-dialog` wrapper for new dialogs; use `ItemDialog` for schema-driven CRUD. Source: [docs/global/dialogs-and-ui.md](docs/global/dialogs-and-ui.md).
+
 ---
 
 ## Testing
 
-### Backend
+### Backend (testing)
 
 - ✅ Testcontainers for integration tests
 - ✅ Test tenant isolation

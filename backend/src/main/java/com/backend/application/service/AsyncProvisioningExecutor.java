@@ -3,20 +3,20 @@ package com.backend.application.service;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.domain.entity.ProvisioningJob;
 import com.backend.domain.entity.Tenant;
-import com.backend.domain.entity.TenantModule;
+import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.ProvisioningJobRepository;
 import com.backend.domain.repository.TenantModuleRepository;
 import com.backend.domain.repository.TenantRepository;
@@ -36,6 +36,7 @@ public class AsyncProvisioningExecutor {
   private final ProvisioningJobRepository jobRepository;
   private final TenantModuleRepository tenantModuleRepository;
   private final TenantMigrationService tenantMigrationService;
+  private final TenantModuleRegistrar tenantModuleRegistrar;
   private final Environment environment;
 
   @Value("${spring.datasource.tenant.host}")
@@ -56,11 +57,12 @@ public class AsyncProvisioningExecutor {
 
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenantId));
+    MDC.put("tenantDb", dbName);
+
+    log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
-
-      log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
 
       updateJobProgress(jobId, 20);
       prepareDatabaseForProvisioning(tenantId, dbName);
@@ -69,9 +71,9 @@ public class AsyncProvisioningExecutor {
       tenantMigrationService.migrateTenant(dbName, modules);
 
       updateJobProgress(jobId, 90);
-      insertTenantModules(tenantId, modules);
+      tenantModuleRegistrar.registerModules(tenantId, modules);
 
-      updateTenantStatus(tenantId, "ACTIVE");
+      updateTenantStatus(tenantId, TenantStatus.ACTIVE);
       updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
 
       log.info("Provisioning completed successfully for tenant {} on thread: {}",
@@ -91,6 +93,7 @@ public class AsyncProvisioningExecutor {
     log.info("Async sync migrations started on thread: {}", Thread.currentThread().getName());
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenantId));
+    MDC.put("tenantDb", dbName);
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
       log.info("Starting migration sync for tenant {} with modules: {}", tenantId, modules);
@@ -138,8 +141,8 @@ public class AsyncProvisioningExecutor {
           log.warn("Database {} already contains tables. Dropping for clean provisioning.", dbName);
           stmt.execute("DROP DATABASE IF EXISTS " + quotedDbName);
         } else {
-          throw new IllegalStateException(
-              "Tenant database already initialized: " + dbName + ". Use sync migrations instead of full provision.");
+          log.info("Tenant database already initialized: {}. Skipping creation, continuing with migrations and module registration.", dbName);
+          return;
         }
       }
 
@@ -175,12 +178,12 @@ public class AsyncProvisioningExecutor {
         .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
     boolean hasModules = !tenantModuleRepository.findByTenantId(tenantId).isEmpty();
 
-    return tenant.getStatus() == com.backend.domain.enums.TenantStatus.PENDING && !hasModules;
+    return tenant.getStatus() == TenantStatus.PENDING && !hasModules;
   }
 
   private boolean isDestructiveRecreateAllowed() {
     return environment.acceptsProfiles(
-        org.springframework.core.env.Profiles.of("dev", "test"));
+        Profiles.of("dev", "test"));
   }
 
   private boolean databaseExists(Connection conn, String dbName) {
@@ -242,57 +245,12 @@ public class AsyncProvisioningExecutor {
   }
 
   @Transactional("platformTransactionManager")
-  public void updateTenantStatus(Long tenantId, String status) {
+  public void updateTenantStatus(Long tenantId, TenantStatus status) {
     Tenant tenant = tenantRepository.findById(tenantId)
         .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
-    tenant.setStatus(com.backend.domain.enums.TenantStatus.valueOf(status));
+    tenant.setStatus(status);
     tenantRepository.save(tenant);
     log.info("Tenant {} status updated to: {}", tenantId, status);
-  }
-
-  @Transactional("platformTransactionManager")
-  public void insertTenantModules(Long tenantId, List<String> modules) {
-    log.info("Inserting tenant_modules records for tenant {} with modules: {}", tenantId, modules);
-
-    List<TenantModule> existingModules = tenantModuleRepository.findByTenantId(tenantId);
-    List<String> existingModuleCodes = existingModules.stream()
-        .map(TenantModule::getModuleCode)
-        .toList();
-
-    log.debug("Tenant {} already has modules: {}", tenantId, existingModuleCodes);
-
-    List<TenantModule> newModules = new ArrayList<>();
-    LocalDateTime now = LocalDateTime.now();
-
-    for (String moduleCode : modules) {
-      if (existingModuleCodes.contains(moduleCode)) {
-        log.debug("Skipping module {} - already installed for tenant {}", moduleCode, tenantId);
-        continue;
-      }
-
-      try {
-        com.backend.domain.enums.ModuleCode.fromCode(moduleCode);
-      } catch (IllegalArgumentException ex) {
-        log.warn("Skipping unknown module code during provisioning: {}", moduleCode);
-        continue;
-      }
-
-      TenantModule tenantModule = TenantModule.builder()
-          .tenantId(tenantId)
-          .moduleCode(moduleCode)
-          .status("enabled")
-          .installedAt(now)
-          .build();
-      newModules.add(tenantModule);
-      log.debug("Prepared NEW tenant_module record: tenantId={}, moduleCode={}", tenantId, moduleCode);
-    }
-
-    if (!newModules.isEmpty()) {
-      tenantModuleRepository.saveAll(newModules);
-      log.info("Successfully inserted {} new tenant_modules records for tenant {}", newModules.size(), tenantId);
-    } else {
-      log.info("No new modules to insert for tenant {} - all modules already exist", tenantId);
-    }
   }
 
   private String buildDetailedErrorMessage(Exception e) {

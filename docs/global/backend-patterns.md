@@ -18,9 +18,7 @@ Platform migrations/seeds live under:
 
 ## Modules catalog sync (manual)
 
-When adding a new tenant module, follow:
-
-- [`backend/docs/MODULE_SYNC_CHECKLIST.md`](../../backend/docs/MODULE_SYNC_CHECKLIST.md)
+When adding a new tenant module, follow the checklist in [platform-provisioning.md](../modules/platform-provisioning.md) (section **Add a new tenant module**).
 
 ## API base path
 

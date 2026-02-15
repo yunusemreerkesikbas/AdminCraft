@@ -2,7 +2,8 @@ package com.backend.application.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
@@ -183,7 +184,11 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     slot.setAllowedTypes(pageTemplateMapper.encodeAllowedTypes(command.allowedTypes()));
 
     TemplateSlot saved = templateSlotRepository.save(slot);
+    int createdPageSlots = propagateTemplateSlotCreate(templateId, saved);
     log.info("Added slot '{}' to template '{}'", command.slotName(), template.getUid());
+    if (createdPageSlots > 0) {
+      log.info("Added slot '{}' to {} pages assigned to template {}", command.slotName(), createdPageSlots, templateId);
+    }
 
     return pageTemplateMapper.toSlotDto(saved);
   }
@@ -193,8 +198,12 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     TemplateSlot slot = templateSlotRepository.findByTemplateIdAndSlotName(templateId, slotName)
         .orElseThrow(() -> new EntityNotFoundException("TemplateSlot", slotName));
 
+    int removedPageSlots = propagateTemplateSlotDelete(templateId, slotName);
     templateSlotRepository.delete(slot);
     log.info("Removed slot '{}' from template {}", slotName, templateId);
+    if (removedPageSlots > 0) {
+      log.info("Removed slot '{}' from {} pages assigned to template {}", slotName, removedPageSlots, templateId);
+    }
   }
 
   @Override
@@ -215,36 +224,10 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     page.setTemplateId(templateId);
     pageRepository.save(page);
 
-    // Get existing slot names in one query to avoid N+1
-    Set<String> existingSlotNames = pageSlotRepository.findByPageId(pageId).stream()
-        .map(PageSlot::getSlotName)
-        .collect(Collectors.toSet());
-
-    // Get template slots and filter to only create missing ones
-    List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(templateId);
-    List<PageSlot> newSlots = new ArrayList<>();
-
-    for (TemplateSlot templateSlot : templateSlots) {
-      if (!existingSlotNames.contains(templateSlot.getSlotName())) {
-        PageSlot pageSlot = new PageSlot();
-        pageSlot.setPageId(pageId);
-        pageSlot.setSlotName(templateSlot.getSlotName());
-        pageSlot.setPosition(templateSlot.getPosition());
-        pageSlot.setSortOrder(templateSlot.getSortOrder());
-        pageSlot.setIsActive(true);
-        pageSlot.setIsShared(false);
-        newSlots.add(pageSlot);
-      }
-    }
-
-    // Batch save all new slots
-    if (!newSlots.isEmpty()) {
-      pageSlotRepository.saveAll(newSlots);
-      log.debug("Created {} page slots for page {}", newSlots.size(), pageId);
-    }
+    int createdSlots = synchronizeTemplateSlotsToPage(pageId, templateId);
 
     log.info("Assigned template '{}' to page {} and created {} slots",
-        template.getUid(), pageId, newSlots.size());
+        template.getUid(), pageId, createdSlots);
   }
 
   @Override
@@ -272,7 +255,144 @@ public class PageTemplateServiceImpl implements PageTemplateService {
     }
 
     templateSlotRepository.saveAll(updatedSlots);
+    int updatedPageSlots = propagateTemplateSlotReorder(templateId, updatedSlots);
     log.info("Reordered {} slots for template {}", updatedSlots.size(), templateId);
+    if (updatedPageSlots > 0) {
+      log.info("Reordered {} page slots across pages assigned to template {}", updatedPageSlots, templateId);
+    }
+  }
+
+  private int synchronizeTemplateSlotsToPage(Long pageId, Long templateId) {
+    List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(templateId);
+    if (templateSlots.isEmpty()) {
+      return 0;
+    }
+
+    Map<String, PageSlot> existingSlots = pageSlotRepository.findByPageId(pageId).stream()
+        .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot));
+
+    List<PageSlot> newSlots = new ArrayList<>();
+    List<PageSlot> slotsToUpdate = new ArrayList<>();
+
+    for (TemplateSlot templateSlot : templateSlots) {
+      PageSlot existing = existingSlots.get(templateSlot.getSlotName());
+      if (existing == null) {
+        PageSlot pageSlot = new PageSlot();
+        pageSlot.setPageId(pageId);
+        pageSlot.setSlotName(templateSlot.getSlotName());
+        pageSlot.setPosition(templateSlot.getPosition());
+        pageSlot.setSortOrder(templateSlot.getSortOrder());
+        pageSlot.setIsActive(true);
+        pageSlot.setIsShared(false);
+        newSlots.add(pageSlot);
+        continue;
+      }
+
+      boolean changed = false;
+      if (!Objects.equals(existing.getPosition(), templateSlot.getPosition())) {
+        existing.setPosition(templateSlot.getPosition());
+        changed = true;
+      }
+      if (!Objects.equals(existing.getSortOrder(), templateSlot.getSortOrder())) {
+        existing.setSortOrder(templateSlot.getSortOrder());
+        changed = true;
+      }
+      if (!Objects.equals(existing.getIsShared(), false)) {
+        existing.setIsShared(false);
+        changed = true;
+      }
+      if (changed) {
+        slotsToUpdate.add(existing);
+      }
+    }
+
+    if (!newSlots.isEmpty()) {
+      pageSlotRepository.saveAll(newSlots);
+    }
+    if (!slotsToUpdate.isEmpty()) {
+      pageSlotRepository.saveAll(slotsToUpdate);
+    }
+    return newSlots.size();
+  }
+
+  private int propagateTemplateSlotCreate(Long templateId, TemplateSlot templateSlot) {
+    List<Page> pages = pageRepository.findByTemplateId(templateId);
+    if (pages.isEmpty()) {
+      return 0;
+    }
+
+    List<Long> pageIds = pages.stream().map(Page::getId).collect(Collectors.toList());
+    List<PageSlot> existingSlots = pageSlotRepository.findByPageIdInAndSlotName(pageIds, templateSlot.getSlotName());
+    java.util.Set<Long> pagesWithSlot = existingSlots.stream()
+        .map(PageSlot::getPageId)
+        .collect(java.util.stream.Collectors.toSet());
+
+    List<PageSlot> newSlots = new ArrayList<>();
+    for (Page page : pages) {
+      if (pagesWithSlot.contains(page.getId())) {
+        continue;
+      }
+      PageSlot slot = new PageSlot();
+      slot.setPageId(page.getId());
+      slot.setSlotName(templateSlot.getSlotName());
+      slot.setPosition(templateSlot.getPosition());
+      slot.setSortOrder(templateSlot.getSortOrder());
+      slot.setIsActive(true);
+      slot.setIsShared(false);
+      newSlots.add(slot);
+    }
+
+    if (!newSlots.isEmpty()) {
+      pageSlotRepository.saveAll(newSlots);
+    }
+    return newSlots.size();
+  }
+
+  private int propagateTemplateSlotDelete(Long templateId, String slotName) {
+    List<Page> pages = pageRepository.findByTemplateId(templateId);
+    if (pages.isEmpty()) {
+      return 0;
+    }
+
+    int removed = 0;
+    for (Page page : pages) {
+      var pageSlot = pageSlotRepository.findByPageIdAndSlotName(page.getId(), slotName);
+      if (pageSlot.isPresent()) {
+        pageSlotRepository.delete(pageSlot.get());
+        removed++;
+      }
+    }
+    return removed;
+  }
+
+  private int propagateTemplateSlotReorder(Long templateId, List<TemplateSlot> updatedSlots) {
+    if (updatedSlots.isEmpty()) {
+      return 0;
+    }
+
+    Map<String, Integer> sortOrderBySlotName = updatedSlots.stream()
+        .collect(Collectors.toMap(TemplateSlot::getSlotName, TemplateSlot::getSortOrder));
+
+    List<Page> pages = pageRepository.findByTemplateId(templateId);
+    if (pages.isEmpty()) {
+      return 0;
+    }
+
+    int updatedPageSlots = 0;
+    for (Page page : pages) {
+      List<PageSlot> slotsToUpdate = pageSlotRepository.findByPageId(page.getId()).stream()
+          .filter(pageSlot -> sortOrderBySlotName.containsKey(pageSlot.getSlotName()))
+          .filter(pageSlot -> !Objects.equals(pageSlot.getSortOrder(), sortOrderBySlotName.get(pageSlot.getSlotName())))
+          .peek(pageSlot -> pageSlot.setSortOrder(sortOrderBySlotName.get(pageSlot.getSlotName())))
+          .toList();
+
+      if (!slotsToUpdate.isEmpty()) {
+        pageSlotRepository.saveAll(slotsToUpdate);
+        updatedPageSlots += slotsToUpdate.size();
+      }
+    }
+
+    return updatedPageSlots;
   }
 
   private Language getDefaultLanguage() {

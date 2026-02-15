@@ -20,7 +20,7 @@ import com.backend.domain.exception.PageNotFoundException;
 import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.util.UuidUidGenerator;
-import com.backend.presentation.dto.response.PageI18nResponse;
+import com.backend.application.dto.response.PageI18nResponse;
 
 import lombok.RequiredArgsConstructor;
 

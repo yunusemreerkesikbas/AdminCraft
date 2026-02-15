@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
 
 public record ComponentResponse(
         Long id,
@@ -15,6 +16,10 @@ public record ComponentResponse(
         Integer displayOrder,
         Boolean isVisible,
         String styleClasses,
+        Long navigationNodeId,
+        Long navigationLinkNodeId,
+        NavigationType navigationType,
+        Boolean searchBox,
         ComponentStatus status,
         ResponsiveMediaResponse responsiveMedia,
         LocalDateTime createdAt,
@@ -32,6 +37,10 @@ public record ComponentResponse(
                 entity.getDisplayOrder(),
                 entity.getIsVisible(),
                 entity.getStyleClasses(),
+                entity.getNavigationNodeId(),
+                entity.getNavigationLinkNodeId(),
+                entity.getNavigationType(),
+                entity.getSearchBox(),
                 entity.getStatus(),
                 entity.getResponsiveMedia() != null ? ResponsiveMediaResponse.from(entity.getResponsiveMedia()) : null,
                 entity.getCreatedAt(),

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
+import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.util.MediaFieldExpander;
 import com.backend.domain.entity.Component;
@@ -25,6 +26,7 @@ import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
@@ -42,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
+  private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
   private static final Set<String> RESERVED_FIELDS = Set.of(
       "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -53,6 +56,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
   private final ResponsiveMediaService responsiveMediaService;
   private final MediaFieldExpander mediaFieldExpander;
+  private final NavigationService navigationService;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -152,13 +156,17 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
       ComponentDeliveryResponse response = ComponentDeliveryResponse.builder()
           .uid(component.getUid())
-          .type(type != null ? type.getName() : null)
+          .type(resolveComponentType(type))
           .category(type != null ? type.getCategory() : null)
           .title(i18n != null ? i18n.getTitle() : null)
           .subtitle(i18n != null ? i18n.getSubtitle() : null)
           .description(i18n != null ? i18n.getDescription() : null)
           .isVisible(component.getIsVisible())
           .styleClasses(component.getStyleClasses())
+          .navigationType(resolveNavigationType(type, component))
+          .searchBox(resolveSearchBox(type, component))
+          .navigationNode(resolveNavigationNode(type, component))
+          .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
           .entries(entryResponses)
           .build();
@@ -222,13 +230,17 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
     return ComponentDeliveryResponse.builder()
         .uid(component.getUid())
-        .type(componentType != null ? componentType.getName() : null)
+        .type(resolveComponentType(componentType))
         .category(componentType != null ? componentType.getCategory() : null)
         .title(i18nOpt.map(ComponentI18n::getTitle).orElse(null))
         .subtitle(i18nOpt.map(ComponentI18n::getSubtitle).orElse(null))
         .description(i18nOpt.map(ComponentI18n::getDescription).orElse(null))
         .isVisible(component.getIsVisible())
         .styleClasses(component.getStyleClasses())
+        .navigationType(resolveNavigationType(componentType, component))
+        .searchBox(resolveSearchBox(componentType, component))
+        .navigationNode(resolveNavigationNode(componentType, component))
+        .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
         .entries(entryResponses)
         .build();
@@ -262,5 +274,44 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .styleClasses(entry.getStyleClasses())
         .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
+  }
+
+  private String resolveComponentType(ComponentType type) {
+    if (type == null) {
+      return null;
+    }
+    return type.getUid() != null ? type.getUid() : type.getName();
+  }
+
+  private NavigationType resolveNavigationType(ComponentType type, Component component) {
+    if (!isCategoryNavigationComponent(type)) {
+      return null;
+    }
+    return component.getNavigationType();
+  }
+
+  private Boolean resolveSearchBox(ComponentType type, Component component) {
+    if (!isCategoryNavigationComponent(type)) {
+      return null;
+    }
+    return component.getSearchBox();
+  }
+
+  private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
+    if (!isCategoryNavigationComponent(type) || component.getNavigationNodeId() == null) {
+      return null;
+    }
+    return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
+  }
+
+  private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
+    if (!isCategoryNavigationComponent(type) || component.getNavigationLinkNodeId() == null) {
+      return null;
+    }
+    return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
+  }
+
+  private boolean isCategoryNavigationComponent(ComponentType type) {
+    return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
   }
 }

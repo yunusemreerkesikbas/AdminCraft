@@ -122,6 +122,13 @@ Frontend clients must check `payload.result === "ERROR"` (not response status) t
 
 Source: `backend/src/main/java/com/backend/application/dto/delivery/ContentSlotDeliveryResponse.java`
 
+Template-slot resolution note:
+
+- For pages with `templateId`, delivery slot list is resolved from `template_slots` (slot order/position contract).
+- Component bindings are taken from page slot first, then shared slot fallback for the same `slot_name`.
+- `contentSlots.contentSlot[].position` is the slot `position` value (not slot name).
+- `component.type` is populated from `componentType.uid` (stable registry key); falls back to `componentType.name` if uid is missing.
+
 DTO references (source of truth):
 
 - `backend/src/main/java/com/backend/application/dto/delivery/ComponentDeliveryResponse.java`
@@ -146,6 +153,7 @@ Key patterns used in the Next.js client:
 - `resolvePage` and `fetchSiteConfig` are wrapped with React `cache()` to deduplicate identical calls within a single SSR render cycle (e.g. `generateMetadata` + page component both calling the same endpoint).
 - `resolvePage` uses flat primitive arguments (`lang, pageType, pageLabelOrId, code`) instead of an object — required for `cache()` identity comparison to work correctly.
 - HTTP 200 + `result: "ERROR"` is treated as `null` (not an error throw), matching the backend's page-not-found contract.
+- `page.template` drives layout selection via `templateRegistry` — equivalent to Spartacus's `cx-storefront` / `cx-page-slot` pattern. Each template places `<CmsSlot position="..." />` where it needs; unknown templates render `null` + `console.warn`. See `storefront-nextjs/components/cms/templates/`.
 
 ## Security & tenant isolation
 

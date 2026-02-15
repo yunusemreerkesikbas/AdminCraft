@@ -1,6 +1,7 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,7 +27,9 @@ import lombok.NoArgsConstructor;
 }, indexes = {
         @Index(columnList = "component_type_id", name = "idx_component_type"),
         @Index(columnList = "status", name = "idx_component_status"),
-        @Index(columnList = "responsive_id", name = "idx_component_responsive")
+        @Index(columnList = "responsive_id", name = "idx_component_responsive"),
+        @Index(columnList = "navigation_node_id", name = "idx_component_navigation_node"),
+        @Index(columnList = "navigation_link_node_id", name = "idx_component_navigation_link_node")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -58,12 +61,21 @@ public class Component extends BaseEntity {
     @NotNull
     private ComponentStatus status = ComponentStatus.DRAFT;
 
-    /**
-     * Responsive media set for component-level Desktop/Mobile images.
-     * Used for component backgrounds, hero images, etc.
-     * EAGER fetch to prevent LazyInitializationException in DTO mappings.
-     */
+    // EAGER: LazyInitializationException prevention
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "responsive_id")
     private ResponsiveMediaSet responsiveMedia;
+
+    @Column(name = "navigation_node_id")
+    private Long navigationNodeId;
+
+    @Column(name = "navigation_link_node_id")
+    private Long navigationLinkNodeId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "navigation_type", length = 50)
+    private NavigationType navigationType;
+
+    @Column(name = "search_box")
+    private Boolean searchBox;
 }

@@ -61,7 +61,11 @@
       "Bash(git merge:*)",
       "Bash(git fetch:*)",
       "Bash(yarn add:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(mvn test:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": [],

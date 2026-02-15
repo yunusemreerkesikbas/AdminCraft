@@ -24,4 +24,6 @@ interface PageSlotJpaRepository extends JpaRepository<PageSlot, Long> {
   List<PageSlot> findSharedSlots();
 
   boolean existsByPageIdAndSlotName(Long pageId, String slotName);
+
+  List<PageSlot> findByPageIdInAndSlotName(List<Long> pageIds, String slotName);
 }

@@ -20,6 +20,8 @@ public interface PageRepository extends JpaRepository<Page, Long> {
 
     List<Page> findByStatus(PageStatus status);
 
+    List<Page> findByTemplateId(Long templateId);
+
     boolean existsByUid(String uid);
 
     List<Page> findByUidIn(List<String> uids);

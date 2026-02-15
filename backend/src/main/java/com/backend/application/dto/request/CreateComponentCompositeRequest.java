@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -12,19 +13,27 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateComponentCompositeRequest(
-    @NotNull(message = "Component type is required") Long componentTypeId,
+    @NotNull(message = "{validation.component.type.id.required}") Long componentTypeId,
 
-    @NotBlank(message = "Name is required") @Size(max = 100, message = "Name must be at most 100 characters") String name,
+    @NotBlank(message = "{validation.component.name.required}") @Size(max = 100, message = "{validation.component.name.size}") String name,
 
     Integer displayOrder,
 
     Boolean isVisible,
 
-    @Size(max = 500, message = "Style classes must be at most 500 characters") String styleClasses,
+    @Size(max = 500, message = "{validation.component.style.classes.size}") String styleClasses,
+
+    Long navigationNodeId,
+
+    Long navigationLinkNodeId,
+
+    NavigationType navigationType,
+
+    Boolean searchBox,
 
     ComponentStatus status,
 
-    @NotEmpty(message = "At least one translation is required") @Valid Map<Language, ComponentI18nCommand> translations) {
+    @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
   public CreateComponentCompositeRequest {
     if (displayOrder == null) {

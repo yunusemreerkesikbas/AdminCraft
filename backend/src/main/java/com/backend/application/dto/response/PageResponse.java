@@ -1,4 +1,4 @@
-package com.backend.presentation.dto.response;
+package com.backend.application.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -30,5 +30,4 @@ public record PageResponse(
                 page.getCreatedAt(),
                 page.getUpdatedAt());
     }
-
 }

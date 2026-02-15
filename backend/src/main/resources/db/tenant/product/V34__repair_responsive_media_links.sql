@@ -1,4 +1,8 @@
--- Repair responsive media links for product module (idempotent)
+-- V34: Repair responsive media links for product module (idempotent).
+-- GOVERNANCE EXCEPTION: Dynamic DDL via stored procedures is intentional here.
+-- Cross-tenant idempotency requires INFORMATION_SCHEMA checks; this is a repair migration
+-- targeting schema drift across existing tenants. Standard straight DDL would fail on tenants
+-- where columns/indexes already exist or FK constraints differ.
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DELIMITER //
@@ -53,6 +57,21 @@ CALL AddIndexIfNotExists(DATABASE(), 'responsive_media_set', 'idx_temp_pm', 'tem
 CALL AddIndexIfNotExists(DATABASE(), 'product_media', 'idx_pm_responsive_set', 'responsive_media_set_id');
 
 DROP PROCEDURE IF EXISTS AddIndexIfNotExists;
+
+-- If V28 ran: column is NOT NULL and fk_pm_responsive_set exists. ON DELETE SET NULL requires nullable column.
+SET @old_fk = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'product_media' AND CONSTRAINT_NAME = 'fk_pm_responsive_set');
+SET @ddl = IF(@old_fk > 0, 'ALTER TABLE product_media DROP FOREIGN KEY fk_pm_responsive_set', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @is_nullable = (SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'product_media' AND COLUMN_NAME = 'responsive_media_set_id');
+SET @ddl = IF(@is_nullable = 'NO', 'ALTER TABLE product_media MODIFY COLUMN responsive_media_set_id BIGINT NULL', 'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- FK guard
 SET @fk_exists = (

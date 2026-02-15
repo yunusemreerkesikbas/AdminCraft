@@ -86,6 +86,12 @@ Provisioning-related admin UI is integrated through tenant management views:
 - Tenants service: [`storefront/src/app/modules/admin/custom/tenants/tenants.service.ts`](../../storefront/src/app/modules/admin/custom/tenants/tenants.service.ts)
 - Tenant detail jobs tab: [`storefront/src/app/modules/admin/custom/tenants/detail/tabs/tenant-jobs.component.ts`](../../storefront/src/app/modules/admin/custom/tenants/detail/tabs/tenant-jobs.component.ts)
 
+### Messaging convention (tenant/provisioning flows)
+
+- Backend owns user-facing operation messages and returns them in `ApiResponse.message` (localized by `Accept-Language`).
+- Frontend should only display backend `message` for success/error states (`response.message` and `error.error.message`), not author module-specific business messages.
+- Frontend may use only generic fallback text when backend message is missing (unexpected failure scenarios).
+
 ## Security & tenant isolation
 
 Platform routes are treated as non-tenant-scoped control-plane paths by:
@@ -132,21 +138,89 @@ DTO references (source of truth):
 
 ### Add a new tenant module
 
-Follow the checklist exactly:
+Update these files in order. See also [Module Execution Order](../global/migrations.md#module-execution-order) and `TenantMigrationService.MODULE_ORDER` when adding a new module to the migration sequence.
 
-- [`backend/docs/MODULE_SYNC_CHECKLIST.md`](../../backend/docs/MODULE_SYNC_CHECKLIST.md)
+#### Backend
 
-Quick reference (files you will typically touch):
+1. **Database seed** — `backend/src/main/resources/db/platform/R__seed_modules.sql`  
+   Use `ON DUPLICATE KEY UPDATE` (see existing rows) to avoid cascade-deleting `tenant_modules`:
 
-- Backend
-  - `backend/src/main/resources/db/platform/R__seed_modules.sql`
-  - `backend/src/main/java/com/backend/domain/enums/ModuleCode.java`
-  - `backend/src/main/resources/db/tenant/{module}/V1__baseline.sql`
-- Frontend
-  - `storefront/src/app/core/navigation/navigation-modules.constants.ts`
-  - `storefront/src/app/shared/navigation/navigation-data.constants.ts` (only if module adds new navigation items)
-  - `storefront/src/app/core/auth/guards/module.guard.ts` (only if custom module messaging is needed)
-  - `storefront/src/app/modules/admin/api-endpoints.ts` (add endpoint templates when the admin UI needs new routes)
+   ```sql
+   INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
+   VALUES ('new_module', 'New Module', 'core', '1.0.0', '["core"]', FALSE, 'Module description here.')
+   AS new_vals
+   ON DUPLICATE KEY UPDATE
+       name = new_vals.name,
+       type = new_vals.type,
+       version = new_vals.version,
+       description = new_vals.description;
+   ```
+
+2. **Enum** — `backend/src/main/java/com/backend/domain/enums/ModuleCode.java`
+
+   ```java
+   public enum ModuleCode {
+       // ... existing
+       NEW_MODULE("new_module", "New Module");
+   }
+   ```
+
+3. **Migration order** — If the module participates in tenant migrations, add it to `MODULE_ORDER` in [TenantMigrationService](../../backend/src/main/java/com/backend/application/service/TenantMigrationService.java) and document the order in [docs/global/migrations.md](../global/migrations.md).
+
+4. **Tenant migration** — `backend/src/main/resources/db/tenant/new_module/V1__baseline.sql`
+
+   ```sql
+   CREATE TABLE new_module_data (
+       id BIGINT AUTO_INCREMENT PRIMARY KEY,
+       -- fields here
+   ) ENGINE=InnoDB CHARSET=utf8mb4;
+   ```
+
+#### Frontend
+
+1. **Navigation constant** — `storefront/src/app/core/navigation/navigation-modules.constants.ts`  
+   Only add **provisioning-selectable** modules here (catalog exposes `core` and `product`; core-expanded modules like `media`, `component_library`, `pagebuilder` are covered by `CORE` and do not need an entry):
+
+   ```typescript
+   export const NAVIGATION_MODULES = {
+       // ... existing
+       NEW_MODULE: 'new_module'
+   } as const;
+   ```
+
+2. **Module guard** — `storefront/src/app/core/auth/guards/module.guard.ts`  
+   The guard reads `requiredModule` from route data; typically no changes needed. Add `requiredModule` to route/navigation data when protecting new routes.
+
+3. **Navigation items** (if needed) — `storefront/src/app/shared/navigation/navigation-data.constants.ts`  
+   Use i18n keys for `title` (e.g. `admin.nav.newModule`):
+
+   ```typescript
+   {
+       id: 'apps.custom.newModule',
+       title: 'admin.nav.newModule',
+       type: 'basic',
+       icon: 'heroicons_outline:icon-name',
+       link: 'new-module',
+       requiredModule: NAVIGATION_MODULES.NEW_MODULE,
+       excludedRoles: ['SUPER_ADMIN'],
+   }
+   ```
+
+4. **API endpoints** (when admin UI needs new routes) — `storefront/src/app/modules/admin/api-endpoints.ts`
+
+#### Verification
+
+- [ ] Backend compiles: `mvn clean compile`
+- [ ] Module in catalog: `curl http://localhost:8080/api/provisioning/modules/catalog`
+- [ ] Provision dialog shows new module
+- [ ] Navigation appears when module is enabled
+- [ ] Migration runs successfully
+
+#### Notes
+
+- Module types: core-expanded modules (`core`, `media`, `component_library`, `pagebuilder`) use `type: 'core'`; optional catalog modules (e.g. `product`) use `type: 'b2c'`
+- Core module deps: `NULL`; others: `'["core"]'`
+- Module codes: lowercase with underscores
 
 ### Apply new migrations to existing tenants
 

@@ -1,24 +1,36 @@
 package com.backend.application.dto.request;
 
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_NAME_MAX_LENGTH;
+import static com.backend.shared.constants.ValidationConstants.COMPONENT_STYLE_CLASSES_MAX_LENGTH;
+
 import java.util.Map;
 
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public record UpdateComponentCompositeRequest(
-        @Size(max = 100, message = "Name must be at most 100 characters") String name,
+        @Size(max = COMPONENT_NAME_MAX_LENGTH, message = "{validation.component.name.size}") String name,
 
         Integer displayOrder,
 
         Boolean isVisible,
 
-        @Size(max = 500, message = "Style classes must be at most 500 characters") String styleClasses,
+        @Size(max = COMPONENT_STYLE_CLASSES_MAX_LENGTH, message = "{validation.component.style.classes.size}") String styleClasses,
+
+        Long navigationNodeId,
+
+        Long navigationLinkNodeId,
+
+        NavigationType navigationType,
+
+        Boolean searchBox,
 
         ComponentStatus status,
 
-        @NotEmpty(message = "At least one translation is required") @Valid Map<Language, ComponentI18nCommand> translations) {
+        @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 }

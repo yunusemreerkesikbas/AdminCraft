@@ -6,6 +6,7 @@ import java.util.Map;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
 
 public record ComponentDetailResponse(
         Long id,
@@ -17,6 +18,10 @@ public record ComponentDetailResponse(
         Integer displayOrder,
         Boolean isVisible,
         String styleClasses,
+        Long navigationNodeId,
+        Long navigationLinkNodeId,
+        NavigationType navigationType,
+        Boolean searchBox,
         ComponentStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
@@ -47,6 +52,10 @@ public record ComponentDetailResponse(
                 component.getDisplayOrder(),
                 component.getIsVisible(),
                 component.getStyleClasses(),
+                component.getNavigationNodeId(),
+                component.getNavigationLinkNodeId(),
+                component.getNavigationType(),
+                component.getSearchBox(),
                 component.getStatus(),
                 component.getCreatedAt(),
                 component.getUpdatedAt(),

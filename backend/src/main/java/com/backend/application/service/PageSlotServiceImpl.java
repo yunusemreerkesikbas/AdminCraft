@@ -1,8 +1,11 @@
 package com.backend.application.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,17 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.command.PageSlotCommands.AddComponentToSlotCommand;
 import com.backend.application.command.PageSlotCommands.CreatePageSlotCommand;
 import com.backend.application.command.PageSlotCommands.ReorderSlotComponentsCommand;
+import com.backend.application.dto.request.UpdatePageSlotRequest;
 import com.backend.application.dto.slot.PageSlotDto;
 import com.backend.application.dto.slot.SlotComponentDto;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageSlot;
 import com.backend.domain.entity.SlotComponent;
+import com.backend.domain.entity.TemplateSlot;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.SlotComponentRepository;
+import com.backend.domain.repository.TemplateSlotRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +45,7 @@ public class PageSlotServiceImpl implements PageSlotService {
   private final PageRepository pageRepository;
   private final ComponentRepository componentRepository;
   private final ComponentTypeRepository componentTypeRepository;
+  private final TemplateSlotRepository templateSlotRepository;
 
   @Override
   public PageSlotDto createSlot(Long pageId, CreatePageSlotCommand command) {
@@ -45,8 +53,12 @@ public class PageSlotServiceImpl implements PageSlotService {
     Long effectivePageId = isShared ? null : pageId;
 
     if (effectivePageId != null) {
-      pageRepository.findById(effectivePageId)
+      Page page = pageRepository.findById(effectivePageId)
           .orElseThrow(() -> new IllegalArgumentException("Page not found: " + effectivePageId));
+      if (page.getTemplateId() != null) {
+        throw new IllegalArgumentException(
+            "Cannot create slots on a template-based page. Manage slot structure from page template.");
+      }
     }
 
     if (isShared) {
@@ -84,15 +96,22 @@ public class PageSlotServiceImpl implements PageSlotService {
   @Override
   @Transactional(readOnly = true)
   public List<PageSlotDto> getSlotsByPageId(Long pageId) {
-    List<PageSlot> pageSlots = pageSlotRepository.findByPageId(pageId);
+    Page page = pageRepository.findById(pageId)
+        .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageId));
 
+    List<PageSlot> pageSlots = pageSlotRepository.findByPageId(pageId);
     List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
 
-    List<PageSlot> allSlots = new ArrayList<>();
-    allSlots.addAll(sharedSlots);
-    allSlots.addAll(pageSlots);
+    if (page.getTemplateId() == null) {
+      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots));
+    }
 
-    return mapSlotsToDtos(allSlots);
+    List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(page.getTemplateId());
+    if (templateSlots.isEmpty()) {
+      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots));
+    }
+
+    return mapSlotsToDtos(resolveEffectiveTemplateSlots(pageId, templateSlots, pageSlots, sharedSlots));
   }
 
   @Override
@@ -103,8 +122,50 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   @Override
+  public PageSlotDto updateSlot(Long pageId, String slotName, UpdatePageSlotRequest request) {
+    PageSlot slot = findWritablePageSlot(pageId, slotName);
+    assertTemplateSlotMutationAllowed(pageId, slotName, request.getSlotName());
+
+    if (request.getIsShared() != null && !Objects.equals(slot.getIsShared(), request.getIsShared())) {
+      throw new IllegalArgumentException("Shared flag cannot be changed for an existing slot");
+    }
+
+    String updatedSlotName = request.getSlotName();
+    if (!Objects.equals(slot.getSlotName(), updatedSlotName) && isSlotNameTaken(slot, updatedSlotName)) {
+      throw new IllegalArgumentException("Slot with name '" + updatedSlotName + "' already exists");
+    }
+
+    String updatedUid = request.getUid();
+    if (updatedUid != null && !updatedUid.isBlank() && !Objects.equals(slot.getUid(), updatedUid)) {
+      pageSlotRepository.findByUid(updatedUid)
+          .ifPresent(existing -> {
+            throw new IllegalArgumentException("Slot uid already exists: " + updatedUid);
+          });
+      slot.setUid(updatedUid);
+    }
+
+    slot.setSlotName(updatedSlotName);
+    slot.setPosition(request.getPosition());
+    if (request.getSortOrder() != null) {
+      slot.setSortOrder(request.getSortOrder());
+    }
+    if (request.getIsActive() != null) {
+      slot.setIsActive(request.getIsActive());
+    }
+
+    PageSlot savedSlot = pageSlotRepository.save(slot);
+    log.info("Updated slot '{}' for page {}", slotName, pageId);
+
+    return mapSlotsToDtos(List.of(savedSlot)).stream()
+        .findFirst()
+        .orElseGet(() -> mapToDto(savedSlot, List.of()));
+  }
+
+  @Override
   @Transactional
   public void deleteSlot(Long pageId, String slotName) {
+    assertTemplateSlotMutationAllowed(pageId, slotName, null);
+
     PageSlot slot = pageSlotRepository.findByPageIdAndSlotName(pageId, slotName)
         .orElseThrow(() -> new IllegalArgumentException(
             "Slot '" + slotName + "' not found for page " + pageId));
@@ -115,7 +176,7 @@ public class PageSlotServiceImpl implements PageSlotService {
 
   @Override
   public void addComponentToSlot(Long pageId, String slotName, AddComponentToSlotCommand command) {
-    PageSlot slot = findSlot(pageId, slotName);
+    PageSlot slot = findOrMaterializeWritablePageSlot(pageId, slotName, true);
     componentRepository.findById(command.componentId())
         .orElseThrow(() -> new IllegalArgumentException("Component not found: " + command.componentId()));
     if (slotComponentRepository.existsBySlotIdAndComponentId(slot.getId(), command.componentId())) {
@@ -136,7 +197,7 @@ public class PageSlotServiceImpl implements PageSlotService {
 
   @Override
   public void removeComponentFromSlot(Long pageId, String slotName, Long componentId) {
-    PageSlot slot = findSlot(pageId, slotName);
+    PageSlot slot = findOrMaterializeWritablePageSlot(pageId, slotName, true);
 
     SlotComponent slotComponent = slotComponentRepository
         .findBySlotIdAndComponentId(slot.getId(), componentId)
@@ -149,7 +210,7 @@ public class PageSlotServiceImpl implements PageSlotService {
 
   @Override
   public void reorderComponents(Long pageId, String slotName, ReorderSlotComponentsCommand command) {
-    PageSlot slot = findSlot(pageId, slotName);
+    PageSlot slot = findOrMaterializeWritablePageSlot(pageId, slotName, true);
 
     List<SlotComponent> slotComponents = slotComponentRepository
         .findBySlotIdOrderBySortOrder(slot.getId());
@@ -171,22 +232,180 @@ public class PageSlotServiceImpl implements PageSlotService {
         command.componentIds().size(), slotName, pageId);
   }
 
-  private PageSlot findSlot(Long pageId, String slotName) {
-    Optional<PageSlot> slot = pageSlotRepository.findByPageIdAndSlotName(pageId, slotName);
-    if (slot.isPresent()) {
-      return slot.get();
-    }
-    return pageSlotRepository.findByPageIdAndSlotName(null, slotName)
+  private PageSlot findWritablePageSlot(Long pageId, String slotName) {
+    return pageSlotRepository.findByPageIdAndSlotName(pageId, slotName)
         .orElseThrow(() -> new IllegalArgumentException(
-            "Slot '" + slotName + "' not found for page " + pageId));
+            "Slot '" + slotName + "' not materialized for page " + pageId));
+  }
+
+  private PageSlot findOrMaterializeWritablePageSlot(Long pageId, String slotName, boolean copySharedComponents) {
+    Optional<PageSlot> existing = pageSlotRepository.findByPageIdAndSlotName(pageId, slotName);
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+
+    Page page = pageRepository.findById(pageId)
+        .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageId));
+
+    String position;
+    Integer sortOrder;
+    if (page.getTemplateId() != null) {
+      TemplateSlot templateSlot = templateSlotRepository.findByTemplateIdAndSlotName(page.getTemplateId(), slotName)
+          .orElseThrow(() -> new IllegalArgumentException(
+              "Slot '" + slotName + "' is not defined in page template"));
+      position = templateSlot.getPosition();
+      sortOrder = templateSlot.getSortOrder();
+    } else {
+      PageSlot sharedSlot = pageSlotRepository.findSharedSlotBySlotName(slotName)
+          .orElseThrow(() -> new IllegalArgumentException(
+              "Slot '" + slotName + "' not materialized for page " + pageId));
+      position = sharedSlot.getPosition();
+      sortOrder = sharedSlot.getSortOrder();
+    }
+
+    PageSlot materialized = new PageSlot();
+    materialized.setPageId(pageId);
+    materialized.setSlotName(slotName);
+    materialized.setPosition(position);
+    materialized.setSortOrder(sortOrder != null ? sortOrder : 0);
+    materialized.setIsActive(true);
+    materialized.setIsShared(false);
+
+    PageSlot savedSlot = pageSlotRepository.save(materialized);
+    if (copySharedComponents) {
+      copySharedComponentsToPageSlot(slotName, savedSlot.getId());
+    }
+
+    log.info("Materialized slot '{}' for page {}", slotName, pageId);
+    return savedSlot;
+  }
+
+  private void copySharedComponentsToPageSlot(String slotName, Long targetSlotId) {
+    Optional<PageSlot> sharedSlotOpt = pageSlotRepository.findSharedSlotBySlotName(slotName);
+    if (sharedSlotOpt.isEmpty()) {
+      return;
+    }
+
+    List<SlotComponent> sharedComponents = slotComponentRepository
+        .findBySlotIdOrderBySortOrder(sharedSlotOpt.get().getId());
+    if (sharedComponents.isEmpty()) {
+      return;
+    }
+
+    List<SlotComponent> copies = new ArrayList<>();
+    for (SlotComponent sharedComponent : sharedComponents) {
+      SlotComponent copy = new SlotComponent();
+      copy.setSlotId(targetSlotId);
+      copy.setComponentId(sharedComponent.getComponentId());
+      copy.setSortOrder(sharedComponent.getSortOrder());
+      copy.setIsVisible(sharedComponent.getIsVisible());
+      copies.add(copy);
+    }
+    slotComponentRepository.saveAll(copies);
+  }
+
+  private boolean isSlotNameTaken(PageSlot slot, String updatedSlotName) {
+    if (Boolean.TRUE.equals(slot.getIsShared())) {
+      return pageSlotRepository.findSharedSlotBySlotName(updatedSlotName)
+          .filter(existing -> !existing.getId().equals(slot.getId()))
+          .isPresent();
+    }
+    return pageSlotRepository.findByPageIdAndSlotName(slot.getPageId(), updatedSlotName)
+        .filter(existing -> !existing.getId().equals(slot.getId()))
+        .isPresent();
+  }
+
+  private void assertTemplateSlotMutationAllowed(Long pageId, String currentSlotName, String updatedSlotName) {
+    Page page = pageRepository.findById(pageId)
+        .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageId));
+    Long templateId = page.getTemplateId();
+    if (templateId == null) {
+      return;
+    }
+
+    boolean currentIsTemplateSlot = templateSlotRepository.existsByTemplateIdAndSlotName(templateId, currentSlotName);
+    boolean targetIsTemplateSlot = updatedSlotName != null
+        && templateSlotRepository.existsByTemplateIdAndSlotName(templateId, updatedSlotName);
+    if (currentIsTemplateSlot || targetIsTemplateSlot) {
+      throw new IllegalArgumentException(
+          "Template-managed slots cannot be modified from page endpoint. Use page template slot APIs.");
+    }
+  }
+
+  private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots) {
+    // Page-specific slot overrides shared slot with same slotName.
+    Map<String, PageSlot> bySlotName = new LinkedHashMap<>();
+    for (PageSlot shared : sharedSlots) {
+      bySlotName.putIfAbsent(shared.getSlotName(), shared);
+    }
+    for (PageSlot pageSlot : pageSlots) {
+      bySlotName.put(pageSlot.getSlotName(), pageSlot);
+    }
+    return bySlotName.values().stream()
+        .sorted(Comparator
+            .comparingInt((PageSlot slot) -> slot.getSortOrder() != null ? slot.getSortOrder() : 0)
+            .thenComparing(PageSlot::getSlotName, String.CASE_INSENSITIVE_ORDER))
+        .toList();
+  }
+
+  private List<PageSlot> resolveEffectiveTemplateSlots(
+      Long pageId,
+      List<TemplateSlot> templateSlots,
+      List<PageSlot> pageSlots,
+      List<PageSlot> sharedSlots) {
+    Map<String, PageSlot> pageBySlotName = pageSlots.stream()
+        .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
+    Map<String, PageSlot> sharedBySlotName = sharedSlots.stream()
+        .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
+
+    List<PageSlot> effectiveSlots = new ArrayList<>();
+    for (TemplateSlot templateSlot : templateSlots) {
+      PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
+      if (source == null) {
+        source = sharedBySlotName.get(templateSlot.getSlotName());
+      }
+      effectiveSlots.add(buildEffectiveSlot(pageId, templateSlot, source));
+    }
+    return effectiveSlots;
+  }
+
+  private PageSlot buildEffectiveSlot(Long pageId, TemplateSlot templateSlot, PageSlot source) {
+    PageSlot effective = new PageSlot();
+    if (source != null) {
+      effective.setId(source.getId());
+      effective.setUuid(source.getUuid());
+      effective.setUid(source.getUid());
+      effective.setCreatedAt(source.getCreatedAt());
+      effective.setUpdatedAt(source.getUpdatedAt());
+      effective.setCreatedBy(source.getCreatedBy());
+      effective.setUpdatedBy(source.getUpdatedBy());
+      effective.setIsActive(source.getIsActive());
+      effective.setIsShared(source.getIsShared());
+    } else {
+      effective.setUid("template-slot-" + pageId + "-" + templateSlot.getId());
+      effective.setIsActive(true);
+      effective.setIsShared(false);
+    }
+
+    effective.setPageId(pageId);
+    effective.setSlotName(templateSlot.getSlotName());
+    effective.setPosition(templateSlot.getPosition());
+    effective.setSortOrder(templateSlot.getSortOrder());
+
+    return effective;
   }
 
   private List<PageSlotDto> mapSlotsToDtos(List<PageSlot> slots) {
     if (slots.isEmpty()) {
       return List.of();
     }
-    List<Long> slotIds = slots.stream().map(PageSlot::getId).toList();
-    List<SlotComponent> allSlotComponents = slotComponentRepository.findBySlotIdIn(slotIds);
+    List<Long> slotIds = slots.stream()
+        .map(PageSlot::getId)
+        .filter(Objects::nonNull)
+        .toList();
+    List<SlotComponent> allSlotComponents = slotIds.isEmpty()
+        ? List.of()
+        : slotComponentRepository.findBySlotIdIn(slotIds);
 
     Map<Long, List<SlotComponent>> componentsBySlotId = allSlotComponents.stream()
         .collect(Collectors.groupingBy(SlotComponent::getSlotId));
