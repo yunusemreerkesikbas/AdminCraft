@@ -105,17 +105,18 @@ When component type is `CategoryNavigationComponent`, component-level navigation
 - `navigationLinkNodeId` (optional)
 - `navigationType` (optional, defaults to `MAINMENU`)
 - `searchBox` (optional, defaults to `false`)
-- `wrapAfter` (optional, defaults to `0`)
 
 Validation and mapping source-of-truth:
 
 - `backend/src/main/java/com/backend/application/service/ComponentServiceImpl.java`
 - `backend/src/main/java/com/backend/presentation/controller/ComponentController.java`
-- `backend/src/main/java/com/backend/application/command/ComponentCommands.java`
+- `backend/src/main/java/com/backend/application/dto/request/CreateComponentCompositeRequest.java`
+- `backend/src/main/java/com/backend/application/dto/request/UpdateComponentCompositeRequest.java`
+- `backend/src/main/java/com/backend/application/dto/response/ComponentCompositeResponse.java`
 
 Delivery behavior:
 
-- CMS delivery includes `navigationType`, `searchBox`, `wrapAfter`, `navigationNode`, `navigationLinkNode`.
+- CMS delivery includes `navigationType`, `searchBox`, `navigationNode`, `navigationLinkNode`.
 - `navigationNode` and `navigationLinkNode` are delivered as full navigation tree objects when IDs are set.
 - Source-of-truth:
   - `backend/src/main/java/com/backend/application/service/ComponentDeliveryServiceImpl.java`

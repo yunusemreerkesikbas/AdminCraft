@@ -6,5 +6,4 @@
 -- 4. Dropped featured_image, sort_order from pages
 -- 5. Updated indexes for canonical_url
 -- This migration is now a no-op placeholder to sync Flyway history.
--- Forward-only repair: see V34__repair_page_i18n_name_canonical_url.sql
 SELECT 1;

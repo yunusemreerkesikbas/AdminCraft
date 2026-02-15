@@ -11,8 +11,7 @@ import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
-import com.backend.domain.exception.EntityNotFoundException;
-
+import com.backend.domain.enums.NavigationType;
 import lombok.Builder;
 
 @Builder
@@ -28,9 +27,8 @@ public record ComponentCompositeResponse(
     String styleClasses,
     Long navigationNodeId,
     Long navigationLinkNodeId,
-    String navigationType,
+    NavigationType navigationType,
     Boolean searchBox,
-    Integer wrapAfter,
     ComponentStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
@@ -40,10 +38,6 @@ public record ComponentCompositeResponse(
       Component component,
       String typeName,
       List<ComponentI18n> i18nList) {
-
-    if (component == null) {
-      throw new EntityNotFoundException("component.not.found");
-    }
 
     Map<Language, ComponentI18nDto> translationsMap = Optional.ofNullable(i18nList)
         .orElseGet(Collections::emptyList)
@@ -67,7 +61,6 @@ public record ComponentCompositeResponse(
         .navigationLinkNodeId(component.getNavigationLinkNodeId())
         .navigationType(component.getNavigationType())
         .searchBox(component.getSearchBox())
-        .wrapAfter(component.getWrapAfter())
         .status(component.getStatus())
         .createdAt(component.getCreatedAt())
         .updatedAt(component.getUpdatedAt())

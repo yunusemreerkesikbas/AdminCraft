@@ -1,5 +1,9 @@
 -- V34: Forward-only repair for page_i18n name/canonical_url (aligns with V26 design).
 -- Idempotent: safe for tenants that ran V26 no-op or had manual schema drift.
+-- GOVERNANCE EXCEPTION: Dynamic DDL via stored procedures is intentional here.
+-- Cross-tenant idempotency requires INFORMATION_SCHEMA checks; this is a repair migration
+-- targeting schema drift across existing tenants. Standard straight DDL would fail on tenants
+-- where columns already exist or have already been renamed.
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DROP PROCEDURE IF EXISTS DropColumnIfExists;

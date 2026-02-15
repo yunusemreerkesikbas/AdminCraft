@@ -35,6 +35,7 @@ import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.entity.TemplateSlot;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.enums.PageType;
 import com.backend.domain.enums.RobotTag;
@@ -383,7 +384,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .styleClasses(comp.getStyleClasses())
                                 .navigationType(resolveNavigationType(type, comp))
                                 .searchBox(resolveSearchBox(type, comp))
-                                .wrapAfter(resolveWrapAfter(type, comp))
                                 .navigationNode(resolveNavigationNode(type, comp))
                                 .navigationLinkNode(resolveNavigationLinkNode(type, comp))
                                 .responsive(responsive)
@@ -415,7 +415,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .build();
         }
 
-        private String resolveNavigationType(ComponentType type, Component component) {
+        private NavigationType resolveNavigationType(ComponentType type, Component component) {
                 if (!isCategoryNavigationComponent(type)) {
                         return null;
                 }
@@ -427,13 +427,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         return null;
                 }
                 return component.getSearchBox();
-        }
-
-        private Integer resolveWrapAfter(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type)) {
-                        return null;
-                }
-                return component.getWrapAfter();
         }
 
         private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {

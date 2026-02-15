@@ -21,11 +21,11 @@ public class UpdatePageSlotRequest {
   @SlotName(maxLength = SLOT_NAME_MAX_LENGTH)
   private String slotName;
 
-  @NotBlank(message = "validation.slot.position.required")
-  @Size(max = 20, message = "validation.slot.position.size")
+  @NotBlank(message = "{validation.slot.position.required}")
+  @Size(max = 20, message = "{validation.slot.position.size}")
   private String position;
 
-  @Min(value = SORT_ORDER_MIN, message = "validation.sort.order.min")
+  @Min(value = SORT_ORDER_MIN, message = "{validation.sortOrder.min}")
   private Integer sortOrder;
 
   private Boolean isActive;

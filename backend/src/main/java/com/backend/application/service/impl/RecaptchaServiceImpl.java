@@ -71,7 +71,8 @@ public class RecaptchaServiceImpl implements RecaptchaService {
         try {
             response = restTemplate.exchange(
                     verifyUrl, HttpMethod.POST, request,
-                    new ParameterizedTypeReference<>() {});
+                    new ParameterizedTypeReference<>() {
+                    });
         } catch (RestClientException e) {
             log.error("Failed to call Google reCAPTCHA API", e);
             throw new RecaptchaVerificationException("reCAPTCHA service unavailable", e);
@@ -131,8 +132,12 @@ public class RecaptchaServiceImpl implements RecaptchaService {
 
     private RecaptchaContext resolveRecaptchaContext() {
         if (tenantContext.isSet()) {
-            Site site = siteRepository.findFirstByOrderByIdAsc()
-                    .orElseThrow(() -> new RecaptchaVerificationException("No site configured for tenant"));
+            var siteOpt = siteRepository.findFirstByOrderByIdAsc();
+            if (siteOpt.isEmpty()) {
+                log.debug("No site configured for tenant, reCAPTCHA treated as disabled");
+                return new RecaptchaContext("tenant (no site)", false, null, new BigDecimal("0.5"));
+            }
+            Site site = siteOpt.get();
             return new RecaptchaContext(
                     "tenant siteId=" + site.getId(),
                     Boolean.TRUE.equals(site.getRecaptchaEnabled()),

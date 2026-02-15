@@ -3,7 +3,10 @@ package com.backend.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.springframework.core.env.Profiles;
@@ -15,13 +18,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.backend.domain.entity.ProvisioningJob;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.TenantModule;
 import com.backend.domain.enums.TenantStatus;
@@ -47,8 +49,11 @@ class AsyncProvisioningExecutorTest {
         @Mock
         private Environment environment;
 
-        @Captor
-        private ArgumentCaptor<List<TenantModule>> tenantModulesCaptor;
+        @Mock
+        private TenantModuleRegistrar tenantModuleRegistrar;
+
+        @Mock
+        private ProvisioningJob jobMock;
 
         private AsyncProvisioningExecutor executor;
 
@@ -61,6 +66,7 @@ class AsyncProvisioningExecutorTest {
                                 jobRepository,
                                 tenantModuleRepository,
                                 tenantMigrationService,
+                                tenantModuleRegistrar,
                                 environment);
 
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");
@@ -72,82 +78,27 @@ class AsyncProvisioningExecutorTest {
         }
 
         @Test
-        void shouldInsertTenantModulesWithCorrectData() {
-                List<String> modules = Arrays.asList("core", "pagebuilder", "media");
-                List<TenantModule> expectedModules = modules.stream()
-                                .map(code -> TenantModule.builder()
-                                                .tenantId(testTenantId)
-                                                .moduleCode(code)
-                                                .status("enabled")
-                                                .build())
-                                .toList();
-
-                assertThat(expectedModules).hasSize(3);
-                assertThat(expectedModules).extracting(TenantModule::getModuleCode)
-                                .containsExactlyInAnyOrder("core", "pagebuilder", "media");
-                assertThat(expectedModules).allMatch(tm -> tm.getTenantId().equals(1L));
-                assertThat(expectedModules).allMatch(tm -> tm.getStatus().equals("enabled"));
-        }
-
-        @Test
-        void shouldCreateTenantModuleForEachModule() {
+        void executeProvisioning_setsJobToFailed_whenDatabaseCreationFails() {
+                // DB creation will fail in unit tests (no real MySQL) — verify error path
                 List<String> modules = Arrays.asList("core", "pagebuilder");
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(false);
+                when(jobRepository.findById(1L)).thenReturn(Optional.of(jobMock));
 
-                List<TenantModule> tenantModules = modules.stream()
-                                .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenantId)
-                                                .moduleCode(moduleCode)
-                                                .status("enabled")
-                                                .build())
-                                .toList();
+                executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, "corr-001");
 
-                assertThat(tenantModules).hasSize(2);
-
-                TenantModule coreModule = tenantModules.stream()
-                                .filter(tm -> tm.getModuleCode().equals("core"))
-                                .findFirst()
-                                .orElseThrow();
-                assertThat(coreModule.getTenantId()).isEqualTo(1L);
-                assertThat(coreModule.getStatus()).isEqualTo("enabled");
-
-                TenantModule pageBuilderModule = tenantModules.stream()
-                                .filter(tm -> tm.getModuleCode().equals("pagebuilder"))
-                                .findFirst()
-                                .orElseThrow();
-                assertThat(pageBuilderModule.getTenantId()).isEqualTo(1L);
-                assertThat(pageBuilderModule.getStatus()).isEqualTo("enabled");
+                verify(jobMock).setStatus(eq("failed"));
+                verify(tenantModuleRegistrar, never()).registerModules(any(), any());
         }
 
         @Test
-        void shouldHandleEmptyModuleList() {
-                List<String> modules = List.of();
-                List<TenantModule> tenantModules = modules.stream()
-                                .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenantId)
-                                                .moduleCode(moduleCode)
-                                                .status("enabled")
-                                                .build())
-                                .toList();
+        void executeProvisioning_doesNotCallMigration_whenDatabaseCreationFails() {
+                List<String> modules = List.of("core");
+                lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(false);
+                when(jobRepository.findById(1L)).thenReturn(Optional.of(jobMock));
 
-                assertThat(tenantModules).isEmpty();
-        }
+                executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, "corr-002");
 
-        @Test
-        void shouldPreserveModuleOrderInList() {
-                List<String> modules = Arrays.asList("core", "pagebuilder", "media");
-
-                List<TenantModule> tenantModules = modules.stream()
-                                .map(moduleCode -> TenantModule.builder()
-                                                .tenantId(testTenantId)
-                                                .moduleCode(moduleCode)
-                                                .status("enabled")
-                                                .build())
-                                .toList();
-
-                assertThat(tenantModules).hasSize(3);
-                assertThat(tenantModules.get(0).getModuleCode()).isEqualTo("core");
-                assertThat(tenantModules.get(1).getModuleCode()).isEqualTo("pagebuilder");
-                assertThat(tenantModules.get(2).getModuleCode()).isEqualTo("media");
+                verify(tenantMigrationService, never()).migrateTenant(any(), any());
         }
 
         @Test

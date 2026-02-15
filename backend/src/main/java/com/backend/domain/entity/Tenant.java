@@ -101,13 +101,13 @@ public class Tenant {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (databaseName == null || databaseName.isEmpty()) {
-            databaseName = formatDatabaseName(subdomain, 0L);
+            databaseName = "ac_" + subdomain + "_placeholder";
         }
     }
 
     @PostPersist
     protected void onPostPersist() {
-        if (id != null && databaseName != null && databaseName.endsWith("_0")) {
+        if (id != null && databaseName != null && databaseName.endsWith("_placeholder")) {
             databaseName = formatDatabaseName(subdomain, id);
         }
     }

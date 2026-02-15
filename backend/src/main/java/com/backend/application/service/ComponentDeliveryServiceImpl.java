@@ -26,6 +26,7 @@ import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.NavigationType;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
@@ -164,7 +165,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .styleClasses(component.getStyleClasses())
           .navigationType(resolveNavigationType(type, component))
           .searchBox(resolveSearchBox(type, component))
-          .wrapAfter(resolveWrapAfter(type, component))
           .navigationNode(resolveNavigationNode(type, component))
           .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
@@ -239,7 +239,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .styleClasses(component.getStyleClasses())
         .navigationType(resolveNavigationType(componentType, component))
         .searchBox(resolveSearchBox(componentType, component))
-        .wrapAfter(resolveWrapAfter(componentType, component))
         .navigationNode(resolveNavigationNode(componentType, component))
         .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
@@ -284,7 +283,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     return type.getUid() != null ? type.getUid() : type.getName();
   }
 
-  private String resolveNavigationType(ComponentType type, Component component) {
+  private NavigationType resolveNavigationType(ComponentType type, Component component) {
     if (!isCategoryNavigationComponent(type)) {
       return null;
     }
@@ -296,13 +295,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       return null;
     }
     return component.getSearchBox();
-  }
-
-  private Integer resolveWrapAfter(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type)) {
-      return null;
-    }
-    return component.getWrapAfter();
   }
 
   private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {

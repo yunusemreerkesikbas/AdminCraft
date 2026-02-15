@@ -1,4 +1,8 @@
--- Repair responsive media links for product module (idempotent)
+-- V34: Repair responsive media links for product module (idempotent).
+-- GOVERNANCE EXCEPTION: Dynamic DDL via stored procedures is intentional here.
+-- Cross-tenant idempotency requires INFORMATION_SCHEMA checks; this is a repair migration
+-- targeting schema drift across existing tenants. Standard straight DDL would fail on tenants
+-- where columns/indexes already exist or FK constraints differ.
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 DELIMITER //

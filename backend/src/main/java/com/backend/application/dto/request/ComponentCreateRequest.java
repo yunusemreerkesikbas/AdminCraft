@@ -1,6 +1,7 @@
 package com.backend.application.dto.request;
 
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,12 +28,9 @@ public record ComponentCreateRequest(
 
         Long navigationLinkNodeId,
 
-        @Size(max = 50, message = "{validation.component.navigation.type.size}")
-        String navigationType,
+        NavigationType navigationType,
 
         Boolean searchBox,
-
-        Integer wrapAfter,
 
         ComponentStatus status) {
     public ComponentCreateRequest {

@@ -1,6 +1,7 @@
 package com.backend.domain.entity;
 
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.NavigationType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,11 +61,7 @@ public class Component extends BaseEntity {
     @NotNull
     private ComponentStatus status = ComponentStatus.DRAFT;
 
-    /**
-     * Responsive media set for component-level Desktop/Mobile images.
-     * Used for component backgrounds, hero images, etc.
-     * EAGER fetch to prevent LazyInitializationException in DTO mappings.
-     */
+    // EAGER: LazyInitializationException prevention
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "responsive_id")
     private ResponsiveMediaSet responsiveMedia;
@@ -75,13 +72,10 @@ public class Component extends BaseEntity {
     @Column(name = "navigation_link_node_id")
     private Long navigationLinkNodeId;
 
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "navigation_type", length = 50)
-    private String navigationType;
+    private NavigationType navigationType;
 
     @Column(name = "search_box")
     private Boolean searchBox;
-
-    @Column(name = "wrap_after")
-    private Integer wrapAfter;
 }
