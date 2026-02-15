@@ -46,6 +46,43 @@
                     </spa-select>
                 </div>
 
+                @if (isCategoryNavigationSelected) {
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <spa-select
+                            formControlName="navigationNodeId"
+                            label="Navigation Node"
+                            [options]="navigationNodeOptions"
+                            placeholder="Select root navigation node"
+                            [required]="true"
+                        >
+                        </spa-select>
+
+                        <spa-select
+                            formControlName="navigationLinkNodeId"
+                            label="Navigation Link Node (Optional)"
+                            [options]="navigationLinkNodeOptions"
+                            placeholder="Select optional secondary node"
+                        >
+                        </spa-select>
+
+                        <spa-select
+                            formControlName="navigationType"
+                            label="Navigation Type"
+                            [options]="navigationTypeOptions"
+                            placeholder="Select navigation type"
+                        >
+                        </spa-select>
+
+                        <spa-checkbox
+                            class="sm:col-span-2"
+                            formControlName="searchBox"
+                            label="Show Search Box"
+                            styleClasses="boxed"
+                        >
+                        </spa-checkbox>
+                    </div>
+                }
+
                 <div class="my-2 w-full border-t"></div>
 
                 <div class="flex flex-col gap-4">

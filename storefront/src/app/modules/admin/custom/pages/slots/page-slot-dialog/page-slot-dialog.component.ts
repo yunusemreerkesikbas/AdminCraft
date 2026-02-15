@@ -18,11 +18,12 @@ import { BehaviorSubject, catchError, of, take, takeUntil, tap } from 'rxjs';
 import { ComponentPickerDialogComponent } from '../../../components/picker/component-picker-dialog.component';
 import { PageSlotFormDialogComponent, PageSlotFormDialogResult } from '../form/page-slot-form-dialog.component';
 import { PageSlotService } from '../page-slot.service';
-import { CreatePageSlotRequest, PageSlotResponse, UpdatePageSlotRequest } from '../page-slot.types';
+import { PageSlotResponse, UpdatePageSlotRequest } from '../page-slot.types';
 
 export interface PageSlotDialogData extends SpaDialogData {
     pageId: number;
     pageUid?: string;
+    templateId?: number | null;
 }
 
 @Component({
@@ -54,6 +55,8 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
 
     protected pageId: number;
     protected pageUid: string;
+    protected templateId: number | null;
+    protected isTemplateBound: boolean;
 
     slots$ = new BehaviorSubject<PageSlotResponse[]>([]);
     isLoading$ = new BehaviorSubject<boolean>(false);
@@ -62,6 +65,8 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
         super();
         this.pageId = this.data?.pageId ?? 0;
         this.pageUid = this.data?.pageUid ?? '';
+        this.templateId = this.data?.templateId ?? null;
+        this.isTemplateBound = this.templateId !== null;
     }
 
     ngOnInit(): void {
@@ -85,32 +90,11 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
         ).subscribe();
     }
 
-    addSlot(): void {
-        const dialogRef = this.#dialog.open(PageSlotFormDialogComponent, {
-            data: { pageId: this.pageId },
-            width: '500px',
-            panelClass: 'spa-dialog-panel'
-        });
-
-        dialogRef.afterClosed().pipe(
-            take(1),
-            takeUntil(this.destroy$)
-        ).subscribe((result: PageSlotFormDialogResult | undefined) => {
-            if (!result) return;
-
-            this.#pageSlotService.createSlot(this.pageId, result.data as CreatePageSlotRequest)
-                .pipe(take(1))
-                .subscribe({
-                    next: () => {
-                        this.#notificationService.success(this.#translocoService.translate('admin.pageSlots.createSuccess'));
-                        this.#loadSlots();
-                    },
-                    error: () => this.#notificationService.alert(this.#translocoService.translate('admin.pageSlots.createError'))
-                });
-        });
-    }
-
     editSlot(slot: PageSlotResponse): void {
+        if (this.isTemplateBound) {
+            this.#notificationService.alert('Bu sayfa template tabanli. Slot yapisini Template ekranindan yonetin.');
+            return;
+        }
         const dialogRef = this.#dialog.open(PageSlotFormDialogComponent, {
             data: { pageId: this.pageId, slot },
             width: '500px',
@@ -136,6 +120,10 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
     }
 
     deleteSlot(slot: PageSlotResponse): void {
+        if (this.isTemplateBound) {
+            this.#notificationService.alert('Bu sayfa template tabanli. Slot yapisini Template ekranindan yonetin.');
+            return;
+        }
         if (slot.isShared) {
             this.#notificationService.alert(this.#translocoService.translate('admin.pageSlots.sharedSlotDeleteError'));
             return;

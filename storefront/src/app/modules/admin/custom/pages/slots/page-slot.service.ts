@@ -67,7 +67,7 @@ export class PageSlotService {
     }
 
     reorderComponents(pageId: number, slotName: string, componentIds: number[]): Observable<void> {
-        const request: ReorderSlotComponentsRequest = { componentIds };
+        const request: ReorderSlotComponentsRequest = { items: componentIds };
         return this.#api
             .put<ApiResponse<void>>('pageSlotComponentsReorder', request, { id: pageId, slotName })
             .pipe(

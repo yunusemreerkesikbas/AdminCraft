@@ -1,6 +1,6 @@
 # AdminCraft
 
-A modern, multi-tenant SaaS CMS platform built with Clean Architecture, emphasizing security, scalability, and performance.
+AdminCraft is a configurable project solutions platform built with Clean Architecture, emphasizing modular delivery, security, scalability, and performance.
 
 Documentation: [`docs/README.md`](docs/README.md)
 
@@ -43,7 +43,7 @@ AdminCraft/
 AdminCraft uses a robust **Database-per-Tenant** architecture for maximum data isolation and security.
 
 - **Platform DB**: Manages tenant registry and global configurations.
-- **Tenant DBs**: Each tenant has a dedicated physical database (`ac_tenant_{id}`).
+- **Tenant DBs**: Each tenant has a dedicated physical database (`ac_subdomain_{id}`).
 - **Routing**: `TenantContext` routes requests to the correct database dynamically using HikariCP connection pooling.
 
 ### Clean Architecture

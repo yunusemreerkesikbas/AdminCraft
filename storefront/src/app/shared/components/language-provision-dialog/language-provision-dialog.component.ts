@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { interval, switchMap } from 'rxjs';
 import { TenantsService } from '@modules/admin/custom/tenants/tenants.service';
 import { LanguageProvisionDialogData, LanguageProvisioningJob } from './language-provision.types';
@@ -26,6 +26,7 @@ import { LanguageProvisionDialogData, LanguageProvisioningJob } from './language
 export class LanguageProvisionDialogComponent implements OnInit {
     #tenantsService = inject(TenantsService);
     #destroyRef = inject(DestroyRef);
+    #transloco = inject(TranslocoService);
 
     protected languageJob = signal<LanguageProvisioningJob | null>(null);
     protected isConfirmationPhase = signal<boolean>(false);
@@ -100,13 +101,13 @@ export class LanguageProvisionDialogComponent implements OnInit {
                 next: (job) => {
                     this.languageJob.set(job);
                 },
-                error: () => {
+                error: (err) => {
                     const current = this.languageJob();
                     if (current) {
                         this.languageJob.set({
                             ...current,
                             status: 'FAILED',
-                            errorMessage: 'Failed to poll language job status'
+                            errorMessage: err?.error?.message ?? ''
                         });
                     }
                 }

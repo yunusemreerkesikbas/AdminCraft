@@ -20,24 +20,35 @@ export class ConfirmationService {
             variant: 'confirmation' as const,
             title: this._transloco.translate(title),
             icon: type,
-            sections: [{
-                type: 'alert-box' as const,
-                alertType: type,
-                content: this._transloco.translate(message)
-            }],
+            sections: [
+                {
+                    type: 'alert-box' as const,
+                    alertType: type,
+                    content: this._transloco.translate(message),
+                },
+            ],
             actions: [
-                { label: this._transloco.translate('admin.common.actions.cancel'), value: false },
+                {
+                    label: this._transloco.translate(
+                        'admin.common.actions.cancel'
+                    ),
+                    value: false,
+                },
                 {
                     label: this._transloco.translate(confirmLabel),
                     color: type === 'warning' ? 'warn' : 'primary',
-                    value: true
-                }
-            ]
+                    value: true,
+                },
+            ],
         };
 
-        return this._dialog.open(SpaGenericModalComponent, {
-            width: '400px',
-            data: dialogConfig
-        }).afterClosed().pipe(map(result => !!result));
+        return this._dialog
+            .open(SpaGenericModalComponent, {
+                width: '500px',
+                maxHeight: '50vh',
+                data: dialogConfig,
+            })
+            .afterClosed()
+            .pipe(map((result) => !!result));
     }
 }

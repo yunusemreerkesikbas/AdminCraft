@@ -186,6 +186,7 @@ export const langEN = {
                 confirm: 'Confirm',
                 select: 'Select',
                 remove: 'Remove',
+                sync: 'Sync',
             },
             messages: {
                 operationSuccess: 'Operation successful',
@@ -1755,11 +1756,7 @@ export const langEN = {
                 syncMigrations: 'Sync Database Migrations',
             },
             messages: {
-                syncStarted: 'Migration sync started...',
                 syncSuccess: 'Database migrations synced successfully',
-                syncCompleted: 'Migration sync completed successfully',
-                syncFailed: 'Migration sync failed',
-                syncOnlyActive: 'Only active tenants can sync migrations',
                 pollingStopped: 'Polling stopped',
                 deleteSuccess: 'Tenant deleted successfully',
                 deleteFailed: 'Failed to delete tenant',
@@ -1948,7 +1945,6 @@ export const langEN = {
             complete: 'complete',
             error: 'Error',
             retry: 'Retry',
-            success: 'Modules successfully provisioned',
         },
 
         errors: {

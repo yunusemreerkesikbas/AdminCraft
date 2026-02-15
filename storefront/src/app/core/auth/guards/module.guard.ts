@@ -23,7 +23,7 @@ export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state)
         { durationMs: 5000 }
     );
     const currentLang = route.paramMap.get('lang') || environment.defaultLanguage;
-    router.navigate([`/${currentLang}/pages`]);
+    router.navigate([currentLang, 'pages', 'error', '403']);
 
     return false;
 };

@@ -13,6 +13,15 @@ const TENANT_SPECIFIC_EXCEPTIONS: readonly string[] = [
   'api/tenants/current/modules',
   'api/tenants/current/detail'
 ] as const;
+const AUTH_ENDPOINTS: readonly string[] = [
+  'auth/login',
+  'auth/refresh',
+  'auth/forgotPassword',
+  'auth/resetPassword',
+  'auth/verifyOtp',
+  'auth/setInitialPassword',
+  'auth/verify-otp'
+] as const;
 
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const tenantContext = inject(TenantContextService);
@@ -28,7 +37,11 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
         }
     }
     const user = userService.user();
-    const subdomain = tenantContext.getCurrentSubdomain();
+    let subdomain = tenantContext.getCurrentSubdomain();
+    if (!subdomain && AUTH_ENDPOINTS.some((endpoint) => req.url.includes(endpoint))) {
+        subdomain = tenantContext.extractSubdomainFromHost();
+        if (subdomain === 'admin') subdomain = null;
+    }
     const contextTenantId = tenantContext.getCurrentTenantId();
     const effectiveTenantId = user?.role === 'TENANT_ADMIN' && user?.tenantId
         ? user.tenantId

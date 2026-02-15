@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { interval, switchMap, takeWhile } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { forkJoin, interval, switchMap, takeWhile } from 'rxjs';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { heroCheckCircle, heroXCircle, heroExclamationTriangle } from '@ng-icons/heroicons/outline';
 import { ModuleCardComponent } from './module-card/module-card.component';
@@ -37,17 +37,24 @@ export class ModuleProvisionDialogComponent implements OnInit {
     #destroyRef = inject(DestroyRef);
     #dialogRef = inject(MatDialogRef<ModuleProvisionDialogComponent>);
     #data = inject<ModuleProvisionDialogData>(MAT_DIALOG_DATA);
+    #transloco = inject(TranslocoService);
 
     protected modulesSig = signal<ModuleCatalog[]>([]);
     protected selectedModulesSig = signal<Set<string>>(new Set());
+    protected installedModulesSig = signal<Set<string>>(new Set());
     protected currentJobSig = signal<ProvisioningJob | null>(null);
     protected isLoadingSig = signal<boolean>(false);
     protected isProvisioningSig = signal<boolean>(false);
     protected errorSig = signal<string | null>(null);
     protected statusAnimationClassSig = signal<string>('');
 
+    protected hasNewModulesSig = computed(() =>
+        [...this.selectedModulesSig()].some(code => !this.installedModulesSig().has(code))
+    );
+
     protected canStartSig = computed(() =>
         this.selectedModulesSig().size > 0 &&
+        this.hasNewModulesSig() &&
         !this.isProvisioningSig() &&
         !this.currentJobSig()
     );
@@ -106,24 +113,32 @@ export class ModuleProvisionDialogComponent implements OnInit {
     #loadModules(): void {
         this.isLoadingSig.set(true);
 
-        this.#service.getModulesCatalog()
+        forkJoin({
+            catalog: this.#service.getModulesCatalog(),
+            installed: this.#service.getInstalledModules(this.#data.tenantId)
+        })
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe({
-                next: (response) => {
-                    this.modulesSig.set(response.data || []);
+                next: ({ catalog, installed }) => {
+                    this.modulesSig.set(catalog.data || []);
 
-                    const defaultModules = new Set<string>();
-                    response.data?.forEach(module => {
+                    const installedCodes = new Set<string>(
+                        (installed.data || []).map(m => m.moduleCode)
+                    );
+                    this.installedModulesSig.set(installedCodes);
+
+                    const selected = new Set<string>(installedCodes);
+                    catalog.data?.forEach(module => {
                         if (module.enabledByDefault) {
-                            defaultModules.add(module.code);
+                            selected.add(module.code);
                         }
                     });
-                    this.selectedModulesSig.set(defaultModules);
+                    this.selectedModulesSig.set(selected);
 
                     this.isLoadingSig.set(false);
                 },
-                error: () => {
-                    this.errorSig.set('Failed to load modules catalog');
+                error: (err) => {
+                    this.errorSig.set(err?.error?.message ?? '');
                     this.isLoadingSig.set(false);
                 }
             });
@@ -148,7 +163,7 @@ export class ModuleProvisionDialogComponent implements OnInit {
     }
 
     protected isModuleDisabled(code: string): boolean {
-        return code === 'core';
+        return code === 'core' || this.installedModulesSig().has(code);
     }
 
     protected startProvisioning(): void {
@@ -165,12 +180,12 @@ export class ModuleProvisionDialogComponent implements OnInit {
                         this.currentJobSig.set(response.data);
                         this.#startPolling(response.data.jobId);
                     } else {
-                        this.errorSig.set(response.message || 'Failed to start provisioning');
+                        this.errorSig.set(response.message ?? '');
                         this.isProvisioningSig.set(false);
                     }
                 },
                 error: (err) => {
-                    this.errorSig.set(err.error?.message || 'Failed to start provisioning');
+                    this.errorSig.set(err?.error?.message ?? '');
                     this.isProvisioningSig.set(false);
                 }
             });
@@ -196,8 +211,8 @@ export class ModuleProvisionDialogComponent implements OnInit {
                         }
                     }
                 },
-                error: () => {
-                    this.errorSig.set('Failed to poll job status');
+                error: (err) => {
+                    this.errorSig.set(err?.error?.message ?? '');
                     this.isProvisioningSig.set(false);
                 }
             });

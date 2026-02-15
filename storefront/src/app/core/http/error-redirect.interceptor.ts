@@ -5,6 +5,7 @@ import {
     HttpRequest,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { LanguageService } from 'app/core/language/language.service';
 import { environment } from '@environments/environment';
@@ -16,6 +17,7 @@ export const errorRedirectInterceptor = (
 ): Observable<HttpEvent<unknown>> => {
     const router = inject(Router);
     const languageService = inject(LanguageService);
+    const dialog = inject(MatDialog);
 
     return next(req).pipe(
         catchError((error) => {
@@ -48,11 +50,13 @@ export const errorRedirectInterceptor = (
             }
 
             if (status === 403) {
+                dialog.closeAll();
                 router.navigate([`/${lang}/pages/error/403`]);
                 return throwError(() => error);
             }
 
             if (status === 500) {
+                dialog.closeAll();
                 router.navigate([`/${lang}/pages/error/500`]);
                 return throwError(() => error);
             }

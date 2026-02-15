@@ -181,6 +181,7 @@ export const langTR = {
                 confirm: 'Onayla',
                 select: 'Seç',
                 remove: 'Kaldır',
+                sync: 'Senkronize Et',
             },
             messages: {
                 operationSuccess: 'İşlem başarılı',
@@ -1727,13 +1728,8 @@ export const langTR = {
                 syncMigrations: 'Veritabanı Migrasyonlarını Senkronize Et',
             },
             messages: {
-                syncStarted: 'Migrasyon senkronizasyonu başlatıldı...',
                 syncSuccess:
                     'Veritabanı migrasyonları başarıyla senkronize edildi',
-                syncCompleted: 'Migrasyon senkronizasyonu başarıyla tamamlandı',
-                syncFailed: 'Migrasyon senkronizasyonu başarısız',
-                syncOnlyActive:
-                    'Sadece aktif tenantlar migrasyon senkronizasyonu yapabilir',
                 pollingStopped: 'Yoklama durduruldu',
                 deleteSuccess: 'Tenant başarıyla silindi',
                 deleteFailed: 'Tenant silinemedi',
@@ -1922,7 +1918,6 @@ export const langTR = {
             complete: 'tamamlandı',
             error: 'Hata',
             retry: 'Tekrar Dene',
-            success: 'Modüller başarıyla hazırlandı',
         },
 
         errors: {

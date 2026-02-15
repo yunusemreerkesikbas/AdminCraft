@@ -57,7 +57,7 @@ graph LR
 
 ## Multi-Tenancy (Database-per-Tenant)
 
-- **Isolation**: Physical isolation via separate databases (`ac_tenant_{id}`).
+- **Isolation**: Physical isolation via separate databases (`ac_subdomain_{id}`).
 - **Platform DB**: `platform_management` (control plane).
 - ❌ **NO tenant_id columns**: Enforced at the database connection level.
 - ✅ **TenantContext**: ThreadLocal storage for `tenantId` and `tenantDbName`.

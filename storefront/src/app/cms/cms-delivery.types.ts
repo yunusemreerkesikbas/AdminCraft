@@ -17,7 +17,31 @@ export interface ComponentDeliveryResponse {
     description?: string;
     isVisible: boolean;
     styleClasses?: string;
+    navigationType?: string;
+    searchBox?: boolean;
+    navigationNode?: NavigationDeliveryResponse | null;
+    navigationLinkNode?: NavigationDeliveryResponse | null;
     entries: EntryDeliveryResponse[];
+}
+
+export interface NavigationEntryDeliveryResponse {
+    uid: string;
+    itemType: string;
+    itemId?: string;
+    url?: string;
+    linkName?: string;
+    linkColor?: string;
+    target?: string;
+    isExternal?: boolean;
+}
+
+export interface NavigationDeliveryResponse {
+    uid: string;
+    title?: string;
+    position?: string;
+    isTab?: boolean;
+    entries?: NavigationEntryDeliveryResponse[];
+    children?: NavigationDeliveryResponse[];
 }
 
 export interface BatchMeta {
