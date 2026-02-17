@@ -26,6 +26,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SUPER_ADMIN_ROLE } from '@shared/constants';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
 import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
@@ -227,7 +228,7 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         const lang = this.#translocoService.getActiveLang();
         const user = this.#userService.user();
 
-        if (user?.role === 'SUPER_ADMIN') {
+        if (user?.role === SUPER_ADMIN_ROLE) {
             this.#router.navigateByUrl(`/${lang}/tenants`);
             return;
         }

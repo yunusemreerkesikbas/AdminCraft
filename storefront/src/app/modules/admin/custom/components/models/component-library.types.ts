@@ -8,15 +8,22 @@ export enum ComponentStatus {
     ARCHIVED = 'ARCHIVED'
 }
 
+export enum NavigationType {
+    MAINMENU = 'MAINMENU',
+    STATICPAGE = 'STATICPAGE'
+}
+
 
 export interface ComponentTypeDto {
     id: number;
-    code: string;
+    uid: string;
+    code?: string;
     name: string;
     category?: string;
     icon?: string;
-    isSystem: boolean;
+    isSystem?: boolean;
     createdAt: string;
+    updatedAt?: string;
 }
 
 
@@ -43,6 +50,10 @@ export interface ComponentDto {
     displayOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status: ComponentStatus;
     createdAt: string;
     updatedAt?: string;
@@ -65,14 +76,23 @@ export interface CreateComponentRequest {
     displayOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status: ComponentStatus;
 }
 
 export interface UpdateComponentRequest {
+    componentTypeId?: number;
     name: string;
     displayOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status: ComponentStatus;
 }
 
@@ -103,6 +123,10 @@ export interface CreateComponentCompositeRequest {
     displayOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status?: ComponentStatus;
     translations: Record<Language, ComponentI18nRequest>;
 }
@@ -112,6 +136,10 @@ export interface UpdateComponentCompositeRequest {
     displayOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status?: ComponentStatus;
     translations: Record<Language, ComponentI18nRequest>;
 }
@@ -126,6 +154,10 @@ export interface ComponentCompositeResponse {
     displayOrder: number;
     isVisible: boolean;
     styleClasses?: string;
+    navigationNodeId?: number;
+    navigationLinkNodeId?: number;
+    navigationType?: NavigationType;
+    searchBox?: boolean;
     status: ComponentStatus;
     createdAt: string;
     updatedAt: string;

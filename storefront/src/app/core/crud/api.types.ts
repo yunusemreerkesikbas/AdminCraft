@@ -1,8 +1,9 @@
 export interface ApiResponse<T> {
   data: T;
-  success: boolean;
+  result: 'SUCCESS' | 'ERROR';
   message?: string;
-  result?: string;
+  code?: number;
+  success?: boolean;
 }
 
 export interface Page<T> {

@@ -179,6 +179,7 @@ export class PageListComponent extends BaseCrudListComponent<PageListDto, Create
         const dialogData: PageSlotDialogData = {
             pageId: page.id,
             pageUid: page.uid,
+            templateId: page.templateId ?? null,
         };
 
         this.#dialog.open(PageSlotDialogComponent, {

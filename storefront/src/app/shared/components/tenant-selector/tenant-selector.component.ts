@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { SUPER_ADMIN_ROLE } from '@shared/constants';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
 import { TenantsService } from 'app/modules/admin/custom/tenants/tenants.service';
@@ -56,7 +57,7 @@ export class TenantSelectorComponent implements OnInit, OnDestroy {
         this.#userService.user$
             .pipe(takeUntil(this.#destroy$))
             .subscribe((user) => {
-                this.isSuperAdmin = user?.role === 'SUPER_ADMIN';
+                this.isSuperAdmin = user?.role === SUPER_ADMIN_ROLE;
                 if (this.isSuperAdmin) {
                     this.#loadTenants();
                 }

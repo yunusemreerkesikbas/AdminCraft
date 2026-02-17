@@ -14,19 +14,13 @@
                         | transloco: { count: (slots$ | async)?.length || 0 }
                 }}
             </div>
-            <button
-                mat-stroked-button
-                color="primary"
-                class="!h-8 !px-4 leading-8"
-                (click)="addSlot()"
-            >
-                <mat-icon
-                    class="mr-2 icon-size-5"
-                    svgIcon="heroicons_outline:plus"
-                ></mat-icon>
-                <span>{{ 'admin.pageSlots.addSlot' | transloco }}</span>
-            </button>
         </div>
+
+        @if (isTemplateBound) {
+            <div class="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Bu sayfa bir template kullaniyor. Slot yapisini Template ekranindan yonetin; bu ekranda sadece component icerigini duzenleyin.
+            </div>
+        }
 
         @if (isLoading$ | async) {
             <div class="flex flex-1 items-center justify-center">
@@ -83,34 +77,36 @@
                                         svgIcon="heroicons_outline:plus-circle"
                                     ></mat-icon>
                                 </button>
-                                <button
-                                    mat-icon-button
-                                    class="!h-8 !w-8"
-                                    (click)="editSlot(slot)"
-                                    [matTooltip]="
-                                        'admin.common.edit' | transloco
-                                    "
-                                >
-                                    <mat-icon
-                                        class="icon-size-5"
-                                        svgIcon="heroicons_outline:pencil-square"
-                                    ></mat-icon>
-                                </button>
-                                @if (!slot.isShared) {
+                                @if (!isTemplateBound) {
                                     <button
                                         mat-icon-button
                                         class="!h-8 !w-8"
-                                        color="warn"
-                                        (click)="deleteSlot(slot)"
+                                        (click)="editSlot(slot)"
                                         [matTooltip]="
-                                            'admin.common.delete' | transloco
+                                            'admin.common.edit' | transloco
                                         "
                                     >
                                         <mat-icon
                                             class="icon-size-5"
-                                            svgIcon="heroicons_outline:trash"
+                                            svgIcon="heroicons_outline:pencil-square"
                                         ></mat-icon>
                                     </button>
+                                    @if (!slot.isShared) {
+                                        <button
+                                            mat-icon-button
+                                            class="!h-8 !w-8"
+                                            color="warn"
+                                            (click)="deleteSlot(slot)"
+                                            [matTooltip]="
+                                                'admin.common.delete' | transloco
+                                            "
+                                        >
+                                            <mat-icon
+                                                class="icon-size-5"
+                                                svgIcon="heroicons_outline:trash"
+                                            ></mat-icon>
+                                        </button>
+                                    }
                                 }
                             </div>
                         </div>
@@ -189,13 +185,6 @@
                         <p class="text-secondary mb-3 text-sm">
                             {{ 'admin.pageSlots.noSlots' | transloco }}
                         </p>
-                        <button
-                            mat-stroked-button
-                            color="primary"
-                            (click)="addSlot()"
-                        >
-                            {{ 'admin.pageSlots.addFirstSlot' | transloco }}
-                        </button>
                     </div>
                 }
             </div>

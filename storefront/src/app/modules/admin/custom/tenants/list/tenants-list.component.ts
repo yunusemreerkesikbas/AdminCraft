@@ -211,10 +211,7 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                         });
                     },
                     error: (err) => {
-                        const message =
-                            err?.error?.message ||
-                            'admin.common.errors.unexpected';
-                        this.#notify.alert(message);
+                        this.#notify.alert(err?.error?.message ?? '');
                     },
                 });
         });
@@ -234,7 +231,6 @@ export class TenantsListComponent extends BasePaginatedListComponent<
 
         dialogRef.afterClosed().pipe(take(1)).subscribe((success) => {
             if (success) {
-                this.#notify.success('admin.provisioning.success');
                 this.refresh();
             }
         });
@@ -302,20 +298,12 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                     });
                 },
                 error: (err) => {
-                    const message =
-                        err.error?.message ||
-                        this.#transloco.translate('admin.tenants.errors.adminGenerationFailed');
-                    this.#notify.alert(message);
+                    this.#notify.alert(err.error?.message ?? '');
                 },
             });
     }
 
     protected syncMigrations(tenant: Tenant): void {
-        if (tenant.status !== 'ACTIVE') {
-            this.#notify.warning('admin.tenants.messages.syncOnlyActive');
-            return;
-        }
-
         this.#confirmation
             .confirm(
                 'admin.tenants.confirm.syncTitle',
@@ -329,20 +317,20 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                     return;
                 }
 
-                this.#notify.info('admin.tenants.messages.syncStarted');
-
                 this.service
                     .syncMigrations(tenant.id)
                     .pipe(take(1))
                     .subscribe({
-                        next: (job) => {
-                            this.#pollSyncJob(job.jobId);
+                        next: (response) => {
+                            this.#notify.info(response.message ?? '');
+                            this.#pollSyncJob(response.data.jobId);
                         },
                         error: (err) => {
-                            const message =
-                                err.error?.message ||
-                                this.#transloco.translate('admin.tenants.messages.syncFailed');
-                            this.#notify.alert(message);
+                            this.#notify.alert(err.error?.message ?? '');
+                            const isNoModules = err?.error?.code === 4001;
+                            if (isNoModules) {
+                                this.provisionTenant(tenant);
+                            }
                         },
                     });
             });
@@ -356,14 +344,12 @@ export class TenantsListComponent extends BasePaginatedListComponent<
             this.destroy$
         ).subscribe({
             next: (job) => {
-                if (job.status === SyncJobStatus.SUCCEEDED) {
-                    this.#notify.success('admin.tenants.messages.syncCompleted');
-                } else if (job.status === SyncJobStatus.FAILED) {
-                    this.#notify.alert(job.error || 'admin.tenants.messages.syncFailed');
+                if (job.status === SyncJobStatus.FAILED) {
+                    this.#notify.alert(job.error ?? '');
                 }
             },
             error: (err) => {
-                this.#notify.alert('admin.tenants.messages.syncFailed');
+                this.#notify.alert(err?.error?.message ?? '');
             },
         });
     }

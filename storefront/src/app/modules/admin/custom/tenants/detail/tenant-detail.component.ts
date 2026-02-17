@@ -96,9 +96,9 @@ export class SpaTenantDetailComponent implements OnInit, OnDestroy {
                     this.jobsSig.set(jobs);
                     this.loadingSig.set(false);
                 },
-                error: () => {
+                error: (err) => {
                     this.loadingSig.set(false);
-                    this.#notify.alert('admin.common.errors.loadFailed');
+                    this.#notify.alert(err?.error?.message ?? '');
                 },
             });
     }

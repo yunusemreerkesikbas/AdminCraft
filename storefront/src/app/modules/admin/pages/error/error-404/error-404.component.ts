@@ -5,6 +5,7 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { SUPER_ADMIN_ROLE } from '@shared/constants';
 import { UserService } from 'app/core/user/user.service';
 import { LanguageService } from 'app/core/language/language.service';
 
@@ -29,7 +30,7 @@ export class Error404Component {
             return;
         }
 
-        if (user.role === 'SUPER_ADMIN') {
+        if (user.role === SUPER_ADMIN_ROLE) {
             this.#router.navigate([`/${lang}/platform-dashboard`]);
         } else {
             this.#router.navigate([`/${lang}/site`]);

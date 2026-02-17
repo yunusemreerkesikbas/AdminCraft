@@ -24,7 +24,7 @@ import {
 } from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { map, Observable, of, switchMap, take } from 'rxjs';
+import { map, Observable, of, switchMap, take, takeUntil } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../media/components/spa-media-picker/spa-media-picker.component';
 import { MediaService } from '../../media/media.service';
 import { ComponentEntryListComponent } from '../entries/component-entry-list/component-entry-list.component';
@@ -33,9 +33,12 @@ import {
     ComponentStatus,
     ComponentTypeDto,
     CreateComponentCompositeRequest,
+    NavigationType,
     UpdateComponentCompositeRequest,
 } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
+import { NavigationNodeService } from '../../navigation/navigation-node.service';
+import { NavigationNode } from '../../navigation/navigation-node.types';
 
 export interface ComponentEditDialogData
     extends SpaLocalizedFormDialogData<ComponentDetailDto> {
@@ -74,9 +77,14 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     any,
     ComponentEditDialogData
 > {
+    static readonly CATEGORY_NAVIGATION_UID = 'CategoryNavigationComponent';
+    static readonly DEFAULT_NAVIGATION_TYPE = NavigationType.MAINMENU;
+    static readonly NAVIGATION_NODE_PAGE_SIZE = 100;
+
     readonly #translocoService = inject(TranslocoService);
     readonly #componentService = inject(ComponentLibraryService);
     readonly #mediaService = inject(MediaService);
+    readonly #navigationNodeService = inject(NavigationNodeService);
     readonly #notify = inject(NotificationService);
     readonly #tenantContext = inject(TenantContextService);
 
@@ -85,7 +93,15 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         label: s,
     }));
     componentTypeOptions: { value: any; label: string }[] = [];
+    navigationTypeOptions: { value: NavigationType; label: string }[] = [
+        { value: NavigationType.MAINMENU, label: 'MAINMENU' },
+        { value: NavigationType.STATICPAGE, label: 'STATICPAGE' },
+    ];
+    navigationNodeOptions: { value: any; label: string }[] = [];
+    navigationLinkNodeOptions: { value: any; label: string }[] = [];
     override languages: string[] = [];
+    categoryNavigationTypeId: number | null = null;
+    isCategoryNavigationSelected = false;
 
     readonly dialogTitle = this.data?.component
         ? this.#translocoService.translate('admin.dialog.title.edit')
@@ -93,10 +109,16 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
 
     constructor() {
         super();
+        this.categoryNavigationTypeId =
+            this.data?.componentTypes?.find(
+                (type) =>
+                    type.uid ===
+                    ComponentEditDialogComponent.CATEGORY_NAVIGATION_UID
+            )?.id ?? null;
         this.componentTypeOptions = (this.data?.componentTypes || []).map(
             (type) => ({
                 value: type.id,
-                label: type.name,
+                label: `${type.name} (${type.uid})`,
             })
         );
     }
@@ -137,6 +159,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             this.languages = ['en'];
         }
         super.ngOnInit();
+        this.#setupNavigationTypeWatcher();
+        this.#loadNavigationNodes();
     }
 
     protected buildGeneralForm(): FormGroup {
@@ -173,6 +197,13 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             ],
             displayOrder: [component?.displayOrder || 0],
             responsiveMedia: [responsiveValue],
+            navigationNodeId: [component?.navigationNodeId ?? null],
+            navigationLinkNodeId: [component?.navigationLinkNodeId ?? null],
+            navigationType: [
+                component?.navigationType ||
+                    ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
+            ],
+            searchBox: [component?.searchBox ?? false],
         });
     }
 
@@ -210,6 +241,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             styleClasses: generalData.styleClasses,
             status: generalData.status,
             translations: translations,
+            ...this.#buildNavigationPayload(generalData),
         };
 
         this.#componentService
@@ -245,6 +277,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             styleClasses: generalData.styleClasses,
             status: generalData.status,
             translations: translations,
+            ...this.#buildNavigationPayload(generalData),
         };
 
         this.#componentService
@@ -339,5 +372,133 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                     )
                 );
         }
+    }
+
+    #loadNavigationNodes(): void {
+        this.#navigationNodeService
+            .listPaged({
+                page: 0,
+                size: ComponentEditDialogComponent.NAVIGATION_NODE_PAGE_SIZE,
+                sort: 'createdAt,asc',
+            })
+            .pipe(take(1))
+            .subscribe({
+                next: (page) => {
+                    const nodes = page?.content || [];
+                    this.navigationNodeOptions = this.#mapNavigationNodeOptions(
+                        nodes
+                    );
+                    this.navigationLinkNodeOptions = [
+                        { value: null, label: 'None' },
+                        ...this.#mapNavigationNodeOptions(nodes),
+                    ];
+                },
+                error: () => {
+                    this.navigationNodeOptions = [];
+                    this.navigationLinkNodeOptions = [
+                        { value: null, label: 'None' },
+                    ];
+                },
+            });
+    }
+
+    #mapNavigationNodeOptions(
+        nodes: NavigationNode[]
+    ): { value: number; label: string }[] {
+        return nodes.map((node) => ({
+            value: node.id,
+            label: `${node.title || node.uid} (${node.uid})`,
+        }));
+    }
+
+    #setupNavigationTypeWatcher(): void {
+        const componentTypeControl = this.generalForm.get('componentTypeId');
+        if (!componentTypeControl) {
+            return;
+        }
+
+        componentTypeControl.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((value) => {
+                this.#updateNavigationFieldState(value);
+            });
+        this.#updateNavigationFieldState(componentTypeControl.value);
+    }
+
+    #updateNavigationFieldState(componentTypeIdValue: unknown): void {
+        const componentTypeId = this.#toNullableNumber(componentTypeIdValue);
+        this.isCategoryNavigationSelected =
+            componentTypeId !== null &&
+            componentTypeId === this.categoryNavigationTypeId;
+
+        const navigationNodeControl = this.generalForm.get('navigationNodeId');
+        if (!navigationNodeControl) {
+            return;
+        }
+
+        if (this.isCategoryNavigationSelected) {
+            navigationNodeControl.setValidators([Validators.required]);
+            if (!this.generalForm.get('navigationType')?.value) {
+                this.generalForm
+                    .get('navigationType')
+                    ?.setValue(
+                        ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE
+                    );
+            }
+        } else {
+            navigationNodeControl.clearValidators();
+            this.generalForm.patchValue(
+                {
+                    navigationNodeId: null,
+                    navigationLinkNodeId: null,
+                    navigationType:
+                        ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
+                    searchBox: false,
+                },
+                { emitEvent: false }
+            );
+        }
+
+        navigationNodeControl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    #buildNavigationPayload(
+        generalData: Record<string, any>
+    ): Pick<
+        CreateComponentCompositeRequest,
+        | 'navigationNodeId'
+        | 'navigationLinkNodeId'
+        | 'navigationType'
+        | 'searchBox'
+    > {
+        if (!this.isCategoryNavigationSelected) {
+            return {
+                navigationNodeId: undefined,
+                navigationLinkNodeId: undefined,
+                navigationType: undefined,
+                searchBox: undefined,
+            };
+        }
+
+        return {
+            navigationNodeId: this.#toNullableNumber(
+                generalData['navigationNodeId']
+            ) ?? undefined,
+            navigationLinkNodeId:
+                this.#toNullableNumber(generalData['navigationLinkNodeId']) ??
+                undefined,
+            navigationType:
+                (generalData['navigationType'] as NavigationType | undefined) ||
+                ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
+            searchBox: !!generalData['searchBox'],
+        };
+    }
+
+    #toNullableNumber(value: unknown): number | null {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
     }
 }

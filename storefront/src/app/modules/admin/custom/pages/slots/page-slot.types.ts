@@ -46,5 +46,5 @@ export interface AddComponentToSlotRequest {
 }
 
 export interface ReorderSlotComponentsRequest {
-    componentIds: number[];
+    items: number[];
 }

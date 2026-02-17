@@ -4,7 +4,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-top: 1.5rem;
     gap: 1rem;
     margin-bottom: 0.5rem;
 
@@ -13,11 +12,19 @@
         height: 64px;
         font-size: 64px;
         margin-bottom: 0.5rem;
-        
-        &.icon-warning { color: var(--fuse-warn); }
-        &.icon-info { color: var(--fuse-primary); }
-        &.icon-success { color: var(--fuse-accent); }
-        &.icon-error { color: var(--fuse-warn); }
+
+        &.icon-warning {
+            color: var(--fuse-warn);
+        }
+        &.icon-info {
+            color: var(--fuse-primary);
+        }
+        &.icon-success {
+            color: var(--fuse-accent);
+        }
+        &.icon-error {
+            color: var(--fuse-warn);
+        }
     }
 
     .modal-title {
@@ -82,8 +89,6 @@
 mat-dialog-actions {
     justify-content: center;
     gap: 1rem;
-    padding-bottom: 1.5rem;
-    margin-bottom: 0.5rem;
 
     button {
         min-width: 100px;
@@ -91,18 +96,21 @@ mat-dialog-actions {
         text-transform: capitalize;
         font-weight: 500;
         letter-spacing: 0.02em;
-        
-        &.mat-mdc-raised-button, &.mat-mdc-flat-button {
+
+        &.mat-mdc-raised-button,
+        &.mat-mdc-flat-button {
             box-shadow: none;
-            &:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            &:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
         }
 
         &.mat-mdc-button {
-             color: var(--fuse-text-secondary);
-             &:hover {
-                 background-color: rgba(var(--fuse-on-surface-rgb), 0.05);
-                 color: var(--fuse-text-default);
-             }
+            color: var(--fuse-text-secondary);
+            &:hover {
+                background-color: rgba(var(--fuse-on-surface-rgb), 0.05);
+                color: var(--fuse-text-default);
+            }
         }
     }
 }

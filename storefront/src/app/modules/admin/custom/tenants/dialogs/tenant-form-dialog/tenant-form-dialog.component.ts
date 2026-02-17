@@ -189,10 +189,7 @@ export class TenantFormDialogComponent implements OnInit {
                 .subscribe({
                     next: (response) => {
                         this.isLoadingSig.set(false);
-                        this.#notificationService.success(
-                            response.message ||
-                                'admin.common.messages.operationSuccess'
-                        );
+                        this.#notificationService.success(response.message ?? '');
                         this.#dialogRef.close({
                             updated: true,
                             supportedLanguages,
@@ -201,10 +198,7 @@ export class TenantFormDialogComponent implements OnInit {
                     },
                     error: (error) => {
                         this.isLoadingSig.set(false);
-                        this.#notificationService.alert(
-                            error.error?.message ||
-                                'admin.common.errors.unexpected'
-                        );
+                        this.#notificationService.alert(error.error?.message ?? '');
                     },
                 });
             return;
@@ -226,10 +220,7 @@ export class TenantFormDialogComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     this.isLoadingSig.set(false);
-                    this.#notificationService.success(
-                        response.message ||
-                            'admin.common.messages.operationSuccess'
-                    );
+                    this.#notificationService.success(response.message ?? '');
                     this.#dialogRef.close({
                         updated: true,
                         supportedLanguages,
@@ -238,10 +229,7 @@ export class TenantFormDialogComponent implements OnInit {
                 },
                 error: (error) => {
                     this.isLoadingSig.set(false);
-                    this.#notificationService.alert(
-                        error.error?.message ||
-                            'admin.common.errors.unexpected'
-                    );
+                    this.#notificationService.alert(error.error?.message ?? '');
                 },
             });
     }

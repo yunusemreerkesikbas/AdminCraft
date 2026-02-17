@@ -82,8 +82,12 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
         return this.customPost<AdminUserResponse>('generateAdminUser', {}, { tenantId });
     }
 
-    syncMigrations(tenantId: number): Observable<SyncJobDto> {
-        return this.customPost<SyncJobDto>('provisioningSyncMigrations', {}, { tenantId });
+    syncMigrations(tenantId: number): Observable<ApiResponse<SyncJobDto>> {
+        return this.api.post<ApiResponse<SyncJobDto>>(
+            'provisioningSyncMigrations',
+            {},
+            { tenantId }
+        );
     }
 
     getTenantDetail(tenantId: number): Observable<TenantDetailResponse> {

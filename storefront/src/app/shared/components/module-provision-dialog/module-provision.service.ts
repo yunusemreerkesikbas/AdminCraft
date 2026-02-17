@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
 import { Observable } from 'rxjs';
-import { ApiResponse, ModuleCatalog, ProvisioningJob, ProvisionRequest } from './module-provision.types';
+import { ApiResponse, InstalledModule, ModuleCatalog, ProvisioningJob, ProvisionRequest } from './module-provision.types';
 
 @Injectable({
     providedIn: 'root'
@@ -31,6 +31,13 @@ export class ModuleProvisionService extends CrudHttpService<any, any, any> {
         return this.api.get<ApiResponse<ProvisioningJob>>(
             'provisioningJob',
             { jobId }
+        );
+    }
+
+    getInstalledModules(tenantId: number): Observable<ApiResponse<InstalledModule[]>> {
+        return this.api.get<ApiResponse<InstalledModule[]>>(
+            'tenantModules',
+            { tenantId }
         );
     }
 }
