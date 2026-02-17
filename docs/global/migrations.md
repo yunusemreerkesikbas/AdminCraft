@@ -175,6 +175,6 @@ Before committing a new migration:
 | ------------- | ----------------- | ----------------------------------------------------------- |
 | V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair |
 | V1-V17        | component_library | Baseline + responsive links + navigation bindings + legacy repair |
-| V1-V34        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url |
+| V1-V35        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url + restore description |
 | V20-V24       | media             | Baseline + responsive media + link type alignment           |
 | V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

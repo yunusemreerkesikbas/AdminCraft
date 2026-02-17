@@ -1,6 +1,6 @@
 package com.backend.application.service;
 
-import com.backend.application.command.CreateEntryFieldCommand;
+import com.backend.application.dto.request.CreateEntryFieldRequest;
 import com.backend.application.mapper.EntryFieldMapper;
 import com.backend.application.query.GetEntryFieldsByTypeQuery;
 import com.backend.domain.entity.EntryFieldDefinition;
@@ -19,56 +19,25 @@ import java.util.List;
 @Slf4j
 public class EntryFieldServiceImpl implements EntryFieldService {
 
-    private static final int MAX_FIELDS_PER_TYPE = 10;
-
     private final EntryFieldDefinitionRepository fieldRepository;
     private final ComponentTypeRepository componentTypeRepository;
-    private final EntryFieldValidator fieldValidator;
-    private final RuntimeMigrationService migrationService;
     private final EntryFieldMapper mapper;
 
     @Override
     @Transactional
-    public EntryFieldDefinitionResponse addField(CreateEntryFieldCommand command) {
-        componentTypeRepository.findById(command.componentTypeId())
-                .orElseThrow(() -> new IllegalArgumentException("Component type not found: " + command.componentTypeId()));
+    public EntryFieldDefinitionResponse addField(Long componentTypeId, CreateEntryFieldRequest request) {
+        componentTypeRepository.findById(componentTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("Component type not found: " + componentTypeId));
 
-        EntryFieldDefinition field = mapper.toEntity(command);
+        EntryFieldDefinition field = mapper.toEntity(componentTypeId, request);
 
-        long existingFieldCount = fieldRepository.findByComponentTypeId(command.componentTypeId()).size();
-        
-        if (existingFieldCount >= MAX_FIELDS_PER_TYPE) {
-            throw new com.backend.domain.exception.MaxFieldLimitException(
-                MAX_FIELDS_PER_TYPE, command.componentTypeId()
-            );
-        }
-        
-        fieldValidator.validate(field, existingFieldCount);
-
-        if (fieldRepository.existsByComponentTypeIdAndFieldKey(command.componentTypeId(), command.fieldKey())) {
-            throw new IllegalArgumentException("Field already exists: " + command.fieldKey());
+        if (fieldRepository.existsByComponentTypeIdAndFieldKey(componentTypeId, request.fieldKey())) {
+            throw new IllegalArgumentException("Field already exists: " + request.fieldKey());
         }
 
         EntryFieldDefinition saved = fieldRepository.save(field);
-
-        String migrationVersion = generateMigrationVersion(command.componentTypeId(), saved.getId());
-        saved.setMigrationVersion(migrationVersion);
-        
-        migrationService.addFieldColumn(saved);
-        
-        saved.setAppliedAt(java.time.LocalDateTime.now());
-        fieldRepository.save(saved);
-
-        log.info("Added field {} to component type {} with migration version {}", 
-            saved.getFieldKey(), saved.getComponentTypeId(), migrationVersion);
+        log.info("Added field {} to component type {}", saved.getFieldKey(), saved.getComponentTypeId());
         return mapper.toResponse(saved);
-    }
-    
-    protected String generateMigrationVersion(Long componentTypeId, Long fieldId) {
-        return String.format("V%d_%s_%03d", 
-            componentTypeId, 
-            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")),
-            fieldId);
     }
 
     @Override
@@ -86,4 +55,3 @@ public class EntryFieldServiceImpl implements EntryFieldService {
         return mapper.toResponse(field);
     }
 }
-

@@ -1,6 +1,6 @@
 package com.backend.application.mapper;
 
-import com.backend.application.command.CreateEntryFieldCommand;
+import com.backend.application.dto.request.CreateEntryFieldRequest;
 import com.backend.domain.entity.EntryFieldDefinition;
 import com.backend.presentation.dto.response.EntryFieldDefinitionResponse;
 import org.springframework.stereotype.Component;
@@ -11,15 +11,11 @@ import java.util.stream.Collectors;
 @Component
 public class EntryFieldMapper {
 
-  public EntryFieldDefinition toEntity(CreateEntryFieldCommand command) {
+  public EntryFieldDefinition toEntity(Long componentTypeId, CreateEntryFieldRequest request) {
     EntryFieldDefinition entity = new EntryFieldDefinition();
-    entity.setComponentTypeId(command.componentTypeId());
-    entity.setFieldKey(command.fieldKey());
-    entity.setFieldType(command.fieldType());
-    entity.setIsRequired(command.isRequired() != null ? command.isRequired() : false);
-    entity.setMaxLength(command.maxLength());
-    entity.setMinValue(command.minValue());
-    entity.setMaxValue(command.maxValue());
+    entity.setComponentTypeId(componentTypeId);
+    entity.setFieldKey(request.fieldKey());
+    entity.setFieldType(request.fieldType());
     return entity;
   }
 

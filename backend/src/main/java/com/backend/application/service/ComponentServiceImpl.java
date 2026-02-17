@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -20,14 +21,19 @@ import com.backend.application.dto.response.ComponentCompositeResponse;
 import com.backend.application.dto.response.ComponentListItemResponse;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.domain.entity.Component;
+import com.backend.domain.entity.ComponentEntry;
+import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.ComponentEntryI18nRepository;
+import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.ComponentRepository;
@@ -46,6 +52,8 @@ public class ComponentServiceImpl implements ComponentService {
     private static final NavigationType DEFAULT_NAVIGATION_TYPE = NavigationType.MAINMENU;
 
     private final ComponentRepository componentRepository;
+    private final ComponentEntryRepository componentEntryRepository;
+    private final ComponentEntryI18nRepository componentEntryI18nRepository;
     private final ComponentI18nRepository componentI18nRepository;
     private final ComponentTypeService componentTypeService;
     private final ComponentTypeRepository componentTypeRepository;
@@ -61,7 +69,9 @@ public class ComponentServiceImpl implements ComponentService {
 
         Component component = new Component();
         component.setComponentTypeId(request.componentTypeId());
-        component.setName(request.name());
+        validateUidUnique(request.uid(), null);
+        component.setUid(request.uid());
+        component.setName(resolveName(request.name(), request.uid()));
         component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
         component.setStyleClasses(request.styleClasses());
@@ -168,7 +178,9 @@ public class ComponentServiceImpl implements ComponentService {
                 .getComponentTypeById(new GetComponentTypeByIdQuery(request.componentTypeId()));
 
         component.setComponentTypeId(request.componentTypeId());
-        component.setName(request.name());
+        validateUidUnique(request.uid(), component.getUid());
+        component.setUid(request.uid());
+        component.setName(resolveName(request.name(), request.uid()));
         component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : component.getDisplayOrder());
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : component.getIsVisible());
         component.setStyleClasses(request.styleClasses() != null ? request.styleClasses() : component.getStyleClasses());
@@ -201,7 +213,9 @@ public class ComponentServiceImpl implements ComponentService {
 
         Component component = new Component();
         component.setComponentTypeId(request.componentTypeId());
-        component.setName(request.name());
+        validateUidUnique(request.uid(), null);
+        component.setUid(request.uid());
+        component.setName(resolveName(request.name(), request.uid()));
         component.setDisplayOrder(request.displayOrder());
         component.setIsVisible(request.isVisible());
         component.setStyleClasses(request.styleClasses());
@@ -228,6 +242,8 @@ public class ComponentServiceImpl implements ComponentService {
             i18nList.add(componentI18nRepository.save(i18n));
         }
 
+        createBootstrapEntryWithDraftTranslations(savedComponent.getId(), request.translations().keySet());
+
         log.info("Created component with {} translations: id={}, uid={}",
                 i18nList.size(), savedComponent.getId(), savedComponent.getUid());
 
@@ -240,8 +256,12 @@ public class ComponentServiceImpl implements ComponentService {
         Component component = componentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Component", id));
 
-        if (request.name() != null) {
-            component.setName(request.name());
+        if (request.uid() != null) {
+            validateUidUnique(request.uid(), component.getUid());
+            component.setUid(request.uid());
+        }
+        if (request.name() != null || request.uid() != null) {
+            component.setName(resolveName(request.name(), request.uid()));
         }
         if (request.displayOrder() != null) {
             component.setDisplayOrder(request.displayOrder());
@@ -298,6 +318,31 @@ public class ComponentServiceImpl implements ComponentService {
         log.info("Updated component with {} translations: id={}", i18nList.size(), id);
 
         return ComponentCompositeResponse.from(savedComponent, typeName, i18nList);
+    }
+
+    private void createBootstrapEntryWithDraftTranslations(Long componentId, Set<Language> languages) {
+        if (languages == null || languages.isEmpty()) {
+            return;
+        }
+
+        ComponentEntry bootstrapEntry = new ComponentEntry();
+        bootstrapEntry.setComponentId(componentId);
+        bootstrapEntry.setSortOrder(0);
+        bootstrapEntry.setIsVisible(true);
+        bootstrapEntry.setStatus(ComponentStatus.DRAFT);
+        ComponentEntry savedEntry = componentEntryRepository.save(bootstrapEntry);
+
+        List<ComponentEntryI18n> i18nEntries = languages.stream()
+                .map(language -> {
+                    ComponentEntryI18n i18n = new ComponentEntryI18n();
+                    i18n.setEntryId(savedEntry.getId());
+                    i18n.setLanguage(language);
+                    i18n.setStatus(ComponentStatus.DRAFT);
+                    return i18n;
+                })
+                .toList();
+
+        componentEntryI18nRepository.saveAll(i18nEntries);
     }
 
     @Override
@@ -435,4 +480,22 @@ public class ComponentServiceImpl implements ComponentService {
         return requested != null ? requested : current;
     }
 
+    private void validateUidUnique(String uid, String currentUid) {
+        if (uid == null || uid.isBlank()) {
+            return;
+        }
+        if (uid.equals(currentUid)) {
+            return;
+        }
+        if (componentRepository.existsByUid(uid)) {
+            throw new BusinessRuleViolationException("component.uid.exists");
+        }
+    }
+
+    private String resolveName(String name, String uid) {
+        if (name == null || name.trim().isEmpty()) {
+            return uid != null ? uid.trim() : null;
+        }
+        return name.trim();
+    }
 }

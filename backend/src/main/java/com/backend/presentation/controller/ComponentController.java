@@ -43,6 +43,7 @@ import com.backend.domain.entity.ComponentType;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.ComponentI18nRequest;
 import com.backend.presentation.dto.response.ComponentDetailResponse;
+import com.backend.presentation.dto.response.ComponentI18nContentResponse;
 import com.backend.presentation.dto.response.ComponentI18nResponse;
 import com.backend.presentation.dto.response.ComponentResponse;
 import com.backend.presentation.dto.response.PageableResponse;
@@ -107,10 +108,10 @@ public class ComponentController {
                                                 .next();
                                 Component component = entry.getKey();
                                 List<ComponentI18n> i18nList = entry.getValue();
-                                Map<String, ComponentI18nResponse> translationsMap = i18nList.stream()
+                                Map<String, ComponentI18nContentResponse> translationsMap = i18nList.stream()
                                                 .collect(Collectors.toMap(
                                                                 i18n -> i18n.getLanguage().name(), // "TR", "EN", etc.
-                                                                ComponentI18nResponse::from));
+                                                                ComponentI18nContentResponse::from));
 
                                 int publishedCount = (int) i18nList.stream()
                                                 .filter(i18n -> com.backend.domain.enums.ComponentStatus.PUBLISHED

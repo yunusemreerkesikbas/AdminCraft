@@ -1,6 +1,5 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.command.CreateEntryFieldCommand;
 import com.backend.application.query.GetEntryFieldsByTypeQuery;
 import com.backend.application.service.EntryFieldService;
 import com.backend.application.dto.request.CreateEntryFieldRequest;
@@ -36,16 +35,7 @@ public class EntryFieldController {
                         @Valid @RequestBody CreateEntryFieldRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
 
-                CreateEntryFieldCommand command = new CreateEntryFieldCommand(
-                                typeId,
-                                request.fieldKey(),
-                                request.fieldType(),
-                                request.isRequired(),
-                                request.maxLength(),
-                                request.minValue(),
-                                request.maxValue());
-
-                EntryFieldDefinitionResponse response = entryFieldService.addField(command);
+                EntryFieldDefinitionResponse response = entryFieldService.addField(typeId, request);
 
                 String successMessage = messageSource.getMessage("entry.field.create.success",
                                 null, Locale.forLanguageTag(lang));
