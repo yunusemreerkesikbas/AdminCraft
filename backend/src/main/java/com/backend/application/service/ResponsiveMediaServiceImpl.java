@@ -1,6 +1,7 @@
 package com.backend.application.service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -38,20 +39,22 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
   @Override
   @Transactional
   public ResponsiveMediaResponse create(ResponsiveMediaRequest request) {
-    log.info("Creating responsive media set with code: {}", request.code());
+    String code = (request.code() != null && !request.code().isBlank())
+        ? request.code()
+        : UUID.randomUUID().toString().replace("-", "");
 
-    // Validate code uniqueness
-    if (repository.existsByCode(request.code())) {
-      throw new IllegalArgumentException("Responsive media set with code already exists: " + request.code());
+    log.info("Creating responsive media set with code: {}", code);
+
+    if (repository.existsByCode(code)) {
+      throw new IllegalArgumentException("Responsive media set with code already exists: " + code);
     }
 
-    // Validate at least one media is provided
     if (request.desktopMediaId() == null && request.mobileMediaId() == null) {
       throw new IllegalArgumentException("At least one media (desktop or mobile) must be provided");
     }
 
     ResponsiveMediaSet entity = new ResponsiveMediaSet();
-    entity.setCode(request.code());
+    entity.setCode(code);
 
     // Set desktop media if provided
     if (request.desktopMediaId() != null) {
@@ -95,8 +98,7 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
 
     ResponsiveMediaSet entity = getEntityById(id);
 
-    // Update code if changed and validate uniqueness
-    if (!entity.getCode().equals(request.code())) {
+    if (request.code() != null && !request.code().isBlank() && !entity.getCode().equals(request.code())) {
       if (repository.existsByCode(request.code())) {
         throw new IllegalArgumentException("Responsive media set with code already exists: " + request.code());
       }
