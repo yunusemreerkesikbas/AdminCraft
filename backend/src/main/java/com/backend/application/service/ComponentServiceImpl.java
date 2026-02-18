@@ -178,9 +178,13 @@ public class ComponentServiceImpl implements ComponentService {
                 .getComponentTypeById(new GetComponentTypeByIdQuery(request.componentTypeId()));
 
         component.setComponentTypeId(request.componentTypeId());
-        validateUidUnique(request.uid(), component.getUid());
-        component.setUid(request.uid());
-        component.setName(resolveName(request.name(), request.uid()));
+        if (request.uid() != null) {
+            validateUidUnique(request.uid(), component.getUid());
+            component.setUid(request.uid());
+        }
+        if (request.name() != null) {
+            component.setName(resolveName(request.name(), component.getUid()));
+        }
         component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : component.getDisplayOrder());
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : component.getIsVisible());
         component.setStyleClasses(request.styleClasses() != null ? request.styleClasses() : component.getStyleClasses());
@@ -260,8 +264,8 @@ public class ComponentServiceImpl implements ComponentService {
             validateUidUnique(request.uid(), component.getUid());
             component.setUid(request.uid());
         }
-        if (request.name() != null || request.uid() != null) {
-            component.setName(resolveName(request.name(), request.uid()));
+        if (request.name() != null) {
+            component.setName(resolveName(request.name(), component.getUid()));
         }
         if (request.displayOrder() != null) {
             component.setDisplayOrder(request.displayOrder());
@@ -488,13 +492,16 @@ public class ComponentServiceImpl implements ComponentService {
             return;
         }
         if (componentRepository.existsByUid(uid)) {
-            throw new BusinessRuleViolationException("component.uid.exists");
+            throw new BusinessRuleViolationException("component.uid.exists.simple");
         }
     }
 
     private String resolveName(String name, String uid) {
         if (name == null || name.trim().isEmpty()) {
-            return uid != null ? uid.trim() : null;
+            if (uid == null || uid.trim().isEmpty()) {
+                throw new IllegalArgumentException("Component name cannot be blank");
+            }
+            return uid.trim();
         }
         return name.trim();
     }

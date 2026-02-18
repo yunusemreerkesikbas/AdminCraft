@@ -1,6 +1,6 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.domain.entity.EntryFieldDefinition;
+import com.backend.application.dto.response.EntryFieldDefinitionResult;
 import com.backend.domain.enums.EntryFieldType;
 
 import java.time.LocalDateTime;
@@ -12,15 +12,13 @@ public record EntryFieldDefinitionResponse(
     EntryFieldType fieldType,
     LocalDateTime createdAt
 ) {
-    public static EntryFieldDefinitionResponse from(EntryFieldDefinition entity) {
+    public static EntryFieldDefinitionResponse from(EntryFieldDefinitionResult result) {
         return new EntryFieldDefinitionResponse(
-            entity.getId(),
-            entity.getComponentTypeId(),
-            entity.getFieldKey(),
-            entity.getFieldType(),
-            entity.getCreatedAt()
+            result.id(),
+            result.componentTypeId(),
+            result.fieldKey(),
+            result.fieldType(),
+            result.createdAt()
         );
     }
 }
-
-

@@ -35,7 +35,8 @@ public class EntryFieldController {
                         @Valid @RequestBody CreateEntryFieldRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
 
-                EntryFieldDefinitionResponse response = entryFieldService.addField(typeId, request);
+                EntryFieldDefinitionResponse response = EntryFieldDefinitionResponse.from(
+                        entryFieldService.addField(typeId, request));
 
                 String successMessage = messageSource.getMessage("entry.field.create.success",
                                 null, Locale.forLanguageTag(lang));
@@ -50,7 +51,10 @@ public class EntryFieldController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
 
                 GetEntryFieldsByTypeQuery query = new GetEntryFieldsByTypeQuery(typeId);
-                List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query);
+                List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query)
+                        .stream()
+                        .map(EntryFieldDefinitionResponse::from)
+                        .toList();
 
                 String successMessage = messageSource.getMessage("entry.field.list.success",
                                 null, Locale.forLanguageTag(lang));

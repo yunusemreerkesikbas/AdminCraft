@@ -64,3 +64,29 @@ SELECT ps.id, c.id, 0, TRUE, NOW()
 FROM page_slots ps, components c
 WHERE ps.uid = 'searchResultsPage-TopContentSlot' AND c.uid = 'SeedWelcomeParagraph'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- ============================================
+-- 3. SHARED HEADER/FOOTER SLOTS (is_shared=TRUE, page_id=NULL)
+-- ============================================
+
+INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
+VALUES ('bb000001-0000-4000-8000-000000000001', 'SharedHeaderSlot', NULL, 'Header', 'TOP', -1, TRUE, TRUE, NOW(), NOW())
+ON DUPLICATE KEY UPDATE updated_at = NOW();
+
+INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
+VALUES ('bb000002-0000-4000-8000-000000000002', 'SharedFooterSlot', NULL, 'Footer', 'BOTTOM', 99, TRUE, TRUE, NOW(), NOW())
+ON DUPLICATE KEY UPDATE updated_at = NOW();
+
+-- SharedHeaderSlot → SeedHeaderComponent
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'SeedHeaderComponent'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- SharedFooterSlot → SeedFooterComponent
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'SeedFooterComponent'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);

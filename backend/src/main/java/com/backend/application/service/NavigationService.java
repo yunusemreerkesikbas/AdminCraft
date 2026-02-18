@@ -1,6 +1,8 @@
 package com.backend.application.service;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,6 +66,8 @@ public interface NavigationService {
   NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request);
 
   Optional<NavigationDeliveryResponse> getNavigationById(Long id);
+
+  Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids);
 
   Optional<NavigationDeliveryResponse> getNavigationByUid(String uid);
 }

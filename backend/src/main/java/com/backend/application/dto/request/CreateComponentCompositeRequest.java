@@ -41,6 +41,7 @@ public record CreateComponentCompositeRequest(
     @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
   public CreateComponentCompositeRequest {
+    uid = uid == null ? null : uid.trim();
     if (displayOrder == null) {
       displayOrder = 0;
     }

@@ -549,6 +549,16 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Override
   @Transactional(readOnly = true)
+  public Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids) {
+    Map<Long, NavigationDeliveryResponse> result = new java.util.HashMap<>();
+    for (Long id : ids) {
+      getNavigationById(id).ifPresent(nav -> result.put(id, nav));
+    }
+    return result;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public Optional<NavigationDeliveryResponse> getNavigationByUid(String uid) {
     List<NavigationNode> nodes = nodeRepository.findSubtreeByRootUid(uid);
     if (nodes.isEmpty()) {

@@ -37,4 +37,8 @@ public record UpdateComponentCompositeRequest(
         ComponentStatus status,
 
         @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
+
+    public UpdateComponentCompositeRequest {
+        uid = uid == null ? null : uid.trim();
+    }
 }

@@ -1,12 +1,11 @@
 package com.backend.application.mapper;
 
 import com.backend.application.dto.request.CreateEntryFieldRequest;
+import com.backend.application.dto.response.EntryFieldDefinitionResult;
 import com.backend.domain.entity.EntryFieldDefinition;
-import com.backend.presentation.dto.response.EntryFieldDefinitionResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class EntryFieldMapper {
@@ -19,13 +18,13 @@ public class EntryFieldMapper {
     return entity;
   }
 
-  public EntryFieldDefinitionResponse toResponse(EntryFieldDefinition entity) {
-    return EntryFieldDefinitionResponse.from(entity);
+  public EntryFieldDefinitionResult toResult(EntryFieldDefinition entity) {
+    return EntryFieldDefinitionResult.from(entity);
   }
 
-  public List<EntryFieldDefinitionResponse> toResponseList(List<EntryFieldDefinition> entities) {
+  public List<EntryFieldDefinitionResult> toResultList(List<EntryFieldDefinition> entities) {
     return entities.stream()
-        .map(this::toResponse)
-        .collect(Collectors.toList());
+        .map(this::toResult)
+        .toList();
   }
 }
