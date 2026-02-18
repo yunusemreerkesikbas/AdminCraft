@@ -7,13 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.application.command.ComponentTypeCommands.CreateComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.DeleteComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.UpdateComponentTypeCommand;
 import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.util.UuidUidGenerator;
 
@@ -29,15 +27,20 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
 
     @Override
     @Transactional
-    public ComponentType createComponentType(CreateComponentTypeCommand command) {
-        log.debug("Creating component type with name: {}", command.name());
+    public ComponentType createComponentType(
+            String name,
+            String category,
+            ComponentNavigationProfile navigationProfile,
+            Long userId) {
+        log.debug("Creating component type with name: {}", name);
 
         ComponentType componentType = new ComponentType();
         componentType.setUid(generateUniqueUid());
-        componentType.setName(command.name());
-        componentType.setCategory(command.category());
-        componentType.setCreatedBy(command.userId());
-        componentType.setUpdatedBy(command.userId());
+        componentType.setName(name);
+        componentType.setCategory(category);
+        componentType.setNavigationProfile(normalizeNavigationProfile(navigationProfile));
+        componentType.setCreatedBy(userId);
+        componentType.setUpdatedBy(userId);
 
         componentType = componentTypeRepository.save(componentType);
         log.info("Component type created successfully with id: {}", componentType.getId());
@@ -74,26 +77,34 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
 
     @Override
     @Transactional
-    public ComponentType updateComponentType(UpdateComponentTypeCommand command) {
-        log.debug("Updating component type with id: {}", command.id());
+    public ComponentType updateComponentType(
+            Long id,
+            String name,
+            String category,
+            ComponentNavigationProfile navigationProfile,
+            Long userId) {
+        log.debug("Updating component type with id: {}", id);
 
-        ComponentType componentType = componentTypeRepository.findById(command.id())
-                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + command.id()));
+        ComponentType componentType = componentTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + id));
 
-        componentType.setName(command.name());
-        componentType.setCategory(command.category());
-        componentType.setUpdatedBy(command.userId());
+        componentType.setName(name);
+        componentType.setCategory(category);
+        if (navigationProfile != null) {
+            componentType.setNavigationProfile(normalizeNavigationProfile(navigationProfile));
+        }
+        componentType.setUpdatedBy(userId);
 
         componentType = componentTypeRepository.save(componentType);
-        log.info("Component type updated successfully with id: {}", command.id());
+        log.info("Component type updated successfully with id: {}", id);
         return componentType;
     }
 
     @Override
     @Transactional
-    public void deleteComponentType(DeleteComponentTypeCommand command) {
-        ComponentType componentType = componentTypeRepository.findById(command.id())
-                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + command.id()));
+    public void deleteComponentType(Long id) {
+        ComponentType componentType = componentTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + id));
 
         componentTypeRepository.delete(componentType);
     }
@@ -104,5 +115,9 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
             uid = UuidUidGenerator.generateUid();
         } while (componentTypeRepository.existsByUid(uid));
         return uid;
+    }
+
+    private ComponentNavigationProfile normalizeNavigationProfile(ComponentNavigationProfile profile) {
+        return profile != null ? profile : ComponentNavigationProfile.NONE;
     }
 }

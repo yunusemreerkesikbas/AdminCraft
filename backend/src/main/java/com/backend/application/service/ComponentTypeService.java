@@ -5,16 +5,18 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.backend.application.command.ComponentTypeCommands.CreateComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.DeleteComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.UpdateComponentTypeCommand;
 import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.enums.ComponentNavigationProfile;
 
 public interface ComponentTypeService {
-  ComponentType createComponentType(CreateComponentTypeCommand command);
+  ComponentType createComponentType(
+      String name,
+      String category,
+      ComponentNavigationProfile navigationProfile,
+      Long userId);
 
   ComponentType getComponentTypeById(GetComponentTypeByIdQuery query);
 
@@ -24,7 +26,12 @@ public interface ComponentTypeService {
 
   List<ComponentType> getComponentTypesByCategory(GetComponentTypesByCategoryQuery query);
 
-  ComponentType updateComponentType(UpdateComponentTypeCommand command);
+  ComponentType updateComponentType(
+      Long id,
+      String name,
+      String category,
+      ComponentNavigationProfile navigationProfile,
+      Long userId);
 
-  void deleteComponentType(DeleteComponentTypeCommand command);
+  void deleteComponentType(Long id);
 }

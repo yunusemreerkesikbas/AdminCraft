@@ -3,6 +3,7 @@ package com.backend.presentation.dto.response;
 import java.time.LocalDateTime;
 
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.enums.ComponentNavigationProfile;
 
 public record ComponentTypeResponse(
         Long id,
@@ -10,6 +11,7 @@ public record ComponentTypeResponse(
         String uid,
         String name,
         String category,
+        ComponentNavigationProfile navigationProfile,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
     public static ComponentTypeResponse from(ComponentType entity) {
@@ -22,6 +24,7 @@ public record ComponentTypeResponse(
                 entity.getUid(),
                 entity.getName(),
                 entity.getCategory(),
+                entity.getNavigationProfile(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

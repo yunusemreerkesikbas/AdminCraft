@@ -77,6 +77,9 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     @Query("SELECT c FROM Component c WHERE c.responsiveMedia.id = :responsiveMediaId")
     List<Component> findByResponsiveMediaId(@Param("responsiveMediaId") Long responsiveMediaId);
 
+    boolean existsByNavigationNodeIdInOrNavigationLinkNodeIdIn(List<Long> navigationNodeIds,
+            List<Long> navigationLinkNodeIds);
+
     long countByStatus(ComponentStatus status);
 
     long countByCreatedAtAfter(LocalDateTime date);

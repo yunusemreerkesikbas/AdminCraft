@@ -37,11 +37,14 @@ import com.backend.domain.entity.NavigationEntryI18n;
 import com.backend.domain.entity.NavigationNode;
 import com.backend.domain.entity.NavigationNodeI18n;
 import com.backend.domain.enums.Language;
+import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.NavigationEntryI18nRepository;
 import com.backend.domain.repository.NavigationEntryRepository;
 import com.backend.domain.repository.NavigationNodeI18nRepository;
 import com.backend.domain.repository.NavigationNodeRepository;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,12 +55,13 @@ import lombok.extern.slf4j.Slf4j;
 public class NavigationServiceImpl implements NavigationService {
 
   private static final int MAX_DEPTH = 5;
-  private static final Language DEFAULT_LANGUAGE = Language.TR;
 
   private final NavigationNodeRepository nodeRepository;
   private final NavigationEntryRepository entryRepository;
   private final NavigationNodeI18nRepository nodeI18nRepository;
   private final NavigationEntryI18nRepository entryI18nRepository;
+  private final ComponentRepository componentRepository;
+  private final TenantContextPort tenantContext;
 
   @Override
   @Transactional(readOnly = true)
@@ -194,6 +198,14 @@ public class NavigationServiceImpl implements NavigationService {
   @Transactional
   public void deleteNode(Long id) {
     NavigationNode node = findNodeOrThrow(id);
+    List<Long> subtreeNodeIds = nodeRepository.findSubtreeByRootId(id).stream()
+        .map(NavigationNode::getId)
+        .filter(nodeId -> nodeId != null)
+        .toList();
+    if (!subtreeNodeIds.isEmpty() && componentRepository
+        .existsByNavigationNodeIdInOrNavigationLinkNodeIdIn(subtreeNodeIds, subtreeNodeIds)) {
+      throw new BusinessRuleViolationException("navigation.node.in.use");
+    }
     nodeRepository.delete(node);
     log.info("Deleted navigation node: id={}, uid={} (cascade to children and entries)", id, node.getUid());
   }
@@ -718,8 +730,7 @@ public class NavigationServiceImpl implements NavigationService {
   // ==================== Mappers ====================
 
   private Language getDefaultLanguage() {
-    // TODO: In future, can be fetched from tenant settings
-    return DEFAULT_LANGUAGE;
+    return tenantContext.getDefaultLanguage();
   }
 
   private NavigationNodeResponse mapToNodeResponseWithI18n(NavigationNode node) {

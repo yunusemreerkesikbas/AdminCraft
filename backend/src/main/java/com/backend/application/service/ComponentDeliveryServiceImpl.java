@@ -24,6 +24,7 @@ import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
+import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
@@ -44,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
-  private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
   private static final Set<String> RESERVED_FIELDS = Set.of(
       "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -284,34 +284,53 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   }
 
   private NavigationType resolveNavigationType(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type)) {
+    if (!supportsNavigationType(type)) {
       return null;
     }
     return component.getNavigationType();
   }
 
   private Boolean resolveSearchBox(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type)) {
+    if (!supportsSearchBox(type)) {
       return null;
     }
     return component.getSearchBox();
   }
 
   private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type) || component.getNavigationNodeId() == null) {
+    if (!supportsNavigationNode(type) || component.getNavigationNodeId() == null) {
       return null;
     }
     return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
   }
 
   private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type) || component.getNavigationLinkNodeId() == null) {
+    if (!supportsNavigationLinkNode(type) || component.getNavigationLinkNodeId() == null) {
       return null;
     }
     return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
   }
 
-  private boolean isCategoryNavigationComponent(ComponentType type) {
-    return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
+  private boolean supportsNavigationNode(ComponentType type) {
+    return resolveNavigationProfile(type).supportsNavigationNode();
+  }
+
+  private boolean supportsNavigationLinkNode(ComponentType type) {
+    return resolveNavigationProfile(type).supportsNavigationLinkNode();
+  }
+
+  private boolean supportsNavigationType(ComponentType type) {
+    return resolveNavigationProfile(type).supportsNavigationType();
+  }
+
+  private boolean supportsSearchBox(ComponentType type) {
+    return resolveNavigationProfile(type).supportsSearchBox();
+  }
+
+  private ComponentNavigationProfile resolveNavigationProfile(ComponentType type) {
+    if (type == null || type.getNavigationProfile() == null) {
+      return ComponentNavigationProfile.NONE;
+    }
+    return type.getNavigationProfile();
   }
 }

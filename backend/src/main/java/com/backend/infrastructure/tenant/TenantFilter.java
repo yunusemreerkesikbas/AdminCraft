@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.backend.domain.enums.Currency;
+import com.backend.domain.enums.Language;
 import com.backend.infrastructure.persistence.platform.entity.Tenant;
 import com.backend.infrastructure.persistence.platform.repository.TenantPlatformRepository;
 
@@ -113,6 +114,8 @@ public class TenantFilter extends OncePerRequestFilter {
       tenantContext.setTenantDbName(tenant.getDatabaseName());
       tenantContext.setSubdomain(tenant.getSubdomain());
       tenantContext.setCurrency(Currency.fromCodeOrDefault(tenant.getCurrency()));
+      tenantContext.setDefaultLanguage(Language.fromCode(tenant.getDefaultLanguage())
+          .orElseThrow(() -> new IllegalStateException("Tenant default_language is required")));
 
       MDC.put("tenantId", String.valueOf(tenant.getId()));
       MDC.put("tenantDb", tenant.getDatabaseName());

@@ -34,6 +34,7 @@ import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.entity.TemplateSlot;
+import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
@@ -62,9 +63,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
-        private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
-        private static final Set<String> NAVIGATION_AWARE_COMPONENT_UIDS = Set.of(
-                        "CategoryNavigationComponent", "HeaderComponent", "FooterComponent");
         private static final Set<String> RESERVED_FIELDS = Set.of(
                         "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -429,14 +427,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         }
 
         private NavigationType resolveNavigationType(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type)) {
+                if (!supportsNavigationType(type)) {
                         return null;
                 }
                 return component.getNavigationType();
         }
 
         private Boolean resolveSearchBox(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type)) {
+                if (!supportsSearchBox(type)) {
                         return null;
                 }
                 return component.getSearchBox();
@@ -444,7 +442,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component,
                         Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!isNavigationAwareComponent(type) || component.getNavigationNodeId() == null) {
+                if (!supportsNavigationNode(type) || component.getNavigationNodeId() == null) {
                         return null;
                 }
                 return navigationMap.get(component.getNavigationNodeId());
@@ -452,18 +450,33 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component,
                         Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!isNavigationAwareComponent(type) || component.getNavigationLinkNodeId() == null) {
+                if (!supportsNavigationLinkNode(type) || component.getNavigationLinkNodeId() == null) {
                         return null;
                 }
                 return navigationMap.get(component.getNavigationLinkNodeId());
         }
 
-        private boolean isCategoryNavigationComponent(ComponentType type) {
-                return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
+        private boolean supportsNavigationNode(ComponentType type) {
+                return resolveNavigationProfile(type).supportsNavigationNode();
         }
 
-        private boolean isNavigationAwareComponent(ComponentType type) {
-                return type != null && NAVIGATION_AWARE_COMPONENT_UIDS.contains(type.getUid());
+        private boolean supportsNavigationLinkNode(ComponentType type) {
+                return resolveNavigationProfile(type).supportsNavigationLinkNode();
+        }
+
+        private boolean supportsNavigationType(ComponentType type) {
+                return resolveNavigationProfile(type).supportsNavigationType();
+        }
+
+        private boolean supportsSearchBox(ComponentType type) {
+                return resolveNavigationProfile(type).supportsSearchBox();
+        }
+
+        private ComponentNavigationProfile resolveNavigationProfile(ComponentType type) {
+                if (type == null || type.getNavigationProfile() == null) {
+                        return ComponentNavigationProfile.NONE;
+                }
+                return type.getNavigationProfile();
         }
 
         private List<PageSlot> resolveEffectiveSlotsForDelivery(

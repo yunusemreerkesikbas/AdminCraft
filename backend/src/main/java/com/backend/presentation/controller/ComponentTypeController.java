@@ -21,9 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.application.command.ComponentTypeCommands.CreateComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.DeleteComponentTypeCommand;
-import com.backend.application.command.ComponentTypeCommands.UpdateComponentTypeCommand;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.service.ComponentTypeService;
 import com.backend.domain.entity.ComponentType;
@@ -61,12 +58,11 @@ public class ComponentTypeController {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
 
-            CreateComponentTypeCommand command = new CreateComponentTypeCommand(
+            ComponentType result = componentTypeService.createComponentType(
                     request.name(),
                     request.category(),
+                    request.navigationProfile(),
                     userId);
-
-            ComponentType result = componentTypeService.createComponentType(command);
             ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
             String successMessage = messageSource.getMessage("component.type.create.success",
@@ -145,13 +141,12 @@ public class ComponentTypeController {
         try {
             Long userId = SecurityUtil.getCurrentUserIdOrThrow();
 
-            UpdateComponentTypeCommand command = new UpdateComponentTypeCommand(
+            ComponentType result = componentTypeService.updateComponentType(
                     id,
                     request.name(),
                     request.category(),
+                    request.navigationProfile(),
                     userId);
-
-            ComponentType result = componentTypeService.updateComponentType(command);
             ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
             String successMessage = messageSource.getMessage("component.type.update.success",
@@ -171,8 +166,7 @@ public class ComponentTypeController {
             @PathVariable @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
         try {
-            DeleteComponentTypeCommand command = new DeleteComponentTypeCommand(id);
-            componentTypeService.deleteComponentType(command);
+            componentTypeService.deleteComponentType(id);
 
             String successMessage = messageSource.getMessage("component.type.delete.success",
                     null, Locale.forLanguageTag(lang));

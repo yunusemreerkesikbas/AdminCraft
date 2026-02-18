@@ -29,6 +29,7 @@ import com.backend.domain.repository.PageSlotRepository;
 import com.backend.domain.repository.PageTemplateI18nRepository;
 import com.backend.domain.repository.PageTemplateRepository;
 import com.backend.domain.repository.TemplateSlotRepository;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,14 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class PageTemplateServiceImpl implements PageTemplateService {
 
-  private static final Language DEFAULT_LANGUAGE = Language.TR;
-
   private final PageTemplateRepository pageTemplateRepository;
   private final TemplateSlotRepository templateSlotRepository;
   private final PageRepository pageRepository;
   private final PageSlotRepository pageSlotRepository;
   private final PageTemplateI18nRepository templateI18nRepository;
   private final PageTemplateMapper pageTemplateMapper;
+  private final TenantContextPort tenantContext;
 
   @Override
   @Transactional(readOnly = true)
@@ -396,7 +396,6 @@ public class PageTemplateServiceImpl implements PageTemplateService {
   }
 
   private Language getDefaultLanguage() {
-    // TODO: In future, can be fetched from tenant settings
-    return DEFAULT_LANGUAGE;
+    return tenantContext.getDefaultLanguage();
   }
 }
