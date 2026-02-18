@@ -1,6 +1,5 @@
 package com.backend.presentation.controller;
 
-import com.backend.application.command.CreateEntryFieldCommand;
 import com.backend.application.query.GetEntryFieldsByTypeQuery;
 import com.backend.application.service.EntryFieldService;
 import com.backend.application.dto.request.CreateEntryFieldRequest;
@@ -36,16 +35,8 @@ public class EntryFieldController {
                         @Valid @RequestBody CreateEntryFieldRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
 
-                CreateEntryFieldCommand command = new CreateEntryFieldCommand(
-                                typeId,
-                                request.fieldKey(),
-                                request.fieldType(),
-                                request.isRequired(),
-                                request.maxLength(),
-                                request.minValue(),
-                                request.maxValue());
-
-                EntryFieldDefinitionResponse response = entryFieldService.addField(command);
+                EntryFieldDefinitionResponse response = EntryFieldDefinitionResponse.from(
+                        entryFieldService.addField(typeId, request));
 
                 String successMessage = messageSource.getMessage("entry.field.create.success",
                                 null, Locale.forLanguageTag(lang));
@@ -60,7 +51,10 @@ public class EntryFieldController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
 
                 GetEntryFieldsByTypeQuery query = new GetEntryFieldsByTypeQuery(typeId);
-                List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query);
+                List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query)
+                        .stream()
+                        .map(EntryFieldDefinitionResponse::from)
+                        .toList();
 
                 String successMessage = messageSource.getMessage("entry.field.list.success",
                                 null, Locale.forLanguageTag(lang));

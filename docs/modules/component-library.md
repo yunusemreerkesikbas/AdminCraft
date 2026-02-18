@@ -12,6 +12,7 @@ Tenant migrations:
 - `backend/src/main/resources/db/tenant/component_library/`
   - `V1__component_library_baseline.sql`
   - `V17__add_component_navigation_bindings.sql` (CategoryNavigationComponent navigation bindings)
+  - `V18__cleanup_entry_field_definitions.sql` (remove legacy entry field columns)
   - `R__seed_component_types.sql` (idempotent upsert; does not truncate component tables)
   - `R__seed_entry_field_definitions.sql`
 
@@ -53,7 +54,7 @@ Base path: `/api/components/types`
 
 Note:
 
-- Frontend endpoint config contains templates for import/export/validate, but the backend currently exposes only **list + create** for entry fields.
+- Entry field definitions are intentionally minimal (`fieldKey`, `fieldType`).
 - Authorization is `TENANT_ADMIN` or `SUPER_ADMIN`, but requests are still tenant-scoped (a tenant must be resolved by `TenantFilter`).
 
 ### Components
@@ -183,9 +184,10 @@ Key parts:
    - `POST /api/components/types/{typeId}/entry-fields`
 3. Create a component with translations (atomic):
    - `POST /api/components/composite`
-4. Create an entry with translations (atomic):
+4. First entry is auto-bootstrapped on component composite create (draft, per request languages).
+5. Optionally update/create additional entries with translations (atomic):
    - `POST /api/components/entries/composite`
-5. Publish i18n (optional, per language):
+6. Publish i18n (optional, per language):
    - Component: `POST /api/components/{id}/publish/{language}`
    - Entry: `POST /api/components/entries/{id}/publish/{language}`
 
@@ -203,8 +205,7 @@ Key parts:
 
 1. Backend:
    - Add a seed row or provide via API (`EntryFieldController`).
-   - Validation uses the shared validation framework (see `../global/validation.md`) and component config:
-     - `backend/src/main/java/com/backend/application/service/ComponentFieldValidatorConfig.java`
+   - Field metadata is minimal and schema-driven (`fieldKey`, `fieldType`).
 2. Frontend:
    - Ensure schema builder can map the field type to a form control:
      - `storefront/src/app/modules/admin/custom/components/services/component-schema-builder.service.ts`

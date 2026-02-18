@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +63,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
+        private static final Set<String> NAVIGATION_AWARE_COMPONENT_UIDS = Set.of(
+                        "CategoryNavigationComponent", "HeaderComponent", "FooterComponent");
         private static final Set<String> RESERVED_FIELDS = Set.of(
                         "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -129,20 +132,10 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         }
 
         private Optional<Page> resolveHomepage() {
-                long publishedHomeCount = pageRepository.countByIsHomeTrueAndStatus(PageStatus.PUBLISHED);
-                if (publishedHomeCount > 1) {
-                        log.warn("Multiple published homepages found (count={}), first one will be used",
-                                        publishedHomeCount);
-                }
                 return pageRepository.findByIsHomeTrueAndStatus(PageStatus.PUBLISHED);
         }
 
         private Optional<Page> resolveUniqueTemplatePage(PageType pageType) {
-                long publishedTypeCount = pageRepository.countByPageTypeAndStatus(pageType, PageStatus.PUBLISHED);
-                if (publishedTypeCount > 1) {
-                        log.warn("Multiple published {} templates found (count={}), lowest id will be used", pageType,
-                                        publishedTypeCount);
-                }
                 return pageRepository.findFirstByPageTypeAndStatusOrderByIdAsc(pageType, PageStatus.PUBLISHED);
         }
 
@@ -264,15 +257,23 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                                 .stream()
                                                 .collect(Collectors.toMap(ComponentEntryI18n::getEntryId, i -> i));
 
-                Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(
-                                activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap,
-                                responsiveMediaMap,
-                                entriesByComponentId, entryI18nMap, lang);
+                // Batch-fetch all navigation nodes to avoid N+1 per component
+                Set<Long> navIds = componentMap.values().stream()
+                                .flatMap(c -> Stream.of(c.getNavigationNodeId(), c.getNavigationLinkNodeId()))
+                                .filter(id -> id != null)
+                                .collect(Collectors.toSet());
+                Map<Long, NavigationDeliveryResponse> navigationMap = navIds.isEmpty()
+                                ? Map.of()
+                                : navigationService.getNavigationsByIds(navIds);
 
-                ContentSlotsWrapper contentSlots = buildContentSlots(
+                // Build all slot components once, reuse for both outputs
+                Map<String, List<ComponentDeliveryResponse>> slotComponentsMap = buildAllSlotComponents(
                                 activeSlots, componentsBySlotId, componentMap, componentI18nMap, typeMap,
-                                responsiveMediaMap,
-                                entriesByComponentId, entryI18nMap, lang);
+                                responsiveMediaMap, entriesByComponentId, entryI18nMap, navigationMap, lang);
+
+                Map<String, List<ComponentDeliveryResponse>> slotsMap = buildSlotsMap(activeSlots, slotComponentsMap);
+
+                ContentSlotsWrapper contentSlots = buildContentSlots(activeSlots, slotComponentsMap);
 
                 PageI18n i18n = i18nOpt.orElse(null);
 
@@ -295,7 +296,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .build();
         }
 
-        private Map<String, List<ComponentDeliveryResponse>> buildSlotsMap(
+        private Map<String, List<ComponentDeliveryResponse>> buildAllSlotComponents(
                         List<PageSlot> slots,
                         Map<Long, List<SlotComponent>> componentsBySlotId,
                         Map<Long, Component> componentMap,
@@ -304,20 +305,30 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         Map<Long, ResponsiveMediaSet> responsiveMediaMap,
                         Map<Long, List<ComponentEntry>> entriesByComponentId,
                         Map<Long, ComponentEntryI18n> entryI18nMap,
+                        Map<Long, NavigationDeliveryResponse> navigationMap,
                         Language lang) {
 
-                Map<String, List<ComponentDeliveryResponse>> slotsMap = new LinkedHashMap<>();
-
+                Map<String, List<ComponentDeliveryResponse>> result = new LinkedHashMap<>();
                 for (PageSlot slot : slots) {
                         List<ComponentDeliveryResponse> compResponses = buildSlotComponents(
                                         slot, componentsBySlotId, componentMap, componentI18nMap, typeMap,
-                                        responsiveMediaMap, entriesByComponentId, entryI18nMap, lang);
+                                        responsiveMediaMap, entriesByComponentId, entryI18nMap, navigationMap, lang);
+                        result.put(slot.getSlotName(), compResponses);
+                }
+                return result;
+        }
 
+        private Map<String, List<ComponentDeliveryResponse>> buildSlotsMap(
+                        List<PageSlot> slots,
+                        Map<String, List<ComponentDeliveryResponse>> slotComponentsMap) {
+
+                Map<String, List<ComponentDeliveryResponse>> slotsMap = new LinkedHashMap<>();
+                for (PageSlot slot : slots) {
+                        List<ComponentDeliveryResponse> compResponses = slotComponentsMap.getOrDefault(slot.getSlotName(), List.of());
                         if (!compResponses.isEmpty()) {
                                 slotsMap.put(slot.getSlotName(), compResponses);
                         }
                 }
-
                 return slotsMap;
         }
 
@@ -330,6 +341,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         Map<Long, ResponsiveMediaSet> responsiveMediaMap,
                         Map<Long, List<ComponentEntry>> entriesByComponentId,
                         Map<Long, ComponentEntryI18n> entryI18nMap,
+                        Map<Long, NavigationDeliveryResponse> navigationMap,
                         Language lang) {
 
                 return componentsBySlotId.getOrDefault(slot.getId(), List.of()).stream()
@@ -338,7 +350,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                                 .comparingInt(sc -> sc.getSortOrder() != null ? sc.getSortOrder() : 0))
                                 .filter(sc -> componentMap.containsKey(sc.getComponentId()))
                                 .map(sc -> buildComponentResponse(sc, componentMap, componentI18nMap, typeMap,
-                                                responsiveMediaMap, entriesByComponentId, entryI18nMap, lang))
+                                                responsiveMediaMap, entriesByComponentId, entryI18nMap, navigationMap, lang))
                                 .toList();
         }
 
@@ -350,6 +362,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         Map<Long, ResponsiveMediaSet> responsiveMediaMap,
                         Map<Long, List<ComponentEntry>> entriesByComponentId,
                         Map<Long, ComponentEntryI18n> entryI18nMap,
+                        Map<Long, NavigationDeliveryResponse> navigationMap,
                         Language lang) {
 
                 Component comp = componentMap.get(sc.getComponentId());
@@ -384,8 +397,8 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .styleClasses(comp.getStyleClasses())
                                 .navigationType(resolveNavigationType(type, comp))
                                 .searchBox(resolveSearchBox(type, comp))
-                                .navigationNode(resolveNavigationNode(type, comp))
-                                .navigationLinkNode(resolveNavigationLinkNode(type, comp))
+                                .navigationNode(resolveNavigationNode(type, comp, navigationMap))
+                                .navigationLinkNode(resolveNavigationLinkNode(type, comp, navigationMap))
                                 .responsive(responsive)
                                 .entries(entryResponses)
                                 .build();
@@ -429,22 +442,28 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 return component.getSearchBox();
         }
 
-        private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type) || component.getNavigationNodeId() == null) {
+        private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component,
+                        Map<Long, NavigationDeliveryResponse> navigationMap) {
+                if (!isNavigationAwareComponent(type) || component.getNavigationNodeId() == null) {
                         return null;
                 }
-                return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
+                return navigationMap.get(component.getNavigationNodeId());
         }
 
-        private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type) || component.getNavigationLinkNodeId() == null) {
+        private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component,
+                        Map<Long, NavigationDeliveryResponse> navigationMap) {
+                if (!isNavigationAwareComponent(type) || component.getNavigationLinkNodeId() == null) {
                         return null;
                 }
-                return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
+                return navigationMap.get(component.getNavigationLinkNodeId());
         }
 
         private boolean isCategoryNavigationComponent(ComponentType type) {
                 return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
+        }
+
+        private boolean isNavigationAwareComponent(ComponentType type) {
+                return type != null && NAVIGATION_AWARE_COMPONENT_UIDS.contains(type.getUid());
         }
 
         private List<PageSlot> resolveEffectiveSlotsForDelivery(
@@ -518,26 +537,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 return effective;
         }
 
-        /**
-         * Builds Hybris-compatible contentSlots wrapper with structured slot metadata.
-         */
         private ContentSlotsWrapper buildContentSlots(
                         List<PageSlot> slots,
-                        Map<Long, List<SlotComponent>> componentsBySlotId,
-                        Map<Long, Component> componentMap,
-                        Map<Long, ComponentI18n> componentI18nMap,
-                        Map<Long, ComponentType> typeMap,
-                        Map<Long, ResponsiveMediaSet> responsiveMediaMap,
-                        Map<Long, List<ComponentEntry>> entriesByComponentId,
-                        Map<Long, ComponentEntryI18n> entryI18nMap,
-                        Language lang) {
+                        Map<String, List<ComponentDeliveryResponse>> slotComponentsMap) {
 
                 List<ContentSlotDeliveryResponse> contentSlotList = new ArrayList<>();
 
                 for (PageSlot slot : slots) {
-                        List<ComponentDeliveryResponse> compResponses = buildSlotComponents(
-                                        slot, componentsBySlotId, componentMap, componentI18nMap, typeMap,
-                                        responsiveMediaMap, entriesByComponentId, entryI18nMap, lang);
+                        List<ComponentDeliveryResponse> compResponses = slotComponentsMap.getOrDefault(slot.getSlotName(), List.of());
 
                         ContentSlotDeliveryResponse contentSlot = ContentSlotDeliveryResponse.builder()
                                         .slotId(slot.getSlotName() + "Slot")

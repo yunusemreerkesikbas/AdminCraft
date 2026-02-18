@@ -19,9 +19,9 @@ public record ComponentCompositeResponse(
     Long id,
     String uuid,
     String uid,
+    String name,
     Long componentTypeId,
     String componentTypeName,
-    String name,
     Integer displayOrder,
     Boolean isVisible,
     String styleClasses,
@@ -32,28 +32,28 @@ public record ComponentCompositeResponse(
     ComponentStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    Map<Language, ComponentI18nDto> translations) {
+    Map<Language, ComponentI18nContentResponse> translations) {
 
   public static ComponentCompositeResponse from(
       Component component,
       String typeName,
       List<ComponentI18n> i18nList) {
 
-    Map<Language, ComponentI18nDto> translationsMap = Optional.ofNullable(i18nList)
+    Map<Language, ComponentI18nContentResponse> translationsMap = Optional.ofNullable(i18nList)
         .orElseGet(Collections::emptyList)
         .stream()
         .collect(Collectors.toMap(
             ComponentI18n::getLanguage,
-            ComponentI18nDto::from,
+            ComponentI18nContentResponse::from,
             (existing, replacement) -> replacement));
 
     return ComponentCompositeResponse.builder()
         .id(component.getId())
         .uuid(component.getUuid())
         .uid(component.getUid())
+        .name(component.getName())
         .componentTypeId(component.getComponentTypeId())
         .componentTypeName(typeName)
-        .name(component.getName())
         .displayOrder(component.getDisplayOrder())
         .isVisible(component.getIsVisible())
         .styleClasses(component.getStyleClasses())

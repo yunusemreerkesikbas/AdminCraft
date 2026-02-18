@@ -2,9 +2,12 @@ package com.backend.application.dto.request;
 
 import java.util.Map;
 
+import static com.backend.shared.constants.ValidationConstants.UID_TEMPLATE_MAX_LENGTH;
+
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
+import com.backend.shared.validation.Uid;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -14,6 +17,8 @@ import jakarta.validation.constraints.Size;
 
 public record CreateComponentCompositeRequest(
     @NotNull(message = "{validation.component.type.id.required}") Long componentTypeId,
+
+    @Uid(maxLength = UID_TEMPLATE_MAX_LENGTH) String uid,
 
     @NotBlank(message = "{validation.component.name.required}") @Size(max = 100, message = "{validation.component.name.size}") String name,
 
@@ -36,6 +41,7 @@ public record CreateComponentCompositeRequest(
     @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
   public CreateComponentCompositeRequest {
+    uid = uid == null ? null : uid.trim();
     if (displayOrder == null) {
       displayOrder = 0;
     }

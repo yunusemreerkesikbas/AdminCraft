@@ -126,7 +126,9 @@ Template-slot resolution note:
 
 - For pages with `templateId`, delivery slot list is resolved from `template_slots` (slot order/position contract).
 - Component bindings are taken from page slot first, then shared slot fallback for the same `slot_name`.
-- `contentSlots.contentSlot[].position` is the slot `position` value (not slot name).
+- `contentSlots.contentSlot[].slotId` = `slotName + "Slot"` (e.g. `"Section1Slot"`).
+- `contentSlots.contentSlot[].position` = position enum value (e.g. `"TOP"`, `"CENTER"`, `"BOTTOM"`), **not** slot name.
+- The Next.js storefront's `buildSlotMap` keys by `slotId.replace(/Slot$/, "")` (→ `"Section1"`) so template components can reference slots by their logical name rather than the position enum.
 - `component.type` is populated from `componentType.uid` (stable registry key); falls back to `componentType.name` if uid is missing.
 
 DTO references (source of truth):

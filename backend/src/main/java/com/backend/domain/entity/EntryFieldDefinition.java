@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -40,25 +39,6 @@ public class EntryFieldDefinition {
     @Column(name = "field_type", nullable = false, length = 20)
     private EntryFieldType fieldType;
 
-    @Size(max = 50)
-    @Column(name = "migration_version", length = 50)
-    private String migrationVersion;
-
-    @Column(name = "applied_at")
-    private LocalDateTime appliedAt;
-
-    @Column(name = "is_required")
-    private Boolean isRequired = false;
-
-    @Column(name = "max_length")
-    private Integer maxLength;
-
-    @Column(name = "min_value", precision = 10, scale = 2)
-    private BigDecimal minValue;
-
-    @Column(name = "max_value", precision = 10, scale = 2)
-    private BigDecimal maxValue;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -69,6 +49,5 @@ public class EntryFieldDefinition {
         }
     }
 }
-
 
 

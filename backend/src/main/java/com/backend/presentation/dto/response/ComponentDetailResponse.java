@@ -12,7 +12,6 @@ public record ComponentDetailResponse(
         Long id,
         String uuid,
         String uid,
-        String name,
         Long componentTypeId,
         String componentTypeName,
         Integer displayOrder,
@@ -26,7 +25,7 @@ public record ComponentDetailResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         ResponsiveMediaResponse responsiveMedia,
-        Map<String, ComponentI18nResponse> translations,
+        Map<String, ComponentI18nContentResponse> translations,
         Metadata metadata) {
 
     public record Metadata(int translationCount, int publishedTranslationCount) {
@@ -35,7 +34,7 @@ public record ComponentDetailResponse(
     public static ComponentDetailResponse from(
             Component component,
             String componentTypeName,
-            Map<String, ComponentI18nResponse> translations,
+            Map<String, ComponentI18nContentResponse> translations,
             Metadata metadata) {
 
         ResponsiveMediaResponse responsiveMediaDto = component.getResponsiveMedia() != null
@@ -46,7 +45,6 @@ public record ComponentDetailResponse(
                 component.getId(),
                 component.getUuid(),
                 component.getUid(),
-                component.getName(),
                 component.getComponentTypeId(),
                 componentTypeName,
                 component.getDisplayOrder(),

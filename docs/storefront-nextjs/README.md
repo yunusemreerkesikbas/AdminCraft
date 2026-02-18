@@ -41,8 +41,8 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 
 | Route | Resolution |
 | --- | --- |
-| `/` | Redirects to `/{FALLBACK_LOCALE}` (`app/page.tsx`) |
-| `/{lang}` | Layout validates `lang` against `site.enabledLanguages`; redirects to `/{site.defaultLanguage}` if not supported |
+| `/` | `fetchSiteConfig()` → `site.defaultLanguage`; if site unavailable → `FALLBACK_LOCALE` (`app/page.tsx`) |
+| `/{lang}` | Layout validates `lang` against tenant `supportedLanguages` (via `fetchTenantConfig()`); if tenant config unavailable (403/500), validation is skipped and the middleware's format check is trusted |
 | `/{lang}` | `resolvePage(lang)` (homepage) |
 | `/{lang}/**` | `resolvePage(lang, "ContentPage", "/{slug}")` |
 | `/{lang}/products/{uid}` | `resolvePage(lang, "ProductPage", undefined, uid)` + `fetchProduct(uid)` |
@@ -51,16 +51,26 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 
 Missing pages use `app/[lang]/not-found.tsx`.
 
+### Language validation layers
+
+| Layer | Source | Behaviour when unavailable |
+| --- | --- | --- |
+| `middleware.ts` | Regex `[a-z]{2,3}` | Always runs |
+| `app/page.tsx` | `fetchSiteConfig()` → `defaultLanguage` | Falls back to `FALLBACK_LOCALE` |
+| `app/[lang]/layout.tsx` | `fetchTenantConfig()` → `supportedLanguages` | Skips validation (trusts middleware) |
+
+`fetchTenantConfig()` calls `GET /api/tenants/current/detail` which requires authentication; the storefront has no token, so this endpoint returns 403. The call is wrapped in a `try/catch` that silently returns `null`. The tenant language routing will only enforce restrictions if this endpoint becomes publicly accessible or a dedicated public endpoint is added.
+
 ## CMS render pipeline
 
 Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-page-slot` pattern.
 
-1. `CmsPage` calls `buildSlotMap(page)` → `{ position: slot }` map from `contentSlots` (or legacy `slots`).
+1. `CmsPage` calls `buildSlotMap(page)` → `{ slotName: slot }` map from `contentSlots` (or legacy `slots`). The backend sets `contentSlot[].slotId = slotName + "Slot"` and `contentSlot[].position = positionEnum` (e.g. `"TOP"`). `buildSlotMap` derives the key from `slotId` by stripping the `"Slot"` suffix — so `"Section1Slot"` → `"Section1"` — matching the position strings used in template components.
 2. `resolveTemplate(page.template)` looks up the template component from `templateRegistry`.
-   - Unknown template → `null` render + `console.warn` (development only).
+   - Unknown template → falls back to `DefaultTemplate` (renders all slots as a vertical stack) + `console.warn` (development only).
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
-4. Each template places `<CmsSlot position="..." slotMap={slotMap} template={page.template} />` wherever it wants.
-5. `CmsSlot` renders the components for that position; returns `null` if the position isn't in `slotMap`.
+4. Each template reads its slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot position="..." slotMap={slotMap} />` for each slot.
+5. `CmsSlot` renders the components for that position; returns `null` + `console.warn` (development only) if the position isn't in `slotMap`.
 6. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
 7. Unknown component types render with `UnknownComponent`.
 
@@ -73,30 +83,54 @@ Located in `components/cms/templates/index.ts`.
 | Template name | File | Slot positions | Page type |
 |---|---|---|---|
 | `LandingPageTemplate` | `LandingPageTemplate.tsx` | Section1, Section2, Section3 | Home / campaign |
-| `ContentPageTemplate` | `ContentPageTemplate.tsx` | TopContent, BodyContent, BottomContent | Generic content |
+| `ContentPageTemplate` | `ContentPageTemplate.tsx` | TopContent, BodyContent, SideContent | Generic content |
 | `CategoryPageTemplate` | `CategoryPageTemplate.tsx` | TopContent, ProductGrid | Category listing |
 | `ProductDetailsPageTemplate` | `ProductDetailsPageTemplate.tsx` | Summary, Tabs, CrossSelling | Product detail |
 | `SearchResultsPageTemplate` | `SearchResultsPageTemplate.tsx` | TopContent, Results | Search results |
 | `ErrorPageTemplate` | `ErrorPageTemplate.tsx` | MiddleContent | 500 error |
 | `NotFoundPageTemplate` | `NotFoundPageTemplate.tsx` | MiddleContent | 404 not found |
+| `DefaultTemplate` | `DefaultTemplate.tsx` | all slots in slotMap | Fallback (unknown templates) |
 
 Template names match `page_template.uid` values in the database exactly — do not rename.
 
-To add a new template: create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps`, then add it to `templateRegistry` in `index.ts`.
+Slot names and positions are centrally defined in `template-configs.ts` (`TEMPLATE_CONFIGS`). Each template reads its own config entry at render time.
+
+To add a new template:
+1. Add an entry to `TEMPLATE_CONFIGS` in `template-configs.ts` with slot names and positions.
+2. Create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps` (read slots from `TEMPLATE_CONFIGS.MyTemplate`).
+3. Register it in `templateRegistry` in `index.ts`.
 
 ### CSS targeting
 
-`CmsSlot` emits `class="cms-slot {templateName} {position}"`. This enables scoped CSS without extra wrapper elements:
+Template name appears **once** on the template's outer `<div>` (`cms-page {templateName}`), not repeated on every slot.
+`CmsSlot` emits `class="cms-slot {position}"` only.
+
+```html
+<!-- Rendered structure -->
+<div class="cms-page LandingPageTemplate space-y-8">
+  <section class="cms-slot Section1" data-slot-position="Section1"> ... </section>
+  <section class="cms-slot Section2" data-slot-position="Section2"> ... </section>
+</div>
+```
+
+CSS scoping patterns:
 
 ```css
 /* All slots in a specific template */
-.LandingPageTemplate.cms-slot { ... }
+.cms-page.LandingPageTemplate .cms-slot { ... }
 
 /* A specific slot across all templates */
-.Section1 { ... }
+.cms-slot.Section1 { ... }
 
 /* A specific slot in a specific template */
-.LandingPageTemplate.Section1 { ... }
+.cms-page.LandingPageTemplate .cms-slot.Section1 { ... }
+```
+
+`CmsPage` mounts a `BodyClassSetter` client component (`components/BodyClassSetter.tsx`) that adds `page-{uid}` to `<body>` on hydration and removes it on unmount. This enables page-type–level CSS scoping:
+
+```css
+/* Target only the homepage */
+body.page-homepage .hero { ... }
 ```
 
 ## i18n — Tenant-driven locale configuration
@@ -212,6 +246,24 @@ Locale validation happens at the layout level (not middleware) to allow tenant-s
 ### 5) Enabling a new language for a tenant
 
 No code changes required. Add the language via the admin Site Settings UI. The storefront reads `enabledLanguages` from the API at runtime. If no `messages/{lang}.json` exists, the UI falls back to `tr.json`; CMS content is served in the requested language by the backend.
+
+## Error handling
+
+### `cms-client.ts` request behaviour
+
+| Status | Behaviour |
+| --- | --- |
+| 404 | Returns `null` |
+| 429 or 5xx | Logs `[CMS] Request failed {status}: {url}` to server console; returns `null` |
+| Other non-2xx | Throws `Error` (propagates to page) |
+
+`null` from `resolvePage` causes `ContentPage` to call `notFound()`, showing `app/[lang]/not-found.tsx` instead of crashing.
+
+`fetchTenantConfig()` wraps its `request()` call in `try/catch` and always returns `null` on any error (including the expected 403 from the auth-protected endpoint).
+
+### Error boundary
+
+`app/[lang]/error.tsx` is a `"use client"` error boundary for any uncaught errors inside the locale subtree. It shows a Türkçe error message with a retry button. Root-level errors (outside `[lang]`) are not caught here.
 
 ## Current limitations and extension points
 

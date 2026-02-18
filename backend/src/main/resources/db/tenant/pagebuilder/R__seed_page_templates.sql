@@ -236,6 +236,74 @@ ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 
 -- NotFoundPageTemplate Slots
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
-SELECT 'c5d6e7f8-a9b0-1234-8901-345678901318', 'NotFoundPageMiddleSlot', id, 'MiddleContent', 'CENTER', 0, TRUE 
+SELECT 'c5d6e7f8-a9b0-1234-8901-345678901318', 'NotFoundPageMiddleSlot', id, 'MiddleContent', 'CENTER', 0, TRUE
 FROM page_templates WHERE uid = 'NotFoundPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- ============================================
+-- 5. CHROME SLOTS: Header (TOP, sort_order=-1) + Footer (BOTTOM, sort_order=99)
+--    Chrome templates: Landing, Content, Category, ProductDetails, SearchResults, Account
+--    Excluded (no chrome): Login, Error, NotFound
+-- ============================================
+
+-- Header Slots
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000001-0000-4000-8000-000000000001', 'LandingPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000002-0000-4000-8000-000000000002', 'ContentPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'ContentPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000003-0000-4000-8000-000000000003', 'CategoryPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'CategoryPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000004-0000-4000-8000-000000000004', 'ProductDetailsPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'ProductDetailsPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000005-0000-4000-8000-000000000005', 'SearchResultsPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'SearchResultsPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000006-0000-4000-8000-000000000006', 'AccountPageHeaderSlot', id, 'Header', 'TOP', -1, FALSE
+FROM page_templates WHERE uid = 'AccountPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Footer Slots
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000007-0000-4000-8000-000000000007', 'LandingPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000008-0000-4000-8000-000000000008', 'ContentPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'ContentPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000009-0000-4000-8000-000000000009', 'CategoryPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'CategoryPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000010-0000-4000-8000-000000000010', 'ProductDetailsPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'ProductDetailsPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000011-0000-4000-8000-000000000011', 'SearchResultsPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'SearchResultsPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'aa000012-0000-4000-8000-000000000012', 'AccountPageFooterSlot', id, 'Footer', 'BOTTOM', 99, FALSE
+FROM page_templates WHERE uid = 'AccountPageTemplate'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
