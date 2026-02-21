@@ -34,7 +34,6 @@ import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.entity.SlotComponent;
 import com.backend.domain.entity.TemplateSlot;
-import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
@@ -427,14 +426,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         }
 
         private NavigationType resolveNavigationType(ComponentType type, Component component) {
-                if (!supportsNavigationType(type)) {
+                if (!isNavigationAware(type)) {
                         return null;
                 }
                 return component.getNavigationType();
         }
 
         private Boolean resolveSearchBox(ComponentType type, Component component) {
-                if (!supportsSearchBox(type)) {
+                if (!isNavigationAware(type)) {
                         return null;
                 }
                 return component.getSearchBox();
@@ -442,7 +441,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component,
                         Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!supportsNavigationNode(type) || component.getNavigationNodeId() == null) {
+                if (!isNavigationAware(type) || component.getNavigationNodeId() == null) {
                         return null;
                 }
                 return navigationMap.get(component.getNavigationNodeId());
@@ -450,33 +449,12 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component,
                         Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!supportsNavigationLinkNode(type) || component.getNavigationLinkNodeId() == null) {
-                        return null;
-                }
-                return navigationMap.get(component.getNavigationLinkNodeId());
+                // navigationLinkNodeId is reserved for future use and hidden from UI
+                return null;
         }
 
-        private boolean supportsNavigationNode(ComponentType type) {
-                return resolveNavigationProfile(type).supportsNavigationNode();
-        }
-
-        private boolean supportsNavigationLinkNode(ComponentType type) {
-                return resolveNavigationProfile(type).supportsNavigationLinkNode();
-        }
-
-        private boolean supportsNavigationType(ComponentType type) {
-                return resolveNavigationProfile(type).supportsNavigationType();
-        }
-
-        private boolean supportsSearchBox(ComponentType type) {
-                return resolveNavigationProfile(type).supportsSearchBox();
-        }
-
-        private ComponentNavigationProfile resolveNavigationProfile(ComponentType type) {
-                if (type == null || type.getNavigationProfile() == null) {
-                        return ComponentNavigationProfile.NONE;
-                }
-                return type.getNavigationProfile();
+        private boolean isNavigationAware(ComponentType type) {
+                return type != null && type.isNavigationAware();
         }
 
         private List<PageSlot> resolveEffectiveSlotsForDelivery(

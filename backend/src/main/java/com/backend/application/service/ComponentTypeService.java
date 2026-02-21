@@ -9,13 +9,12 @@ import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQu
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
-import com.backend.domain.enums.ComponentNavigationProfile;
 
 public interface ComponentTypeService {
   ComponentType createComponentType(
       String name,
       String category,
-      ComponentNavigationProfile navigationProfile,
+      boolean navigationAware,
       Long userId);
 
   ComponentType getComponentTypeById(GetComponentTypeByIdQuery query);
@@ -30,7 +29,7 @@ public interface ComponentTypeService {
       Long id,
       String name,
       String category,
-      ComponentNavigationProfile navigationProfile,
+      boolean navigationAware,
       Long userId);
 
   void deleteComponentType(Long id);

@@ -67,6 +67,8 @@ Composite:
 
 Location: `storefront/src/app/modules/admin/custom/navigation/`
 
+The admin list view is a **tree view** (not a paginated grid): it uses Angular Material Tree (`MatTree`, `NestedTreeControl`) with lazy-loaded children. Root nodes are loaded via `GET /api/navigation/nodes` (with a single large page size); expanding a node loads its subtree via `GET /api/navigation/nodes/{id}`. The UI mirrors the Product categories tree (`storefront/.../products/categories/`): header with create button, empty state, expand/collapse, and row actions (add child, manage, delete).
+
 ## Security & tenant isolation
 
 - Admin endpoints require `TENANT_ADMIN` (`@PreAuthorize("hasRole('TENANT_ADMIN')")` at controller level).

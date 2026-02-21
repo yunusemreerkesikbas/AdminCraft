@@ -6,7 +6,6 @@ import static com.backend.shared.constants.ValidationConstants.UID_TEMPLATE_MAX_
 
 import java.util.Map;
 
-import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
 import com.backend.shared.validation.Uid;
@@ -33,8 +32,6 @@ public record UpdateComponentCompositeRequest(
         NavigationType navigationType,
 
         Boolean searchBox,
-
-        ComponentStatus status,
 
         @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 

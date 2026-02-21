@@ -1,7 +1,7 @@
 # AdminCraft Documentation
 
 AdminCraft is a platform for **customizable project solutions** built with **Spring Boot (Java 21)** and **Angular 19**.
-The platform uses **database-per-tenant** isolation (`platform_management` + `ac_tenant_{id}`) and a Clean Architecture layout.
+The platform uses **database-per-tenant** isolation (`platform_management` + `ac_subdomain_{id}`) and a Clean Architecture layout.
 
 ## How to use these docs
 

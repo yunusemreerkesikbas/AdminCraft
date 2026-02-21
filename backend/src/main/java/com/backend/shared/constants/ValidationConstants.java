@@ -54,12 +54,12 @@ public final class ValidationConstants {
 
     /**
      * UID Pattern
-     * - Start with lowercase letter or digit
-     * - Lowercase letters, digits, underscores, and hyphens allowed
+     * - Start with letter or digit
+     * - Letters, digits, underscores, and hyphens allowed
      * 
-     * @example "page_123", "template-main", "a1"
+     * @example "SeedLandingPortfolioGrid", "page_123", "template-main"
      */
-    public static final String UID_PATTERN = "^[a-z0-9][a-z0-9_-]*$";
+    public static final String UID_PATTERN = "^[A-Za-z0-9][A-Za-z0-9_-]*$";
 
     /**
      * Slot Name Pattern

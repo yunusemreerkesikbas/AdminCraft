@@ -53,6 +53,7 @@ class ComponentServiceImplTest {
     component1.setComponentTypeId(10L);
     component1.setName("Main Header");
     component1.setStatus(ComponentStatus.PUBLISHED);
+    component1.setIsVisible(true);
     component1.setCreatedAt(LocalDateTime.now());
     component1.setUpdatedAt(LocalDateTime.now());
 
@@ -63,6 +64,7 @@ class ComponentServiceImplTest {
     component2.setComponentTypeId(11L);
     component2.setName("Main Footer");
     component2.setStatus(ComponentStatus.DRAFT);
+    component2.setIsVisible(false);
     component2.setCreatedAt(LocalDateTime.now());
     component2.setUpdatedAt(LocalDateTime.now());
 
@@ -90,13 +92,13 @@ class ComponentServiceImplTest {
     ComponentListItemResponse first = result.get(0);
     assertThat(first.componentTypeName()).isEqualTo("Navigation");
     assertThat(first.id()).isEqualTo(1L);
-    assertThat(first.name()).isEqualTo("Main Header");
     assertThat(first.componentTypeId()).isEqualTo(10L);
+    assertThat(first.isVisible()).isTrue();
 
     ComponentListItemResponse second = result.get(1);
     assertThat(second.componentTypeName()).isEqualTo("Footer");
     assertThat(second.id()).isEqualTo(2L);
-    assertThat(second.name()).isEqualTo("Main Footer");
+    assertThat(second.isVisible()).isFalse();
   }
 
   @Test

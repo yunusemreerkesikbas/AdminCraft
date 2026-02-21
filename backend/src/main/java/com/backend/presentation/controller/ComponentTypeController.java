@@ -61,7 +61,7 @@ public class ComponentTypeController {
             ComponentType result = componentTypeService.createComponentType(
                     request.name(),
                     request.category(),
-                    request.navigationProfile(),
+                    request.navigationAware(),
                     userId);
             ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
@@ -145,7 +145,7 @@ public class ComponentTypeController {
                     id,
                     request.name(),
                     request.category(),
-                    request.navigationProfile(),
+                    request.navigationAware(),
                     userId);
             ComponentTypeResponse response = ComponentTypeResponse.from(result);
 

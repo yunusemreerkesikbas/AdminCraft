@@ -6,10 +6,10 @@ import com.backend.domain.enums.ComponentStatus;
 public record ComponentListItemResponse(
         Long id,
         String uid,
-        String name,
         Long componentTypeId,
         String componentTypeName,
         ComponentStatus status,
+        Boolean isVisible,
         Integer entryCount) {
     public static ComponentListItemResponse from(Component component, String typeName, Integer entryCount) {
         if (component == null) {
@@ -18,10 +18,10 @@ public record ComponentListItemResponse(
         return new ComponentListItemResponse(
                 component.getId(),
                 component.getUid(),
-                component.getName(),
                 component.getComponentTypeId(),
                 typeName,
                 component.getStatus(),
+                component.getIsVisible(),
                 entryCount != null ? entryCount : 0);
     }
 }

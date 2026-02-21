@@ -19,15 +19,14 @@ Tenant migration location:
 Key migrations and seeds:
 
 - `V17__add_component_navigation_bindings.sql` (component-level navigation binding fields)
-- `V19__add_component_type_navigation_capabilities.sql` (legacy boolean capability columns)
-- `V20__simplify_component_type_navigation_profile.sql` (single `navigation_profile` model; drops legacy columns)
-- `R__seed_component_types.sql` (idempotent upsert with `navigation_profile`)
+- `V20__simplify_component_type_navigation_profile.sql` (consolidated legacy boolean columns → `navigation_profile` enum)
+- `V21__replace_navigation_profile_with_is_navigation_aware.sql` (replaces `navigation_profile` enum with single `is_navigation_aware` boolean)
+- `R__seed_component_types.sql` (idempotent upsert with `is_navigation_aware`; includes `NavigationComponent` system type)
 - `R__seed_entry_field_definitions.sql`
 
 Navigation capability model source of truth:
 
-- `../../backend/src/main/java/com/backend/domain/enums/ComponentNavigationProfile.java`
-- `../../backend/src/main/java/com/backend/domain/entity/ComponentType.java`
+- `../../backend/src/main/java/com/backend/domain/entity/ComponentType.java` (`navigationAware` boolean field)
 
 ## Admin API (tenant-scoped, authenticated)
 
@@ -48,7 +47,7 @@ Component type contract (relevant fields):
 
 - `name`
 - `category`
-- `navigationProfile` (`NONE`, `NODE`, `NODE_REQUIRED`, `NODE_WITH_LINK`, `NODE_WITH_TYPE`, `CATEGORY`)
+- `navigationAware` (boolean — replaces the old 6-variant `navigationProfile` enum)
 
 Request/response DTOs:
 
@@ -72,6 +71,9 @@ Endpoints:
 - `PUT /api/components/{id}/composite`
 - `PATCH /api/components/{id}/responsive-media?responsiveMediaId={id}`
 
+Composite note:
+- Composite create/update **do not accept `status`**. Status defaults to `DRAFT` and is managed via publish flows (i18n publish endpoints).
+
 Entry field definition controller:
 
 - `../../backend/src/main/java/com/backend/presentation/controller/EntryFieldController.java`
@@ -91,7 +93,10 @@ Component entries controller:
 - `POST /api/components/entries/composite`
 - `PUT /api/components/entries/{id}/composite`
 
-Navigation-aware binding behavior is profile-driven in:
+Composite entry note:
+- Entry composite create/update **do not accept `status`**. Status defaults to `DRAFT` and is managed via publish flows.
+
+Navigation-aware binding behavior is driven by the `isNavigationAware()` flag in:
 
 - `../../backend/src/main/java/com/backend/application/service/ComponentServiceImpl.java`
 - `../../backend/src/main/java/com/backend/application/service/ComponentDeliveryServiceImpl.java`
@@ -108,12 +113,14 @@ See:
 
 - `cms-delivery.md`
 
-When the selected component type profile supports navigation fields, delivery payload can include:
+When the component type has `navigationAware = true`, the delivery payload can include:
 
-- `navigationType`
-- `searchBox`
-- `navigationNode`
-- `navigationLinkNode`
+- `navigationType` (`MAINMENU` or `STATICPAGE`) — drives storefront rendering
+- `searchBox` (boolean)
+- `navigationNode` (resolved navigation tree)
+
+> `navigationLinkNodeId` is preserved in the DB schema but hidden from the UI and not populated.
+> It is reserved for future use.
 
 ## Frontend integration
 
@@ -123,10 +130,11 @@ Admin UI location:
 
 Key files:
 
-- `models/component-library.types.ts` (includes `ComponentNavigationProfile`)
+- `models/component-library.types.ts` (defines `ComponentTypeDto` with `navigationAware: boolean`)
+- `models/component-form.types.ts` (defines `ComponentTypeFormData` with `navigationAware`)
 - `types/component-types-list.component.ts`
-- `types/component-type-edit-dialog/component-type-edit-dialog.component.ts`
-- `component-edit-dialog/component-edit-dialog.component.ts` (derives visibility/requirements from profile)
+- `types/component-type-edit-dialog/component-type-edit-dialog.component.ts` (checkbox for `navigationAware`)
+- `component-edit-dialog/component-edit-dialog.component.ts` (`isNavigationAware` getter drives field visibility)
 - `services/component-schema-builder.service.ts`
 
 ## Security & tenant isolation
@@ -138,26 +146,24 @@ Key files:
 
 ## Implementation guide
 
-### 1) Create a new type with navigation behavior
+### 1) Create a new navigation-aware type
 
-1. Create type with `navigationProfile` using `POST /api/components/types`.
+1. Create type via `POST /api/components/types` with `navigationAware: true`.
 2. Add entry field definitions via `POST /api/components/types/{typeId}/entry-fields`.
 3. Use the type in component create/edit flows.
 
 ### 2) Create a navigation-aware component
 
-1. Select a type whose `navigationProfile` is not `NONE`.
+1. Select a type whose `navigationAware` is `true`.
 2. Save component via composite endpoint (`POST /api/components/composite`).
-3. Provide only fields supported by that profile:
-   - `NODE`: `navigationNodeId`
-   - `NODE_REQUIRED`: `navigationNodeId` required
-   - `NODE_WITH_LINK`: `navigationNodeId`, optional `navigationLinkNodeId`
-   - `NODE_WITH_TYPE`: `navigationNodeId`, optional `navigationType`
-   - `CATEGORY`: `navigationNodeId` required, optional `navigationType`, optional `searchBox`
+3. Provide navigation fields (all optional):
+   - `navigationNodeId` — links to a `NavigationNode`
+   - `navigationType` — `MAINMENU` or `STATICPAGE` (defaults to `MAINMENU`)
+   - `searchBox` — boolean (defaults to `false`)
 
 ### 3) Migrate existing tenants safely
 
-1. Apply versioned migration `V20__simplify_component_type_navigation_profile.sql`.
-2. Verify `flyway_component_library_history` includes version `20`.
+1. Apply versioned migration `V21__replace_navigation_profile_with_is_navigation_aware.sql`.
+2. Verify `flyway_component_library_history` includes version `21`.
 3. Run sync migrations if needed:
    - `POST /api/provisioning/tenants/{tenantId}/sync-migrations`

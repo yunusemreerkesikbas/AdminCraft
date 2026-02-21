@@ -3,8 +3,6 @@ package com.backend.presentation.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import com.backend.domain.enums.ComponentNavigationProfile;
-
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_TYPE_CATEGORY_MAX_LENGTH;
 import static com.backend.shared.constants.ValidationConstants.COMPONENT_TYPE_NAME_MAX_LENGTH;
 
@@ -16,7 +14,7 @@ public record ComponentTypeCreateRequest(
         @Size(max = COMPONENT_TYPE_CATEGORY_MAX_LENGTH, message = "validation.component.type.category.size")
         String category,
 
-        ComponentNavigationProfile navigationProfile) {
+        boolean navigationAware) {
     public ComponentTypeCreateRequest {
         if (name != null) {
             name = name.trim();

@@ -24,7 +24,6 @@ import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
-import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
@@ -284,53 +283,32 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   }
 
   private NavigationType resolveNavigationType(ComponentType type, Component component) {
-    if (!supportsNavigationType(type)) {
+    if (!isNavigationAware(type)) {
       return null;
     }
     return component.getNavigationType();
   }
 
   private Boolean resolveSearchBox(ComponentType type, Component component) {
-    if (!supportsSearchBox(type)) {
+    if (!isNavigationAware(type)) {
       return null;
     }
     return component.getSearchBox();
   }
 
   private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
-    if (!supportsNavigationNode(type) || component.getNavigationNodeId() == null) {
+    if (!isNavigationAware(type) || component.getNavigationNodeId() == null) {
       return null;
     }
     return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
   }
 
   private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-    if (!supportsNavigationLinkNode(type) || component.getNavigationLinkNodeId() == null) {
-      return null;
-    }
-    return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
+    // navigationLinkNodeId is reserved for future use and hidden from UI
+    return null;
   }
 
-  private boolean supportsNavigationNode(ComponentType type) {
-    return resolveNavigationProfile(type).supportsNavigationNode();
-  }
-
-  private boolean supportsNavigationLinkNode(ComponentType type) {
-    return resolveNavigationProfile(type).supportsNavigationLinkNode();
-  }
-
-  private boolean supportsNavigationType(ComponentType type) {
-    return resolveNavigationProfile(type).supportsNavigationType();
-  }
-
-  private boolean supportsSearchBox(ComponentType type) {
-    return resolveNavigationProfile(type).supportsSearchBox();
-  }
-
-  private ComponentNavigationProfile resolveNavigationProfile(ComponentType type) {
-    if (type == null || type.getNavigationProfile() == null) {
-      return ComponentNavigationProfile.NONE;
-    }
-    return type.getNavigationProfile();
+  private boolean isNavigationAware(ComponentType type) {
+    return type != null && type.isNavigationAware();
   }
 }

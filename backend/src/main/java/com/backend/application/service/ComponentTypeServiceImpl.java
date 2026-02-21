@@ -11,7 +11,6 @@ import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQu
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
-import com.backend.domain.enums.ComponentNavigationProfile;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.util.UuidUidGenerator;
 
@@ -30,7 +29,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
     public ComponentType createComponentType(
             String name,
             String category,
-            ComponentNavigationProfile navigationProfile,
+            boolean navigationAware,
             Long userId) {
         log.debug("Creating component type with name: {}", name);
 
@@ -38,7 +37,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
         componentType.setUid(generateUniqueUid());
         componentType.setName(name);
         componentType.setCategory(category);
-        componentType.setNavigationProfile(normalizeNavigationProfile(navigationProfile));
+        componentType.setNavigationAware(navigationAware);
         componentType.setCreatedBy(userId);
         componentType.setUpdatedBy(userId);
 
@@ -81,7 +80,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
             Long id,
             String name,
             String category,
-            ComponentNavigationProfile navigationProfile,
+            boolean navigationAware,
             Long userId) {
         log.debug("Updating component type with id: {}", id);
 
@@ -90,9 +89,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
 
         componentType.setName(name);
         componentType.setCategory(category);
-        if (navigationProfile != null) {
-            componentType.setNavigationProfile(normalizeNavigationProfile(navigationProfile));
-        }
+        componentType.setNavigationAware(navigationAware);
         componentType.setUpdatedBy(userId);
 
         componentType = componentTypeRepository.save(componentType);
@@ -115,9 +112,5 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
             uid = UuidUidGenerator.generateUid();
         } while (componentTypeRepository.existsByUid(uid));
         return uid;
-    }
-
-    private ComponentNavigationProfile normalizeNavigationProfile(ComponentNavigationProfile profile) {
-        return profile != null ? profile : ComponentNavigationProfile.NONE;
     }
 }

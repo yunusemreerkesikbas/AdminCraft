@@ -2,15 +2,12 @@ package com.backend.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import com.backend.domain.enums.ComponentNavigationProfile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -37,7 +34,6 @@ public class ComponentType extends BaseEntity {
     @Column(length = 50)
     private String category;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "navigation_profile", nullable = false, length = 40)
-    private ComponentNavigationProfile navigationProfile = ComponentNavigationProfile.NONE;
+    @Column(name = "is_navigation_aware", nullable = false)
+    private boolean navigationAware = false;
 }
