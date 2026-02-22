@@ -15,6 +15,7 @@ import com.backend.domain.repository.NavigationEntryI18nRepository;
 import com.backend.domain.repository.NavigationEntryRepository;
 import com.backend.domain.repository.NavigationNodeI18nRepository;
 import com.backend.domain.repository.NavigationNodeRepository;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class NavigationI18nServiceImpl implements NavigationI18nService {
 
-  private static final Language DEFAULT_LANGUAGE = Language.TR;
-
   private final NavigationNodeRepository nodeRepository;
   private final NavigationEntryRepository entryRepository;
   private final NavigationNodeI18nRepository nodeI18nRepository;
   private final NavigationEntryI18nRepository entryI18nRepository;
+  private final TenantContextPort tenantContext;
 
   // ==================== Node i18n Operations ====================
 
@@ -125,7 +125,7 @@ public class NavigationI18nServiceImpl implements NavigationI18nService {
    */
   private NavigationNodeI18n getFallbackNodeI18n(Long nodeId) {
     // Try default language first
-    return nodeI18nRepository.findByNodeIdAndLanguage(nodeId, DEFAULT_LANGUAGE)
+    return nodeI18nRepository.findByNodeIdAndLanguage(nodeId, tenantContext.getDefaultLanguage())
         .orElseGet(() -> {
           // Get first available
           var allI18n = nodeI18nRepository.findByNodeId(nodeId);
@@ -142,7 +142,7 @@ public class NavigationI18nServiceImpl implements NavigationI18nService {
    */
   private NavigationEntryI18n getFallbackEntryI18n(Long entryId) {
     // Try default language first
-    return entryI18nRepository.findByEntryIdAndLanguage(entryId, DEFAULT_LANGUAGE)
+    return entryI18nRepository.findByEntryIdAndLanguage(entryId, tenantContext.getDefaultLanguage())
         .orElseGet(() -> {
           // Get first available
           var allI18n = entryI18nRepository.findByEntryId(entryId);

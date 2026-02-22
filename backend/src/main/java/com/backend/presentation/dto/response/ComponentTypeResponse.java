@@ -10,6 +10,7 @@ public record ComponentTypeResponse(
         String uid,
         String name,
         String category,
+        boolean navigationAware,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
     public static ComponentTypeResponse from(ComponentType entity) {
@@ -22,6 +23,7 @@ public record ComponentTypeResponse(
                 entity.getUid(),
                 entity.getName(),
                 entity.getCategory(),
+                entity.isNavigationAware(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

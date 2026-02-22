@@ -11,6 +11,7 @@ import com.backend.domain.entity.PageTemplate;
 import com.backend.domain.entity.PageTemplateI18n;
 import com.backend.domain.entity.TemplateSlot;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,9 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PageTemplateMapper {
 
-  private static final Language DEFAULT_LANGUAGE = Language.TR;
-
   private final TemplateAllowedTypesCodec allowedTypesCodec;
+  private final TenantContextPort tenantContext;
 
   public String encodeAllowedTypes(List<String> allowedTypes) {
     return allowedTypesCodec.encode(allowedTypes);
@@ -78,7 +78,6 @@ public class PageTemplateMapper {
   }
 
   private Language getDefaultLanguage() {
-    // TODO: In future, can be fetched from tenant settings
-    return DEFAULT_LANGUAGE;
+    return tenantContext.getDefaultLanguage();
   }
 }

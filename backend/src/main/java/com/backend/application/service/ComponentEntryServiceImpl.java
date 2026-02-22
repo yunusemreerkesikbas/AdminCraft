@@ -111,7 +111,6 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         entry.setSortOrder(request.sortOrder() != null ? request.sortOrder() : 0);
         entry.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
         entry.setStyleClasses(request.styleClasses());
-        entry.setStatus(request.status() != null ? request.status() : com.backend.domain.enums.ComponentStatus.DRAFT);
         if (request.responsiveMediaId() != null) {
             ResponsiveMediaSet mediaSet = responsiveMediaSetRepository.findById(request.responsiveMediaId())
                     .orElseThrow(() -> new IllegalArgumentException(
@@ -128,8 +127,6 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                     i18n.setLanguage(e.getKey());
                     i18n.setTitle(e.getValue().title());
                     i18n.setDescription(e.getValue().description());
-                    i18n.setStatus(e.getValue().status() != null ? e.getValue().status()
-                            : com.backend.domain.enums.ComponentStatus.DRAFT);
 
                     if (e.getValue().dynamicFields() != null && !e.getValue().dynamicFields().isEmpty()) {
                         try {
@@ -166,8 +163,6 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
             entry.setIsVisible(request.isVisible());
         if (request.styleClasses() != null)
             entry.setStyleClasses(request.styleClasses());
-        if (request.status() != null)
-            entry.setStatus(request.status());
 
         if (request.responsiveMediaId() != null) {
             ResponsiveMediaSet mediaSet = responsiveMediaSetRepository.findById(request.responsiveMediaId())
@@ -194,9 +189,6 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                     if (e.getValue().title() != null)
                         i18n.setTitle(e.getValue().title());
                     i18n.setDescription(e.getValue().description());
-
-                    if (e.getValue().status() != null)
-                        i18n.setStatus(e.getValue().status());
 
                     if (e.getValue().dynamicFields() != null) {
                         try {

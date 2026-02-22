@@ -2,7 +2,6 @@ package com.backend.application.dto.request;
 
 import java.util.Map;
 
-import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 
 import jakarta.validation.Valid;
@@ -14,7 +13,6 @@ public record UpdateComponentEntryCompositeRequest(
     Integer sortOrder,
     Boolean isVisible,
     String styleClasses,
-    ComponentStatus status,
     Long responsiveMediaId,
 
     @NotEmpty(message = "At least one translation is required") @Valid Map<Language, EntryI18nRequest> translations) {

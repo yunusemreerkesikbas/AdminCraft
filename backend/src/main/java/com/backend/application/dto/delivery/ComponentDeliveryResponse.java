@@ -19,7 +19,6 @@ public record ComponentDeliveryResponse(
     NavigationType navigationType,
     Boolean searchBox,
     NavigationDeliveryResponse navigationNode,
-    NavigationDeliveryResponse navigationLinkNode,
     ResponsiveMediaDeliveryResponse responsive,
     List<EntryDeliveryResponse> entries) {
 }

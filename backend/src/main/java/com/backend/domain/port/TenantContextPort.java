@@ -1,6 +1,7 @@
 package com.backend.domain.port;
 
 import com.backend.domain.enums.Currency;
+import com.backend.domain.enums.Language;
 
 public interface TenantContextPort {
 
@@ -19,6 +20,10 @@ public interface TenantContextPort {
   Currency getCurrency();
 
   void setCurrency(Currency currency);
+
+  Language getDefaultLanguage();
+
+  void setDefaultLanguage(Language language);
 
   void clear();
 

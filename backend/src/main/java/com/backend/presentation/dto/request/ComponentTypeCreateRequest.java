@@ -12,7 +12,9 @@ public record ComponentTypeCreateRequest(
         String name,
 
         @Size(max = COMPONENT_TYPE_CATEGORY_MAX_LENGTH, message = "validation.component.type.category.size")
-        String category) {
+        String category,
+
+        boolean navigationAware) {
     public ComponentTypeCreateRequest {
         if (name != null) {
             name = name.trim();

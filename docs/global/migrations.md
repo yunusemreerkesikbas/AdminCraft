@@ -174,7 +174,7 @@ Before committing a new migration:
 | Version Range | Module            | Notes                                                       |
 | ------------- | ----------------- | ----------------------------------------------------------- |
 | V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair |
-| V1-V18        | component_library | Baseline + responsive links + navigation bindings + legacy repair + cleanup entry field definitions |
+| V1-V21        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean |
 | V1-V35        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url + restore description |
 | V20-V24       | media             | Baseline + responsive media + link type alignment           |
 | V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

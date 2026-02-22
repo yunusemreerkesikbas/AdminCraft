@@ -48,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class ComponentServiceImpl implements ComponentService {
-    private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
     private static final NavigationType DEFAULT_NAVIGATION_TYPE = NavigationType.MAINMENU;
 
     private final ComponentRepository componentRepository;
@@ -75,10 +74,8 @@ public class ComponentServiceImpl implements ComponentService {
         component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
         component.setStyleClasses(request.styleClasses());
-        component.setStatus(request.status() != null ? request.status() : ComponentStatus.DRAFT);
-        applyNavigationBinding(component, componentType.getUid(), request.navigationNodeId(),
-                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
-                false);
+        applyNavigationBinding(component, componentType, request.navigationNodeId(),
+                request.navigationType(), request.searchBox(), false);
         component.setCreatedBy(userId);
         component.setUpdatedBy(userId);
 
@@ -188,12 +185,8 @@ public class ComponentServiceImpl implements ComponentService {
         component.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : component.getDisplayOrder());
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : component.getIsVisible());
         component.setStyleClasses(request.styleClasses() != null ? request.styleClasses() : component.getStyleClasses());
-        applyNavigationBinding(component, componentType.getUid(), request.navigationNodeId(),
-                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
-                true);
-        if (request.status() != null) {
-            component.setStatus(request.status());
-        }
+        applyNavigationBinding(component, componentType, request.navigationNodeId(),
+                request.navigationType(), request.searchBox(), true);
         component.setUpdatedBy(userId);
 
         return componentRepository.save(component);
@@ -223,8 +216,7 @@ public class ComponentServiceImpl implements ComponentService {
         component.setDisplayOrder(request.displayOrder());
         component.setIsVisible(request.isVisible());
         component.setStyleClasses(request.styleClasses());
-        component.setStatus(request.status());
-        applyNavigationBinding(component, type.getUid(), request.navigationNodeId(), request.navigationLinkNodeId(),
+        applyNavigationBinding(component, type, request.navigationNodeId(),
                 request.navigationType(), request.searchBox(), false);
 
         Component savedComponent = componentRepository.save(component);
@@ -240,7 +232,6 @@ public class ComponentServiceImpl implements ComponentService {
                 i18n.setTitle(data.title());
                 i18n.setSubtitle(data.subtitle());
                 i18n.setDescription(data.description());
-                i18n.setStatus(data.status() != null ? data.status() : ComponentStatus.DRAFT);
             }
 
             i18nList.add(componentI18nRepository.save(i18n));
@@ -276,18 +267,15 @@ public class ComponentServiceImpl implements ComponentService {
         if (request.styleClasses() != null) {
             component.setStyleClasses(request.styleClasses());
         }
-        if (request.status() != null) {
-            component.setStatus(request.status());
-        }
 
-        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId()).orElse(null);
-        String typeUid = componentType != null ? componentType.getUid() : null;
-        applyNavigationBinding(component, typeUid, request.navigationNodeId(), request.navigationLinkNodeId(),
+        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", component.getComponentTypeId()));
+        applyNavigationBinding(component, componentType, request.navigationNodeId(),
                 request.navigationType(), request.searchBox(), true);
 
         Component savedComponent = componentRepository.save(component);
 
-        String typeName = componentType != null ? componentType.getName() : null;
+        String typeName = componentType.getName();
 
         List<ComponentI18n> i18nList = new ArrayList<>();
         for (var entry : request.translations().entrySet()) {
@@ -310,9 +298,6 @@ public class ComponentServiceImpl implements ComponentService {
                 }
                 if (data.description() != null) {
                     i18n.setDescription(data.description());
-                }
-                if (data.status() != null) {
-                    i18n.setStatus(data.status());
                 }
             }
 
@@ -423,58 +408,35 @@ public class ComponentServiceImpl implements ComponentService {
 
     private void applyNavigationBinding(
             Component component,
-            String componentTypeUid,
+            ComponentType componentType,
             Long requestedNavigationNodeId,
-            Long requestedNavigationLinkNodeId,
             NavigationType requestedNavigationType,
             Boolean requestedSearchBox,
             boolean partialUpdate) {
-        if (!isCategoryNavigationComponent(componentTypeUid)) {
+        if (componentType == null || !componentType.isNavigationAware()) {
             component.setNavigationNodeId(null);
-            component.setNavigationLinkNodeId(null);
             component.setNavigationType(null);
             component.setSearchBox(null);
             return;
         }
 
-        Long effectiveNavigationNodeId = resolveValue(
-                component.getNavigationNodeId(), requestedNavigationNodeId, partialUpdate);
-        Long effectiveNavigationLinkNodeId = resolveValue(
-                component.getNavigationLinkNodeId(), requestedNavigationLinkNodeId, partialUpdate);
-        NavigationType effectiveNavigationType = resolveValue(
-                component.getNavigationType(), requestedNavigationType, partialUpdate);
-        Boolean effectiveSearchBox = resolveValue(
-                component.getSearchBox(), requestedSearchBox, partialUpdate);
+        Long effectiveNodeId = resolveValue(component.getNavigationNodeId(), requestedNavigationNodeId, partialUpdate);
+        NavigationType effectiveType = resolveValue(component.getNavigationType(), requestedNavigationType, partialUpdate);
+        Boolean effectiveSearchBox = resolveValue(component.getSearchBox(), requestedSearchBox, partialUpdate);
 
-        if (effectiveNavigationNodeId == null) {
-            throw new BusinessRuleViolationException("component.navigation.node.required");
-        }
-        validateNavigationNodeExists(effectiveNavigationNodeId, "component.navigation.node.not.found");
-        if (effectiveNavigationLinkNodeId != null) {
-            validateNavigationNodeExists(effectiveNavigationLinkNodeId, "component.navigation.link.node.not.found");
+        if (effectiveNodeId != null) {
+            validateNavigationNodeExists(effectiveNodeId);
         }
 
-        component.setNavigationNodeId(effectiveNavigationNodeId);
-        component.setNavigationLinkNodeId(effectiveNavigationLinkNodeId);
-        component.setNavigationType(normalizeNavigationType(effectiveNavigationType));
+        component.setNavigationNodeId(effectiveNodeId);
+        component.setNavigationType(effectiveType != null ? effectiveType : DEFAULT_NAVIGATION_TYPE);
         component.setSearchBox(effectiveSearchBox != null ? effectiveSearchBox : Boolean.FALSE);
     }
 
-    private void validateNavigationNodeExists(Long nodeId, String errorKey) {
+    private void validateNavigationNodeExists(Long nodeId) {
         if (navigationNodeRepository.findById(nodeId).isEmpty()) {
-            throw new EntityNotFoundException(errorKey);
+            throw new EntityNotFoundException("NavigationNode", nodeId);
         }
-    }
-
-    private NavigationType normalizeNavigationType(NavigationType value) {
-        if (value == null) {
-            return DEFAULT_NAVIGATION_TYPE;
-        }
-        return value;
-    }
-
-    private boolean isCategoryNavigationComponent(String componentTypeUid) {
-        return CATEGORY_NAVIGATION_COMPONENT_UID.equals(componentTypeUid);
     }
 
     private <T> T resolveValue(T current, T requested, boolean partialUpdate) {
@@ -499,7 +461,7 @@ public class ComponentServiceImpl implements ComponentService {
     private String resolveName(String name, String uid) {
         if (name == null || name.trim().isEmpty()) {
             if (uid == null || uid.trim().isEmpty()) {
-                throw new IllegalArgumentException("Component name cannot be blank");
+                throw new BusinessRuleViolationException("component.name.cannot.be.blank");
             }
             return uid.trim();
         }

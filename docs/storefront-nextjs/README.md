@@ -265,8 +265,44 @@ No code changes required. Add the language via the admin Site Settings UI. The s
 
 `app/[lang]/error.tsx` is a `"use client"` error boundary for any uncaught errors inside the locale subtree. It shows a Türkçe error message with a retry button. Root-level errors (outside `[lang]`) are not caught here.
 
+## Component Registry
+
+Located in `components/cms/registry/index.ts`. Maps `component.type` (from delivery API) to a React renderer.
+
+| Component type | Renderer | Notes |
+|---|---|---|
+| `HeaderComponent` | `HeaderCmsComponent` | Brand logo + nav + language switcher (async server component) |
+| `FooterComponent` | `FooterCmsComponent` | Footer links + copyright |
+| `NavigationComponent` | `NavigationCmsComponent` | Navigation-aware renderer; delegates to `NavigationRenderer` or `StaticNavRenderer` based on `navigationType` |
+| `FeatureCardComponent` | `PortfolioGridRenderer` | Portfolio/feature card grid |
+| Other known types | `TextBlockRenderer` | Simple title/subtitle/description block |
+| Unknown types | `UnknownComponent` | Dev-visible fallback showing component type |
+
+### NavigationComponent
+
+`NavigationCmsComponent` handles the `NavigationComponent` system type introduced in CMS-181.
+
+**`navigationType` render strategy:**
+
+| `navigationType` | Renderer | Output |
+|---|---|---|
+| `MAINMENU` (or undefined) | `NavigationRenderer` | Hierarchical nav tree with children support |
+| `STATICPAGE` | `StaticNavRenderer` | Flat link list — root entries + all children's entries merged |
+
+**`searchBox` flag:**
+
+When `component.searchBox === true`, a `SearchOverlay` button is rendered alongside the navigation.
+- Clicking the search icon opens a `<dialog>` overlay.
+- Submitting the search form navigates to `/{lang}/search?q={query}`.
+- Escape key or clicking the backdrop closes the overlay.
+
+**Files:**
+
+- `components/cms/navigation/NavigationCmsComponent.tsx` — main renderer
+- `components/cms/navigation/StaticNavRenderer.tsx` — flat link list for `STATICPAGE`
+- `components/cms/search/SearchOverlay.tsx` — client component for search dialog
+
 ## Current limitations and extension points
 
-- CMS component registry is minimal; unknown types render `UnknownComponent`.
 - Product, category, and search pages include minimal UI beyond CMS slots.
 - Adding new UI languages requires a new `messages/{lang}.json` file and an entry in `AVAILABLE_MESSAGES` in `lib/i18n.ts`.

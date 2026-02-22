@@ -43,6 +43,8 @@ public interface ComponentRepository {
 
     List<Component> findByResponsiveMediaId(Long responsiveMediaId);
 
+    boolean existsByNavigationNodeIdIn(List<Long> navigationNodeIds);
+
     long count();
 
     long countByStatus(ComponentStatus status);

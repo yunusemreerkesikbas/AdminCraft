@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
-  private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
   private static final Set<String> RESERVED_FIELDS = Set.of(
       "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -166,7 +165,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .navigationType(resolveNavigationType(type, component))
           .searchBox(resolveSearchBox(type, component))
           .navigationNode(resolveNavigationNode(type, component))
-          .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
           .entries(entryResponses)
           .build();
@@ -240,7 +238,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .navigationType(resolveNavigationType(componentType, component))
         .searchBox(resolveSearchBox(componentType, component))
         .navigationNode(resolveNavigationNode(componentType, component))
-        .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
         .entries(entryResponses)
         .build();
@@ -284,34 +281,27 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
   }
 
   private NavigationType resolveNavigationType(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type)) {
+    if (!isNavigationAware(type)) {
       return null;
     }
     return component.getNavigationType();
   }
 
   private Boolean resolveSearchBox(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type)) {
+    if (!isNavigationAware(type)) {
       return null;
     }
     return component.getSearchBox();
   }
 
   private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type) || component.getNavigationNodeId() == null) {
+    if (!isNavigationAware(type) || component.getNavigationNodeId() == null) {
       return null;
     }
     return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
   }
 
-  private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-    if (!isCategoryNavigationComponent(type) || component.getNavigationLinkNodeId() == null) {
-      return null;
-    }
-    return navigationService.getNavigationById(component.getNavigationLinkNodeId()).orElse(null);
-  }
-
-  private boolean isCategoryNavigationComponent(ComponentType type) {
-    return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
+  private boolean isNavigationAware(ComponentType type) {
+    return type != null && type.isNavigationAware();
   }
 }

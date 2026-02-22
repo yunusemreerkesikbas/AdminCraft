@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,9 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
-        private static final String CATEGORY_NAVIGATION_COMPONENT_UID = "CategoryNavigationComponent";
-        private static final Set<String> NAVIGATION_AWARE_COMPONENT_UIDS = Set.of(
-                        "CategoryNavigationComponent", "HeaderComponent", "FooterComponent");
         private static final Set<String> RESERVED_FIELDS = Set.of(
                         "uid", "order", "title", "description", "isVisible", "styleClasses");
 
@@ -259,7 +255,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 // Batch-fetch all navigation nodes to avoid N+1 per component
                 Set<Long> navIds = componentMap.values().stream()
-                                .flatMap(c -> Stream.of(c.getNavigationNodeId(), c.getNavigationLinkNodeId()))
+                                .map(Component::getNavigationNodeId)
                                 .filter(id -> id != null)
                                 .collect(Collectors.toSet());
                 Map<Long, NavigationDeliveryResponse> navigationMap = navIds.isEmpty()
@@ -398,7 +394,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .navigationType(resolveNavigationType(type, comp))
                                 .searchBox(resolveSearchBox(type, comp))
                                 .navigationNode(resolveNavigationNode(type, comp, navigationMap))
-                                .navigationLinkNode(resolveNavigationLinkNode(type, comp, navigationMap))
                                 .responsive(responsive)
                                 .entries(entryResponses)
                                 .build();
@@ -429,14 +424,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
         }
 
         private NavigationType resolveNavigationType(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type)) {
+                if (!isNavigationAware(type)) {
                         return null;
                 }
                 return component.getNavigationType();
         }
 
         private Boolean resolveSearchBox(ComponentType type, Component component) {
-                if (!isCategoryNavigationComponent(type)) {
+                if (!isNavigationAware(type)) {
                         return null;
                 }
                 return component.getSearchBox();
@@ -444,26 +439,14 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component,
                         Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!isNavigationAwareComponent(type) || component.getNavigationNodeId() == null) {
+                if (!isNavigationAware(type) || component.getNavigationNodeId() == null) {
                         return null;
                 }
                 return navigationMap.get(component.getNavigationNodeId());
         }
 
-        private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component,
-                        Map<Long, NavigationDeliveryResponse> navigationMap) {
-                if (!isNavigationAwareComponent(type) || component.getNavigationLinkNodeId() == null) {
-                        return null;
-                }
-                return navigationMap.get(component.getNavigationLinkNodeId());
-        }
-
-        private boolean isCategoryNavigationComponent(ComponentType type) {
-                return type != null && CATEGORY_NAVIGATION_COMPONENT_UID.equals(type.getUid());
-        }
-
-        private boolean isNavigationAwareComponent(ComponentType type) {
-                return type != null && NAVIGATION_AWARE_COMPONENT_UIDS.contains(type.getUid());
+        private boolean isNavigationAware(ComponentType type) {
+                return type != null && type.isNavigationAware();
         }
 
         private List<PageSlot> resolveEffectiveSlotsForDelivery(

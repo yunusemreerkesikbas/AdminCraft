@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,4 +33,7 @@ public class ComponentType extends BaseEntity {
     @Size(max = 50)
     @Column(length = 50)
     private String category;
+
+    @Column(name = "is_navigation_aware", nullable = false)
+    private boolean navigationAware = false;
 }

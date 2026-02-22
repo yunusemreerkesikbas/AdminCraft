@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.enums.Currency;
+import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.TenantRepository;
@@ -15,6 +16,7 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentTenantDbName = new ThreadLocal<>();
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
   private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
+  private static final ThreadLocal<Language> currentDefaultLanguage = new ThreadLocal<>();
 
   private final TenantRepository tenantRepository;
 
@@ -64,11 +66,23 @@ public class TenantContext implements TenantContextPort {
   }
 
   @Override
+  public Language getDefaultLanguage() {
+    Language lang = currentDefaultLanguage.get();
+    return lang != null ? lang : Language.getDefault();
+  }
+
+  @Override
+  public void setDefaultLanguage(Language language) {
+    currentDefaultLanguage.set(language);
+  }
+
+  @Override
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
     currentSubdomain.remove();
     currentCurrency.remove();
+    currentDefaultLanguage.remove();
   }
 
   @Override

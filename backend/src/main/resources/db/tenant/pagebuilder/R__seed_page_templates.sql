@@ -141,19 +141,9 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description);
 -- These define WHERE components can be placed in each template
 -- ============================================
 
--- LandingPageTemplate Slots (Hero-focused layout)
+-- LandingPageTemplate Slots (shared reusable layout)
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
-SELECT 'd8e9f0a1-b2c3-4567-1234-678901234301', 'LandingPageSection1Slot', id, 'Section1', 'TOP', 0, FALSE 
-FROM page_templates WHERE uid = 'LandingPageTemplate'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
-INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
-SELECT 'e9f0a1b2-c3d4-5678-2345-789012345302', 'LandingPageSection2Slot', id, 'Section2', 'CENTER', 1, FALSE 
-FROM page_templates WHERE uid = 'LandingPageTemplate'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
-INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
-SELECT 'f0a1b2c3-d4e5-6789-3456-890123456303', 'LandingPageSection3Slot', id, 'Section3', 'BOTTOM', 2, FALSE 
+SELECT 'd8e9f0a1-b2c3-4567-1234-678901234301', 'LandingPageContentSlot', id, 'Content', 'CENTER', 1, FALSE 
 FROM page_templates WHERE uid = 'LandingPageTemplate'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 

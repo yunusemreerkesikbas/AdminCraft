@@ -14,11 +14,13 @@ Admin list pages should use server-side pagination, sorting, and search. This av
 Examples in code:
 
 - **Users**: `GET /api/users` in `UserController` (paginated, searchable across 5 fields)
-- Navigation root nodes: `GET /api/navigation/nodes` in `NavigationController`
+- Navigation root nodes: `GET /api/navigation/nodes` in `NavigationController` (paginated; admin UI uses a **tree view** that loads roots then lazy-loads children via `GET /nodes/{id}`)
 - Page templates: `GET /api/page-templates` in `PageTemplateController`
 - Media list: `GET /api/media` in `MediaController`
 - Component Library components: `GET /api/components` in `ComponentController`
 - Component Library types: `GET /api/components/types` in `ComponentTypeController`
+
+**Tree-style list UIs**: Some admin pages (e.g. Navigation, Product categories) use a **tree view** instead of a paginated grid. They still rely on list or tree endpoints (e.g. `GET /api/navigation/nodes` for roots, `GET /api/navigation/nodes/{id}` for a subtree); the frontend does not use `BasePaginatedListComponent` for those views.
 
 ## Frontend implementation
 

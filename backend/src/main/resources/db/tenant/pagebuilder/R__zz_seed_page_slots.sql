@@ -17,34 +17,20 @@ ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_or
 -- 2. SLOT_COMPONENTS (link slots to seed components)
 -- ============================================
 
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-HeaderSlot' AND c.uid = 'SeedHeaderComponent'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+-- Homepage Content slot should render only the portfolio grid component.
+DELETE sc
+FROM slot_components sc
+JOIN page_slots ps ON ps.id = sc.slot_id
+JOIN pages p ON p.id = ps.page_id
+JOIN components c ON c.id = sc.component_id
+WHERE p.uid = 'homepage'
+  AND ps.slot_name = 'Content'
+  AND c.uid <> 'SeedLandingPortfolioGrid';
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, 0, TRUE, NOW()
 FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'SeedHeroBanner'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 1, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'SeedWelcomeParagraph'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 2, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'SeedCtaShopNow'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-Section2Slot' AND c.uid = 'SeedSection2Banner'
+WHERE ps.uid = 'homepage-ContentSlot' AND c.uid = 'SeedLandingPortfolioGrid'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
@@ -76,17 +62,3 @@ ON DUPLICATE KEY UPDATE updated_at = NOW();
 INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
 VALUES ('bb000002-0000-4000-8000-000000000002', 'SharedFooterSlot', NULL, 'Footer', 'BOTTOM', 99, TRUE, TRUE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE updated_at = NOW();
-
--- SharedHeaderSlot → SeedHeaderComponent
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'SeedHeaderComponent'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
--- SharedFooterSlot → SeedFooterComponent
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'SeedFooterComponent'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);

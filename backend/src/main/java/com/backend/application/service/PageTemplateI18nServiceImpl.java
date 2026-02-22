@@ -10,6 +10,7 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.PageTemplateI18nRepository;
 import com.backend.domain.repository.PageTemplateRepository;
+import com.backend.domain.port.TenantContextPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class PageTemplateI18nServiceImpl implements PageTemplateI18nService {
 
-  private static final Language DEFAULT_LANGUAGE = Language.TR;
-
   private final PageTemplateRepository templateRepository;
   private final PageTemplateI18nRepository templateI18nRepository;
+  private final TenantContextPort tenantContext;
 
   @Override
   @Transactional(readOnly = true)
@@ -78,7 +78,7 @@ public class PageTemplateI18nServiceImpl implements PageTemplateI18nService {
    */
   private PageTemplateI18n getFallbackTemplateI18n(Long templateId) {
     // Try default language first
-    return templateI18nRepository.findByTemplateIdAndLanguage(templateId, DEFAULT_LANGUAGE)
+    return templateI18nRepository.findByTemplateIdAndLanguage(templateId, tenantContext.getDefaultLanguage())
         .orElseGet(() -> {
           // Get first available
           var allI18n = templateI18nRepository.findByTemplateId(templateId);

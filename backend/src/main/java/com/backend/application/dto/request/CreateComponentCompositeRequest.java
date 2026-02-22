@@ -4,7 +4,6 @@ import java.util.Map;
 
 import static com.backend.shared.constants.ValidationConstants.UID_TEMPLATE_MAX_LENGTH;
 
-import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
 import com.backend.shared.validation.Uid;
@@ -30,13 +29,9 @@ public record CreateComponentCompositeRequest(
 
     Long navigationNodeId,
 
-    Long navigationLinkNodeId,
-
     NavigationType navigationType,
 
     Boolean searchBox,
-
-    ComponentStatus status,
 
     @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
@@ -47,9 +42,6 @@ public record CreateComponentCompositeRequest(
     }
     if (isVisible == null) {
       isVisible = true;
-    }
-    if (status == null) {
-      status = ComponentStatus.DRAFT;
     }
   }
 }
