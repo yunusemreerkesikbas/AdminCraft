@@ -127,9 +127,7 @@
                                         <button
                                             mat-icon-button
                                             matTreeNodeToggle
-                                            [attr.aria-label]="
-                                                'Toggle ' + node.title
-                                            "
+                                            [attr.aria-label]="'admin.navigation.actions.toggleNode' | transloco: { title: node.title }"
                                         >
                                             <mat-icon
                                                 class="text-gray-500 icon-size-5"

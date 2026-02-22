@@ -59,7 +59,7 @@ export const langEN = {
         },
         uid: {
             pattern:
-                'Must start with a lowercase letter or digit, only lowercase letters, digits, underscores and hyphens allowed',
+                'Must start with a letter or digit, only letters (uppercase or lowercase), digits, underscores and hyphens allowed',
         },
         slot: {
             name: {
@@ -816,6 +816,7 @@ export const langEN = {
                 addChild: 'Add Child',
                 addEntry: 'Add Entry',
                 deleteNode: 'Delete Node',
+                toggleNode: 'Toggle {{title}}',
             },
             entries: {
                 title: 'Entries',

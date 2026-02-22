@@ -56,7 +56,7 @@ export const langTR = {
         },
         uid: {
             pattern:
-                'Küçük harf veya rakam ile başlamalı, sadece küçük harf, rakam, alt çizgi ve tire içermelidir',
+                'Harf veya rakam ile başlamalı, sadece harf (büyük veya küçük), rakam, alt çizgi ve tire içermelidir',
         },
         slot: {
             name: {
@@ -812,6 +812,7 @@ export const langTR = {
                 addChild: 'Alt Öğe Ekle',
                 addEntry: 'Giriş Ekle',
                 deleteNode: 'Düğüm Sil',
+                toggleNode: '{{title}} düğümünü aç/kapat',
             },
             entries: {
                 title: 'Girişler',

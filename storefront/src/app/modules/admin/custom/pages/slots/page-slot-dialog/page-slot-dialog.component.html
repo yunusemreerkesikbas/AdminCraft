@@ -16,12 +16,6 @@
             </div>
         </div>
 
-        @if (isTemplateBound) {
-            <div class="mb-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Bu sayfa bir template kullaniyor. Slot yapisini Template ekranindan yonetin; bu ekranda sadece component icerigini duzenleyin.
-            </div>
-        }
-
         @if (isLoading$ | async) {
             <div class="flex flex-1 items-center justify-center">
                 <mat-progress-spinner
@@ -77,36 +71,34 @@
                                         svgIcon="heroicons_outline:plus-circle"
                                     ></mat-icon>
                                 </button>
-                                @if (!isTemplateBound) {
+                                <button
+                                    mat-icon-button
+                                    class="!h-8 !w-8"
+                                    (click)="editSlot(slot)"
+                                    [matTooltip]="
+                                        'admin.common.edit' | transloco
+                                    "
+                                >
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        svgIcon="heroicons_outline:pencil-square"
+                                    ></mat-icon>
+                                </button>
+                                @if (!slot.isShared) {
                                     <button
                                         mat-icon-button
                                         class="!h-8 !w-8"
-                                        (click)="editSlot(slot)"
+                                        color="warn"
+                                        (click)="deleteSlot(slot)"
                                         [matTooltip]="
-                                            'admin.common.edit' | transloco
+                                            'admin.common.delete' | transloco
                                         "
                                     >
                                         <mat-icon
                                             class="icon-size-5"
-                                            svgIcon="heroicons_outline:pencil-square"
+                                            svgIcon="heroicons_outline:trash"
                                         ></mat-icon>
                                     </button>
-                                    @if (!slot.isShared) {
-                                        <button
-                                            mat-icon-button
-                                            class="!h-8 !w-8"
-                                            color="warn"
-                                            (click)="deleteSlot(slot)"
-                                            [matTooltip]="
-                                                'admin.common.delete' | transloco
-                                            "
-                                        >
-                                            <mat-icon
-                                                class="icon-size-5"
-                                                svgIcon="heroicons_outline:trash"
-                                            ></mat-icon>
-                                        </button>
-                                    }
                                 }
                             </div>
                         </div>

@@ -35,11 +35,13 @@ import { ComponentEntryListComponent } from '../entries/component-entry-list/com
 import {
     ComponentCompositeResponse,
     ComponentDetailDto,
+    ComponentI18nRequest,
     ComponentTypeDto,
     CreateComponentCompositeRequest,
     NavigationType,
     UpdateComponentCompositeRequest,
 } from '../models/component-library.types';
+import { Language } from '@shared/types/common.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { NavigationNodeService } from '../../navigation/navigation-node.service';
 import { NavigationNode } from '../../navigation/navigation-node.types';
@@ -156,7 +158,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         } else {
             this.languages = ['en'];
         }
-        super.ngOnInit(); // calls buildForms() → generalForm is now available
+        super.ngOnInit();
 
         const componentTypeId = this.generalForm.get('componentTypeId')!;
         this.isNavigationAwareSig = runInInjectionContext(this.#injector, () =>
@@ -241,7 +243,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
     }
 
-    #createComponentComposite(translations: Record<string, unknown>): void {
+    #createComponentComposite(translations: Record<Language, ComponentI18nRequest>): void {
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
@@ -252,7 +254,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             displayOrder: generalData.displayOrder,
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
-            translations: translations as never,
+            translations: translations,
             ...this.#buildNavigationPayload(generalData),
         };
 
@@ -279,7 +281,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             });
     }
 
-    #updateComponentComposite(translations: Record<string, unknown>): void {
+    #updateComponentComposite(translations: Record<Language, ComponentI18nRequest>): void {
         if (!this.data.component?.id) return;
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
@@ -290,7 +292,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             displayOrder: generalData.displayOrder,
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
-            translations: translations as never,
+            translations: translations,
             ...this.#buildNavigationPayload(generalData),
         };
 
@@ -317,8 +319,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             });
     }
 
-    #buildTranslations(): Record<string, unknown> {
-        const translations: Record<string, unknown> = {};
+    #buildTranslations(): Record<Language, ComponentI18nRequest> {
+        const translations = {} as Record<Language, ComponentI18nRequest>;
 
         this.languages.forEach((lang) => {
             const form = this.i18nForms[lang];
@@ -328,7 +330,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             const subtitle = form.value.subtitle as string;
             const description = form.value.description as string;
             if (title && title.trim().length > 0) {
-                translations[lang.toUpperCase()] = {
+                translations[lang.toUpperCase() as Language] = {
                     title: title.trim(),
                     subtitle: subtitle?.trim() || undefined,
                     description: description?.trim() || undefined,

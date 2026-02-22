@@ -16,8 +16,8 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { SpaEmptyStateComponent } from '@shared/components/custom-ui/spa-empty-state/spa-empty-state.component';
-import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal/spa-generic-modal.component';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take } from 'rxjs';
 import { NavigationNodeDialogComponent } from '../dialogs/node-dialog/node-dialog.component';
 import { NavigationNodeManagerDialogComponent } from '../manager/navigation-node-manager-dialog.component';
@@ -38,20 +38,22 @@ import { NavigationNode } from '../navigation-node.types';
         MatTooltipModule,
         AdminPageHeaderComponent,
         SpaEmptyStateComponent,
-        SpaGenericModalComponent
     ]
 })
 export class SpaNavigationListComponent implements OnInit {
+    static readonly DEFAULT_ROOT_PAGE_SIZE = 100;
+
     #navigationService = inject(NavigationNodeService);
     #matDialog = inject(MatDialog);
     #notificationService = inject(NotificationService);
+    #confirmationService = inject(ConfirmationService);
     #cdr = inject(ChangeDetectorRef);
     #destroyRef = inject(DestroyRef);
 
-    treeControl = new NestedTreeControl<NavigationNode>(node => node.children);
-    dataSource = new MatTreeNestedDataSource<NavigationNode>();
+    protected treeControl = new NestedTreeControl<NavigationNode>(node => node.children);
+    protected dataSource = new MatTreeNestedDataSource<NavigationNode>();
 
-    hasChild = (_: number, node: NavigationNode) =>
+    protected hasChild = (_: number, node: NavigationNode) =>
         node.children === undefined ? true : node.children.length > 0;
 
     ngOnInit(): void {
@@ -61,16 +63,16 @@ export class SpaNavigationListComponent implements OnInit {
             .subscribe(() => {
                 this.treeControl.expansionModel.selected.forEach((node) => {
                     if (node.children === undefined) {
-                        this.loadChildren(node);
+                        this.#loadChildren(node);
                     }
                 });
                 this.#cdr.markForCheck();
             });
     }
 
-    loadRoots(): void {
+    protected loadRoots(): void {
         this.#navigationService
-            .searchPaged({ page: 0, size: 100, sort: 'createdAt,desc' })
+            .searchPaged({ page: 0, size: SpaNavigationListComponent.DEFAULT_ROOT_PAGE_SIZE, sort: 'createdAt,desc' })
             .pipe(take(1))
             .subscribe({
                 next: (page) => {
@@ -84,7 +86,7 @@ export class SpaNavigationListComponent implements OnInit {
             });
     }
 
-    loadChildren(node: NavigationNode): void {
+    #loadChildren(node: NavigationNode): void {
         if (node.children !== undefined) {
             return;
         }
@@ -98,7 +100,7 @@ export class SpaNavigationListComponent implements OnInit {
         });
     }
 
-    openCreateDialog(parentId?: number | null): void {
+    protected openCreateDialog(parentId?: number | null): void {
         this.#matDialog
             .open(NavigationNodeDialogComponent, {
                 width: '700px',
@@ -116,7 +118,7 @@ export class SpaNavigationListComponent implements OnInit {
             });
     }
 
-    openNodeManager(node: NavigationNode): void {
+    protected openNodeManager(node: NavigationNode): void {
         this.#matDialog
             .open(NavigationNodeManagerDialogComponent, {
                 width: '900px',
@@ -132,38 +134,23 @@ export class SpaNavigationListComponent implements OnInit {
             });
     }
 
-    confirmDelete(node: NavigationNode): void {
-        const dialogRef = this.#matDialog.open(SpaGenericModalComponent, {
-            data: {
-                title: 'admin.navigation.actions.deleteNode',
-                message: 'admin.navigation.nodes.confirmDelete',
-                variant: 'confirmation',
-                type: 'error',
-                actions: [
-                    { label: 'admin.common.cancel', value: false },
-                    { label: 'admin.common.delete', value: true, color: 'warn' }
-                ]
-            } as never
-        });
-
-        dialogRef
-            .afterClosed()
-            .pipe(take(1))
-            .subscribe((result) => {
-                if (result) {
-                    this.#navigationService.deleteNode(node.id).pipe(take(1)).subscribe({
-                        next: () => {
-                            this.#notificationService.success(
-                                'admin.common.messages.deleteSuccess'
-                            );
-                            this.loadRoots();
-                        },
-                        error: (err) =>
-                            this.#notificationService.alert(
-                                err?.error?.message ?? 'admin.common.errors.deleteFailed'
-                            )
-                    });
-                }
+    protected confirmDelete(node: NavigationNode): void {
+        this.#confirmationService.confirm(
+            'admin.navigation.actions.deleteNode',
+            'admin.navigation.nodes.confirmDelete',
+            'admin.common.delete'
+        ).pipe(take(1)).subscribe(confirmed => {
+            if (!confirmed) return;
+            this.#navigationService.deleteNode(node.id).pipe(take(1)).subscribe({
+                next: () => {
+                    this.#notificationService.success('admin.common.messages.deleteSuccess');
+                    this.loadRoots();
+                },
+                error: (err) =>
+                    this.#notificationService.alert(
+                        err?.error?.message ?? 'admin.common.errors.deleteFailed'
+                    )
             });
+        });
     }
 }

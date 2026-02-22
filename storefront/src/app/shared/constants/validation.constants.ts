@@ -42,12 +42,6 @@ export const VALIDATION_PATTERNS = {
      */
     SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
 
-    /**
-     * UID Pattern
-     * - Start with letter or digit
-     * - Letters, digits, underscores, and hyphens allowed
-     * @backend ^[A-Za-z0-9][A-Za-z0-9_-]*$
-     */
     UID: /^[A-Za-z0-9][A-Za-z0-9_-]*$/,
 
     /**
