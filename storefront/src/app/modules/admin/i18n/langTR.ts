@@ -2111,9 +2111,6 @@ export const langTR = {
                     saveFailed: 'Ayarlar kaydedilemedi',
                     publishSuccess: 'Site başarıyla yayınlandı',
                     publishFailed: 'Site yayınlanamadı',
-                    maintenanceEnabled: 'Bakım modu etkinleştirildi',
-                    maintenanceDisabled: 'Bakım modu devre dışı bırakıldı',
-                    maintenanceFailed: 'Bakım modu işlemi başarısız',
                 },
                 overview: {
                     confirmPublish: {

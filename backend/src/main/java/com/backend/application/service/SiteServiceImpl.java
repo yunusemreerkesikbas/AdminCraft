@@ -181,7 +181,10 @@ public class SiteServiceImpl implements SiteService {
 
         log.info("Maintenance mode enabled for site with ID: {}", id);
 
-        return siteMapper.toResponse(updatedSite, displayLanguage);
+        Site loadedSite = siteRepository.findByIdWithEnabledLanguages(updatedSite.getId())
+                .orElse(updatedSite);
+
+        return siteMapper.toResponse(loadedSite, displayLanguage);
     }
 
     @Override
@@ -199,7 +202,10 @@ public class SiteServiceImpl implements SiteService {
 
         log.info("Maintenance mode disabled for site with ID: {}", id);
 
-        return siteMapper.toResponse(updatedSite, displayLanguage);
+        Site loadedSite = siteRepository.findByIdWithEnabledLanguages(updatedSite.getId())
+                .orElse(updatedSite);
+
+        return siteMapper.toResponse(loadedSite, displayLanguage);
     }
 
     @Override

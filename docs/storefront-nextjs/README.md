@@ -48,8 +48,21 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | `/{lang}/products/{uid}` | `resolvePage(lang, "ProductPage", undefined, uid)` + `fetchProduct(uid)` |
 | `/{lang}/c/{categoryUid}` | `resolvePage(lang, "CategoryPage", undefined, categoryUid)` + `fetchProductsByCategory` |
 | `/{lang}/search?q=...` | `resolvePage(lang, "SearchResultPage")` + `searchProducts(q)` |
+| `/{lang}/maintenance` | Rendered by `app/[lang]/[[...slug]]/page.tsx` (maintenance fallback view) |
 
 Missing pages use `app/[lang]/not-found.tsx`.
+
+### Maintenance mode
+
+Maintenance mode is enforced at the edge in [`middleware.ts`](../../storefront-nextjs/middleware.ts):
+
+- Calls `GET /api/cms/site` with `cache: "no-store"` on each request.
+- If `maintenanceMode === true`, redirects all page routes to `/{lang}/maintenance`.
+- `/robots.txt`, `/sitemap.xml`, `/_next/*`, and `/{lang}/maintenance` are excluded.
+- Fail-open: if the CMS call fails, no redirect is applied.
+
+The maintenance page itself is rendered in the catch-all route:
+`app/[lang]/[[...slug]]/page.tsx`.
 
 ### Language validation layers
 
@@ -179,6 +192,7 @@ Message namespaces:
 | `Search` | `title`, `emptyQuery` | `search/page.tsx` |
 | `Product` | `sku` | `products/[uid]/page.tsx` |
 | `NotFound` | `title`, `description` | `not-found.tsx` |
+| `Maintenance` | `title`, `description` | `[[...slug]]/page.tsx` |
 
 ### Language Switcher
 

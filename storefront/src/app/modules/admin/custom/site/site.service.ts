@@ -181,14 +181,17 @@ export class SiteService {
     /**
      * Enable maintenance mode
      */
-    enableMaintenanceMode(id: number, message?: string): Observable<Site> {
+    enableMaintenanceMode(
+        id: number,
+        message?: string
+    ): Observable<ApiResponse<Site>> {
         return this.#apiClient
             .post<ApiResponse<Site>>('siteMaintenance', {}, { id }, { message })
             .pipe(
                 switchMap((response) =>
                     this.getOverview().pipe(
                         take(1),
-                        map(() => response.data)
+                        map(() => response)
                     )
                 )
             );
@@ -197,14 +200,14 @@ export class SiteService {
     /**
      * Disable maintenance mode
      */
-    disableMaintenanceMode(id: number): Observable<Site> {
+    disableMaintenanceMode(id: number): Observable<ApiResponse<Site>> {
         return this.#apiClient
             .delete<ApiResponse<Site>>('siteMaintenance', { id })
             .pipe(
                 switchMap((response) =>
                     this.getOverview().pipe(
                         take(1),
-                        map(() => response.data)
+                        map(() => response)
                     )
                 )
             );

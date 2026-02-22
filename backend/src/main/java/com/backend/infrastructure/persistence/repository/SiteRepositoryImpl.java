@@ -47,6 +47,11 @@ public class SiteRepositoryImpl implements SiteRepository {
     }
 
     @Override
+    public Optional<Site> findByIdWithEnabledLanguages(Long id) {
+        return siteJpaRepository.findByIdWithEnabledLanguages(id);
+    }
+
+    @Override
     public void deleteById(Long id) {
         siteJpaRepository.deleteById(id);
     }
