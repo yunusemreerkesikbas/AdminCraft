@@ -203,7 +203,7 @@ public class NavigationServiceImpl implements NavigationService {
         .filter(nodeId -> nodeId != null)
         .toList();
     if (!subtreeNodeIds.isEmpty() && componentRepository
-        .existsByNavigationNodeIdInOrNavigationLinkNodeIdIn(subtreeNodeIds, subtreeNodeIds)) {
+        .existsByNavigationNodeIdIn(subtreeNodeIds)) {
       throw new BusinessRuleViolationException("navigation.node.in.use");
     }
     nodeRepository.delete(node);

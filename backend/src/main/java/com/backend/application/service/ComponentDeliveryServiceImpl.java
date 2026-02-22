@@ -165,7 +165,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .navigationType(resolveNavigationType(type, component))
           .searchBox(resolveSearchBox(type, component))
           .navigationNode(resolveNavigationNode(type, component))
-          .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
           .entries(entryResponses)
           .build();
@@ -239,7 +238,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .navigationType(resolveNavigationType(componentType, component))
         .searchBox(resolveSearchBox(componentType, component))
         .navigationNode(resolveNavigationNode(componentType, component))
-        .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
         .entries(entryResponses)
         .build();
@@ -301,11 +299,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       return null;
     }
     return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
-  }
-
-  private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-    // navigationLinkNodeId is reserved for future use and hidden from UI
-    return null;
   }
 
   private boolean isNavigationAware(ComponentType type) {

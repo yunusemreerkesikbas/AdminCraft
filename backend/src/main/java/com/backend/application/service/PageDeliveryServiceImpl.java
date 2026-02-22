@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -256,7 +255,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
 
                 // Batch-fetch all navigation nodes to avoid N+1 per component
                 Set<Long> navIds = componentMap.values().stream()
-                                .flatMap(c -> Stream.of(c.getNavigationNodeId(), c.getNavigationLinkNodeId()))
+                                .map(Component::getNavigationNodeId)
                                 .filter(id -> id != null)
                                 .collect(Collectors.toSet());
                 Map<Long, NavigationDeliveryResponse> navigationMap = navIds.isEmpty()
@@ -395,7 +394,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .navigationType(resolveNavigationType(type, comp))
                                 .searchBox(resolveSearchBox(type, comp))
                                 .navigationNode(resolveNavigationNode(type, comp, navigationMap))
-                                .navigationLinkNode(resolveNavigationLinkNode(type, comp, navigationMap))
                                 .responsive(responsive)
                                 .entries(entryResponses)
                                 .build();
@@ -445,12 +443,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         return null;
                 }
                 return navigationMap.get(component.getNavigationNodeId());
-        }
-
-        private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component,
-                        Map<Long, NavigationDeliveryResponse> navigationMap) {
-                // navigationLinkNodeId is reserved for future use and hidden from UI
-                return null;
         }
 
         private boolean isNavigationAware(ComponentType type) {
