@@ -1,20 +1,47 @@
-// Most styles are handled by Tailwind utility classes in the HTML
 :host {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
+    overflow: hidden;
 }
 
-// Override MatTab styles if needed
-::ng-deep {
-    .component-tabs {
-        .mat-mdc-tab-header {
-            border-bottom: 1px solid var(--fuse-border);
-        }
-        
-        .mat-mdc-tab-body-wrapper {
-            flex: 1 1 auto;
-        }
-    }
+:host ::ng-deep .spa-dialog {
+    background: var(--fuse-card, #ffffff);
+}
+
+:host ::ng-deep .spa-dialog-footer {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    background: var(--fuse-bg-hover, #f1f5f9);
+}
+
+// Dialog-content scrollable like user-form-dialog (form type): one scroll for entire content
+:host ::ng-deep .spa-dialog-content.spa-dialog-content--tabbed {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 65vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: block;
+}
+
+:host ::ng-deep spa-tab-container {
+    display: block;
+    min-height: 0;
+}
+
+:host ::ng-deep spa-tab-container .mat-mdc-tab-group {
+    display: block;
+}
+
+:host ::ng-deep spa-tab-container .mat-mdc-tab-body-wrapper {
+    display: block;
+}
+
+:host ::ng-deep spa-tab-container .mat-mdc-tab-body-content {
+    padding: 1.5rem;
+    overflow: visible;
 }

@@ -1,14 +1,13 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, Input, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, TemplateRef, viewChild, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseCrudListComponent, CrudStore } from '@core/crud';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { SpaStatusBadgeComponent } from 'app/shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 import { finalize, take } from 'rxjs';
 import { ComponentEntry, CreateEntryRequest, UpdateEntryRequest } from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
@@ -21,54 +20,60 @@ import { ComponentEntryFormComponent } from '../component-entry-form/component-e
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         MatButtonModule,
         MatIconModule,
         MatTooltipModule,
         TranslocoModule,
-        SpaStatusBadgeComponent,
         SpaAdminGridComponent
     ]
 })
-export class ComponentEntryListComponent extends BaseCrudListComponent<ComponentEntry, CreateEntryRequest, UpdateEntryRequest> {
+export class ComponentEntryListComponent extends BaseCrudListComponent<ComponentEntry, CreateEntryRequest, UpdateEntryRequest> implements AfterViewInit {
     protected service = inject(ComponentEntryService);
     protected store = new CrudStore<ComponentEntry>();
 
     #notify = inject(NotificationService);
     #dialog = inject(MatDialog);
-    #transloco = inject(TranslocoService);
+    #confirmation = inject(ConfirmationService);
+    #cdr = inject(ChangeDetectorRef);
 
-    @Input({ required: true }) componentId!: number;
-    @Input({ required: true }) componentTypeId!: number;
-    @Input() languages: string[] = ['tr', 'en'];
+    protected componentId = input.required<number>();
+    protected componentTypeId = input.required<number>();
+    protected languages = input<string[]>(['tr', 'en']);
 
-    @ViewChild('infoTemplate', { static: true }) infoTemplate!: TemplateRef<any>;
+    protected infoTemplate = viewChild.required<TemplateRef<any>>('infoTemplate');
 
     protected columns: GridColumn<ComponentEntry>[] = [];
 
     protected actions: GridAction<ComponentEntry>[] = [
-        { icon: 'edit', label: 'admin.common.actions.edit', action: 'edit' },
-        { icon: 'delete', label: 'admin.common.actions.delete', action: 'delete', color: 'warn' }
+        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' },
+        { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
     ];
 
     override ngOnInit(): void {
+        super.ngOnInit();
+    }
+
+    ngAfterViewInit(): void {
         this.columns = [
             {
                 key: 'info',
-                label: 'admin.components.entries.title',
+                label: 'admin.common.grid.name',
                 type: 'custom',
-                template: this.infoTemplate,
-                width: 'auto'
+                template: this.infoTemplate(),
+                width: '1fr'
+            },
+            {
+                key: 'isVisible',
+                label: 'admin.common.fields.isVisible',
+                type: 'text',
+                width: '120px'
             }
         ];
-
-        setTimeout(() => {
-            super.ngOnInit();
-        });
+        this.#cdr.markForCheck();
     }
 
     protected override fetchItems() {
-        return this.service.listByComponentId(this.componentId);
+        return this.service.listByComponentId(this.componentId());
     }
 
     protected override onLoadSuccess(items: ComponentEntry[]): void {
@@ -91,8 +96,6 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
         }
     }
 
-
-
     createEntry(): void {
         const sortOrder = this.#calculateNextSortOrder();
 
@@ -102,9 +105,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
             disableClose: true,
             data: {
                 mode: 'create',
-                componentId: this.componentId,
-                componentTypeId: this.componentTypeId,
-                languages: this.languages,
+                componentId: this.componentId(),
+                componentTypeId: this.componentTypeId(),
+                languages: this.languages(),
                 sortOrder
             }
         });
@@ -141,9 +144,9 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                         disableClose: true,
                         data: {
                             mode: 'edit',
-                            componentId: this.componentId,
-                            componentTypeId: this.componentTypeId,
-                            languages: this.languages,
+                            componentId: this.componentId(),
+                            componentTypeId: this.componentTypeId(),
+                            languages: this.languages(),
                             entryId: entryId,
                             entry: detail,
                             translations: detail.translations
@@ -165,20 +168,25 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     protected deleteEntry(entry: ComponentEntry): void {
-        if (!confirm(this.#transloco.translate('admin.components.entries.confirmDelete', { uid: entry.uid }))) {
-            return;
-        }
-
-        this.service.delete(entry.id)
+        this.#confirmation.confirm(
+            'admin.components.entries.deleteTitle',
+            'admin.components.entries.confirmDelete'
+        )
             .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.#notify.success('admin.components.entries.deleteSuccess');
-                    this.loadItems();
-                },
-                error: () => {
-                    this.#notify.alert('admin.components.entries.deleteFailed');
-                }
+            .subscribe((confirmed) => {
+                if (!confirmed) return;
+
+                this.service.delete(entry.id)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: () => {
+                            this.#notify.success('admin.components.entries.deleteSuccess');
+                            this.loadItems();
+                        },
+                        error: () => {
+                            this.#notify.alert('admin.components.entries.deleteFailed');
+                        }
+                    });
             });
     }
 }

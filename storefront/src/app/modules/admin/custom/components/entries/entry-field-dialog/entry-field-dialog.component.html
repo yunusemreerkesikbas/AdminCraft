@@ -1,6 +1,6 @@
 <spa-dialog
     [title]="'admin.components.entryFields.addField' | transloco"
-    [subtitle]="'admin.components.entryFields.types.text' | transloco"
+    [subtitle]="'admin.components.entryFields.basicInfo' | transloco"
     [submitDisabled]="form.invalid"
     [isSubmitting]="isSubmitting()"
     submitLabel="admin.dialog.actions.save"
@@ -25,10 +25,6 @@
                         'admin.components.entryFields.fieldKey' | transloco
                     "
                     placeholder="e.g. userFullName"
-                    [hint]="
-                        'admin.components.entryFields.invalidFieldKey'
-                            | transloco
-                    "
                 >
                 </spa-input>
 
@@ -42,81 +38,6 @@
                 >
                 </spa-select>
             </div>
-
-            <spa-checkbox
-                formControlName="isRequired"
-                [label]="'admin.components.entryFields.required' | transloco"
-            >
-            </spa-checkbox>
         </div>
-
-        @if (showMaxLength()) {
-            <div
-                class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
-                [@expandCollapse]
-            >
-                <div
-                    class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                    <mat-icon class="icon-size-5">rule</mat-icon>
-                    {{
-                        'admin.components.entryFields.textConstraints'
-                            | transloco
-                    }}
-                </div>
-
-                <spa-input
-                    class="w-full md:w-1/2"
-                    formControlName="maxLength"
-                    type="number"
-                    [label]="
-                        'admin.components.entryFields.maxLength' | transloco
-                    "
-                    [hint]="
-                        'admin.components.entryFields.maxLengthHint' | transloco
-                    "
-                >
-                </spa-input>
-            </div>
-        }
-
-        @if (showMinMax()) {
-            <div
-                class="mt-2 flex flex-col gap-5 border-t pt-6 dark:border-slate-800"
-                [@expandCollapse]
-            >
-                <div
-                    class="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                    <mat-icon class="icon-size-5">rule</mat-icon>
-                    {{
-                        'admin.components.entryFields.numberConstraints'
-                            | transloco
-                    }}
-                </div>
-
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <spa-input
-                        class="w-full"
-                        formControlName="minValue"
-                        type="number"
-                        [label]="
-                            'admin.components.entryFields.minValue' | transloco
-                        "
-                    >
-                    </spa-input>
-
-                    <spa-input
-                        class="w-full"
-                        formControlName="maxValue"
-                        type="number"
-                        [label]="
-                            'admin.components.entryFields.maxValue' | transloco
-                        "
-                    >
-                    </spa-input>
-                </div>
-            </div>
-        }
     </form>
 </spa-dialog>

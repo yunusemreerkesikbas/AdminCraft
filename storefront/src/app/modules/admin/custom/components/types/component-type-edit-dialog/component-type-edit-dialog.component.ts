@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
+import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaDialogComponent } from '@shared/components/spa-dialog';
@@ -15,7 +16,10 @@ import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { take, takeUntil } from 'rxjs';
 import { EntryFieldsBuilderComponent } from '../../entries/entry-fields-builder/entry-fields-builder.component';
 import { COMPONENT_CATEGORIES } from '../../models/component-categories.constants';
-import { ComponentTypeDto, UpdateComponentTypeRequest } from '../../models/component-library.types';
+import {
+    ComponentTypeDto,
+    UpdateComponentTypeRequest
+} from '../../models/component-library.types';
 import { ComponentTypeService } from '../../services/component-type.service';
 
 interface DialogData extends SpaDialogData {
@@ -39,6 +43,7 @@ interface DialogData extends SpaDialogData {
         EntryFieldsBuilderComponent,
         SpaInputComponent,
         SpaSelectComponent,
+        SpaCheckboxComponent,
         SpaDialogComponent
     ]
 })
@@ -57,7 +62,8 @@ export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTyp
             ]],
             category: [typeData.category || null, [
                 Validators.maxLength(VALIDATION_LIMITS.COMPONENT_TYPE_CATEGORY_MAX)
-            ]]
+            ]],
+            navigationAware: [typeData.navigationAware ?? false]
         });
     }
 
@@ -67,7 +73,8 @@ export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTyp
 
         const payload: UpdateComponentTypeRequest = {
             name: this.form.value.name!,
-            category: this.form.value.category || undefined
+            category: this.form.value.category || undefined,
+            navigationAware: !!this.form.value.navigationAware
         };
 
         this.setSubmitting(true);

@@ -112,13 +112,6 @@ export class ComponentSchemaBuilderService {
     #buildComponentTypeFields(): ReadonlyArray<GeneralFieldConfig> {
         return [
             {
-                key: 'code',
-                type: 'text',
-                labelKey: 'admin.common.fields.code',
-                required: true,
-                maxLength: VALIDATION_LIMITS.CODE_MAX
-            },
-            {
                 key: 'name',
                 type: 'text',
                 labelKey: 'admin.common.fields.name',
@@ -134,10 +127,9 @@ export class ComponentSchemaBuilderService {
                 maxLength: VALIDATION_LIMITS.COMPONENT_TYPE_CATEGORY_MAX
             },
             {
-                key: 'icon',
-                type: 'text',
-                labelKey: 'admin.components.fields.icon',
-                maxLength: 100
+                key: 'navigationAware',
+                type: 'checkbox',
+                labelKey: 'admin.components.types.fields.navigationAware'
             }
         ];
     }

@@ -4,7 +4,7 @@
             {{ 'admin.components.entries.title' | transloco }}
         </h3>
         <button mat-flat-button color="primary" (click)="createEntry()">
-            <mat-icon>add</mat-icon>
+            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
             {{ 'admin.components.entries.addEntry' | transloco }}
         </button>
     </div>
@@ -25,7 +25,7 @@
             color="primary"
             (click)="createEntry()"
         >
-            <mat-icon>add</mat-icon>
+            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
             {{ 'admin.components.entries.addEntry' | transloco }}
         </button>
     </spa-admin-grid>
@@ -34,27 +34,20 @@
 <ng-template #infoTemplate let-entry let-value="value">
     <div class="flex min-w-0 flex-col gap-1">
         <div class="flex items-center gap-3">
-            <span
-                class="text-secondary rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium dark:bg-slate-800"
-            >
-                {{ entry.uid }}
-            </span>
-            <spa-status-badge
-                [status]="entry.status"
-                size="sm"
-            ></spa-status-badge>
             @if (!entry.isVisible) {
                 <mat-icon
                     class="text-hint icon-size-4"
                     [matTooltip]="'admin.components.entries.hidden' | transloco"
-                    >visibility_off</mat-icon
-                >
+                    [svgIcon]="'heroicons_outline:eye-slash'"
+                ></mat-icon>
             }
         </div>
-        @if (entry.translations && entry.translations['en']) {
-            <span class="truncate text-sm font-medium">
-                {{ entry.translations['en'].title || '-' }}
+        <div class="text-secondary flex items-center gap-2 text-sm">
+            <span
+                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800"
+            >
+                {{ entry.uid }}
             </span>
-        }
+        </div>
     </div>
 </ng-template>

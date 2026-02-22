@@ -26,16 +26,6 @@
                     </spa-admin-sort-dropdown>
                 }
             </ng-container>
-
-            <button
-                after-create
-                mat-stroked-button
-                (click)="openTypesManager()"
-                class="hidden sm:inline-flex"
-            >
-                <mat-icon class="mr-2 icon-size-5">settings</mat-icon>
-                {{ 'admin.components.manageTypes' | transloco }}
-            </button>
         </admin-page-header>
     }
 
@@ -84,24 +74,15 @@
     <div class="flex min-w-0 flex-col gap-1">
         <div class="flex items-center gap-3">
             <h3 class="truncate text-base font-semibold leading-none">
-                {{ component.name }}
-            </h3>
-            <spa-status-badge
-                class="sm:hidden"
-                [status]="component.status"
-                size="sm"
-            ></spa-status-badge>
-        </div>
-        <div class="text-secondary flex items-center gap-2 text-sm">
-            <span
-                class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs dark:bg-slate-800"
-            >
                 {{ component.uid }}
-            </span>
-            <span class="sm:hidden">{{
-                component.componentTypeName || '-'
-            }}</span>
+            </h3>
         </div>
+    </div>
+</ng-template>
+
+<ng-template #visibleTemplate let-component>
+    <div class="inline-flex items-center text-sm font-medium">
+        {{ component.isVisibl }}
     </div>
 </ng-template>
 

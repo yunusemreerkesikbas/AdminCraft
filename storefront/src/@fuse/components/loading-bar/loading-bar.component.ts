@@ -8,6 +8,7 @@ import {
     OnDestroy,
     OnInit,
     SimpleChanges,
+    ChangeDetectorRef,
     ViewEncapsulation,
 } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -24,6 +25,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class FuseLoadingBarComponent implements OnChanges, OnInit, OnDestroy {
     private _fuseLoadingService = inject(FuseLoadingService);
+    private _cdr = inject(ChangeDetectorRef);
 
     @Input() autoMode: boolean = true;
     mode: 'determinate' | 'indeterminate';
@@ -58,19 +60,28 @@ export class FuseLoadingBarComponent implements OnChanges, OnInit, OnDestroy {
         this._fuseLoadingService.mode$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
-                this.mode = value;
+                Promise.resolve().then(() => {
+                    this.mode = value;
+                    this._cdr.markForCheck();
+                });
             });
 
         this._fuseLoadingService.progress$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
-                this.progress = value;
+                Promise.resolve().then(() => {
+                    this.progress = value;
+                    this._cdr.markForCheck();
+                });
             });
 
         this._fuseLoadingService.show$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
-                this.show = value;
+                Promise.resolve().then(() => {
+                    this.show = value;
+                    this._cdr.markForCheck();
+                });
             });
     }
 

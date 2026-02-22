@@ -1,15 +1,32 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    EventEmitter,
+    inject,
+    Input,
+    OnDestroy,
+    OnInit,
+    Output,
+    signal,
+    TemplateRef,
+    ViewChild,
+    ViewEncapsulation,
+} from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
+import {
+    GridAction,
+    GridColumn,
+    SpaAdminGridComponent,
+} from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -21,15 +38,13 @@ import {
     ComponentDto,
     ComponentTypeDto,
     CreateComponentRequest,
-    UpdateComponentRequest
+    UpdateComponentRequest,
 } from '../models/component-library.types';
 import { ComponentLibraryService } from '../services/component-library.service';
 import { ComponentStore } from '../services/component.store';
-import { ComponentTypesListComponent } from '../types/component-types-list.component';
 
 const DIALOG_CONFIG = {
     COMPONENT_FORM: { width: '800px', height: 'auto' },
-    TYPES_MANAGER: { width: '900px', height: '80vh' }
 };
 
 @Component({
@@ -42,24 +57,34 @@ const DIALOG_CONFIG = {
         MatButtonModule,
         MatIconModule,
         MatPaginatorModule,
-        MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
         SpaAdminGridComponent,
         SpaAdminPaginatorComponent,
-        SpaAdminSortDropdownComponent
+        SpaAdminSortDropdownComponent,
     ],
     templateUrl: './component-list.component.html',
     styleUrls: ['./component-list.component.scss'],
     encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ComponentListComponent extends BasePaginatedListComponent<ComponentDto, CreateComponentRequest, UpdateComponentRequest> implements OnInit, OnDestroy {
+export class ComponentListComponent
+    extends BasePaginatedListComponent<
+        ComponentDto,
+        CreateComponentRequest,
+        UpdateComponentRequest
+    >
+    implements OnInit, OnDestroy
+{
     @Input() mode: 'admin' | 'picker' = 'admin';
     @Output() componentSelected = new EventEmitter<ComponentDto>();
 
-    @ViewChild('infoTemplate', { static: true }) infoTemplate!: TemplateRef<any>;
-    @ViewChild('pickerActionsTemplate', { static: true }) pickerActionsTemplate!: TemplateRef<any>;
+    @ViewChild('infoTemplate', { static: true })
+    infoTemplate!: TemplateRef<any>;
+    @ViewChild('visibleTemplate', { static: true })
+    visibleTemplate!: TemplateRef<any>;
+    @ViewChild('pickerActionsTemplate', { static: true })
+    pickerActionsTemplate!: TemplateRef<any>;
 
     #matDialog = inject(MatDialog);
     #translocoService = inject(TranslocoService);
@@ -72,40 +97,52 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
 
     protected componentTypesSig = signal<ComponentTypeDto[]>([]);
     protected typesLoadingSig = signal<boolean>(false);
-    protected supportedLanguagesSig = computed(() => this.#languageContextService.supportedLanguages());
+    protected supportedLanguagesSig = computed(() =>
+        this.#languageContextService.supportedLanguages()
+    );
     protected searchInputControl = new FormControl('');
     protected paginatedItemsSig = computed(() => this.store.items());
 
     protected columns: GridColumn<ComponentDto>[] = [];
 
     protected actions: GridAction<ComponentDto>[] = [
-        { icon: 'heroicons_outline:pencil-square', label: 'admin.common.edit', action: 'edit' },
-        { icon: 'heroicons_outline:trash', label: 'admin.common.delete', action: 'delete', color: 'warn' }
+        {
+            icon: 'heroicons_outline:pencil-square',
+            label: 'admin.common.edit',
+            action: 'edit',
+        },
+        {
+            icon: 'heroicons_outline:trash',
+            label: 'admin.common.delete',
+            action: 'delete',
+            color: 'warn',
+        },
     ];
 
     protected override onInit(): void {
         this.columns = [
             {
                 key: 'info',
-                label: 'admin.common.grid.name',
+                label: 'admin.common.grid.uid',
                 type: 'custom',
                 template: this.infoTemplate,
-                width: '1fr'
+                width: '1fr',
             },
             {
                 key: 'componentTypeName',
                 label: 'admin.components.filters.type',
                 type: 'badge',
                 hideOn: 'sm',
-                width: '150px'
+                width: '150px',
             },
             {
-                key: 'status',
-                label: 'admin.common.grid.status',
-                type: 'status',
+                key: 'isVisible',
+                label: 'admin.common.fields.isVisible',
+                type: 'custom',
+                template: this.visibleTemplate,
                 hideOn: 'sm',
-                width: '120px'
-            }
+                width: '120px',
+            },
         ];
 
         this.#loadComponentTypes();
@@ -113,16 +150,17 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     }
 
     #setupSearchDebounce(): void {
-        this.searchInputControl.valueChanges.pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(query => {
-            this.onSearchInput(query || '');
-        });
+        this.searchInputControl.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((query) => {
+                this.onSearchInput(query || '');
+            });
     }
 
     #loadComponentTypes(): void {
         this.typesLoadingSig.set(true);
-        this.service.listComponentTypes()
+        this.service
+            .listComponentTypes()
             .pipe(take(1))
             .subscribe({
                 next: (types) => {
@@ -130,9 +168,11 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
                     this.typesLoadingSig.set(false);
                 },
                 error: () => {
-                    this.#notificationService.alert('admin.components.errors.loadTypesFailed');
+                    this.#notificationService.alert(
+                        'admin.components.errors.loadTypesFailed'
+                    );
                     this.typesLoadingSig.set(false);
-                }
+                },
             });
     }
 
@@ -140,7 +180,10 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
         this.#notificationService.alert('admin.components.errors.loadFailed');
     }
 
-    protected onGridAction(event: { action: string; item: ComponentDto }): void {
+    protected onGridAction(event: {
+        action: string;
+        item: ComponentDto;
+    }): void {
         switch (event.action) {
             case 'edit':
                 this.editComponent(event.item.id);
@@ -158,34 +201,44 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     createComponent(): void {
         if (!this.canCreateComponent()) {
             if (this.typesLoadingSig()) {
-                this.#notificationService.info('admin.components.info.loadingTypes');
+                this.#notificationService.info(
+                    'admin.components.info.loadingTypes'
+                );
             } else {
-                this.#notificationService.warning('admin.components.errors.noTypes');
+                this.#notificationService.warning(
+                    'admin.components.errors.noTypes'
+                );
             }
             return;
         }
 
         const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
             width: DIALOG_CONFIG.COMPONENT_FORM.width,
+            height: '90vh',
             maxHeight: '90vh',
+            panelClass: 'spa-compact-dialog',
             disableClose: true,
             data: {
                 mode: 'create',
                 componentTypes: this.componentTypesSig(),
-                languages: this.supportedLanguagesSig()
-            }
+                languages: this.supportedLanguagesSig(),
+            },
         });
 
-        dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
-            if (result) {
-                this.loadItems();
-            }
-        });
+        dialogRef
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((result) => {
+                if (result) {
+                    this.loadItems();
+                }
+            });
     }
 
     protected editComponent(componentId: number): void {
         this.store.setLoading(true);
-        this.service.getComponentDetail(componentId)
+        this.service
+            .getComponentDetail(componentId)
             .pipe(take(1))
             .subscribe({
                 next: (detail) => {
@@ -194,25 +247,30 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
                 },
                 error: () => {
                     this.store.setLoading(false);
-                    this.#notificationService.alert('admin.components.errors.loadDetailFailed');
-                }
+                    this.#notificationService.alert(
+                        'admin.components.errors.loadDetailFailed'
+                    );
+                },
             });
     }
 
     #openEditDialog(detail: ComponentDetailDto): void {
         const dialogRef = this.#matDialog.open(ComponentEditDialogComponent, {
             width: '900px',
+            height: '90vh',
             maxHeight: '90vh',
+            panelClass: 'spa-compact-dialog',
             disableClose: true,
             data: {
                 mode: 'edit',
                 component: detail,
                 languages: this.supportedLanguagesSig(),
-                componentTypes: this.componentTypesSig()
-            }
+                componentTypes: this.componentTypesSig(),
+            },
         });
 
-        dialogRef.afterClosed()
+        dialogRef
+            .afterClosed()
             .pipe(take(1))
             .subscribe((result) => {
                 if (result) {
@@ -222,31 +280,31 @@ export class ComponentListComponent extends BasePaginatedListComponent<Component
     }
 
     protected deleteComponent(componentId: number): void {
-        if (!confirm(this.#translocoService.translate('admin.components.confirmDelete'))) {
+        if (
+            !confirm(
+                this.#translocoService.translate(
+                    'admin.components.confirmDelete'
+                )
+            )
+        ) {
             return;
         }
 
-        this.service.deleteComponent(componentId)
+        this.service
+            .deleteComponent(componentId)
             .pipe(take(1))
             .subscribe({
                 next: () => {
-                    this.#notificationService.success('admin.components.success.deleted');
+                    this.#notificationService.success(
+                        'admin.components.success.deleted'
+                    );
                     this.loadItems();
                 },
-                error: () => this.#notificationService.alert('admin.components.errors.deleteFailed')
+                error: () =>
+                    this.#notificationService.alert(
+                        'admin.components.errors.deleteFailed'
+                    ),
             });
-    }
-
-    openTypesManager(): void {
-        const dialogRef = this.#matDialog.open(ComponentTypesListComponent, {
-            width: DIALOG_CONFIG.TYPES_MANAGER.width,
-            height: DIALOG_CONFIG.TYPES_MANAGER.height,
-            disableClose: false
-        });
-
-        dialogRef.afterClosed().pipe(take(1)).subscribe(() => {
-            this.#loadComponentTypes();
-        });
     }
 
     selectComponent(component: ComponentDto): void {

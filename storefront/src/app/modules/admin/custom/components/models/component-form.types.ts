@@ -31,8 +31,7 @@ export interface EditComponentFormData extends CreateComponentFormData {
 }
 
 export interface ComponentTypeFormData {
-    code?: string | null;
     name?: string | null;
     category?: string | null;
-    icon?: string | null;
+    navigationAware?: boolean | null;
 }

@@ -234,7 +234,7 @@ export interface ResponsiveMediaResponse {
 }
 
 export interface ResponsiveMediaRequest {
-    code: string;
+    code?: string;
     desktopMediaId: number;
     mobileMediaId: number;
 }

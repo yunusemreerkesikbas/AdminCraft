@@ -5,8 +5,9 @@
             : 'admin.components.entries.edit'
         ) | transloco
     "
+    [size]="'lg'"
     [contentType]="'tabbed'"
-    [submitDisabled]="!canSave()"
+    [submitDisabled]="!canSaveSig()"
     [isSubmitting]="isSubmitting()"
     [submitLabel]="
         mode() === 'create'
@@ -18,7 +19,7 @@
     (cancelled)="cancel()"
     (submitted)="save()"
 >
-    @if (isLoading()) {
+    @if (isLoadingSig()) {
         <div class="flex flex-col items-center justify-center py-12">
             <mat-spinner diameter="40"></mat-spinner>
             <p class="text-secondary mt-4">
@@ -30,13 +31,6 @@
             <ng-template spaTabContent="general">
                 <form [formGroup]="generalForm" class="flex flex-col gap-6">
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <spa-select
-                            formControlName="status"
-                            [label]="'admin.common.fields.status' | transloco"
-                            [options]="statusOptions"
-                            [required]="true"
-                        ></spa-select>
-
                         <spa-input
                             class="sm:col-span-2"
                             formControlName="styleClasses"
@@ -123,7 +117,7 @@
                             </div>
                         </div>
 
-                        @if (fieldDefinitions().length > 0) {
+                        @if (fieldDefinitionsSig().length > 0) {
                             <div
                                 class="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
                             >
@@ -146,13 +140,13 @@
                                     <span
                                         class="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                                     >
-                                        {{ fieldDefinitions().length }}
+                                        {{ fieldDefinitionsSig().length }}
                                     </span>
                                 </div>
 
                                 <div class="grid grid-cols-1 gap-4">
                                     @for (
-                                        field of fieldDefinitions();
+                                        field of fieldDefinitionsSig();
                                         track field.fieldKey
                                     ) {
                                         @switch (field.fieldType) {
@@ -231,9 +225,6 @@
                                                         getFieldLabelWithFallback(
                                                             field.fieldKey
                                                         )
-                                                    "
-                                                    [required]="
-                                                        field.isRequired
                                                     "
                                                 ></spa-media-picker>
                                             }

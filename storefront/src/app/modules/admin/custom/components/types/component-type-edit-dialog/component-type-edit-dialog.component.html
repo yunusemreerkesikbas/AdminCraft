@@ -1,6 +1,6 @@
 <spa-dialog
     [title]="'admin.components.types.edit' | transloco"
-    [subtitle]="data.type.code"
+    [subtitle]="data.type.uid"
     [contentType]="'tabbed'"
     [submitDisabled]="form.invalid"
     [isSubmitting]="isSubmitting()"
@@ -17,26 +17,26 @@
         [(selectedIndex)]="activeTab"
     >
         <mat-tab [label]="'admin.components.types.tabs.general' | transloco">
-            <div class="py-6 sm:py-8">
+            <div class="component-tab-panel">
                 <div
                     class="mb-6 flex items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3 dark:bg-slate-900/50"
                 >
                     <mat-icon class="text-secondary">fingerprint</mat-icon>
-                    <div class="flex flex-col">
+                    <div class="flex min-w-0 flex-col">
                         <span
                             class="text-secondary text-xs font-medium uppercase tracking-wider"
                         >
-                            {{ 'admin.common.fields.code' | transloco }}
+                            {{ 'admin.common.fields.uid' | transloco }}
                         </span>
-                        <span class="font-mono font-medium">{{
-                            data.type.code
+                        <span class="truncate font-mono font-medium">{{
+                            data.type.uid
                         }}</span>
                     </div>
                 </div>
 
                 <form
                     [formGroup]="form"
-                    class="grid grid-cols-1 gap-6 sm:grid-cols-2"
+                    class="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2"
                 >
                     <spa-input
                         class="w-full sm:col-span-2"
@@ -46,13 +46,22 @@
                     </spa-input>
 
                     <spa-select
-                        class="w-full"
+                        class="w-full sm:col-span-1"
                         formControlName="category"
                         [label]="'admin.components.fields.category' | transloco"
                         [options]="categoryOptions"
                         [placeholder]="'admin.common.none' | transloco"
                     >
                     </spa-select>
+
+                    <spa-checkbox
+                        class="w-full sm:col-span-1"
+                        formControlName="navigationAware"
+                        [label]="'admin.components.types.fields.navigationAware' | transloco"
+                        [hint]="'admin.components.types.fields.navigationAwareHint' | transloco"
+                        styleClasses="boxed"
+                    >
+                    </spa-checkbox>
                 </form>
             </div>
         </mat-tab>
@@ -60,7 +69,7 @@
         <mat-tab
             [label]="'admin.components.types.tabs.entryFields' | transloco"
         >
-            <div class="flex flex-col p-6 sm:p-8">
+            <div class="component-tab-panel">
                 <div class="mb-6 flex items-center gap-2">
                     <div
                         class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary"

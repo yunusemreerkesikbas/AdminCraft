@@ -42,13 +42,7 @@ export const VALIDATION_PATTERNS = {
      */
     SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
 
-    /**
-     * UID Pattern
-     * - Start with lowercase letter or digit
-     * - Lowercase letters, digits, underscores, and hyphens allowed
-     * @backend ^[a-z0-9][a-z0-9_-]*$
-     */
-    UID: /^[a-z0-9][a-z0-9_-]*$/,
+    UID: /^[A-Za-z0-9][A-Za-z0-9_-]*$/,
 
     /**
      * Slot Name Pattern

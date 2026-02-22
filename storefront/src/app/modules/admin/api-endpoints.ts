@@ -131,14 +131,7 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- COMPONENT LIBRARY: ENTRY FIELDS -----
     componentTypeEntryFields: 'components/types/${typeId}/entry-fields',
-    componentTypeEntryFieldById:
-        'components/types/${typeId}/entry-fields/${id}',
-    componentTypeEntryFieldsImport:
-        'components/types/${typeId}/entry-fields/import',
-    componentTypeEntryFieldsExport:
-        'components/types/${typeId}/entry-fields/export',
-    componentTypeEntryFieldValidate:
-        'components/types/${typeId}/entry-fields/validate',
+    componentTypeEntryFieldById: 'components/types/${typeId}/entry-fields/${id}',
 
     // ----- COMPONENT LIBRARY: ENTRIES -----
     componentEntriesList: 'components/${componentId}/entries',
