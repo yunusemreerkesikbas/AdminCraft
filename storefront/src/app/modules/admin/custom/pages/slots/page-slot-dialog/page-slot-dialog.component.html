@@ -123,7 +123,8 @@
                                 >
                                     <ng-template #itemTemplate let-comp>
                                         <div
-                                            class="group/comp flex items-center justify-between py-1.5"
+                                            class="group/comp flex cursor-pointer items-center justify-between rounded px-1 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                                            (click)="editComponent(comp)"
                                         >
                                             <div class="flex min-w-0 flex-col">
                                                 <span

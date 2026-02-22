@@ -307,7 +307,7 @@ export const appRoutes: Route[] = [
                 loadComponent: () =>
                     import(
                         'app/modules/admin/custom/navigation/list/navigation-list.component'
-                    ).then((m) => m.NavigationListComponent),
+                    ).then((m) => m.SpaNavigationListComponent),
             },
 
             // Pages

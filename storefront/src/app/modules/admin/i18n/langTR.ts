@@ -793,6 +793,13 @@ export const langTR = {
         navigation: {
             title: 'Navigasyon Yönetimi',
             subtitle: 'Site navigasyon menülerini ve yapısını yönetin',
+            empty: {
+                title: 'Henüz menü yok',
+                message: 'İlk navigasyon menüsünü oluşturarak başlayın.',
+            },
+            errors: {
+                loadFailed: 'Navigasyon yüklenirken bir hata oluştu.',
+            },
             nodes: {
                 title: 'Düğümler',
                 create: 'Düğüm Oluştur',
@@ -869,7 +876,7 @@ export const langTR = {
             },
             tabs: {
                 submenus: 'Alt Menüler',
-                entries: 'Girdiler',
+                entries: 'Girişler',
             },
         },
         users: {
@@ -1236,6 +1243,14 @@ export const langTR = {
                 sortOrder: 'Sıralama',
                 isVisible: 'Görünür',
                 styleClasses: 'CSS Sınıfları',
+                navigationNode: 'Navigasyon Düğümü',
+                navigationType: 'Navigasyon Türü',
+                searchBox: 'Arama Kutusunu Göster',
+                appearance: 'Görünüm',
+            },
+            placeholders: {
+                selectNavigationNode: 'Navigasyon düğümü seçin',
+                selectNavigationType: 'Navigasyon türü seçin',
             },
             hints: {
                 imageUrl:
@@ -1304,6 +1319,17 @@ export const langTR = {
                 tabs: {
                     general: 'Genel',
                     entryFields: 'Öğe Alanları',
+                },
+                fields: {
+                    navigationAware: 'Navigasyon Bileşeni',
+                    navigationAwareHint: 'Etkinleştirildiğinde, bu bileşen tipi navigasyon düğümü bağlamayı destekler',
+                },
+                capabilities: {
+                    supportsNavigationNode: 'Navigasyon düğümünü destekler',
+                    requiresNavigationNode: 'Navigasyon düğümü zorunlu',
+                    supportsNavigationLinkNode: 'Navigasyon link düğümünü destekler',
+                    supportsNavigationType: 'Navigasyon tipini destekler',
+                    supportsSearchBox: 'Arama kutusunu destekler',
                 },
                 errors: {
                     cannotEditSystem: 'Sistem türleri düzenlenemez',
@@ -1414,6 +1440,7 @@ export const langTR = {
                 loadFailed: 'Öğeler yüklenemedi',
                 loadFieldsFailed: 'Alan tanımları yüklenemedi',
                 saveI18nFailed: 'Çeviriler kaydedilemedi',
+                deleteTitle: 'Öğeyi Sil',
                 confirmDelete:
                     '{{uid}} kodlu öğeyi silmek istediğinize emin misiniz?',
                 messages: {
@@ -1661,6 +1688,7 @@ export const langTR = {
             mediaComponentsSubtitle: 'Medya kütüphanesi ve bileşen kataloğu',
             mediaManagement: 'Medya Yönetimi',
             componentCatalog: 'Bileşen Kataloğu',
+            componentTypes: 'Bileşen Tipleri',
             productCatalog: 'Ürün Kataloğu',
             productCatalogSubtitle: 'Ürün ve kategori yönetimi',
             products: 'Ürünler',

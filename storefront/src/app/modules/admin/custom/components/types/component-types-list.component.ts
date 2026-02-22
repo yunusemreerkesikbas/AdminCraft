@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { TranslocoModule } from '@jsverse/transloco';
 import { GridAction, GridColumn, SpaAdminGridComponent } from '@shared/components/spa-admin-grid';
@@ -17,7 +16,11 @@ import { type ItemDialogOptions } from '@shared/types/item-dialog.types';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
 import { take, takeUntil } from 'rxjs';
 import { ComponentTypeFormData } from '../models/component-form.types';
-import { ComponentTypeDto, CreateComponentTypeRequest, UpdateComponentTypeRequest } from '../models/component-library.types';
+import {
+    ComponentTypeDto,
+    CreateComponentTypeRequest,
+    UpdateComponentTypeRequest
+} from '../models/component-library.types';
 import { ComponentSchemaBuilderService } from '../services/component-schema-builder.service';
 import { ComponentTypeService } from '../services/component-type.service';
 import { ComponentTypeStore } from '../services/component-type.store';
@@ -36,7 +39,6 @@ import { ComponentTypeEditDialogComponent } from './component-type-edit-dialog/c
         MatIconModule,
         MatDialogModule,
         MatPaginatorModule,
-        MatTooltipModule,
         TranslocoModule,
         AdminPageHeaderComponent,
         SpaAdminGridComponent,
@@ -52,7 +54,6 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
     #itemDialogService = inject(ItemDialogService);
     #matDialog = inject(MatDialog);
     #componentSchemaBuilderService = inject(ComponentSchemaBuilderService);
-    #matDialogRef = inject(MatDialogRef<ComponentTypesListComponent>);
 
     protected override service = inject(ComponentTypeService);
     protected override store = inject(ComponentTypeStore);
@@ -116,10 +117,9 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
     protected createType(): void {
         const schema = this.#componentSchemaBuilderService.buildComponentTypeSchema();
         const initial: ComponentTypeFormData = {
-            code: null,
             name: null,
             category: null,
-            icon: null
+            navigationAware: false
         };
 
         const options: ItemDialogOptions<ComponentTypeFormData> = {
@@ -137,10 +137,9 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
                 if (!result) return;
 
                 const payload: CreateComponentTypeRequest = {
-                    code: result.code!,
                     name: result.name!,
                     category: result.category || undefined,
-                    icon: result.icon || undefined
+                    navigationAware: !!result.navigationAware
                 };
 
                 this.service.create(payload)
@@ -202,7 +201,4 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
         });
     }
 
-    protected close(): void {
-        this.#matDialogRef.close();
-    }
 }

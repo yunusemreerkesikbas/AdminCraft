@@ -3,29 +3,11 @@ export interface EntryFieldDefinition {
     componentTypeId: number;
     fieldKey: string;
     fieldType: 'text' | 'textarea' | 'number' | 'boolean' | 'media';
-    isRequired: boolean;
-    maxLength?: number;
-    minValue?: number;
-    maxValue?: number;
 }
 
 export interface CreateEntryFieldRequest {
     fieldKey: string;
     fieldType: 'text' | 'textarea' | 'number' | 'boolean' | 'media';
-    isRequired: boolean;
-    maxLength?: number;
-    minValue?: number;
-    maxValue?: number;
-}
-
-export interface ImportSchemaRequest {
-    fields: CreateEntryFieldRequest[];
-}
-
-export interface ImportResultResponse {
-    successCount: number;
-    failedCount: number;
-    errors: string[];
 }
 
 export interface ComponentEntry {
@@ -105,12 +87,7 @@ export interface EntryI18nRequest {
 export interface EntryFieldDefinitionResponse extends EntryFieldDefinition {
     id: number;
     createdAt: string;
-    updatedAt: string;
-}
-
-export interface ValidationResult {
-    valid: boolean;
-    errors?: string[];
+    updatedAt?: string;
 }
 
 export interface CreateComponentEntryCompositeRequest {
@@ -118,7 +95,6 @@ export interface CreateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     responsiveMediaId?: number;
     translations: Record<string, EntryI18nRequest>;
 }
@@ -127,7 +103,6 @@ export interface UpdateComponentEntryCompositeRequest {
     sortOrder?: number;
     isVisible?: boolean;
     styleClasses?: string;
-    status?: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
     responsiveMediaId?: number;
     translations: Record<string, EntryI18nRequest>;
 }
@@ -146,4 +121,3 @@ export interface ComponentEntryCompositeResponse {
     updatedAt: string;
     translations: Record<string, EntryI18nDto>;
 }
-

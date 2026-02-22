@@ -217,6 +217,10 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
 
     openComponent(component: ComponentDto): void {
         this.#matDialog.open(ComponentEditDialogComponent, {
+            width: '900px',
+            height: '90vh',
+            maxHeight: '90vh',
+            panelClass: 'spa-compact-dialog',
             data: {
                 component: component,
                 mode: 'edit',
@@ -224,7 +228,6 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
             },
             disableClose: true,
             autoFocus: false,
-            maxHeight: '90vh',
         });
     }
 

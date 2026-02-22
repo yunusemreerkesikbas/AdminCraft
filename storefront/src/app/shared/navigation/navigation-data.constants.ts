@@ -72,6 +72,15 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
                 requiredModule: NAVIGATION_MODULES.CORE,
                 excludedRoles: ['SUPER_ADMIN'],
             },
+            {
+                id: 'media-components.types',
+                title: 'admin.nav.componentTypes',
+                type: 'basic',
+                icon: 'heroicons_outline:tag',
+                link: 'components/types',
+                requiredModule: NAVIGATION_MODULES.CORE,
+                excludedRoles: ['SUPER_ADMIN'],
+            },
         ],
     },
     {

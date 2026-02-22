@@ -14,11 +14,14 @@ import { SpaDialogBase } from '@shared/components/spa-dialog-base';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
-import { BehaviorSubject, catchError, of, take, takeUntil, tap } from 'rxjs';
+import { BehaviorSubject, catchError, forkJoin, of, take, takeUntil, tap } from 'rxjs';
+import { ComponentEditDialogComponent } from '../../../components/component-edit-dialog/component-edit-dialog.component';
 import { ComponentPickerDialogComponent } from '../../../components/picker/component-picker-dialog.component';
+import { ComponentLibraryService } from '../../../components/services/component-library.service';
 import { PageSlotFormDialogComponent, PageSlotFormDialogResult } from '../form/page-slot-form-dialog.component';
 import { PageSlotService } from '../page-slot.service';
-import { PageSlotResponse, UpdatePageSlotRequest } from '../page-slot.types';
+import { PageSlotResponse, SlotComponentResponse, UpdatePageSlotRequest } from '../page-slot.types';
+import { LanguageContextService } from '@core/services/language-context.service';
 
 export interface PageSlotDialogData extends SpaDialogData {
     pageId: number;
@@ -43,7 +46,8 @@ export interface PageSlotDialogData extends SpaDialogData {
         MatTooltipModule,
         TranslocoModule,
         SpaDialogComponent,
-        SpaReorderListComponent
+        SpaReorderListComponent,
+        ComponentEditDialogComponent
     ]
 })
 export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogData> implements OnInit {
@@ -52,6 +56,8 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
     #dialog = inject(MatDialog);
     #translocoService = inject(TranslocoService);
     #confirmationService = inject(ConfirmationService);
+    #componentService = inject(ComponentLibraryService);
+    #languageContextService = inject(LanguageContextService);
 
     protected pageId: number;
     protected pageUid: string;
@@ -175,6 +181,33 @@ export class PageSlotDialogComponent extends SpaDialogBase<void, PageSlotDialogD
                         this.#notificationService.alert(message);
                     }
                 });
+        });
+    }
+
+    editComponent(comp: SlotComponentResponse): void {
+        forkJoin([
+            this.#componentService.getComponentDetail(comp.componentId),
+            this.#componentService.listComponentTypes()
+        ])
+        .pipe(take(1), takeUntil(this.destroy$))
+        .subscribe({
+            next: ([detail, types]) => {
+                const dialogRef = this.#dialog.open(ComponentEditDialogComponent, {
+                    width: '900px',
+                    height: '90vh',
+                    maxHeight: '90vh',
+                    panelClass: 'spa-compact-dialog',
+                    disableClose: true,
+                    data: {
+                        mode: 'edit',
+                        component: detail,
+                        componentTypes: types,
+                        languages: this.#languageContextService.supportedLanguages(),
+                    }
+                });
+                dialogRef.afterClosed().pipe(take(1)).subscribe();
+            },
+            error: () => this.#notificationService.alert('admin.components.errors.loadDetailFailed')
         });
     }
 

@@ -797,6 +797,13 @@ export const langEN = {
         navigation: {
             title: 'Navigation Management',
             subtitle: 'Manage your site navigation menus and structure',
+            empty: {
+                title: 'No menus yet',
+                message: 'Get started by creating your first navigation menu.',
+            },
+            errors: {
+                loadFailed: 'An error occurred while loading navigation.',
+            },
             nodes: {
                 title: 'Nodes',
                 create: 'Create Node',
@@ -874,6 +881,7 @@ export const langEN = {
             },
             tabs: {
                 submenus: 'Submenus',
+                entries: 'Entries',
             },
         },
         users: {
@@ -1263,6 +1271,14 @@ export const langEN = {
                 sortOrder: 'Sort Order',
                 isVisible: 'Visible',
                 styleClasses: 'CSS Classes',
+                navigationNode: 'Navigation Node',
+                navigationType: 'Navigation Type',
+                searchBox: 'Show Search Box',
+                appearance: 'Appearance',
+            },
+            placeholders: {
+                selectNavigationNode: 'Select navigation node',
+                selectNavigationType: 'Select navigation type',
             },
             hints: {
                 imageUrl:
@@ -1330,6 +1346,17 @@ export const langEN = {
                 tabs: {
                     general: 'General',
                     entryFields: 'Entry Fields',
+                },
+                fields: {
+                    navigationAware: 'Navigation Component',
+                    navigationAwareHint: 'When enabled, this component type supports navigation node binding',
+                },
+                capabilities: {
+                    supportsNavigationNode: 'Supports navigation node',
+                    requiresNavigationNode: 'Requires navigation node',
+                    supportsNavigationLinkNode: 'Supports navigation link node',
+                    supportsNavigationType: 'Supports navigation type',
+                    supportsSearchBox: 'Supports search box',
                 },
                 errors: {
                     cannotEditSystem: 'System types cannot be edited',
@@ -1441,6 +1468,7 @@ export const langEN = {
                 loadFailed: 'Failed to load entries',
                 loadFieldsFailed: 'Failed to load field definitions',
                 saveI18nFailed: 'Failed to save translations',
+                deleteTitle: 'Delete Entry',
                 confirmDelete: 'Are you sure you want to delete entry {{uid}}?',
                 messages: {
                     i18nSaved: '{{lang}} translation saved',
@@ -1689,6 +1717,7 @@ export const langEN = {
             mediaComponentsSubtitle: 'Media library and component catalog',
             mediaManagement: 'Media Management',
             componentCatalog: 'Component Catalog',
+            componentTypes: 'Component Types',
             productCatalog: 'Product Catalog',
             productCatalogSubtitle: 'Product and category management',
             products: 'Products',

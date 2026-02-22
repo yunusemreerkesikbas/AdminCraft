@@ -1,11 +1,15 @@
 import { SpaLocalizedFormDialogData } from '@/app/shared/components/spa-dialog-base';
-import { CommonModule, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     inject,
+    Injector,
+    runInInjectionContext,
+    Signal,
     ViewEncapsulation,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,15 +26,15 @@ import {
     SpaTabContentDirective,
     TabDefinition,
 } from '@shared/components/spa-tab-container';
-import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
+import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { map, Observable, of, switchMap, take, takeUntil } from 'rxjs';
+import { map, Observable, of, startWith, switchMap, take } from 'rxjs';
 import { SpaMediaPickerComponent } from '../../media/components/spa-media-picker/spa-media-picker.component';
 import { MediaService } from '../../media/media.service';
 import { ComponentEntryListComponent } from '../entries/component-entry-list/component-entry-list.component';
 import {
+    ComponentCompositeResponse,
     ComponentDetailDto,
-    ComponentStatus,
     ComponentTypeDto,
     CreateComponentCompositeRequest,
     NavigationType,
@@ -48,11 +52,15 @@ export interface ComponentEditDialogData
     languages: string[];
 }
 
+interface SelectOption<T = number> {
+    value: T;
+    label: string;
+}
+
 @Component({
     selector: 'spa-component-edit-dialog',
     standalone: true,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
@@ -74,13 +82,13 @@ export interface ComponentEditDialogData
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
-    any,
+    ComponentCompositeResponse,
     ComponentEditDialogData
-> {
-    static readonly CATEGORY_NAVIGATION_UID = 'CategoryNavigationComponent';
+    > {
     static readonly DEFAULT_NAVIGATION_TYPE = NavigationType.MAINMENU;
     static readonly NAVIGATION_NODE_PAGE_SIZE = 100;
 
+    readonly #injector = inject(Injector);
     readonly #translocoService = inject(TranslocoService);
     readonly #componentService = inject(ComponentLibraryService);
     readonly #mediaService = inject(MediaService);
@@ -88,42 +96,32 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
     readonly #notify = inject(NotificationService);
     readonly #tenantContext = inject(TenantContextService);
 
-    statusOptions = Object.values(ComponentStatus).map((s) => ({
-        value: s,
-        label: s,
-    }));
-    componentTypeOptions: { value: any; label: string }[] = [];
-    navigationTypeOptions: { value: NavigationType; label: string }[] = [
+    protected componentTypeOptions: SelectOption[] = [];
+    protected navigationTypeOptions: SelectOption<NavigationType>[] = [
         { value: NavigationType.MAINMENU, label: 'MAINMENU' },
         { value: NavigationType.STATICPAGE, label: 'STATICPAGE' },
     ];
-    navigationNodeOptions: { value: any; label: string }[] = [];
-    navigationLinkNodeOptions: { value: any; label: string }[] = [];
+    protected navigationNodeOptions: SelectOption[] = [];
     override languages: string[] = [];
-    categoryNavigationTypeId: number | null = null;
-    isCategoryNavigationSelected = false;
+    protected componentTypesById = new Map<number, ComponentTypeDto>();
 
-    readonly dialogTitle = this.data?.component
+    protected readonly dialogTitle = this.data?.component
         ? this.#translocoService.translate('admin.dialog.title.edit')
         : this.#translocoService.translate('admin.dialog.title.create');
 
+    protected isNavigationAwareSig!: Signal<boolean>;
+
     constructor() {
         super();
-        this.categoryNavigationTypeId =
-            this.data?.componentTypes?.find(
-                (type) =>
-                    type.uid ===
-                    ComponentEditDialogComponent.CATEGORY_NAVIGATION_UID
-            )?.id ?? null;
-        this.componentTypeOptions = (this.data?.componentTypes || []).map(
-            (type) => ({
-                value: type.id,
-                label: `${type.name} (${type.uid})`,
-            })
-        );
+        const types = this.data?.componentTypes || [];
+        this.componentTypesById = new Map(types.map((type) => [type.id, type]));
+        this.componentTypeOptions = types.map((type) => ({
+            value: type.id,
+            label: type.uid,
+        }));
     }
 
-    get tabs(): TabDefinition[] {
+    protected get tabs(): TabDefinition[] {
         const baseTabs: TabDefinition[] = [
             {
                 id: 'general',
@@ -158,8 +156,22 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         } else {
             this.languages = ['en'];
         }
-        super.ngOnInit();
-        this.#setupNavigationTypeWatcher();
+        super.ngOnInit(); // calls buildForms() → generalForm is now available
+
+        const componentTypeId = this.generalForm.get('componentTypeId')!;
+        this.isNavigationAwareSig = runInInjectionContext(this.#injector, () =>
+            toSignal(
+                componentTypeId.valueChanges.pipe(
+                    startWith(componentTypeId.value),
+                    map(value => {
+                        const id = this.#toNullableNumber(value);
+                        return (id !== null ? this.componentTypesById.get(id) : undefined)?.navigationAware ?? false;
+                    })
+                ),
+                { initialValue: false }
+            )
+        );
+
         this.#loadNavigationNodes();
     }
 
@@ -174,18 +186,18 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             : null;
 
         return this.fb.group({
-            name: [
-                component?.name || '',
+            uid: [
+                component?.uid || '',
                 [
                     Validators.required,
-                    Validators.maxLength(VALIDATION_LIMITS.COMPONENT_NAME_MAX),
+                    Validators.maxLength(VALIDATION_LIMITS.UID_TEMPLATE_MAX),
+                    Validators.pattern(VALIDATION_PATTERNS.UID),
                 ],
             ],
             componentTypeId: [
                 component?.componentTypeId || '',
                 Validators.required,
             ],
-            status: [component?.status, Validators.required],
             isVisible: [component?.isVisible ?? true],
             styleClasses: [
                 component?.styleClasses || '',
@@ -198,7 +210,6 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             displayOrder: [component?.displayOrder || 0],
             responsiveMedia: [responsiveValue],
             navigationNodeId: [component?.navigationNodeId ?? null],
-            navigationLinkNodeId: [component?.navigationLinkNodeId ?? null],
             navigationType: [
                 component?.navigationType ||
                     ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
@@ -230,17 +241,18 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
     }
 
-    #createComponentComposite(translations: Record<string, any>): void {
+    #createComponentComposite(translations: Record<string, unknown>): void {
         const generalData = this.generalForm.value;
+        const uid = (generalData.uid as string)?.trim();
 
         const request: CreateComponentCompositeRequest = {
             componentTypeId: generalData.componentTypeId,
-            name: generalData.name,
+            uid: uid,
+            name: uid,
             displayOrder: generalData.displayOrder,
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
-            status: generalData.status,
-            translations: translations,
+            translations: translations as never,
             ...this.#buildNavigationPayload(generalData),
         };
 
@@ -256,8 +268,9 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             )
             .subscribe({
                 next: (response) => {
+                    this.setSubmitting(false);
                     this.#notify.success('admin.components.success.created');
-                    this.close(true);
+                    this.close(response);
                 },
                 error: () => {
                     this.setSubmitting(false);
@@ -266,17 +279,18 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             });
     }
 
-    #updateComponentComposite(translations: Record<string, any>): void {
+    #updateComponentComposite(translations: Record<string, unknown>): void {
         if (!this.data.component?.id) return;
         const generalData = this.generalForm.value;
+        const uid = (generalData.uid as string)?.trim();
 
         const request: UpdateComponentCompositeRequest = {
-            name: generalData.name,
+            uid: uid,
+            name: uid,
             displayOrder: generalData.displayOrder,
             isVisible: generalData.isVisible,
             styleClasses: generalData.styleClasses,
-            status: generalData.status,
-            translations: translations,
+            translations: translations as never,
             ...this.#buildNavigationPayload(generalData),
         };
 
@@ -292,8 +306,9 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             )
             .subscribe({
                 next: (response) => {
+                    this.setSubmitting(false);
                     this.#notify.success('admin.components.success.updated');
-                    this.close(true);
+                    this.close(response);
                 },
                 error: () => {
                     this.setSubmitting(false);
@@ -302,8 +317,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             });
     }
 
-    #buildTranslations(): Record<string, any> {
-        const translations: Record<string, any> = {};
+    #buildTranslations(): Record<string, unknown> {
+        const translations: Record<string, unknown> = {};
 
         this.languages.forEach((lang) => {
             const form = this.i18nForms[lang];
@@ -312,14 +327,11 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             const title = form.value.title as string;
             const subtitle = form.value.subtitle as string;
             const description = form.value.description as string;
-            const status = form.value.status || ComponentStatus.DRAFT;
-
             if (title && title.trim().length > 0) {
                 translations[lang.toUpperCase()] = {
                     title: title.trim(),
                     subtitle: subtitle?.trim() || undefined,
                     description: description?.trim() || undefined,
-                    status: status,
                 };
             }
         });
@@ -327,7 +339,7 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         return translations;
     }
 
-    #handleResponsiveMedia(componentId: number): Observable<any> {
+    #handleResponsiveMedia(componentId: number): Observable<unknown> {
         const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
@@ -385,110 +397,42 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
             .subscribe({
                 next: (page) => {
                     const nodes = page?.content || [];
-                    this.navigationNodeOptions = this.#mapNavigationNodeOptions(
-                        nodes
-                    );
-                    this.navigationLinkNodeOptions = [
-                        { value: null, label: 'None' },
-                        ...this.#mapNavigationNodeOptions(nodes),
-                    ];
+                    this.navigationNodeOptions = this.#mapNavigationNodeOptions(nodes);
                 },
                 error: () => {
                     this.navigationNodeOptions = [];
-                    this.navigationLinkNodeOptions = [
-                        { value: null, label: 'None' },
-                    ];
                 },
             });
     }
 
     #mapNavigationNodeOptions(
         nodes: NavigationNode[]
-    ): { value: number; label: string }[] {
+    ): SelectOption[] {
         return nodes.map((node) => ({
             value: node.id,
             label: `${node.title || node.uid} (${node.uid})`,
         }));
     }
 
-    #setupNavigationTypeWatcher(): void {
-        const componentTypeControl = this.generalForm.get('componentTypeId');
-        if (!componentTypeControl) {
-            return;
-        }
-
-        componentTypeControl.valueChanges
-            .pipe(takeUntil(this.destroy$))
-            .subscribe((value) => {
-                this.#updateNavigationFieldState(value);
-            });
-        this.#updateNavigationFieldState(componentTypeControl.value);
-    }
-
-    #updateNavigationFieldState(componentTypeIdValue: unknown): void {
-        const componentTypeId = this.#toNullableNumber(componentTypeIdValue);
-        this.isCategoryNavigationSelected =
-            componentTypeId !== null &&
-            componentTypeId === this.categoryNavigationTypeId;
-
-        const navigationNodeControl = this.generalForm.get('navigationNodeId');
-        if (!navigationNodeControl) {
-            return;
-        }
-
-        if (this.isCategoryNavigationSelected) {
-            navigationNodeControl.setValidators([Validators.required]);
-            if (!this.generalForm.get('navigationType')?.value) {
-                this.generalForm
-                    .get('navigationType')
-                    ?.setValue(
-                        ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE
-                    );
-            }
-        } else {
-            navigationNodeControl.clearValidators();
-            this.generalForm.patchValue(
-                {
-                    navigationNodeId: null,
-                    navigationLinkNodeId: null,
-                    navigationType:
-                        ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
-                    searchBox: false,
-                },
-                { emitEvent: false }
-            );
-        }
-
-        navigationNodeControl.updateValueAndValidity({ emitEvent: false });
-    }
-
     #buildNavigationPayload(
-        generalData: Record<string, any>
+        generalData: Record<string, unknown>
     ): Pick<
         CreateComponentCompositeRequest,
         | 'navigationNodeId'
-        | 'navigationLinkNodeId'
         | 'navigationType'
         | 'searchBox'
     > {
-        if (!this.isCategoryNavigationSelected) {
+        if (!this.isNavigationAwareSig()) {
             return {
                 navigationNodeId: undefined,
-                navigationLinkNodeId: undefined,
                 navigationType: undefined,
                 searchBox: undefined,
             };
         }
 
         return {
-            navigationNodeId: this.#toNullableNumber(
-                generalData['navigationNodeId']
-            ) ?? undefined,
-            navigationLinkNodeId:
-                this.#toNullableNumber(generalData['navigationLinkNodeId']) ??
-                undefined,
-            navigationType:
-                (generalData['navigationType'] as NavigationType | undefined) ||
+            navigationNodeId: this.#toNullableNumber(generalData['navigationNodeId']) ?? undefined,
+            navigationType: (generalData['navigationType'] as NavigationType | undefined) ||
                 ComponentEditDialogComponent.DEFAULT_NAVIGATION_TYPE,
             searchBox: !!generalData['searchBox'],
         };

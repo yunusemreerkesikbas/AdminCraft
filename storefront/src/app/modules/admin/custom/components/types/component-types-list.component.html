@@ -1,4 +1,4 @@
-<div class="bg-card flex min-w-[700px] max-w-[90vw] flex-col">
+<div class="bg-card flex min-w-0 flex-auto flex-col">
     <admin-page-header
         [title]="'admin.components.types.title'"
         [showCreateButton]="true"
@@ -18,53 +18,44 @@
                 >
                 </spa-admin-sort-dropdown>
             }
-            <button
-                mat-icon-button
-                (click)="close()"
-                [matTooltip]="'admin.common.close' | transloco"
-            >
-                <mat-icon>close</mat-icon>
-            </button>
         </ng-container>
     </admin-page-header>
 
-    <div
-        class="flex-auto overflow-y-auto"
-        style="min-height: 300px; max-height: 55vh"
-    >
-        <spa-admin-grid
-            [items]="paginatedItemsSig()"
-            [columns]="columns"
-            [actions]="actions"
-            [isLoading]="store.isLoading()"
-            [emptyIcon]="'category'"
-            [emptyTitle]="'admin.components.types.noTypes'"
-            [emptyDescription]="'admin.components.types.createFirstHint'"
-            (actionClick)="onGridAction($event)"
-        >
-            <button
-                emptyAction
-                mat-flat-button
-                color="primary"
-                (click)="createType()"
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'category'"
+                [emptyTitle]="'admin.components.types.noTypes'"
+                [emptyDescription]="'admin.components.types.createFirstHint'"
+                (actionClick)="onGridAction($event)"
             >
-                <mat-icon>add</mat-icon>
-                {{ 'admin.components.types.create' | transloco }}
-            </button>
-        </spa-admin-grid>
-    </div>
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    (click)="createType()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.components.types.create' | transloco }}
+                </button>
+            </spa-admin-grid>
+        </div>
 
-    <!-- Fixed paginator at bottom -->
-    @if (totalElementsSig() > 0) {
-        <spa-admin-paginator
-            class="flex-none border-t"
-            [length]="totalElementsSig()"
-            [pageSize]="pageSizeSig()"
-            [pageIndex]="pageIndexSig()"
-            (pageCallback)="onPageChange($event)"
-        >
-        </spa-admin-paginator>
-    }
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
+    </div>
 </div>
 
 <ng-template #infoTemplate let-type>

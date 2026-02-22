@@ -4,3 +4,30 @@
     flex: 1 1 auto;
     min-height: 0;
 }
+
+:host ::ng-deep .component-tabs {
+    width: 100%;
+    min-width: 0;
+}
+
+:host ::ng-deep .component-tabs .mat-mdc-tab-body-wrapper {
+    overflow: hidden;
+}
+
+:host ::ng-deep .component-tabs .mat-mdc-tab-body-content {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.component-tab-panel {
+    padding: 1.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+@media (min-width: 640px) {
+    .component-tab-panel {
+        padding: 2rem;
+    }
+}

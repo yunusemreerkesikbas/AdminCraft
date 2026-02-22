@@ -1,4 +1,4 @@
-import { CommonModule, UpperCasePipe } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -6,13 +6,13 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog';
 import {
     SpaTabContainerComponent,
@@ -23,7 +23,6 @@ import { SpaCheckboxComponent } from 'app/shared/components/custom-ui/spa-checkb
 import { SpaDynamicFormService } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.service';
 import { DynamicFieldConfig } from 'app/shared/components/custom-ui/spa-dynamic-form/spa-dynamic-form.types';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaSelectComponent } from 'app/shared/components/custom-ui/spa-select/spa-select.component';
 import { SpaTextareaComponent } from 'app/shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaDialogComponent } from 'app/shared/components/spa-dialog';
 import { map, Observable, of, switchMap, take } from 'rxjs';
@@ -31,10 +30,11 @@ import { SpaMediaPickerComponent } from '../../../media/components/spa-media-pic
 import { MediaService } from '../../../media/media.service';
 import {
     ComponentEntry,
+    CreateComponentEntryCompositeRequest,
     EntryFieldDefinition,
     EntryI18nDto,
+    UpdateComponentEntryCompositeRequest,
 } from '../../models/component-entry.types';
-import { ComponentStatus } from '../../models/component-library.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
 import { EntryFieldService } from '../../services/entry-field.service';
 
@@ -56,7 +56,6 @@ interface ComponentEntryFormData {
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatIconModule,
         MatButtonModule,
@@ -64,7 +63,6 @@ interface ComponentEntryFormData {
         TranslocoModule,
         UpperCasePipe,
         SpaInputComponent,
-        SpaSelectComponent,
         SpaTextareaComponent,
         SpaCheckboxComponent,
         SpaDialogComponent,
@@ -84,26 +82,22 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     #mediaService = inject(MediaService);
     #languageContext = inject(LanguageContextService);
     #dynamicFormService = inject(SpaDynamicFormService);
+    #transloco = inject(TranslocoService);
 
     override languages = this.#languageContext.supportedLanguages();
 
-    fieldDefinitions = signal<EntryFieldDefinition[]>([]);
-    dynamicFieldsConfig = computed(() =>
-        this.#mapToDynamicConfig(this.fieldDefinitions())
+    protected fieldDefinitionsSig = signal<EntryFieldDefinition[]>([]);
+    protected dynamicFieldsConfigSig = computed(() =>
+        this.#mapToDynamicConfig(this.fieldDefinitionsSig())
     );
-    isLoading = signal<boolean>(false);
+    protected isLoadingSig = signal<boolean>(false);
 
-    canSave = computed(
+    protected canSaveSig = computed(
         () =>
-            this.generalForm?.valid && !this.isSubmitting() && !this.isLoading()
+            this.generalForm?.valid && !this.isSubmitting() && !this.isLoadingSig()
     );
 
-    statusOptions = Object.values(ComponentStatus).map((s) => ({
-        value: s,
-        label: s,
-    }));
-
-    get tabs(): TabDefinition[] {
+    protected get tabs(): TabDefinition[] {
         return [
             {
                 id: 'general',
@@ -123,9 +117,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         super.ngOnInit();
 
         if (this.data.componentTypeId) {
-            setTimeout(() => {
-                this.#loadFieldDefinitions();
-            });
+            this.#loadFieldDefinitions();
         }
     }
 
@@ -133,7 +125,6 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         return this.fb.group({
             isVisible: [this.data.entry?.isVisible ?? true],
             styleClasses: [this.data.entry?.styleClasses || ''],
-            status: [this.data.entry?.status ?? 'DRAFT', Validators.required],
             responsiveMedia: [this.#buildResponsiveMediaValue()],
         });
     }
@@ -163,11 +154,12 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         if (!desktopMediaId && !mobileMediaId) {
             return of(undefined);
         }
-        //TODO: code değişkeni neden frontendde oluşturuluyor ?
+
+        const responsiveMedia = this.data.entry?.responsiveMedia;
         const request = {
             desktopMediaId,
             mobileMediaId,
-            code: `responsive_entry_${this.data.componentId}_${Date.now()}`,
+            code: responsiveMedia ? String(responsiveMedia.id) : undefined,
         };
 
         if (currentSetId) {
@@ -189,28 +181,28 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     }
 
     #loadFieldDefinitions(): void {
-        this.isLoading.set(true);
+        this.isLoadingSig.set(true);
 
         this.#fieldService
             .getFields(this.data.componentTypeId!)
             .pipe(take(1))
             .subscribe({
                 next: (fields) => {
-                    this.fieldDefinitions.set(fields);
+                    this.fieldDefinitionsSig.set(fields);
                     this.#addDynamicFieldsToForms();
-                    this.isLoading.set(false);
+                    this.isLoadingSig.set(false);
                 },
                 error: () => {
                     this.notify.alert(
                         'admin.components.entries.loadFieldsFailed'
                     );
-                    this.isLoading.set(false);
+                    this.isLoadingSig.set(false);
                 },
             });
     }
 
     #addDynamicFieldsToForms(): void {
-        const configs = this.dynamicFieldsConfig();
+        const configs = this.dynamicFieldsConfigSig();
 
         this.languages.forEach((lang) => {
             const formGroup = this.i18nForms[lang];
@@ -230,12 +222,14 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         return fields.map((f) => ({
             key: f.fieldKey,
             type: f.fieldType as any,
-            required: f.isRequired,
-            maxLength: f.maxLength,
-            minValue: f.minValue,
-            maxValue: f.maxValue,
             labelKey: `admin.components.entryFields.custom.${f.fieldKey}`,
         }));
+    }
+
+    protected getFieldLabelWithFallback(fieldKey: string): string {
+        const key = `admin.components.entryFields.custom.${fieldKey}`;
+        const translated = this.#transloco.translate(key);
+        return translated === key ? fieldKey : translated;
     }
 
     save(): void {
@@ -260,26 +254,24 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             .pipe(
                 switchMap((responsiveMediaId) => {
                     if (this.data.mode === 'create') {
-                        const payload: any = {
+                        const payload: CreateComponentEntryCompositeRequest = {
                             componentId: this.data.componentId,
                             sortOrder: this.data.sortOrder ?? 0,
                             isVisible: this.generalForm.value.isVisible,
                             styleClasses:
                                 this.generalForm.value.styleClasses ||
                                 undefined,
-                            status: this.generalForm.value.status,
                             responsiveMediaId,
                             translations,
                         };
                         return this.#entryService.createComposite(payload);
                     } else {
-                        const payload: any = {
+                        const payload: UpdateComponentEntryCompositeRequest = {
                             sortOrder: this.data.sortOrder,
                             isVisible: this.generalForm.value.isVisible,
                             styleClasses:
                                 this.generalForm.value.styleClasses ||
                                 undefined,
-                            status: this.generalForm.value.status,
                             responsiveMediaId,
                             translations,
                         };
@@ -333,7 +325,6 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             translations[lang] = {
                 title: formData.title || undefined,
                 description: formData.description || undefined,
-                status: this.generalForm.value.status || ComponentStatus.DRAFT,
                 dynamicFields:
                     Object.keys(dynamicFields).length > 0
                         ? dynamicFields

@@ -1,0 +1,41 @@
+.navigation-tree {
+    background: transparent;
+    font-family: var(--font-family-sans);
+
+    .mat-tree-node,
+    .mat-nested-tree-node {
+        min-height: 48px;
+        position: relative;
+    }
+
+    .mat-tree-node button[matTreeNodeToggle],
+    .mat-nested-tree-node button[matTreeNodeToggle] {
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        margin-right: 8px;
+    }
+}
+
+.navigation-tree-nested-node {
+    padding-left: 24px;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 12px;
+        border-left: 1px dashed var(--mat-sys-outline-variant);
+        opacity: 0.5;
+    }
+}
+
+.group:hover {
+    transition: background-color 0.2s ease;
+}
+
+.hidden {
+    display: none;
+}
