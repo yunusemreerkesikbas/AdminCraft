@@ -1,9 +1,12 @@
 package com.backend.presentation.controller;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,45 +37,60 @@ public class SiteSettingsController {
 
   private final SiteSettingsService service;
   private final SecurityHelper securityHelper;
+  private final MessageSource messageSource;
 
   @GetMapping
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get() {
-    Long tenantId = securityHelper.getCurrentUserTenantId();
-    SiteSettingsAppResponseDto responseApp = service.getAdminSettings(tenantId);
-    SiteSettingsResponseDto response = toPresentationResponse(responseApp);
-    return ResponseEntity.ok(ApiResponse.success(response));
+    Locale locale = LocaleContextHolder.getLocale();
+    try {
+      Long tenantId = securityHelper.getCurrentUserTenantId();
+      SiteSettingsAppResponseDto responseApp = service.getAdminSettings(tenantId);
+      SiteSettingsResponseDto response = toPresentationResponse(responseApp);
+      return ResponseEntity.ok(ApiResponse.success(response));
+    } catch (Exception ex) {
+      log.error("Error getting site settings", ex);
+      String message = messageSource.getMessage("site.settings.get.error", null, locale);
+      return ResponseEntity.internalServerError().body(ApiResponse.error(message));
+    }
   }
 
   @PatchMapping
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> patch(
       @Valid @RequestBody SiteSettingsPatchRequest req) {
-    Long tenantId = securityHelper.getCurrentUserTenantId();
-    Long userId = securityHelper.getCurrentUserId();
+    Locale locale = LocaleContextHolder.getLocale();
+    try {
+      Long tenantId = securityHelper.getCurrentUserTenantId();
+      Long userId = securityHelper.getCurrentUserId();
 
-    // Convert string keys to Language enum
-    Map<Language, SiteSettingsAppDto.SiteSettingsAppI18nDto> languageMap = null;
-    if (req.languages() != null) {
-      languageMap = new HashMap<>();
-      for (Map.Entry<String, SiteSettingsI18nDto> entry : req.languages().entrySet()) {
-        try {
-          Language lang = Language.valueOf(entry.getKey().toUpperCase());
-          languageMap.put(lang, toAppI18nDto(entry.getValue()));
-        } catch (IllegalArgumentException e) {
-          log.warn("Invalid language code in request: {}", entry.getKey());
-          // Optionally throw exception or ignore invalid language
-          return ResponseEntity.badRequest()
-              .body(ApiResponse.error("Invalid language code: " + entry.getKey()));
+      // Convert string keys to Language enum
+      Map<Language, SiteSettingsAppDto.SiteSettingsAppI18nDto> languageMap = null;
+      if (req.languages() != null) {
+        languageMap = new HashMap<>();
+        for (Map.Entry<String, SiteSettingsI18nDto> entry : req.languages().entrySet()) {
+          try {
+            Language lang = Language.valueOf(entry.getKey().toUpperCase());
+            languageMap.put(lang, toAppI18nDto(entry.getValue()));
+          } catch (IllegalArgumentException e) {
+            log.warn("Invalid language code in request: {}", entry.getKey());
+            String message = messageSource.getMessage("common.invalid.language",
+                new Object[] { entry.getKey() }, locale);
+            return ResponseEntity.badRequest().body(ApiResponse.error(message));
+          }
         }
       }
+
+      SiteSettingsAppDto.SiteSettingsAppGlobalDto globalAppDto = toAppGlobalDto(req.global());
+
+      SiteSettingsAppResponseDto responseApp = service.patchSettings(tenantId, globalAppDto, languageMap, userId);
+      SiteSettingsResponseDto response = toPresentationResponse(responseApp);
+      return ResponseEntity.ok(ApiResponse.success(response));
+    } catch (Exception ex) {
+      log.error("Error updating site settings", ex);
+      String message = messageSource.getMessage("site.settings.patch.error", null, locale);
+      return ResponseEntity.internalServerError().body(ApiResponse.error(message));
     }
-
-    SiteSettingsAppDto.SiteSettingsAppGlobalDto globalAppDto = toAppGlobalDto(req.global());
-
-    SiteSettingsAppResponseDto responseApp = service.patchSettings(tenantId, globalAppDto, languageMap, userId);
-    SiteSettingsResponseDto response = toPresentationResponse(responseApp);
-    return ResponseEntity.ok(ApiResponse.success(response));
   }
 
   public record SiteSettingsPatchRequest(

@@ -8,6 +8,7 @@ import java.util.List;
  * Replaces the dependency on presentation layer SiteOverviewResponse.
  */
 public record SiteOverviewAppDto(
+    Long id,
     SiteStatusAppDto status,
     SiteStatsAppDto stats,
     List<ActivityAppDto> recentActivity,

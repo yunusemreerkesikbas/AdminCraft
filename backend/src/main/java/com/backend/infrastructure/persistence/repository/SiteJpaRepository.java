@@ -21,6 +21,9 @@ public interface SiteJpaRepository extends JpaRepository<Site, Long> {
     @Query("SELECT DISTINCT s FROM Site s LEFT JOIN FETCH s.enabledLanguages")
     List<Site> findAllWithEnabledLanguages();
 
+    @Query("SELECT s FROM Site s LEFT JOIN FETCH s.enabledLanguages WHERE s.id = :id")
+    Optional<Site> findByIdWithEnabledLanguages(@Param("id") Long id);
+
     Optional<Site> findByDomain(String domain);
     Optional<Site> findByDomainIgnoreCase(String domain);
     Optional<Site> findByCustomDomain(String customDomain);

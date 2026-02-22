@@ -124,16 +124,12 @@ export class SpaSiteOverviewComponent {
                         .enableMaintenanceMode(this.overview.id)
                         .pipe(take(1))
                         .subscribe({
-                            next: () => {
-                                this.#notification.success(
-                                    'admin.site.dashboard.messages.maintenanceEnabled'
-                                );
+                            next: (response) => {
+                                this.#notification.success(response.message);
                                 this.refresh.emit();
                             },
-                            error: () => {
-                                this.#notification.alert(
-                                    'admin.site.dashboard.messages.maintenanceFailed'
-                                );
+                            error: (error) => {
+                                this.#notification.alert(error?.error?.message);
                             },
                         });
                 }
@@ -157,16 +153,12 @@ export class SpaSiteOverviewComponent {
                         .disableMaintenanceMode(this.overview.id)
                         .pipe(take(1))
                         .subscribe({
-                            next: () => {
-                                this.#notification.success(
-                                    'admin.site.dashboard.messages.maintenanceDisabled'
-                                );
+                            next: (response) => {
+                                this.#notification.success(response.message);
                                 this.refresh.emit();
                             },
-                            error: () => {
-                                this.#notification.alert(
-                                    'admin.site.dashboard.messages.maintenanceFailed'
-                                );
+                            error: (error) => {
+                                this.#notification.alert(error?.error?.message);
                             },
                         });
                 }

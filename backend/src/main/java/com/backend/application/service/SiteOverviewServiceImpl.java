@@ -65,6 +65,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         Site site = getFirstSite();
 
         return new SiteOverviewAppDto(
+                site != null ? site.getId() : null,
                 getSiteStatus(site),
                 getStats(),
                 getRecentActivity(DEFAULT_ACTIVITY_LIMIT),

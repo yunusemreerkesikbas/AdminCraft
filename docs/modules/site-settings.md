@@ -31,6 +31,8 @@ Routes:
 
 - `storefront/src/app/modules/admin/custom/settings/site-settings.routes.ts`
 
+Frontend notifications for site settings should prefer the backend `ApiResponse.message` value (success/error) when available.
+
 ## Security & tenant isolation
 
 The controller enforces tenant admin role per endpoint:

@@ -210,7 +210,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(successMessage, response));
         } catch (Exception ex) {
             log.error("Error enabling maintenance mode for site {}: {}", id, ex.getMessage());
-            String errorMessage = messageSource.getMessage("site.maintenance.error", new Object[] { ex.getMessage() },
+            String errorMessage = messageSource.getMessage("site.maintenance.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(errorMessage));
@@ -229,7 +229,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
             log.error("Error disabling maintenance mode for site {}: {}", id, ex.getMessage());
-            String errorMessage = messageSource.getMessage("site.maintenance.error", new Object[] { ex.getMessage() },
+            String errorMessage = messageSource.getMessage("site.maintenance.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(errorMessage));
@@ -326,7 +326,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception ex) {
             log.error("Error getting technical settings", ex);
-            String message = messageSource.getMessage("site.technical.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.technical.get.error", null,
                     Locale.forLanguageTag(languageCode));
             if (message.length() > 500)
                 message = message.substring(0, 500);
@@ -351,7 +351,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(message, response));
         } catch (Exception ex) {
             log.error("Error updating technical settings", ex);
-            String message = messageSource.getMessage("site.technical.update.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.technical.update.error", null,
                     Locale.forLanguageTag(languageCode));
             if (message.length() > 500)
                 message = message.substring(0, 500);
@@ -371,7 +371,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(toSecuritySettingsResponse(result)));
         } catch (Exception ex) {
             log.error("Error getting security settings", ex);
-            String message = messageSource.getMessage("site.security.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.security.get.error", null,
                     Locale.forLanguageTag(languageCode));
             if (message.length() > 500)
                 message = message.substring(0, 500);
@@ -400,7 +400,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(message, toSecuritySettingsResponse(result)));
         } catch (Exception ex) {
             log.error("Error updating security settings", ex);
-            String message = messageSource.getMessage("site.security.update.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.security.update.error", null,
                     Locale.forLanguageTag(languageCode));
             if (message.length() > 500)
                 message = message.substring(0, 500);
@@ -502,6 +502,7 @@ public class SiteController {
         }
 
         return SiteOverviewResponse.builder()
+                .id(dto.id())
                 .status(status)
                 .stats(stats)
                 .recentActivity(recentActivity)

@@ -1097,9 +1097,6 @@ export const langEN = {
                     saveFailed: 'Failed to save settings',
                     publishSuccess: 'Site published successfully',
                     publishFailed: 'Failed to publish site',
-                    maintenanceEnabled: 'Maintenance mode enabled',
-                    maintenanceDisabled: 'Maintenance mode disabled',
-                    maintenanceFailed: 'Maintenance mode operation failed',
                 },
                 overview: {
                     status: 'Site Status',

@@ -8,6 +8,7 @@ import java.util.List;
  * Contains site status, stats, recent activity, and available actions.
  */
 public record SiteOverviewResponse(
+    Long id,
     SiteStatusDto status,
     SiteStatsDto stats,
     List<ActivityDto> recentActivity,
@@ -74,10 +75,16 @@ public record SiteOverviewResponse(
     }
 
     public static class Builder {
+        private Long id;
         private SiteStatusDto status;
         private SiteStatsDto stats;
         private List<ActivityDto> recentActivity;
         private ActionsDto actions;
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
 
         public Builder status(SiteStatusDto status) {
             this.status = status;
@@ -100,7 +107,7 @@ public record SiteOverviewResponse(
         }
 
         public SiteOverviewResponse build() {
-            return new SiteOverviewResponse(status, stats, recentActivity, actions);
+            return new SiteOverviewResponse(id, status, stats, recentActivity, actions);
         }
     }
 }

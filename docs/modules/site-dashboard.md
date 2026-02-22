@@ -63,6 +63,7 @@ New endpoints under `/api/sites`:
 
 ```json
 {
+  "id": 1,
   "status": {
     "state": "published|draft|maintenance",
     "publishedAt": "2024-01-18T09:00:00",
@@ -176,6 +177,8 @@ Retention policy: 30 days (cleanup via scheduled job)
 ### Module Location
 
 `storefront/src/app/modules/admin/custom/site/`
+
+Maintenance mode notifications use the backend `ApiResponse.message` field for success/error messaging.
 
 ### Structure
 
