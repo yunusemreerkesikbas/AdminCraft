@@ -5,9 +5,7 @@ import com.backend.application.dto.delivery.ProductDeliveryResponse;
 import com.backend.application.dto.delivery.ProductListDeliveryResponse;
 import com.backend.application.service.ProductCmsDeliveryService;
 import com.backend.domain.enums.Language;
-import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.shared.common.ApiResponse;
-import com.google.common.util.concurrent.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/cms/products")
@@ -31,13 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProductCmsDeliveryController {
 
     private static final int MAX_BATCH_SIZE = 50;
-    private static final double PERMITS_PER_MINUTE = 100.0;
-    private static final double PERMITS_PER_SECOND = PERMITS_PER_MINUTE / 60.0;
-    private final ConcurrentHashMap<String, RateLimiter> rateLimiters = new ConcurrentHashMap<>();
 
     private final ProductCmsDeliveryService productCmsDeliveryService;
     private final MessageSource messageSource;
-    private final TenantContext tenantContext;
 
     @GetMapping("/{uid}")
     @Operation(summary = "Get product by UID", description = "Retrieves a published product by its UID for public delivery")
@@ -47,9 +40,6 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<ProductDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
-
         Language resolvedLang = resolveLanguage(lang, acceptLanguage);
         log.debug("CMS Delivery: Fetching product uid={}, lang={}", uid, resolvedLang);
 
@@ -68,8 +58,6 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<List<ProductDeliveryResponse>>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
 
         if (uids == null || uids.isEmpty()) {
             return ResponseEntity.badRequest().body(
@@ -100,9 +88,6 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<Page<ProductListDeliveryResponse>>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
-
         Language resolvedLang = resolveLanguage(lang, acceptLanguage);
         log.debug("CMS Delivery: Fetching products by category uid={}, lang={}", categoryUid, resolvedLang);
 
@@ -123,9 +108,6 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<Page<ProductListDeliveryResponse>>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
-
         Language resolvedLang = resolveLanguage(lang, acceptLanguage);
         log.debug("CMS Delivery: Searching products query={}, lang={}", q, resolvedLang);
 
@@ -144,9 +126,6 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<CategoryDeliveryResponse>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
-
         Language resolvedLang = resolveLanguage(lang, acceptLanguage);
         log.debug("CMS Delivery: Fetching category uid={}, lang={}", uid, resolvedLang);
 
@@ -164,33 +143,12 @@ public class ProductCmsDeliveryController {
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
         Locale locale = Locale.forLanguageTag(acceptLanguage);
-        ResponseEntity<ApiResponse<List<CategoryDeliveryResponse>>> rateLimitResponse = checkRateLimit(locale);
-        if (rateLimitResponse != null) return rateLimitResponse;
-
         Language resolvedLang = resolveLanguage(lang, acceptLanguage);
         log.debug("CMS Delivery: Fetching category tree, lang={}", resolvedLang);
 
         List<CategoryDeliveryResponse> response = productCmsDeliveryService.getCategoryTree(resolvedLang);
         return ResponseEntity.ok(ApiResponse.success(
                 messageSource.getMessage("cms.categories.found", null, locale), response));
-    }
-
-    private <T> ResponseEntity<ApiResponse<T>> checkRateLimit(Locale locale) {
-        String tenantId = tenantContext.getTenantId();
-        if (tenantId == null) {
-            return ResponseEntity.badRequest().body(
-                    ApiResponse.error(messageSource.getMessage("cms.tenant.required", null, locale)));
-        }
-
-        RateLimiter limiter = rateLimiters.computeIfAbsent(tenantId,
-                k -> RateLimiter.create(PERMITS_PER_SECOND));
-
-        if (!limiter.tryAcquire()) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(
-                    ApiResponse.error(messageSource.getMessage("cms.rate.limit.exceeded", null, locale)));
-        }
-
-        return null;
     }
 
     private Language resolveLanguage(Language lang, String acceptLanguage) {
