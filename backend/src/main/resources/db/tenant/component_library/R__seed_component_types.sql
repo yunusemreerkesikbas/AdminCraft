@@ -12,18 +12,12 @@ INSERT INTO component_types (
 )
 VALUES
   (UUID(), 'NavigationComponent',        'Navigation Component',  'navigation', true,  NOW(), NOW()),
-  (UUID(), 'HeaderComponent',            'Header',                'navigation', true,  NOW(), NOW()),
-  (UUID(), 'FooterComponent',            'Footer',                'navigation', true,  NOW(), NOW()),
   (UUID(), 'SimpleBannerComponent',      'Banner',                'hero',       false, NOW(), NOW()),
   (UUID(), 'CMSImageComponent',          'Image',                 'content',    false, NOW(), NOW()),
   (UUID(), 'CMSLinkComponent',           'CTA Button',            'cta',        false, NOW(), NOW()),
   (UUID(), 'CMSParagraphComponent',      'Paragraph',             'content',    false, NOW(), NOW()),
-  (UUID(), 'CategoryNavigationComponent','Category Navigation',   'navigation', true,  NOW(), NOW()),
   (UUID(), 'RotatingImagesComponent',    'Image Slider',          'gallery',    false, NOW(), NOW()),
-  (UUID(), 'FeatureCardComponent',       'Card',                  'feature',    false, NOW(), NOW()),
-  (UUID(), 'CustomerReviewComponent',    'Testimonial',           'testimonial',false, NOW(), NOW()),
-  (UUID(), 'ImageMapComponent',          'Gallery',               'gallery',    false, NOW(), NOW()),
-  (UUID(), 'PricingTableComponent',      'Pricing Table',         'pricing',    false, NOW(), NOW())
+  (UUID(), 'FeatureCardComponent',       'Card',                  'feature',    false, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name               = VALUES(name),
   category           = VALUES(category),

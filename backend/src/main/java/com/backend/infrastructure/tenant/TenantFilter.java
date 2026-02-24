@@ -133,8 +133,8 @@ public class TenantFilter extends OncePerRequestFilter {
 
       filterChain.doFilter(request, response);
 
-    } catch (NumberFormatException e) {
-      log.error("Invalid tenant ID format: {}", request.getHeader(TENANT_ID_HEADER));
+    } catch (NumberFormatException | IllegalStateException e) {
+      log.error("Invalid tenant ID format or state: {}", e.getMessage());
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid tenant identifier");
     } finally {
       tenantContext.clear();
