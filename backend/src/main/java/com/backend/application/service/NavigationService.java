@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
+import com.backend.domain.enums.Language;
 import com.backend.application.dto.request.CreateEntryCompositeRequest;
 import com.backend.application.dto.request.CreateEntryRequest;
 import com.backend.application.dto.request.CreateNodeCompositeRequest;
@@ -65,9 +66,9 @@ public interface NavigationService {
 
   NavigationEntryCompositeResponse updateEntryComposite(Long id, UpdateEntryCompositeRequest request);
 
-  Optional<NavigationDeliveryResponse> getNavigationById(Long id);
+  Optional<NavigationDeliveryResponse> getNavigationById(Long id, Language lang);
 
-  Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids);
+  Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids, Language lang);
 
-  Optional<NavigationDeliveryResponse> getNavigationByUid(String uid);
+  Optional<NavigationDeliveryResponse> getNavigationByUid(String uid, Language lang);
 }

@@ -546,7 +546,7 @@ public class NavigationServiceImpl implements NavigationService {
 
   @Override
   @Transactional(readOnly = true)
-  public Optional<NavigationDeliveryResponse> getNavigationById(Long id) {
+  public Optional<NavigationDeliveryResponse> getNavigationById(Long id, Language lang) {
     List<NavigationNode> nodes = nodeRepository.findSubtreeByRootId(id);
     if (nodes.isEmpty()) {
       return Optional.empty();
@@ -556,22 +556,22 @@ public class NavigationServiceImpl implements NavigationService {
         .filter(n -> id.equals(n.getId()))
         .findFirst();
 
-    return buildDeliveryTreeResponse(rootOpt, nodes);
+    return buildDeliveryTreeResponse(rootOpt, nodes, lang);
   }
 
   @Override
   @Transactional(readOnly = true)
-  public Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids) {
+  public Map<Long, NavigationDeliveryResponse> getNavigationsByIds(Set<Long> ids, Language lang) {
     Map<Long, NavigationDeliveryResponse> result = new java.util.HashMap<>();
     for (Long id : ids) {
-      getNavigationById(id).ifPresent(nav -> result.put(id, nav));
+      getNavigationById(id, lang).ifPresent(nav -> result.put(id, nav));
     }
     return result;
   }
 
   @Override
   @Transactional(readOnly = true)
-  public Optional<NavigationDeliveryResponse> getNavigationByUid(String uid) {
+  public Optional<NavigationDeliveryResponse> getNavigationByUid(String uid, Language lang) {
     List<NavigationNode> nodes = nodeRepository.findSubtreeByRootUid(uid);
     if (nodes.isEmpty()) {
       return Optional.empty();
@@ -581,7 +581,7 @@ public class NavigationServiceImpl implements NavigationService {
         .filter(n -> uid.equals(n.getUid()))
         .findFirst();
 
-    return buildDeliveryTreeResponse(rootOpt, nodes);
+    return buildDeliveryTreeResponse(rootOpt, nodes, lang);
   }
 
   // ==================== Private Helpers ====================
@@ -598,7 +598,8 @@ public class NavigationServiceImpl implements NavigationService {
 
   private Optional<NavigationDeliveryResponse> buildDeliveryTreeResponse(
       Optional<NavigationNode> rootOpt,
-      List<NavigationNode> nodes) {
+      List<NavigationNode> nodes,
+      Language lang) {
     if (rootOpt.isEmpty() || !Boolean.TRUE.equals(rootOpt.get().getIsVisible())) {
       return Optional.empty();
     }
@@ -611,7 +612,7 @@ public class NavigationServiceImpl implements NavigationService {
         .filter(n -> n.getParentId() != null)
         .collect(Collectors.groupingBy(NavigationNode::getParentId));
 
-    NavigationDeliveryResponse response = buildDeliveryResponse(rootOpt.get(), childrenByParentId, entriesByNodeId);
+    NavigationDeliveryResponse response = buildDeliveryResponse(rootOpt.get(), childrenByParentId, entriesByNodeId, lang);
     return Optional.of(response);
   }
 
@@ -815,15 +816,16 @@ public class NavigationServiceImpl implements NavigationService {
   private NavigationDeliveryResponse buildDeliveryResponse(
       NavigationNode root,
       Map<Long, List<NavigationNode>> childrenByParentId,
-      Map<Long, List<NavigationEntry>> entriesByNodeId) {
+      Map<Long, List<NavigationEntry>> entriesByNodeId,
+      Language lang) {
 
-    String title = nodeI18nRepository.findByNodeIdAndLanguage(root.getId(), getDefaultLanguage())
+    String title = nodeI18nRepository.findByNodeIdAndLanguage(root.getId(), lang)
         .map(NavigationNodeI18n::getTitle)
         .orElse(null);
     List<NavigationEntry> nodeEntries = entriesByNodeId.getOrDefault(root.getId(), List.of());
     List<Long> entryIds = nodeEntries.stream().map(NavigationEntry::getId).toList();
     Map<Long, String> linkNamesByEntryId = entryI18nRepository.findByEntryIdIn(entryIds).stream()
-        .filter(i18n -> i18n.getLanguage() == getDefaultLanguage())
+        .filter(i18n -> i18n.getLanguage() == lang)
         .collect(Collectors.toMap(NavigationEntryI18n::getEntryId, NavigationEntryI18n::getLinkName, (a, b) -> a));
 
     List<EntryDeliveryDto> entries = nodeEntries.stream()
@@ -836,7 +838,7 @@ public class NavigationServiceImpl implements NavigationService {
         .sorted(Comparator
             .comparing(NavigationNode::getSortOrder, Comparator.nullsLast(Integer::compareTo))
             .thenComparing(NavigationNode::getId, Comparator.nullsLast(Long::compareTo)))
-        .map(child -> buildDeliveryResponse(child, childrenByParentId, entriesByNodeId))
+        .map(child -> buildDeliveryResponse(child, childrenByParentId, entriesByNodeId, lang))
         .toList();
 
     return NavigationDeliveryResponse.builder()

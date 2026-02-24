@@ -164,7 +164,8 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .styleClasses(component.getStyleClasses())
           .navigationType(resolveNavigationType(type, component))
           .searchBox(resolveSearchBox(type, component))
-          .navigationNode(resolveNavigationNode(type, component))
+          .navigationNode(resolveNavigationNode(type, component, lang))
+          .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
           .entries(entryResponses)
           .build();
@@ -237,7 +238,8 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .styleClasses(component.getStyleClasses())
         .navigationType(resolveNavigationType(componentType, component))
         .searchBox(resolveSearchBox(componentType, component))
-        .navigationNode(resolveNavigationNode(componentType, component))
+        .navigationNode(resolveNavigationNode(componentType, component, lang))
+        .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
         .entries(entryResponses)
         .build();
@@ -294,11 +296,11 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     return component.getSearchBox();
   }
 
-  private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component) {
+  private NavigationDeliveryResponse resolveNavigationNode(ComponentType type, Component component, Language lang) {
     if (!isNavigationAware(type) || component.getNavigationNodeId() == null) {
       return null;
     }
-    return navigationService.getNavigationById(component.getNavigationNodeId()).orElse(null);
+    return navigationService.getNavigationById(component.getNavigationNodeId(), lang).orElse(null);
   }
 
   private boolean isNavigationAware(ComponentType type) {

@@ -260,7 +260,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .collect(Collectors.toSet());
                 Map<Long, NavigationDeliveryResponse> navigationMap = navIds.isEmpty()
                                 ? Map.of()
-                                : navigationService.getNavigationsByIds(navIds);
+                                : navigationService.getNavigationsByIds(navIds, lang);
 
                 // Build all slot components once, reuse for both outputs
                 Map<String, List<ComponentDeliveryResponse>> slotComponentsMap = buildAllSlotComponents(
