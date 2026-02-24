@@ -101,10 +101,8 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     }
 
     @Override
-    public boolean existsByNavigationNodeIdInOrNavigationLinkNodeIdIn(List<Long> navigationNodeIds,
-            List<Long> navigationLinkNodeIds) {
-        return jpaRepository.existsByNavigationNodeIdInOrNavigationLinkNodeIdIn(navigationNodeIds,
-                navigationLinkNodeIds);
+    public boolean existsByNavigationNodeIdIn(List<Long> navigationNodeIds) {
+        return jpaRepository.existsByNavigationNodeIdIn(navigationNodeIds);
     }
 
     @Override

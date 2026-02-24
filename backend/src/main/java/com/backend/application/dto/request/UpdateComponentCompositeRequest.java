@@ -27,8 +27,6 @@ public record UpdateComponentCompositeRequest(
 
         Long navigationNodeId,
 
-        Long navigationLinkNodeId,
-
         NavigationType navigationType,
 
         Boolean searchBox,

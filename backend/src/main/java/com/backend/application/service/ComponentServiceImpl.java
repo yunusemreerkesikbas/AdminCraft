@@ -27,6 +27,7 @@ import com.backend.domain.entity.ComponentI18n;
 import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
+import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.NavigationType;
 import com.backend.domain.exception.BusinessRuleViolationException;
@@ -74,8 +75,7 @@ public class ComponentServiceImpl implements ComponentService {
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : true);
         component.setStyleClasses(request.styleClasses());
         applyNavigationBinding(component, componentType, request.navigationNodeId(),
-                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
-                false);
+                request.navigationType(), request.searchBox(), false);
         component.setCreatedBy(userId);
         component.setUpdatedBy(userId);
 
@@ -186,8 +186,7 @@ public class ComponentServiceImpl implements ComponentService {
         component.setIsVisible(request.isVisible() != null ? request.isVisible() : component.getIsVisible());
         component.setStyleClasses(request.styleClasses() != null ? request.styleClasses() : component.getStyleClasses());
         applyNavigationBinding(component, componentType, request.navigationNodeId(),
-                request.navigationLinkNodeId(), request.navigationType(), request.searchBox(),
-                true);
+                request.navigationType(), request.searchBox(), true);
         component.setUpdatedBy(userId);
 
         return componentRepository.save(component);
@@ -217,7 +216,7 @@ public class ComponentServiceImpl implements ComponentService {
         component.setDisplayOrder(request.displayOrder());
         component.setIsVisible(request.isVisible());
         component.setStyleClasses(request.styleClasses());
-        applyNavigationBinding(component, type, request.navigationNodeId(), request.navigationLinkNodeId(),
+        applyNavigationBinding(component, type, request.navigationNodeId(),
                 request.navigationType(), request.searchBox(), false);
 
         Component savedComponent = componentRepository.save(component);
@@ -269,13 +268,14 @@ public class ComponentServiceImpl implements ComponentService {
             component.setStyleClasses(request.styleClasses());
         }
 
-        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId()).orElse(null);
-        applyNavigationBinding(component, componentType, request.navigationNodeId(), request.navigationLinkNodeId(),
+        ComponentType componentType = componentTypeRepository.findById(component.getComponentTypeId())
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", component.getComponentTypeId()));
+        applyNavigationBinding(component, componentType, request.navigationNodeId(),
                 request.navigationType(), request.searchBox(), true);
 
         Component savedComponent = componentRepository.save(component);
 
-        String typeName = componentType != null ? componentType.getName() : null;
+        String typeName = componentType.getName();
 
         List<ComponentI18n> i18nList = new ArrayList<>();
         for (var entry : request.translations().entrySet()) {
@@ -318,7 +318,7 @@ public class ComponentServiceImpl implements ComponentService {
         bootstrapEntry.setComponentId(componentId);
         bootstrapEntry.setSortOrder(0);
         bootstrapEntry.setIsVisible(true);
-        bootstrapEntry.setStatus(com.backend.domain.enums.ComponentStatus.DRAFT);
+        bootstrapEntry.setStatus(ComponentStatus.DRAFT);
         ComponentEntry savedEntry = componentEntryRepository.save(bootstrapEntry);
 
         List<ComponentEntryI18n> i18nEntries = languages.stream()
@@ -326,7 +326,7 @@ public class ComponentServiceImpl implements ComponentService {
                     ComponentEntryI18n i18n = new ComponentEntryI18n();
                     i18n.setEntryId(savedEntry.getId());
                     i18n.setLanguage(language);
-                    i18n.setStatus(com.backend.domain.enums.ComponentStatus.DRAFT);
+                    i18n.setStatus(ComponentStatus.DRAFT);
                     return i18n;
                 })
                 .toList();
@@ -410,13 +410,11 @@ public class ComponentServiceImpl implements ComponentService {
             Component component,
             ComponentType componentType,
             Long requestedNavigationNodeId,
-            Long requestedNavigationLinkNodeId,
             NavigationType requestedNavigationType,
             Boolean requestedSearchBox,
             boolean partialUpdate) {
         if (componentType == null || !componentType.isNavigationAware()) {
             component.setNavigationNodeId(null);
-            component.setNavigationLinkNodeId(null);
             component.setNavigationType(null);
             component.setSearchBox(null);
             return;
@@ -431,14 +429,13 @@ public class ComponentServiceImpl implements ComponentService {
         }
 
         component.setNavigationNodeId(effectiveNodeId);
-        component.setNavigationLinkNodeId(null); // hidden from UI, reserved for future use
         component.setNavigationType(effectiveType != null ? effectiveType : DEFAULT_NAVIGATION_TYPE);
         component.setSearchBox(effectiveSearchBox != null ? effectiveSearchBox : Boolean.FALSE);
     }
 
     private void validateNavigationNodeExists(Long nodeId) {
         if (navigationNodeRepository.findById(nodeId).isEmpty()) {
-            throw new EntityNotFoundException("component.navigation.node.not.found");
+            throw new EntityNotFoundException("NavigationNode", nodeId);
         }
     }
 
@@ -464,7 +461,7 @@ public class ComponentServiceImpl implements ComponentService {
     private String resolveName(String name, String uid) {
         if (name == null || name.trim().isEmpty()) {
             if (uid == null || uid.trim().isEmpty()) {
-                throw new IllegalArgumentException("Component name cannot be blank");
+                throw new BusinessRuleViolationException("component.name.cannot.be.blank");
             }
             return uid.trim();
         }

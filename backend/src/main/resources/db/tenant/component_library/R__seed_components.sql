@@ -6,14 +6,6 @@
 -- 1. COMPONENTS (fixed UIDs for slot_components reference)
 -- ============================================
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, navigation_node_id, navigation_link_node_id, status, created_at, updated_at)
-SELECT 'a1000001-0000-4000-8000-000000000001', 'SeedHeaderComponent', id, 'Site Header', 0, TRUE, 'site-header',
-       (SELECT n.id FROM navigation_nodes n WHERE n.uid = 'LandingMainNavNode'),
-       (SELECT n.id FROM navigation_nodes n WHERE n.uid = 'LandingSocialNavNode'),
-       'PUBLISHED', NOW(), NOW()
-FROM component_types WHERE uid = 'HeaderComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), navigation_node_id = VALUES(navigation_node_id), navigation_link_node_id = VALUES(navigation_link_node_id), status = VALUES(status), updated_at = NOW();
-
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT 'a1000002-0000-4000-8000-000000000002', 'SeedHeroBanner', id, 'Hero Banner', 0, TRUE, 'hero-banner', 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'SimpleBannerComponent'
@@ -39,13 +31,6 @@ SELECT 'a1000006-0000-4000-8000-000000000006', 'SeedProductSummaryCta', id, 'Vie
 FROM component_types WHERE uid = 'CMSLinkComponent'
 ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, navigation_node_id, status, created_at, updated_at)
-SELECT 'a1000007-0000-4000-8000-000000000007', 'SeedFooterComponent', id, 'Site Footer', 0, TRUE, 'site-footer',
-       (SELECT n.id FROM navigation_nodes n WHERE n.uid = 'LandingSocialNavNode'),
-       'PUBLISHED', NOW(), NOW()
-FROM component_types WHERE uid = 'FooterComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), navigation_node_id = VALUES(navigation_node_id), status = VALUES(status), updated_at = NOW();
-
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT 'a1000008-0000-4000-8000-000000000008', 'SeedLandingPortfolioGrid', id, 'Landing Portfolio Grid', 0, TRUE, 'portfolio-grid', 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'FeatureCardComponent'
@@ -54,16 +39,6 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), style_classes = VALUES(style_classe
 -- ============================================
 -- 2. COMPONENT_I18N (TR + EN, PUBLISHED for delivery)
 -- ============================================
-
-INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
-SELECT 'a2000001-0000-4000-8000-000000000001', 'SeedHeaderComponentTr', c.id, 'TR', 'Site Header', NULL, NULL, 'PUBLISHED', NOW(), NOW()
-FROM components c WHERE c.uid = 'SeedHeaderComponent'
-ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_at = NOW();
-
-INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
-SELECT 'a2000002-0000-4000-8000-000000000002', 'SeedHeaderComponentEn', c.id, 'EN', 'Site Header', NULL, NULL, 'PUBLISHED', NOW(), NOW()
-FROM components c WHERE c.uid = 'SeedHeaderComponent'
-ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'a2000003-0000-4000-8000-000000000003', 'SeedHeroBannerTr', c.id, 'TR', 'Hoş Geldiniz', 'Kampanyaları keşfedin', NULL, 'PUBLISHED', NOW(), NOW()
@@ -113,16 +88,6 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'a2000012-0000-4000-8000-000000000012', 'SeedProductSummaryCtaEn', c.id, 'EN', 'View Details', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'SeedProductSummaryCta'
-ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_at = NOW();
-
-INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
-SELECT 'a2000013-0000-4000-8000-000000000013', 'SeedFooterComponentTr', c.id, 'TR', 'Site Footer', NULL, NULL, 'PUBLISHED', NOW(), NOW()
-FROM components c WHERE c.uid = 'SeedFooterComponent'
-ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_at = NOW();
-
-INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
-SELECT 'a2000014-0000-4000-8000-000000000014', 'SeedFooterComponentEn', c.id, 'EN', 'Site Footer', NULL, NULL, 'PUBLISHED', NOW(), NOW()
-FROM components c WHERE c.uid = 'SeedFooterComponent'
 ON DUPLICATE KEY UPDATE title = VALUES(title), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
