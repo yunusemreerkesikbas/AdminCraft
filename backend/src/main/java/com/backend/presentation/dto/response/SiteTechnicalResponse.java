@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record SiteTechnicalResponse(
         SearchEngineDto searchEngine,
-        ScriptsDto scripts,
         CookieConsentDto cookieConsent) {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,13 +28,6 @@ public record SiteTechnicalResponse(
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ScriptsDto(
-            String headScripts,
-            String bodyStartScripts,
-            String bodyEndScripts) {
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CookieConsentDto(
             Boolean enabled,
             String text) {
@@ -50,16 +42,10 @@ public record SiteTechnicalResponse(
 
     public static class Builder {
         private SearchEngineDto searchEngine;
-        private ScriptsDto scripts;
         private CookieConsentDto cookieConsent;
 
         public Builder searchEngine(SearchEngineDto searchEngine) {
             this.searchEngine = searchEngine;
-            return this;
-        }
-
-        public Builder scripts(ScriptsDto scripts) {
-            this.scripts = scripts;
             return this;
         }
 
@@ -69,7 +55,7 @@ public record SiteTechnicalResponse(
         }
 
         public SiteTechnicalResponse build() {
-            return new SiteTechnicalResponse(searchEngine, scripts, cookieConsent);
+            return new SiteTechnicalResponse(searchEngine, cookieConsent);
         }
     }
 }

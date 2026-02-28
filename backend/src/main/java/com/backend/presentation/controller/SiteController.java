@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/sites")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class SiteController {
 
     private final SiteService siteService;
@@ -61,6 +61,7 @@ public class SiteController {
     private final MessageSource messageSource;
     private final SecurityHelper securityHelper;
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<SiteResponse>> createSite(
             @Valid @RequestBody CreateSiteRequest request,
@@ -121,6 +122,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<SiteResponse>> updateSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -142,6 +144,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -159,6 +162,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/publish")
     public ResponseEntity<ApiResponse<SiteResponse>> publishSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -178,6 +182,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/unpublish")
     public ResponseEntity<ApiResponse<SiteResponse>> unpublishSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -197,6 +202,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/maintenance")
     public ResponseEntity<ApiResponse<SiteResponse>> enableMaintenanceMode(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -217,6 +223,7 @@ public class SiteController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}/maintenance")
     public ResponseEntity<ApiResponse<SiteResponse>> disableMaintenanceMode(
             @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -315,7 +322,7 @@ public class SiteController {
 
     /**
      * Get technical settings for the site.
-     * Includes domain info, robots.txt, verification codes, and scripts.
+     * Includes domain info, robots.txt, and verification codes.
      */
     @GetMapping("/technical")
     public ResponseEntity<ApiResponse<SiteTechnicalResponse>> getTechnicalSettings(
@@ -339,6 +346,7 @@ public class SiteController {
      * Update technical settings for the site.
      * Only provided fields will be updated (PATCH semantics).
      */
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PatchMapping("/technical")
     public ResponseEntity<ApiResponse<SiteTechnicalResponse>> patchTechnicalSettings(
             @Valid @RequestBody SiteTechnicalPatchRequest request,
@@ -362,7 +370,7 @@ public class SiteController {
 
     // ========== Security Settings Endpoints ==========
 
-    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
     @GetMapping("/security")
     public ResponseEntity<ApiResponse<SecuritySettingsResponse>> getSecuritySettings(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -530,14 +538,6 @@ public class SiteController {
                     verification);
         }
 
-        SiteTechnicalResponse.ScriptsDto scripts = null;
-        if (dto.scripts() != null) {
-            scripts = new SiteTechnicalResponse.ScriptsDto(
-                    dto.scripts().head(),
-                    dto.scripts().bodyStart(),
-                    dto.scripts().bodyEnd());
-        }
-
         SiteTechnicalResponse.CookieConsentDto cookieConsent = null;
         if (dto.cookieConsent() != null) {
             cookieConsent = new SiteTechnicalResponse.CookieConsentDto(
@@ -547,7 +547,6 @@ public class SiteController {
 
         return SiteTechnicalResponse.builder()
                 .searchEngine(searchEngine)
-                .scripts(scripts)
                 .cookieConsent(cookieConsent)
                 .build();
     }

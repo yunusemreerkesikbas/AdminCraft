@@ -46,6 +46,15 @@ Public delivery resolution rules:
 
 - `GET /api/cms/navigation/{uid}`
 
+### Robots.txt
+
+- `GET /api/cms/robots.txt`
+  - Returns `text/plain` content type.
+  - Reads the effective robots.txt from `SiteTechnicalService.getRobotsTxt()`.
+  - When `indexingEnabled = false` → `Disallow: /`; otherwise → the admin-configured robots.txt (or a default `Allow: /`).
+  - No auth required — public delivery endpoint.
+  - Subject to the standard 100 req/min tenant rate limit.
+
 ### Media
 
 Base path: `/api/cms/media`
@@ -93,13 +102,14 @@ From `CmsDeliveryController` and `CmsMediaDeliveryController`:
 ### Page not found behavior
 
 `GET /api/cms/pages` does **not** return HTTP 404 when no matching page exists.
-It returns **HTTP 200** with `result: "ERROR"` and a localized not-found message:
+It returns **HTTP 200** with `result: "ERROR"` and a localized not-found message.
+The `data` field is **omitted** when null (global `JsonInclude.Include.NON_NULL`):
 
 ```json
-{ "result": "ERROR", "message": "Page not found", "data": null }
+{ "result": "ERROR", "message": "Page not found" }
 ```
 
-Frontend clients must check `payload.result === "ERROR"` (not response status) to detect a missing page and handle it as `null` — not as a thrown error.
+Frontend clients must check `payload.result === "ERROR"` (not response status) to detect a missing page and handle it as `null` — not as a thrown error. Use `payload.data ?? null` when reading the payload.
 
 ### ContentSlot component list field name
 
@@ -155,7 +165,7 @@ Key patterns used in the Next.js client:
 - `resolvePage` and `fetchSiteConfig` are wrapped with React `cache()` to deduplicate identical calls within a single SSR render cycle (e.g. `generateMetadata` + page component both calling the same endpoint).
 - `resolvePage` uses flat primitive arguments (`lang, pageType, pageLabelOrId, code`) instead of an object — required for `cache()` identity comparison to work correctly.
 - HTTP 200 + `result: "ERROR"` is treated as `null` (not an error throw), matching the backend's page-not-found contract.
-- `page.template` drives layout selection via `templateRegistry` — equivalent to Spartacus's `cx-storefront` / `cx-page-slot` pattern. Each template places `<CmsSlot position="..." />` where it needs; unknown templates render `null` + `console.warn`. See `storefront-nextjs/components/cms/templates/`.
+- `page.template` drives layout selection via `templateRegistry` — equivalent to Spartacus's `cx-storefront` / `cx-page-slot` pattern. Each template places `<CmsSlot slotName="..." />` where it needs; unknown templates render `null` + `console.warn`. See `storefront-nextjs/components/cms/templates/`.
 
 ## Security & tenant isolation
 

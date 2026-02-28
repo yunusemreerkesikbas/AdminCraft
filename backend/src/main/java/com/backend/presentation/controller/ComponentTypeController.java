@@ -45,12 +45,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class ComponentTypeController {
 
     private final ComponentTypeService componentTypeService;
     private final MessageSource messageSource;
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<ComponentTypeResponse>> create(
             @Valid @RequestBody ComponentTypeCreateRequest request,
@@ -133,6 +134,7 @@ public class ComponentTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ComponentTypeResponse>> update(
             @PathVariable @NotNull @Min(1) Long id,
@@ -161,6 +163,7 @@ public class ComponentTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable @NotNull @Min(1) Long id,

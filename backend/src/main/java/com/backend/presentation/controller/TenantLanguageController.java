@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class TenantLanguageController {
 
   private final TenantLanguageService tenantLanguageService;
@@ -57,6 +57,7 @@ public class TenantLanguageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{tenantId}/languages")
   public ResponseEntity<ApiResponse<TenantLanguagesResponse>> updateLanguages(
       @PathVariable Long tenantId,
@@ -92,6 +93,7 @@ public class TenantLanguageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{tenantId}/languages/provision")
   public ResponseEntity<ApiResponse<ProvisioningJobResponse>> provisionLanguages(
       @PathVariable Long tenantId,

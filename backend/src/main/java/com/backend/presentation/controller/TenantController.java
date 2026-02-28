@@ -194,7 +194,7 @@ public class TenantController {
         }
 
         @GetMapping("/current/modules")
-        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<List<TenantModuleResponse>>> getCurrentUserModules(
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
@@ -223,7 +223,7 @@ public class TenantController {
         }
 
         @GetMapping("/current/detail")
-        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<TenantDetailResponse>> getCurrentTenantDetail(
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {

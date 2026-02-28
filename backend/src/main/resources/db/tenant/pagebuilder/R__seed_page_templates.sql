@@ -141,9 +141,19 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description);
 -- These define WHERE components can be placed in each template
 -- ============================================
 
--- LandingPageTemplate Slots (shared reusable layout)
+-- LandingPageTemplate Slots: multi-section (Section1 TOP, Section2 CENTER, Section3 BOTTOM)
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
-SELECT 'd8e9f0a1-b2c3-4567-1234-678901234301', 'LandingPageContentSlot', id, 'Content', 'CENTER', 1, FALSE 
+SELECT 'd8e9f0a1-b2c3-4567-1234-678901234301', 'LandingPageSection1Slot', id, 'Section1', 'TOP', 1, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000002-0000-4000-8000-000000000002', 'LandingPageSection2Slot', id, 'Section2', 'CENTER', 2, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000003-0000-4000-8000-000000000003', 'LandingPageSection3Slot', id, 'Section3', 'BOTTOM', 3, FALSE
 FROM page_templates WHERE uid = 'LandingPageTemplate'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 

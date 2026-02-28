@@ -53,7 +53,7 @@ public class ComponentEntryController {
         private final MessageSource messageSource;
 
         @PostMapping("/{componentId}/entries")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<ComponentEntryResponse>> createEntry(
                         @PathVariable Long componentId,
                         @Valid @RequestBody CreateComponentEntryRequest request,
@@ -85,7 +85,7 @@ public class ComponentEntryController {
         }
 
         @GetMapping("/{componentId}/entries")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR', 'VIEWER')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<List<ComponentEntryResponse>>> listEntries(
                         @PathVariable Long componentId,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -108,7 +108,7 @@ public class ComponentEntryController {
         }
 
         @GetMapping("/entries/{id}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR', 'VIEWER')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<?>> getEntry(
                         @PathVariable Long id,
                         @org.springframework.web.bind.annotation.RequestParam(required = false) String include,
@@ -135,7 +135,7 @@ public class ComponentEntryController {
         }
 
         @PutMapping("/entries/{id}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<ComponentEntryResponse>> updateEntry(
                         @PathVariable Long id,
                         @Valid @RequestBody UpdateComponentEntryRequest request,
@@ -168,7 +168,7 @@ public class ComponentEntryController {
         }
 
         @DeleteMapping("/entries/{id}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<Void>> deleteEntry(
                         @PathVariable Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -188,7 +188,7 @@ public class ComponentEntryController {
         }
 
         @PostMapping("/entries/composite")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<com.backend.application.dto.response.ComponentEntryCompositeResponse>> createEntryComposite(
                         @Valid @RequestBody com.backend.application.dto.request.CreateComponentEntryCompositeRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -208,7 +208,7 @@ public class ComponentEntryController {
         }
 
         @PutMapping("/entries/{id}/composite")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<com.backend.application.dto.response.ComponentEntryCompositeResponse>> updateEntryComposite(
                         @PathVariable @NotNull @Min(1) Long id,
                         @Valid @RequestBody com.backend.application.dto.request.UpdateComponentEntryCompositeRequest request,
@@ -228,7 +228,7 @@ public class ComponentEntryController {
         }
 
         @PutMapping("/entries/{id}/i18n/{language}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<ComponentEntryI18nResponse>> upsertEntryI18n(
                         @PathVariable Long id,
                         @PathVariable Language language,
@@ -262,7 +262,7 @@ public class ComponentEntryController {
         }
 
         @GetMapping("/entries/{id}/i18n/{language}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR', 'VIEWER')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<ComponentEntryI18nResponse>> getEntryI18n(
                         @PathVariable Long id,
                         @PathVariable Language language,
@@ -284,7 +284,7 @@ public class ComponentEntryController {
         }
 
         @PostMapping("/entries/{id}/publish/{language}")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'EDITOR')")
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         public ResponseEntity<ApiResponse<ComponentEntryI18nResponse>> publishEntry(
                         @PathVariable Long id,
                         @PathVariable Language language,

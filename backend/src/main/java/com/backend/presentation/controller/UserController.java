@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class UserController {
 
         private final UserService userService;
@@ -203,6 +203,7 @@ public class UserController {
 
         // ========== Create User ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping
         public ResponseEntity<ApiResponse<UserResponse>> createUser(
                         @Valid @RequestBody CreateUserRequest request,
@@ -253,6 +254,7 @@ public class UserController {
 
         // ========== Update User ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
         public ResponseEntity<ApiResponse<UserResponse>> updateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -296,6 +298,7 @@ public class UserController {
 
         // ========== Delete User ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
         public ResponseEntity<ApiResponse<Void>> deleteUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -317,6 +320,7 @@ public class UserController {
 
         // ========== Activate User ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/activate")
         public ResponseEntity<ApiResponse<UserResponse>> activateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -350,6 +354,7 @@ public class UserController {
          * @param httpRequest  HTTP request for extracting IP and user agent
          * @return Success response with confirmation message
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/reset-password")
         public ResponseEntity<ApiResponse<Void>> resetPassword(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
@@ -400,6 +405,7 @@ public class UserController {
 
         // ========== Deactivate User ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/deactivate")
         public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,

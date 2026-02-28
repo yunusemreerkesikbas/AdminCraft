@@ -125,6 +125,10 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     return new HikariDataSource(config);
   }
 
+  public DataSource getDataSource(String dbName) {
+    return selectDataSource(dbName);
+  }
+
   public void warmUpConnectionPool(String tenantDbName) {
     log.debug("Pre-warming connection pool for tenant DB: {}", tenantDbName);
 

@@ -17,14 +17,14 @@ ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_or
 -- 2. SLOT_COMPONENTS (link slots to seed components)
 -- ============================================
 
--- Homepage Content slot should render only the portfolio grid component.
+-- Homepage Section1 slot should render only the portfolio grid component.
 DELETE sc
 FROM slot_components sc
 JOIN page_slots ps ON ps.id = sc.slot_id
 JOIN pages p ON p.id = ps.page_id
 JOIN components c ON c.id = sc.component_id
 WHERE p.uid = 'homepage'
-  AND ps.slot_name = 'Content'
+  AND ps.slot_name = 'Section1'
   AND c.uid <> 'SeedLandingPortfolioGrid';
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
@@ -36,7 +36,7 @@ ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
 SELECT ps.id, c.id, 0, TRUE, NOW()
 FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-ContentSlot' AND c.uid = 'SeedLandingPortfolioGrid'
+WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'SeedLandingPortfolioGrid'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
 
 INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)

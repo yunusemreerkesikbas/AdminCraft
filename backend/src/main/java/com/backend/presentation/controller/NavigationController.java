@@ -57,7 +57,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/navigation")
 @RequiredArgsConstructor
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class NavigationController {
 
   private final NavigationService navigationService;
@@ -112,6 +112,7 @@ public class NavigationController {
         .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation node not found")));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/nodes")
   public ResponseEntity<ApiResponse<NavigationNodeResponse>> createRootNode(
       @Valid @RequestBody CreateNodeRequest request) {
@@ -120,6 +121,7 @@ public class NavigationController {
         .body(ApiResponse.success("Navigation node created successfully", node));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/nodes/{id}/children")
   public ResponseEntity<ApiResponse<NavigationNodeResponse>> addChildNode(
       @PathVariable @NotNull @Min(1) Long id,
@@ -129,6 +131,7 @@ public class NavigationController {
         .body(ApiResponse.success("Child node added successfully", child));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/nodes/{id}")
   public ResponseEntity<ApiResponse<NavigationNodeResponse>> updateNode(
       @PathVariable @NotNull @Min(1) Long id,
@@ -137,6 +140,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Navigation node updated successfully", node));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/nodes/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteNode(
       @PathVariable @NotNull @Min(1) Long id) {
@@ -144,6 +148,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Navigation node deleted successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/nodes/{id}/reorder")
   public ResponseEntity<ApiResponse<Void>> reorderChildren(
       @PathVariable @NotNull @Min(1) Long id,
@@ -160,6 +165,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/nodes/{id}/i18n/{language}")
   public ResponseEntity<ApiResponse<NavigationNodeI18nResponse>> upsertNodeI18n(
       @PathVariable @NotNull @Min(1) Long id,
@@ -177,6 +183,7 @@ public class NavigationController {
         .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation node not found")));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/nodes/composite")
   public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> createNodeComposite(
       @Valid @RequestBody CreateNodeCompositeRequest request) {
@@ -185,6 +192,7 @@ public class NavigationController {
         .body(ApiResponse.success("Node created with translations", response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/nodes/{id}/composite")
   public ResponseEntity<ApiResponse<NavigationNodeCompositeResponse>> updateNodeComposite(
       @PathVariable @NotNull @Min(1) Long id,
@@ -193,6 +201,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Node updated with translations", response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/entries")
   public ResponseEntity<ApiResponse<NavigationEntryResponse>> createEntry(
       @Valid @RequestBody CreateEntryRequest request) {
@@ -201,6 +210,7 @@ public class NavigationController {
         .body(ApiResponse.success("Navigation entry created successfully", entry));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/entries/{id}")
   public ResponseEntity<ApiResponse<NavigationEntryResponse>> updateEntry(
       @PathVariable @NotNull @Min(1) Long id,
@@ -209,6 +219,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Navigation entry updated successfully", entry));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/entries/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteEntry(
       @PathVariable @NotNull @Min(1) Long id) {
@@ -216,6 +227,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success("Navigation entry deleted successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/nodes/{id}/entries/reorder")
   public ResponseEntity<ApiResponse<Void>> reorderEntries(
       @PathVariable @NotNull @Min(1) Long id,
@@ -232,6 +244,7 @@ public class NavigationController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/entries/{id}/i18n/{language}")
   public ResponseEntity<ApiResponse<NavigationEntryI18nResponse>> upsertEntryI18n(
       @PathVariable @NotNull @Min(1) Long id,
@@ -249,6 +262,7 @@ public class NavigationController {
         .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation entry not found")));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/entries/composite")
   public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> createEntryComposite(
       @Valid @RequestBody CreateEntryCompositeRequest request) {
@@ -257,6 +271,7 @@ public class NavigationController {
         .body(ApiResponse.success("Entry created with translations", response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/entries/{id}/composite")
   public ResponseEntity<ApiResponse<NavigationEntryCompositeResponse>> updateEntryComposite(
       @PathVariable @NotNull @Min(1) Long id,

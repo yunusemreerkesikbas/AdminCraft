@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Product", description = "Endpoints for managing products")
 public class ProductController {
 
@@ -163,6 +163,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/composite")
         @Operation(summary = "Create product", description = "Creates a new product with translations, attributes, categories and gallery")
         public ResponseEntity<ApiResponse<ProductCompositeResponse>> createComposite(
@@ -203,6 +204,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/composite")
         @Operation(summary = "Update product", description = "Updates an existing product with translations, attributes, categories and gallery")
         public ResponseEntity<ApiResponse<ProductCompositeResponse>> updateComposite(
@@ -242,6 +244,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
         @Operation(summary = "Delete product", description = "Deletes a product and all its related data")
         public ResponseEntity<ApiResponse<Void>> delete(
@@ -265,6 +268,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PatchMapping("/{id}/status")
         @Operation(summary = "Update product status", description = "Updates the status of a product (DRAFT/PUBLISHED)")
         public ResponseEntity<ApiResponse<ProductListItemResponse>> updateStatus(
@@ -294,6 +298,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PatchMapping("/{id}/visibility")
         @Operation(summary = "Update product visibility", description = "Updates the visibility of a product")
         public ResponseEntity<ApiResponse<ProductListItemResponse>> updateVisibility(

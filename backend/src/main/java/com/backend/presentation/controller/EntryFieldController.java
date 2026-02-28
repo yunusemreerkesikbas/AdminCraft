@@ -45,7 +45,7 @@ public class EntryFieldController {
         }
 
         @GetMapping("/{typeId}/entry-fields")
-        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+        @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN', 'VIEWER')")
         public ResponseEntity<ApiResponse<List<EntryFieldDefinitionResponse>>> getFields(
                         @PathVariable Long typeId,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {

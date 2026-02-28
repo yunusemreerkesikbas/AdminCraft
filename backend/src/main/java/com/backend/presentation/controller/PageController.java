@@ -45,13 +45,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class PageController {
 
   private final PageService pageService;
   private final PageI18nService pageI18nService;
   private final MessageSource messageSource;
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping
   public ResponseEntity<ApiResponse<PageResponse>> create(
       @Valid @RequestBody PageCreateRequest request,
@@ -107,6 +108,7 @@ public class PageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<PageResponse>> update(
       @PathVariable @NotNull @Min(1) Long id,
@@ -127,6 +129,7 @@ public class PageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> delete(
       @PathVariable @NotNull @Min(1) Long id,
@@ -162,6 +165,7 @@ public class PageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{pageId}/i18n/{language}")
   public ResponseEntity<ApiResponse<PageI18nResponse>> upsertPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -190,6 +194,7 @@ public class PageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{pageId}/publish/{language}")
   public ResponseEntity<ApiResponse<PageI18nResponse>> publishPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -221,6 +226,7 @@ public class PageController {
   // ==================== Composite Endpoints (Sprint 34 Pattern)
   // ====================
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/composite")
   public ResponseEntity<ApiResponse<PageDetailResponse>> createComposite(
       @Valid @RequestBody CreatePageCompositeRequest request,
@@ -256,6 +262,7 @@ public class PageController {
     }
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}/composite")
   public ResponseEntity<ApiResponse<PageDetailResponse>> updateComposite(
       @PathVariable @NotNull @Min(1) Long id,

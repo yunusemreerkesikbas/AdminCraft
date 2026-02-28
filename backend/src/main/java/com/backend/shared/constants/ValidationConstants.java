@@ -301,7 +301,6 @@ public final class ValidationConstants {
 
     public static final int VERIFICATION_CODE_MAX_LENGTH = 100;
     public static final int ROBOTS_TXT_MAX_LENGTH = 10000;
-    public static final int SITE_SCRIPTS_MAX_LENGTH = 50000;
     public static final int COOKIE_CONSENT_TEXT_MAX_LENGTH = 2000;
 
     // ============================================================================

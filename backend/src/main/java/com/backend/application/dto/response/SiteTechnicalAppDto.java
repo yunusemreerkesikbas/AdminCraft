@@ -6,7 +6,6 @@ package com.backend.application.dto.response;
  */
 public record SiteTechnicalAppDto(
     SearchEngineAppDto searchEngine,
-    ScriptsAppDto scripts,
     CookieConsentAppDto cookieConsent) {
 
   public record SearchEngineAppDto(
@@ -20,12 +19,6 @@ public record SiteTechnicalAppDto(
       String google,
       String bing,
       String yandex) {
-  }
-
-  public record ScriptsAppDto(
-      String head,
-      String bodyStart,
-      String bodyEnd) {
   }
 
   public record CookieConsentAppDto(

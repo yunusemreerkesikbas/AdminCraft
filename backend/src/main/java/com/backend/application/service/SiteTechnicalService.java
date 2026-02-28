@@ -5,7 +5,7 @@ import com.backend.application.dto.response.SiteTechnicalAppDto;
 
 /**
  * Service interface for Site Technical Settings operations.
- * Handles robots.txt, verification codes, custom scripts, and cookie consent.
+ * Handles robots.txt, verification codes, and cookie consent.
  */
 public interface SiteTechnicalService {
 
@@ -46,18 +46,4 @@ public interface SiteTechnicalService {
      * @return true if indexing is enabled
      */
     boolean isIndexingEnabled();
-
-    /**
-     * Get head scripts for the site.
-     *
-     * @return head scripts content or null
-     */
-    String getHeadScripts();
-
-    /**
-     * Get body end scripts for the site.
-     *
-     * @return body end scripts content or null
-     */
-    String getBodyEndScripts();
 }

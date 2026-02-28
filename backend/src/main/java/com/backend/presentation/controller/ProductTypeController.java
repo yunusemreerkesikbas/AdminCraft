@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Product Type", description = "Endpoints for managing product types and their attribute definitions")
 public class ProductTypeController {
 
@@ -119,6 +119,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping
     @Operation(summary = "Create product type", description = "Creates a new product type")
     public ResponseEntity<ApiResponse<ProductTypeResponse>> create(
@@ -145,6 +146,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{id}")
     @Operation(summary = "Update product type", description = "Updates an existing product type")
     public ResponseEntity<ApiResponse<ProductTypeResponse>> update(
@@ -170,6 +172,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete product type", description = "Deletes a product type and all its attributes")
     public ResponseEntity<ApiResponse<Void>> delete(
@@ -214,6 +217,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{typeId}/attributes")
     @Operation(summary = "Create attribute", description = "Adds a new attribute definition to a product type")
     public ResponseEntity<ApiResponse<AttributeDefinitionResponse>> createAttribute(
@@ -241,6 +245,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{typeId}/attributes/{attrId}")
     @Operation(summary = "Update attribute", description = "Updates an existing attribute definition")
     public ResponseEntity<ApiResponse<AttributeDefinitionResponse>> updateAttribute(
@@ -268,6 +273,7 @@ public class ProductTypeController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{typeId}/attributes/{attrId}")
     @Operation(summary = "Delete attribute", description = "Deletes an attribute definition from a product type")
     public ResponseEntity<ApiResponse<Void>> deleteAttribute(

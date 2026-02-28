@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.CookieConsentAppDto;
-import com.backend.application.dto.response.SiteTechnicalAppDto.ScriptsAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppDto;
 import com.backend.domain.entity.Site;
@@ -23,8 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of SiteTechnicalService.
- * Manages technical settings for sites including robots.txt, scripts, and
- * verification codes.
+ * Manages technical settings for sites including robots.txt and verification codes.
  */
 @Service
 @RequiredArgsConstructor
@@ -73,15 +71,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
             settings.setYandexVerification(
                     request.yandexVerification().isBlank() ? null : request.yandexVerification());
         }
-        if (request.headScripts() != null) {
-            settings.setHeadScripts(request.headScripts().isBlank() ? null : request.headScripts());
-        }
-        if (request.bodyStartScripts() != null) {
-            settings.setBodyStartScripts(request.bodyStartScripts().isBlank() ? null : request.bodyStartScripts());
-        }
-        if (request.bodyEndScripts() != null) {
-            settings.setBodyEndScripts(request.bodyEndScripts().isBlank() ? null : request.bodyEndScripts());
-        }
         if (request.cookieConsentEnabled() != null) {
             settings.setCookieConsentEnabled(request.cookieConsentEnabled());
         }
@@ -114,20 +103,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
         Site site = getFirstSite();
         SiteTechnicalSettings settings = getOrCreateSettings(site);
         return Boolean.TRUE.equals(settings.getIndexingEnabled());
-    }
-
-    @Override
-    public String getHeadScripts() {
-        Site site = getFirstSite();
-        SiteTechnicalSettings settings = getOrCreateSettings(site);
-        return settings.getHeadScripts();
-    }
-
-    @Override
-    public String getBodyEndScripts() {
-        Site site = getFirstSite();
-        SiteTechnicalSettings settings = getOrCreateSettings(site);
-        return settings.getBodyEndScripts();
     }
 
     private synchronized Site getFirstSite() {
@@ -185,20 +160,12 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
                 settings.getIndexingEnabled(),
                 verificationDto);
 
-        // Scripts info
-        ScriptsAppDto scriptsDto = new ScriptsAppDto(
-                settings.getHeadScripts(),
-                settings.getBodyStartScripts(),
-                settings.getBodyEndScripts());
-
-        // Cookie consent info
         CookieConsentAppDto cookieConsentDto = new CookieConsentAppDto(
                 settings.getCookieConsentEnabled(),
                 settings.getCookieConsentText());
 
         return new SiteTechnicalAppDto(
                 searchEngineDto,
-                scriptsDto,
                 cookieConsentDto);
     }
 }

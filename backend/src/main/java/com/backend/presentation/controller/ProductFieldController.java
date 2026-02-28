@@ -38,7 +38,7 @@ public class ProductFieldController {
 
   @GetMapping
   @Operation(summary = "Get all field definitions")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   public ResponseEntity<ApiResponse<List<ProductFieldDefinitionResponse>>> getAllDefinitions() {
     List<ProductFieldDefinitionResponse> definitions = productFieldService.findAllDefinitions();
     return ResponseEntity.ok(ApiResponse.success(definitions));
@@ -46,7 +46,7 @@ public class ProductFieldController {
 
   @GetMapping("/{id}")
   @Operation(summary = "Get field definition by ID")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   public ResponseEntity<ApiResponse<ProductFieldDefinitionResponse>> getDefinitionById(@PathVariable Long id) {
     ProductFieldDefinitionResponse definition = productFieldService.findDefinitionById(id);
     return ResponseEntity.ok(ApiResponse.success(definition));
