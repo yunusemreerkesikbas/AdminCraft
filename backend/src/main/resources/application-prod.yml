@@ -38,14 +38,21 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   frontend:
-    base-url: ${APP_FRONTEND_BASE_URL:https://%s.admincraft.com}
+    base-url: ${APP_FRONTEND_BASE_URL:https://%s.craftive.io}
   tenant:
     auto-sync-on-startup: true
-  platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
+  platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     provider: smtp
-    from-address: ${EMAIL_FROM_ADDRESS:noreply@admincraft.com}
-    from-name: ${EMAIL_FROM_NAME:AdminCraft}
+    from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}
+    from-name: ${EMAIL_FROM_NAME:Craftive}
+  cors:
+    allowed-origins:
+      - https://app.craftive.io
+      - https://craftive.io
+      - https://www.craftive.io
+    allowed-origin-patterns:
+      - https://*.craftive.io
   otp:
     bypass-code:
   encryption:

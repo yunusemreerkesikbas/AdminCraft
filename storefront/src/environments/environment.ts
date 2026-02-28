@@ -8,6 +8,6 @@ export const environment = {
     supportedLanguages: ['tr', 'en'],
     defaultLanguage: 'en',
     version: '1.0.0-dev',
-    appName: 'AdminCraft',
+    appName: 'Craftive',
     maxRetryAttempts: 0,
 };

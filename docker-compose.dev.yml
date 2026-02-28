@@ -11,7 +11,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2
-    container_name: admincraft-phpmyadmin
+    container_name: craftive-phpmyadmin
     restart: unless-stopped
     environment:
       PMA_HOST: mysql-db
@@ -28,4 +28,4 @@ services:
     depends_on:
       - mysql-db
     networks:
-      - admincraft-network
+      - craftive-network

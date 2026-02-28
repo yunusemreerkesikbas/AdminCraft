@@ -73,11 +73,9 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
-                configuration.setAllowedOriginPatterns(Arrays.asList(
-                                "http://*.localhost:4200",
-                                "http://*.localhost:4201",
-                                "https://*.localhost:4200",
-                                "https://*.localhost:4201"));
+                if (!corsProperties.getAllowedOriginPatterns().isEmpty()) {
+                        configuration.setAllowedOriginPatterns(corsProperties.getAllowedOriginPatterns());
+                }
 
                 // Allow all HTTP methods
                 configuration.setAllowedMethods(Arrays.asList(

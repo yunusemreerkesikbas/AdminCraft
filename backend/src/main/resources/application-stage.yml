@@ -28,10 +28,15 @@ app:
   jwt:
     secret: ${JWT_SECRET}
   frontend:
-    base-url: ${APP_FRONTEND_BASE_URL:https://%s.stage.admincraft.com}
+    base-url: ${APP_FRONTEND_BASE_URL:https://s1.%s.craftive.io}
   tenant:
     auto-sync-on-startup: true
-  platform-domain: ${PLATFORM_DOMAIN:stage.admincraft.com}
+  platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
+  cors:
+    allowed-origins:
+      - https://s1.app.craftive.io
+    allowed-origin-patterns:
+      - https://*.craftive.io
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 

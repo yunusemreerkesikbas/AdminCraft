@@ -7,7 +7,7 @@
 services:
   mysql-db:
     image: mysql:8.0
-    container_name: admincraft-mysql
+    container_name: craftive-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -20,7 +20,7 @@ services:
       - ./docker/mysql/conf/my.cnf:/etc/mysql/conf.d/my.cnf
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     networks:
-      - admincraft-network
+      - craftive-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -39,5 +39,5 @@ volumes:
     driver: local
 
 networks:
-  admincraft-network:
+  craftive-network:
     driver: bridge

@@ -7,19 +7,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "app.cors")
 public class CorsProperties {
 
-    private List<String> allowedOrigins = List.of(
-            "http://localhost:4200",
-            "http://localhost:4201",
-            "http://localhost:3000",
-            "http://localhost:8090",
-            "http://localhost:8080",
-            "http://localhost:8081",
-            "https://localhost:4200",
-            "https://localhost:4201",
-            "https://localhost:3000",
-            "https://localhost:8090",
-            "https://localhost:8080",
-            "https://localhost:8081");
+    private List<String> allowedOrigins = List.of();
+
+    private List<String> allowedOriginPatterns = List.of();
 
     public List<String> getAllowedOrigins() {
         return allowedOrigins;
@@ -27,5 +17,13 @@ public class CorsProperties {
 
     public void setAllowedOrigins(List<String> allowedOrigins) {
         this.allowedOrigins = allowedOrigins != null ? allowedOrigins : this.allowedOrigins;
+    }
+
+    public List<String> getAllowedOriginPatterns() {
+        return allowedOriginPatterns;
+    }
+
+    public void setAllowedOriginPatterns(List<String> allowedOriginPatterns) {
+        this.allowedOriginPatterns = allowedOriginPatterns != null ? allowedOriginPatterns : this.allowedOriginPatterns;
     }
 }

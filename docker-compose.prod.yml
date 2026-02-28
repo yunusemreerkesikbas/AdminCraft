@@ -1,19 +1,18 @@
-# AdminCraft - Production/Stage Override
-# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
-#
-# This configuration runs the full stack: MySQL + Backend + Frontend + Traefik
-# Designed for VPS deployment (Hetzner, DigitalOcean, etc.)
+# Craftive - Production Override
+# Usage:
+#   Prod:  docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#   Stage: docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.stage.yml --env-file .env.stage up -d --build
 
 services:
   mysql-db:
     # No port exposure in production - internal only via Docker network
 
   backend:
+    image: ghcr.io/craftive/craftive-backend:${APP_VERSION:-latest}
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
-    image: admincraft-backend:${APP_VERSION:-latest}
-    container_name: admincraft-backend
+    container_name: craftive-backend
     restart: unless-stopped
     depends_on:
       mysql-db:
@@ -25,51 +24,71 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      RECAPTCHA_MASTER_KEY: ${RECAPTCHA_MASTER_KEY}
       PLATFORM_DB_URL: jdbc:mysql://mysql-db:3306/platform_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
     networks:
-      - admincraft-network
+      - craftive-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+      traefik.enable: "true"
+      traefik.http.routers.backend.rule: "Host(`api.${DOMAIN}`)"
+      traefik.http.routers.backend.entrypoints: "websecure"
+      traefik.http.routers.backend.tls.certresolver: "letsencrypt"
+      traefik.http.services.backend.loadbalancer.server.port: "8080"
 
   frontend:
+    image: ghcr.io/craftive/craftive-frontend:${APP_VERSION:-latest}
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
       args:
         - BUILD_ENV=${SPRING_PROFILE:-prod}
-    image: admincraft-frontend:${APP_VERSION:-latest}
-    container_name: admincraft-frontend
+    container_name: craftive-frontend
     restart: unless-stopped
     depends_on:
       - backend
     networks:
-      - admincraft-network
+      - craftive-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      traefik.enable: "true"
+      traefik.http.routers.frontend.rule: "Host(`app.${DOMAIN}`)"
+      traefik.http.routers.frontend.entrypoints: "websecure"
+      traefik.http.routers.frontend.tls.certresolver: "letsencrypt"
+      traefik.http.services.frontend.loadbalancer.server.port: "80"
+      # Redirect root domain to app subdomain
+      traefik.http.routers.root-redirect.rule: "Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      traefik.http.routers.root-redirect.entrypoints: "websecure"
+      traefik.http.routers.root-redirect.tls.certresolver: "letsencrypt"
+      traefik.http.routers.root-redirect.middlewares: "redirect-to-app"
+      traefik.http.middlewares.redirect-to-app.redirectregex.regex: ".*"
+      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://app.${DOMAIN}"
+      traefik.http.middlewares.redirect-to-app.redirectregex.permanent: "true"
 
   traefik:
     image: traefik:v3.0
-    container_name: admincraft-traefik
+    container_name: craftive-traefik
     restart: unless-stopped
     command:
-      - "--api.dashboard=true"
+      - "--api.dashboard=false"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    environment:
+      CF_API_TOKEN: ${CF_API_TOKEN}
     ports:
       - "80:80"
       - "443:443"
@@ -77,8 +96,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
     networks:
-      - admincraft-network
+      - craftive-network
 
 volumes:
   traefik_letsencrypt:
     driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  craftive-network:
+    external: true
