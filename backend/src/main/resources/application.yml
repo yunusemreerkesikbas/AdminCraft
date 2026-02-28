@@ -12,12 +12,12 @@ app:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
-  platform-domain: ${PLATFORM_DOMAIN:admincraft.com}
+  platform-domain: ${PLATFORM_DOMAIN:craftive.io}
   email:
     enabled: ${EMAIL_ENABLED:true}
     provider: ${EMAIL_PROVIDER:console}
-    from-address: ${EMAIL_FROM_ADDRESS:noreply@admincraft.com}
-    from-name: ${EMAIL_FROM_NAME:AdminCraft}
+    from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}
+    from-name: ${EMAIL_FROM_NAME:Craftive}
     log-content: ${EMAIL_LOG_CONTENT:false}
   otp:
     length: ${OTP_LENGTH:6}
@@ -47,7 +47,7 @@ spring:
       max-request-size: 20MB
 
   application:
-    name: AdminCraft
+    name: Craftive
 
   datasource:
     platform:

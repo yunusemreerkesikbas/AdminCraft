@@ -3,11 +3,11 @@
  */
 export const environment = {
     production: false,
-    apiBaseUrl: 'https://s1.api.admincraft.com',
+    apiBaseUrl: 'https://s1.api.craftive.io',
     apiTimeout: 30000,
     supportedLanguages: ['tr', 'en'],
     defaultLanguage: 'en',
     version: '1.0.0-stage',
-    appName: 'AdminCraft',
+    appName: 'Craftive',
     maxRetryAttempts: 0,
 };
