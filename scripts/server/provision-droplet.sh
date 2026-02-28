@@ -97,6 +97,7 @@ cat > /etc/docker/daemon.json <<'EOF'
   "userland-proxy": false
 }
 EOF
+systemctl is-active --quiet docker || systemctl start docker
 systemctl reload docker
 log "Docker daemon configured (log limit: 10MB x 3)"
 
@@ -247,8 +248,9 @@ TIMESTAMP=\$(date +%Y-%m-%d_%H-%M)
 CONTAINER="craftive-mysql"
 ENV_FILE="${APP_DIR}/.env.${ENV}"
 
-# Read DB_PASSWORD from env file
-source <(grep "^DB_PASSWORD=" "\${ENV_FILE}" | sed 's/^/export /')
+# Read DB_PASSWORD from env file (safe: no shell execution of .env content)
+DB_PASSWORD=\$(grep "^DB_PASSWORD=" "\${ENV_FILE}" | cut -d'=' -f2-)
+export DB_PASSWORD
 
 # MySQL dump — all databases
 DUMP_FILE="\${BACKUP_DIR}/\${TIMESTAMP}.sql.gz"
@@ -313,7 +315,7 @@ section "Installing rclone (DO Spaces backup)"
 if command -v rclone &>/dev/null; then
   warn "rclone is already installed: $(rclone --version | head -1)"
 else
-  curl -fsSL https://rclone.org/install.sh | bash -s -- --quiet
+  apt-get install -y -qq rclone
   log "rclone installed: $(rclone --version | head -1)"
 fi
 

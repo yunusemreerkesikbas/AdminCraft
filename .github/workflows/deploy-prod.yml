@@ -72,6 +72,16 @@ jobs:
     environment: production  # Requires reviewer approval in GitHub Settings
 
     steps:
+      - name: Save current version
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          script: |
+            cp /opt/craftive/prod/.last-deployed-tag \
+               /opt/craftive/prod/.last-deployed-tag.prev 2>/dev/null || true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -92,15 +102,39 @@ jobs:
             docker compose -f docker-compose.yml -f docker-compose.prod.yml \
               --env-file .env.prod up -d --remove-orphans
 
+            echo "${APP_VERSION}" > .last-deployed-tag
+
       - name: Health check
         run: |
-          sleep 20
-          STATUS=$(curl -sf https://api.craftive.io/api/actuator/health | jq -r '.status')
-          if [ "$STATUS" != "UP" ]; then
-            echo "Production health check failed: $STATUS"
-            exit 1
-          fi
-          echo "Production deploy OK — ${{ needs.build-and-push.outputs.tag }}"
+          for i in $(seq 1 10); do
+            STATUS=$(curl -sf https://api.craftive.io/api/actuator/health | jq -r '.status' 2>/dev/null || echo "FAIL")
+            [ "$STATUS" = "UP" ] && echo "Production deploy OK — ${{ needs.build-and-push.outputs.tag }}" && exit 0
+            echo "Attempt $i/10: $STATUS — retrying in $((i * 3))s"
+            sleep $((i * 3))
+          done
+          echo "Health check failed — triggering rollback"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/craftive/prod
+            PREV_TAG=$(cat .last-deployed-tag.prev 2>/dev/null || echo "")
+            if [ -z "$PREV_TAG" ]; then
+              echo "No previous version found for rollback"
+              exit 1
+            fi
+            echo "Rolling back to: $PREV_TAG"
+            export APP_VERSION="$PREV_TAG"
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+              --env-file .env.prod up -d --remove-orphans
+            echo "Rollback complete: $PREV_TAG"
 
       - name: Smoke test — Admin panel
         run: |

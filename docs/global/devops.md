@@ -96,8 +96,9 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - `stage` branch → `stage-{git-sha}`
    - `release/release-27.02.2026` → `release-27.02.2026`
 4. Build 3 images (backend, frontend, storefront), push to GHCR
-5. SSH to Stage Droplet, pull and restart services
-6. Health check: `https://s1.api.craftive.io/api/actuator/health` → `{"status":"UP"}`
+5. SSH to Stage Droplet, save current tag → pull and restart services → write new tag to `.last-deployed-tag`
+6. Health check: `https://s1.api.craftive.io/api/actuator/health` → `{"status":"UP"}` (exponential backoff, 10 attempts)
+7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
 
 ### Deploy flow — Production (release)
 
@@ -115,8 +116,9 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
      → branch naming convention is `release/release-DD.MM.YYYY` (recommended, not enforced)
      → build backend + frontend, push release-DD.MM.YYYY + latest tags
      → wait for GitHub Environment "production" reviewer approval
-     → SSH to Prod Droplet, pull and restart
-     → health check + admin panel smoke test
+     → SSH to Prod Droplet, save current tag → pull and restart → write new tag to `.last-deployed-tag`
+     → health check (exponential backoff, 10 attempts) + admin panel smoke test
+     → on failure: automatic rollback to previous tag from `.last-deployed-tag.prev`
 ```
 
 ### Tenant storefront flow — Separate repository (recommended)
@@ -194,7 +196,7 @@ app:
     allowed-origins:
       - https://s1.app.craftive.io
     allowed-origin-patterns:
-      - https://*.craftive.io
+      - https://*.s1.craftive.io
 ```
 
 CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — tenant storefronts run on arbitrary domains.
@@ -328,6 +330,22 @@ mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-D
 `rclone` credentials are stored in `/home/deploy/.config/rclone/rclone.conf` so cron and manual backup runs use the same user context.
 30-day retention enforced via Spaces lifecycle policy.
 
+### Rollback pattern (platform)
+
+Deploy workflows save the previous image tag before each deploy:
+- Before deploy: current tag copied to `.last-deployed-tag.prev`
+- After successful `up -d`: new tag written to `.last-deployed-tag`
+
+If the health check fails, the `Rollback on failure` step (runs on `if: failure()`) automatically re-deploys the previous tag. Both `deploy-prod.yml` and `deploy-stage.yml` implement this pattern.
+
+Manual rollback (if needed):
+```bash
+# On the droplet
+cd /opt/craftive/{prod|stage}
+export APP_VERSION=$(cat .last-deployed-tag.prev)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
 ### Rollback pattern (tenant storefront)
 
 1. Re-run tenant deploy with the previous known-good image tag.
@@ -344,3 +362,4 @@ mysqldump --all-databases | gzip → DO Spaces: craftive-backups/{env}/YYYY-MM-D
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
 - **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.
 - **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
+- **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax (`HostRegexp(`[a-z0-9-]+\.craftive\.io`)`).

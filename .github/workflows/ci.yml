@@ -49,7 +49,7 @@ jobs:
         run: ./mvnw -pl backend test
 
   frontend-ci:
-    name: Frontend — Build Check
+    name: Frontend — Build Check (Angular)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,25 +69,5 @@ jobs:
         run: npm run build -- --configuration=production
         working-directory: storefront
 
-  storefront-ci:
-    name: Storefront — Build Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: storefront-nextjs/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: storefront-nextjs
-
-      - name: Build (prod)
-        run: npm run build:prod
-        working-directory: storefront-nextjs
-        env:
-          NEXT_PUBLIC_CMS_API_URL: https://api.craftive.io/api
+  # storefront-ci job removed until storefront-nextjs/ is merged to stage branch.
+  # Re-add when storefront-nextjs/package-lock.json is present in the repo.

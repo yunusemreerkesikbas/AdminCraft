@@ -36,7 +36,7 @@ app:
     allowed-origins:
       - https://s1.app.craftive.io
     allowed-origin-patterns:
-      - https://*.craftive.io
+      - https://*.s1.craftive.io
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 

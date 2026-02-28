@@ -47,6 +47,10 @@ echo
 
 mkdir -p "${RCLONE_CONFIG_DIR}"
 
+[ -f "${RCLONE_CONFIG_DIR}/rclone.conf" ] && \
+  cp "${RCLONE_CONFIG_DIR}/rclone.conf" \
+     "${RCLONE_CONFIG_DIR}/rclone.conf.bak.$(date +%Y%m%d_%H%M%S)"
+
 cat > "${RCLONE_CONFIG_DIR}/rclone.conf" <<EOF
 [spaces]
 type = s3
