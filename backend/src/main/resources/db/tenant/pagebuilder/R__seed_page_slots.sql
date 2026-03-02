@@ -1,4 +1,0 @@
--- Deprecated intentionally.
--- Seed order bug: repeatable filename ordering caused this migration to run before
--- R__seed_page_templates.sql and R__seed_sample_pages.sql in fresh tenants.
--- Active seed moved to: R__zz_seed_page_slots.sql

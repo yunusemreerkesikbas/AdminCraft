@@ -1,3 +1,0 @@
--- Migrated to ImpEx.
--- Content moved to: backend/src/main/resources/impex/seed_navigation.sql
--- Run via Admin UI /{lang}/impex when needed.
