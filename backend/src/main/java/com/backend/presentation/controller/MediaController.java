@@ -74,7 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Media", description = "Endpoints for managing media files, uploads, and metadata")
 public class MediaController {
 
@@ -93,6 +93,7 @@ public class MediaController {
 
         // ========== CRUD Operations ==========
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @Operation(summary = "Upload a media file", description = "Uploads a file, validates it, and creates a media record. Supports async processing.")
         public ResponseEntity<ApiResponse<MediaResponse>> uploadFile(
@@ -117,6 +118,7 @@ public class MediaController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping(value = "/composite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @Operation(summary = "Upload media with metadata", description = "Uploads a file and creates i18n entries in a single transaction.")
         public ResponseEntity<ApiResponse<MediaResponse>> uploadComposite(
@@ -253,6 +255,7 @@ public class MediaController {
         /**
          * Update media metadata (public flag, tags).
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
         @Operation(summary = "Update media metadata", description = "Updates media properties like public status and tags.")
         public ResponseEntity<ApiResponse<MediaResponse>> updateMedia(
@@ -281,6 +284,7 @@ public class MediaController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
         @Operation(summary = "Delete media", description = "Deletes a media file and its associated data (containers, i18n, physical files).")
         public ResponseEntity<ApiResponse<Void>> deleteMedia(
@@ -378,6 +382,7 @@ public class MediaController {
         /**
          * Create or update i18n metadata for a media file.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/i18n/{language}")
         @Operation(summary = "Upsert media i18n", description = "Creates or updates localized metadata for a media file.")
         public ResponseEntity<ApiResponse<MediaI18nResponse>> upsertI18n(
@@ -412,6 +417,7 @@ public class MediaController {
         /**
          * Delete i18n metadata for a media file.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}/i18n/{language}")
         @Operation(summary = "Delete media i18n", description = "Removes localized metadata for a specific language.")
         public ResponseEntity<ApiResponse<Void>> deleteI18n(
@@ -485,6 +491,7 @@ public class MediaController {
          * Generate a single format variant for a media file.
          * Supports both preset formats and custom dimensions.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/generate-format")
         @Operation(summary = "Generate format variant", description = "Generates a single format variant. Use formatCode for presets or customWidth/customHeight for custom sizes.")
         public ResponseEntity<ApiResponse<MediaVariantResponse>> generateFormat(
@@ -518,6 +525,7 @@ public class MediaController {
         /**
          * Generate multiple format variants for a media file in batch.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/generate-formats")
         @Operation(summary = "Generate multiple format variants", description = "Generates multiple format variants in a single request. Max 10 formats per request.")
         public ResponseEntity<ApiResponse<List<MediaVariantResponse>>> generateFormats(
@@ -555,6 +563,7 @@ public class MediaController {
         /**
          * Delete a generated variant.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{mediaId}/variants/{variantId}")
         @Operation(summary = "Delete variant", description = "Deletes a generated variant. The original media cannot be deleted via this endpoint.")
         public ResponseEntity<ApiResponse<Void>> deleteVariant(
@@ -586,6 +595,7 @@ public class MediaController {
         /**
          * Update focal point for smart cropping.
          */
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/focal-point")
         @Operation(summary = "Update focal point", description = "Sets the focal point for smart cropping. Values are normalized (0.0 to 1.0).")
         public ResponseEntity<ApiResponse<Void>> updateFocalPoint(

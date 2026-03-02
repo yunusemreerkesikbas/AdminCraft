@@ -19,12 +19,6 @@ public record SiteTechnicalPatchRequest(
 
         @Size(max = ValidationConstants.VERIFICATION_CODE_MAX_LENGTH, message = "Yandex verification code must not exceed {max} characters") String yandexVerification,
 
-        @Size(max = ValidationConstants.SITE_SCRIPTS_MAX_LENGTH) String headScripts,
-
-        @Size(max = ValidationConstants.SITE_SCRIPTS_MAX_LENGTH) String bodyStartScripts,
-
-        @Size(max = ValidationConstants.SITE_SCRIPTS_MAX_LENGTH) String bodyEndScripts,
-
         Boolean cookieConsentEnabled,
 
         @Size(max = ValidationConstants.COOKIE_CONSENT_TEXT_MAX_LENGTH) String cookieConsentText) {
@@ -36,9 +30,6 @@ public record SiteTechnicalPatchRequest(
                 googleVerification != null ||
                 bingVerification != null ||
                 yandexVerification != null ||
-                headScripts != null ||
-                bodyStartScripts != null ||
-                bodyEndScripts != null ||
                 cookieConsentEnabled != null ||
                 cookieConsentText != null;
     }

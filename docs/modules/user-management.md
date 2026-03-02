@@ -243,7 +243,6 @@ Defined in [`UserRole.java`](../../backend/src/main/java/com/backend/domain/enum
 |------|-------------|-------------|
 | SUPER_ADMIN | Platform-wide access | All tenants |
 | TENANT_ADMIN | Full tenant access | User management, all modules |
-| EDITOR | Content editing | Read/write content |
 | VIEWER | Read-only access | Read content only |
 
 ## Frontend Integration

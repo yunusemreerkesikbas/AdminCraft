@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.context.MessageSource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.dto.delivery.SiteDeliveryResponse;
 import com.backend.application.service.CmsDeliveryService;
 import com.backend.application.service.NavigationService;
+import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
 import com.backend.shared.common.ApiResponse;
 
@@ -35,6 +37,7 @@ public class CmsDeliveryController {
 
   private final CmsDeliveryService cmsDeliveryService;
   private final NavigationService navigationService;
+  private final SiteTechnicalService siteTechnicalService;
   private final MessageSource messageSource;
 
   @GetMapping("/components/{uid}")
@@ -131,6 +134,13 @@ public class CmsDeliveryController {
             ApiResponse.success("Navigation found", response)))
         .orElseGet(() -> ResponseEntity.ok(
             ApiResponse.error("Navigation not found")));
+  }
+
+  @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
+  public ResponseEntity<String> getRobotsTxt() {
+    return ResponseEntity.ok()
+        .contentType(MediaType.TEXT_PLAIN)
+        .body(siteTechnicalService.getRobotsTxt());
   }
 
   private Language resolveLanguage(Language langParam, String acceptLanguage) {

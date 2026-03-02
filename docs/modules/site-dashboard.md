@@ -12,7 +12,7 @@ Site Dashboard is a unified admin interface that consolidates **Site Management*
 - **Address**: Business address and map embed
 - **Social**: Social media links
 - **SEO**: Meta tags, Open Graph, and search engine settings (per language, dynamic language support)
-- **Technical**: robots.txt, verification codes, custom scripts, cookie consent
+- **Technical**: robots.txt, verification codes, cookie consent
 - **Security**: Two-factor authentication policy configuration
 
 ## Architecture
@@ -31,14 +31,15 @@ The Site Dashboard merges functionality from:
 Migrations in `backend/src/main/resources/db/tenant/core/`:
 
 - `V20__create_site_activity.sql` - Activity tracking for dashboard overview
-- `V21__create_site_technical_settings.sql` - Technical settings (robots.txt, scripts, verification)
+- `V21__create_site_technical_settings.sql` - Technical settings (robots.txt, verification, cookie consent)
+- `V36__drop_site_technical_scripts_columns.sql` - Removed custom script columns
 
 ### Entities
 
 | Entity                  | Purpose                                                                  |
 | ----------------------- | ------------------------------------------------------------------------ |
 | `SiteActivity`          | Tracks user actions on pages, components, media, products, site settings |
-| `SiteTechnicalSettings` | Stores robots.txt, verification codes, custom scripts, cookie consent    |
+| `SiteTechnicalSettings` | Stores robots.txt, verification codes, cookie consent    |
 
 ## Admin API (tenant-scoped, authenticated)
 
@@ -48,14 +49,15 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/SiteCont
 
 New endpoints under `/api/sites`:
 
-| Method  | Path                | Description                                           |
-| ------- | ------------------- | ----------------------------------------------------- |
-| `GET`   | `/sites/overview`   | Dashboard overview (status, stats, activity, actions) |
-| `GET`   | `/sites/technical`  | Technical settings                                    |
-| `PATCH` | `/sites/technical`  | Update technical settings                             |
-| `GET`   | `/sites/security`   | Security settings (2FA policy)                        |
-| `PATCH` | `/sites/security`   | Update security settings                              |
-| `GET`   | `/sites/robots.txt` | Public robots.txt endpoint                            |
+| Method  | Path               | Description                                           |
+| ------- | ------------------ | ----------------------------------------------------- |
+| `GET`   | `/sites/overview`  | Dashboard overview (status, stats, activity, actions) |
+| `GET`   | `/sites/technical` | Technical settings                                    |
+| `PATCH` | `/sites/technical` | Update technical settings                             |
+| `GET`   | `/sites/security`  | Security settings (2FA policy)                        |
+| `PATCH` | `/sites/security`  | Update security settings                              |
+
+> **Not:** Public robots.txt endpoint'i `SiteController`'da değil, `CmsDeliveryController`'dadır: `GET /api/cms/robots.txt` (no auth, 100 req/min). Bkz. [cms-delivery.md](./cms-delivery.md#robotstxt).
 
 ### Response DTOs
 
@@ -114,11 +116,6 @@ New endpoints under `/api/sites`:
     "sitemapEnabled": true,
     "indexingEnabled": true,
     "verification": { "google": "xxx", "bing": null, "yandex": null }
-  },
-  "scripts": {
-    "headScripts": null,
-    "bodyStartScripts": null,
-    "bodyEndScripts": "<script src='chat.js'></script>"
   },
   "cookieConsent": {
     "enabled": false,
@@ -240,24 +237,20 @@ Defined in `storefront/src/app/modules/admin/api-endpoints.ts`:
 siteOverview: 'sites/overview',
 siteTechnical: 'sites/technical',
 siteSecuritySettings: 'sites/security',
-siteRobotsTxt: 'sites/robots.txt',
 ```
 
 ## Security & Tenant Isolation
 
 - All endpoints require `TENANT_ADMIN` role via `@PreAuthorize("hasRole('TENANT_ADMIN')")`
-- Exception: `/sites/robots.txt` is public (`@PreAuthorize("permitAll()")`)
 - Tenant context resolved via `TenantFilter` before reaching controllers
 
 ### Security & Validation
 
 #### Backend Validation
 
-- **XSS Protection**: Script fields (head/body) are validated for size but allow script tags for analytics/tools.
 - **Validation Limits** (enforced in `SiteTechnicalPatchRequest` via `ValidationConstants`):
   - `verificationCode`: Max 100 chars
   - `robotsTxt`: Max 10,000 chars
-  - `headScripts` / `bodyScripts`: Max 50,000 chars
   - `cookieConsentText`: Max 2,000 chars
 
 #### Frontend Security (Phase 1)

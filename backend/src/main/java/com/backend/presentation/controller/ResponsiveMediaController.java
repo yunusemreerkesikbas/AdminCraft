@@ -53,7 +53,7 @@ public class ResponsiveMediaController {
   }
 
   @GetMapping("/{id}")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   @Operation(summary = "Get responsive media set by ID")
   @ApiResponses(value = {
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Found"),
@@ -66,7 +66,7 @@ public class ResponsiveMediaController {
   }
 
   @GetMapping("/uid/{uid}")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   @Operation(summary = "Get responsive media set by UID")
   @ApiResponses(value = {
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Found"),
@@ -107,7 +107,7 @@ public class ResponsiveMediaController {
   }
 
   @GetMapping("/media/{mediaId}/linked-components")
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   @Operation(summary = "Get components using a media", description = "Returns component IDs that use the specified media")
   @ApiResponses(value = {
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of component IDs")

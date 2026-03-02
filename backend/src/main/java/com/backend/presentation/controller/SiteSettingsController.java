@@ -40,7 +40,7 @@ public class SiteSettingsController {
   private final MessageSource messageSource;
 
   @GetMapping
-  @PreAuthorize("hasRole('TENANT_ADMIN')")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
   public ResponseEntity<ApiResponse<SiteSettingsResponseDto>> get() {
     Locale locale = LocaleContextHolder.getLocale();
     try {

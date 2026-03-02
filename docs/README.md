@@ -21,6 +21,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Database migrations: [`global/migrations.md`](global/migrations.md)
   - Migration governance: [`global/migration-governance.md`](global/migration-governance.md)
   - Testing patterns: [`global/testing.md`](global/testing.md)
+  - DevOps & deployment: [`global/devops.md`](global/devops.md)
 
 ## Modules (admin APIs)
 
@@ -65,3 +66,4 @@ Next.js 16 App Router storefront consuming the CMS delivery APIs.
 ## Cross-cutting features
 
 - Navigation (hierarchical nodes/entries): [`modules/navigation.md`](modules/navigation.md)
+- ImpEx (on-demand SQL data import): [`modules/impex.md`](modules/impex.md)

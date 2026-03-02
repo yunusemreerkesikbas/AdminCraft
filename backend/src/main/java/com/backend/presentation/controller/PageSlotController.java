@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/pages")
 @RequiredArgsConstructor
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class PageSlotController {
 
   private final PageSlotService pageSlotService;
@@ -51,6 +51,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success(mapToResponses(slots)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{pageId}/slots")
   public ResponseEntity<ApiResponse<PageSlotResponse>> createSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -61,6 +62,7 @@ public class PageSlotController {
         .body(ApiResponse.success("Slot created successfully", mapToResponse(slot)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/shared/slots")
   public ResponseEntity<ApiResponse<PageSlotResponse>> createSharedSlot(
       @Valid @RequestBody CreatePageSlotRequest request) {
@@ -81,6 +83,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success(mapToResponses(slots)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{pageId}/slots/{slotName}")
   public ResponseEntity<ApiResponse<Void>> deleteSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -89,6 +92,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success("Slot deleted successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{pageId}/slots/{slotName}")
   public ResponseEntity<ApiResponse<PageSlotResponse>> updateSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -98,6 +102,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success("Slot updated successfully", mapToResponse(slot)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{pageId}/slots/{slotName}/components")
   public ResponseEntity<ApiResponse<Void>> addComponentToSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -108,6 +113,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success("Component added to slot", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{pageId}/slots/{slotName}/components/{componentId}")
   public ResponseEntity<ApiResponse<Void>> removeComponentFromSlot(
       @PathVariable @NotNull @Min(1) Long pageId,
@@ -117,6 +123,7 @@ public class PageSlotController {
     return ResponseEntity.ok(ApiResponse.success("Component removed from slot", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{pageId}/slots/{slotName}/reorder")
   public ResponseEntity<ApiResponse<Void>> reorderComponents(
       @PathVariable @NotNull @Min(1) Long pageId,

@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Category", description = "Endpoints for managing product categories")
 public class CategoryController {
 
@@ -119,6 +119,7 @@ public class CategoryController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/composite")
     @Operation(summary = "Create category", description = "Creates a new category with translations")
     public ResponseEntity<ApiResponse<CategoryCompositeResponse>> createComposite(
@@ -146,6 +147,7 @@ public class CategoryController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{id}/composite")
     @Operation(summary = "Update category", description = "Updates an existing category with translations")
     public ResponseEntity<ApiResponse<CategoryCompositeResponse>> updateComposite(
@@ -173,6 +175,7 @@ public class CategoryController {
         }
     }
 
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete category", description = "Deletes a category (fails if has children or products)")
     public ResponseEntity<ApiResponse<Void>> delete(

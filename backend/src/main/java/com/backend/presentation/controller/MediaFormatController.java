@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Media Format", description = "Endpoints for managing media formats (image variants)")
 public class MediaFormatController {
 
@@ -175,6 +175,7 @@ public class MediaFormatController {
   /**
    * Create a new custom format.
    */
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping
   @Operation(summary = "Create custom format", description = "Creates a new custom media format.")
   public ResponseEntity<ApiResponse<MediaFormatResponse>> createFormat(
@@ -215,6 +216,7 @@ public class MediaFormatController {
   /**
    * Update a custom format. System formats cannot be updated.
    */
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}")
   @Operation(summary = "Update custom format", description = "Updates a custom media format. System formats cannot be updated.")
   public ResponseEntity<ApiResponse<MediaFormatResponse>> updateFormat(
@@ -258,6 +260,7 @@ public class MediaFormatController {
   /**
    * Delete a custom format. System formats cannot be deleted.
    */
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{id}")
   @Operation(summary = "Delete custom format", description = "Deletes a custom media format. System formats cannot be deleted.")
   public ResponseEntity<ApiResponse<Void>> deleteFormat(

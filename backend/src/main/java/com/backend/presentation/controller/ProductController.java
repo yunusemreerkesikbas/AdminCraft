@@ -34,7 +34,7 @@ import com.backend.domain.entity.Product;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
 import com.backend.domain.repository.ProductCategoryLinkRepository;
-import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.presentation.dto.request.ProductCompositeRequest;
 import com.backend.presentation.dto.request.ProductI18nRequest;
 import com.backend.presentation.dto.request.ProductUpdateRequest;
@@ -62,14 +62,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @Tag(name = "Product", description = "Endpoints for managing products")
 public class ProductController {
 
         private final ProductService productService;
         private final MessageSource messageSource;
         private final ProductCategoryLinkRepository productCategoryLinkRepository;
-        private final TenantContext tenantContext;
+        private final TenantContextPort tenantContext;
 
         @GetMapping
         @Operation(summary = "List products", description = "Retrieves products with pagination, search and filters")
@@ -142,8 +142,6 @@ public class ProductController {
                         @RequestParam(value = "include", required = false) String include,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
-                        boolean includeTranslations = include != null && include.contains("translations");
-
                         return productService.findByIdComposite(id)
                                         .map(p -> ResponseEntity
                                                         .ok(ApiResponse.success(ProductCompositeResponse.from(p,
@@ -163,6 +161,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/composite")
         @Operation(summary = "Create product", description = "Creates a new product with translations, attributes, categories and gallery")
         public ResponseEntity<ApiResponse<ProductCompositeResponse>> createComposite(
@@ -203,6 +202,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/composite")
         @Operation(summary = "Update product", description = "Updates an existing product with translations, attributes, categories and gallery")
         public ResponseEntity<ApiResponse<ProductCompositeResponse>> updateComposite(
@@ -242,6 +242,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
         @Operation(summary = "Delete product", description = "Deletes a product and all its related data")
         public ResponseEntity<ApiResponse<Void>> delete(
@@ -265,6 +266,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PatchMapping("/{id}/status")
         @Operation(summary = "Update product status", description = "Updates the status of a product (DRAFT/PUBLISHED)")
         public ResponseEntity<ApiResponse<ProductListItemResponse>> updateStatus(
@@ -294,6 +296,7 @@ public class ProductController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PatchMapping("/{id}/visibility")
         @Operation(summary = "Update product visibility", description = "Updates the visibility of a product")
         public ResponseEntity<ApiResponse<ProductListItemResponse>> updateVisibility(

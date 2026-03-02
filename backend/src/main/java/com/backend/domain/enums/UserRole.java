@@ -6,7 +6,6 @@ import lombok.Getter;
 public enum UserRole {
     SUPER_ADMIN,
     TENANT_ADMIN,
-    EDITOR,
     VIEWER;
 
     public boolean hasPermission(Permission permission) {
@@ -14,16 +13,10 @@ public enum UserRole {
             case SUPER_ADMIN -> true;
             case TENANT_ADMIN -> switch (permission) {
                 case READ_CONTENT, WRITE_CONTENT, DELETE_CONTENT,
+                        PUBLISH_CONTENT,
                         READ_USER, WRITE_USER, DELETE_USER,
                         READ_MEDIA, WRITE_MEDIA, DELETE_MEDIA,
                         MANAGE_TENANT ->
-                    true;
-                default -> false;
-            };
-            case EDITOR -> switch (permission) {
-                case READ_CONTENT, WRITE_CONTENT,
-                        READ_MEDIA, WRITE_MEDIA,
-                        READ_USER ->
                     true;
                 default -> false;
             };

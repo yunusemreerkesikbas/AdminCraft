@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Entity representing technical settings for a site.
  * One-to-one relationship with Site entity.
- * Contains robots.txt, sitemap settings, verification codes, and custom scripts.
+ * Contains robots.txt, sitemap settings, verification codes, and cookie consent.
  */
 @Entity
 @Table(name = "site_technical_settings")
@@ -61,16 +61,6 @@ public class SiteTechnicalSettings {
     @Size(max = 100)
     @Column(name = "yandex_verification", length = 100)
     private String yandexVerification;
-
-    // Custom Scripts
-    @Column(name = "head_scripts", columnDefinition = "TEXT")
-    private String headScripts;
-
-    @Column(name = "body_start_scripts", columnDefinition = "TEXT")
-    private String bodyStartScripts;
-
-    @Column(name = "body_end_scripts", columnDefinition = "TEXT")
-    private String bodyEndScripts;
 
     // Cookie Consent Settings
     @Column(name = "cookie_consent_enabled", nullable = false)

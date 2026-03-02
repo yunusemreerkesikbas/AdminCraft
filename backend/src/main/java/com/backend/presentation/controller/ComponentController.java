@@ -65,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class ComponentController {
 
         private final ComponentService componentService;
@@ -73,6 +73,7 @@ public class ComponentController {
         private final ComponentTypeService componentTypeService;
         private final MessageSource messageSource;
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping
         public ResponseEntity<ApiResponse<ComponentResponse>> create(
                         @Valid @RequestBody ComponentCreateRequest request,
@@ -189,6 +190,7 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
         public ResponseEntity<ApiResponse<ComponentResponse>> update(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -211,6 +213,7 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
         public ResponseEntity<ApiResponse<Void>> delete(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -251,6 +254,7 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/i18n/{language}")
         public ResponseEntity<ApiResponse<ComponentI18nResponse>> upsertComponentI18n(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -282,6 +286,7 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/publish/{language}")
         public ResponseEntity<ApiResponse<ComponentI18nResponse>> publishComponentI18n(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -307,6 +312,7 @@ public class ComponentController {
 
         // ==================== Composite Endpoints ====================
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/composite")
         public ResponseEntity<ApiResponse<ComponentCompositeResponse>> createComposite(
                         @Valid @RequestBody CreateComponentCompositeRequest request,
@@ -327,6 +333,7 @@ public class ComponentController {
                 }
         }
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}/composite")
         public ResponseEntity<ApiResponse<ComponentCompositeResponse>> updateComposite(
                         @PathVariable @NotNull @Min(1) Long id,
@@ -371,6 +378,7 @@ public class ComponentController {
 
         // ==================== Responsive Media Endpoint ====================
 
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PatchMapping("/{id}/responsive-media")
         public ResponseEntity<ApiResponse<ComponentResponse>> assignResponsiveMedia(
                         @PathVariable @NotNull @Min(1) Long id,

@@ -36,6 +36,7 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | `fetchProductsByCategory` | `GET /api/cms/products/category/{categoryUid}` | Paged list |
 | `searchProducts` | `GET /api/cms/products/search` | Query param: `q` |
 | `fetchCategoryTree` | `GET /api/cms/products/categories` | Category tree |
+| `app/robots.ts` | `GET /api/cms/robots.txt` | Plain-text robots.txt; respects `indexingEnabled` from `SiteTechnicalSettings` |
 
 ## Routing and page resolution
 
@@ -78,12 +79,12 @@ The maintenance page itself is rendered in the catch-all route:
 
 Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-page-slot` pattern.
 
-1. `CmsPage` calls `buildSlotMap(page)` → `{ slotName: slot }` map from `contentSlots` (or legacy `slots`). The backend sets `contentSlot[].slotId = slotName + "Slot"` and `contentSlot[].position = positionEnum` (e.g. `"TOP"`). `buildSlotMap` derives the key from `slotId` by stripping the `"Slot"` suffix — so `"Section1Slot"` → `"Section1"` — matching the position strings used in template components.
+1. `CmsPage` calls `buildSlotMap(page)` → `{ slotName: slot }` map from `contentSlots`. The backend sets `contentSlot[].slotId = slotName + "Slot"` and `contentSlot[].position = positionEnum` (e.g. `"TOP"`). `buildSlotMap` derives the key from `slotId` by stripping the `"Slot"` suffix — so `"Section1Slot"` → `"Section1"` — matching the slot names used in template components.
 2. `resolveTemplate(page.template)` looks up the template component from `templateRegistry`.
    - Unknown template → falls back to `DefaultTemplate` (renders all slots as a vertical stack) + `console.warn` (development only).
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
-4. Each template reads its slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot position="..." slotMap={slotMap} />` for each slot.
-5. `CmsSlot` renders the components for that position; returns `null` + `console.warn` (development only) if the position isn't in `slotMap`.
+4. Each template reads its slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each slot.
+5. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
 6. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
 7. Unknown component types render with `UnknownComponent`.
 
@@ -116,13 +117,14 @@ To add a new template:
 ### CSS targeting
 
 Template name appears **once** on the template's outer `<div>` (`cms-page {templateName}`), not repeated on every slot.
-`CmsSlot` emits `class="cms-slot {position}"` only.
+`CmsSlot` emits `class="cms-slot {slotName}"` only.
 
 ```html
 <!-- Rendered structure -->
 <div class="cms-page LandingPageTemplate space-y-8">
-  <section class="cms-slot Section1" data-slot-position="Section1"> ... </section>
-  <section class="cms-slot Section2" data-slot-position="Section2"> ... </section>
+  <section class="cms-slot Section1" data-slot-name="Section1"> ... </section>
+  <section class="cms-slot Section2" data-slot-name="Section2"> ... </section>
+  <section class="cms-slot Section3" data-slot-name="Section3"> ... </section>
 </div>
 ```
 

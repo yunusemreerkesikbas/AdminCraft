@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -77,7 +78,10 @@ public class PageServiceImpl implements PageService {
                 .orElseThrow(() -> new PageNotFoundException(id));
 
         List<PageI18n> i18nList = pageI18nRepository.findByPageId(id);
-        return PageDetailResponse.from(page, i18nList);
+        String templateUid = page.getTemplateId() != null
+                ? pageTemplateService.getById(page.getTemplateId()).getUid()
+                : null;
+        return PageDetailResponse.from(page, i18nList, templateUid);
     }
 
     @Override
@@ -171,7 +175,10 @@ public class PageServiceImpl implements PageService {
 
         // 4. Return composite response
         List<PageI18n> i18nList = pageI18nRepository.findByPageId(pageId);
-        return PageDetailResponse.from(page, i18nList);
+        String templateUid = page.getTemplateId() != null
+                ? pageTemplateService.getById(page.getTemplateId()).getUid()
+                : null;
+        return PageDetailResponse.from(page, i18nList, templateUid);
     }
 
     @Override
@@ -184,6 +191,10 @@ public class PageServiceImpl implements PageService {
         Long oldTemplateId = page.getTemplateId();
         Long newTemplateId = request.templateId();
 
+        if (request.uid() != null && !request.uid().isBlank()) {
+            String newUid = ensureUniqueUidForUpdate(id, request.uid().trim());
+            page.setUid(newUid);
+        }
         if (request.status() != null)
             page.setStatus(request.status());
         if (request.styleClasses() != null)
@@ -210,7 +221,10 @@ public class PageServiceImpl implements PageService {
 
         // 4. Return composite response
         List<PageI18n> i18nList = pageI18nRepository.findByPageId(id);
-        return PageDetailResponse.from(page, i18nList);
+        String templateUid = page.getTemplateId() != null
+                ? pageTemplateService.getById(page.getTemplateId()).getUid()
+                : null;
+        return PageDetailResponse.from(page, i18nList, templateUid);
     }
 
     /**
@@ -255,6 +269,21 @@ public class PageServiceImpl implements PageService {
             counter++;
         }
         return uid + "-" + counter;
+    }
+
+    private String ensureUniqueUidForUpdate(Long pageId, String desiredUid) {
+        if (desiredUid == null || desiredUid.isEmpty()) {
+            return pageRepository.findById(pageId).map(Page::getUid).orElseGet(this::generateUniqueUidForPage);
+        }
+        Optional<Page> existing = pageRepository.findByUid(desiredUid);
+        if (existing.isEmpty() || existing.get().getId().equals(pageId)) {
+            return desiredUid;
+        }
+        int counter = 1;
+        while (pageRepository.existsByUid(desiredUid + "-" + counter)) {
+            counter++;
+        }
+        return desiredUid + "-" + counter;
     }
 
     private String generateUniqueUidForPage() {

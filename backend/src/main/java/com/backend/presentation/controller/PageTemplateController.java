@@ -55,7 +55,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/page-templates")
 @RequiredArgsConstructor
 @Validated
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class PageTemplateController {
 
   private final PageTemplateService pageTemplateService;
@@ -114,6 +114,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success(mapToResponse(template)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping
   public ResponseEntity<ApiResponse<PageTemplateResponse>> createTemplate(
       @Valid @RequestBody CreatePageTemplateRequest request) {
@@ -128,6 +129,7 @@ public class PageTemplateController {
         .body(ApiResponse.success("Template created successfully", mapToResponse(template)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<PageTemplateResponse>> updateTemplate(
       @PathVariable @NotNull @Min(1) Long id,
@@ -141,6 +143,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success("Template updated successfully", mapToResponse(template)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteTemplate(
       @PathVariable @NotNull @Min(1) Long id) {
@@ -148,6 +151,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success("Template deleted successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{id}/slots")
   public ResponseEntity<ApiResponse<TemplateSlotResponse>> addSlot(
       @PathVariable @NotNull @Min(1) Long id,
@@ -165,6 +169,7 @@ public class PageTemplateController {
         .body(ApiResponse.success("Slot added successfully", mapSlotToResponse(slot)));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{id}/slots/{slotName}")
   public ResponseEntity<ApiResponse<Void>> removeSlot(
       @PathVariable @NotNull @Min(1) Long id,
@@ -173,6 +178,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success("Slot removed successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{id}/assign/{pageId}")
   public ResponseEntity<ApiResponse<Void>> assignTemplateToPage(
       @PathVariable @NotNull @Min(1) Long id,
@@ -181,6 +187,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success("Template assigned to page successfully", null));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}/slots/reorder")
   public ResponseEntity<ApiResponse<Void>> reorderSlots(
       @PathVariable @NotNull @Min(1) Long id,
@@ -200,6 +207,7 @@ public class PageTemplateController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
+  @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}/i18n/{language}")
   public ResponseEntity<ApiResponse<PageTemplateI18nResponse>> upsertTemplateI18n(
       @PathVariable @NotNull @Min(1) Long id,
