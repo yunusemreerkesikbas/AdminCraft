@@ -150,12 +150,12 @@ ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), positi
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
 SELECT 'dd000002-0000-4000-8000-000000000002', 'LandingPageSection2Slot', id, 'Section2', 'CENTER', 2, FALSE
 FROM page_templates WHERE uid = 'LandingPageTemplate'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
 
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
 SELECT 'dd000003-0000-4000-8000-000000000003', 'LandingPageSection3Slot', id, 'Section3', 'BOTTOM', 3, FALSE
 FROM page_templates WHERE uid = 'LandingPageTemplate'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
 
 -- ContentPageTemplate Slots (Main content with optional sidebar)
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)

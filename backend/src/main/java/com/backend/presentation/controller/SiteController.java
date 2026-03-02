@@ -370,7 +370,6 @@ public class SiteController {
 
     // ========== Security Settings Endpoints ==========
 
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
     @GetMapping("/security")
     public ResponseEntity<ApiResponse<SecuritySettingsResponse>> getSecuritySettings(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {

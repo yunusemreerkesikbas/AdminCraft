@@ -97,7 +97,7 @@ public class TenantLanguageController {
   @PostMapping("/{tenantId}/languages/provision")
   public ResponseEntity<ApiResponse<ProvisioningJobResponse>> provisionLanguages(
       @PathVariable Long tenantId,
-      @RequestBody ProvisionLanguagesRequest request,
+      @Valid @RequestBody ProvisionLanguagesRequest request,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
       log.info("Provisioning languages for tenantId={}: {}", tenantId, request.getLanguages());

@@ -128,3 +128,8 @@ resilience4j:
         limit-refresh-period: 60s
         timeout-duration: 0s
         allow-health-indicator-to-fail: true
+      impexExecute:
+        limit-for-period: 5
+        limit-refresh-period: 60s
+        timeout-duration: 0s
+        allow-health-indicator-to-fail: true

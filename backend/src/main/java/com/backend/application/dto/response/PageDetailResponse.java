@@ -16,6 +16,7 @@ public record PageDetailResponse(
                 String uuid,
                 String uid,
                 Long templateId,
+                String templateUid,
                 PageStatus status,
                 String styleClasses,
                 RobotTag robotTag,
@@ -25,7 +26,7 @@ public record PageDetailResponse(
                 LocalDateTime updatedAt,
                 Map<String, PageI18nResponse> translations) {
 
-        public static PageDetailResponse from(Page page, List<PageI18n> pageI18nList) {
+        public static PageDetailResponse from(Page page, List<PageI18n> pageI18nList, String templateUid) {
                 if (page == null) {
                         throw new IllegalArgumentException("Page entity cannot be null");
                 }
@@ -43,6 +44,7 @@ public record PageDetailResponse(
                                 page.getUuid(),
                                 page.getUid(),
                                 page.getTemplateId(),
+                                templateUid,
                                 page.getStatus(),
                                 page.getStyleClasses(),
                                 page.getRobotTag(),

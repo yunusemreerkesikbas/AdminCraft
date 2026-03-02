@@ -44,3 +44,6 @@ resilience4j:
       entryFieldDefinition:
         limit-for-period: 1000
         limit-refresh-period: 1s
+      impexExecute:
+        limit-for-period: 1000
+        limit-refresh-period: 1s

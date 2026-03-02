@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.impex.ImpExRequest;
 import com.backend.application.dto.impex.ImpExResult;
-import com.backend.application.service.impex.ImpExInvalidScriptException;
 import com.backend.application.service.impex.ImpExService;
+import com.backend.domain.exception.ImpExInvalidScriptException;
 import com.backend.shared.common.ApiResponse;
+
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/impex")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class ImpExController {
 
     private final ImpExService impExService;
     private final MessageSource messageSource;
 
+    @RateLimiter(name = "impexExecute")
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/execute")
     public ResponseEntity<ApiResponse<ImpExResult>> execute(
@@ -66,8 +68,10 @@ public class ImpExController {
 
         } catch (ImpExInvalidScriptException ex) {
             log.warn("ImpEx rejected — invalid content: {}", ex.getMessage());
+            String msg = ex.getMessage();
+            String truncated = (msg != null && msg.length() > 500) ? msg.substring(0, 500) : msg;
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(ex.getMessage()));
+                    .body(ApiResponse.error(truncated));
         } catch (Exception ex) {
             log.error("ImpEx unexpected error: {}", ex.getMessage(), ex);
             String message = messageSource.getMessage("impex.error.execute", null, locale);

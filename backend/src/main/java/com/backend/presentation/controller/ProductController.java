@@ -34,7 +34,7 @@ import com.backend.domain.entity.Product;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProductStatus;
 import com.backend.domain.repository.ProductCategoryLinkRepository;
-import com.backend.infrastructure.tenant.TenantContext;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.presentation.dto.request.ProductCompositeRequest;
 import com.backend.presentation.dto.request.ProductI18nRequest;
 import com.backend.presentation.dto.request.ProductUpdateRequest;
@@ -69,7 +69,7 @@ public class ProductController {
         private final ProductService productService;
         private final MessageSource messageSource;
         private final ProductCategoryLinkRepository productCategoryLinkRepository;
-        private final TenantContext tenantContext;
+        private final TenantContextPort tenantContext;
 
         @GetMapping
         @Operation(summary = "List products", description = "Retrieves products with pagination, search and filters")
@@ -142,8 +142,6 @@ public class ProductController {
                         @RequestParam(value = "include", required = false) String include,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
                 try {
-                        boolean includeTranslations = include != null && include.contains("translations");
-
                         return productService.findByIdComposite(id)
                                         .map(p -> ResponseEntity
                                                         .ok(ApiResponse.success(ProductCompositeResponse.from(p,

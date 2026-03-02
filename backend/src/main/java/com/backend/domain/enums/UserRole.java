@@ -13,6 +13,7 @@ public enum UserRole {
             case SUPER_ADMIN -> true;
             case TENANT_ADMIN -> switch (permission) {
                 case READ_CONTENT, WRITE_CONTENT, DELETE_CONTENT,
+                        PUBLISH_CONTENT,
                         READ_USER, WRITE_USER, DELETE_USER,
                         READ_MEDIA, WRITE_MEDIA, DELETE_MEDIA,
                         MANAGE_TENANT ->

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.backend.application.dto.impex.ImpExResult;
 import com.backend.application.dto.impex.StatementResult;
+import com.backend.domain.exception.ImpExInvalidScriptException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
 
@@ -35,10 +36,6 @@ public class ImpExServiceImpl implements ImpExService {
     private final TenantContextPort tenantContext;
     private final MessageSource messageSource;
 
-    private JdbcTemplate jdbcTemplate() {
-        return new JdbcTemplate(multiTenantConnectionProvider.getDataSource(tenantContext.getTenantDbName()));
-    }
-
     @Override
     public ImpExResult execute(String sqlContent, Locale locale) {
         log.info("ImpEx execution started, content length: {} chars", sqlContent.length());
@@ -48,7 +45,10 @@ public class ImpExServiceImpl implements ImpExService {
         List<String> statements = parseStatements(sqlContent);
         log.debug("ImpEx parsed {} statement(s)", statements.size());
 
-        List<StatementResult> results = executeStatements(statements, locale);
+        JdbcTemplate jdbc = new JdbcTemplate(
+            multiTenantConnectionProvider.getDataSource(tenantContext.getTenantDbName())
+        );
+        List<StatementResult> results = executeStatements(statements, locale, jdbc);
 
         int executed = (int) results.stream().filter(StatementResult::success).count();
         int failed = results.size() - executed;
@@ -90,7 +90,7 @@ public class ImpExServiceImpl implements ImpExService {
         return sb.toString().trim();
     }
 
-    private List<StatementResult> executeStatements(List<String> statements, Locale locale) {
+    private List<StatementResult> executeStatements(List<String> statements, Locale locale, JdbcTemplate jdbc) {
         List<StatementResult> results = new ArrayList<>();
         for (int i = 0; i < statements.size(); i++) {
             String sql = statements.get(i);
@@ -101,28 +101,31 @@ public class ImpExServiceImpl implements ImpExService {
             String blockReason = checkBlocked(sql, locale);
             if (blockReason != null) {
                 log.warn("ImpEx statement [{}] blocked — preview: {}", i + 1, preview);
-                results.add(new StatementResult(i + 1, preview, false, 0, blockReason));
+                results.add(StatementResult.failure(i + 1, preview, blockReason));
                 continue;
             }
 
             try {
-                int rows = jdbcTemplate().update(sql);
-                log.debug("ImpEx statement [{}] OK — {} row(s) affected", i + 1, rows);
-                results.add(new StatementResult(i + 1, preview, true, rows, null));
-            } catch (Exception e) {
-                String error = e.getMessage();
-                if (error != null && error.length() > 500) {
-                    error = error.substring(0, 500);
+                String upper = sql.stripLeading().toUpperCase(Locale.ROOT);
+                if (upper.startsWith("SELECT")) {
+                    List<?> rows = jdbc.queryForList(sql);
+                    log.debug("ImpEx statement [{}] OK — {} row(s) returned", i + 1, rows.size());
+                    results.add(StatementResult.success(i + 1, preview, rows.size()));
+                } else {
+                    int rows = jdbc.update(sql);
+                    log.debug("ImpEx statement [{}] OK — {} row(s) affected", i + 1, rows);
+                    results.add(StatementResult.success(i + 1, preview, rows));
                 }
-                log.warn("ImpEx statement [{}] FAILED — {}", i + 1, error);
-                results.add(new StatementResult(i + 1, preview, false, 0, error));
+            } catch (Exception e) {
+                log.error("ImpEx statement [{}] FAILED — {}", i + 1, e.getMessage(), e);
+                results.add(StatementResult.failure(i + 1, preview, e.getMessage()));
             }
         }
         return results;
     }
 
     private String checkBlocked(String sql, Locale locale) {
-        String upper = sql.stripLeading().toUpperCase();
+        String upper = sql.stripLeading().toUpperCase(Locale.ROOT);
 
         for (String blocked : BLOCKED_KEYWORDS) {
             if (upper.startsWith(blocked)) {

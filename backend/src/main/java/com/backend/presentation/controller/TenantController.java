@@ -37,6 +37,7 @@ import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.TenantDetailResponse;
 import com.backend.presentation.dto.response.TenantListResponse;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
@@ -61,7 +62,7 @@ public class TenantController {
         private final MessageSource messageSource;
         private final GenerateTenantAdminUserUseCase generateTenantAdminUserUseCase;
         private final SecurityHelper securityHelper;
-        private final com.backend.infrastructure.tenant.TenantContext tenantContext;
+        private final TenantContextPort tenantContext;
 
         @PreAuthorize("hasRole('SUPER_ADMIN')")
         @PostMapping

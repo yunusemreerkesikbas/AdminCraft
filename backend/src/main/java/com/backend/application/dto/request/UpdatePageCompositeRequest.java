@@ -18,6 +18,8 @@ import jakarta.validation.constraints.Size;
  * Service layer converts these to Language enum.
  */
 public record UpdatePageCompositeRequest(
+    @Size(max = 100) String uid,
+
     Long templateId,
 
     PageStatus status,
