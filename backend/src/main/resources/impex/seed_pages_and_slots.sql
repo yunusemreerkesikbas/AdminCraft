@@ -14,32 +14,28 @@
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT 'f0000001-0000-0000-0000-000000000001', 'homepage',
     (SELECT id FROM page_templates WHERE uid = 'LandingPageTemplate'),
-    'PUBLISHED', 'LANDING', TRUE, 'INDEX_FOLLOW',
-    (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+    'PUBLISHED', 'LANDING', TRUE, 'INDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
     page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT 'f0000002-0000-0000-0000-000000000001', 'productPage',
     (SELECT id FROM page_templates WHERE uid = 'ProductDetailsPageTemplate'),
-    'PUBLISHED', 'PRODUCT', FALSE, 'INDEX_FOLLOW',
-    (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+    'PUBLISHED', 'PRODUCT', FALSE, 'INDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
     page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT 'f0000003-0000-0000-0000-000000000001', 'categoryPage',
     (SELECT id FROM page_templates WHERE uid = 'CategoryPageTemplate'),
-    'PUBLISHED', 'CATEGORY', FALSE, 'INDEX_FOLLOW',
-    (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+    'PUBLISHED', 'CATEGORY', FALSE, 'INDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
     page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
 SELECT 'f0000004-0000-0000-0000-000000000001', 'searchResultsPage',
     (SELECT id FROM page_templates WHERE uid = 'SearchResultsPageTemplate'),
-    'PUBLISHED', 'SEARCH', FALSE, 'NOINDEX_FOLLOW',
-    (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+    'PUBLISHED', 'SEARCH', FALSE, 'NOINDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
     page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
 

@@ -124,8 +124,7 @@ All scripts should be written with `ON DUPLICATE KEY UPDATE` so they can be run 
 
 INSERT INTO pages (uuid, uid, template_id, status, robot_tag, page_type, is_home, created_by)
 SELECT 'f0000001-0000-0000-0000-000000000001', 'homepage', pt.id,
-  'PUBLISHED', 'INDEX_FOLLOW', 'LANDING', TRUE,
-  (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+  'PUBLISHED', 'INDEX_FOLLOW', 'LANDING', TRUE, NULL
 FROM page_templates pt WHERE pt.uid = 'LandingPageTemplate'
 ON DUPLICATE KEY UPDATE status = VALUES(status);
 ```
@@ -133,7 +132,7 @@ ON DUPLICATE KEY UPDATE status = VALUES(status);
 Rules:
 - Never hardcode database IDs — resolve via `uid` subqueries.
 - `uuid` must never appear in `ON DUPLICATE KEY UPDATE` (it is the idempotency key).
-- `created_by` must always resolve via `(SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)`.
+- `created_by`: use `NULL` — the `users` table in tenant DB has no `is_system` column.
 
 ---
 
