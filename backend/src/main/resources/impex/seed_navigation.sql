@@ -1,5 +1,8 @@
--- Seed navigation nodes and entries used by CMS header/footer components.
--- Repeatable migration: keeps default navigation reusable across tenants.
+-- #ADMINCRAFT_IMPEX
+-- Version-controlled ImpEx reference script.
+-- Run via Admin UI /{lang}/impex when needed to seed navigation demo data.
+-- Idempotent: safe to run multiple times.
+-- Prerequisite: core tables (navigation_nodes, navigation_entries) must exist (Flyway).
 
 -- ============================================
 -- 1. ROOT NODES
@@ -7,19 +10,11 @@
 
 INSERT INTO navigation_nodes (uuid, uid, parent_id, position, sort_order, is_visible, is_tab, created_at, updated_at, created_by, updated_by)
 VALUES ('c1000001-0000-4000-8000-000000000001', 'LandingMainNavNode', NULL, 'TOP', 0, TRUE, FALSE, NOW(), NOW(), NULL, NULL)
-ON DUPLICATE KEY UPDATE
-    position = VALUES(position),
-    sort_order = VALUES(sort_order),
-    is_visible = VALUES(is_visible),
-    updated_at = NOW();
+ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_order), is_visible = VALUES(is_visible), updated_at = NOW();
 
 INSERT INTO navigation_nodes (uuid, uid, parent_id, position, sort_order, is_visible, is_tab, created_at, updated_at, created_by, updated_by)
 VALUES ('c1000002-0000-4000-8000-000000000002', 'LandingSocialNavNode', NULL, 'RIGHT', 1, TRUE, FALSE, NOW(), NOW(), NULL, NULL)
-ON DUPLICATE KEY UPDATE
-    position = VALUES(position),
-    sort_order = VALUES(sort_order),
-    is_visible = VALUES(is_visible),
-    updated_at = NOW();
+ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_order), is_visible = VALUES(is_visible), updated_at = NOW();
 
 -- ============================================
 -- 2. ROOT NODE I18N

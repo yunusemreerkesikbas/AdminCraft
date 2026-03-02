@@ -1,9 +1,11 @@
--- Seed data for CMS components (component instances + i18n)
--- Repeatable migration: runs after R__seed_component_types and R__seed_entry_field_definitions
--- Used by CMS delivery API; component_types must exist.
+-- #ADMINCRAFT_IMPEX
+-- Version-controlled ImpEx reference script.
+-- Run via Admin UI /{lang}/impex when needed to seed component library demo data.
+-- Idempotent: safe to run multiple times.
+-- Prerequisite: component_types and entry_field_definitions must exist (Flyway R__seed_component_types, R__seed_entry_field_definitions).
 
 -- ============================================
--- 1. COMPONENTS (fixed UIDs for slot_components reference)
+-- 1. COMPONENTS
 -- ============================================
 
 INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
@@ -37,7 +39,7 @@ FROM component_types WHERE uid = 'FeatureCardComponent'
 ON DUPLICATE KEY UPDATE name = VALUES(name), style_classes = VALUES(style_classes), status = VALUES(status), updated_at = NOW();
 
 -- ============================================
--- 2. COMPONENT_I18N (TR + EN, PUBLISHED for delivery)
+-- 2. COMPONENT_I18N (TR + EN)
 -- ============================================
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
@@ -101,7 +103,7 @@ FROM components c WHERE c.uid = 'SeedLandingPortfolioGrid'
 ON DUPLICATE KEY UPDATE title = VALUES(title), subtitle = VALUES(subtitle), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
 -- ============================================
--- 3. COMPONENT_ENTRIES + COMPONENT_ENTRY_I18N (Portfolio Grid)
+-- 3. COMPONENT_ENTRIES (Portfolio Grid items)
 -- ============================================
 
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
@@ -123,6 +125,10 @@ INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, 
 SELECT 'a3000004-0000-4000-8000-000000000004', 'SeedLandingPortfolioGridEntry4', c.id, 3, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'SeedLandingPortfolioGrid'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible), status = VALUES(status), updated_at = NOW();
+
+-- ============================================
+-- 4. COMPONENT_ENTRY_I18N (Portfolio Grid items)
+-- ============================================
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'a4000001-0000-4000-8000-000000000001', 'SeedLandingPortfolioGridEntry1Tr', e.id, 'TR', 'Modern Kimlik Tasarımı', 'Kurumsal kimlik, logo ve tipografi sistemi.', 'PUBLISHED',

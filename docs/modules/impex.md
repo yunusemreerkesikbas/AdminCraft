@@ -124,8 +124,7 @@ All scripts should be written with `ON DUPLICATE KEY UPDATE` so they can be run 
 
 INSERT INTO pages (uuid, uid, template_id, status, robot_tag, page_type, is_home, created_by)
 SELECT 'f0000001-0000-0000-0000-000000000001', 'homepage', pt.id,
-  'PUBLISHED', 'INDEX_FOLLOW', 'LANDING', TRUE,
-  (SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)
+  'PUBLISHED', 'INDEX_FOLLOW', 'LANDING', TRUE, NULL
 FROM page_templates pt WHERE pt.uid = 'LandingPageTemplate'
 ON DUPLICATE KEY UPDATE status = VALUES(status);
 ```
@@ -133,7 +132,7 @@ ON DUPLICATE KEY UPDATE status = VALUES(status);
 Rules:
 - Never hardcode database IDs — resolve via `uid` subqueries.
 - `uuid` must never appear in `ON DUPLICATE KEY UPDATE` (it is the idempotency key).
-- `created_by` must always resolve via `(SELECT id FROM users WHERE is_system = TRUE ORDER BY id ASC LIMIT 1)`.
+- `created_by`: use `NULL` — the `users` table in tenant DB has no `is_system` column.
 
 ---
 
@@ -193,3 +192,34 @@ When `status` is `"PARTIAL"`, inspect `results` where `success: false`:
 ### Adding a new script pattern
 
 Scripts have no file-based registration. Any valid SQL can be submitted. For repeatable seeds that belong to the codebase, keep them in version-controlled `.sql` files and paste into the UI as needed. There is no automatic classpath scanning.
+
+---
+
+## Version-Controlled Reference Scripts
+
+ImpEx scripts for demo/content data are stored under `backend/src/main/resources/impex/`. These are **not executed automatically** — they serve as versioned reference documents that an admin can paste into the UI when setting up a new tenant with sample data.
+
+### Execution order (when seeding a fresh tenant)
+
+```
+1. seed_components.sql      — components, i18n, entries, entry i18n
+2. seed_navigation.sql      — nav nodes, entries, i18n
+3. seed_pages_and_slots.sql — pages, page_i18n, page_slots, slot_components, shared slots
+```
+
+`seed_pages_and_slots.sql` depends on components from step 1 (FK via `slot_components`) and on Flyway-managed `page_templates` / `template_slots`.
+
+### What remains in Flyway (R__ repeatable migrations)
+
+These seeds are structural / system data and still run automatically via Flyway:
+
+| File | Purpose |
+|------|---------|
+| `core/R__seed_system_user.sql` | System user required by FK on `created_by` |
+| `core/R__seed_roles.sql` | Default site settings |
+| `media/R__seed_media_formats.sql` | Media format definitions |
+| `component_library/R__seed_component_types.sql` | Component type catalog |
+| `component_library/R__seed_entry_field_definitions.sql` | Field schema per type |
+| `pagebuilder/R__seed_page_templates.sql` | Page templates + template slots |
+
+The former content seeds (`R__seed_components.sql`, `R__seed_navigation.sql`, `R__seed_sample_pages.sql`, `R__zz_seed_page_slots.sql`) have been stubbed out and their content moved to the `impex/` directory.
