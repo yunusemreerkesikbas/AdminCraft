@@ -56,45 +56,28 @@ public class ComponentTypeController {
     public ResponseEntity<ApiResponse<ComponentTypeResponse>> create(
             @Valid @RequestBody ComponentTypeCreateRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        try {
-            Long userId = SecurityUtil.getCurrentUserIdOrThrow();
+        Long userId = SecurityUtil.getCurrentUserIdOrThrow();
 
-            ComponentType result = componentTypeService.createComponentType(
-                    request.name(),
-                    request.category(),
-                    request.navigationAware(),
-                    userId);
-            ComponentTypeResponse response = ComponentTypeResponse.from(result);
+        ComponentType result = componentTypeService.createComponentType(
+                request.name(),
+                request.category(),
+                request.navigationAware(),
+                userId);
+        ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
-            String successMessage = messageSource.getMessage("component.type.create.success",
-                    null, Locale.forLanguageTag(lang));
-            return ResponseEntity.ok(ApiResponse.success(successMessage, response));
-        } catch (Exception ex) {
-            log.error("Error creating component type: {}", ex.getMessage());
-            String msg = messageSource.getMessage("component.type.create.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(msg));
-        }
+        String successMessage = messageSource.getMessage("component.type.create.success",
+                null, Locale.forLanguageTag(lang));
+        return ResponseEntity.ok(ApiResponse.success(successMessage, response));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ComponentTypeResponse>> getById(
-            @PathVariable @NotNull @Min(1) Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        try {
-            GetComponentTypeByIdQuery query = new GetComponentTypeByIdQuery(id);
-            ComponentType result = componentTypeService.getComponentTypeById(query);
-            ComponentTypeResponse response = ComponentTypeResponse.from(result);
+            @PathVariable @NotNull @Min(1) Long id) {
+        GetComponentTypeByIdQuery query = new GetComponentTypeByIdQuery(id);
+        ComponentType result = componentTypeService.getComponentTypeById(query);
+        ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
-            return ResponseEntity.ok(ApiResponse.success(response));
-        } catch (Exception ex) {
-            log.error("Error getting component type {}: {}", id, ex.getMessage());
-            String msg = messageSource.getMessage("component.type.get.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error(msg));
-        }
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping
@@ -140,27 +123,19 @@ public class ComponentTypeController {
             @PathVariable @NotNull @Min(1) Long id,
             @Valid @RequestBody ComponentTypeCreateRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        try {
-            Long userId = SecurityUtil.getCurrentUserIdOrThrow();
+        Long userId = SecurityUtil.getCurrentUserIdOrThrow();
 
-            ComponentType result = componentTypeService.updateComponentType(
-                    id,
-                    request.name(),
-                    request.category(),
-                    request.navigationAware(),
-                    userId);
-            ComponentTypeResponse response = ComponentTypeResponse.from(result);
+        ComponentType result = componentTypeService.updateComponentType(
+                id,
+                request.name(),
+                request.category(),
+                request.navigationAware(),
+                userId);
+        ComponentTypeResponse response = ComponentTypeResponse.from(result);
 
-            String successMessage = messageSource.getMessage("component.type.update.success",
-                    null, Locale.forLanguageTag(lang));
-            return ResponseEntity.ok(ApiResponse.success(successMessage, response));
-        } catch (Exception ex) {
-            log.error("Error updating component type {}: {}", id, ex.getMessage());
-            String msg = messageSource.getMessage("component.type.update.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(msg));
-        }
+        String successMessage = messageSource.getMessage("component.type.update.success",
+                null, Locale.forLanguageTag(lang));
+        return ResponseEntity.ok(ApiResponse.success(successMessage, response));
     }
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -168,18 +143,10 @@ public class ComponentTypeController {
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
-        try {
-            componentTypeService.deleteComponentType(id);
+        componentTypeService.deleteComponentType(id);
 
-            String successMessage = messageSource.getMessage("component.type.delete.success",
-                    null, Locale.forLanguageTag(lang));
-            return ResponseEntity.ok(ApiResponse.success(successMessage, null));
-        } catch (Exception ex) {
-            log.error("Error deleting component type {}: {}", id, ex.getMessage());
-            String msg = messageSource.getMessage("component.type.delete.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(msg));
-        }
+        String successMessage = messageSource.getMessage("component.type.delete.success",
+                null, Locale.forLanguageTag(lang));
+        return ResponseEntity.ok(ApiResponse.success(successMessage, null));
     }
 }

@@ -26,7 +26,6 @@ public record ComponentCompositeResponse(
     Boolean isVisible,
     String styleClasses,
     Long navigationNodeId,
-    Long navigationLinkNodeId,
     NavigationType navigationType,
     Boolean searchBox,
     ComponentStatus status,
@@ -58,7 +57,6 @@ public record ComponentCompositeResponse(
         .isVisible(component.getIsVisible())
         .styleClasses(component.getStyleClasses())
         .navigationNodeId(component.getNavigationNodeId())
-        .navigationLinkNodeId(component.getNavigationLinkNodeId())
         .navigationType(component.getNavigationType())
         .searchBox(component.getSearchBox())
         .status(component.getStatus())

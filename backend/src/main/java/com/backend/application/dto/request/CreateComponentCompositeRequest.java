@@ -29,8 +29,6 @@ public record CreateComponentCompositeRequest(
 
     Long navigationNodeId,
 
-    Long navigationLinkNodeId,
-
     NavigationType navigationType,
 
     Boolean searchBox,

@@ -67,7 +67,8 @@ public class TenantContext implements TenantContextPort {
 
   @Override
   public Language getDefaultLanguage() {
-    return currentDefaultLanguage.get();
+    Language lang = currentDefaultLanguage.get();
+    return lang != null ? lang : Language.getDefault();
   }
 
   @Override

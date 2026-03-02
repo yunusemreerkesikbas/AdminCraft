@@ -11,6 +11,7 @@ import com.backend.application.query.ComponentTypeQueries.GetAllComponentTypesQu
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypeByIdQuery;
 import com.backend.application.query.ComponentTypeQueries.GetComponentTypesByCategoryQuery;
 import com.backend.domain.entity.ComponentType;
+import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.util.UuidUidGenerator;
 
@@ -50,7 +51,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
     @Transactional(readOnly = true)
     public ComponentType getComponentTypeById(GetComponentTypeByIdQuery query) {
         return componentTypeRepository.findById(query.id())
-                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + query.id()));
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", query.id()));
     }
 
     @Override
@@ -85,7 +86,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
         log.debug("Updating component type with id: {}", id);
 
         ComponentType componentType = componentTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", id));
 
         componentType.setName(name);
         componentType.setCategory(category);
@@ -101,7 +102,7 @@ public class ComponentTypeServiceImpl implements ComponentTypeService {
     @Transactional
     public void deleteComponentType(Long id) {
         ComponentType componentType = componentTypeRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ComponentType not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("ComponentType", id));
 
         componentTypeRepository.delete(componentType);
     }

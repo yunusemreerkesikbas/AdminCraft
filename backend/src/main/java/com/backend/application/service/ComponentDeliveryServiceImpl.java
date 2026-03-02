@@ -303,11 +303,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     return navigationService.getNavigationById(component.getNavigationNodeId(), lang).orElse(null);
   }
 
-  private NavigationDeliveryResponse resolveNavigationLinkNode(ComponentType type, Component component) {
-    // navigationLinkNodeId is reserved for future use and hidden from UI
-    return null;
-  }
-
   private boolean isNavigationAware(ComponentType type) {
     return type != null && type.isNavigationAware();
   }

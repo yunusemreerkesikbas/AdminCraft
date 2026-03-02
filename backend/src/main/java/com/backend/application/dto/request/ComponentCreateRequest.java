@@ -30,8 +30,6 @@ public record ComponentCreateRequest(
 
         Long navigationNodeId,
 
-        Long navigationLinkNodeId,
-
         NavigationType navigationType,
 
         Boolean searchBox,
