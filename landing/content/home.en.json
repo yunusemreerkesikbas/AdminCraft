@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "headline": "Configurable business platform for every project.",
+    "subheadline": "One platform, unlimited configurations. From blogs to HR portals, from agency OS to ecommerce, ship fast on a proven multi-tenant architecture.",
+    "primaryCta": "Request Demo",
+    "secondaryCta": "Explore Features"
+  },
+  "trustedBy": {
+    "title": "Trusted by Teams Around the Globe"
+  },
+  "benefits": {
+    "sectionTag": "Benefits",
+    "heading": "Designed for Your Everyday Life",
+    "subheading": "Discover smart tools that empower you to save better, spend thoughtfully, and stay in full control.",
+    "cards": [
+      { "title": "Personalize Your Experience", "description": "Easily adapt every element to fit your brand and workflow. From colors to logic." },
+      { "title": "Customization Options", "description": "Personalize your dashboard to display the information that matters." },
+      { "title": "Effortless Tracking", "description": "Monitor your progress towards your goals in real-time." },
+      { "title": "Secure Connections", "description": "Link your accounts safely with bank-level encryption and protection." }
+    ]
+  },
+  "features": {
+    "sectionTag": "Features",
+    "heading": "Powerful Features for Your Finances",
+    "subheading": "Explore intelligent tools designed to help you save smarter, spend wiser, and stay in full control.",
+    "cards": [
+      { "title": "Why Customers Prefer Our Service", "description": "Our service is built on trust, transparency, and proven results. We focus on delivering real value.", "bgClass": "bg-[#fef2ff]", "ctaLabel": "Start tracking spend", "ctaUrl": "#" },
+      { "title": "Seamless payments for today's business", "description": "We provide fast, secure, and frictionless payment solutions designed to keep businesses running smoothly.", "bgClass": "bg-[#fff3ef]", "ctaLabel": "Start tracking spend", "ctaUrl": "#" },
+      { "title": "Single platform delivering total clarity", "description": "Manage everything in one place with ease. From tracking expenses to monitoring growth.", "bgClass": "bg-[#f6f3fe]", "ctaLabel": "Start tracking spend", "ctaUrl": "#" }
+    ]
+  },
+  "testimonials": {
+    "sectionTag": "Testimonials",
+    "heading": "What Our Users Say",
+    "subheading": "Explore intelligent tools designed to help you save smarter, spend wiser, and stay in full control.",
+    "items": [
+      { "name": "Sarah M.", "role": "CEO of NovaTech", "quote": "Using this platform has completely changed the way I handle my business payments. Everything is fast, secure, and easy to manage." },
+      { "name": "James R.", "role": "Business Owner", "quote": "I started with the free plan and quickly upgraded. The tools are clear, easy to understand, and actually helped me make smarter decisions." }
+    ]
+  }
+}
+

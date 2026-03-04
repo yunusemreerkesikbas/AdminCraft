@@ -1,0 +1,14 @@
+{
+  "brandName": "AdminCraft",
+  "domain": "craftive.io",
+  "docsUrl": "https://docs.craftive.io",
+  "appUrl": "https://app.craftive.io",
+  "apiUrl": "https://api.craftive.io",
+  "contactEmail": "hello@craftive.io",
+  "social": {
+    "twitter": "https://x.com",
+    "github": "https://github.com",
+    "linkedin": "https://linkedin.com"
+  }
+}
+

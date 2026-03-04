@@ -1,0 +1,42 @@
+{
+  "hero": {
+    "headline": "Her işletme için özelleştirilebilir dijital çözümler.",
+    "subheadline": "Tek platform, sınırsız yapılandırma. Blog sitesinden HR portalına, ajans yönetiminden e-ticarete kadar farklı projeleri aynı altyapı ile hızla hayata geçirin.",
+    "primaryCta": "Demo Talep Et",
+    "secondaryCta": "Özellikleri Keşfet"
+  },
+  "trustedBy": {
+    "title": "Dünya genelinde ekipler tarafından güvenilir"
+  },
+  "benefits": {
+    "sectionTag": "Faydalar",
+    "heading": "Günlük işiniz için tasarlandı",
+    "subheading": "Daha iyi tasarruf etmenizi, bilinçli harcamanızı ve tam kontrolü elinizde tutmanızı sağlayan akıllı araçlar.",
+    "cards": [
+      { "title": "Deneyiminizi kişiselleştirin", "description": "Renklerden mantığa kadar her öğeyi markanıza ve iş akışınıza uyarlayın." },
+      { "title": "Özelleştirme seçenekleri", "description": "Gösterilecek bilgileri kişiselleştirmek için panonuzu yapılandırın." },
+      { "title": "Kolay takip", "description": "Finansal hedeflerinize doğru ilerlemenizi gerçek zamanlı izleyin." },
+      { "title": "Güvenli bağlantılar", "description": "Hesaplarınızı banka düzeyinde şifreleme ile güvenle bağlayın." }
+    ]
+  },
+  "features": {
+    "sectionTag": "Özellikler",
+    "heading": "Finanslarınız için güçlü özellikler",
+    "subheading": "Daha akıllı tasarruf etmenize, daha bilinçli harcamanıza ve tam kontrolde kalmanıza yardımcı olan araçlar.",
+    "cards": [
+      { "title": "Müşterilerimiz neden bizi tercih ediyor", "description": "Hizmetimiz güven, şeffaflık ve kanıtlanmış sonuçlar üzerine kuruludur. Gerçek değer sunmaya odaklanıyoruz.", "bgClass": "bg-[#fef2ff]", "ctaLabel": "Harcamayı takip et", "ctaUrl": "#" },
+      { "title": "Bugünün işi için kesintisiz ödemeler", "description": "İşletmelerin sorunsuz çalışması için hızlı, güvenli ve sürtünmesiz ödeme çözümleri sunuyoruz.", "bgClass": "bg-[#fff3ef]", "ctaLabel": "Harcamayı takip et", "ctaUrl": "#" },
+      { "title": "Tek platformda tam finansal netlik", "description": "Tüm finanslarınızı tek yerden yönetin. Gider takibinden büyümeye kadar.", "bgClass": "bg-[#f6f3fe]", "ctaLabel": "Harcamayı takip et", "ctaUrl": "#" }
+    ]
+  },
+  "testimonials": {
+    "sectionTag": "Referanslar",
+    "heading": "Kullanıcılarımız ne diyor",
+    "subheading": "Daha akıllı tasarruf, daha bilinçli harcama ve tam kontrol için tasarlanmış araçlar.",
+    "items": [
+      { "name": "Ayşe K.", "role": "CEO, NovaTech", "quote": "Bu platform iş ödemelerimi yönetme şeklimi tamamen değiştirdi. Her şey hızlı, güvenli ve yönetmesi kolay." },
+      { "name": "Mehmet Y.", "role": "İşletme Sahibi", "quote": "Ücretsiz plandan başladım, kısa sürede yükselttim. Araçlar net ve daha akıllı kararlar vermeme yardımcı oldu." }
+    ]
+  }
+}
+
