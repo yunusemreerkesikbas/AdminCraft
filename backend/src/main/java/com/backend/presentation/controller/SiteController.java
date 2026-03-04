@@ -393,13 +393,7 @@ public class SiteController {
             @Valid @RequestBody UpdateSecuritySettingsRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
-            var command = new UpdateSecuritySettingsCommand(
-                    request.twoFactorPolicy(),
-                    request.recaptchaEnabled(),
-                    request.recaptchaSiteKey(),
-                    request.recaptchaSecretKey(),
-                    request.recaptchaThreshold()
-            );
+            var command = new UpdateSecuritySettingsCommand(request.twoFactorPolicy());
 
             SecuritySettingsResult result = securitySettingsService.updateSecuritySettings(command);
             String message = messageSource.getMessage("site.security.updated.success", null,
@@ -417,13 +411,7 @@ public class SiteController {
     }
 
     private SecuritySettingsResponse toSecuritySettingsResponse(SecuritySettingsResult result) {
-        return SecuritySettingsResponse.of(
-            result.policy(),
-            result.policyDescription(),
-            result.recaptchaEnabled(),
-            result.recaptchaSiteKey(),
-            result.recaptchaThreshold()
-        );
+        return SecuritySettingsResponse.of(result.policy(), result.policyDescription());
     }
 
     private String sanitizeInput(String input) {

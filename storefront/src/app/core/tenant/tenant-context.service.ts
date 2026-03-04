@@ -3,7 +3,7 @@ import { inject, Injectable, signal, Signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ApiClientService } from '@core/api/api-client.service';
 import { ApiResponse } from '@core/crud';
-import { SUPER_ADMIN_ROLE, TENANT_ADMIN_ROLE } from '@shared/constants';
+import { SUPER_ADMIN_ROLE } from '@shared/constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { TenantModule } from 'app/core/tenant/tenant.types';
 import { UserService } from 'app/core/user/user.service';
@@ -170,7 +170,7 @@ export class TenantContextService {
     initializeTenantContext(user: User): Observable<any> {
         if (user.role === SUPER_ADMIN_ROLE) {
             return this.restoreTenantSelection();
-        } else if (user.role === TENANT_ADMIN_ROLE && user.tenantId) {
+        } else if (user.tenantId) {
             return forkJoin([
                 this.loadCurrentUserTenantModules(),
                 this.#loadTenantDetails(),

@@ -51,5 +51,3 @@ export interface NotificationEvent {
   source?: string;
   actionInvoked?: boolean;
 }
-
-

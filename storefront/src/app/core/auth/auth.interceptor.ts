@@ -16,11 +16,12 @@ export const authInterceptor = (
     const authService = inject(AuthService);
     let newReq = req.clone();
     const isAuthEndpoint = req.url.includes('/auth/login') ||
-                          req.url.includes('/auth/signup') ||
-                          req.url.includes('/auth/forgot-password') ||
-                          req.url.includes('/auth/reset-password');
+        req.url.includes('/auth/signup') ||
+        req.url.includes('/auth/forgot-password') ||
+        req.url.includes('/auth/reset-password');
+    const isConfigEndpoint = req.url.includes('/config/auth') || req.url.includes('/config/admin');
 
-    if (!isAuthEndpoint) {
+    if (!isAuthEndpoint && !isConfigEndpoint && !req.headers.has('Authorization')) {
         const token = authService.getAccessToken();
         if (token && !AuthUtils.isTokenExpired(token)) {
             newReq = req.clone({
@@ -30,7 +31,7 @@ export const authInterceptor = (
     }
     return next(newReq).pipe(
         catchError((error) => {
-            if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint) {
+            if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint && !isConfigEndpoint) {
                 authService.signOut();
             }
             return throwError(() => error);

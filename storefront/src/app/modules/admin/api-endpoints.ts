@@ -12,9 +12,6 @@ export const SPA_ENDPOINTS_CONFIG = {
     verifyEmailToken: 'auth/verify-email-token',
     setInitialPassword: 'auth/set-initial-password',
 
-    // ----- PUBLIC CONFIG -----
-    publicTenantConfig: 'config/public',
-
     // ----- SITE SECURITY -----
     siteSecuritySettings: 'sites/security',
 
@@ -83,6 +80,20 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- SITE SETTINGS -----
     siteSettings: 'site-settings',
 
+    // ----- MAIL MARKETING (TENANT) -----
+    mailTemplateTypes: 'mail/templates/types',
+    mailTemplateTypeDetail: 'mail/templates/types/${templateType}',
+    mailTemplateTypeTranslation: 'mail/templates/types/${templateType}/translations/${language}',
+    mailTemplates: 'mail/templates',
+    mailTemplateById: 'mail/templates/${id}',
+    mailSubscribers: 'mail/subscribers',
+    mailProviderConfig: 'mail/provider-config',
+    mailCampaignSend: 'mail/campaigns/send',
+    mailCampaignById: 'mail/campaigns/${id}',
+    publicNewsletterSubscribe: 'public/newsletter/subscribe',
+    publicNewsletterConfirm: 'public/newsletter/confirm',
+    publicNewsletterUnsubscribe: 'public/newsletter/unsubscribe',
+
     // ----- SITE DASHBOARD -----
     siteOverview: 'sites/overview',
     siteTechnical: 'sites/technical',
@@ -149,6 +160,17 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PLATFORM -----
     platformDashboard: 'platform/dashboard',
     platformSettings: 'platform/settings',
+    platformMailTemplateTypes: 'platform/mail/templates/types',
+    platformMailTemplateTypeDetail: 'platform/mail/templates/types/${templateType}',
+    platformMailTemplateTypeTranslation: 'platform/mail/templates/types/${templateType}/translations/${language}',
+    platformMailTemplates: 'platform/mail/templates',
+    platformMailTemplateById: 'platform/mail/templates/${id}',
+    platformMailSubscribers: 'platform/mail/subscribers',
+    platformMailCampaignSend: 'platform/mail/campaigns/send',
+    platformMailCampaignById: 'platform/mail/campaigns/${id}',
+    platformPublicNewsletterSubscribe: 'platform/public/newsletter/subscribe',
+    platformPublicNewsletterConfirm: 'platform/public/newsletter/confirm',
+    platformPublicNewsletterUnsubscribe: 'platform/public/newsletter/unsubscribe',
     tenantProvisioningJobs: 'tenants/${tenantId}/provisioning-jobs',
 
     // ----- PROVISIONING -----
@@ -164,6 +186,7 @@ export const SPA_ENDPOINTS_CONFIG = {
     cmsComponentsBatch: 'cms/components',
     cmsPage: 'cms/pages',
     cmsSite: 'cms/site',
+    cmsConfig: 'cms/config',
 
     // ----- PAGE TEMPLATES -----
     pageTemplates: 'page-templates',
@@ -227,6 +250,9 @@ export const SPA_ENDPOINTS_CONFIG = {
     productFields: 'products/fields',
     productFieldsVisible: 'products/fields/visible',
     productFieldById: 'products/fields/${id}',
+
+    // ----- IMPEX -----
+    impexExecute: 'impex/execute',
 } as const;
 
 export type EndpointKey = keyof typeof SPA_ENDPOINTS_CONFIG;

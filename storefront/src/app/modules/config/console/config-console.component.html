@@ -1,0 +1,16 @@
+@if (stageSig() === 'login' || stageSig() === 'otp') {
+    <spa-config-auth
+        [stage]="stageSig()"
+        [challenge]="challengeSig()"
+        (challengeReceived)="onChallengeReceived($event)"
+        (authenticated)="onAuthenticated($event)"
+        (cancelOtp)="onCancelOtp()"
+    />
+}
+
+@if (stageSig() === 'panel' && tokenSig()) {
+    <spa-config-dashboard
+        [token]="tokenSig()!"
+        (logout)="logout()"
+    />
+}

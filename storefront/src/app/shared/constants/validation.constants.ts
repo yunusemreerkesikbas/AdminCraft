@@ -187,7 +187,6 @@ export const VALIDATION_LIMITS = {
     // Site Technical Limits
     VERIFICATION_CODE_MAX: 100,
     ROBOTS_TXT_MAX: 10000,
-    SITE_SCRIPTS_MAX: 50000,
     COOKIE_CONSENT_TEXT_MAX: 2000,
 
     // Site General Limits (from SiteSettingsI18nDto.java)
