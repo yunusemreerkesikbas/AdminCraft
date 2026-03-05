@@ -1,11 +1,15 @@
 package com.backend.application.service.impl.config;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.MDC;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.backend.application.dto.config.ConfigPrincipal;
 import com.backend.application.dto.config.ConfigPropertyResult;
@@ -16,7 +20,7 @@ import com.backend.domain.entity.ConfigProperty;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.infrastructure.persistence.platform.entity.ConfigChangeAudit;
+import com.backend.domain.entity.ConfigChangeAudit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     private final TenantDbExecutor tenantDbExecutor;
     private final ConfigPropertyService configPropertyService;
     private final ConfigChangeAuditRepository auditRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -108,10 +113,14 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     }
 
     private String snapshotJson(String key, String value) {
-        if (value == null) {
-            return "{\"key\":\"" + key + "\",\"value\":null}";
+        try {
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("key", key);
+            map.put("value", value != null ? "[set]" : null);
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize audit snapshot", e);
         }
-        return "{\"key\":\"" + key + "\",\"value\":\"[set]\"}";
     }
 
     private ConfigPropertyResult toResult(ConfigProperty prop) {

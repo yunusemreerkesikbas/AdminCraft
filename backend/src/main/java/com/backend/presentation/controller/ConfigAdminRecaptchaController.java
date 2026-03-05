@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.config.ConfigPrincipal;
+import com.backend.application.dto.config.PatchConfigRecaptchaParams;
 import com.backend.application.service.config.ConfigRecaptchaAdminService;
 import com.backend.presentation.dto.request.config.PatchConfigRecaptchaRequest;
 import com.backend.presentation.dto.response.config.ConfigAuditItemResponse;
@@ -44,7 +45,12 @@ public class ConfigAdminRecaptchaController {
             Authentication authentication,
             @Valid @RequestBody PatchConfigRecaptchaRequest request) {
         ConfigPrincipal principal = principalResolver.resolve(authentication);
-        var result = recaptchaAdminService.patchRecaptcha(principal, request);
+        PatchConfigRecaptchaParams params = new PatchConfigRecaptchaParams(
+                request.recaptchaEnabled(),
+                request.recaptchaSiteKey(),
+                request.recaptchaSecretKey(),
+                request.reason());
+        var result = recaptchaAdminService.patchRecaptcha(principal, params);
         return ResponseEntity.ok(ApiResponse.success("reCAPTCHA settings updated", ConfigRecaptchaResponse.from(result)));
     }
 

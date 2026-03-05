@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.config.ConfigAuditItemResult;
 import com.backend.application.dto.config.ConfigPrincipal;
 import com.backend.application.dto.config.ConfigRecaptchaResult;
+import com.backend.application.dto.config.PatchConfigRecaptchaParams;
 import com.backend.application.service.TenantDbExecutor;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.ConfigRecaptchaAdminService;
@@ -22,8 +23,7 @@ import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.TenantRepository;
-import com.backend.infrastructure.persistence.platform.entity.ConfigChangeAudit;
-import com.backend.presentation.dto.request.config.PatchConfigRecaptchaRequest;
+import com.backend.domain.entity.ConfigChangeAudit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -65,7 +65,7 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
 
     @Override
     @Transactional
-    public ConfigRecaptchaResult patchRecaptcha(ConfigPrincipal principal, PatchConfigRecaptchaRequest request) {
+    public ConfigRecaptchaResult patchRecaptcha(ConfigPrincipal principal, PatchConfigRecaptchaParams request) {
         Tenant tenant = resolveTargetTenant(principal);
 
         return tenantDbExecutor.withTenant(tenant.getId(), tenant.getDatabaseName(), () -> {

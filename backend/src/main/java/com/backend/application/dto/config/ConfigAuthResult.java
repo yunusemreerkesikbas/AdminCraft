@@ -4,6 +4,7 @@ public record ConfigAuthResult(
         String accessToken,
         String tokenType,
         long expiresIn,
+        long issuedAt,
         Long userId,
         String email,
         String fullName,

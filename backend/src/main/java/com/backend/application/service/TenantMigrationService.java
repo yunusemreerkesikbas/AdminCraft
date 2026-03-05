@@ -19,6 +19,7 @@ public class TenantMigrationService {
    * CRITICAL: Module execution order for Flyway migrations.
    * This order ensures that FK dependencies are satisfied:
    * - core creates base tables (users, sites)
+   * - mail_marketing has no FK deps on media/component_library/pagebuilder; placed early for isolation
    * - media creates responsive_media_set
    * - component_library creates components/entries and adds FK to responsive_media_set
    * - pagebuilder creates pages/slots and references components
@@ -27,6 +28,7 @@ public class TenantMigrationService {
    */
   private static final List<String> MODULE_ORDER = List.of(
       "core", // Base tables (users, sites) - always first
+      "mail_marketing", // No FK deps on other modules; placed before media intentionally
       "media", // Media assets, responsive_media_set
       "component_library", // Components, entries (references media)
       "pagebuilder", // Pages, slots (references components)
