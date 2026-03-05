@@ -11,4 +11,3 @@ public interface PlatformAdminUserRepository extends JpaRepository<PlatformAdmin
 
   Optional<PlatformAdminUser> findByEmailAndIsActiveTrue(String email);
 }
-
