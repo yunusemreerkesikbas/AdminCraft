@@ -3,7 +3,7 @@ package com.backend.domain.repository;
 import java.util.Optional;
 
 import com.backend.domain.enums.TokenType;
-import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
+import com.backend.domain.entity.PlatformVerificationToken;
 
 /**
  * Domain repository interface for platform verification tokens.

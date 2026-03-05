@@ -311,7 +311,7 @@ public class PlatformMailMarketingService {
         campaign.setContent(selectedTemplate.getContent());
         campaign.setStatus(MailCampaignStatus.SENDING);
         campaign.setTotalCount(subscriptions.size());
-        campaign.setCreatedBy(resolveCurrentUserEmail());
+        campaign.setCreatedByEmail(resolveCurrentUserEmail());
         campaign = campaignRepository.save(campaign);
 
         int sent = 0;
