@@ -165,7 +165,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           .navigationType(resolveNavigationType(type, component))
           .searchBox(resolveSearchBox(type, component))
           .navigationNode(resolveNavigationNode(type, component, lang))
-          .navigationLinkNode(resolveNavigationLinkNode(type, component))
           .responsive(responsive)
           .entries(entryResponses)
           .build();
@@ -239,7 +238,6 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .navigationType(resolveNavigationType(componentType, component))
         .searchBox(resolveSearchBox(componentType, component))
         .navigationNode(resolveNavigationNode(componentType, component, lang))
-        .navigationLinkNode(resolveNavigationLinkNode(componentType, component))
         .responsive(responsive)
         .entries(entryResponses)
         .build();

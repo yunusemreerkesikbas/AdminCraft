@@ -31,12 +31,12 @@ import com.backend.domain.repository.PlatformVerificationTokenRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
-import com.backend.infrastructure.email.OtpProperties;
-import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
-import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
-import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
-import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
-import com.backend.infrastructure.security.JwtTokenProvider;
+import com.backend.domain.entity.PlatformAdminUser;
+import com.backend.domain.entity.PlatformVerificationToken;
+import com.backend.domain.port.JwtProviderPort;
+import com.backend.domain.port.OtpConfig;
+import com.backend.domain.port.PlatformSettingsPort;
+import com.backend.domain.repository.PlatformAdminUserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,14 +50,14 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
     private final TenantRepository tenantRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PlatformAdminUserRepository platformAdminUserRepository;
-    private final PlatformSettingsRepository platformSettingsRepository;
+    private final PlatformSettingsPort platformSettingsPort;
     private final PlatformVerificationTokenRepository platformVerificationTokenRepository;
     private final TenantContextPort tenantContext;
     private final OtpService otpService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final OtpProperties otpProperties;
+    private final JwtProviderPort jwtProviderPort;
+    private final OtpConfig otpConfig;
 
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
@@ -184,7 +184,8 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                 user.recordSuccessfulLogin(ipAddress);
                 userRepository.save(user);
 
-                String accessToken = jwtTokenProvider.createAccessToken(
+                long issuedAt = System.currentTimeMillis();
+                String accessToken = jwtProviderPort.createAccessToken(
                         user.getEmail(),
                         ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
                         user.getId(),
@@ -193,7 +194,8 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                 return new ConfigAuthResult(
                         accessToken,
                         "Bearer",
-                        jwtTokenProvider.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration(),
+                        issuedAt,
                         user.getId(),
                         user.getEmail(),
                         user.getFullName(),
@@ -216,7 +218,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         }
 
         String otpHash = otpService.hashToken(otpCode);
-        boolean isBypassCode = otpProperties.getBypassCode() != null && otpProperties.getBypassCode().equals(otpCode);
+        boolean isBypassCode = otpConfig.getBypassCode() != null && otpConfig.getBypassCode().equals(otpCode);
         boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
 
         if (!isValid) {
@@ -239,7 +241,8 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
-        String accessToken = jwtTokenProvider.createAccessToken(
+        long issuedAt = System.currentTimeMillis();
+        String accessToken = jwtProviderPort.createAccessToken(
                 admin.getEmail(),
                 ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN,
                 admin.getId(),
@@ -248,7 +251,8 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         return new ConfigAuthResult(
                 accessToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration(),
+                issuedAt,
                 admin.getId(),
                 admin.getEmail(),
                 admin.getFullName(),
@@ -263,7 +267,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
         }
 
         String otpHash = otpService.hashToken(otpCode);
-        boolean isBypassCode = otpProperties.getBypassCode() != null && otpProperties.getBypassCode().equals(otpCode);
+        boolean isBypassCode = otpConfig.getBypassCode() != null && otpConfig.getBypassCode().equals(otpCode);
         boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
 
         if (!isValid) {
@@ -292,9 +296,9 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                 .tokenType(TokenType.LOGIN_OTP)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(otpService.hashToken(otpCode))
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
                 .build();
@@ -330,7 +334,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
     }
 
     private Language resolvePlatformLanguage() {
-        String languageCode = platformSettingsRepository.getSingleton().getDefaultLanguage();
+        String languageCode = platformSettingsPort.getSingleton().getDefaultLanguage();
         return Language.fromCodeOrDefault(languageCode, Language.TR);
     }
 

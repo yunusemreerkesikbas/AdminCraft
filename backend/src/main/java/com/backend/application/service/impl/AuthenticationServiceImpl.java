@@ -38,13 +38,13 @@ import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.domain.repository.VerificationTokenRepository;
-import com.backend.infrastructure.email.OtpProperties;
-import com.backend.infrastructure.persistence.platform.entity.PlatformAdminUser;
-import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
-import com.backend.infrastructure.persistence.platform.repository.PlatformSettingsRepository;
-import com.backend.infrastructure.persistence.platform.repository.PlatformAdminUserRepository;
+import com.backend.domain.entity.PlatformAdminUser;
+import com.backend.domain.entity.PlatformVerificationToken;
+import com.backend.domain.port.JwtProviderPort;
+import com.backend.domain.port.OtpConfig;
+import com.backend.domain.port.PlatformSettingsPort;
+import com.backend.domain.repository.PlatformAdminUserRepository;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
-import com.backend.infrastructure.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,18 +60,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final ConcurrentHashMap<String, OtpRateLimitEntry> otpRateLimiters = new ConcurrentHashMap<>();
 
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProviderPort jwtProviderPort;
     private final PasswordEncoder passwordEncoder;
     private final TenantRepository tenantRepository;
     private final PlatformAdminUserRepository platformAdminUserRepository;
-    private final PlatformSettingsRepository platformSettingsRepository;
+    private final PlatformSettingsPort platformSettingsPort;
     private final PlatformVerificationTokenRepository platformVerificationTokenRepository;
     private final TenantContextPort tenantContext;
     private final OtpService otpService;
     private final EmailService emailService;
     private final TrustedDeviceService trustedDeviceService;
     private final VerificationTokenRepository verificationTokenRepository;
-    private final OtpProperties otpProperties;
+    private final OtpConfig otpConfig;
 
     @Qualifier("tenantTransactionManager")
     private final PlatformTransactionManager tenantTransactionManager;
@@ -251,12 +251,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Reset failed login attempts on successful login
         user.recordSuccessfulLogin(ipAddress);
         userRepository.save(user);
-        String accessToken = jwtTokenProvider.createAccessToken(
+        String accessToken = jwtProviderPort.createAccessToken(
                 user.getEmail(),
                 user.getRole().name(),
                 user.getId(),
                 tenantId);
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
 
         log.info("Authentication successful for userId: {}", user.getId());
 
@@ -264,7 +264,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration(),
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
@@ -308,12 +308,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
-        String accessToken = jwtTokenProvider.createAccessToken(
+        String accessToken = jwtProviderPort.createAccessToken(
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
                 null);
-        String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
 
         log.info("Authentication successful for platform admin userId: {}", admin.getId());
 
@@ -321,7 +321,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration(),
                 admin.getId(),
                 admin.getEmail(),
                 admin.getFullName(),
@@ -333,25 +333,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthResult refreshToken(String refreshToken) {
         log.info("Refreshing token");
-        if (!jwtTokenProvider.validateToken(refreshToken) ||
-                !jwtTokenProvider.isRefreshToken(refreshToken)) {
+        if (!jwtProviderPort.validateToken(refreshToken) ||
+                !jwtProviderPort.isRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
         }
-        String email = jwtTokenProvider.getEmailFromToken(refreshToken);
-        String role = jwtTokenProvider.getRoleFromToken(refreshToken);
-        Long tenantId = jwtTokenProvider.getTenantIdFromToken(refreshToken);
+        String email = jwtProviderPort.getEmailFromToken(refreshToken);
+        String role = jwtProviderPort.getRoleFromToken(refreshToken);
+        Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
 
         if ("SUPER_ADMIN".equals(role) && tenantId == null) {
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
 
-            String newAccessToken = jwtTokenProvider.createAccessToken(
+            String newAccessToken = jwtProviderPort.createAccessToken(
                     admin.getEmail(),
                     "SUPER_ADMIN",
                     admin.getId(),
                     null);
-            String newRefreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+            String newRefreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
 
@@ -359,7 +359,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     newAccessToken,
                     newRefreshToken,
                     "Bearer",
-                    jwtTokenProvider.getAccessTokenExpiration(),
+                    jwtProviderPort.getAccessTokenExpiration(),
                     admin.getId(),
                     admin.getEmail(),
                     admin.getFullName(),
@@ -399,12 +399,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
                     throw new UserAccountDisabledException();
                 }
-                String newAccessToken = jwtTokenProvider.createAccessToken(
+                String newAccessToken = jwtProviderPort.createAccessToken(
                         user.getEmail(),
                         user.getRole().name(),
                         user.getId(),
                         tenantId);
-                String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+                String newRefreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
 
                 log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
 
@@ -412,7 +412,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         newAccessToken,
                         newRefreshToken,
                         "Bearer",
-                        jwtTokenProvider.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration(),
                         user.getId(),
                         user.getEmail(),
                         user.getFullName(),
@@ -433,12 +433,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Logging out user");
 
         try {
-            if (!jwtTokenProvider.validateToken(token)) {
+            if (!jwtProviderPort.validateToken(token)) {
                 throw new InvalidTokenException("Invalid token");
             }
-            String email = jwtTokenProvider.getEmailFromToken(token);
-            String role = jwtTokenProvider.getRoleFromToken(token);
-            Long tenantId = jwtTokenProvider.getTenantIdFromToken(token);
+            String email = jwtProviderPort.getEmailFromToken(token);
+            String role = jwtProviderPort.getRoleFromToken(token);
+            Long tenantId = jwtProviderPort.getTenantIdFromToken(token);
 
             if ("SUPER_ADMIN".equals(role) && tenantId == null) {
                 log.info("Logout successful for platform admin: {}", email);
@@ -518,8 +518,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     throw new InvalidTokenException("OTP session has expired or is no longer valid");
                 }
 
-                boolean isBypassCode = otpProperties.getBypassCode() != null &&
-                        otpProperties.getBypassCode().equals(otpCode);
+                boolean isBypassCode = otpConfig.getBypassCode() != null &&
+                        otpConfig.getBypassCode().equals(otpCode);
                 String otpHash = otpService.hashToken(otpCode);
                 boolean isValid = isBypassCode || token.getTargetValue().equals(otpHash);
 
@@ -554,12 +554,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.recordSuccessfulLogin(ipAddress);
                 userRepository.save(user);
 
-                String accessToken = jwtTokenProvider.createAccessToken(
+                String accessToken = jwtProviderPort.createAccessToken(
                         user.getEmail(),
                         user.getRole().name(),
                         user.getId(),
                         tenant.getId());
-                String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+                String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
 
                 log.info("OTP verification successful for userId: {}", user.getId());
 
@@ -567,7 +567,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         accessToken,
                         refreshToken,
                         "Bearer",
-                        jwtTokenProvider.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration(),
                         user.getId(),
                         user.getEmail(),
                         user.getFullName(),
@@ -593,8 +593,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new InvalidTokenException("OTP session has expired or is no longer valid");
         }
 
-        boolean isBypassCode = otpProperties.getBypassCode() != null &&
-                otpProperties.getBypassCode().equals(otpCode);
+        boolean isBypassCode = otpConfig.getBypassCode() != null &&
+                otpConfig.getBypassCode().equals(otpCode);
         String otpHash = otpService.hashToken(otpCode);
         boolean isValid = isBypassCode || otpHash.equals(token.getTargetValue());
 
@@ -621,12 +621,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         admin.recordSuccessfulLogin(ipAddress);
         platformAdminUserRepository.save(admin);
 
-        String accessToken = jwtTokenProvider.createAccessToken(
+        String accessToken = jwtProviderPort.createAccessToken(
                 admin.getEmail(),
                 "SUPER_ADMIN",
                 admin.getId(),
                 null);
-        String refreshToken = jwtTokenProvider.createRefreshToken(admin.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
 
         log.info("OTP verification successful for platform admin userId: {}", admin.getId());
 
@@ -634,7 +634,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 "Bearer",
-                jwtTokenProvider.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration(),
                 admin.getId(),
                 admin.getEmail(),
                 admin.getFullName(),
@@ -851,19 +851,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .orElseThrow(() -> new IllegalStateException("Tenant not found"));
 
             // 6. Generate JWT tokens
-            String accessToken = jwtTokenProvider.createAccessToken(
+            String accessToken = jwtProviderPort.createAccessToken(
                     user.getEmail(),
                     user.getRole().name(),
                     user.getId(),
                     tenantId);
-            String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
+            String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
 
             // 7. Return AuthResult with tokens
             return AuthResult.success(
                     accessToken,
                     refreshToken,
                     "Bearer",
-                    jwtTokenProvider.getAccessTokenExpiration(),
+                    jwtProviderPort.getAccessTokenExpiration(),
                     user.getId(),
                     user.getEmail(),
                     user.getFullName(),
@@ -874,12 +874,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean isPlatformTwoFactorRequired() {
-        TwoFactorPolicy policy = platformSettingsRepository.getSingleton().getTwoFactorPolicy();
+        TwoFactorPolicy policy = platformSettingsPort.getSingleton().getTwoFactorPolicy();
         return policy == TwoFactorPolicy.REQUIRED;
     }
 
     private Language resolvePlatformLanguage() {
-        String languageCode = platformSettingsRepository.getSingleton().getDefaultLanguage();
+        String languageCode = platformSettingsPort.getSingleton().getDefaultLanguage();
         return Language.fromCodeOrDefault(languageCode, Language.TR);
     }
 
@@ -900,9 +900,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .tokenType(TokenType.LOGIN_OTP)
                 .status(TokenStatus.ACTIVE)
                 .targetValue(otpService.hashToken(otp))
-                .expiresAt(LocalDateTime.now().plusSeconds(otpProperties.getExpirySeconds()))
+                .expiresAt(LocalDateTime.now().plusSeconds(otpConfig.getExpirySeconds()))
                 .attemptCount(0)
-                .maxAttempts(otpProperties.getMaxAttempts())
+                .maxAttempts(otpConfig.getMaxAttempts())
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)
                 .build();

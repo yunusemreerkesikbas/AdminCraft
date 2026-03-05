@@ -6,8 +6,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.backend.application.dto.impex.ImpExResult;
@@ -16,16 +22,15 @@ import com.backend.domain.exception.ImpExInvalidScriptException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ImpExServiceImpl implements ImpExService {
 
     private static final String IMPEX_MARKER = "-- #ADMINCRAFT_IMPEX";
     private static final int PREVIEW_LENGTH = 80;
+    private static final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
 
     private static final Set<String> ALLOWED_KEYWORDS = Set.of("INSERT", "UPDATE", "SELECT");
     private static final Set<String> BLOCKED_KEYWORDS = Set.of(
@@ -35,6 +40,18 @@ public class ImpExServiceImpl implements ImpExService {
     private final MultiTenantConnectionProvider multiTenantConnectionProvider;
     private final TenantContextPort tenantContext;
     private final MessageSource messageSource;
+    private final DataSource platformDataSource;
+
+    public ImpExServiceImpl(
+            MultiTenantConnectionProvider multiTenantConnectionProvider,
+            TenantContextPort tenantContext,
+            MessageSource messageSource,
+            @Qualifier("platformDataSource") DataSource platformDataSource) {
+        this.multiTenantConnectionProvider = multiTenantConnectionProvider;
+        this.tenantContext = tenantContext;
+        this.messageSource = messageSource;
+        this.platformDataSource = platformDataSource;
+    }
 
     @Override
     public ImpExResult execute(String sqlContent, Locale locale) {
@@ -45,9 +62,8 @@ public class ImpExServiceImpl implements ImpExService {
         List<String> statements = parseStatements(sqlContent);
         log.debug("ImpEx parsed {} statement(s)", statements.size());
 
-        JdbcTemplate jdbc = new JdbcTemplate(
-            multiTenantConnectionProvider.getDataSource(tenantContext.getTenantDbName())
-        );
+        DataSource ds = resolveDataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(ds);
         List<StatementResult> results = executeStatements(statements, locale, jdbc);
 
         int executed = (int) results.stream().filter(StatementResult::success).count();
@@ -57,6 +73,32 @@ public class ImpExServiceImpl implements ImpExService {
         log.info("ImpEx execution finished — status: {}, total: {}, success: {}, failed: {}", status, results.size(), executed, failed);
 
         return new ImpExResult(status, results.size(), executed, failed, results, LocalDateTime.now());
+    }
+
+    private DataSource resolveDataSource() {
+        String tenantDbName = tenantContext.getTenantDbName();
+        if ((tenantDbName == null || tenantDbName.isBlank()) && isCurrentUserSuperAdmin()) {
+            log.info("ImpEx using platform database (SUPER_ADMIN, no tenant context)");
+            return platformDataSource;
+        }
+        if (tenantDbName != null && !tenantDbName.isBlank()) {
+            return multiTenantConnectionProvider.getDataSource(tenantDbName);
+        }
+        throw new IllegalStateException(
+            messageSource.getMessage("impex.error.tenant.required", null, Locale.getDefault()));
+    }
+
+    private boolean isCurrentUserSuperAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getAuthorities() == null) {
+            return false;
+        }
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            if (ROLE_SUPER_ADMIN.equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validateMarker(String content, Locale locale) {
