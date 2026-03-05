@@ -1,0 +1,135 @@
+<div class="p-6 flex flex-col gap-6">
+
+    <admin-page-header
+        [title]="'admin.impex.title' | transloco"
+        [subtitle]="'admin.impex.subtitle' | transloco"
+    ></admin-page-header>
+
+    <!-- Editor Panel -->
+    <div class="bg-card rounded-lg border shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-base font-semibold">{{ 'admin.impex.editor.title' | transloco }}</h2>
+            <p class="text-sm text-secondary mt-0.5">{{ 'admin.impex.editor.hint' | transloco }}</p>
+        </div>
+
+        <div class="px-6 py-4">
+            <spa-textarea
+                [label]="'admin.impex.editor.label' | transloco"
+                [placeholder]="'admin.impex.editor.placeholder' | transloco"
+                [rows]="18"
+                [formControl]="sqlControl"
+                styleClasses="font-mono"
+            ></spa-textarea>
+        </div>
+
+        <div class="px-6 py-4 border-t flex items-center justify-between gap-3">
+            <p class="text-xs text-secondary">
+                {{ 'admin.impex.editor.markerInfo' | transloco }}
+                <code class="bg-default rounded px-1 py-0.5 text-primary">-- #ADMINCRAFT_IMPEX</code>
+            </p>
+            <div class="flex items-center gap-2">
+                <button
+                    mat-stroked-button
+                    [disabled]="isRunningSig()"
+                    (click)="onClear()"
+                >
+                    <mat-icon>clear</mat-icon>
+                    {{ 'admin.impex.editor.clear' | transloco }}
+                </button>
+                <button
+                    mat-flat-button
+                    color="primary"
+                    [disabled]="isRunningSig() || sqlControl.invalid"
+                    (click)="onRun()"
+                >
+                    @if (isRunningSig()) {
+                        <ng-container>
+                            <mat-spinner diameter="16" class="mr-2"></mat-spinner>
+                            {{ 'admin.impex.editor.running' | transloco }}
+                        </ng-container>
+                    } @else {
+                        <ng-container>
+                            <mat-icon>play_arrow</mat-icon>
+                            {{ 'admin.impex.editor.run' | transloco }}
+                        </ng-container>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Panel -->
+    @if (resultSig(); as result) {
+        <div class="bg-card rounded-lg border shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b flex items-center justify-between">
+                <h2 class="text-base font-semibold">{{ 'admin.impex.result.title' | transloco }}</h2>
+                <div
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                    [ngClass]="{
+                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': result.status === 'SUCCESS',
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': result.status === 'PARTIAL'
+                    }"
+                >
+                    <mat-icon class="text-base">
+                        {{ result.status === 'SUCCESS' ? 'check_circle' : 'warning' }}
+                    </mat-icon>
+                    {{ result.executedStatements }}/{{ result.totalStatements }}
+                    {{ 'admin.impex.result.statements' | transloco }}
+                </div>
+            </div>
+
+            <div class="px-6 py-3 flex items-center gap-6 text-sm border-b bg-gray-50 dark:bg-gray-900">
+                <span class="flex items-center gap-1.5 text-green-700 dark:text-green-400">
+                    <mat-icon class="text-base">check</mat-icon>
+                    {{ result.executedStatements }} {{ 'admin.impex.result.success' | transloco }}
+                </span>
+                @if (result.failedStatements > 0) {
+                    <span class="flex items-center gap-1.5 text-red-700 dark:text-red-400">
+                        <mat-icon class="text-base">close</mat-icon>
+                        {{ result.failedStatements }} {{ 'admin.impex.result.failed' | transloco }}
+                    </span>
+                }
+            </div>
+
+            <div class="px-6 py-3 border-b">
+                <button mat-button (click)="onToggleDetails()" class="text-sm">
+                    <mat-icon>{{ showDetailsSig() ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    {{ (showDetailsSig() ? 'admin.impex.result.hideDetails' : 'admin.impex.result.showDetails') | transloco }}
+                </button>
+            </div>
+
+            @if (showDetailsSig()) {
+                <ul class="divide-y max-h-96 overflow-y-auto">
+                    @for (stmt of result.results; track stmt.index) {
+                        <li
+                            class="flex items-start gap-3 px-6 py-3 text-sm"
+                            [ngClass]="{ 'bg-red-50 dark:bg-red-950': !stmt.success }"
+                        >
+                            <span class="text-secondary w-8 text-right shrink-0">[{{ stmt.index }}]</span>
+                            <mat-icon
+                                class="text-base shrink-0 mt-0.5"
+                                [ngClass]="{
+                                    'text-green-600': stmt.success,
+                                    'text-red-600': !stmt.success
+                                }"
+                            >
+                                {{ stmt.success ? 'check_circle' : 'cancel' }}
+                            </mat-icon>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-mono text-xs truncate">{{ stmt.preview }}</p>
+                                @if (stmt.success) {
+                                    <p class="text-xs text-secondary mt-0.5">
+                                        {{ stmt.affectedRows }} {{ 'admin.impex.result.rows' | transloco }}
+                                    </p>
+                                } @else {
+                                    <p class="text-xs text-red-600 dark:text-red-400 mt-0.5">{{ stmt.errorMessage }}</p>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+</div>

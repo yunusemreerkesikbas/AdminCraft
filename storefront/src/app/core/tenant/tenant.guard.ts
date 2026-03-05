@@ -16,10 +16,18 @@ export const tenantGuard: CanActivateFn = (route, state) => {
         snackBar.open('Please select a tenant to access this page', 'Close', {
             duration: 5000,
             horizontalPosition: 'center',
-            verticalPosition: 'top'
+            verticalPosition: 'top',
         });
-        router.navigate(['/dashboards']);
+
+        const lang =
+            route.params['lang'] ??
+            route.parent?.params['lang'] ??
+            state.url.split('/').filter(Boolean)[0] ??
+            'en';
+
+        router.navigate(['/', lang, 'platform-dashboard']);
         return false;
     }
+
     return true;
 };

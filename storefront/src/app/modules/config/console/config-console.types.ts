@@ -10,6 +10,7 @@ export interface ConfigAuthResponse {
     accessToken: string;
     tokenType: string;
     expiresIn: number;
+    issuedAt?: number;
     userId: number;
     email: string;
     fullName: string;

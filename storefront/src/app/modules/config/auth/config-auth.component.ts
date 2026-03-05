@@ -132,7 +132,7 @@ export class ConfigAuthComponent {
                         role: response.data.role,
                         tenantId: response.data.tenantId,
                         subdomain: response.data.subdomain,
-                        issuedAt: Date.now(),
+                        issuedAt: response.data.issuedAt ?? Date.now(),
                     };
                     this.authenticated.emit(tokenState);
                 },

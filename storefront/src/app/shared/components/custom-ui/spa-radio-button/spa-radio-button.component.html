@@ -4,7 +4,7 @@
     [class]="styleClasses"
     (change)="onSelection($event.value)"
 >
-    @for (o of options; track o) {
+    @for (o of options; track o.value) {
         <mat-radio-button
             [value]="o.value"
             [disabled]="o.disabled"

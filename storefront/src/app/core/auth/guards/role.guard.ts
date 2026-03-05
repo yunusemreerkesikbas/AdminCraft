@@ -35,3 +35,7 @@ export const tenantUserGuard: CanActivateFn = roleGuard([
     TENANT_ADMIN_ROLE,
     VIEWER_ROLE,
 ]);
+export const tenantAdminOrSuperAdminGuard: CanActivateFn = roleGuard([
+    TENANT_ADMIN_ROLE,
+    SUPER_ADMIN_ROLE,
+]);

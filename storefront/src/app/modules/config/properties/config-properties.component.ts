@@ -1,7 +1,6 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    OnDestroy,
     OnInit,
     computed,
     inject,
@@ -13,7 +12,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
@@ -40,9 +38,8 @@ const REASON_DELETE = 'HAC admin delete';
         SpaToggleComponent,
     ],
 })
-export class ConfigPropertiesComponent implements OnInit, OnDestroy {
+export class ConfigPropertiesComponent implements OnInit {
     readonly #service = inject(ConfigConsoleService);
-    readonly #destroy$ = new Subject<void>();
 
     token = input.required<ConfigTokenState>();
 
@@ -67,11 +64,6 @@ export class ConfigPropertiesComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.load();
-    }
-
-    ngOnDestroy(): void {
-        this.#destroy$.next();
-        this.#destroy$.complete();
     }
 
     protected load(): void {

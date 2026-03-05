@@ -1,0 +1,95 @@
+<spa-dialog
+    [title]="dialogTitleKeySig() | transloco"
+    [subtitle]="data.scope === 'platform' ? ('admin.mailMarketing.subscribers.platformTitle' | transloco) : ('admin.mailMarketing.subscribers.tenantTitle' | transloco)"
+    [submitDisabled]="form.invalid"
+    [isSubmitting]="isSubmittingSig()"
+    submitLabel="admin.dialog.actions.save"
+    cancelLabel="admin.dialog.actions.cancel"
+    (closed)="cancel()"
+    (cancelled)="cancel()"
+    (submitted)="save()"
+>
+    <div class="grid grid-cols-1 gap-6" [formGroup]="form">
+        <div class="rounded-lg border bg-slate-50 p-4 dark:bg-slate-900/40">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <spa-input
+                    formControlName="email"
+                    [label]="'admin.mailMarketing.fields.email' | transloco"
+                    [readonly]="data.mode === 'edit'"
+                ></spa-input>
+
+                <div class="flex items-center">
+                    <mat-slide-toggle formControlName="statusActive" color="primary">
+                        {{
+                            form.get('statusActive')?.value
+                                ? ('admin.mailMarketing.subscriberStatus.ACTIVE' | transloco)
+                                : ('admin.mailMarketing.subscriberStatus.UNSUBSCRIBED' | transloco)
+                        }}
+                    </mat-slide-toggle>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border p-4">
+            <div class="mb-4 flex items-center justify-between gap-2">
+                <h3 class="text-base font-semibold">
+                    {{ 'admin.mailMarketing.subscribers.fields.bindings' | transloco }}
+                </h3>
+                <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="addSubscription()"
+                    [disabled]="!canAddSubscription()"
+                >
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.mailMarketing.subscribers.actions.addBinding' | transloco }}
+                </button>
+            </div>
+
+            <div class="space-y-4" formArrayName="subscriptions">
+                @for (group of subscriptionsArray.controls; track $index) {
+                    <div class="rounded-lg border p-4" [formGroupName]="$index">
+                        <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+                            <spa-select
+                                class="md:col-span-1"
+                                formControlName="templateType"
+                                [label]="'admin.mailMarketing.fields.templateType' | transloco"
+                                [options]="templateOptionsFor($index)"
+                            >
+                            </spa-select>
+
+                            <spa-select
+                                class="md:col-span-1"
+                                formControlName="preferredLanguage"
+                                [label]="'admin.mailMarketing.fields.preferredLanguage' | transloco"
+                                [options]="languageOptions"
+                            >
+                            </spa-select>
+
+                            <spa-input
+                                class="md:col-span-1"
+                                formControlName="source"
+                                [label]="'admin.mailMarketing.fields.source' | transloco"
+                            ></spa-input>
+
+                            <div class="flex items-center justify-between gap-3 md:col-span-1">
+                                <mat-slide-toggle formControlName="permission" color="primary">
+                                    {{ 'admin.mailMarketing.subscribers.fields.permission' | transloco }}
+                                </mat-slide-toggle>
+                                <button
+                                    mat-icon-button
+                                    color="warn"
+                                    type="button"
+                                    (click)="removeSubscription($index)"
+                                    [disabled]="subscriptionsArray.length <= 1"
+                                >
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</spa-dialog>
