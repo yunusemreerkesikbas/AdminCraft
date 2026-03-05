@@ -19,13 +19,12 @@
                 ></spa-input>
 
                 <div class="flex items-center">
-                    <mat-slide-toggle formControlName="statusActive" color="primary">
-                        {{
-                            form.get('statusActive')?.value
-                                ? ('admin.mailMarketing.subscriberStatus.ACTIVE' | transloco)
-                                : ('admin.mailMarketing.subscriberStatus.UNSUBSCRIBED' | transloco)
-                        }}
-                    </mat-slide-toggle>
+                    <spa-select
+                        formControlName="status"
+                        [label]="'admin.mailMarketing.fields.status' | transloco"
+                        [options]="statusOptions"
+                    >
+                    </spa-select>
                 </div>
             </div>
         </div>

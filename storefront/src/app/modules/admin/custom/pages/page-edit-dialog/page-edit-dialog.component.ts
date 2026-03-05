@@ -256,10 +256,9 @@ export class PageEditDialogComponent extends SpaLocalizedFormDialog<
                     this.#notify.success('admin.pages.success.created');
                     this.close(true);
                 },
-                error: (err) => {
+                error: () => {
                     this.setSubmitting(false);
                     this.#notify.alert('admin.pages.errors.createFailed');
-                    console.error(err);
                 },
             });
     }
@@ -284,10 +283,9 @@ export class PageEditDialogComponent extends SpaLocalizedFormDialog<
                     this.#notify.success('admin.pages.success.updated');
                     this.close(true);
                 },
-                error: (err) => {
+                error: () => {
                     this.setSubmitting(false);
                     this.#notify.alert('admin.pages.errors.updateFailed');
-                    console.error(err);
                 },
             });
     }

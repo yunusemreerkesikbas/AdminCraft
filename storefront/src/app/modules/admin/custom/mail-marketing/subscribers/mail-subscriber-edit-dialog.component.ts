@@ -79,6 +79,20 @@ export class MailSubscriberEditDialogComponent {
         { value: 'TR', label: 'TR' },
         { value: 'EN', label: 'EN' },
     ];
+    protected readonly statusOptions: SpaSelectOption<MailSubscriberStatus>[] = [
+        {
+            value: 'PENDING_CONFIRMATION',
+            labelKey: 'admin.mailMarketing.subscriberStatus.PENDING_CONFIRMATION',
+        },
+        {
+            value: 'ACTIVE',
+            labelKey: 'admin.mailMarketing.subscriberStatus.ACTIVE',
+        },
+        {
+            value: 'UNSUBSCRIBED',
+            labelKey: 'admin.mailMarketing.subscriberStatus.UNSUBSCRIBED',
+        },
+    ];
     protected readonly templateTypeOptions: SpaSelectOption<string>[] =
         this.data.templateTypes.map((templateType) => ({
             value: templateType,
@@ -97,7 +111,10 @@ export class MailSubscriberEditDialogComponent {
                 subscriber?.email ?? '',
                 [Validators.required, Validators.email],
             ],
-            statusActive: [subscriber?.status !== 'UNSUBSCRIBED'],
+            status: [
+                subscriber?.status ?? 'ACTIVE',
+                [Validators.required],
+            ],
             subscriptions: this.#fb.array([]),
         });
         if (this.data.mode === 'edit') {
@@ -201,9 +218,7 @@ export class MailSubscriberEditDialogComponent {
         const email =
             this.data.subscriber?.email ??
             String(emailControl?.value ?? '').trim().toLowerCase();
-        const status: MailSubscriberStatus = this.form.get('statusActive')?.value
-            ? 'ACTIVE'
-            : 'UNSUBSCRIBED';
+        const status = this.form.get('status')?.value as MailSubscriberStatus;
 
         const subscriptions = this.subscriptionsArray.controls.map((group) => ({
             templateType: String(group.get('templateType')?.value ?? '').toUpperCase(),
