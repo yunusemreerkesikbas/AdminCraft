@@ -90,9 +90,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
             googleVerification: formValue.googleVerification,
             bingVerification: formValue.bingVerification,
             yandexVerification: formValue.yandexVerification,
-            headScripts: formValue.headScripts,
-            bodyStartScripts: formValue.bodyStartScripts,
-            bodyEndScripts: formValue.bodyEndScripts,
             cookieConsentEnabled: formValue.cookieConsentEnabled,
             cookieConsentText: formValue.cookieConsentText,
         };
@@ -146,18 +143,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
                 '',
                 [Validators.maxLength(VALIDATION_LIMITS.VERIFICATION_CODE_MAX)],
             ],
-            headScripts: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.SITE_SCRIPTS_MAX)],
-            ],
-            bodyStartScripts: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.SITE_SCRIPTS_MAX)],
-            ],
-            bodyEndScripts: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.SITE_SCRIPTS_MAX)],
-            ],
             cookieConsentEnabled: [false],
             cookieConsentText: [
                 '',
@@ -184,9 +169,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
                 this.technical.searchEngine?.verification?.bing || '',
             yandexVerification:
                 this.technical.searchEngine?.verification?.yandex || '',
-            headScripts: this.technical.scripts?.headScripts || '',
-            bodyStartScripts: this.technical.scripts?.bodyStartScripts || '',
-            bodyEndScripts: this.technical.scripts?.bodyEndScripts || '',
             cookieConsentEnabled:
                 this.technical.cookieConsent?.enabled ?? false,
             cookieConsentText: this.technical.cookieConsent?.text || '',

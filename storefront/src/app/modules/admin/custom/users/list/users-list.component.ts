@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     inject,
     signal,
     TemplateRef,
@@ -24,7 +25,9 @@ import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginat
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { VIEWER_ROLE } from '@shared/constants';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
+import { UserService } from 'app/core/user/user.service';
 import { take } from 'rxjs';
 import {
     UserFormDialogComponent,
@@ -70,10 +73,14 @@ export class UsersListComponent extends BasePaginatedListComponent<
     #transloco = inject(TranslocoService);
     #notificationService = inject(NotificationService);
     #confirmationService = inject(ConfirmationService);
+    #userService = inject(UserService);
 
     protected readonly columns = signal<GridColumn<User>[]>([]);
 
     protected readonly actions = signal<GridAction<User>[]>([]);
+    protected readonly isViewerSig = computed(
+        () => this.#userService.user()?.role === VIEWER_ROLE
+    );
 
     protected override onInit(): void {
         this.columns.set([
@@ -111,6 +118,10 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     openCreateDialog(): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+
         const dialogRef = this.#dialog.open<
             UserFormDialogComponent,
             UserFormDialogData
@@ -133,6 +144,10 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     openEditDialog(user: User): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+
         const dialogRef = this.#dialog.open<
             UserFormDialogComponent,
             UserFormDialogData
@@ -155,6 +170,10 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     deleteUser(user: User): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+
         this.#confirmationService
             .confirm(
                 'admin.users.confirm.deleteTitle',
@@ -185,6 +204,10 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     toggleUserStatus(user: User, activate: boolean): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+
         const action$ = activate
             ? this.service.activateUser(user.id)
             : this.service.deactivateUser(user.id);
@@ -207,6 +230,10 @@ export class UsersListComponent extends BasePaginatedListComponent<
     }
 
     resetPassword(user: User): void {
+        if (this.isViewerSig()) {
+            return;
+        }
+
         this.#confirmationService
             .confirm(
                 'admin.users.confirm.resetPasswordTitle',

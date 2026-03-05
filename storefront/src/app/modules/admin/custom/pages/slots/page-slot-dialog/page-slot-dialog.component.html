@@ -115,7 +115,7 @@
                                 >
                                     <ng-template #itemTemplate let-comp>
                                         <div
-                                            class="group/comp flex cursor-pointer items-center justify-between rounded px-1 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                                            class="group/comp flex cursor-pointer items-center justify-between rounded px-1 py-1.5 transition-colors"
                                             (click)="editComponent(comp)"
                                         >
                                             <div class="flex min-w-0 flex-col">
@@ -132,7 +132,7 @@
                                             </div>
                                             <button
                                                 mat-icon-button
-                                                class="!h-6 !w-6 opacity-0 transition-opacity group-hover/comp:opacity-100"
+                                                class="!w- !h-6"
                                                 (click)="
                                                     removeComponent(
                                                         slot,

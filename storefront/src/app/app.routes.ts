@@ -7,6 +7,7 @@ import {
     superAdminGuard,
     tenantAdminGuard,
     tenantUserGuard,
+    tenantAdminOrSuperAdminGuard,
 } from 'app/core/auth/guards/role.guard';
 import { rootRedirectGuard } from 'app/core/auth/guards/root-redirect.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
@@ -247,10 +248,30 @@ export const appRoutes: Route[] = [
             {
                 path: 'platform-mail',
                 canActivate: [superAdminGuard],
-                loadChildren: () =>
-                    import(
-                        'app/modules/admin/custom/mail-marketing/platform-mail.routes'
-                    ),
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/platform-mail-template-list.component'
+                            ).then((m) => m.SpaPlatformMailTemplateListComponent),
+                    },
+                    {
+                        path: 'subscribers',
+                        data: { scope: 'platform' },
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component'
+                            ).then((m) => m.MailSubscriberListComponent),
+                    },
+                    {
+                        path: ':templateType',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/platform-mail-marketing.component'
+                            ).then((m) => m.SpaPlatformMailMarketingComponent),
+                    },
+                ],
             },
             {
                 path: 'media',
@@ -336,7 +357,7 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'impex',
-                canActivate: [tenantAdminGuard],
+                canActivate: [tenantAdminOrSuperAdminGuard],
                 loadComponent: () =>
                     import('app/modules/admin/custom/impex/impex.component').then(
                         (m) => m.SpaImpExComponent
@@ -346,10 +367,30 @@ export const appRoutes: Route[] = [
                 path: 'mail-marketing',
                 canActivate: [tenantAdminGuard, moduleGuard],
                 data: { requiredModule: 'mail_marketing' },
-                loadChildren: () =>
-                    import(
-                        'app/modules/admin/custom/mail-marketing/tenant-mail-marketing.routes'
-                    ),
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component'
+                            ).then((m) => m.SpaTenantMailTemplateListComponent),
+                    },
+                    {
+                        path: 'subscribers',
+                        data: { scope: 'tenant' },
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component'
+                            ).then((m) => m.MailSubscriberListComponent),
+                    },
+                    {
+                        path: ':templateType',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component'
+                            ).then((m) => m.SpaTenantMailMarketingComponent),
+                    },
+                ],
             },
 
             // Pages

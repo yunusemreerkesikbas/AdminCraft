@@ -20,7 +20,7 @@
             <mat-option [value]="null">{{ placeholder }}</mat-option>
         }
         @if (options && options.length) {
-            @for (o of options; track o) {
+            @for (o of options; track optionValue ? o[optionValue] : o.value) {
                 <mat-option
                     [value]="optionValue ? o[optionValue] : o.value"
                     [disabled]="o.disabled"

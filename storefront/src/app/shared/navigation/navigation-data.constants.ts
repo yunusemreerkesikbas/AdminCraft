@@ -164,6 +164,15 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
         requiredRole: 'SUPER_ADMIN',
         children: [
             {
+                id: 'platform.impex',
+                title: 'admin.nav.impex',
+                type: 'basic',
+                icon: 'heroicons_outline:code-bracket',
+                link: 'impex',
+                requiredModule: null,
+                requiredRole: 'SUPER_ADMIN',
+            },
+            {
                 id: 'platform.dashboard',
                 title: 'admin.nav.platformDashboard',
                 type: 'basic',

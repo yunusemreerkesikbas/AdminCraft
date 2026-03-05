@@ -2003,6 +2003,7 @@ export const langTR = {
                 status: 'Durum',
                 source: 'Kaynak',
                 preferredLanguage: 'Tercih Edilen Dil',
+                permission: 'İzin',
                 createdAt: 'Oluşturulma',
                 totalCount: 'Toplam',
                 sentCount: 'Gönderilen',
@@ -2021,7 +2022,43 @@ export const langTR = {
                 sendCampaign: 'Kampanya Gönder',
                 refreshCampaign: 'Durumu Yenile',
                 refreshSubscribers: 'Aboneleri Yenile',
+                manageSubscribers: 'Aboneleri Yönet',
                 openDetail: 'Detayı Aç',
+            },
+            subscribers: {
+                tenantTitle: 'Tenant Aboneleri',
+                tenantSubtitle:
+                    'Tenant mail marketing için abone kayıtlarını ve template aboneliklerini yönetin',
+                platformTitle: 'Platform Aboneleri',
+                platformSubtitle:
+                    'Platform seviyesindeki abone kayıtlarını ve template aboneliklerini yönetin',
+                fields: {
+                    bindings: 'Template Bağlantıları',
+                    permission: 'Gönderim İzni',
+                    allowed: 'İzinli',
+                    blocked: 'Engelli',
+                },
+                actions: {
+                    addBinding: 'Bağlantı Ekle',
+                },
+                dialog: {
+                    createTitle: 'Abone Oluştur',
+                    editTitle: 'Abone Düzenle',
+                },
+                messages: {
+                    noData: 'Abone bulunamadı',
+                    noDataHint: 'Kampanya kitlesi için yeni bir abone oluşturun',
+                    duplicateTemplate:
+                        'Aynı template türü birden fazla kez seçilemez',
+                    loadDetailFailed: 'Abone detayı yüklenemedi',
+                    created: 'Abone başarıyla oluşturuldu',
+                    updated: 'Abone başarıyla güncellendi',
+                    deleted: 'Abone başarıyla abonelikten çıkarıldı',
+                    saveFailed: 'Abone kaydı başarısız oldu',
+                    deleteFailed: 'Abone silme işlemi başarısız oldu',
+                    confirmDelete:
+                        'Bu işlem aboneyi abonelikten çıkarır ve tüm template izinlerini kaldırır. Devam edilsin mi?',
+                },
             },
             status: {
                 DRAFT: 'Taslak',
@@ -2047,6 +2084,7 @@ export const langTR = {
                 campaignLoadFailed: 'Kampanya durumu yüklenemedi',
                 subscribersLoadFailed: 'Aboneler yüklenemedi',
                 noSubscribers: 'Henüz abone bulunmuyor',
+                templatesLoadFailed: 'Template türleri yüklenemedi',
                 noTemplates: 'Henüz template type bulunmuyor',
                 noTemplatesHint: 'Başlatma sonrası template type listesi burada görünür',
                 backend: {

@@ -119,67 +119,6 @@
             </div>
         </div>
 
-        <!-- Custom Scripts -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.technical.scripts' | transloco }}
-            </h3>
-            <p class="text-secondary mb-4 text-sm">
-                {{ 'admin.site.dashboard.technical.scriptsDesc' | transloco }}
-            </p>
-
-            <div class="space-y-4">
-                <spa-textarea
-                    [label]="
-                        'admin.site.dashboard.technical.headScripts' | transloco
-                    "
-                    [labelTooltip]="'headScripts'"
-                    formControlName="headScripts"
-                    [rows]="4"
-                    styleClasses="font-mono text-sm"
-                    placeholder="<!-- Scripts to inject in <head> -->"
-                    [hint]="
-                        'admin.site.dashboard.technical.headScriptsHint'
-                            | transloco
-                    "
-                    [showErrors]="true"
-                >
-                </spa-textarea>
-
-                <spa-textarea
-                    [label]="
-                        'admin.site.dashboard.technical.bodyStartScripts'
-                            | transloco
-                    "
-                    [labelTooltip]="'bodyStartScripts'"
-                    formControlName="bodyStartScripts"
-                    [rows]="4"
-                    styleClasses="font-mono text-sm"
-                    placeholder="<!-- Scripts to inject at start of <body> -->"
-                    [showErrors]="true"
-                >
-                </spa-textarea>
-
-                <spa-textarea
-                    [label]="
-                        'admin.site.dashboard.technical.bodyEndScripts'
-                            | transloco
-                    "
-                    [labelTooltip]="'bodyEndScripts'"
-                    formControlName="bodyEndScripts"
-                    [rows]="4"
-                    styleClasses="font-mono text-sm"
-                    placeholder="<!-- Scripts to inject at end of <body> -->"
-                    [hint]="
-                        'admin.site.dashboard.technical.bodyEndScriptsHint'
-                            | transloco
-                    "
-                    [showErrors]="true"
-                >
-                </spa-textarea>
-            </div>
-        </div>
-
         <!-- Cookie Consent -->
         <div class="bg-card mb-6 rounded-2xl p-6 shadow">
             <h3 class="mb-4 text-lg font-medium tracking-tight">

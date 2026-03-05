@@ -26,7 +26,6 @@ export interface User extends CrudEntity {
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
     TENANT_ADMIN = 'TENANT_ADMIN',
-    EDITOR = 'EDITOR',
     VIEWER = 'VIEWER'
 }
 

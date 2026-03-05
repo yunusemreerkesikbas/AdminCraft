@@ -20,6 +20,7 @@
                         [label]="'admin.pages.fields.template' | transloco"
                         [options]="templateOptions"
                         [placeholder]="'admin.pages.placeholders.selectTemplate' | transloco"
+                        [disabled]="data?.mode === 'edit'"
                     >
                     </spa-select>
 
@@ -62,14 +63,7 @@
                 }
 
                 @if (isEditMode()) {
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                        <spa-input
-                            formControlName="publishedAt"
-                            label="Published At"
-                            [readonly]="true"
-                        >
-                        </spa-input>
-
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <spa-input
                             formControlName="createdAt"
                             label="Created At"

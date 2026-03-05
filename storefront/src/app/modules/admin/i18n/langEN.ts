@@ -2029,6 +2029,7 @@ export const langEN = {
                 status: 'Status',
                 source: 'Source',
                 preferredLanguage: 'Preferred Language',
+                permission: 'Permission',
                 createdAt: 'Created At',
                 totalCount: 'Total',
                 sentCount: 'Sent',
@@ -2047,7 +2048,43 @@ export const langEN = {
                 sendCampaign: 'Send Campaign',
                 refreshCampaign: 'Refresh Status',
                 refreshSubscribers: 'Refresh Subscribers',
+                manageSubscribers: 'Manage Subscribers',
                 openDetail: 'Open Detail',
+            },
+            subscribers: {
+                tenantTitle: 'Tenant Subscribers',
+                tenantSubtitle:
+                    'Manage subscriber records and template subscriptions for tenant mail marketing',
+                platformTitle: 'Platform Subscribers',
+                platformSubtitle:
+                    'Manage platform-level subscriber records and template subscriptions',
+                fields: {
+                    bindings: 'Template Bindings',
+                    permission: 'Allowed to Receive',
+                    allowed: 'Allowed',
+                    blocked: 'Blocked',
+                },
+                actions: {
+                    addBinding: 'Add Binding',
+                },
+                dialog: {
+                    createTitle: 'Create Subscriber',
+                    editTitle: 'Edit Subscriber',
+                },
+                messages: {
+                    noData: 'No subscribers found',
+                    noDataHint: 'Create a subscriber to start building your campaign audience',
+                    duplicateTemplate:
+                        'The same template type cannot be selected more than once',
+                    loadDetailFailed: 'Failed to load subscriber detail',
+                    created: 'Subscriber created successfully',
+                    updated: 'Subscriber updated successfully',
+                    deleted: 'Subscriber unsubscribed successfully',
+                    saveFailed: 'Subscriber save failed',
+                    deleteFailed: 'Subscriber delete failed',
+                    confirmDelete:
+                        'This action will unsubscribe the subscriber and revoke all template permissions. Continue?',
+                },
             },
             status: {
                 DRAFT: 'Draft',
@@ -2073,6 +2110,7 @@ export const langEN = {
                 campaignLoadFailed: 'Failed to load campaign status',
                 subscribersLoadFailed: 'Failed to load subscribers',
                 noSubscribers: 'No subscribers found yet',
+                templatesLoadFailed: 'Failed to load template types',
                 noTemplates: 'No template type found',
                 noTemplatesHint: 'Template types will appear here after initialization',
                 backend: {

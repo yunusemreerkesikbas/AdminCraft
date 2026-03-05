@@ -3,7 +3,7 @@
 >
     <admin-page-header
         [title]="'admin.users.title' | transloco"
-        [showCreateButton]="true"
+        [showCreateButton]="!isViewerSig()"
         [createButtonText]="'admin.users.create' | transloco"
         (createClick)="openCreateDialog()"
         [showSearch]="true"
@@ -29,8 +29,8 @@
                 [actions]="actions()"
                 [isLoading]="store.isLoading()"
                 [emptyTitle]="'admin.users.emptyMessage' | transloco"
-                [actionsTemplate]="actionsTemplate"
-                (rowClick)="openEditDialog($event)"
+                [actionsTemplate]="isViewerSig() ? undefined : actionsTemplate"
+                (rowClick)="!isViewerSig() && openEditDialog($event)"
             >
             </spa-admin-grid>
         </div>
