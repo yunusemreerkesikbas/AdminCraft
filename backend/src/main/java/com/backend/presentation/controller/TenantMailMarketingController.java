@@ -192,6 +192,7 @@ public class TenantMailMarketingController {
         try {
             MailSubscriberAdminDto updated = service.updateSubscriber(
                 id,
+                request.email(),
                 request.status(),
                 request.subscriptions()
             );
@@ -304,7 +305,7 @@ public class TenantMailMarketingController {
     public record UpsertMailSubscriberRequest(
         @Email @NotBlank String email,
         MailSubscriberStatus status,
-        List<MailSubscriberSubscriptionDto> subscriptions
+        @Valid List<MailSubscriberSubscriptionDto> subscriptions
     ) {
     }
 }

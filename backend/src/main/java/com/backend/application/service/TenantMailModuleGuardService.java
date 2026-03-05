@@ -1,7 +1,5 @@
 package com.backend.application.service;
 
-import java.util.Objects;
-
 import org.springframework.stereotype.Service;
 
 import com.backend.domain.port.TenantContextPort;
@@ -22,10 +20,15 @@ public class TenantMailModuleGuardService {
         if (tenantIdRaw == null || tenantIdRaw.isBlank()) {
             throw new IllegalStateException("mail.marketing.tenant.context.required");
         }
-        Long tenantId = Long.parseLong(tenantIdRaw);
+        Long tenantId;
+        try {
+            tenantId = Long.parseLong(tenantIdRaw);
+        } catch (NumberFormatException ex) {
+            throw new IllegalStateException("mail.marketing.tenant.context.required");
+        }
         boolean enabled = tenantModuleRepository.findByTenantId(tenantId).stream()
             .anyMatch(tm -> MAIL_MARKETING.equalsIgnoreCase(tm.getModuleCode())
-                && Objects.equals("enabled", tm.getStatus()));
+                && "enabled".equalsIgnoreCase(tm.getStatus()));
         if (!enabled) {
             throw new IllegalStateException("mail.marketing.module.not.enabled");
         }

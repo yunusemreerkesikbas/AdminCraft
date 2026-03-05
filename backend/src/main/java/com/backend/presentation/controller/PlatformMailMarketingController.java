@@ -191,6 +191,7 @@ public class PlatformMailMarketingController {
         try {
             MailSubscriberAdminDto updated = service.updateSubscriber(
                 id,
+                request.email(),
                 request.status(),
                 request.subscriptions()
             );
@@ -262,7 +263,7 @@ public class PlatformMailMarketingController {
     public record UpsertMailSubscriberRequest(
         @Email @NotBlank String email,
         MailSubscriberStatus status,
-        List<MailSubscriberSubscriptionDto> subscriptions
+        @Valid List<MailSubscriberSubscriptionDto> subscriptions
     ) {
     }
 }

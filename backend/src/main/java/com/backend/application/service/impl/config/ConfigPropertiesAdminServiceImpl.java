@@ -119,7 +119,7 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
             map.put("value", value != null ? "[set]" : null);
             return objectMapper.writeValueAsString(map);
         } catch (JsonProcessingException e) {
-            return "{}";
+            throw new IllegalStateException("Failed to serialize audit snapshot", e);
         }
     }
 

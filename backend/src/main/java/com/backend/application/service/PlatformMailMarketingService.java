@@ -27,7 +27,7 @@ import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.enums.MailCampaignStatus;
 import com.backend.domain.enums.MailOutboxStatus;
 import com.backend.domain.enums.MailSubscriberStatus;
-import com.backend.infrastructure.email.EmailSender;
+import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.entity.PlatformEmailTemplate;
 import com.backend.domain.entity.PlatformMailCampaign;
 import com.backend.domain.entity.PlatformMailOutbox;
@@ -58,14 +58,14 @@ public class PlatformMailMarketingService {
     private final PlatformNewsletterSubscriberSubscriptionRepository subscriberSubscriptionRepository;
     private final PlatformMailCampaignRepository campaignRepository;
     private final PlatformMailOutboxRepository outboxRepository;
-    private final EmailSender emailSender;
+    private final MailSenderPort mailSender;
     private final TemplateVariableRenderer templateVariableRenderer;
     private final SecurityHelper securityHelper;
 
     @Value("${app.platform-domain:craftive.io}")
     private String platformDomain;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<MailTemplateTypeSummaryDto> getTemplateTypes() {
         ensureAllFixedTemplateTypes();
         return FIXED_TEMPLATE_TYPES.stream()
@@ -73,7 +73,7 @@ public class PlatformMailMarketingService {
             .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public MailTemplateTypeDetailDto getTemplateTypeDetail(String templateTypeRaw) {
         String templateType = normalizeTemplateType(templateTypeRaw);
         ensureTemplateTypeTranslations(templateType);
@@ -204,6 +204,7 @@ public class PlatformMailMarketingService {
     @Transactional
     public MailSubscriberAdminDto updateSubscriber(
         Long subscriberId,
+        String email,
         MailSubscriberStatus status,
         List<MailSubscriberSubscriptionDto> subscriptions
     ) {
@@ -211,6 +212,14 @@ public class PlatformMailMarketingService {
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.subscriber.not.found"));
         if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
             subscriber.setUnsubscribeToken(UUID.randomUUID().toString());
+        }
+        if (email != null && !email.isBlank()) {
+            String normalizedEmail = normalizeEmail(email);
+            if (!normalizedEmail.equalsIgnoreCase(subscriber.getEmail())
+                    && subscriberRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+                throw new IllegalArgumentException("mail.marketing.subscriber.email.exists");
+            }
+            subscriber.setEmail(normalizedEmail);
         }
         if (status != null) {
             applyAdminStatus(subscriber, normalizeAdminStatus(status, subscriber.getStatus()));
@@ -257,7 +266,7 @@ public class PlatformMailMarketingService {
 
         String confirmLink = buildPlatformUrl("/newsletter/confirm?token=" + savedSubscriber.getConfirmToken());
         String body = "Please confirm your newsletter subscription: " + confirmLink;
-        emailSender.send(savedSubscriber.getEmail(), "Newsletter Confirmation", body);
+        mailSender.send(savedSubscriber.getEmail(), "Newsletter Confirmation", body);
     }
 
     @Transactional
@@ -322,7 +331,7 @@ public class PlatformMailMarketingService {
             outbox.setStatus(MailOutboxStatus.PROCESSING);
             outbox = outboxRepository.save(outbox);
 
-            EmailResult result = emailSender.send(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
+            EmailResult result = mailSender.send(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
             if (result.isSuccess()) {
                 outbox.setStatus(MailOutboxStatus.SENT);
                 outbox.setProviderMessageId(result.getMessageId());

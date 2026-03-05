@@ -11,14 +11,12 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.MessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.backend.application.dto.impex.ImpExResult;
 import com.backend.application.dto.impex.StatementResult;
 import com.backend.domain.exception.ImpExInvalidScriptException;
+import com.backend.domain.port.CurrentUserPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
 
@@ -30,8 +28,6 @@ public class ImpExServiceImpl implements ImpExService {
 
     private static final String IMPEX_MARKER = "-- #ADMINCRAFT_IMPEX";
     private static final int PREVIEW_LENGTH = 80;
-    private static final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
-
     private static final Set<String> ALLOWED_KEYWORDS = Set.of("INSERT", "UPDATE", "SELECT");
     private static final Set<String> BLOCKED_KEYWORDS = Set.of(
         "DELETE", "DROP", "TRUNCATE", "ALTER", "CREATE", "RENAME", "REPLACE"
@@ -41,16 +37,19 @@ public class ImpExServiceImpl implements ImpExService {
     private final TenantContextPort tenantContext;
     private final MessageSource messageSource;
     private final DataSource platformDataSource;
+    private final CurrentUserPort currentUser;
 
     public ImpExServiceImpl(
             MultiTenantConnectionProvider multiTenantConnectionProvider,
             TenantContextPort tenantContext,
             MessageSource messageSource,
-            @Qualifier("platformDataSource") DataSource platformDataSource) {
+            @Qualifier("platformDataSource") DataSource platformDataSource,
+            CurrentUserPort currentUser) {
         this.multiTenantConnectionProvider = multiTenantConnectionProvider;
         this.tenantContext = tenantContext;
         this.messageSource = messageSource;
         this.platformDataSource = platformDataSource;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -62,7 +61,7 @@ public class ImpExServiceImpl implements ImpExService {
         List<String> statements = parseStatements(sqlContent);
         log.debug("ImpEx parsed {} statement(s)", statements.size());
 
-        DataSource ds = resolveDataSource();
+        DataSource ds = resolveDataSource(locale);
         JdbcTemplate jdbc = new JdbcTemplate(ds);
         List<StatementResult> results = executeStatements(statements, locale, jdbc);
 
@@ -75,9 +74,9 @@ public class ImpExServiceImpl implements ImpExService {
         return new ImpExResult(status, results.size(), executed, failed, results, LocalDateTime.now());
     }
 
-    private DataSource resolveDataSource() {
+    private DataSource resolveDataSource(Locale locale) {
         String tenantDbName = tenantContext.getTenantDbName();
-        if ((tenantDbName == null || tenantDbName.isBlank()) && isCurrentUserSuperAdmin()) {
+        if ((tenantDbName == null || tenantDbName.isBlank()) && currentUser.isSuperAdmin()) {
             log.info("ImpEx using platform database (SUPER_ADMIN, no tenant context)");
             return platformDataSource;
         }
@@ -85,20 +84,7 @@ public class ImpExServiceImpl implements ImpExService {
             return multiTenantConnectionProvider.getDataSource(tenantDbName);
         }
         throw new IllegalStateException(
-            messageSource.getMessage("impex.error.tenant.required", null, Locale.getDefault()));
-    }
-
-    private boolean isCurrentUserSuperAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getAuthorities() == null) {
-            return false;
-        }
-        for (GrantedAuthority authority : auth.getAuthorities()) {
-            if (ROLE_SUPER_ADMIN.equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
+            messageSource.getMessage("impex.error.tenant.required", null, locale));
     }
 
     private void validateMarker(String content, Locale locale) {
