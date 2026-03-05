@@ -2,14 +2,14 @@ package com.backend.infrastructure.persistence.repository;
 
 import java.util.Optional;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import com.backend.domain.entity.MailProviderConfig;
 import com.backend.domain.repository.MailProviderConfigRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class MailProviderConfigRepositoryImpl implements MailProviderConfigRepository {
 

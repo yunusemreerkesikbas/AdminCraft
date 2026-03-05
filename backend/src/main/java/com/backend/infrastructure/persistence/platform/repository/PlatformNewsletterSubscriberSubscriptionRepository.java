@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;
 
 import com.backend.domain.enums.MailSubscriberStatus;
@@ -20,22 +21,27 @@ public interface PlatformNewsletterSubscriberSubscriptionRepository
         String templateKey
     );
 
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(
         String templateKey
     );
 
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndSubscriberStatus(
         String templateKey,
         MailSubscriberStatus status
     );
 
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndPermissionTrueAndSubscriberStatus(
         String templateKey,
         MailSubscriberStatus status
     );
 
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findBySubscriberIdInOrderByTemplateKeyAsc(Collection<Long> subscriberIds);
 
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findBySubscriberOrderByTemplateKeyAsc(PlatformNewsletterSubscriber subscriber);
 
     long countByTemplateKeyIgnoreCase(String templateKey);

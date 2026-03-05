@@ -19,6 +19,8 @@ Examples in code:
 - Media list: `GET /api/media` in `MediaController`
 - Component Library components: `GET /api/components` in `ComponentController`
 - Component Library types: `GET /api/components/types` in `ComponentTypeController`
+- Mail subscribers (tenant): `GET /api/mail/subscribers/admin` in `TenantMailMarketingController`
+- Mail subscribers (platform): `GET /api/platform/mail/subscribers/admin` in `PlatformMailMarketingController`
 
 **Tree-style list UIs**: Some admin pages (e.g. Navigation, Product categories) use a **tree view** instead of a paginated grid. They still rely on list or tree endpoints (e.g. `GET /api/navigation/nodes` for roots, `GET /api/navigation/nodes/{id}` for a subtree); the frontend does not use `BasePaginatedListComponent` for those views.
 
@@ -108,3 +110,17 @@ For sortable collections:
 
 - Use the shared reorder component (`SpaReorderListComponent`) for drag-and-drop.
 - Backends should expose a dedicated reorder endpoint (commonly `PUT .../reorder`).
+
+## Mail subscriber sort profile
+
+Mail subscriber admin grids accept these server-side sort fields:
+
+- `createdAt`
+- `email`
+- `status`
+- `confirmedAt`
+- `unsubscribedAt`
+
+Source of truth:
+
+- `backend/src/main/java/com/backend/shared/config/SortableFieldsConfig.java`

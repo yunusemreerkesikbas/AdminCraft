@@ -63,6 +63,9 @@ Source-of-truth services/entities:
 - Tenant subscriber relation entity: [`../../backend/src/main/java/com/backend/domain/entity/NewsletterSubscriberSubscription.java`](../../backend/src/main/java/com/backend/domain/entity/NewsletterSubscriberSubscription.java)
 - Platform subscriber relation entity: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/entity/PlatformNewsletterSubscriberSubscription.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/entity/PlatformNewsletterSubscriberSubscription.java)
 - Platform entity↔domain mapper: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformMailMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformMailMapper.java)
+- Shared platform mappers:
+  - [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformAdminUserMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformAdminUserMapper.java)
+  - [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformVerificationTokenMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformVerificationTokenMapper.java)
 
 ### Platform entity conventions
 
@@ -79,6 +82,15 @@ All 5 platform mail marketing entities (`PlatformEmailTemplate`, `PlatformMailCa
 `PlatformNewsletterSubscriber` and `PlatformNewsletterSubscriberSubscription` have a bidirectional `@OneToMany`/`@ManyToOne` relationship. Both entities use `@ToString(exclude=...)` to prevent `StackOverflowError` in Lombok-generated `toString()`.
 
 `preferredLanguage` defaults to `Language.EN.name()` (`"EN"`), consistent with the platform subscribe flow.
+
+### Query performance notes
+
+Subscriber relation list methods load `subscriber` via `@EntityGraph(attributePaths = "subscriber")` to avoid N+1 when mapping `subscription.getSubscriber()` in service layer:
+
+- Platform relation repository: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/repository/PlatformNewsletterSubscriberSubscriptionRepository.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/repository/PlatformNewsletterSubscriberSubscriptionRepository.java)
+- Tenant relation repository: [`../../backend/src/main/java/com/backend/infrastructure/persistence/repository/NewsletterSubscriberSubscriptionJpaRepository.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/repository/NewsletterSubscriberSubscriptionJpaRepository.java)
+
+`PlatformMailMapper` intentionally uses shallow subscriber mapping in subscription conversions and avoids eager mapping of `subscriber.subscriptions` by default.
 
 ## Admin API
 
@@ -214,6 +226,7 @@ Language assignment policy:
 
 1. Open `/:lang/mail-marketing/subscribers` (tenant) or `/:lang/platform-mail/subscribers` (platform).
 2. List page supports server-side pagination/sort/search.
+   - Sort options include: `createdAt`, `email`, `status`, `confirmedAt`, `unsubscribedAt`.
 3. Create/edit supports multiple template bindings in one dialog:
    - `templateType`
    - `preferredLanguage`

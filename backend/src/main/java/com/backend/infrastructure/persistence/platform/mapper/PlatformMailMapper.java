@@ -91,12 +91,6 @@ public final class PlatformMailMapper {
         target.setUnsubscribedAt(source.getUnsubscribedAt());
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
-        if (source.getSubscriptions() != null) {
-            target.setSubscriptions(
-                    source.getSubscriptions().stream()
-                            .map(PlatformMailMapper::toDomainShallow)
-                            .collect(java.util.stream.Collectors.toList()));
-        }
         return target;
     }
 
@@ -123,7 +117,7 @@ public final class PlatformMailMapper {
         if (source == null) return null;
         PlatformNewsletterSubscriberSubscription target = new PlatformNewsletterSubscriberSubscription();
         target.setId(source.getId());
-        target.setSubscriber(toDomain(source.getSubscriber()));
+        target.setSubscriber(toSubscriberShallow(source.getSubscriber()));
         target.setTemplateKey(source.getTemplateKey());
         target.setSource(source.getSource());
         target.setPreferredLanguage(source.getPreferredLanguage());
@@ -149,16 +143,18 @@ public final class PlatformMailMapper {
         return target;
     }
 
-    // Shallow mapping to avoid infinite recursion when mapping subscriber→subscriptions→subscriber
-    private static PlatformNewsletterSubscriberSubscription toDomainShallow(
-            com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription source) {
+    private static PlatformNewsletterSubscriber toSubscriberShallow(
+            com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber source) {
         if (source == null) return null;
-        PlatformNewsletterSubscriberSubscription target = new PlatformNewsletterSubscriberSubscription();
+        PlatformNewsletterSubscriber target = new PlatformNewsletterSubscriber();
         target.setId(source.getId());
-        target.setTemplateKey(source.getTemplateKey());
+        target.setEmail(source.getEmail());
+        target.setStatus(source.getStatus());
         target.setSource(source.getSource());
-        target.setPreferredLanguage(source.getPreferredLanguage());
-        target.setPermission(source.getPermission());
+        target.setConfirmToken(source.getConfirmToken());
+        target.setUnsubscribeToken(source.getUnsubscribeToken());
+        target.setConfirmedAt(source.getConfirmedAt());
+        target.setUnsubscribedAt(source.getUnsubscribedAt());
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
         return target;

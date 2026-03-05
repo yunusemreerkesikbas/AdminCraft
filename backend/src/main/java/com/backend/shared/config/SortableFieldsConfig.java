@@ -118,7 +118,11 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
                         SortOptionDto.of("email,desc", "admin.sort.emailDesc"),
                         SortOptionDto.of("status,asc", "admin.sort.statusAsc"),
-                        SortOptionDto.of("status,desc", "admin.sort.statusDesc"));
+                        SortOptionDto.of("status,desc", "admin.sort.statusDesc"),
+                        SortOptionDto.of("confirmedAt,asc", "admin.sort.confirmedAtAsc"),
+                        SortOptionDto.of("confirmedAt,desc", "admin.sort.confirmedAtDesc"),
+                        SortOptionDto.of("unsubscribedAt,asc", "admin.sort.unsubscribedAtAsc"),
+                        SortOptionDto.of("unsubscribedAt,desc", "admin.sort.unsubscribedAtDesc"));
 
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(

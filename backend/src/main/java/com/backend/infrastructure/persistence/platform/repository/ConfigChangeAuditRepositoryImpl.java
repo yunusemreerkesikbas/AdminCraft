@@ -1,7 +1,6 @@
 package com.backend.infrastructure.persistence.platform.repository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
@@ -28,7 +27,7 @@ public class ConfigChangeAuditRepositoryImpl implements ConfigChangeAuditReposit
         return jpaRepository.findByTargetTenantIdOrderByCreatedAtDesc(tenantId, PageRequest.of(0, safeLimit))
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ConfigChangeAudit toDomain(com.backend.infrastructure.persistence.platform.entity.ConfigChangeAudit source) {
