@@ -51,3 +51,13 @@ ON DUPLICATE KEY UPDATE
     type = new_vals.type,
     version = new_vals.version,
     description = new_vals.description;
+
+INSERT INTO modules_catalog (code, name, type, version, deps, enabled_by_default, description)
+VALUES ('mail_marketing', 'Mail Marketing', 'b2c', '1.0.0', '["core"]', FALSE,
+        'Optional tenant newsletter and announcement mailing capability with tenant-owned provider credentials.')
+AS new_vals
+ON DUPLICATE KEY UPDATE
+    name = new_vals.name,
+    type = new_vals.type,
+    version = new_vals.version,
+    description = new_vals.description;
