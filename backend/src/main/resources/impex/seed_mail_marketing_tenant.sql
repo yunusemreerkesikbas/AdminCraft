@@ -2,7 +2,7 @@
 -- Version-controlled ImpEx reference script.
 -- Run via Admin UI /{lang}/impex when needed to seed tenant mail marketing sample data.
 -- Idempotent: safe to run multiple times.
--- Prerequisite: mail_marketing module tables must exist (Flyway V1 + V2).
+-- Prerequisite: mail_marketing module tables must exist (Flyway V1..V5).
 
 -- ============================================
 -- 1. TEMPLATE TRANSLATIONS (TR + EN)
@@ -53,18 +53,7 @@ SELECT
     s.id,
     'NEWSLETTER_DEFAULT',
     s.source,
-    COALESCE(
-        (
-            SELECT CASE
-                WHEN UPPER(COALESCE(t.default_language, 'EN')) = 'TR' THEN 'TR'
-                ELSE 'EN'
-            END
-            FROM platform_management.tenants t
-            WHERE t.database_name = DATABASE()
-            LIMIT 1
-        ),
-        'EN'
-    ),
+    'EN',
     TRUE
 FROM newsletter_subscribers s
 WHERE s.email IN ('alice@example.com', 'bob@example.com', 'carol@example.com')
@@ -80,18 +69,7 @@ SELECT
     s.id,
     'VERSION_UPGRADE',
     s.source,
-    COALESCE(
-        (
-            SELECT CASE
-                WHEN UPPER(COALESCE(t.default_language, 'EN')) = 'TR' THEN 'TR'
-                ELSE 'EN'
-            END
-            FROM platform_management.tenants t
-            WHERE t.database_name = DATABASE()
-            LIMIT 1
-        ),
-        'EN'
-    ),
+    'EN',
     TRUE
 FROM newsletter_subscribers s
 WHERE s.email IN ('alice@example.com', 'bob@example.com')

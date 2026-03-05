@@ -22,6 +22,7 @@ When a sync job fails:
 1. Capture `jobId`, module name, migration name, SQL error.
 2. Check Flyway history tables:
    - `flyway_core_history`
+   - `flyway_mail_marketing_history`
    - `flyway_media_history`
    - `flyway_component_library_history`
    - `flyway_pagebuilder_history`

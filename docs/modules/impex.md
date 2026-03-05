@@ -211,7 +211,7 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 
 `seed_pages_and_slots.sql` depends on components from step 1 (FK via `slot_components`) and on Flyway-managed `page_templates` / `template_slots`.
 
-`seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned (Flyway `mail_marketing/V1__baseline.sql` + `V2__add_newsletter_subscriptions.sql`).
+`seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
 
 ### Platform reference script
 

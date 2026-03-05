@@ -2,7 +2,7 @@
 -- Version-controlled ImpEx reference script.
 -- Run via Admin UI /{lang}/impex when needed to seed platform mail marketing sample data.
 -- Idempotent: safe to run multiple times.
--- Prerequisite: platform mail marketing tables must exist (Flyway V46 + V47).
+-- Prerequisite: platform mail marketing tables must exist (Flyway V46..V49).
 
 -- ============================================
 -- 1. TEMPLATE TRANSLATIONS (TR + EN)
