@@ -2,7 +2,7 @@ package com.backend.domain.repository;
 
 import java.util.List;
 
-import com.backend.infrastructure.persistence.platform.entity.ConfigChangeAudit;
+import com.backend.domain.entity.ConfigChangeAudit;
 
 public interface ConfigChangeAuditRepository {
 
