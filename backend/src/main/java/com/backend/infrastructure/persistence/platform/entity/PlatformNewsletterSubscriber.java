@@ -1,22 +1,18 @@
-package com.backend.domain.entity;
+package com.backend.infrastructure.persistence.platform.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.backend.domain.entity.BaseEntity;
 import com.backend.domain.enums.MailSubscriberStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,17 +20,13 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "newsletter_subscribers")
+@Table(name = "platform_newsletter_subscribers", schema = "platform_management")
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = "subscriptions")
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@ToString(callSuper = true, exclude = "subscriptions")
 @NoArgsConstructor
-public class NewsletterSubscriber {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class PlatformNewsletterSubscriber extends BaseEntity {
 
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
@@ -58,23 +50,6 @@ public class NewsletterSubscriber {
     @Column(name = "unsubscribed_at")
     private LocalDateTime unsubscribedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "subscriber")
-    private List<NewsletterSubscriberSubscription> subscriptions = new ArrayList<>();
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private List<PlatformNewsletterSubscriberSubscription> subscriptions = new ArrayList<>();
 }

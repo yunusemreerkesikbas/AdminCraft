@@ -397,7 +397,7 @@ public class TenantMailMarketingService {
             campaign.setContent(selectedTemplate.getContent());
             campaign.setStatus(MailCampaignStatus.SENDING);
             campaign.setTotalCount(subscriptions.size());
-            campaign.setCreatedBy(resolveCurrentUserId());
+            campaign.setCreatedByUserId(resolveCurrentUserId());
             campaign = campaignRepository.save(campaign);
 
             List<Long> outboxIds = new ArrayList<>();

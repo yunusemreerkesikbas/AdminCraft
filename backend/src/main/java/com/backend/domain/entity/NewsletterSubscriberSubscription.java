@@ -2,6 +2,8 @@ package com.backend.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.backend.domain.enums.Language;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,8 +15,11 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "newsletter_subscriber_subscriptions", uniqueConstraints = {
@@ -23,7 +28,10 @@ import lombok.NoArgsConstructor;
         columnNames = { "subscriber_id", "template_key" }
     )
 })
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "subscriber")
 @NoArgsConstructor
 public class NewsletterSubscriberSubscription {
 
@@ -42,7 +50,7 @@ public class NewsletterSubscriberSubscription {
     private String source;
 
     @Column(name = "preferred_language", nullable = false, length = 10)
-    private String preferredLanguage = "EN";
+    private String preferredLanguage = Language.EN.name();
 
     @Column(name = "permission", nullable = false)
     private Boolean permission = Boolean.TRUE;

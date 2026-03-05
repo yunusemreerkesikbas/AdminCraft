@@ -1,33 +1,25 @@
-package com.backend.domain.entity;
+package com.backend.infrastructure.persistence.platform.entity;
 
-import java.time.LocalDateTime;
-
+import com.backend.domain.entity.BaseEntity;
 import com.backend.domain.enums.MailCampaignStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "platform_mail_campaigns", schema = "platform_management")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class PlatformMailCampaign {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class PlatformMailCampaign extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "template_id")
@@ -52,23 +44,7 @@ public class PlatformMailCampaign {
     @Column(name = "failed_count", nullable = false)
     private Integer failedCount = 0;
 
+    // Separate from BaseEntity.createdBy (Long user ID): stores the email/name of the platform admin who created the campaign
     @Column(name = "created_by_email", length = 100)
     private String createdByEmail;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

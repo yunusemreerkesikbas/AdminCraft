@@ -53,7 +53,7 @@ public class MailCampaign {
     private Integer failedCount = 0;
 
     @Column(name = "created_by")
-    private Long createdBy;
+    private Long createdByUserId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -83,6 +83,12 @@ Role checks are enforced by:
 
 All other endpoints require a resolved tenant, and run with tenant DB context.
 
+This includes ImpEx:
+
+- `POST /api/impex/execute` executes against the active tenant database.
+- `TENANT_ADMIN` users: require a resolved tenant context (`X-Tenant-ID` or `X-Tenant-Subdomain` header).
+- `SUPER_ADMIN` users: bypass tenant resolution entirely — `TenantFilter` short-circuits before tenant lookup and emits a `WARN` audit log: `ImpEx bypass for superAdmin - path: {path}`. This allows SUPER_ADMIN to run ImpEx against the platform DB directly without a tenant header.
+
 ## Correlation IDs
 
 - Incoming `X-Correlation-ID` is used when present.

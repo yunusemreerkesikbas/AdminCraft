@@ -40,6 +40,14 @@ Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
 3. **Credentials**: Dev uses defaults, Stage/Prod require environment variables
 4. **No defaults for sensitive values in Stage/Prod**: `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD` must be set
 
+#### Tenant runtime configuration (Config Control Panel)
+
+Some settings are **tenant-specific** and must be editable at runtime (e.g. reCAPTCHA recovery settings used by `/config`).
+
+- **Do NOT** store tenant runtime settings in `application.yml` or `application-{profile}.yml`
+- Store them in the **tenant database** (key-value store): `config_properties`
+- `application.yml` may still define safe **defaults** (used only when the tenant key is missing)
+
 ### Frontend — Angular
 
 1. **File replacement**: Angular replaces `environment.ts` with profile-specific file at build time

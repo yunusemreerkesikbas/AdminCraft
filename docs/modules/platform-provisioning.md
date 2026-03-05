@@ -64,7 +64,7 @@ Base path: `/api/provisioning`
 
 Module catalog behavior:
 
-- `GET /api/provisioning/modules/catalog` returns only provisioning-selectable modules: `core` and `product`.
+- `GET /api/provisioning/modules/catalog` returns provisioning-selectable modules: `core`, `product`, `mail_marketing`.
 - `modules_catalog` still stores execution modules (`media`, `component_library`, `pagebuilder`) for migration ordering and tenant module history joins.
 
 Authorization note:
@@ -121,6 +121,8 @@ Request/response shape (high level):
 - Provision request body:
   - `{ "modules": ["core"] }`
   - `{ "modules": ["core", "product"] }`
+  - `{ "modules": ["core", "mail_marketing"] }`
+  - `{ "modules": ["core", "product", "mail_marketing"] }`
 - Job status response contains:
   - `jobId`, `tenantId`, `type`, `status`, `progress`, `error`, `createdAt`, `startedAt`, `completedAt`
 
@@ -129,7 +131,7 @@ Provisioning module canonicalization:
 - `core` is required for full provision.
 - When request includes `core`, backend expands execution set to:
   - `core`, `media`, `component_library`, `pagebuilder`
-- `product` remains optional and is appended only when requested.
+- `product` and `mail_marketing` remain optional and are appended only when requested.
 
 DTO references (source of truth):
 
@@ -179,7 +181,7 @@ Update these files in order. See also [Module Execution Order](../global/migrati
 #### Frontend
 
 1. **Navigation constant** — `storefront/src/app/core/navigation/navigation-modules.constants.ts`  
-   Only add **provisioning-selectable** modules here (catalog exposes `core` and `product`; core-expanded modules like `media`, `component_library`, `pagebuilder` are covered by `CORE` and do not need an entry):
+   Only add **provisioning-selectable** modules here (catalog exposes `core`, `product`, `mail_marketing`; core-expanded modules like `media`, `component_library`, `pagebuilder` are covered by `CORE` and do not need an entry):
 
    ```typescript
    export const NAVIGATION_MODULES = {
@@ -218,7 +220,7 @@ Update these files in order. See also [Module Execution Order](../global/migrati
 
 #### Notes
 
-- Module types: core-expanded modules (`core`, `media`, `component_library`, `pagebuilder`) use `type: 'core'`; optional catalog modules (e.g. `product`) use `type: 'b2c'`
+- Module types: core-expanded modules (`core`, `media`, `component_library`, `pagebuilder`) use `type: 'core'`; optional catalog modules (e.g. `product`, `mail_marketing`) use `type: 'b2c'`
 - Core module deps: `NULL`; others: `'["core"]'`
 - Module codes: lowercase with underscores
 

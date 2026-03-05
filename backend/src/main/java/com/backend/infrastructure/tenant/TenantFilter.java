@@ -84,6 +84,12 @@ public class TenantFilter extends OncePerRequestFilter {
         return;
       }
 
+      if (path.startsWith("/api/impex") && isSuperAdmin) {
+        log.warn("ImpEx bypass for superAdmin - path: {}", path);
+        filterChain.doFilter(request, response);
+        return;
+      }
+
       Tenant tenant = resolveTenantFromHeaders(request);
       if (tenant == null) {
         tenant = resolveTenantFromHostname(request);
@@ -250,17 +256,6 @@ public class TenantFilter extends OncePerRequestFilter {
         path.startsWith("/api/platform/public/newsletter") ||
         path.startsWith("/api/swagger-ui") ||
         path.startsWith("/api/v3/api-docs");
-  }
-
-  private String extractSubdomain(String hostname) {
-    if (hostname == null || hostname.isBlank() || "localhost".equalsIgnoreCase(hostname)) {
-      return null;
-    }
-    int firstDot = hostname.indexOf('.');
-    if (firstDot <= 0) {
-      return null;
-    }
-    return hostname.substring(0, firstDot);
   }
 
   private boolean isPlatformEndpoint(String path) {
