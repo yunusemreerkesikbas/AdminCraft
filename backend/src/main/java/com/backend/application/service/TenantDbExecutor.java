@@ -15,12 +15,20 @@ public class TenantDbExecutor {
   }
 
   public <T> T withTenant(Long tenantId, String tenantDbName, Supplier<T> action) {
+    String prevTenantId = tenantContext.getTenantId();
+    String prevTenantDbName = tenantContext.getTenantDbName();
+
     tenantContext.setTenantId(String.valueOf(tenantId));
     tenantContext.setTenantDbName(tenantDbName);
     try {
       return action.get();
     } finally {
-      tenantContext.clear();
+      if (prevTenantId != null && prevTenantDbName != null) {
+        tenantContext.setTenantId(prevTenantId);
+        tenantContext.setTenantDbName(prevTenantDbName);
+      } else {
+        tenantContext.clear();
+      }
     }
   }
 }

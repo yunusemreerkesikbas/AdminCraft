@@ -24,7 +24,8 @@ export class AuthService {
     );
 
     #requires2FASig = signal<boolean>(false);
-    readonly requires2FASig: Signal<boolean> = this.#requires2FASig.asReadonly();
+    readonly requires2FASig: Signal<boolean> =
+        this.#requires2FASig.asReadonly();
 
     #twoFactorPendingSig = signal<TwoFactorPendingState | null>(null);
     readonly twoFactorPendingSig: Signal<TwoFactorPendingState | null> =
@@ -47,17 +48,25 @@ export class AuthService {
         return this.#getAccessToken();
     }
 
-    forgotPassword(email: string, subdomain?: string, recaptchaToken?: string): Observable<any> {
+    forgotPassword(
+        email: string,
+        subdomain?: string,
+        recaptchaToken?: string
+    ): Observable<any> {
         return this.#apiClient.custom('POST', 'forgotPassword', {
             body: { email, recaptchaToken },
-            customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
+            customHeaders: subdomain
+                ? { 'X-Tenant-Subdomain': subdomain }
+                : undefined,
         });
     }
 
     verifyResetToken(token: string, subdomain?: string): Observable<any> {
         return this.#apiClient.custom('GET', 'verifyResetToken', {
             queryParams: { token },
-            customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
+            customHeaders: subdomain
+                ? { 'X-Tenant-Subdomain': subdomain }
+                : undefined,
         });
     }
 
@@ -70,14 +79,18 @@ export class AuthService {
     ): Observable<any> {
         return this.#apiClient.custom('POST', 'resetPassword', {
             body: { token, password, confirmPassword, recaptchaToken },
-            customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
+            customHeaders: subdomain
+                ? { 'X-Tenant-Subdomain': subdomain }
+                : undefined,
         });
     }
 
     verifyEmailToken(token: string, subdomain?: string): Observable<any> {
         return this.#apiClient.custom('GET', 'verifyEmailToken', {
             queryParams: { token },
-            customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
+            customHeaders: subdomain
+                ? { 'X-Tenant-Subdomain': subdomain }
+                : undefined,
         });
     }
 
@@ -91,18 +104,24 @@ export class AuthService {
         subdomain?: string,
         recaptchaToken?: string
     ): Observable<LoginResponse> {
-        return this.#apiClient.custom<LoginResponse>('POST', 'setInitialPassword', {
-            body: {
-                token,
-                password,
-                confirmPassword,
-                deviceFingerprint,
-                trustDevice,
-                deviceName,
-                recaptchaToken,
-            },
-            customHeaders: subdomain ? { 'X-Tenant-Subdomain': subdomain } : undefined
-        });
+        return this.#apiClient.custom<LoginResponse>(
+            'POST',
+            'setInitialPassword',
+            {
+                body: {
+                    token,
+                    password,
+                    confirmPassword,
+                    deviceFingerprint,
+                    trustDevice,
+                    deviceName,
+                    recaptchaToken,
+                },
+                customHeaders: subdomain
+                    ? { 'X-Tenant-Subdomain': subdomain }
+                    : undefined,
+            }
+        );
     }
 
     completeSignInWithResponse(response: LoginResponseData): void {
@@ -153,18 +172,17 @@ export class AuthService {
                         );
                         return of('requires2FA' as const);
                     }
-                    return this.#completeSignIn(response.data, response.message);
-                } else {
-                    this.#notificationService.alert(
+                    return this.#completeSignIn(
+                        response.data,
                         response.message
                     );
+                } else {
+                    this.#notificationService.alert(response.message);
                     return of(false);
                 }
             }),
             catchError((error) => {
-                const message =
-                    error?.error?.message ||
-                    error?.message;
+                const message = error?.error?.message || error?.message;
                 const errorCode = error?.error?.data?.errorCode;
 
                 if (errorCode === 'ACCOUNT_LOCKED') {
@@ -185,7 +203,10 @@ export class AuthService {
                 if (response.result === 'SUCCESS' && response.data) {
                     this.#requires2FASig.set(false);
                     this.#twoFactorPendingSig.set(null);
-                    return this.#completeSignIn(response.data, response.message);
+                    return this.#completeSignIn(
+                        response.data,
+                        response.message
+                    );
                 } else {
                     this.#notificationService.alert(
                         response.message || 'OTP verification failed'
@@ -194,9 +215,7 @@ export class AuthService {
                 }
             }),
             catchError((error) => {
-                const message =
-                    error?.error?.message ||
-                    error?.message;
+                const message = error?.error?.message || error?.message;
                 this.#notificationService.alert(message);
                 return of(false);
             })
@@ -231,15 +250,11 @@ export class AuthService {
 
         return this.#tenantContext.initializeTenantContext(user).pipe(
             switchMap(() => {
-                this.#notificationService.success(
-                    message || 'Login successful'
-                );
+                this.#notificationService.success(message);
                 return of(true);
             }),
             catchError(() => {
-                this.#notificationService.success(
-                    message || 'Login successful'
-                ); // Still success auth-wise
+                this.#notificationService.success(message); // Still success auth-wise
                 return of(true);
             })
         );
@@ -252,10 +267,17 @@ export class AuthService {
                 const decoded = AuthUtils.decodeToken(token);
                 if (decoded) {
                     this.#authenticatedSig.set(true);
+                    const storedName = (() => {
+                        try {
+                            return localStorage.getItem('userFullName');
+                        } catch {
+                            return null;
+                        }
+                    })();
                     const user: User = {
                         id: decoded.userId || 0,
                         email: decoded.sub,
-                        name: decoded.sub,
+                        name: storedName ?? decoded.sub,
                         role: decoded.role,
                         tenantId: decoded.tenantId || 0,
                     };
@@ -326,6 +348,10 @@ export class AuthService {
                 const subdomain = data.subdomain;
                 localStorage.setItem('currentTenantSubdomain', subdomain);
             }
+            const displayName = data.fullName ?? data.email;
+            if (displayName) {
+                localStorage.setItem('userFullName', displayName);
+            }
         } catch (error) {}
     }
 
@@ -334,6 +360,7 @@ export class AuthService {
             localStorage.removeItem('userId');
             localStorage.removeItem('tenantId');
             localStorage.removeItem('currentTenantSubdomain');
+            localStorage.removeItem('userFullName');
         } catch (error) {}
     }
 }

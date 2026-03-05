@@ -29,8 +29,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SUPER_ADMIN_ROLE } from '@shared/constants';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
-import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
-import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
+import { ConfigFlagsService } from 'app/core/config/config-flags.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { UserService } from 'app/core/user/user.service';
@@ -63,9 +62,9 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
 
     #activatedRoute = inject(ActivatedRoute);
     #authService = inject(AuthService);
+    #configFlags = inject(ConfigFlagsService);
     #deviceFingerprintService = inject(DeviceFingerprintService);
     #recaptchaService = inject(RecaptchaService);
-    #publicConfigService = inject(PublicTenantConfigService);
     #tenantContext = inject(TenantContextService);
     #formBuilder = inject(UntypedFormBuilder);
     #router = inject(Router);
@@ -73,7 +72,6 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     #translocoService = inject(TranslocoService);
     #destroySubject = new Subject<void>();
 
-    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
     protected isPlatformHostSig = signal(false);
 
     signInForm: UntypedFormGroup;
@@ -107,24 +105,14 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
             trustDevice: [false],
         });
 
-        this.#loadPublicConfig(subdomain);
-    }
-
-    #loadPublicConfig(subdomain?: string | null): void {
-        const resolvedSubdomain = subdomain ?? this.#tenantContext.extractSubdomainFromHost();
-        if (!resolvedSubdomain) return;
-
-        this.#publicConfigService
-            .loadConfig(resolvedSubdomain)
-            .pipe(take(1))
-            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
     }
 
     async #getRecaptchaToken(): Promise<string | undefined> {
-        const config = this.recaptchaConfigSig();
-        if (!config?.enabled || !config.siteKey) return undefined;
+        const enabled = this.#configFlags.flag('security.recaptcha.enabled', false);
+        const siteKey = this.#configFlags.flag('security.recaptcha.site_key', '');
+        if (!enabled || !siteKey) return undefined;
 
-        return await this.#recaptchaService.execute('login', config.siteKey);
+        return await this.#recaptchaService.execute('login', siteKey);
     }
 
     async signIn(): Promise<void> {

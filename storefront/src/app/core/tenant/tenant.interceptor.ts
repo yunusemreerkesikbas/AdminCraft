@@ -22,8 +22,19 @@ const AUTH_ENDPOINTS: readonly string[] = [
   'auth/setInitialPassword',
   'auth/verify-otp'
 ] as const;
+const CONFIG_ENDPOINTS: readonly string[] = [
+  'config/auth',
+  'config/admin'
+] as const;
 
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
+    const isConfigEndpoint = CONFIG_ENDPOINTS.some((endpoint) =>
+        req.url.includes(endpoint)
+    );
+    if (isConfigEndpoint) {
+        return next(req);
+    }
+
     const tenantContext = inject(TenantContextService);
     const userService = inject(UserService);
     const isTenantSpecificException = TENANT_SPECIFIC_EXCEPTIONS.some((endpoint) =>
@@ -43,7 +54,7 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
         if (subdomain === 'admin') subdomain = null;
     }
     const contextTenantId = tenantContext.getCurrentTenantId();
-    const effectiveTenantId = user?.role === 'TENANT_ADMIN' && user?.tenantId
+    const effectiveTenantId = user?.role !== 'SUPER_ADMIN' && user?.tenantId
         ? user.tenantId
         : contextTenantId;
 
@@ -62,5 +73,3 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
     const cloned = req.clone({ setHeaders: headers });
     return next(cloned);
 };
-
-
