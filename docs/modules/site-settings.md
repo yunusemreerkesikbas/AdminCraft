@@ -13,6 +13,11 @@ It supports a split model:
 - **Global settings** (language-agnostic)
 - **Per-language settings** (keyed by language)
 
+Security scope note:
+
+- Tenant `twoFactorPolicy` is managed from Site Dashboard Security tab (`/api/sites/security`).
+- This remains separate from Config Control Panel global runtime email overrides.
+
 ## Admin API (tenant-scoped, authenticated)
 
 Controller: [`backend/src/main/java/com/backend/presentation/controller/SiteSettingsController.java`](../../backend/src/main/java/com/backend/presentation/controller/SiteSettingsController.java)

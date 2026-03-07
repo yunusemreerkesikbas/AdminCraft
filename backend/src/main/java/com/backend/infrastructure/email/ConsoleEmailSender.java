@@ -2,10 +2,10 @@ package com.backend.infrastructure.email;
 
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.domain.port.MailConfigPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.email.provider", havingValue = "console", matchIfMissing = true)
 public class ConsoleEmailSender implements EmailSender {
 
+    private final MailConfigPort mailConfig;
     private final EmailProperties emailProperties;
 
     @Override
@@ -26,7 +26,7 @@ public class ConsoleEmailSender implements EmailSender {
         log.info("EMAIL (Console Mode)");
         log.info("========================================");
         log.info("To: {}", to);
-        log.info("From: {} <{}>", emailProperties.getFromName(), emailProperties.getFromAddress());
+        log.info("From: {} <{}>", mailConfig.getFromName(), mailConfig.getFromAddress());
         log.info("Subject: {}", subject);
         log.info("Message ID: {}", messageId);
         log.info("----------------------------------------");

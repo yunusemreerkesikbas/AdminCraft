@@ -15,7 +15,8 @@ export class ConfigFlagsService {
     readonly #flags = new Map<string, string>();
 
     async load(subdomain: string | null): Promise<void> {
-        if (!subdomain) {
+        // /config panel and admin host are platform-scoped, not tenant-scoped.
+        if (!subdomain || subdomain === 'admin') {
             return;
         }
         try {

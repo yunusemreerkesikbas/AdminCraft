@@ -32,48 +32,50 @@
     }
 
     <!-- Add property row -->
-    <div class="bg-card flex flex-wrap items-end gap-3 rounded p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
-        <div class="min-w-48 flex-1">
-            <spa-input
-                [ngModel]="newKeySig()"
-                (ngModelChange)="newKeySig.set($event)"
-                label="Key"
-                placeholder="e.g. mail.provider.enabled"
-                styleClasses="fuse-mat-dense fuse-mat-rounded"
-            />
+    @if (!isGlobalScopeSig()) {
+        <div class="bg-card flex flex-wrap items-end gap-3 rounded p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
+            <div class="min-w-48 flex-1">
+                <spa-input
+                    [ngModel]="newKeySig()"
+                    (ngModelChange)="newKeySig.set($event)"
+                    label="Key"
+                    placeholder="e.g. mail.provider.enabled"
+                    styleClasses="fuse-mat-dense fuse-mat-rounded"
+                />
+            </div>
+            <div class="min-w-48 flex-1">
+                <spa-input
+                    [ngModel]="newValueSig()"
+                    (ngModelChange)="newValueSig.set($event)"
+                    [type]="newSecretSig() ? 'password' : 'text'"
+                    label="Value"
+                    placeholder="Property value..."
+                    styleClasses="fuse-mat-dense fuse-mat-rounded"
+                />
+            </div>
+            <div class="flex items-center gap-3 pb-1">
+                <spa-toggle
+                    [ngModel]="newSecretSig()"
+                    (ngModelChange)="newSecretSig.set($event)"
+                    label="Secret"
+                />
+                <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="addRow()"
+                    [disabled]="!newKeySig().trim() || addingSig()"
+                    class="!h-9"
+                >
+                    @if (addingSig()) {
+                        <mat-spinner diameter="16" class="mr-1" />
+                    } @else {
+                        <mat-icon svgIcon="heroicons_outline:plus" />
+                    }
+                    Add
+                </button>
+            </div>
         </div>
-        <div class="min-w-48 flex-1">
-            <spa-input
-                [ngModel]="newValueSig()"
-                (ngModelChange)="newValueSig.set($event)"
-                [type]="newSecretSig() ? 'password' : 'text'"
-                label="Value"
-                placeholder="Property value..."
-                styleClasses="fuse-mat-dense fuse-mat-rounded"
-            />
-        </div>
-        <div class="flex items-center gap-3 pb-1">
-            <spa-toggle
-                [ngModel]="newSecretSig()"
-                (ngModelChange)="newSecretSig.set($event)"
-                label="Secret"
-            />
-            <button
-                mat-flat-button
-                color="primary"
-                (click)="addRow()"
-                [disabled]="!newKeySig().trim() || addingSig()"
-                class="!h-9"
-            >
-                @if (addingSig()) {
-                    <mat-spinner diameter="16" class="mr-1" />
-                } @else {
-                    <mat-icon svgIcon="heroicons_outline:plus" />
-                }
-                Add
-            </button>
-        </div>
-    </div>
+    }
 
     <!-- Properties table -->
     <div class="bg-card overflow-hidden rounded shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
@@ -181,7 +183,7 @@
                                     color="warn"
                                     (click)="deleteRow(prop.key)"
                                     [disabled]="savingKeySig() === prop.key || deletingKeySig() === prop.key"
-                                    matTooltip="Delete"
+                                    [matTooltip]="isGlobalScopeSig() ? 'Reset override' : 'Delete'"
                                     class="!h-8 !w-8"
                                 >
                                     @if (deletingKeySig() === prop.key) {

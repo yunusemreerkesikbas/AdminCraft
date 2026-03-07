@@ -10,6 +10,7 @@ import org.thymeleaf.context.Context;
 
 import com.backend.application.dto.email.EmailContext;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.MailConfigPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +22,12 @@ public class EmailTemplateRenderer {
 
     private final TemplateEngine templateEngine;
     private final MessageSource messageSource;
-    private final EmailProperties emailProperties;
+    private final MailConfigPort mailConfig;
 
     public String render(EmailContext emailContext) {
         Context context = new Context(toLocale(emailContext.getLanguage()));
 
-        context.setVariable("fromName", emailProperties.getFromName());
+        context.setVariable("fromName", mailConfig.getFromName());
 
         if (emailContext.getVariables() != null) {
             emailContext.getVariables().forEach(context::setVariable);
@@ -40,7 +41,7 @@ public class EmailTemplateRenderer {
 
     public String render(String templateName, Map<String, Object> variables, Language language) {
         Context context = new Context(toLocale(language));
-        context.setVariable("fromName", emailProperties.getFromName());
+        context.setVariable("fromName", mailConfig.getFromName());
 
         if (variables != null) {
             variables.forEach(context::setVariable);

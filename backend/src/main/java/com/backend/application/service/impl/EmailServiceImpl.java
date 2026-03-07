@@ -9,10 +9,11 @@ import com.backend.application.dto.email.EmailResult;
 import com.backend.application.service.EmailService;
 import com.backend.domain.enums.EmailType;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.FrontendConfigPort;
+import com.backend.domain.port.MailConfigPort;
 import com.backend.infrastructure.email.EmailProperties;
 import com.backend.infrastructure.email.EmailSender;
 import com.backend.infrastructure.email.EmailTemplateRenderer;
-import com.backend.infrastructure.email.FrontendProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,8 @@ public class EmailServiceImpl implements EmailService {
     private final EmailSender emailSender;
     private final EmailTemplateRenderer templateRenderer;
     private final EmailProperties emailProperties;
-    private final FrontendProperties frontendProperties;
+    private final MailConfigPort mailConfig;
+    private final FrontendConfigPort frontendConfig;
 
     @Override
     public EmailResult sendEmail(EmailContext context) {
@@ -37,7 +39,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             // Check if console mode + simplified logging
             boolean isConsoleModeSimplified =
-                "console".equals(emailProperties.getProvider()) &&
+                "console".equalsIgnoreCase(mailConfig.getProvider()) &&
                 emailProperties.isLogSimplified();
 
             String htmlContent;
@@ -127,7 +129,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildBaseUrl(String subdomain) {
-        String urlTemplate = frontendProperties.getBaseUrl();
+        String urlTemplate = frontendConfig.getBaseUrl();
         if (urlTemplate.contains("%s")) {
             return String.format(urlTemplate, subdomain);
         }
