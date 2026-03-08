@@ -21,8 +21,11 @@ import com.backend.application.service.config.ConfigGlobalPropertiesAdminService
 import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.ConfigChangeAudit;
 import com.backend.domain.entity.PlatformConfigProperty;
+import com.backend.domain.port.EncryptionServicePort;
+import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
+import com.backend.shared.constants.ValidationConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -44,18 +47,27 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String KEY_EMAIL_FROM_ADDRESS = "app.email.from-address";
     private static final String KEY_EMAIL_FROM_NAME = "app.email.from-name";
     private static final String KEY_FRONTEND_BASE_URL = "app.frontend.base-url";
+    private static final String KEY_RECAPTCHA_ENABLED = "platform.security.recaptcha.enabled";
+    private static final String KEY_RECAPTCHA_SITE_KEY = "platform.security.recaptcha.site_key";
+    private static final String KEY_RECAPTCHA_SECRET_KEY = "platform.security.recaptcha.secret_key";
 
     private static final Set<String> ALLOWED_KEYS = Set.of(
             KEY_EMAIL_PROVIDER,
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
-            KEY_FRONTEND_BASE_URL);
+            KEY_FRONTEND_BASE_URL,
+            KEY_RECAPTCHA_ENABLED,
+            KEY_RECAPTCHA_SITE_KEY,
+            KEY_RECAPTCHA_SECRET_KEY);
 
     private static final List<String> ORDERED_KEYS = List.of(
             KEY_EMAIL_PROVIDER,
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
-            KEY_FRONTEND_BASE_URL);
+            KEY_FRONTEND_BASE_URL,
+            KEY_RECAPTCHA_ENABLED,
+            KEY_RECAPTCHA_SITE_KEY,
+            KEY_RECAPTCHA_SECRET_KEY);
 
     private static final Set<String> ALLOWED_PROVIDER_VALUES = Set.of("console", "smtp");
 
@@ -63,13 +75,17 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String DEFAULT_EMAIL_FROM_ADDRESS = "noreply@craftive.io";
     private static final String DEFAULT_EMAIL_FROM_NAME = "Craftive";
     private static final String DEFAULT_FRONTEND_BASE_URL = "http://%s.localhost:4200";
+    private static final String DEFAULT_RECAPTCHA_ENABLED = "false";
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern RECAPTCHA_KEY_PATTERN = Pattern.compile(ValidationConstants.RECAPTCHA_KEY_PATTERN);
 
     private final PlatformConfigPropertyRepository propertyRepository;
     private final ConfigChangeAuditRepository auditRepository;
     private final ObjectMapper objectMapper;
     private final Environment environment;
+    private final EncryptionServicePort encryptionService;
+    private final PlatformSettingsPort platformSettingsPort;
 
     @Override
     @Transactional(readOnly = true)
@@ -102,12 +118,11 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public ConfigPropertyResult upsertProperty(ConfigPrincipal principal, String key, String value, boolean secret, String reason) {
         assertSuperAdmin(principal);
 
-        if (secret) {
-            throw new IllegalArgumentException("Secret properties are not supported for global runtime config");
-        }
-
         String normalizedKey = normalizeAllowedKey(key);
+        validateSecretFlag(normalizedKey, secret);
+
         String normalizedValue = validateAndNormalizeValue(normalizedKey, value);
+        String valueToStore = shouldEncryptValue(normalizedKey) ? encryptionService.encrypt(normalizedValue) : normalizedValue;
 
         String beforeValue = propertyRepository.findByConfigKey(normalizedKey)
                 .map(PlatformConfigProperty::getConfigValue)
@@ -115,16 +130,16 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
         PlatformConfigProperty saved = propertyRepository.findByConfigKey(normalizedKey)
                 .map(existing -> {
-                    existing.setConfigValue(normalizedValue);
-                    existing.setSecret(false);
+                    existing.setConfigValue(valueToStore);
+                    existing.setSecret(secret);
                     existing.setUpdatedBy(principal.userId());
                     return propertyRepository.save(existing);
                 })
                 .orElseGet(() -> {
                     PlatformConfigProperty created = new PlatformConfigProperty();
                     created.setConfigKey(normalizedKey);
-                    created.setConfigValue(normalizedValue);
-                    created.setSecret(false);
+                    created.setConfigValue(valueToStore);
+                    created.setSecret(secret);
                     created.setUpdatedBy(principal.userId());
                     return propertyRepository.save(created);
                 });
@@ -196,6 +211,39 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
         return configured.trim();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean getRecaptchaEnabled() {
+        String configured = resolveConfiguredValue(KEY_RECAPTCHA_ENABLED);
+        if (!StringUtils.hasText(configured)) {
+            configured = resolveFallbackValue(KEY_RECAPTCHA_ENABLED);
+        }
+        if (!StringUtils.hasText(configured)) {
+            return false;
+        }
+        return Boolean.parseBoolean(configured.trim().toLowerCase());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getRecaptchaSiteKey() {
+        String configured = resolveConfiguredValue(KEY_RECAPTCHA_SITE_KEY);
+        if (!StringUtils.hasText(configured)) {
+            return resolveFallbackValue(KEY_RECAPTCHA_SITE_KEY);
+        }
+        return configured.trim();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getRecaptchaSecretKeyEncrypted() {
+        String configured = resolveConfiguredValue(KEY_RECAPTCHA_SECRET_KEY);
+        if (!StringUtils.hasText(configured)) {
+            return resolveFallbackValue(KEY_RECAPTCHA_SECRET_KEY);
+        }
+        return configured;
+    }
+
     private ConfigPropertyResult toResult(String key, PlatformConfigProperty override) {
         String value = override != null && StringUtils.hasText(override.getConfigValue())
                 ? override.getConfigValue()
@@ -203,8 +251,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
         LocalDateTime updatedAt = override != null ? override.getUpdatedAt() : null;
         Long updatedBy = override != null ? override.getUpdatedBy() : null;
+        boolean secret = isSecretKey(key) || (override != null && Boolean.TRUE.equals(override.getSecret()));
 
-        return new ConfigPropertyResult(key, value, false, updatedAt, updatedBy);
+        return new ConfigPropertyResult(key, value, secret, updatedAt, updatedBy);
     }
 
     private String normalizeAllowedKey(String key) {
@@ -251,6 +300,19 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                 validateFrontendBaseUrl(normalized);
                 return normalized;
             }
+            case KEY_RECAPTCHA_ENABLED -> {
+                String bool = normalized.toLowerCase();
+                if (!"true".equals(bool) && !"false".equals(bool)) {
+                    throw new IllegalArgumentException("Invalid reCAPTCHA enabled value. Allowed values: true, false");
+                }
+                return bool;
+            }
+            case KEY_RECAPTCHA_SITE_KEY, KEY_RECAPTCHA_SECRET_KEY -> {
+                if (!RECAPTCHA_KEY_PATTERN.matcher(normalized).matches()) {
+                    throw new IllegalArgumentException("Invalid reCAPTCHA key format");
+                }
+                return normalized;
+            }
             default -> throw new IllegalArgumentException("Config key is not allowed: " + key);
         }
     }
@@ -284,8 +346,44 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             case KEY_EMAIL_FROM_ADDRESS -> environment.getProperty(KEY_EMAIL_FROM_ADDRESS, DEFAULT_EMAIL_FROM_ADDRESS);
             case KEY_EMAIL_FROM_NAME -> environment.getProperty(KEY_EMAIL_FROM_NAME, DEFAULT_EMAIL_FROM_NAME);
             case KEY_FRONTEND_BASE_URL -> environment.getProperty(KEY_FRONTEND_BASE_URL, DEFAULT_FRONTEND_BASE_URL);
+            case KEY_RECAPTCHA_ENABLED -> resolvePlatformRecaptchaEnabledFallback();
+            case KEY_RECAPTCHA_SITE_KEY -> resolvePlatformRecaptchaSiteKeyFallback();
+            case KEY_RECAPTCHA_SECRET_KEY -> resolvePlatformRecaptchaSecretFallback();
             default -> environment.getProperty(key);
         };
+    }
+
+    private String resolvePlatformRecaptchaEnabledFallback() {
+        var settings = platformSettingsPort.getSingleton();
+        if (settings.getRecaptchaEnabled() != null) {
+            return String.valueOf(settings.getRecaptchaEnabled());
+        }
+        return DEFAULT_RECAPTCHA_ENABLED;
+    }
+
+    private String resolvePlatformRecaptchaSiteKeyFallback() {
+        return platformSettingsPort.getSingleton().getRecaptchaSiteKey();
+    }
+
+    private String resolvePlatformRecaptchaSecretFallback() {
+        return platformSettingsPort.getSingleton().getRecaptchaSecretKeyEncrypted();
+    }
+
+    private boolean isSecretKey(String key) {
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key);
+    }
+
+    private void validateSecretFlag(String key, boolean secret) {
+        if (isSecretKey(key) && !secret) {
+            throw new IllegalArgumentException("Secret flag must be true for reCAPTCHA secret key");
+        }
+        if (!isSecretKey(key) && secret) {
+            throw new IllegalArgumentException("Secret flag is not supported for this key");
+        }
+    }
+
+    private boolean shouldEncryptValue(String key) {
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key);
     }
 
     private void assertSuperAdmin(ConfigPrincipal principal) {

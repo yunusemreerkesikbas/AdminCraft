@@ -15,11 +15,23 @@ export class ConfigFlagsService {
     readonly #flags = new Map<string, string>();
 
     async load(subdomain: string | null): Promise<void> {
-        // /config panel and admin host are platform-scoped, not tenant-scoped.
-        if (!subdomain || subdomain === 'admin') {
+        if (!subdomain) {
             return;
         }
         try {
+            if (subdomain === 'admin') {
+                const response = await firstValueFrom(
+                    this.#http.get<ApiResponse<Record<string, string>>>(
+                        `${environment.apiBaseUrl}/platform/cms/config`
+                    )
+                );
+                if (response.result === 'SUCCESS' && response.data) {
+                    this.#flags.clear();
+                    Object.entries(response.data).forEach(([k, v]) => this.#flags.set(k, v));
+                }
+                return;
+            }
+
             const headers = new HttpHeaders({ 'X-Tenant-Subdomain': subdomain });
             const response = await firstValueFrom(
                 this.#http.get<ApiResponse<Record<string, string>>>(

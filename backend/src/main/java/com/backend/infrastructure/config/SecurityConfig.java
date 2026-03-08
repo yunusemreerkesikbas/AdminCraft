@@ -49,6 +49,7 @@ public class SecurityConfig {
                                                 // "/auth"
                                                 .requestMatchers("/auth/**").permitAll() // Authentication endpoints
                                                 .requestMatchers("/config/auth/**").permitAll() // Config panel auth endpoints
+                                                .requestMatchers("/platform/cms/config").permitAll() // Platform public config flags
                                                 .requestMatchers("/platform/public/newsletter/**").permitAll() // Platform public newsletter
                                                 .requestMatchers("/health/**").permitAll() // Health check endpoints
                                                 .requestMatchers("/actuator/**").permitAll() // Actuator endpoints for

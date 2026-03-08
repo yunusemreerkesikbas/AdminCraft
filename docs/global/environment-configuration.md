@@ -58,6 +58,10 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
   - `app.email.from-address`
   - `app.email.from-name`
   - `app.frontend.base-url`
+  - `platform.security.recaptcha.enabled`
+  - `platform.security.recaptcha.site_key`
+  - `platform.security.recaptcha.secret_key` (encrypted)
+- `security.recaptcha.threshold` stays in platform settings (not runtime-managed in Config Panel)
 - Resolution precedence for these keys:
   1. `platform_config_properties` override
   2. Spring `application*.yml` / environment variable value

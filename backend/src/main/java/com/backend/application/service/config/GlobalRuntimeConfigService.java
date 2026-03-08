@@ -9,5 +9,10 @@ public interface GlobalRuntimeConfigService {
     String getEmailFromName();
 
     String getFrontendBaseUrl();
-}
 
+    Boolean getRecaptchaEnabled();
+
+    String getRecaptchaSiteKey();
+
+    String getRecaptchaSecretKeyEncrypted();
+}

@@ -46,7 +46,7 @@ Platform features are not tenant modules, but they are critical for operating th
 - Tenants, provisioning, module enablement, migration sync: [`modules/platform-provisioning.md`](modules/platform-provisioning.md)
 - Platform Dashboard, Tenant Detail, Platform Settings: [`modules/platform-admin.md`](modules/platform-admin.md)
 - Platform newsletter + mail campaign flows (+ admin UI routes `/:lang/mail-marketing`, `/:lang/platform-mail`): [`modules/mail-marketing.md`](modules/mail-marketing.md)
-- Config Control Panel (`/config`) for reCAPTCHA recovery + global runtime email overrides: [`modules/config-control-panel.md`](modules/config-control-panel.md)
+- Config Control Panel (`/config`) for reCAPTCHA recovery + global runtime overrides (email + platform reCAPTCHA keys): [`modules/config-control-panel.md`](modules/config-control-panel.md)
 
 ## Public delivery APIs (storefront)
 

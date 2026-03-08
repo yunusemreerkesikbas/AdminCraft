@@ -8,7 +8,7 @@ Current scope:
 
 - password + OTP authentication for config operations
 - tenant reCAPTCHA management (recovery from storefront lockout)
-- super admin global runtime email overrides (whitelisted keys)
+- super admin global runtime overrides (email + platform reCAPTCHA whitelisted keys)
 - immutable backend audit trail for config changes
 
 Out of scope:
@@ -47,6 +47,12 @@ Global runtime whitelist (CONFIG_SUPER_ADMIN):
 - `app.email.from-address`
 - `app.email.from-name`
 - `app.frontend.base-url`
+- `platform.security.recaptcha.enabled` (`true` | `false`)
+- `platform.security.recaptcha.site_key`
+- `platform.security.recaptcha.secret_key` (encrypted)
+
+Note: `security.recaptcha.threshold` remains in platform settings and is not managed from Config Panel.
+Namespace invariant: tenant `security.recaptcha.*` and platform `platform.security.recaptcha.*` are isolated and never cross-read.
 
 ## Admin API
 
@@ -54,6 +60,7 @@ Authentication APIs:
 
 - `POST /api/config/auth/login`
 - `POST /api/config/auth/verify-otp`
+- `GET /api/platform/cms/config` (public pre-login flags for platform host, e.g. reCAPTCHA site key)
 
 Tenant management APIs (`CONFIG_TENANT_ADMIN`):
 
@@ -91,7 +98,6 @@ Config panel module:
 - [`storefront/src/app/modules/config/auth/config-auth.component.ts`](../../storefront/src/app/modules/config/auth/config-auth.component.ts)
 - [`storefront/src/app/modules/config/dashboard/config-dashboard.component.ts`](../../storefront/src/app/modules/config/dashboard/config-dashboard.component.ts)
 - [`storefront/src/app/modules/config/properties/config-properties.component.ts`](../../storefront/src/app/modules/config/properties/config-properties.component.ts)
-- [`storefront/src/app/modules/config/recaptcha/config-recaptcha.component.ts`](../../storefront/src/app/modules/config/recaptcha/config-recaptcha.component.ts)
 - [`storefront/src/app/modules/config/console/config-console.service.ts`](../../storefront/src/app/modules/config/console/config-console.service.ts)
 
 Role-based behavior:

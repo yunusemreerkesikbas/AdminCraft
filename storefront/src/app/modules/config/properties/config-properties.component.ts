@@ -109,7 +109,7 @@ export class ConfigPropertiesComponent implements OnInit {
 
         this.#service.upsertProperty(this.token().accessToken, prop.key, {
             value: valueToSend,
-            secret: this.#resolveScope() === 'global' ? false : prop.secret,
+            secret: prop.secret,
             reason: REASON_UPDATE,
         }, this.#resolveScope()).pipe(take(1)).subscribe({
             next: (res) => {

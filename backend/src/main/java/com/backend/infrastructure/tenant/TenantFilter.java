@@ -95,15 +95,15 @@ public class TenantFilter extends OncePerRequestFilter {
         tenant = resolveTenantFromHostname(request);
       }
 
-      if (tenant == null) {
-        // Allow platform auth flows without tenant context.
-        // Tenant-scoped validation is handled inside auth service (tenantId/subdomain + token checks).
-        if (path.startsWith("/api/auth/login")
-            || path.startsWith("/api/auth/refresh")
-            || path.startsWith("/api/auth/verify-otp")) {
-          filterChain.doFilter(request, response);
-          return;
-        }
+        if (tenant == null) {
+          // Allow platform auth flows without tenant context.
+          // Tenant-scoped validation is handled inside auth service (tenantId/subdomain + token checks).
+          if (path.startsWith("/api/auth/login")
+              || path.startsWith("/api/auth/refresh")
+              || path.startsWith("/api/auth/verify-otp")) {
+            filterChain.doFilter(request, response);
+            return;
+          }
 
         log.warn("Missing or invalid tenant header for request: {}", path);
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
@@ -252,6 +252,7 @@ public class TenantFilter extends OncePerRequestFilter {
     // production via config.
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
+        path.startsWith("/api/platform/cms/config") ||
         path.startsWith("/api/config/auth") ||
         path.startsWith("/api/platform/public/newsletter") ||
         path.startsWith("/api/swagger-ui") ||
@@ -259,6 +260,9 @@ public class TenantFilter extends OncePerRequestFilter {
   }
 
   private boolean isPlatformEndpoint(String path) {
+    if (path.startsWith("/api/platform/cms/config")) {
+      return false;
+    }
     if (path.startsWith("/api/platform/public/newsletter")) {
       return false;
     }
