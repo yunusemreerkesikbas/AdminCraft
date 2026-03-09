@@ -13,7 +13,7 @@ interface JpaPlatformConfigPropertyRepository extends JpaRepository<PlatformConf
 
     Optional<PlatformConfigProperty> findByConfigKey(String configKey);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PlatformConfigProperty p WHERE p.configKey = :configKey")
     void deleteByConfigKey(@Param("configKey") String configKey);
 }

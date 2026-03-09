@@ -10,6 +10,7 @@ import org.thymeleaf.context.Context;
 
 import com.backend.application.dto.email.EmailContext;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.EmailTemplateRendererPort;
 import com.backend.domain.port.MailConfigPort;
 
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EmailTemplateRenderer {
+public class EmailTemplateRenderer implements EmailTemplateRendererPort {
 
     private final TemplateEngine templateEngine;
     private final MessageSource messageSource;
@@ -56,9 +57,9 @@ public class EmailTemplateRenderer {
 
     private Locale toLocale(Language language) {
         return switch (language) {
-            case TR -> new Locale("tr", "TR");
+            case TR -> Locale.of("tr", "TR");
             case EN -> Locale.ENGLISH;
-            default -> new Locale("tr", "TR");
+            default -> Locale.of("tr", "TR");
         };
     }
 }

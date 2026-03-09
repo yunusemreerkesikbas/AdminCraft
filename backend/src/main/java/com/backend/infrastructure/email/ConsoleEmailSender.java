@@ -25,7 +25,7 @@ public class ConsoleEmailSender implements EmailSender {
         log.info("========================================");
         log.info("EMAIL (Console Mode)");
         log.info("========================================");
-        log.info("To: {}", to);
+        log.info("To: {}", maskEmail(to));
         log.info("From: {} <{}>", mailConfig.getFromName(), mailConfig.getFromAddress());
         log.info("Subject: {}", subject);
         log.info("Message ID: {}", messageId);
@@ -47,5 +47,18 @@ public class ConsoleEmailSender implements EmailSender {
     @Override
     public boolean isAvailable() {
         return true;
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return "***";
+        }
+        int atIndex = email.indexOf('@');
+        String local = email.substring(0, atIndex);
+        String domain = email.substring(atIndex);
+        if (local.isEmpty()) {
+            return domain;
+        }
+        return local.charAt(0) + "***" + domain;
     }
 }

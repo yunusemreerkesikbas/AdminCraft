@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 public class RuntimeMailConfig implements MailConfigPort {
 
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
+    private final EmailProperties emailProperties;
 
     @Override
     public String getProvider() {
@@ -28,6 +29,16 @@ public class RuntimeMailConfig implements MailConfigPort {
     @Override
     public String getFromName() {
         return globalRuntimeConfigService.getEmailFromName();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return emailProperties.isEnabled();
+    }
+
+    @Override
+    public boolean isLogSimplified() {
+        return emailProperties.isLogSimplified();
     }
 }
 

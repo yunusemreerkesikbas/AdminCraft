@@ -9,11 +9,10 @@ import com.backend.application.dto.email.EmailResult;
 import com.backend.application.service.EmailService;
 import com.backend.domain.enums.EmailType;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.EmailTemplateRendererPort;
 import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailConfigPort;
-import com.backend.infrastructure.email.EmailProperties;
-import com.backend.infrastructure.email.EmailSender;
-import com.backend.infrastructure.email.EmailTemplateRenderer;
+import com.backend.domain.port.MailSenderPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final EmailSender emailSender;
-    private final EmailTemplateRenderer templateRenderer;
-    private final EmailProperties emailProperties;
+    private final MailSenderPort emailSender;
+    private final EmailTemplateRendererPort templateRenderer;
     private final MailConfigPort mailConfig;
     private final FrontendConfigPort frontendConfig;
 
     @Override
     public EmailResult sendEmail(EmailContext context) {
-        if (!emailProperties.isEnabled()) {
-            log.info("Email sending is disabled, skipping email to: {}", context.getTo());
+        if (!mailConfig.isEnabled()) {
+            log.info("Email sending is disabled, skipping email");
             return EmailResult.success("disabled");
         }
 
@@ -40,7 +38,7 @@ public class EmailServiceImpl implements EmailService {
             // Check if console mode + simplified logging
             boolean isConsoleModeSimplified =
                 "console".equalsIgnoreCase(mailConfig.getProvider()) &&
-                emailProperties.isLogSimplified();
+                mailConfig.isLogSimplified();
 
             String htmlContent;
             if (isConsoleModeSimplified) {
@@ -55,8 +53,8 @@ public class EmailServiceImpl implements EmailService {
             return emailSender.send(context.getTo(), subject, htmlContent);
 
         } catch (Exception e) {
-            log.error("Failed to send email to: {}", context.getTo(), e);
-            return EmailResult.failure(e.getMessage());
+            log.error("Failed to send email: email send failed");
+            return EmailResult.failure("email send failed");
         }
     }
 
@@ -112,7 +110,6 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String getSubjectForEmailType(EmailType emailType, Language language) {
-        // Şablon seçimi ile uyumlu olması için konuyu da TR veya EN olarak normalize ediyoruz.
         Language normalized = (language == Language.TR) ? Language.TR : Language.EN;
         String subjectKey = "email.subject." + emailType.getCode();
         return templateRenderer.getSubject(subjectKey, normalized);
@@ -147,58 +144,14 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String formatOtpContent(Map<String, Object> vars) {
-        String code = (String) vars.get("otpCode");
-        Integer expiry = (Integer) vars.get("expiryMinutes");
-
-        return String.format("""
-
-            ┌─────────────────────────────────────┐
-            │  VERIFICATION CODE                  │
-            │                                     │
-            │          %s                   │
-            │                                     │
-            │  Expires in: %d minutes             │
-            └─────────────────────────────────────┘
-
-            💡 Copy code: %s
-            """, code, expiry, code);
+        return (String) vars.get("otpCode");
     }
 
     private String formatPasswordResetContent(Map<String, Object> vars) {
-        String link = (String) vars.get("resetLink");
-        String token = (String) vars.get("resetToken");
-        Integer expiry = (Integer) vars.get("expiryHours");
-
-        return String.format("""
-
-            🔑 PASSWORD RESET
-
-            Reset Link:
-            %s
-
-            Token: %s
-            Expires: %d hour(s)
-
-            💡 Copy and paste link in browser
-            """, link, token, expiry);
+        return (String) vars.get("resetLink");
     }
 
     private String formatEmailVerifyContent(Map<String, Object> vars) {
-        String link = (String) vars.get("verificationLink");
-        String token = (String) vars.get("verificationToken");
-        Integer expiry = (Integer) vars.get("expiryHours");
-
-        return String.format("""
-
-            ✉️ EMAIL VERIFICATION
-
-            Verification Link:
-            %s
-
-            Token: %s
-            Expires: %d hour(s)
-
-            💡 Copy and paste link in browser
-            """, link, token, expiry);
+        return (String) vars.get("verificationLink");
     }
 }

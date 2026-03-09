@@ -143,7 +143,7 @@ export const appConfig: ApplicationConfig = {
             const tenantContext = inject(TenantContextService);
             const configFlags = inject(ConfigFlagsService);
             const path = window.location.pathname;
-            if (path.startsWith('/config')) {
+            if (path === '/config' || path.startsWith('/config/')) {
                 return Promise.resolve();
             }
             const subdomain = tenantContext.subdomain();

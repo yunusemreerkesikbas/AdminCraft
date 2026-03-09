@@ -7,4 +7,8 @@ public interface MailConfigPort {
     String getFromAddress();
 
     String getFromName();
+
+    boolean isEnabled();
+
+    boolean isLogSimplified();
 }

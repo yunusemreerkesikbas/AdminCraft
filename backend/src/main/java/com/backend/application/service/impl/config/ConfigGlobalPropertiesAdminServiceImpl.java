@@ -124,16 +124,15 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
         String normalizedValue = validateAndNormalizeValue(normalizedKey, value);
         String valueToStore = shouldEncryptValue(normalizedKey) ? encryptionService.encrypt(normalizedValue) : normalizedValue;
 
-        String beforeValue = propertyRepository.findByConfigKey(normalizedKey)
-                .map(PlatformConfigProperty::getConfigValue)
-                .orElse(null);
+        java.util.Optional<PlatformConfigProperty> existing = propertyRepository.findByConfigKey(normalizedKey);
+        String beforeValue = existing.map(PlatformConfigProperty::getConfigValue).orElse(null);
 
-        PlatformConfigProperty saved = propertyRepository.findByConfigKey(normalizedKey)
-                .map(existing -> {
-                    existing.setConfigValue(valueToStore);
-                    existing.setSecret(secret);
-                    existing.setUpdatedBy(principal.userId());
-                    return propertyRepository.save(existing);
+        PlatformConfigProperty saved = existing
+                .map(prop -> {
+                    prop.setConfigValue(valueToStore);
+                    prop.setSecret(secret);
+                    prop.setUpdatedBy(principal.userId());
+                    return propertyRepository.save(prop);
                 })
                 .orElseGet(() -> {
                     PlatformConfigProperty created = new PlatformConfigProperty();
@@ -342,10 +341,28 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
     private String resolveFallbackValue(String key) {
         return switch (key) {
-            case KEY_EMAIL_PROVIDER -> environment.getProperty(KEY_EMAIL_PROVIDER, DEFAULT_EMAIL_PROVIDER).trim().toLowerCase();
-            case KEY_EMAIL_FROM_ADDRESS -> environment.getProperty(KEY_EMAIL_FROM_ADDRESS, DEFAULT_EMAIL_FROM_ADDRESS);
-            case KEY_EMAIL_FROM_NAME -> environment.getProperty(KEY_EMAIL_FROM_NAME, DEFAULT_EMAIL_FROM_NAME);
-            case KEY_FRONTEND_BASE_URL -> environment.getProperty(KEY_FRONTEND_BASE_URL, DEFAULT_FRONTEND_BASE_URL);
+            case KEY_EMAIL_PROVIDER -> {
+                String val = environment.getProperty(KEY_EMAIL_PROVIDER, DEFAULT_EMAIL_PROVIDER).trim().toLowerCase();
+                yield ALLOWED_PROVIDER_VALUES.contains(val) ? val : DEFAULT_EMAIL_PROVIDER;
+            }
+            case KEY_EMAIL_FROM_ADDRESS -> {
+                String val = environment.getProperty(KEY_EMAIL_FROM_ADDRESS, DEFAULT_EMAIL_FROM_ADDRESS);
+                yield (val != null && val.length() <= 255 && EMAIL_PATTERN.matcher(val.trim()).matches())
+                        ? val.trim() : DEFAULT_EMAIL_FROM_ADDRESS;
+            }
+            case KEY_EMAIL_FROM_NAME -> {
+                String val = environment.getProperty(KEY_EMAIL_FROM_NAME, DEFAULT_EMAIL_FROM_NAME);
+                yield (val != null && val.trim().length() <= 100) ? val.trim() : DEFAULT_EMAIL_FROM_NAME;
+            }
+            case KEY_FRONTEND_BASE_URL -> {
+                String val = environment.getProperty(KEY_FRONTEND_BASE_URL, DEFAULT_FRONTEND_BASE_URL);
+                try {
+                    if (val != null) validateFrontendBaseUrl(val.trim());
+                    yield val != null ? val.trim() : DEFAULT_FRONTEND_BASE_URL;
+                } catch (IllegalArgumentException e) {
+                    yield DEFAULT_FRONTEND_BASE_URL;
+                }
+            }
             case KEY_RECAPTCHA_ENABLED -> resolvePlatformRecaptchaEnabledFallback();
             case KEY_RECAPTCHA_SITE_KEY -> resolvePlatformRecaptchaSiteKeyFallback();
             case KEY_RECAPTCHA_SECRET_KEY -> resolvePlatformRecaptchaSecretFallback();

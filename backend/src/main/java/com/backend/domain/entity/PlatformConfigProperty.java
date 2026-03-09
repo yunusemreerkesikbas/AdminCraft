@@ -9,6 +9,10 @@ public class PlatformConfigProperty {
 
     private Long id;
 
+    private String uuid;
+
+    private String uid;
+
     private String configKey;
 
     private String configValue;

@@ -21,8 +21,11 @@ import com.backend.presentation.dto.response.config.ConfigPropertyResponse;
 import com.backend.shared.common.ApiResponse;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @RestController
 @RequestMapping("/config/admin/global/properties")
 @RequiredArgsConstructor
@@ -31,7 +34,7 @@ public class ConfigAdminGlobalPropertiesController {
     private final ConfigGlobalPropertiesAdminService globalPropertiesAdminService;
     private final ConfigPrincipalResolver principalResolver;
 
-    @PreAuthorize("hasAnyAuthority('ROLE_CONFIG_SUPER_ADMIN','CONFIG_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('CONFIG_SUPER_ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ConfigPropertyResponse>>> listProperties(Authentication authentication) {
         ConfigPrincipal principal = principalResolver.resolve(authentication);
@@ -42,7 +45,7 @@ public class ConfigAdminGlobalPropertiesController {
         return ResponseEntity.ok(ApiResponse.success(items));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_CONFIG_SUPER_ADMIN','CONFIG_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('CONFIG_SUPER_ADMIN')")
     @GetMapping("/{key}")
     public ResponseEntity<ApiResponse<ConfigPropertyResponse>> getProperty(
             Authentication authentication,
@@ -52,7 +55,7 @@ public class ConfigAdminGlobalPropertiesController {
         return ResponseEntity.ok(ApiResponse.success(ConfigPropertyResponse.from(result)));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_CONFIG_SUPER_ADMIN','CONFIG_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('CONFIG_SUPER_ADMIN')")
     @PutMapping("/{key}")
     public ResponseEntity<ApiResponse<ConfigPropertyResponse>> upsertProperty(
             Authentication authentication,
@@ -68,12 +71,12 @@ public class ConfigAdminGlobalPropertiesController {
         return ResponseEntity.ok(ApiResponse.success("config.property.upsert.success", ConfigPropertyResponse.from(result)));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_CONFIG_SUPER_ADMIN','CONFIG_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('CONFIG_SUPER_ADMIN')")
     @DeleteMapping("/{key}")
     public ResponseEntity<ApiResponse<Void>> deleteProperty(
             Authentication authentication,
             @PathVariable String key,
-            @RequestParam(value = "reason") String reason) {
+            @RequestParam(value = "reason") @NotBlank String reason) {
         ConfigPrincipal principal = principalResolver.resolve(authentication);
         globalPropertiesAdminService.deleteProperty(principal, key, reason);
         return ResponseEntity.ok(ApiResponse.success("config.property.delete.success", null));

@@ -38,9 +38,7 @@ public class PlatformVerificationTokenRepositoryImpl implements PlatformVerifica
         com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken saved =
                 jpaRepository.save(platformVerificationTokenMapper.toEntity(token));
 
-        token.setId(saved.getId());
-        token.setCreatedAt(saved.getCreatedAt());
-        return token;
+        return platformVerificationTokenMapper.toDomain(saved);
     }
 
     @Override

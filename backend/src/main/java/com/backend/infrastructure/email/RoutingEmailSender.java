@@ -32,6 +32,10 @@ public class RoutingEmailSender implements EmailSender {
     private EmailSender selectSender() {
         String provider = globalRuntimeConfigService.getEmailProvider();
         if ("smtp".equalsIgnoreCase(provider)) {
+            if (!smtpEmailSender.isAvailable()) {
+                log.warn("SMTP provider selected but is not available, falling back to console sender");
+                return consoleEmailSender;
+            }
             return smtpEmailSender;
         }
         if (!"console".equalsIgnoreCase(provider)) {

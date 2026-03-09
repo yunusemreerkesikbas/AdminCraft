@@ -42,6 +42,8 @@ public class PlatformConfigPropertyRepositoryImpl implements PlatformConfigPrope
         }
         PlatformConfigProperty target = new PlatformConfigProperty();
         target.setId(source.getId());
+        target.setUuid(source.getUuid());
+        target.setUid(source.getUid());
         target.setConfigKey(source.getConfigKey());
         target.setConfigValue(source.getConfigValue());
         target.setSecret(source.getSecret());
@@ -57,6 +59,8 @@ public class PlatformConfigPropertyRepositoryImpl implements PlatformConfigPrope
         }
         return com.backend.infrastructure.persistence.platform.entity.PlatformConfigProperty.builder()
                 .id(source.getId())
+                .uuid(source.getUuid())
+                .uid(source.getUid())
                 .configKey(source.getConfigKey())
                 .configValue(source.getConfigValue())
                 .secret(source.getSecret())
