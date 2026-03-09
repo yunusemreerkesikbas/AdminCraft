@@ -13,6 +13,8 @@ import {
     UpsertPropertyPayload,
 } from './config-console.types';
 
+export type ConfigPropertiesScope = 'tenant' | 'global';
+
 @Injectable({ providedIn: 'root' })
 export class ConfigConsoleService {
     readonly #http = inject(HttpClient);
@@ -75,9 +77,12 @@ export class ConfigConsoleService {
         );
     }
 
-    listProperties(accessToken: string): Observable<ApiResponse<ConfigProperty[]>> {
+    listProperties(
+        accessToken: string,
+        scope: ConfigPropertiesScope = 'tenant'
+    ): Observable<ApiResponse<ConfigProperty[]>> {
         return this.#http.get<ApiResponse<ConfigProperty[]>>(
-            `${this.#baseUrl}/config/admin/properties`,
+            this.#propertiesUrl(scope),
             { headers: this.#authHeaders(accessToken) }
         );
     }
@@ -85,10 +90,11 @@ export class ConfigConsoleService {
     upsertProperty(
         accessToken: string,
         key: string,
-        payload: UpsertPropertyPayload
+        payload: UpsertPropertyPayload,
+        scope: ConfigPropertiesScope = 'tenant'
     ): Observable<ApiResponse<ConfigProperty>> {
         return this.#http.put<ApiResponse<ConfigProperty>>(
-            `${this.#baseUrl}/config/admin/properties/${encodeURIComponent(key)}`,
+            `${this.#propertiesUrl(scope)}/${encodeURIComponent(key)}`,
             payload,
             { headers: this.#authHeaders(accessToken) }
         );
@@ -97,11 +103,12 @@ export class ConfigConsoleService {
     deleteProperty(
         accessToken: string,
         key: string,
-        reason: string
+        reason: string,
+        scope: ConfigPropertiesScope = 'tenant'
     ): Observable<ApiResponse<void>> {
         const params = new HttpParams().set('reason', reason);
         return this.#http.delete<ApiResponse<void>>(
-            `${this.#baseUrl}/config/admin/properties/${encodeURIComponent(key)}`,
+            `${this.#propertiesUrl(scope)}/${encodeURIComponent(key)}`,
             { headers: this.#authHeaders(accessToken), params }
         );
     }
@@ -122,5 +129,12 @@ export class ConfigConsoleService {
             headers = headers.set('X-Tenant-ID', String(tenantId));
         }
         return headers;
+    }
+
+    #propertiesUrl(scope: ConfigPropertiesScope): string {
+        if (scope === 'global') {
+            return `${this.#baseUrl}/config/admin/global/properties`;
+        }
+        return `${this.#baseUrl}/config/admin/properties`;
     }
 }

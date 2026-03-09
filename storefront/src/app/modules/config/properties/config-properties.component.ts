@@ -16,7 +16,10 @@ import { take } from 'rxjs/operators';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSearchInputComponent } from '@shared/components/custom-ui/spa-search-input/spa-search-input.component';
 import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
-import { ConfigConsoleService } from '../console/config-console.service';
+import {
+    ConfigConsoleService,
+    ConfigPropertiesScope,
+} from '../console/config-console.service';
 import { ConfigProperty, ConfigTokenState } from '../console/config-console.types';
 
 const REASON_UPDATE = 'HAC admin update';
@@ -61,6 +64,9 @@ export class ConfigPropertiesComponent implements OnInit {
         if (!term) return this.propertiesSig();
         return this.propertiesSig().filter(p => p.key.toLowerCase().includes(term));
     });
+    protected isGlobalScopeSig = computed(
+        () => this.#resolveScope() === 'global'
+    );
 
     ngOnInit(): void {
         this.load();
@@ -70,7 +76,7 @@ export class ConfigPropertiesComponent implements OnInit {
         this.loadingSig.set(true);
         this.errorSig.set(null);
 
-        this.#service.listProperties(this.token().accessToken).pipe(take(1)).subscribe({
+        this.#service.listProperties(this.token().accessToken, this.#resolveScope()).pipe(take(1)).subscribe({
             next: (res) => {
                 this.loadingSig.set(false);
                 if (res.result !== 'SUCCESS' || !res.data) {
@@ -105,7 +111,7 @@ export class ConfigPropertiesComponent implements OnInit {
             value: valueToSend,
             secret: prop.secret,
             reason: REASON_UPDATE,
-        }).pipe(take(1)).subscribe({
+        }, this.#resolveScope()).pipe(take(1)).subscribe({
             next: (res) => {
                 this.savingKeySig.set(null);
                 if (res.result !== 'SUCCESS') {
@@ -127,7 +133,7 @@ export class ConfigPropertiesComponent implements OnInit {
         this.deletingKeySig.set(key);
         this.errorSig.set(null);
 
-        this.#service.deleteProperty(this.token().accessToken, key, REASON_DELETE)
+        this.#service.deleteProperty(this.token().accessToken, key, REASON_DELETE, this.#resolveScope())
             .pipe(take(1))
             .subscribe({
                 next: (res) => {
@@ -146,6 +152,11 @@ export class ConfigPropertiesComponent implements OnInit {
     }
 
     protected addRow(): void {
+        if (this.#resolveScope() === 'global') {
+            this.errorSig.set('Global config keys are fixed and cannot be added manually.');
+            return;
+        }
+
         const key = this.newKeySig().trim();
         if (!key || this.addingSig()) return;
 
@@ -156,7 +167,7 @@ export class ConfigPropertiesComponent implements OnInit {
             value: this.newValueSig() || null,
             secret: this.newSecretSig(),
             reason: REASON_UPDATE,
-        }).pipe(take(1)).subscribe({
+        }, this.#resolveScope()).pipe(take(1)).subscribe({
             next: (res) => {
                 this.addingSig.set(false);
                 if (res.result !== 'SUCCESS') {
@@ -179,6 +190,10 @@ export class ConfigPropertiesComponent implements OnInit {
         const working = this.workingValuesSig()[prop.key] ?? '';
         if (prop.secret) return working !== '';
         return working !== (prop.value ?? '');
+    }
+
+    #resolveScope(): ConfigPropertiesScope {
+        return this.token().role === 'CONFIG_SUPER_ADMIN' ? 'global' : 'tenant';
     }
 
     #initWorkingValues(props: ConfigProperty[]): void {

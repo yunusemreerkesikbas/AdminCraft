@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ConfigPropertiesComponent } from '../properties/config-properties.component';
@@ -15,4 +15,10 @@ import { ConfigTokenState } from '../console/config-console.types';
 export class ConfigDashboardComponent {
     token = input.required<ConfigTokenState>();
     logout = output<void>();
+
+    protected titleSig = computed(() =>
+        this.token().role === 'CONFIG_SUPER_ADMIN'
+            ? 'Global Runtime Configuration'
+            : 'Configuration Properties'
+    );
 }

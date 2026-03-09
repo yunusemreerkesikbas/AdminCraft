@@ -727,7 +727,7 @@ All authentication events are logged with:
 
 AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in two scopes:
 - **Tenant scope**: configured per tenant in Config Control Panel (`/config/recaptcha`)
-- **Platform scope (SUPER_ADMIN login)**: configured globally in Platform Settings
+- **Platform scope (SUPER_ADMIN login)**: configured globally via Config Global Properties (`platform.security.recaptcha.*`)
 
 > **See also**: [`config-control-panel.md`](../modules/config-control-panel.md) for managing reCAPTCHA config via the admin panel.
 
@@ -737,12 +737,12 @@ AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in 
 sequenceDiagram
     participant User
     participant Frontend
-    participant CmsConfigAPI as /api/cms/config
+    participant CmsConfigAPI as /api/cms/config or /api/platform/cms/config
     participant AuthAPI as /api/auth/login
     participant Google as Google reCAPTCHA
 
     User->>Frontend: App startup
-    Frontend->>CmsConfigAPI: GET (with X-Tenant-Subdomain)
+    Frontend->>CmsConfigAPI: GET (tenant host => /api/cms/config, admin host => /api/platform/cms/config)
     CmsConfigAPI-->>Frontend: { "security.recaptcha.enabled": "true", "security.recaptcha.site_key": "..." }
     Frontend->>Frontend: Cache in ConfigFlagsService (memory Map)
 
@@ -860,7 +860,7 @@ const credentials = {
 ```
 
 **Services**:
-- `ConfigFlagsService`: Loaded at app init from `/api/cms/config`, stores all non-secret config_properties in memory
+- `ConfigFlagsService`: Loaded at app init from `/api/cms/config` (tenant host) or `/api/platform/cms/config` (admin host), stores non-secret flags in memory
 - `RecaptchaService`: Loads Google script lazily, executes reCAPTCHA, returns token
 
 ### Testing

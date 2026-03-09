@@ -142,6 +142,10 @@ export const appConfig: ApplicationConfig = {
         provideAppInitializer(() => {
             const tenantContext = inject(TenantContextService);
             const configFlags = inject(ConfigFlagsService);
+            const path = window.location.pathname;
+            if (path === '/config' || path.startsWith('/config/')) {
+                return Promise.resolve();
+            }
             const subdomain = tenantContext.subdomain();
             return configFlags.load(subdomain ?? null);
         }),

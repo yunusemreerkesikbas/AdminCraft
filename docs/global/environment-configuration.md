@@ -48,6 +48,24 @@ Some settings are **tenant-specific** and must be editable at runtime (e.g. reCA
 - Store them in the **tenant database** (key-value store): `config_properties`
 - `application.yml` may still define safe **defaults** (used only when the tenant key is missing)
 
+#### Global runtime configuration (Config Control Panel)
+
+Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` in `/config`.
+
+- Store them in platform DB key-value store: `platform_config_properties`
+- Current whitelist:
+  - `app.email.provider`
+  - `app.email.from-address`
+  - `app.email.from-name`
+  - `app.frontend.base-url`
+  - `platform.security.recaptcha.enabled`
+  - `platform.security.recaptcha.site_key`
+  - `platform.security.recaptcha.secret_key` (encrypted)
+- `security.recaptcha.threshold` stays in platform settings (not runtime-managed in Config Panel)
+- Resolution precedence for these keys:
+  1. `platform_config_properties` override
+  2. Spring `application*.yml` / environment variable value
+
 ### Frontend — Angular
 
 1. **File replacement**: Angular replaces `environment.ts` with profile-specific file at build time
@@ -234,6 +252,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
    - `application.yml` (base)
    - `application-{profile}.yml` (profile-specific)
    - Environment variables (highest priority)
+
+For whitelisted global runtime keys managed by Config Panel, `platform_config_properties` takes precedence at runtime.
 
 ---
 

@@ -1,11 +1,12 @@
 package com.backend.infrastructure.email;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.backend.application.dto.email.EmailResult;
+import com.backend.domain.port.MailConfigPort;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -14,19 +15,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.email.provider", havingValue = "smtp", matchIfMissing = false)
 public class SmtpEmailSender implements EmailSender {
 
-    private final JavaMailSender mailSender;
-    private final EmailProperties emailProperties;
+    private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final MailConfigPort mailConfig;
 
     @Override
     public EmailResult send(String to, String subject, String htmlContent) {
         try {
+            JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+            if (mailSender == null) {
+                log.error("SMTP provider selected but JavaMailSender bean is not available");
+                return EmailResult.failure("SMTP sender is not available");
+            }
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(emailProperties.getFromAddress(), emailProperties.getFromName());
+            helper.setFrom(mailConfig.getFromAddress(), mailConfig.getFromName());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -45,6 +51,6 @@ public class SmtpEmailSender implements EmailSender {
 
     @Override
     public boolean isAvailable() {
-        return true;
+        return mailSenderProvider.getIfAvailable() != null;
     }
 }

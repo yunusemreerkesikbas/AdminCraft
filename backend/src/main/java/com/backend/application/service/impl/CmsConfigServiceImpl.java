@@ -2,6 +2,7 @@ package com.backend.application.service.impl;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,10 @@ public class CmsConfigServiceImpl implements CmsConfigService {
     public Map<String, String> getPublicConfig(Long tenantId, String tenantDbName) {
         return configPropertyService.findAll(tenantId, tenantDbName).stream()
                 .filter(p -> !Boolean.TRUE.equals(p.getSecret()))
-                .collect(Collectors.toMap(ConfigProperty::getConfigKey, p -> p.getConfigValue() != null ? p.getConfigValue() : ""));
+                .collect(Collectors.toMap(
+                        ConfigProperty::getConfigKey,
+                        p -> p.getConfigValue() != null ? p.getConfigValue() : "",
+                        (left, right) -> right,
+                        LinkedHashMap::new));
     }
 }
