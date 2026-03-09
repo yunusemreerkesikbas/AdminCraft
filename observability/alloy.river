@@ -1,0 +1,110 @@
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/craftive-alloy"
+    action        = "drop"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container_name"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "docker"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  labels     = {}
+  forward_to = [loki.process.redact.receiver]
+}
+
+local.file_match "host_logs" {
+  path_targets = [
+    {
+      __path__       = "/host/opt-craftive-logs/*.log",
+      job            = "host-ops",
+      service        = "ops",
+      container_name = "host",
+    },
+  ]
+  sync_period = "10s"
+}
+
+loki.source.file "host_logs" {
+  targets       = local.file_match.host_logs.targets
+  tail_from_end = true
+  forward_to    = [loki.process.redact.receiver]
+}
+
+loki.process "redact" {
+  forward_to = [loki.write.grafana_cloud.receiver]
+
+  stage.replace {
+    expression = "(?i)authorization\\s*[:=]\\s*bearer\\s+\\S+"
+    replace    = "authorization=Bearer [REDACTED]"
+  }
+
+  stage.replace {
+    expression = "(?i)cookie\\s*[:=]\\s*[^;\\s]+"
+    replace    = "cookie=[REDACTED]"
+  }
+
+  stage.replace {
+    expression = "(?i)(password|passwd|secret|api[_-]?key|access[_-]?token|refresh[_-]?token)\\s*[:=]\\s*\\S+"
+    replace    = "$1=[REDACTED]"
+  }
+
+  stage.replace {
+    expression = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+    replace    = "[REDACTED_EMAIL]"
+  }
+
+  stage.replace {
+    expression = "\\+?[0-9][0-9() .-]{7,}[0-9]"
+    replace    = "[REDACTED_PHONE]"
+  }
+}
+
+loki.write "grafana_cloud" {
+  external_labels = {
+    env       = sys.env("LOG_ENV"),
+    host      = sys.env("LOG_HOST"),
+    collector = "alloy",
+  }
+
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USER")
+      password = sys.env("GRAFANA_CLOUD_LOKI_TOKEN")
+    }
+  }
+}

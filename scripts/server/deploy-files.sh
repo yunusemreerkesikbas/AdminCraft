@@ -69,6 +69,13 @@ ssh -i "${SSH_KEY}" "${REMOTE}" "mkdir -p ${REMOTE_DIR}/docker/mysql/conf ${REMO
 scp -i "${SSH_KEY}" -r docker/mysql "${REMOTE}:${REMOTE_DIR}/docker/"
 log "Copied docker/mysql"
 
+# Copy observability config files (Grafana Alloy)
+ssh -i "${SSH_KEY}" "${REMOTE}" "mkdir -p ${REMOTE_DIR}/observability"
+scp -i "${SSH_KEY}" -o StrictHostKeyChecking=accept-new \
+  observability/alloy.river \
+  "${REMOTE}:${REMOTE_DIR}/observability/"
+log "Copied observability/alloy.river"
+
 # Copy tenant storefront operation scripts
 REMOTE_SCRIPT_DIR="/opt/craftive/scripts"
 ssh -i "${SSH_KEY}" "${REMOTE}" "mkdir -p ${REMOTE_SCRIPT_DIR}"
