@@ -1,0 +1,21 @@
+{
+  "brandName": "AdminCraft",
+  "domain": "craftive.io",
+  "docsUrl": "https://docs.craftive.io",
+  "appUrl": "https://app.craftive.io",
+  "apiUrl": "https://api.craftive.io",
+  "contactEmail": "hello@craftive.io",
+  "social": {
+    "twitter": "https://x.com",
+    "github": "https://github.com",
+    "linkedin": "https://linkedin.com"
+  },
+  "ogImage": "/images/og-image.png",
+  "images": {
+    "heroMockup": "/images/hero-mockup.png",
+    "segmentAgency": "/images/segment-agency.png",
+    "segmentSMB": "/images/segment-smb.png",
+    "segmentEcommerce": "/images/segment-ecommerce.png"
+  }
+}
+

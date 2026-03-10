@@ -1,0 +1,195 @@
+{
+  "hero": {
+    "badge": "Modüler altyapı, hızlı teslim.",
+    "headline": "Tek platform. Sınırsız yapılandırma.",
+    "subheadline": "Blog'dan HR portalına, e-ticaretten ajans yönetimine — aynı altyapı, farklı modüller.",
+    "primaryCta": "Demo Talep Et",
+    "secondaryCta": "Özellikleri Keşfet",
+    "mockupAlt": "AdminCraft platform arayüzü"
+  },
+  "stats": [
+    { "value": "500+", "label": "Aktif Tenant" },
+    { "value": "12", "label": "Hazır Modül" },
+    { "value": "99.9%", "label": "Uptime SLA" },
+    { "value": "< 2dk", "label": "Kurulum Süresi" }
+  ],
+  "techStack": {
+    "label": "Powered by"
+  },
+  "features": {
+    "sectionTag": "Özellikler",
+    "heading": "Araçlar hazır. Altyapı sağlam. Sıra sizde.",
+    "subheading": "Sayfa oluşturucu, headless API, veritabanı izolasyonu, çok kiracılı yönetim — ihtiyaç duyacağınız her şey zaten entegre, kullanıma hazır.",
+    "powerTrio": {
+      "label": "İçerik Mimarisi",
+      "heading": "Üç katman, sınırsız esneklik",
+      "subheading": "PageTemplate, PageSlot ve CmsComponent — AdminCraft'ın içerik motorunu oluşturan üç katman. Her biri bağımsız yönetilir, birlikte tam bir içerik altyapısı oluşturur.",
+      "items": [
+        {
+          "key": "template",
+          "name": "PageTemplate",
+          "label": "Şablon Katmanı",
+          "description": "Sayfanın iskelet yapısını tanımlar. Hangi slot'ların nerede olduğunu belirler. Bir kez tanımla, şablonu kullanan tüm sayfalara uygula."
+        },
+        {
+          "key": "slot",
+          "name": "PageSlot",
+          "label": "Bölge Katmanı",
+          "description": "Sayfadaki adlandırılmış içerik bölgeleri. Her slot şablondan gelir ve bağımsız, sıralanabilir bileşenler barındırır."
+        },
+        {
+          "key": "component",
+          "name": "CmsComponent",
+          "label": "İçerik Katmanı",
+          "description": "Slot'lar içindeki gerçek içerik birimleri. Banner, carousel, metin, ürün listesi — her tür bağımsız yapılandırılır ve yönetilir."
+        }
+      ]
+    },
+    "cards": [
+      {
+        "icon": "Layers",
+        "title": "Modül Mimarisi",
+        "description": "Sayfa oluşturucu, medya yönetimi, bileşen kütüphanesi ve daha fazlası. Her modülü ihtiyacınıza göre açın veya kapatın."
+      },
+      {
+        "icon": "Database",
+        "title": "DB İzolasyonu",
+        "description": "Her tenant için ayrı veritabanı. Veri sızıntısı riski sıfır; tam GDPR uyumluluğu ve bağımsız yedekleme."
+      },
+      {
+        "icon": "Zap",
+        "title": "Headless API",
+        "description": "REST ve GraphQL API'ler ile frontend'inizi özgürce seçin. Next.js, Angular, React Native — hepsi uyumlu."
+      },
+      {
+        "icon": "Globe",
+        "title": "Multi-Tenant",
+        "description": "Tek deployment, yüzlerce müşteri. Her tenant'a kendi subdomain'i, ayarları ve özelleştirmeleri."
+      }
+    ]
+  },
+  "segments": {
+    "sectionTag": "Kullanım Senaryoları",
+    "heading": "Tek deployment, sınırsız tenant",
+    "subheading": "Her tenant tamamen farklı bir dijital ürün olabilir. HR portalı, blog, e-ticaret, landing page — hepsini tek AdminCraft altyapısından yönetin."
+  },
+  "howItWorks": {
+    "sectionTag": "Nasıl Çalışır?",
+    "heading": "4 adımda canlıya alın",
+    "subheading": "Projeyi hayata geçirmekten yayına almaya kadar her adımı Craftive üstlenir.",
+    "steps": [
+      {
+        "key": "tenant",
+        "icon": "LayoutDashboard",
+        "title": "Tenant Oluşturulur",
+        "description": "Projeniz için izole bir tenant oluşturulur. Bağımsız veritabanı, özel subdomain ve modül yapılandırması Craftive tarafından kurulur."
+      },
+      {
+        "key": "content",
+        "icon": "Layers",
+        "title": "İçerik Yapısı Kurulur",
+        "description": "Projeye özel içerik mimarisi tanımlanır. Müşteri bu aşamadan itibaren içerik yönetimini kendi başına yapabilir."
+      },
+      {
+        "key": "frontend",
+        "icon": "Monitor",
+        "title": "Önyüz Geliştirilir",
+        "description": "İstenilen frontend framework ile önyüz tasarımı oluşturulur. Next.js, Angular, React Native — proje ihtiyacına göre seçilir."
+      },
+      {
+        "key": "deploy",
+        "icon": "Rocket",
+        "title": "Production'a Alınır",
+        "description": "Stage ortamında test edilen proje production'a taşınır. Craftive, deploy sürecini uçtan uca yönetir."
+      }
+    ]
+  },
+  "testimonials": {
+    "sectionTag": "Referanslar",
+    "heading": "Müşterilerimiz ne diyor?",
+    "subheading": "AdminCraft kullanan ajanslar, KOBİ'ler ve e-ticaret firmaları deneyimlerini paylaşıyor.",
+    "items": [
+      {
+        "name": "Ayşe Kaya",
+        "role": "Kurucu Ortak, NovaMed Dijital",
+        "avatar": "/images/avatar-1.png",
+        "quote": "AdminCraft ile müşterilerimize artık saatler yerine dakikalar içinde canlı ortam teslim edebiliyoruz. Multi-tenant yapısı müşteri verilerini tam anlamıyla izole tutuyor."
+      },
+      {
+        "name": "Mehmet Yılmaz",
+        "role": "CTO, RetailBridge",
+        "avatar": "/images/avatar-2.png",
+        "quote": "Headless API entegrasyonu sayesinde mevcut Next.js frontend'imizi AdminCraft'a bağladık. Geçiş bir hafta sürdü, performans %40 arttı."
+      },
+      {
+        "name": "Selin Arslan",
+        "role": "Dijital Dönüşüm Müdürü, Optima KOBİ",
+        "avatar": "/images/avatar-3.png",
+        "quote": "Tek deployment ile 12 müşterimizi yönetiyoruz. Bakım maliyetimiz yarıya indi, müşteri memnuniyeti ikiye katlandı."
+      }
+    ]
+  },
+  "faq": {
+    "sectionTag": "SSS",
+    "heading": "Sık sorulan sorular",
+    "subheading": "AdminCraft hakkında merak ettiğiniz her şey.",
+    "items": [
+      {
+        "question": "AdminCraft nedir ve kimler için uygundur?",
+        "answer": "AdminCraft, dijital ajanslar, KOBİ'ler ve e-ticaret firmaları için geliştirilmiş multi-tenant bir SaaS CMS altyapısıdır. Tek bir deployment ile yüzlerce müşteriye izole edilmiş dijital ortam sunabilirsiniz."
+      },
+      {
+        "question": "Multi-tenant ne anlama geliyor?",
+        "answer": "Her müşteri (tenant), kendi ayrı veritabanı ve subdomain'iyle sisteme dahil olur. Veriler fiziksel olarak birbirinden izole edilir; bir müşterinin verisi asla diğerine karışmaz."
+      },
+      {
+        "question": "Teknik bilgim olmadan kullanabilir miyim?",
+        "answer": "Evet. Sürükle-bırak sayfa oluşturucu ve hazır modüller sayesinde teknik ekip gerektirmeden içerik yönetebilirsiniz. Geliştirici iseniz Headless API ile tam esnekliğe sahipsiniz."
+      },
+      {
+        "question": "Mevcut frontend'imi kullanabilir miyim?",
+        "answer": "Kesinlikle. AdminCraft REST ve GraphQL API'ler sunar. Next.js, Angular, React Native veya istediğiniz herhangi bir frontend framework'ü ile entegre edebilirsiniz."
+      },
+      {
+        "question": "GDPR uyumlu mu?",
+        "answer": "Evet. Veritabanı izolasyonu sayesinde her tenant'ın verisi bağımsız olarak yönetilir, yedeklenir ve silinebilir. Bu da GDPR ve KVKK uyumluluğunu kolaylaştırır."
+      },
+      {
+        "question": "Nasıl iletişime geçebilirim?",
+        "answer": "Sayfanın üst kısmındaki 'İletişime Geç' butonuna tıklayarak formu doldurabilirsiniz. Proje fikrinizi veya ihtiyacınızı paylaşın, 24 saat içinde sizinle iletişime geçiyoruz."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Platformunuzu bugün başlatın",
+    "subheading": "Proje fikrinizi paylaşın, ekibimiz en kısa sürede sizinle iletişime geçsin.",
+    "primaryCta": "İletişime Geç",
+    "secondaryCta": "Dokümantasyonu İncele"
+  },
+  "footer": {
+    "tagline": "Kurumsal altyapı, ajans hızı.",
+    "links": {
+      "product": {
+        "label": "Ürün",
+        "items": [
+          { "label": "Özellikler", "href": "#features" },
+          { "label": "Nasıl Çalışır?", "href": "#howitworks" },
+          { "label": "SSS", "href": "#faq" }
+        ]
+      },
+      "company": {
+        "label": "Şirket",
+        "items": []
+      },
+      "resources": {
+        "label": "Kaynaklar",
+        "items": [
+          { "label": "Dokümantasyon", "href": "https://docs.craftive.io" },
+          { "label": "API Referansı", "href": "https://docs.craftive.io/api" },
+          { "label": "GitHub", "href": "https://github.com" }
+        ]
+      }
+    },
+    "copyright": "© 2025 Craftive. Tüm hakları saklıdır."
+  }
+}

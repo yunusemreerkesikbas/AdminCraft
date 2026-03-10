@@ -1,0 +1,13 @@
+{
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "segments": "For You",
+    "comparison": "How it Works",
+    "faq": "FAQ",
+    "docs": "Docs",
+    "cta": "Get in Touch",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu"
+  }
+}
