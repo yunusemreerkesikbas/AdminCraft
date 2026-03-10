@@ -1,0 +1,13 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "features": "Özellikler",
+    "segments": "Kimler İçin?",
+    "howItWorks": "Nasıl Çalışır?",
+    "faq": "SSS",
+    "docs": "Dokümantasyon",
+    "cta": "İletişime Geç",
+    "closeMenu": "Menüyü kapat",
+    "openMenu": "Menüyü aç"
+  }
+}

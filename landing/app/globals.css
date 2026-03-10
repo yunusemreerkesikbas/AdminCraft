@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Brand colors */
+  --background: #ffffff;
+  --foreground: #000000;
+  --color-light-neutral-1: #ffffff;
+  --color-light-neutral-2: #f6f7f9;
+  --color-dark-neutral-1: #000000;
+  --color-dark-neutral-2: #5e5f5c;
+  --color-shade: #e5e5e5;
+  --color-theme-3: #2563EB;
+  --color-theme-6: #f6f3fe;
+  --color-theme-7: #EFF6FF;
+  --color-theme-4: #d1d0fc;
+
+  /* shadcn CSS variables (Tailwind v4 / oklch) */
+  --radius: 0.625rem;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.85 0.08 280);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist), "Geist Placeholder", sans-serif;
+  --font-heading: var(--font-geist), "Geist Placeholder", sans-serif;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.06); }
+  50% { box-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.08); }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in-up-delay-1 { animation-delay: 0.12s; }
+.animate-fade-in-up-delay-2 { animation-delay: 0.24s; }
+.animate-fade-in-up-delay-3 { animation-delay: 0.36s; }
+
+.animate-in-view {
+  opacity: 0;
+}
+.animate-in-view.is-in-view {
+  animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-in-view.is-in-view.animate-scale-in {
+  animation-name: scale-in;
+}
+.animate-in-view-delay-1.is-in-view { animation-delay: 0.12s; }
+.animate-in-view-delay-2.is-in-view { animation-delay: 0.24s; }
+.animate-in-view-delay-3.is-in-view { animation-delay: 0.36s; }
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.font-heading {
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
+}
+
+.heading-1 {
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+@media (max-width: 1023px) {
+  .heading-1 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+}
+
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-light-neutral-1), 0 0 0 4px var(--color-dark-neutral-1);
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-lg bg-[var(--color-dark-neutral-1)] px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98];
+  outline: none;
+}
+.btn-primary:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-light-neutral-1), 0 0 0 4px var(--color-dark-neutral-1);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-lg border border-[var(--color-shade)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--color-dark-neutral-2)] transition-all duration-300 hover:bg-[var(--color-light-neutral-2)] hover:scale-[1.02] active:scale-[0.98];
+  outline: none;
+}
+.btn-secondary:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-light-neutral-1), 0 0 0 4px var(--color-dark-neutral-1);
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+}
+
+/* Ensure form inputs use brand blue on focus */
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible {
+  border-color: var(--color-theme-3);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.18);
+}

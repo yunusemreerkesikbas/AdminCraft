@@ -1,0 +1,195 @@
+{
+  "hero": {
+    "badge": "Modular architecture. Fast delivery.",
+    "headline": "One platform. Every configuration.",
+    "subheadline": "From blog to HR portal, e‑commerce to agency management — one infrastructure, different modules.",
+    "primaryCta": "Request a Demo",
+    "secondaryCta": "Explore Features",
+    "mockupAlt": "AdminCraft platform interface"
+  },
+  "stats": [
+    { "value": "500+", "label": "Active Tenants" },
+    { "value": "12", "label": "Ready Modules" },
+    { "value": "99.9%", "label": "Uptime SLA" },
+    { "value": "< 2min", "label": "Setup Time" }
+  ],
+  "techStack": {
+    "label": "Powered by"
+  },
+  "features": {
+    "sectionTag": "Features",
+    "heading": "Tools ready. Infrastructure solid. Your turn.",
+    "subheading": "Page builder, headless API, database isolation, multi-tenant management — everything you'll ever need, already integrated and ready to ship.",
+    "powerTrio": {
+      "label": "Content Architecture",
+      "heading": "Three layers, infinite flexibility",
+      "subheading": "PageTemplate, PageSlot, and CmsComponent — the three layers powering AdminCraft's content engine. Each managed independently, together they form a complete content infrastructure.",
+      "items": [
+        {
+          "key": "template",
+          "name": "PageTemplate",
+          "label": "Template Layer",
+          "description": "Defines the skeleton of your page — which slots exist and where. Define once, propagate across every page that uses the template."
+        },
+        {
+          "key": "slot",
+          "name": "PageSlot",
+          "label": "Region Layer",
+          "description": "Named content regions within the page. Each slot is driven by the template and hosts independent, reorderable components."
+        },
+        {
+          "key": "component",
+          "name": "CmsComponent",
+          "label": "Content Layer",
+          "description": "The actual content units inside slots. Banners, carousels, rich text, product grids — each type independently configured and managed."
+        }
+      ]
+    },
+    "cards": [
+      {
+        "icon": "Layers",
+        "title": "Modular Architecture",
+        "description": "Page builder, media management, component library and more. Enable or disable each module as needed."
+      },
+      {
+        "icon": "Database",
+        "title": "DB Isolation",
+        "description": "Separate database per tenant. Zero data leakage risk; full GDPR compliance and independent backups."
+      },
+      {
+        "icon": "Zap",
+        "title": "Headless API",
+        "description": "REST and GraphQL APIs let you choose your frontend freely. Next.js, Angular, React Native — all compatible."
+      },
+      {
+        "icon": "Globe",
+        "title": "Multi-Tenant",
+        "description": "One deployment, hundreds of customers. Each tenant gets their own subdomain, settings, and customizations."
+      }
+    ]
+  },
+  "segments": {
+    "sectionTag": "Use Cases",
+    "heading": "One deployment, unlimited tenants",
+    "subheading": "Each tenant can be an entirely different digital product. HR portal, blog, e-commerce, landing page — manage them all from a single AdminCraft infrastructure."
+  },
+  "howItWorks": {
+    "sectionTag": "How it Works",
+    "heading": "Go live in 4 steps",
+    "subheading": "From project kickoff to production — Craftive handles every step of the way.",
+    "steps": [
+      {
+        "key": "tenant",
+        "icon": "LayoutDashboard",
+        "title": "Tenant is Created",
+        "description": "An isolated tenant is provisioned for your project. Independent database, custom subdomain, and module configuration — all set up by Craftive."
+      },
+      {
+        "key": "content",
+        "icon": "Layers",
+        "title": "Content Structure is Built",
+        "description": "A content architecture tailored to the project is defined. From this point, the client can manage content independently."
+      },
+      {
+        "key": "frontend",
+        "icon": "Monitor",
+        "title": "Frontend is Developed",
+        "description": "The frontend is built with the framework that fits the project. Next.js, Angular, React Native — chosen based on project needs."
+      },
+      {
+        "key": "deploy",
+        "icon": "Rocket",
+        "title": "Shipped to Production",
+        "description": "After testing on staging, the project is promoted to production. Craftive manages the entire deployment process end to end."
+      }
+    ]
+  },
+  "testimonials": {
+    "sectionTag": "Testimonials",
+    "heading": "What our customers say",
+    "subheading": "Agencies, SMBs, and ecommerce firms share their AdminCraft experience.",
+    "items": [
+      {
+        "name": "Sarah Mitchell",
+        "role": "Co-Founder, NovaMed Digital",
+        "avatar": "/images/avatar-1.png",
+        "quote": "With AdminCraft, we can now deliver live environments to our clients in minutes instead of hours. The multi-tenant architecture keeps client data truly isolated."
+      },
+      {
+        "name": "James Reynolds",
+        "role": "CTO, RetailBridge",
+        "avatar": "/images/avatar-2.png",
+        "quote": "The headless API integration let us connect our existing Next.js frontend to AdminCraft in a week. Performance improved by 40%."
+      },
+      {
+        "name": "Lena Hoffmann",
+        "role": "Digital Transformation Lead, Optima SMB",
+        "avatar": "/images/avatar-3.png",
+        "quote": "We manage 12 clients with a single deployment. Our maintenance cost halved and customer satisfaction doubled."
+      }
+    ]
+  },
+  "faq": {
+    "sectionTag": "FAQ",
+    "heading": "Frequently asked questions",
+    "subheading": "Everything you need to know about AdminCraft.",
+    "items": [
+      {
+        "question": "What is AdminCraft and who is it for?",
+        "answer": "AdminCraft is a multi-tenant SaaS CMS infrastructure built for digital agencies, SMBs, and ecommerce businesses. With a single deployment, you can serve hundreds of clients with fully isolated digital environments."
+      },
+      {
+        "question": "What does multi-tenant mean?",
+        "answer": "Each customer (tenant) joins the system with their own separate database and subdomain. Data is physically isolated — one tenant's data never mixes with another's."
+      },
+      {
+        "question": "Can I use it without technical knowledge?",
+        "answer": "Yes. With the drag-and-drop page builder and ready-made modules, you can manage content without a technical team. If you're a developer, the Headless API gives you full flexibility."
+      },
+      {
+        "question": "Can I use my existing frontend?",
+        "answer": "Absolutely. AdminCraft provides REST and GraphQL APIs. You can integrate with Next.js, Angular, React Native, or any frontend framework of your choice."
+      },
+      {
+        "question": "Is it GDPR compliant?",
+        "answer": "Yes. Database isolation ensures each tenant's data is independently managed, backed up, and deletable — making GDPR compliance straightforward."
+      },
+      {
+        "question": "How can I get in touch?",
+        "answer": "Click the 'Get in Touch' button at the top of the page and fill out the form. Share your project idea or need, and we'll get back to you within 24 hours."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Launch your platform today",
+    "subheading": "Share your project idea and our team will get back to you as soon as possible.",
+    "primaryCta": "Get in Touch",
+    "secondaryCta": "View Documentation"
+  },
+  "footer": {
+    "tagline": "Enterprise infrastructure, agency speed.",
+    "links": {
+      "product": {
+        "label": "Product",
+        "items": [
+          { "label": "Features", "href": "#features" },
+          { "label": "How It Works", "href": "#howitworks" },
+          { "label": "FAQ", "href": "#faq" }
+        ]
+      },
+      "company": {
+        "label": "Company",
+        "items": []
+      },
+      "resources": {
+        "label": "Resources",
+        "items": [
+          { "label": "Documentation", "href": "https://docs.craftive.io" },
+          { "label": "API Reference", "href": "https://docs.craftive.io/api" },
+          { "label": "GitHub", "href": "https://github.com" }
+        ]
+      }
+    },
+    "copyright": "© 2026 Craftive. All rights reserved."
+  }
+}
