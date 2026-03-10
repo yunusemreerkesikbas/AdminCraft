@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Users, Clock, Shield } from "lucide-react";
 import siteConfig from "@/config/site.json";
 
-type ContactModalProps = {
+type DemoRequestModalProps = {
   open: boolean;
   onClose: () => void;
   locale: string;
@@ -66,9 +66,8 @@ const LABELS = {
   },
 };
 
-export function ContactModal({ open, onClose, locale }: ContactModalProps) {
+export function DemoRequestModal({ open, onClose, locale }: DemoRequestModalProps) {
   const l = LABELS[locale as keyof typeof LABELS] ?? LABELS.en;
-  const formRef = useRef<HTMLFormElement>(null);
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -77,10 +76,14 @@ export function ContactModal({ open, onClose, locale }: ContactModalProps) {
     const name = data.get("name");
     const email = data.get("email");
     const message = data.get("message");
-    const subject = encodeURIComponent(`İletişim — ${name}`);
-    const body = encodeURIComponent(
-      `Ad Soyad: ${name}\nE-posta: ${email}\nMesaj: ${message}`
-    );
+    const mailSubject = locale === "tr"
+      ? `İletişim — ${name}`
+      : `Contact — ${name}`;
+    const mailBody = locale === "tr"
+      ? `Ad Soyad: ${name}\nE-posta: ${email}\nMesaj: ${message}`
+      : `Full Name: ${name}\nEmail: ${email}\nMessage: ${message}`;
+    const subject = encodeURIComponent(mailSubject);
+    const body = encodeURIComponent(mailBody);
     window.location.href = `mailto:${siteConfig.contactEmail}?subject=${subject}&body=${body}`;
     setSubmitted(true);
   }
@@ -182,7 +185,7 @@ export function ContactModal({ open, onClose, locale }: ContactModalProps) {
                   <p className="mt-1 text-xs text-[var(--color-dark-neutral-2)]">{l.formSub}</p>
                 </div>
 
-                <form ref={formRef} onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4">
+                <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="contact-name" className="text-xs font-semibold text-[var(--color-dark-neutral-1)]">
                       {l.name}

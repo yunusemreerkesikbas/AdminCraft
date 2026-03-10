@@ -270,7 +270,8 @@ export function Segments({ content }: { content: SegmentsContent }) {
                       <button
                         key={tenant.key}
                         onClick={() => setActive(tenant.key)}
-                        className={`group flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all duration-200 focus:outline-none ${
+                        aria-pressed={isActive}
+                        className={`group flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                           isActive ? "bg-white/10" : "hover:bg-white/5"
                         }`}
                       >
@@ -336,7 +337,8 @@ export function Segments({ content }: { content: SegmentsContent }) {
               <button
                 key={t.key}
                 onClick={() => setActive(t.key)}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 focus:outline-none ${
+                aria-pressed={t.key === active}
+                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   t.key === active
                     ? "border-transparent text-white shadow-sm"
                     : "border-[var(--color-shade)] bg-white text-[var(--color-dark-neutral-2)] hover:border-[var(--color-dark-neutral-2)]/30"

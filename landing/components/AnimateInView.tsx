@@ -26,7 +26,10 @@ export function AnimateInView({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setInView(true);
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(entry.target);
+        }
       },
       { rootMargin, threshold: 0.1 }
     );

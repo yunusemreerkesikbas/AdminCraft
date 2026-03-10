@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -14,7 +14,7 @@ type NavLabels = {
   home: string;
   features: string;
   segments: string;
-  comparison: string;
+  howItWorks: string;
   faq: string;
   docs: string;
   cta: string;
@@ -28,10 +28,10 @@ type NavbarProps = {
   onDemoOpen: () => void;
 };
 
-const NAV_LINKS = (base: string, labels: NavLabels) => [
+const getNavLinks = (base: string, labels: NavLabels) => [
   { href: `${base}#features`, label: labels.features },
   { href: `${base}#segments`, label: labels.segments },
-  { href: `${base}#howitworks`, label: labels.comparison },
+  { href: `${base}#howitworks`, label: labels.howItWorks },
   { href: `${base}#faq`, label: labels.faq },
   { href: siteConfig.docsUrl, label: labels.docs, external: true },
 ];
@@ -41,20 +41,28 @@ const navLinkClass =
 
 export function Navbar({ locale, labels, onDemoOpen }: NavbarProps) {
   const base = `/${locale}`;
-  const links = NAV_LINKS(base, labels);
+  const links = getNavLinks(base, labels);
   const router = useRouter();
   const [displayLocale, setDisplayLocale] = useState(locale);
+  const langTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setDisplayLocale(locale);
   }, [locale]);
+
+  useEffect(() => {
+    return () => {
+      if (langTimeoutRef.current) clearTimeout(langTimeoutRef.current);
+    };
+  }, []);
 
   const handleLangClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, targetLocale: "tr" | "en") => {
       if (targetLocale === locale) return;
       e.preventDefault();
       setDisplayLocale(targetLocale);
-      setTimeout(() => router.push(`/${targetLocale}`), PILL_TRANSITION_MS);
+      if (langTimeoutRef.current) clearTimeout(langTimeoutRef.current);
+      langTimeoutRef.current = setTimeout(() => router.push(`/${targetLocale}`), PILL_TRANSITION_MS);
     },
     [locale, router]
   );

@@ -1,8 +1,12 @@
 import { ImageResponse } from "next/og";
+import { notFound } from "next/navigation";
 
 export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
+export const alt = "Craftive";
 export const contentType = "image/png";
+
+const SUPPORTED_LOCALES = ["tr", "en"] as const;
 
 export default async function Image({
   params,
@@ -10,6 +14,11 @@ export default async function Image({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
+  if (!SUPPORTED_LOCALES.includes(locale as (typeof SUPPORTED_LOCALES)[number])) {
+    notFound();
+  }
+
   const isEN = locale === "en";
 
   const subtitle = isEN ? "Multi-Tenant Platform" : "Çok Kiracılı Platformu";

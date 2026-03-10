@@ -90,6 +90,10 @@ const softwareJsonLd = {
   offers: { "@type": "Offer", price: "1500", priceCurrency: "TRY" },
 };
 
+function serializeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj).replace(/</g, "\\u003c");
+}
+
 function buildFaqJsonLd(locale: Locale) {
   const content = locale === "tr" ? homeTr : homeEn;
   return {
@@ -118,15 +122,15 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       <SetLang locale={locale} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(orgJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(softwareJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
       />
       <LocaleShell
         locale={locale}

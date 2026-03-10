@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, LayoutDashboard, Layers, Monitor, Rocket } from "lucide-react";
+import { ChevronRight, LayoutDashboard, Layers, Monitor, Rocket, Server } from "lucide-react";
 import { AnimateInView } from "@/components/AnimateInView";
 
 type Step = {

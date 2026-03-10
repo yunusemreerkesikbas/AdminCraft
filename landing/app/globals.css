@@ -67,7 +67,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans Placeholder", sans-serif;
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
 }
 
 @keyframes fade-in-up {
@@ -138,11 +138,11 @@ body {
 }
 
 .font-heading {
-  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans Placeholder", sans-serif;
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
 }
 
 .heading-1 {
-  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans Placeholder", sans-serif;
+  font-family: var(--font-geist), "Plus Jakarta Sans Placeholder", sans-serif;
   font-size: clamp(2.25rem, 5vw, 4.5rem);
   line-height: 1.08;
   letter-spacing: -0.03em;

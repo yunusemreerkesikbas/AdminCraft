@@ -121,10 +121,7 @@ const STACK: Tech[] = [
 function TechItem({ tech }: { tech: Tech }) {
   return (
     <div
-      className="group flex cursor-default flex-col items-center gap-3 px-6 transition-opacity duration-300"
-      style={{ opacity: 0.4 }}
-      onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-      onMouseLeave={e => (e.currentTarget.style.opacity = "0.4")}
+      className="group flex cursor-default flex-col items-center gap-3 px-6 opacity-40 transition-opacity duration-300 hover:opacity-100"
     >
       <span className="text-white" role="img" aria-label={tech.name}>{tech.icon}</span>
       <span className="text-[11px] font-semibold tracking-wide text-white whitespace-nowrap">

@@ -14,7 +14,7 @@
     { "value": "< 2dk", "label": "Kurulum Süresi" }
   ],
   "techStack": {
-    "label": "Powered by"
+    "label": "Teknolojilerimiz"
   },
   "features": {
     "sectionTag": "Özellikler",
@@ -177,10 +177,6 @@
           { "label": "SSS", "href": "#faq" }
         ]
       },
-      "company": {
-        "label": "Şirket",
-        "items": []
-      },
       "resources": {
         "label": "Kaynaklar",
         "items": [
@@ -190,6 +186,6 @@
         ]
       }
     },
-    "copyright": "© 2025 Craftive. Tüm hakları saklıdır."
+    "copyright": "© 2026 Craftive. Tüm hakları saklıdır."
   }
 }

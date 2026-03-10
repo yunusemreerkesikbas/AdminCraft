@@ -1,14 +1,18 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { ContactModal } from "@/components/modals/DemoRequestModal";
+import { DemoRequestModal } from "@/components/modals/DemoRequestModal";
 
 type ContactContextType = { openContact: () => void };
 
-const ContactContext = createContext<ContactContextType>({ openContact: () => {} });
+const ContactContext = createContext<ContactContextType | undefined>(undefined);
 
 export function useDemoContext() {
-  return useContext(ContactContext);
+  const ctx = useContext(ContactContext);
+  if (!ctx) {
+    throw new Error("useDemoContext must be used within a DemoProvider");
+  }
+  return ctx;
 }
 
 export function DemoProvider({ children, locale }: { children: ReactNode; locale: string }) {
@@ -16,7 +20,7 @@ export function DemoProvider({ children, locale }: { children: ReactNode; locale
   return (
     <ContactContext.Provider value={{ openContact: () => setOpen(true) }}>
       {children}
-      <ContactModal open={open} onClose={() => setOpen(false)} locale={locale} />
+      <DemoRequestModal open={open} onClose={() => setOpen(false)} locale={locale} />
     </ContactContext.Provider>
   );
 }
