@@ -41,7 +41,6 @@ discovery.relabel "containers" {
 loki.source.docker "containers" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.containers.output
-  labels     = {}
   forward_to = [loki.process.redact.receiver]
 }
 
@@ -72,8 +71,8 @@ loki.process "redact" {
   }
 
   stage.replace {
-    expression = "(?i)cookie\\s*[:=]\\s*[^;\\s]+"
-    replace    = "cookie=[REDACTED]"
+    expression = "(?i)(cookie\\s*[:=]\\s*).*"
+    replace    = "$1[REDACTED]"
   }
 
   stage.replace {
@@ -87,7 +86,7 @@ loki.process "redact" {
   }
 
   stage.replace {
-    expression = "\\+?[0-9][0-9() .-]{7,}[0-9]"
+    expression = "(?:^|\\b)(\\+?\\d[\\d() .-]{8,}\\d)(?:\\b|$)"
     replace    = "[REDACTED_PHONE]"
   }
 }

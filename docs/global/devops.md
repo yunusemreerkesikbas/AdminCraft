@@ -49,6 +49,7 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 - **Prod images are tagged with release date** (`release-DD.MM.YYYY` + `latest`). Stage images use `stage-{sha}`.
 - **Tenant storefront deploy is isolated per tenant.** Every tenant storefront runs as a separate compose project (`tenant-{env}-{slug}`), with its own router labels and domains.
 - **Centralized logs flow to Grafana Cloud Loki via Alloy.** Stage and prod hosts run Alloy as part of compose; Grafana users are account seats (not tenant count).
+- **Alloy mounts Docker socket (read-only flag; accepted risk).** Required for container log discovery. The `:ro` flag does not restrict Unix socket API access. Mitigation: Alloy container is isolated to `craftive-network` with no published ports. Future option: use a socket proxy allowlist.
 
 ---
 
@@ -91,7 +92,7 @@ Platform compose includes a `craftive-alloy` service that:
 4. Pushes to Grafana Cloud Loki.
 
 Required `.env.{stage|prod}` variables:
-```
+```shell
 GRAFANA_CLOUD_LOKI_URL=https://logs-<stack>.grafana.net/loki/api/v1/push
 GRAFANA_CLOUD_LOKI_USER=<grafana-cloud-logs-user>
 GRAFANA_CLOUD_LOKI_TOKEN=<api-token-with-logs-write>
@@ -99,17 +100,17 @@ LOG_ENV=stage|prod
 LOG_HOST=<droplet-identifier>
 ```
 
-TODO — Environment keys (deploy öncesi doldur):
-- [ ] `.env.stage` içinde `GRAFANA_CLOUD_LOKI_URL` doğru stage/prod stack endpoint’i ile tanımlı.
-- [ ] `.env.stage` içinde `GRAFANA_CLOUD_LOKI_USER` tanımlı.
-- [ ] `.env.stage` içinde `GRAFANA_CLOUD_LOKI_TOKEN` tanımlı.
-- [ ] `.env.stage` içinde `LOG_ENV=stage`.
-- [ ] `.env.stage` içinde `LOG_HOST` (ör. `do-fra1-stage-01`) tanımlı.
-- [ ] `.env.prod` içinde `GRAFANA_CLOUD_LOKI_URL` doğru stage/prod stack endpoint’i ile tanımlı.
-- [ ] `.env.prod` içinde `GRAFANA_CLOUD_LOKI_USER` tanımlı.
-- [ ] `.env.prod` içinde `GRAFANA_CLOUD_LOKI_TOKEN` tanımlı.
-- [ ] `.env.prod` içinde `LOG_ENV=prod`.
-- [ ] `.env.prod` içinde `LOG_HOST` (ör. `do-fra1-prod-01`) tanımlı.
+TODO — Environment keys (fill in before deploy):
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_URL` set to the correct stage stack endpoint.
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_USER` set.
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_TOKEN` set.
+- [ ] `.env.stage` has `LOG_ENV=stage`.
+- [ ] `.env.stage` has `LOG_HOST` set (e.g. `do-fra1-stage-01`).
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_URL` set to the correct prod stack endpoint.
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_USER` set.
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_TOKEN` set.
+- [ ] `.env.prod` has `LOG_ENV=prod`.
+- [ ] `.env.prod` has `LOG_HOST` set (e.g. `do-fra1-prod-01`).
 
 Rollout sequence:
 1. Sync files to droplet (`scripts/server/deploy-files.sh` now also copies `observability/alloy.river`).
