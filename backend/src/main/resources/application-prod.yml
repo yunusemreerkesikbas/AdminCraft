@@ -46,6 +46,7 @@ app:
     provider: smtp
     from-address: ${EMAIL_FROM_ADDRESS:noreply@craftive.io}
     from-name: ${EMAIL_FROM_NAME:Craftive}
+    log-content: false
   cors:
     allowed-origins:
       - https://app.craftive.io

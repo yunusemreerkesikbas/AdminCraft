@@ -32,6 +32,8 @@ app:
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
+  email:
+    log-content: false
   cors:
     allowed-origins:
       - https://s1.app.craftive.io
