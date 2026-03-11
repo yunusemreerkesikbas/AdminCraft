@@ -7,7 +7,7 @@ This document defines the permanent rules for safe tenant migrations in AdminCra
 1. `Forward-only`: Existing versioned migrations (`V*.sql`) are immutable after merge.
 2. `Repair via new versions`: Legacy drift fixes must be implemented as new `V*__repair_*.sql` migrations.
 3. `Repeatable safety`: `R__*.sql` must use explicit column lists for every `INSERT`.
-4. `Module order`: `core -> media -> component_library -> pagebuilder -> product` is mandatory.
+4. `Module order`: `core -> mail_marketing -> media -> component_library -> pagebuilder -> product` is mandatory.
 
 ## Why this policy exists
 
@@ -89,6 +89,7 @@ When a sync job fails:
 1. Capture `jobId`, module name, migration name, SQL error.
 2. Check Flyway history tables:
    - `flyway_core_history`
+   - `flyway_mail_marketing_history`
    - `flyway_media_history`
    - `flyway_component_library_history`
    - `flyway_pagebuilder_history`

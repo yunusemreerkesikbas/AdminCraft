@@ -2,7 +2,7 @@
 
 ## Purpose
 
-ImpEx provides an on-demand SQL execution interface for `TENANT_ADMIN` users. It allows bulk data seeding (pages, slots, components, i18n records) via the Admin UI without manual DB access or provisioning hooks. Inspired by SAP Hybris HAC ImpEx, but SQL-native instead of CSV.
+ImpEx provides an on-demand SQL execution interface for `TENANT_ADMIN` users (tenant DB) and `SUPER_ADMIN` users (tenant DB when a tenant is selected, or **platform DB** when no tenant is selected). It allows bulk data seeding (pages, slots, components, i18n records, or platform data) via the Admin UI without manual DB access or provisioning hooks. Inspired by SAP Hybris HAC ImpEx, but SQL-native instead of CSV.
 
 Execution is **manual only** — there is no automatic trigger on provisioning or tenant creation.
 
@@ -160,7 +160,8 @@ UI flow:
 
 ## Security & Tenant Isolation
 
-- **Auth:** `TENANT_ADMIN` role required (`@PreAuthorize("hasRole('TENANT_ADMIN')")`).
+- **Auth:** `TENANT_ADMIN` or `SUPER_ADMIN` role required (`@PreAuthorize("hasAnyRole('TENANT_ADMIN','SUPER_ADMIN')")`).
+- **SUPER_ADMIN usage:** Platform admins access ImpEx from the **Platform → ImpEx** menu. If no tenant is selected, SQL runs against the **platform** database (e.g. for `seed_mail_marketing_platform.sql`). If a tenant is selected, SQL runs against that tenant's database.
 - **Tenant isolation:** `TenantFilter` sets the active tenant `DataSource` before the request reaches the controller. `JdbcTemplate` executes against that tenant's database — no cross-tenant leakage is possible.
 - **No tenant_id columns:** Consistent with the database-per-tenant model; isolation is at the connection level.
 - **Statement whitelist:** DML writes are restricted to `INSERT` and `UPDATE`. DDL and destructive operations are blocked at the service layer regardless of role.
@@ -205,9 +206,16 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 1. seed_components.sql      — components, i18n, entries, entry i18n
 2. seed_navigation.sql      — nav nodes, entries, i18n
 3. seed_pages_and_slots.sql — pages, page_i18n, page_slots, slot_components, shared slots
+4. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
 
 `seed_pages_and_slots.sql` depends on components from step 1 (FK via `slot_components`) and on Flyway-managed `page_templates` / `template_slots`.
+
+`seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
+
+### Platform reference script
+
+`seed_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
 
 ### What remains in Flyway (R__ repeatable migrations)
 

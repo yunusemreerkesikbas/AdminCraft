@@ -84,7 +84,6 @@ export interface ActionsDto {
 
 export interface SiteTechnicalResponse {
     searchEngine: SearchEngineDto;
-    scripts: ScriptsDto;
     cookieConsent: CookieConsentDto;
 }
 
@@ -101,12 +100,6 @@ export interface VerificationDto {
     yandex: string | null;
 }
 
-export interface ScriptsDto {
-    headScripts: string | null;
-    bodyStartScripts: string | null;
-    bodyEndScripts: string | null;
-}
-
 export interface CookieConsentDto {
     enabled: boolean;
     text: string | null;
@@ -119,9 +112,6 @@ export interface SiteTechnicalPatchRequest {
     googleVerification?: string | null;
     bingVerification?: string | null;
     yandexVerification?: string | null;
-    headScripts?: string | null;
-    bodyStartScripts?: string | null;
-    bodyEndScripts?: string | null;
     cookieConsentEnabled?: boolean;
     cookieConsentText?: string | null;
 }
@@ -132,7 +122,6 @@ export type TwoFactorPolicy = 'DISABLED' | 'REQUIRED';
 
 export interface SecuritySettingsResponse {
     twoFactor: TwoFactorPolicyDto;
-    recaptcha: RecaptchaDto;
 }
 
 export interface TwoFactorPolicyDto {
@@ -140,18 +129,8 @@ export interface TwoFactorPolicyDto {
     policyDescription: string;
 }
 
-export interface RecaptchaDto {
-    enabled: boolean;
-    siteKey: string | null;
-    threshold: number;
-}
-
 export interface UpdateSecuritySettingsRequest {
     twoFactorPolicy: TwoFactorPolicy;
-    recaptchaEnabled?: boolean;
-    recaptchaSiteKey?: string | null;
-    recaptchaSecretKey?: string | null;
-    recaptchaThreshold?: number;
 }
 
 // ========== Dashboard Tab Types ==========

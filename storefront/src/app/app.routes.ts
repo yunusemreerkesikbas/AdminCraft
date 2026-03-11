@@ -6,6 +6,8 @@ import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
 import {
     superAdminGuard,
     tenantAdminGuard,
+    tenantUserGuard,
+    tenantAdminOrSuperAdminGuard,
 } from 'app/core/auth/guards/role.guard';
 import { rootRedirectGuard } from 'app/core/auth/guards/root-redirect.guard';
 import { LanguageGuard } from 'app/core/language/language.guard';
@@ -23,6 +25,22 @@ export const appRoutes: Route[] = [
         path: 'signed-in-redirect',
         pathMatch: 'full',
         redirectTo: 'pages',
+    },
+    {
+        path: 'config',
+        component: LayoutComponent,
+        data: {
+            layout: 'empty',
+        },
+        children: [
+            {
+                path: '',
+                loadComponent: () =>
+                    import(
+                        'app/modules/config/console/config-console.component'
+                    ).then((m) => m.ConfigConsoleComponent),
+            },
+        ],
     },
 
     {
@@ -228,29 +246,57 @@ export const appRoutes: Route[] = [
                     ),
             },
             {
+                path: 'platform-mail',
+                canActivate: [superAdminGuard],
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/platform-mail-template-list.component'
+                            ).then((m) => m.SpaPlatformMailTemplateListComponent),
+                    },
+                    {
+                        path: 'subscribers',
+                        data: { scope: 'platform' },
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component'
+                            ).then((m) => m.MailSubscriberListComponent),
+                    },
+                    {
+                        path: ':templateType',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/platform-mail-marketing.component'
+                            ).then((m) => m.SpaPlatformMailMarketingComponent),
+                    },
+                ],
+            },
+            {
                 path: 'media',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import('app/modules/admin/custom/media/media.routes'),
             },
             {
                 path: 'users',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import('app/modules/admin/custom/users/users.routes'),
             },
             {
                 path: 'sites',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import('app/modules/admin/custom/sites/sites.routes'),
             },
             {
                 path: 'pages',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
@@ -259,7 +305,7 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'settings',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
@@ -268,7 +314,7 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'site',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadComponent: () =>
                     import(
@@ -277,7 +323,7 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'components',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadChildren: () =>
                     import(
@@ -286,14 +332,14 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'products',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'product' },
                 loadChildren: () =>
                     import('app/modules/admin/custom/products/products.routes'),
             },
             {
                 path: 'page-templates',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadComponent: () =>
                     import(
@@ -302,12 +348,49 @@ export const appRoutes: Route[] = [
             },
             {
                 path: 'navigation',
-                canActivate: [tenantAdminGuard, moduleGuard],
+                canActivate: [tenantUserGuard, moduleGuard],
                 data: { requiredModule: 'core' },
                 loadComponent: () =>
                     import(
                         'app/modules/admin/custom/navigation/list/navigation-list.component'
                     ).then((m) => m.SpaNavigationListComponent),
+            },
+            {
+                path: 'impex',
+                canActivate: [tenantAdminOrSuperAdminGuard],
+                loadComponent: () =>
+                    import('app/modules/admin/custom/impex/impex.component').then(
+                        (m) => m.SpaImpExComponent
+                    ),
+            },
+            {
+                path: 'mail-marketing',
+                canActivate: [tenantAdminGuard, moduleGuard],
+                data: { requiredModule: 'mail_marketing' },
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component'
+                            ).then((m) => m.SpaTenantMailTemplateListComponent),
+                    },
+                    {
+                        path: 'subscribers',
+                        data: { scope: 'tenant' },
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component'
+                            ).then((m) => m.MailSubscriberListComponent),
+                    },
+                    {
+                        path: ':templateType',
+                        loadComponent: () =>
+                            import(
+                                'app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component'
+                            ).then((m) => m.SpaTenantMailMarketingComponent),
+                    },
+                ],
             },
 
             // Pages

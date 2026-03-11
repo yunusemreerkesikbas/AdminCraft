@@ -1,0 +1,72 @@
+# AdminCraft - Local Observability Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml --env-file .env.dev up -d
+#
+# Adds Loki + Grafana + Alloy for local log pipeline testing.
+# Does NOT modify any existing services or config files.
+
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: craftive-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki-local.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - craftive-network
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: craftive-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - craftive-network
+
+  alloy:
+    image: grafana/alloy:v1.13.2
+    container_name: craftive-alloy
+    restart: unless-stopped
+    environment:
+      - LOG_ENV=dev
+      - LOG_HOST=local
+    command: ["run", "/etc/alloy/config.alloy", "--server.http.listen-addr=0.0.0.0:12345"]
+    volumes:
+      - ./observability/alloy-local.river:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "12345:12345"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12345/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      loki:
+        condition: service_healthy
+    networks:
+      - craftive-network
+
+volumes:
+  loki_data:
+  grafana_data:

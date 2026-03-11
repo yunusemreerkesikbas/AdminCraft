@@ -98,6 +98,26 @@ public void deleteByProductId(Long productId) {
 }
 ```
 
+### Multi-datasource repository binding
+
+AdminCraft uses package-level repository binding for datasource selection:
+
+- Platform repositories are bound in `PlatformDataSourceConfig` via:
+  - `@EnableJpaRepositories(basePackages = "com.backend.infrastructure.persistence.platform.repository", ...)`
+- Tenant repositories are bound in `DatabaseConfig` via:
+  - `@EnableJpaRepositories(basePackages = { "com.backend.infrastructure.persistence.repository", ... }, ...)`
+
+Implication:
+
+- Do **not** add `@Qualifier("platformDataSource")` on repository interfaces.
+- Do **not** qualify repository injection points with datasource bean names.
+- The package + entity manager configuration is the source of truth.
+
+### Mapper reuse in persistence adapters
+
+When multiple adapters map the same domain/entity pair, extract a shared mapper component under
+`infrastructure/persistence/**/mapper` and reuse it across adapters. This avoids drift when fields are added or renamed.
+
 ## Exception handling
 
 Custom exceptions in `domain/exception/`:

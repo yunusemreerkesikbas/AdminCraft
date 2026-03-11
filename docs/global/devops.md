@@ -32,6 +32,11 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 | Backend config (prod) | [`../../backend/src/main/resources/application-prod.yml`](../../backend/src/main/resources/application-prod.yml) |
 | Backend config (stage) | [`../../backend/src/main/resources/application-stage.yml`](../../backend/src/main/resources/application-stage.yml) |
 | Env template | [`../../.env.example`](../../.env.example) |
+| Alloy config (prod) | [`../../observability/alloy.river`](../../observability/alloy.river) |
+| Alloy config (local) | [`../../observability/alloy-local.river`](../../observability/alloy-local.river) |
+| Loki config (local) | [`../../observability/loki-local.yml`](../../observability/loki-local.yml) |
+| Grafana datasource provision | [`../../observability/grafana/provisioning/datasources/datasources.yml`](../../observability/grafana/provisioning/datasources/datasources.yml) |
+| Dev observability overlay | [`../../docker-compose.observability.yml`](../../docker-compose.observability.yml) |
 
 ---
 
@@ -47,6 +52,8 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 - **`deploy` user has docker group only — no sudo.** Workflows SSH as `deploy`, never root.
 - **Prod images are tagged with release date** (`release-DD.MM.YYYY` + `latest`). Stage images use `stage-{sha}`.
 - **Tenant storefront deploy is isolated per tenant.** Every tenant storefront runs as a separate compose project (`tenant-{env}-{slug}`), with its own router labels and domains.
+- **Centralized logs flow to Grafana Cloud Loki via Alloy.** Stage and prod hosts run Alloy as part of compose; Grafana users are account seats (not tenant count).
+- **Alloy mounts Docker socket (read-only flag; accepted risk).** Required for container log discovery. The `:ro` flag does not restrict Unix socket API access. Mitigation: Alloy container is isolated to `craftive-network` with no published ports. Future option: use a socket proxy allowlist.
 
 ---
 
@@ -79,6 +86,63 @@ ghcr.io/craftive/<tenant>-storefront:{tag}   # tenant-specific repo output
 | `stage` branch | `stage-{sha}` | `stage-a3f9c12` |
 | `release/*` → stage smoke test | `release-DD.MM.YYYY` | `release-27.02.2026` |
 | `release/*` → prod | `release-DD.MM.YYYY` + `latest` | `release-27.02.2026` |
+
+### Centralized logs (Grafana Cloud Loki + Alloy)
+
+Platform compose includes a `craftive-alloy` service that:
+1. Collects Docker container logs from `/var/run/docker.sock`.
+2. Collects host ops logs from `/opt/craftive/logs/*.log` (e.g. backup cron logs).
+3. Redacts common sensitive patterns (authorization, cookie, password/token-like keys, email, phone).
+4. Pushes to Grafana Cloud Loki.
+
+Required `.env.{stage|prod}` variables:
+```shell
+GRAFANA_CLOUD_LOKI_URL=https://logs-<stack>.grafana.net/loki/api/v1/push
+GRAFANA_CLOUD_LOKI_USER=<grafana-cloud-logs-user>
+GRAFANA_CLOUD_LOKI_TOKEN=<api-token-with-logs-write>
+LOG_ENV=stage|prod
+LOG_HOST=<droplet-identifier>
+```
+
+TODO — Environment keys (fill in before deploy):
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_URL` set to the correct stage stack endpoint.
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_USER` set.
+- [ ] `.env.stage` has `GRAFANA_CLOUD_LOKI_TOKEN` set.
+- [ ] `.env.stage` has `LOG_ENV=stage`.
+- [ ] `.env.stage` has `LOG_HOST` set (e.g. `do-fra1-stage-01`).
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_URL` set to the correct prod stack endpoint.
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_USER` set.
+- [ ] `.env.prod` has `GRAFANA_CLOUD_LOKI_TOKEN` set.
+- [ ] `.env.prod` has `LOG_ENV=prod`.
+- [ ] `.env.prod` has `LOG_HOST` set (e.g. `do-fra1-prod-01`).
+
+Rollout sequence:
+1. Sync files to droplet (`scripts/server/deploy-files.sh` now also copies `observability/alloy.river`).
+2. Deploy Stage and verify logs/labels in Grafana.
+3. Deploy Production.
+
+#### Local observability testing
+
+An optional compose overlay runs Loki + Grafana + Alloy locally to validate the log pipeline without Grafana Cloud:
+
+```powershell
+# Dev + local observability:
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml --env-file .env.dev up -d
+```
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Loki | `http://localhost:3100/ready` | Log storage (72h retention, filesystem) |
+| Grafana | `http://localhost:3000` (admin/admin) | Dashboards, Explore queries |
+| Alloy UI | `http://localhost:12345` | Pipeline graph, component health |
+
+Loki datasource is auto-provisioned in Grafana. Query `{job="docker"}` in Explore to see container logs.
+
+`alloy-local.river` mirrors the prod config (`alloy.river`) with two differences:
+- Pushes to local Loki (`http://loki:3100`) instead of Grafana Cloud (no auth).
+- Host log collection removed (Windows dev has no `/opt/craftive/logs`).
+
+PII redaction rules are identical between local and prod configs.
 
 ### Branch strategy
 
@@ -363,3 +427,4 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.
 - **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax (`HostRegexp(`[a-z0-9-]+\.craftive\.io`)`).
+- **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

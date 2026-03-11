@@ -726,10 +726,10 @@ All authentication events are logged with:
 ## reCAPTCHA v3 Protection
 
 AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in two scopes:
-- **Tenant scope**: configured per tenant in Site Dashboard
-- **Platform scope (SUPER_ADMIN login)**: configured globally in Platform Settings
+- **Tenant scope**: configured per tenant in Config Control Panel (`/config/recaptcha`)
+- **Platform scope (SUPER_ADMIN login)**: configured globally via Config Global Properties (`platform.security.recaptcha.*`)
 
-> **See also**: [`public-tenant-config.md`](public-tenant-config.md) for frontend integration patterns.
+> **See also**: [`config-control-panel.md`](../modules/config-control-panel.md) for managing reCAPTCHA config via the admin panel.
 
 ### Architecture Overview
 
@@ -737,15 +737,15 @@ AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in 
 sequenceDiagram
     participant User
     participant Frontend
-    participant PublicConfigAPI as /api/config/public
+    participant CmsConfigAPI as /api/cms/config or /api/platform/cms/config
     participant AuthAPI as /api/auth/login
     participant Google as Google reCAPTCHA
 
-    User->>Frontend: Navigate to login page
-    Frontend->>PublicConfigAPI: GET (with X-Tenant-Subdomain)
-    PublicConfigAPI-->>Frontend: { recaptcha: { enabled, siteKey } }
-    Frontend->>Frontend: Cache config in sessionStorage
-    
+    User->>Frontend: App startup
+    Frontend->>CmsConfigAPI: GET (tenant host => /api/cms/config, admin host => /api/platform/cms/config)
+    CmsConfigAPI-->>Frontend: { "security.recaptcha.enabled": "true", "security.recaptcha.site_key": "..." }
+    Frontend->>Frontend: Cache in ConfigFlagsService (memory Map)
+
     User->>Frontend: Submit credentials
     Frontend->>Google: Execute reCAPTCHA (if enabled)
     Google-->>Frontend: Token
@@ -755,20 +755,20 @@ sequenceDiagram
     AuthAPI-->>Frontend: JWT or Error
 ```
 
-### Database Schema
+### Data Source
 
-reCAPTCHA settings stored in `sites` table:
+reCAPTCHA config is stored in the `config_properties` table (per-tenant) and the `platform_settings` table (platform admin). The `config_properties` table is the single source of truth — there is no sync to `sites`.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `recaptcha_enabled` | BOOLEAN | Master switch (default: false) |
-| `recaptcha_site_key` | VARCHAR(100) | Public key (visible to frontend) |
-| `recaptcha_secret_key_encrypted` | VARCHAR(255) | AES-256 encrypted private key |
-| `recaptcha_threshold` | DECIMAL(3,2) | Min score 0.0-1.0 (default: 0.5) |
+| config_properties key | Description |
+|-----------------------|-------------|
+| `security.recaptcha.enabled` | Master switch (boolean string: `"true"`/`"false"`) |
+| `security.recaptcha.site_key` | Public key (visible to frontend) |
+| `security.recaptcha.secret_key` | AES-256 encrypted private key (`secret=true`, never exposed) |
+| `security.recaptcha.threshold` | Min score 0.0-1.0 (default: `"0.5"`) |
 
-**Migration**: [`V34__add_recaptcha_to_sites.sql`](../../backend/src/main/resources/db/tenant/core/V34__add_recaptcha_to_sites.sql)
+**Migrations**: [`V39__create_config_properties.sql`](../../backend/src/main/resources/db/tenant/core/V39__create_config_properties.sql), [`V40__backfill_recaptcha_config_properties.sql`](../../backend/src/main/resources/db/tenant/core/V40__backfill_recaptcha_config_properties.sql)
 
-**Security**: Secret keys encrypted via `EncryptionService` with master key from `app.encryption.secret-key` env var.
+**Security**: Secret key marked `secret=true` — filtered out of `/cms/config` response.
 
 ### Protected Endpoints
 
@@ -820,7 +820,9 @@ Platform admin login (`POST /api/auth/login` with subdomain="admin") can be prot
 
 ### Configuration
 
-**Admin UI**: Site Dashboard → Security Tab → reCAPTCHA Protection
+**Admin UI**: Config Control Panel → reCAPTCHA tab (`/config/recaptcha`)
+
+> **Note:** reCAPTCHA was previously managed under Site Dashboard → Security tab. It has been moved to Config Control Panel only.
 
 **Get keys**: https://www.google.com/recaptcha/admin
 
@@ -838,28 +840,19 @@ Platform admin login (`POST /api/auth/login` with subdomain="admin") can be prot
 
 ### Frontend Implementation
 
-**Minimal Example**:
+Config is loaded **once at app startup** via `ConfigFlagsService` (not per-component). Auth components read flags directly:
 
 ```typescript
-// 1. Load config in ngOnInit
-ngOnInit(): void {
-    const subdomain = this.#tenantContext.extractSubdomainFromHost();
-    if (!subdomain || subdomain === 'admin') return; // fail-closed on invalid tenant host
-
-    this.#publicConfigService.loadConfig(subdomain)
-        .pipe(take(1))
-        .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
-}
-
-// 2. Generate token before login
+// Generate token before form submit
 async #getRecaptchaToken(): Promise<string | undefined> {
-    const config = this.recaptchaConfigSig();
-    if (!config?.enabled || !config.siteKey) return undefined;
-    
-    return await this.#recaptchaService.execute('login', config.siteKey);
+    const enabled = this.#configFlags.flag('security.recaptcha.enabled', false);
+    const siteKey = this.#configFlags.flag('security.recaptcha.site_key', '');
+    if (!enabled || !siteKey) return undefined;
+
+    return await this.#recaptchaService.execute('login', siteKey);
 }
 
-// 3. Send with credentials
+// Send with credentials
 const credentials = {
     email, password,
     recaptchaToken: await this.#getRecaptchaToken()
@@ -867,8 +860,8 @@ const credentials = {
 ```
 
 **Services**:
-- `PublicTenantConfigService`: Loads config from `/api/config/public`, caches in sessionStorage
-- `RecaptchaService`: Loads Google script, executes reCAPTCHA, returns token
+- `ConfigFlagsService`: Loaded at app init from `/api/cms/config` (tenant host) or `/api/platform/cms/config` (admin host), stores non-secret flags in memory
+- `RecaptchaService`: Loads Google script lazily, executes reCAPTCHA, returns token
 
 ### Testing
 

@@ -5,7 +5,8 @@ public enum ModuleCode {
     PAGEBUILDER("pagebuilder", "Page Builder"),
     MEDIA("media", "Media Library"),
     COMPONENT_LIBRARY("component_library", "Component Library"),
-    PRODUCT_CATALOG("product", "Product Catalog");
+    PRODUCT_CATALOG("product", "Product Catalog"),
+    MAIL_MARKETING("mail_marketing", "Mail Marketing");
 
     private final String code;
     private final String name;

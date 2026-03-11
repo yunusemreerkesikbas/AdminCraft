@@ -1,6 +1,10 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
-import { SUPER_ADMIN_ROLE, TENANT_ADMIN_ROLE } from '@shared/constants';
+import {
+    SUPER_ADMIN_ROLE,
+    TENANT_ADMIN_ROLE,
+    VIEWER_ROLE,
+} from '@shared/constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { UserService } from 'app/core/user/user.service';
 
@@ -27,3 +31,11 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
 
 export const superAdminGuard: CanActivateFn = roleGuard([SUPER_ADMIN_ROLE]);
 export const tenantAdminGuard: CanActivateFn = roleGuard([TENANT_ADMIN_ROLE]);
+export const tenantUserGuard: CanActivateFn = roleGuard([
+    TENANT_ADMIN_ROLE,
+    VIEWER_ROLE,
+]);
+export const tenantAdminOrSuperAdminGuard: CanActivateFn = roleGuard([
+    TENANT_ADMIN_ROLE,
+    SUPER_ADMIN_ROLE,
+]);

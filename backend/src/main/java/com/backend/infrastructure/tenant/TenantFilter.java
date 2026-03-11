@@ -79,7 +79,13 @@ public class TenantFilter extends OncePerRequestFilter {
         return;
       }
 
-      if (isAdminPublicConfigRequest(request)) {
+      if (isConfigAdminEndpoint(path)) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
+      if (path.startsWith("/api/impex") && isSuperAdmin) {
+        log.warn("ImpEx bypass for superAdmin - path: {}", path);
         filterChain.doFilter(request, response);
         return;
       }
@@ -89,15 +95,15 @@ public class TenantFilter extends OncePerRequestFilter {
         tenant = resolveTenantFromHostname(request);
       }
 
-      if (tenant == null) {
-        // Allow platform auth flows without tenant context.
-        // Tenant-scoped validation is handled inside auth service (tenantId/subdomain + token checks).
-        if (path.startsWith("/api/auth/login")
-            || path.startsWith("/api/auth/refresh")
-            || path.startsWith("/api/auth/verify-otp")) {
-          filterChain.doFilter(request, response);
-          return;
-        }
+        if (tenant == null) {
+          // Allow platform auth flows without tenant context.
+          // Tenant-scoped validation is handled inside auth service (tenantId/subdomain + token checks).
+          if (path.startsWith("/api/auth/login")
+              || path.startsWith("/api/auth/refresh")
+              || path.startsWith("/api/auth/verify-otp")) {
+            filterChain.doFilter(request, response);
+            return;
+          }
 
         log.warn("Missing or invalid tenant header for request: {}", path);
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tenant identifier required");
@@ -246,53 +252,20 @@ public class TenantFilter extends OncePerRequestFilter {
     // production via config.
     return path.startsWith("/api/actuator") ||
         path.startsWith("/api/health") ||
+        path.startsWith("/api/platform/cms/config") ||
+        path.startsWith("/api/config/auth") ||
+        path.startsWith("/api/platform/public/newsletter") ||
         path.startsWith("/api/swagger-ui") ||
         path.startsWith("/api/v3/api-docs");
   }
 
-  private boolean isAdminPublicConfigRequest(HttpServletRequest request) {
-    String path = request.getRequestURI();
-    // ✅ SECURITY FIX: Exact match or trailing slash to prevent unintended path matching
-    // "/api/config/public" or "/api/config/public/..." but NOT "/api/config/publicSettings"
-    if (!path.equals("/api/config/public") && !path.startsWith("/api/config/public/")) {
+  private boolean isPlatformEndpoint(String path) {
+    if (path.startsWith("/api/platform/cms/config")) {
       return false;
     }
-
-    String subdomainHeader = request.getHeader(TENANT_SUBDOMAIN_HEADER);
-    if (subdomainHeader != null && "admin".equalsIgnoreCase(subdomainHeader.trim())) {
-      return true;
+    if (path.startsWith("/api/platform/public/newsletter")) {
+      return false;
     }
-
-    String hostname = null;
-    String forwardedHost = request.getHeader("X-Forwarded-Host");
-    if (forwardedHost != null && !forwardedHost.isBlank()) {
-      hostname = forwardedHost.split(",")[0].trim();
-    }
-
-    if (hostname == null) {
-      hostname = extractHostFromUrl(request.getHeader("Origin"));
-    }
-
-    if (hostname == null) {
-      hostname = request.getServerName();
-    }
-
-    String subdomain = extractSubdomain(hostname);
-    return "admin".equalsIgnoreCase(subdomain);
-  }
-
-  private String extractSubdomain(String hostname) {
-    if (hostname == null || hostname.isBlank() || "localhost".equalsIgnoreCase(hostname)) {
-      return null;
-    }
-    int firstDot = hostname.indexOf('.');
-    if (firstDot <= 0) {
-      return null;
-    }
-    return hostname.substring(0, firstDot);
-  }
-
-  private boolean isPlatformEndpoint(String path) {
     if (path.startsWith("/api/tenants/current")) {
       return false;
     }
@@ -300,5 +273,9 @@ public class TenantFilter extends OncePerRequestFilter {
         path.startsWith("/api/modules/catalog") ||
         path.startsWith("/api/provisioning") ||
         path.startsWith("/api/tenants");
+  }
+
+  private boolean isConfigAdminEndpoint(String path) {
+    return path.startsWith("/api/config/admin");
   }
 }

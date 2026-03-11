@@ -1,0 +1,98 @@
+<div
+    class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent sm:absolute sm:inset-0 sm:overflow-hidden"
+>
+    <admin-page-header
+        [title]="pageTitleKeySig()"
+        [subtitle]="pageSubtitleKeySig()"
+        [showCreateButton]="true"
+        [createButtonText]="'admin.common.create'"
+        [isLoading]="store.isLoading()"
+        (createClick)="createSubscriber()"
+        [showSearch]="true"
+        [searchPlaceholder]="'admin.common.searchPlaceholder'"
+        (search)="searchInputControl.setValue($event)"
+    >
+        <ng-container actions>
+            @if (availableSortsSig().length > 0) {
+                <spa-admin-sort-dropdown
+                    [availableSorts]="availableSortsSig()"
+                    [sortCode]="sortCodeSig()"
+                    (sortChange)="onSortChange($event)"
+                >
+                </spa-admin-sort-dropdown>
+            }
+        </ng-container>
+    </admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="paginatedItemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="store.isLoading()"
+                [emptyIcon]="'mail'"
+                [emptyTitle]="'admin.mailMarketing.subscribers.messages.noData'"
+                [emptyDescription]="'admin.mailMarketing.subscribers.messages.noDataHint'"
+                (actionClick)="onGridAction($event)"
+            >
+                <button emptyAction mat-flat-button color="primary" (click)="createSubscriber()">
+                    <mat-icon>add</mat-icon>
+                    {{ 'admin.common.create' | transloco }}
+                </button>
+            </spa-admin-grid>
+        </div>
+
+        @if (totalElementsSig() > 0) {
+            <spa-admin-paginator
+                class="z-10 flex-none"
+                [length]="totalElementsSig()"
+                [pageSize]="pageSizeSig()"
+                [pageIndex]="pageIndexSig()"
+                (pageCallback)="onPageChange($event)"
+            >
+            </spa-admin-paginator>
+        }
+    </div>
+</div>
+
+<ng-template #statusTemplate let-subscriber>
+    <span
+        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+        [ngClass]="statusClass(subscriber.status)"
+    >
+        {{ ('admin.mailMarketing.subscriberStatus.' + subscriber.status) | transloco }}
+    </span>
+</ng-template>
+
+<ng-template #subscriptionsTemplate let-subscriber>
+    <div class="flex flex-col gap-1 py-1">
+        @for (subscription of subscriber.subscriptions; track subscription.templateType) {
+            <div
+                class="inline-flex max-w-full items-center gap-2 rounded-md bg-slate-100 px-2.5 py-1 text-xs dark:bg-slate-800"
+            >
+                <span class="font-semibold">{{ subscription.templateType }}</span>
+                <span class="text-secondary">|</span>
+                <span>{{ subscription.preferredLanguage || 'EN' }}</span>
+                <span class="text-secondary">|</span>
+                <span
+                    [ngClass]="
+                        subscription.permission
+                            ? 'text-green-700 dark:text-green-300'
+                            : 'text-red-700 dark:text-red-300'
+                    "
+                >
+                    {{
+                        subscription.permission
+                            ? ('admin.mailMarketing.subscribers.fields.allowed' | transloco)
+                            : ('admin.mailMarketing.subscribers.fields.blocked' | transloco)
+                    }}
+                </span>
+                @if (subscription.source) {
+                    <span class="text-secondary">|</span>
+                    <span class="truncate">{{ subscription.source }}</span>
+                }
+            </div>
+        }
+    </div>
+</ng-template>

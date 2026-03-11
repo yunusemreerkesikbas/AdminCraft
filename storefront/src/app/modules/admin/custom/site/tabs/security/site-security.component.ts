@@ -21,14 +21,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSliderModule } from '@angular/material/slider';
 import { TranslocoModule } from '@jsverse/transloco';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import {
-    VALIDATION_LIMITS,
-    VALIDATION_PATTERNS,
-} from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { Subject, takeUntil } from 'rxjs';
 import { SiteService } from '../../site.service';
@@ -46,10 +39,7 @@ import { SecuritySettingsResponse, TwoFactorPolicy, UpdateSecuritySettingsReques
         MatButtonModule,
         MatIconModule,
         MatRadioModule,
-        MatSlideToggleModule,
-        MatSliderModule,
         TranslocoModule,
-        SpaInputComponent,
     ],
 })
 export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
@@ -78,12 +68,16 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
     ];
 
     constructor() {
-        this.#buildForm();
+        this.form = this.#fb.group({
+            twoFactorPolicy: ['DISABLED', [Validators.required]],
+        });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['security'] && this.security) {
-            this.#populateForm();
+            this.form.patchValue({
+                twoFactorPolicy: this.security.twoFactor?.policy || 'DISABLED',
+            });
         }
     }
 
@@ -93,27 +87,13 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
     }
 
     save(): void {
-        if (this.savingSig()) return;
-
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            return;
-        }
+        if (this.savingSig() || this.form.invalid) return;
 
         this.savingSig.set(true);
 
-        // Prepare full request payload
         const payload: UpdateSecuritySettingsRequest = {
             twoFactorPolicy: this.form.value.twoFactorPolicy as TwoFactorPolicy,
-            recaptchaEnabled: this.form.value.recaptchaEnabled,
-            recaptchaSiteKey: this.form.value.recaptchaSiteKey || null,
-            recaptchaThreshold: this.form.value.recaptchaThreshold,
         };
-
-        // Only include secret key if it was changed (not empty)
-        if (this.form.value.recaptchaSecretKey?.trim()) {
-            payload.recaptchaSecretKey = this.form.value.recaptchaSecretKey;
-        }
 
         this.#siteService
             .patchSecuritySettingsWithResponse(payload)
@@ -125,9 +105,6 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
                         response.message || 'admin.site.dashboard.security.messages.saveSuccess'
                     );
                     this.securityUpdated.emit(response.data);
-
-                    // Clear secret key field after successful save
-                    this.form.patchValue({ recaptchaSecretKey: '' });
                 },
                 error: (error) => {
                     this.savingSig.set(false);
@@ -137,43 +114,5 @@ export class SpaSiteSecurityComponent implements OnChanges, OnDestroy {
                     );
                 },
             });
-    }
-
-    #buildForm(): void {
-        this.form = this.#fb.group({
-            twoFactorPolicy: ['DISABLED', [Validators.required]],
-
-            // reCAPTCHA fields
-            recaptchaEnabled: [false],
-            recaptchaSiteKey: [
-                '',
-                [
-                    Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
-                    Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
-                ],
-            ],
-            recaptchaSecretKey: [
-                '',
-                [
-                    Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
-                    Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
-                ],
-            ],
-            recaptchaThreshold: [0.5, [Validators.min(0), Validators.max(1)]],
-        });
-    }
-
-    #populateForm(): void {
-        if (!this.security) return;
-
-        this.form.patchValue({
-            twoFactorPolicy: this.security.twoFactor?.policy || 'DISABLED',
-            recaptchaEnabled: this.security.recaptcha?.enabled || false,
-            recaptchaSiteKey: this.security.recaptcha?.siteKey || '',
-            recaptchaThreshold: this.security.recaptcha?.threshold || 0.5,
-        });
-
-        // Secret key'i populate etmiyoruz (güvenlik için)
-        // Kullanıcı değiştirmek isterse yenisini girer
     }
 }

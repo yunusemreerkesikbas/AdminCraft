@@ -12,7 +12,6 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Backend conventions: [`global/backend-patterns.md`](global/backend-patterns.md)
   - Frontend conventions: [`global/frontend-patterns.md`](global/frontend-patterns.md)
   - Authentication: [`global/authentication.md`](global/authentication.md)
-  - Public tenant config (unauthenticated APIs): [`global/public-tenant-config.md`](global/public-tenant-config.md)
   - i18n + composite operations: [`global/i18n-and-composite.md`](global/i18n-and-composite.md)
   - Documentation patterns: [`global/documentation-patterns.md`](global/documentation-patterns.md)
   - Dialogs and shared UI: [`global/dialogs-and-ui.md`](global/dialogs-and-ui.md)
@@ -34,10 +33,11 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 - Site Settings: [`modules/site-settings.md`](modules/site-settings.md) _(integrated into Site Dashboard; not a provisioning module)_
 - Media Library (DAM): [`modules/media.md`](modules/media.md) _(core-managed capability in provisioning)_
 - Product Catalog: [`modules/product-catalog.md`](modules/product-catalog.md)
+- Mail Marketing: [`modules/mail-marketing.md`](modules/mail-marketing.md) _(optional provisioning module)_
 - Component Library: [`modules/component-library.md`](modules/component-library.md) _(core-managed capability in provisioning)_
 
 Provisioning catalog note:
-Core and Product are the only selectable modules in `/api/provisioning/modules/catalog`. Core expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
+`core`, `product`, and `mail_marketing` are selectable modules in `/api/provisioning/modules/catalog`. `core` expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
 
 ## Platform features (control-plane)
 
@@ -45,6 +45,8 @@ Platform features are not tenant modules, but they are critical for operating th
 
 - Tenants, provisioning, module enablement, migration sync: [`modules/platform-provisioning.md`](modules/platform-provisioning.md)
 - Platform Dashboard, Tenant Detail, Platform Settings: [`modules/platform-admin.md`](modules/platform-admin.md)
+- Platform newsletter + mail campaign flows (+ admin UI routes `/:lang/mail-marketing`, `/:lang/platform-mail`): [`modules/mail-marketing.md`](modules/mail-marketing.md)
+- Config Control Panel (`/config`) for reCAPTCHA recovery + global runtime overrides (email + platform reCAPTCHA keys): [`modules/config-control-panel.md`](modules/config-control-panel.md)
 
 ## Public delivery APIs (storefront)
 

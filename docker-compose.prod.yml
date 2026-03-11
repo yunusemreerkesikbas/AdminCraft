@@ -112,6 +112,41 @@ services:
     networks:
       - craftive-network
 
+  alloy:
+    image: grafana/alloy:v1.13.2
+    container_name: craftive-alloy
+    restart: unless-stopped
+    environment:
+      GRAFANA_CLOUD_LOKI_URL: ${GRAFANA_CLOUD_LOKI_URL}
+      GRAFANA_CLOUD_LOKI_USER: ${GRAFANA_CLOUD_LOKI_USER}
+      GRAFANA_CLOUD_LOKI_TOKEN: ${GRAFANA_CLOUD_LOKI_TOKEN}
+      LOG_ENV: ${LOG_ENV}
+      LOG_HOST: ${LOG_HOST}
+    command:
+      - "run"
+      - "/etc/alloy/config.alloy"
+      - "--server.http.listen-addr=127.0.0.1:12345"
+    volumes:
+      - ./observability/alloy.river:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/craftive/logs:/host/opt-craftive-logs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12345/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - craftive-network
+
 volumes:
   traefik_letsencrypt:
     driver: local

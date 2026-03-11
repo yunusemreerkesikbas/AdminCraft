@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class ModuleCatalogServiceImpl implements ModuleCatalogService {
 
-  private static final List<String> PROVISIONING_CATALOG_CODES = List.of("core", "product");
+  private static final List<String> PROVISIONING_CATALOG_CODES = List.of("core", "product", "mail_marketing");
 
   private final ModuleCatalogRepository moduleCatalogRepository;
   private final ObjectMapper objectMapper;

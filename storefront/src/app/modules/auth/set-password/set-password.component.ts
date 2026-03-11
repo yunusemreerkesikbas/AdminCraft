@@ -20,9 +20,8 @@ import { FuseAlertComponent, FuseAlertType } from '@fuse/components/alert';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from 'app/core/auth/auth.service';
 import { DeviceFingerprintService } from 'app/core/auth/device-fingerprint.service';
+import { ConfigFlagsService } from 'app/core/config/config-flags.service';
 import { RecaptchaService } from 'app/core/recaptcha/recaptcha.service';
-import { PublicTenantConfigService } from 'app/core/config/public-tenant-config.service';
-import { RecaptchaConfig } from 'app/core/config/public-tenant-config.types';
 import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { finalize, Subject, take } from 'rxjs';
 
@@ -51,6 +50,7 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     @ViewChild('setPasswordNgForm') setPasswordNgForm: NgForm;
 
     #authService = inject(AuthService);
+    #configFlags = inject(ConfigFlagsService);
     #deviceFingerprintService = inject(DeviceFingerprintService);
     #formBuilder = inject(UntypedFormBuilder);
     #route = inject(ActivatedRoute);
@@ -58,7 +58,6 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     #tenantContext = inject(TenantContextService);
     #translocoService = inject(TranslocoService);
     #recaptchaService = inject(RecaptchaService);
-    #publicConfigService = inject(PublicTenantConfigService);
     #destroySubject = new Subject<void>();
 
     setPasswordForm: UntypedFormGroup;
@@ -72,7 +71,6 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
     protected tokenValidSig = signal(false);
     protected validatingTokenSig = signal(true);
     protected maskedEmailSig = signal('');
-    protected recaptchaConfigSig = signal<RecaptchaConfig | null>(null);
 
     ngOnInit(): void {
         this.setPasswordForm = this.#formBuilder.group({
@@ -99,8 +97,6 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
             this.showAlertSig.set(true);
             return;
         }
-        this.#loadPublicConfig(subdomain);
-
         if (!this.token) {
             this.validatingTokenSig.set(false);
             this.alertSig.set({
@@ -149,20 +145,12 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
         return null;
     }
 
-    #loadPublicConfig(subdomain: string | undefined): void {
-        if (!subdomain) return;
-
-        this.#publicConfigService
-            .loadConfig(subdomain)
-            .pipe(take(1))
-            .subscribe(config => this.recaptchaConfigSig.set(config.recaptcha));
-    }
-
     async #getRecaptchaToken(): Promise<string | undefined> {
-        const config = this.recaptchaConfigSig();
-        if (!config?.enabled || !config.siteKey) return undefined;
+        const enabled = this.#configFlags.flag('security.recaptcha.enabled', false);
+        const siteKey = this.#configFlags.flag('security.recaptcha.site_key', '');
+        if (!enabled || !siteKey) return undefined;
 
-        return await this.#recaptchaService.execute('set_password', config.siteKey);
+        return await this.#recaptchaService.execute('set_password', siteKey);
     }
 
     async setPassword(): Promise<void> {

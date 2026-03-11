@@ -12,6 +12,7 @@ backend/src/main/resources/db/
 │   └── V1__baseline.sql
 └── tenant/             # Tenant database migrations (per module)
     ├── core/           # Always runs first
+    ├── mail_marketing/ # Optional mail marketing module
     ├── media/          # Media assets, responsive sets
     ├── component_library/
     ├── pagebuilder/
@@ -35,27 +36,28 @@ backend/src/main/resources/db/
 **CRITICAL**: Modules are executed in this fixed order to ensure dependencies are satisfied:
 
 ```
-1. core           → Base tables (users, sites)
-2. media          → Media, responsive_media_set
-3. component_library → Components, entries (references media)
-4. pagebuilder    → Pages, slots (references components)
-5. product        → Product catalog
+1. core              → Base tables (users, sites)
+2. mail_marketing    → Optional tenant mail marketing tables
+3. media             → Media, responsive_media_set
+4. component_library → Components, entries (references media)
+5. pagebuilder       → Pages, slots (references components)
+6. product           → Product catalog
 ```
 
 This order is enforced in `TenantMigrationService.java`:
 
 ```java
 private static final List<String> MODULE_ORDER = List.of(
-    "core", "media", "component_library", "pagebuilder", "product"
+    "core", "mail_marketing", "media", "component_library", "pagebuilder", "product"
 );
 ```
 
 Provisioning request mapping:
 
-- Provisioning catalog exposes `core` and `product` as selectable modules.
+- Provisioning catalog exposes `core`, `product`, and `mail_marketing` as selectable modules.
 - Before `MODULE_ORDER` is applied, backend canonicalizes `core` selection to execution modules:
   - `core`, `media`, `component_library`, `pagebuilder`
-- Optional `product` is appended when requested.
+- Optional `product` and `mail_marketing` are appended when requested.
 
 ---
 
@@ -173,8 +175,9 @@ Before committing a new migration:
 
 | Version Range | Module            | Notes                                                       |
 | ------------- | ----------------- | ----------------------------------------------------------- |
-| V1-V35        | core              | Baseline + navigation + site technical + recaptcha + repair |
-| V1-V21        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean |
+| V1-V40        | core              | Baseline + navigation + site technical + recaptcha + repair + config_properties (V39–V40, HAC-style key-value) |
+| V1–V5         | mail_marketing    | Baseline (templates/subscribers/provider config + campaigns/outbox) + subscriptions + source/lang model + lang backfill + permission model |
+| V1-V22        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean + drop `navigation_link_node_id` |
 | V1-V35        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url + restore description |
 | V20-V24       | media             | Baseline + responsive media + link type alignment           |
 | V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

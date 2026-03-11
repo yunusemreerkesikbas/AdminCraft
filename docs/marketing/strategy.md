@@ -521,9 +521,14 @@ Platinum  10+ proje     %25        Dedicated
 ### Teknik SEO
 
 - Core Web Vitals optimize landing page
-- Schema markup: SoftwareApplication, Organization, FAQPage
-- Çok dilli sitemap (TR + EN)
+- ✅ Schema markup: SoftwareApplication, Organization, FAQPage — JSON-LD, locale layout'ta server-side
+- ✅ Çok dilli sitemap (TR + EN) — `landing/app/sitemap.ts`
+- ✅ Hreflang alternates + canonical — `generateMetadata` ile her locale için
+- ✅ Open Graph + Twitter Card — OG image `next/og` ile dinamik üretiliyor
+- ✅ robots.txt — `landing/app/robots.ts`
 - Backlink: Türk tech blogları, partner ajanslar, sektör dizinleri
+
+> Detaylı implementation: [`landing-seo.md`](landing-seo.md)
 
 ---
 

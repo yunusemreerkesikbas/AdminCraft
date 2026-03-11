@@ -20,6 +20,7 @@ import { AuthService } from 'app/core/auth/auth.service';
 import { errorRedirectInterceptor } from 'app/core/http/error-redirect.interceptor';
 import { errorToastInterceptor } from 'app/core/http/error-toast.interceptor';
 import { provideIcons } from 'app/core/icons/icons.provider';
+import { ConfigFlagsService } from 'app/core/config/config-flags.service';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { tenantInterceptor } from 'app/core/tenant/tenant.interceptor';
 
@@ -136,6 +137,17 @@ export const appConfig: ApplicationConfig = {
             const tenantContext = inject(TenantContextService);
             tenantContext.initializeFromHostname();
             return Promise.resolve();
+        }),
+
+        provideAppInitializer(() => {
+            const tenantContext = inject(TenantContextService);
+            const configFlags = inject(ConfigFlagsService);
+            const path = window.location.pathname;
+            if (path === '/config' || path.startsWith('/config/')) {
+                return Promise.resolve();
+            }
+            const subdomain = tenantContext.subdomain();
+            return configFlags.load(subdomain ?? null);
         }),
 
         provideAppInitializer(() => {

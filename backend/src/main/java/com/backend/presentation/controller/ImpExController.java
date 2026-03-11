@@ -34,7 +34,7 @@ public class ImpExController {
     private final MessageSource messageSource;
 
     @RateLimiter(name = "impexExecute")
-    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','SUPER_ADMIN')")
     @PostMapping("/execute")
     public ResponseEntity<ApiResponse<ImpExResult>> execute(
             @Valid @RequestBody ImpExRequest request,

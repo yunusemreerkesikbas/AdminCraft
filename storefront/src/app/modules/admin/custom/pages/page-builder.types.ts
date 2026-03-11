@@ -58,6 +58,7 @@ export interface PageDetailDto { // Mapping PageDetailResponse
   uid: string;
   tenantId: number;
   templateId?: number | null;
+  templateUid?: string | null;
   status: PageStatus;
   styleClasses?: string | null;
   robotTag: RobotTag;
@@ -139,10 +140,10 @@ export interface CreatePageCompositeRequest {
 }
 
 export interface UpdatePageCompositeRequest {
+  uid?: string | null;
   templateId?: number | null;
   status?: PageStatus;
   styleClasses?: string | null;
   robotTag?: RobotTag;
-  // Removed featuresImage, sortOrder
   translations?: Record<string, PageI18nCompositeRequest>;
 }

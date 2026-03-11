@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.domain.entity.PlatformVerificationToken;
 import com.backend.domain.enums.TokenType;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
-import com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken;
+import com.backend.infrastructure.persistence.platform.mapper.PlatformVerificationTokenMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,10 +22,11 @@ import lombok.RequiredArgsConstructor;
 public class PlatformVerificationTokenRepositoryImpl implements PlatformVerificationTokenRepository {
 
     private final JpaPlatformVerificationTokenRepository jpaRepository;
+    private final PlatformVerificationTokenMapper platformVerificationTokenMapper;
 
     @Override
     public Optional<PlatformVerificationToken> findByTokenHash(String tokenHash) {
-        return jpaRepository.findByTokenHash(tokenHash);
+        return jpaRepository.findByTokenHash(tokenHash).map(platformVerificationTokenMapper::toDomain);
     }
 
     @Override
@@ -32,8 +35,12 @@ public class PlatformVerificationTokenRepositoryImpl implements PlatformVerifica
     }
 
     @Override
+    @Transactional
     public PlatformVerificationToken save(PlatformVerificationToken token) {
-        return jpaRepository.save(token);
+        com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken saved =
+                jpaRepository.save(platformVerificationTokenMapper.toEntity(token));
+
+        return platformVerificationTokenMapper.toDomain(saved);
     }
 
     @Override

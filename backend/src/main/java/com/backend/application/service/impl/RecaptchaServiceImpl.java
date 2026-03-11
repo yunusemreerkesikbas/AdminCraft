@@ -1,6 +1,7 @@
 package com.backend.application.service.impl;
 
 import com.backend.application.service.RecaptchaService;
+import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.Site;
 import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.port.PlatformSettingsPort;
@@ -19,6 +20,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class RecaptchaServiceImpl implements RecaptchaService {
 
     private final SiteRepository siteRepository;
     private final PlatformSettingsPort platformSettings;
+    private final GlobalRuntimeConfigService globalRuntimeConfigService;
     private final TenantContextPort tenantContext;
     private final EncryptionServicePort encryptionService;
     private final RestTemplate restTemplate;
@@ -130,6 +133,15 @@ public class RecaptchaServiceImpl implements RecaptchaService {
         return true;
     }
 
+    @Override
+    public Map<String, String> getPublicClientConfig() {
+        RecaptchaPublicConfig config = resolvePublicConfig();
+        Map<String, String> response = new LinkedHashMap<>();
+        response.put("security.recaptcha.enabled", String.valueOf(config.enabled()));
+        response.put("security.recaptcha.site_key", config.siteKey() != null ? config.siteKey() : "");
+        return response;
+    }
+
     private RecaptchaContext resolveRecaptchaContext() {
         if (tenantContext.isSet()) {
             var siteOpt = siteRepository.findFirstByOrderByIdAsc();
@@ -145,11 +157,43 @@ public class RecaptchaServiceImpl implements RecaptchaService {
                     site.getRecaptchaThreshold());
         }
 
+        return resolvePlatformRecaptchaContext();
+    }
+
+    private RecaptchaPublicConfig resolvePublicConfig() {
+        if (tenantContext.isSet()) {
+            var siteOpt = siteRepository.findFirstByOrderByIdAsc();
+            if (siteOpt.isEmpty()) {
+                return new RecaptchaPublicConfig(false, "");
+            }
+            Site site = siteOpt.get();
+            return new RecaptchaPublicConfig(
+                    Boolean.TRUE.equals(site.getRecaptchaEnabled()),
+                    site.getRecaptchaSiteKey());
+        }
+
         var settings = platformSettings.getSingleton();
+        Boolean enabledOverride = globalRuntimeConfigService.getRecaptchaEnabled();
+        String siteKeyOverride = globalRuntimeConfigService.getRecaptchaSiteKey();
+        boolean enabled = enabledOverride != null ? enabledOverride : Boolean.TRUE.equals(settings.getRecaptchaEnabled());
+        String siteKey = (siteKeyOverride != null && !siteKeyOverride.isBlank())
+                ? siteKeyOverride
+                : settings.getRecaptchaSiteKey();
+        return new RecaptchaPublicConfig(enabled, siteKey);
+    }
+
+    private RecaptchaContext resolvePlatformRecaptchaContext() {
+        var settings = platformSettings.getSingleton();
+        Boolean globalEnabled = globalRuntimeConfigService.getRecaptchaEnabled();
+        String globalSecretEncrypted = globalRuntimeConfigService.getRecaptchaSecretKeyEncrypted();
+        boolean enabled = globalEnabled != null ? globalEnabled : Boolean.TRUE.equals(settings.getRecaptchaEnabled());
+        String encryptedSecret = (globalSecretEncrypted != null && !globalSecretEncrypted.isBlank())
+                ? globalSecretEncrypted
+                : settings.getRecaptchaSecretKeyEncrypted();
         return new RecaptchaContext(
-                "platform settings",
-                Boolean.TRUE.equals(settings.getRecaptchaEnabled()),
-                settings.getRecaptchaSecretKeyEncrypted(),
+                "platform runtime config",
+                enabled,
+                encryptedSecret,
                 settings.getRecaptchaThreshold());
     }
 
@@ -158,5 +202,10 @@ public class RecaptchaServiceImpl implements RecaptchaService {
             boolean enabled,
             String encryptedSecretKey,
             BigDecimal threshold) {
+    }
+
+    private record RecaptchaPublicConfig(
+            boolean enabled,
+            String siteKey) {
     }
 }

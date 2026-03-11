@@ -1,0 +1,23 @@
+<div class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent">
+    <admin-page-header
+        [title]="'admin.mailMarketing.platform.title' | transloco"
+        [subtitle]="'admin.mailMarketing.platform.subtitle' | transloco"
+    ></admin-page-header>
+
+    <div class="flex flex-auto flex-col overflow-hidden">
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <spa-admin-grid
+                [items]="itemsSig()"
+                [columns]="columns"
+                [actions]="actions"
+                [isLoading]="loadingSig()"
+                [emptyIcon]="'heroicons_outline:envelope'"
+                [emptyTitle]="'admin.mailMarketing.messages.noTemplates'"
+                [emptyDescription]="'admin.mailMarketing.messages.noTemplatesHint'"
+                (actionClick)="onGridAction($event)"
+                (rowClick)="onRowClick($event)"
+            ></spa-admin-grid>
+        </div>
+    </div>
+</div>
+
