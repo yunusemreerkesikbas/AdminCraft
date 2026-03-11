@@ -32,7 +32,11 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 | Backend config (prod) | [`../../backend/src/main/resources/application-prod.yml`](../../backend/src/main/resources/application-prod.yml) |
 | Backend config (stage) | [`../../backend/src/main/resources/application-stage.yml`](../../backend/src/main/resources/application-stage.yml) |
 | Env template | [`../../.env.example`](../../.env.example) |
-| Alloy config | [`../../observability/alloy.river`](../../observability/alloy.river) |
+| Alloy config (prod) | [`../../observability/alloy.river`](../../observability/alloy.river) |
+| Alloy config (local) | [`../../observability/alloy-local.river`](../../observability/alloy-local.river) |
+| Loki config (local) | [`../../observability/loki-local.yml`](../../observability/loki-local.yml) |
+| Grafana datasource provision | [`../../observability/grafana/provisioning/datasources/datasources.yml`](../../observability/grafana/provisioning/datasources/datasources.yml) |
+| Dev observability overlay | [`../../docker-compose.observability.yml`](../../docker-compose.observability.yml) |
 
 ---
 
@@ -116,6 +120,29 @@ Rollout sequence:
 1. Sync files to droplet (`scripts/server/deploy-files.sh` now also copies `observability/alloy.river`).
 2. Deploy Stage and verify logs/labels in Grafana.
 3. Deploy Production.
+
+#### Local observability testing
+
+An optional compose overlay runs Loki + Grafana + Alloy locally to validate the log pipeline without Grafana Cloud:
+
+```powershell
+# Dev + local observability:
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml --env-file .env.dev up -d
+```
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Loki | `http://localhost:3100/ready` | Log storage (72h retention, filesystem) |
+| Grafana | `http://localhost:3000` (admin/admin) | Dashboards, Explore queries |
+| Alloy UI | `http://localhost:12345` | Pipeline graph, component health |
+
+Loki datasource is auto-provisioned in Grafana. Query `{job="docker"}` in Explore to see container logs.
+
+`alloy-local.river` mirrors the prod config (`alloy.river`) with two differences:
+- Pushes to local Loki (`http://loki:3100`) instead of Grafana Cloud (no auth).
+- Host log collection removed (Windows dev has no `/opt/craftive/logs`).
+
+PII redaction rules are identical between local and prod configs.
 
 ### Branch strategy
 
@@ -400,3 +427,4 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.
 - **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax (`HostRegexp(`[a-z0-9-]+\.craftive\.io`)`).
+- **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

@@ -1,3 +1,6 @@
+// Alloy config for local development — pushes to local Loki (no auth).
+// Based on alloy.river but without host log collection and Grafana Cloud auth.
+
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
@@ -44,26 +47,9 @@ loki.source.docker "containers" {
   forward_to = [loki.process.redact.receiver]
 }
 
-local.file_match "host_logs" {
-  path_targets = [
-    {
-      __path__       = "/host/opt-craftive-logs/*.log",
-      job            = "host-ops",
-      service        = "ops",
-      container_name = "host",
-    },
-  ]
-  sync_period = "10s"
-}
-
-loki.source.file "host_logs" {
-  targets       = local.file_match.host_logs.targets
-  tail_from_end = true
-  forward_to    = [loki.process.redact.receiver]
-}
-
+// PII redaction — same rules as production
 loki.process "redact" {
-  forward_to = [loki.write.grafana_cloud.receiver]
+  forward_to = [loki.write.local.receiver]
 
   stage.replace {
     expression = "(?i)authorization\\s*[:=]\\s*bearer\\s+(\\S+)"
@@ -91,7 +77,7 @@ loki.process "redact" {
   }
 }
 
-loki.write "grafana_cloud" {
+loki.write "local" {
   external_labels = {
     env       = sys.env("LOG_ENV"),
     host      = sys.env("LOG_HOST"),
@@ -99,11 +85,6 @@ loki.write "grafana_cloud" {
   }
 
   endpoint {
-    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
-
-    basic_auth {
-      username = sys.env("GRAFANA_CLOUD_LOKI_USER")
-      password = sys.env("GRAFANA_CLOUD_LOKI_TOKEN")
-    }
+    url = "http://loki:3100/loki/api/v1/push"
   }
 }

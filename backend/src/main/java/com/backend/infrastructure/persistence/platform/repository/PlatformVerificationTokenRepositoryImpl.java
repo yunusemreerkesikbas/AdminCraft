@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.domain.entity.PlatformVerificationToken;
 import com.backend.domain.enums.TokenType;
@@ -34,6 +35,7 @@ public class PlatformVerificationTokenRepositoryImpl implements PlatformVerifica
     }
 
     @Override
+    @Transactional
     public PlatformVerificationToken save(PlatformVerificationToken token) {
         com.backend.infrastructure.persistence.platform.entity.PlatformVerificationToken saved =
                 jpaRepository.save(platformVerificationTokenMapper.toEntity(token));
