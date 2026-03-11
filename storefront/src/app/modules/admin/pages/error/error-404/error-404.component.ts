@@ -4,10 +4,10 @@ import {
     inject,
     ViewEncapsulation,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SUPER_ADMIN_ROLE } from '@shared/constants';
+import { environment } from '@environments/environment';
 import { UserService } from 'app/core/user/user.service';
-import { LanguageService } from 'app/core/language/language.service';
 
 @Component({
     selector: 'error-404',
@@ -18,12 +18,13 @@ import { LanguageService } from 'app/core/language/language.service';
 })
 export class Error404Component {
     #router = inject(Router);
+    #route = inject(ActivatedRoute);
     #userService = inject(UserService);
-    #languageService = inject(LanguageService);
 
     protected navigateToDashboard(): void {
         const user = this.#userService.user();
-        const lang = this.#languageService.currentLanguage || 'en';
+        const routeLang = this.#route.snapshot.paramMap.get('lang');
+        const lang = routeLang || environment.defaultLanguage;
 
         if (!user) {
             this.#router.navigate(['/sign-in']);

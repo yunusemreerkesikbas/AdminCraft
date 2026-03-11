@@ -208,9 +208,8 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
                     });
                     this.resetPasswordNgForm.resetForm();
 
-                    const lang = this.#translocoService.getActiveLang();
                     setTimeout(() => {
-                        this.#router.navigate([`/${lang}/sign-in`]);
+                        this.#router.navigate(['/sign-in']);
                     }, 3000);
                 },
                 error: (error) => {
