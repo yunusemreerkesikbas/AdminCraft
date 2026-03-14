@@ -36,7 +36,9 @@ import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { MediaDetailDialogComponent } from '../dialogs/media-detail-dialog/media-detail-dialog.component';
+import { MediaUploadResultDialogComponent } from '../dialogs/media-upload-result-dialog/media-upload-result-dialog.component';
 import { MediaUploadDialogComponent } from '../dialogs/media-upload-dialog/media-upload-dialog.component';
 import { MediaService } from '../media.service';
 import { MediaStore } from '../media.store';
@@ -196,9 +198,14 @@ export class MediaListComponent
             .subscribe((result) => {
                 if (result && result.length > 0) {
                     this.loadItems();
-                    this.#notificationService.success(
-                        'admin.media.messages.uploadSuccess'
-                    );
+                    this.#matDialog.open(MediaUploadResultDialogComponent, {
+                        width: '720px',
+                        maxHeight: '90vh',
+                        disableClose: false,
+                        data: {
+                            media: result,
+                        },
+                    });
                 }
             });
     }
@@ -221,9 +228,6 @@ export class MediaListComponent
             .pipe(take(1))
             .subscribe((result) => {
                 if (result) {
-                    this.#notificationService.success(
-                        'admin.media.messages.updateSuccess'
-                    );
                     this.loadItems();
                 }
             });
@@ -240,7 +244,23 @@ export class MediaListComponent
         );
         confirmation.pipe(takeUntil(this.destroy$)).subscribe((result) => {
             if (result) {
-                this.deleteItem(media);
+                this.store.setLoading(true);
+                this.service
+                    .deleteMediaWithResponse(media.id)
+                    .pipe(
+                        finalize(() => this.store.setLoading(false)),
+                        takeUntil(this.destroy$)
+                    )
+                    .subscribe({
+                        next: (response) => {
+                            this.store.removeItem(media.id);
+                            this.#notificationService.success(response.message!);
+                        },
+                        error: (error) => {
+                            this.store.setError(this.extractErrorMessage(error));
+                            this.#notificationService.alert(error?.error?.message);
+                        },
+                    });
             }
         });
     }
@@ -258,14 +278,6 @@ export class MediaListComponent
                 this.selectMedia(item);
                 break;
         }
-    }
-
-    protected override onDeleteSuccess(item: Media): void {
-        this.#notificationService.success('admin.media.messages.deleteSuccess');
-    }
-
-    protected override onDeleteError(error: any): void {
-        this.#notificationService.alert('admin.media.messages.deleteError');
     }
 
     override onPageChange(event: PageEvent): void {

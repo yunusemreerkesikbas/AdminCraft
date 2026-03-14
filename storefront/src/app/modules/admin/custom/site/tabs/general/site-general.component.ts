@@ -1,5 +1,6 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
@@ -23,13 +24,15 @@ import { LanguageContextService } from '@core/services/language-context.service'
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
+import { SpaMediaPickerComponent } from '@admin/custom/media/components/spa-media-picker/spa-media-picker.component';
 import {
     VALIDATION_LIMITS,
     VALIDATION_PATTERNS,
 } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { FormUtils } from '@shared/utils/form.utils';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, catchError, of, take, takeUntil } from 'rxjs';
+import { MediaService } from '@admin/custom/media/media.service';
 import { SiteService } from '../../site.service';
 import { SiteSettingsResponseDto } from '../../site.types';
 
@@ -46,14 +49,17 @@ import { SiteSettingsResponseDto } from '../../site.types';
         TranslocoModule,
         SpaInputComponent,
         SpaTextareaComponent,
+        SpaMediaPickerComponent,
     ],
 })
 export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
     readonly #fb = inject(FormBuilder);
     readonly #siteService = inject(SiteService);
+    readonly #mediaService = inject(MediaService);
     readonly #transloco = inject(TranslocoService);
     readonly #notification = inject(NotificationService);
     readonly #languageContext = inject(LanguageContextService);
+    readonly #cdr = inject(ChangeDetectorRef);
     readonly #destroy$ = new Subject<void>();
 
     @Input() settings: SiteSettingsResponseDto | null = null;
@@ -96,11 +102,19 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
         this.saving = true;
         const formValue = this.form.value;
 
+        const toUid = (val: string | { uid?: string } | null | undefined): string | null => {
+            if (!val) return null;
+            if (typeof val === 'string') return val || null;
+            return val.uid ?? null;
+        };
+
         const payload = {
             global: {
                 contactEmail: formValue.global.contactEmail,
                 contactPhone: formValue.global.contactPhone,
                 whatsappPhone: formValue.global.whatsappPhone,
+                logoMediaUid: toUid(formValue.global.logoMediaUid),
+                logoDarkMediaUid: toUid(formValue.global.logoDarkMediaUid),
             },
             languages: {} as Record<string, any>,
         };
@@ -190,6 +204,8 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                     '',
                     [Validators.pattern(VALIDATION_PATTERNS.PHONE_GLOBAL)],
                 ],
+                logoMediaUid: [''],
+                logoDarkMediaUid: [''],
             }),
             languages: this.#fb.group(languagesGroup),
         });
@@ -203,8 +219,33 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                 contactEmail: this.settings.global?.contactEmail || '',
                 contactPhone: this.settings.global?.contactPhone || '',
                 whatsappPhone: this.settings.global?.whatsappPhone || '',
+                logoMediaUid: null,
+                logoDarkMediaUid: null,
             },
         });
+
+        const logoUid = this.settings.global?.logoMediaUid;
+        const logoDarkUid = this.settings.global?.logoDarkMediaUid;
+
+        if (logoUid) {
+            this.#mediaService.getByUid(logoUid).pipe(
+                take(1),
+                catchError(() => of(null)),
+            ).subscribe((media) => {
+                this.form.get('global.logoMediaUid')?.setValue(media);
+                this.#cdr.markForCheck();
+            });
+        }
+
+        if (logoDarkUid) {
+            this.#mediaService.getByUid(logoDarkUid).pipe(
+                take(1),
+                catchError(() => of(null)),
+            ).subscribe((media) => {
+                this.form.get('global.logoDarkMediaUid')?.setValue(media);
+                this.#cdr.markForCheck();
+            });
+        }
 
         const languagesGroup = this.form.get('languages') as FormGroup;
         this.languages().forEach((lang) => {

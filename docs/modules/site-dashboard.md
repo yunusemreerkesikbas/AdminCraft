@@ -345,6 +345,7 @@ Legacy routes (`/sites`, `/settings`) remain functional for backward compatibili
 
 | Feature              | Implementation                     | Benefit                     |
 | -------------------- | ---------------------------------- | --------------------------- |
+| Save Button Placement | Sağ üstte (General, Address, Social, SEO, Technical, Security) | Tutarlı UX, hızlı erişim     |
 | Custom UI Components | 44 form fields migrated            | ✅ -35% template code       |
 | Auto Validation      | `VALIDATION_MESSAGES` integration  | ✅ No manual error handling |
 | User Feedback        | NotificationService (5 components) | ✅ Success/error toasts     |

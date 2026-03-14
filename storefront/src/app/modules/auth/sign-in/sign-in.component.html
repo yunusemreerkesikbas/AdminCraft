@@ -16,15 +16,6 @@
             >
                 {{ 'auth.signIn.title' | transloco }}
             </div>
-            <div class="mt-0.5 flex items-baseline font-medium">
-                <div>{{ 'auth.signIn.noAccount' | transloco }}</div>
-                <a
-                    class="ml-1 text-primary-500 hover:underline"
-                    [routerLink]="['/sign-up']"
-                    >{{ 'auth.signIn.signUp' | transloco }}
-                </a>
-            </div>
-
             @if (!showOtpFormSig()) {
                 <!-- Sign in form -->
                 <form class="mt-8" [formGroup]="signInForm" #signInNgForm="ngForm">

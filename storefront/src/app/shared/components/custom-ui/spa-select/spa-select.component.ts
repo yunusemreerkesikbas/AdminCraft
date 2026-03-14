@@ -76,6 +76,7 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor, AfterV
     @Input() control?: NgControl['control'];
 
     @Output() changed = new EventEmitter<T | null>();
+    @Output() openedChange = new EventEmitter<boolean>();
 
     @Input('value') set setValue(val: T | null) {
         this.writeValue(val);
@@ -184,9 +185,12 @@ export class SpaSelectComponent<T = any> implements ControlValueAccessor, AfterV
         this.changed.emit(value);
     }
 
+    onOpenedChange(opened: boolean): void {
+        this.openedChange.emit(opened);
+    }
+
     touched(): void {
         this.#onTouched();
     }
 }
-
 

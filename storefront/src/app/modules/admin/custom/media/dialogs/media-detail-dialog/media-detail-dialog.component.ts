@@ -12,13 +12,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TenantContextService } from '@core/tenant/tenant-context.service';
-import { FuseConfirmationService } from '@fuse/services/confirmation/confirmation.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { MediaService } from '@media/media.service';
 import {
     MediaDetailDialogData,
     MediaDetailResponse,
+    MediaLinkedUsage,
     MediaStatus,
 } from '@media/media.types';
 import { LanguageResponse } from '@modules/admin/custom/tenants/tenants.types';
@@ -28,15 +29,19 @@ import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-
 import { SpaDialogContentComponent } from '@shared/components/spa-dialog/spa-dialog-content/spa-dialog-content.component';
 import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dialog-footer/spa-dialog-footer.component';
 import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
+import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
+import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog/spa-localized-form-dialog.directive';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
-import { forkJoin, take } from 'rxjs';
+import { take } from 'rxjs';
 import { ComponentEditDialogComponent } from '../../../components/component-edit-dialog/component-edit-dialog.component';
-import { ComponentDto } from '../../../components/models/component-library.types';
+import { ComponentEntryFormComponent } from '../../../components/entries/component-entry-form/component-entry-form.component';
 import { ComponentLibraryService } from '../../../components/services/component-library.service';
+import { ComponentEntryService } from '../../../components/services/component-entry.service';
 import { FocalPointPickerComponent } from '../../components/focal-point-picker/focal-point-picker.component';
 import { FormatGeneratorComponent } from '../../components/format-generator/format-generator.component';
+import { MediaBindDialogComponent } from '../media-bind-dialog/media-bind-dialog.component';
 
 @Component({
     selector: 'app-media-detail-dialog',
@@ -48,6 +53,7 @@ import { FormatGeneratorComponent } from '../../components/format-generator/form
         MatIconModule,
         MatTabsModule,
         MatProgressSpinnerModule,
+        MatTooltipModule,
         TranslocoModule,
         SpaDialogHeaderComponent,
         SpaDialogContentComponent,
@@ -69,7 +75,6 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
     #tenantContext = inject(TenantContextService);
     #transloco = inject(TranslocoService);
     #notificationService = inject(NotificationService);
-    #confirmationService = inject(FuseConfirmationService);
 
     protected supportedLanguages = signal<LanguageResponse[]>([]);
     #mediaDetails = signal<MediaDetailResponse | null>(null);
@@ -86,9 +91,11 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
     });
     protected hasVariants = computed(() => this.containerVariants().length > 0);
     #componentService = inject(ComponentLibraryService);
+    #componentEntryService = inject(ComponentEntryService);
     #matDialog = inject(MatDialog);
-    protected linkedComponentsSig = signal<ComponentDto[]>([]);
+    protected linkedComponentsSig = signal<MediaLinkedUsage[]>([]);
     protected isLoadingLinkedComponentsSig = signal(false);
+    protected deletingLinkedUsageSig = signal<string | null>(null);
 
     override ngOnInit(): void {
         const tenant = this.#tenantContext.tenant();
@@ -184,27 +191,9 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
             .getLinkedComponents(mediaId)
             .pipe(take(1))
             .subscribe({
-                next: (ids) => {
-                    if (ids.length === 0) {
-                        this.linkedComponentsSig.set([]);
-                        this.isLoadingLinkedComponentsSig.set(false);
-                        return;
-                    }
-
-                    forkJoin(
-                        ids.map((id) =>
-                            this.#componentService.getComponentById(id)
-                        )
-                    )
-                        .pipe(take(1))
-                        .subscribe({
-                            next: (components) => {
-                                this.linkedComponentsSig.set(components);
-                                this.isLoadingLinkedComponentsSig.set(false);
-                            },
-                            error: () =>
-                                this.isLoadingLinkedComponentsSig.set(false),
-                        });
+                next: (usages) => {
+                    this.linkedComponentsSig.set(usages);
+                    this.isLoadingLinkedComponentsSig.set(false);
                 },
                 error: () => this.isLoadingLinkedComponentsSig.set(false),
             });
@@ -215,64 +204,228 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
         this.#loadLinkedComponents();
     }
 
-    openComponent(component: ComponentDto): void {
-        this.#matDialog.open(ComponentEditDialogComponent, {
-            width: '900px',
-            height: '90vh',
-            maxHeight: '90vh',
-            panelClass: 'spa-compact-dialog',
-            data: {
-                component: component,
-                mode: 'edit',
-                languages: this.supportedLanguages().map((l) => l.code),
-            },
-            disableClose: true,
-            autoFocus: false,
-        });
+    openBindDialog(): void {
+        const media = this.media();
+        if (!media) return;
+
+        this.#matDialog
+            .open(MediaBindDialogComponent, {
+                width: '640px',
+                maxHeight: '90vh',
+                disableClose: true,
+                data: {
+                    media,
+                },
+            })
+            .afterClosed()
+            .pipe(take(1))
+            .subscribe((success) => {
+                if (success) {
+                    this.reloadDetails();
+                }
+            });
+    }
+
+    openLinkedUsage(usage: MediaLinkedUsage): void {
+        if (usage.entryId) {
+            this.#openEntry(usage);
+            return;
+        }
+
+        this.#openComponent(usage.componentId);
+    }
+
+    protected usageTrackBy(index: number, usage: MediaLinkedUsage): string {
+        return this.usageKey(usage);
+    }
+
+    protected usageKey(usage: MediaLinkedUsage): string {
+        return `${usage.componentId}-${usage.entryId ?? 'component'}-${usage.linkType}`;
+    }
+
+    protected usagePrimaryLabel(usage: MediaLinkedUsage): string {
+        return usage.componentUid || usage.componentName || `#${usage.componentId}`;
+    }
+
+    protected usageEntryLabel(usage: MediaLinkedUsage): string | null {
+        if (!usage.entryId) {
+            return null;
+        }
+
+        return usage.entryUid || usage.entryTitle || `#${usage.entryId}`;
+    }
+
+    protected isDeletingUsage(usage: MediaLinkedUsage): boolean {
+        return this.deletingLinkedUsageSig() === this.usageKey(usage);
+    }
+
+    deleteLinkedUsage(usage: MediaLinkedUsage): void {
+        const mediaId = this.data?.media?.id;
+        if (!mediaId) return;
+
+        this.#openDeleteModal(
+            'admin.media.dialogs.unlink.title',
+            usage.entryId
+                ? 'admin.media.dialogs.unlink.messageEntry'
+                : 'admin.media.dialogs.unlink.messageComponent'
+        )
+            .pipe(take(1))
+            .subscribe((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+
+                this.deletingLinkedUsageSig.set(this.usageKey(usage));
+                this.mediaService
+                    .unlinkMedia(mediaId, usage)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: (response) => {
+                            this.deletingLinkedUsageSig.set(null);
+                            this.#notificationService.success(response.message!);
+                            this.reloadDetails();
+                        },
+                        error: (err) => {
+                            this.deletingLinkedUsageSig.set(null);
+                            this.onError(err);
+                        },
+                    });
+            });
+    }
+
+    #openDeleteModal(titleKey: string, messageKey: string) {
+        const dialogConfig: ModalConfig = {
+            type: 'warning',
+            variant: 'confirmation',
+            title: this.#transloco.translate(titleKey),
+            icon: 'warning',
+            data: null,
+            sections: [
+                {
+                    type: 'alert-box',
+                    alertType: 'warning',
+                    content: this.#transloco.translate(messageKey),
+                },
+            ],
+            actions: [
+                {
+                    label: this.#transloco.translate(
+                        'admin.common.actions.cancel'
+                    ),
+                    value: false,
+                },
+                {
+                    label: this.#transloco.translate(
+                        'admin.common.actions.delete'
+                    ),
+                    color: 'warn',
+                    value: true,
+                },
+            ],
+        };
+
+        return this.#matDialog
+            .open(SpaGenericModalComponent, {
+                width: '500px',
+                maxHeight: '50vh',
+                data: dialogConfig,
+            })
+            .afterClosed();
+    }
+
+    #openComponent(componentId: number): void {
+        this.#componentService
+            .getComponentById(componentId)
+            .pipe(take(1))
+            .subscribe({
+                next: (component) => {
+                    this.#matDialog.open(ComponentEditDialogComponent, {
+                        width: '900px',
+                        height: '90vh',
+                        maxHeight: '90vh',
+                        panelClass: 'spa-compact-dialog',
+                        data: {
+                            component: component,
+                            mode: 'edit',
+                            languages: this.supportedLanguages().map((l) => l.code),
+                        },
+                        disableClose: true,
+                        autoFocus: false,
+                    });
+                },
+                error: () =>
+                    this.#notificationService.alert(
+                        'admin.components.errors.loadDetailFailed'
+                    ),
+            });
+    }
+
+    #openEntry(usage: MediaLinkedUsage): void {
+        if (!usage.entryId) return;
+
+        this.#componentService
+            .getComponentDetail(usage.componentId)
+            .pipe(take(1))
+            .subscribe({
+                next: (component) => {
+                    this.#componentEntryService
+                        .getEntryDetail(usage.entryId!)
+                        .pipe(take(1))
+                        .subscribe({
+                            next: (entry) => {
+                                this.#matDialog.open(ComponentEntryFormComponent, {
+                                    width: '800px',
+                                    maxHeight: '90vh',
+                                    disableClose: true,
+                                    data: {
+                                        mode: 'edit',
+                                        componentId: usage.componentId,
+                                        componentTypeId: component.componentTypeId,
+                                        languages: this.supportedLanguages().map((l) => l.code),
+                                        entryId: usage.entryId,
+                                        entry,
+                                        translations: entry.translations,
+                                    },
+                                });
+                            },
+                            error: () =>
+                                this.#notificationService.alert(
+                                    'admin.messages.loadError'
+                                ),
+                        });
+                },
+                error: () =>
+                    this.#notificationService.alert(
+                        'admin.components.errors.loadDetailFailed'
+                    ),
+            });
     }
 
     deleteVariant(variantId: number): void {
         const mediaId = this.data?.media?.id;
         if (!mediaId) return;
 
-        const confirmation = this.#confirmationService.open({
-            title: 'admin.media.deleteVariant.title',
-            message: 'admin.media.deleteVariant.message',
-            icon: {
-                show: true,
-                name: 'heroicons_outline:exclamation-triangle',
-                color: 'warn',
-            },
-            actions: {
-                confirm: {
-                    show: true,
-                    label: 'admin.common.actions.delete',
-                    color: 'warn',
-                },
-                cancel: {
-                    show: true,
-                    label: 'admin.common.actions.cancel',
-                },
-            },
-            dismissible: true,
-        });
+        this.#openDeleteModal(
+            'admin.media.deleteVariant.title',
+            'admin.media.deleteVariant.message'
+        )
+            .pipe(take(1))
+            .subscribe((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
 
-        confirmation.afterClosed().subscribe((result) => {
-            if (result === 'confirmed') {
                 this.mediaService
                     .deleteVariant(mediaId, variantId)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => {
-                            this.#notificationService.success(
-                                'media.variant.delete.success'
-                            );
+                        next: (response) => {
+                            this.#notificationService.success(response.message!);
                             this.reloadDetails();
                         },
                         error: (err) => this.onError(err),
                     });
-            }
-        });
+            });
     }
 
     save(): void {
@@ -298,13 +451,8 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
             })
             .pipe(take(1))
             .subscribe({
-                next: () => {
-                    this.#transloco
-                        .selectTranslate('admin.media.messages.updateSuccess')
-                        .pipe(take(1))
-                        .subscribe((msg) => {
-                            this.#notificationService.success(msg);
-                        });
+                next: (response) => {
+                    this.#notificationService.success(response.message!);
                     this.close(true);
                 },
                 error: (err) => this.onError(err),

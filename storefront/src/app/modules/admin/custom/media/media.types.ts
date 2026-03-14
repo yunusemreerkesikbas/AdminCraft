@@ -181,6 +181,15 @@ export interface MediaDetailDialogData extends SpaDialogData {
     languages: Language[];
 }
 
+export interface MediaBindDialogData extends SpaDialogData {
+    media: Media;
+    initialComponentId?: number;
+}
+
+export interface MediaUploadResultDialogData extends SpaDialogData {
+    media: Media[];
+}
+
 export interface MediaPickerDialogData extends SpaDialogData {
     mode: 'single' | 'multiple';
     allowedTypes?: string[];
@@ -237,4 +246,26 @@ export interface ResponsiveMediaRequest {
     code?: string;
     desktopMediaId: number;
     mobileMediaId: number;
+}
+
+export type MediaBindTargetType = 'COMPONENT' | 'ENTRY';
+export type MediaBindResponsiveTarget = 'DESKTOP' | 'MOBILE' | 'BOTH';
+
+export interface MediaBindRequest {
+    targetType: MediaBindTargetType;
+    targetId: number;
+    responsiveTarget?: MediaBindResponsiveTarget;
+}
+
+export interface MediaLinkedUsage {
+    componentId: number;
+    componentUid?: string;
+    componentName?: string;
+    componentTypeName?: string;
+    entryId?: number | null;
+    entryUid?: string | null;
+    entrySortOrder?: number | null;
+    entryTitle?: string | null;
+    linkType: string;
+    responsiveSetId?: number | null;
 }

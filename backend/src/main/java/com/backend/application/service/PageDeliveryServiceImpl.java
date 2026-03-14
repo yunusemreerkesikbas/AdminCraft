@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -276,20 +277,19 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 String typeCode = resolveTypeCode(page.getPageType());
                 RobotTag robotTag = page.getRobotTag() != null ? page.getRobotTag() : RobotTag.INDEX_FOLLOW;
 
-                return PageDeliveryResponse.builder()
-                                .uid(page.getUid())
-                                .name(i18n != null ? i18n.getName() : null)
-                                .title(i18n != null ? i18n.getTitle() : null)
-                                .description(i18n != null ? i18n.getDescription() : null)
-                                .robotTag(robotTag.name())
-                                .canonicalUrl(i18n != null ? i18n.getCanonicalUrl() : null)
-                                .styleClasses(page.getStyleClasses())
-                                .template(templateUid)
-                                .typeCode(typeCode)
-                                .code(code)
-                                .contentSlots(contentSlots)
-                                .slots(slotsMap)
-                                .build();
+                return new PageDeliveryResponse(
+                                page.getUid(),
+                                i18n != null ? i18n.getName() : null,
+                                i18n != null ? i18n.getTitle() : null,
+                                i18n != null ? i18n.getDescription() : null,
+                                robotTag.name(),
+                                i18n != null ? i18n.getCanonicalUrl() : null,
+                                page.getStyleClasses(),
+                                templateUid,
+                                typeCode,
+                                code,
+                                contentSlots,
+                                slotsMap);
         }
 
         private Map<String, List<ComponentDeliveryResponse>> buildAllSlotComponents(
@@ -474,14 +474,33 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
 
                 List<PageSlot> effective = new ArrayList<>();
+                Set<String> templateSlotNames = new LinkedHashSet<>();
                 for (TemplateSlot templateSlot : templateSlots) {
+                        templateSlotNames.add(templateSlot.getSlotName());
                         PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
                         if (source == null) {
                                 source = sharedBySlotName.get(templateSlot.getSlotName());
                         }
                         effective.add(buildEffectiveSlot(page.getId(), templateSlot, source));
                 }
-                return effective;
+
+                List<PageSlot> extraSlots = mergeSlotsWithoutTemplate(
+                                pageSlots.stream()
+                                                .filter(slot -> !templateSlotNames.contains(slot.getSlotName()))
+                                                .toList(),
+                                sharedSlots.stream()
+                                                .filter(slot -> !templateSlotNames.contains(slot.getSlotName()))
+                                                .toList());
+
+                effective.addAll(extraSlots);
+
+                return effective.stream()
+                                .sorted(Comparator
+                                                .comparingInt((PageSlot slot) -> slot.getSortOrder() != null
+                                                                ? slot.getSortOrder()
+                                                                : 0)
+                                                .thenComparing(PageSlot::getSlotName, String.CASE_INSENSITIVE_ORDER))
+                                .toList();
         }
 
         private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots) {

@@ -717,19 +717,17 @@ export const langTR = {
             messages: {
                 noMediaFound: 'Bu klasörde henüz medya dosyası yok',
                 uploadFirst: 'Veri girmek için önce dosya yükleyin',
+                userNotIdentified: 'Kullanıcı doğrulanamadı',
+                partialUploadWarning:
+                    '{{successCount}} dosya yüklendi. {{failureCount}} dosya başarısız oldu.',
                 folderCreated: 'Klasör oluşturuldu',
                 folderUpdated: 'Klasör güncellendi',
                 folderDeleted: 'Klasör silindi',
                 folderDeleteError: 'Klasör silinemedi',
-                uploadSuccess: 'Dosyalar yüklendi',
-                updateSuccess: 'Medya güncellendi',
-                deleteSuccess: 'Dosya silindi',
-                deleteError: 'Dosya silinemedi',
                 bulkDeleteSuccess: 'Seçili dosyalar silindi',
                 noFormats: 'Oluşturulmuş format bulunamadı',
                 generatedFormats: 'Oluşturulan Formatlar (Küçük resim vb.)',
                 processingFormats: 'Formatlar işleniyor... Lütfen bekleyin.',
-                variantDeleteSuccess: 'Varyasyon silindi',
             },
             formats: {
                 original: 'Orijinal Dosya',
@@ -737,7 +735,6 @@ export const langTR = {
             focalPoint: {
                 title: 'Odak Noktası',
                 help: 'Görselin odak noktasını seçmek için resmin üzerine tıklayın.',
-                updateSuccess: 'Odak noktası güncellendi',
                 tab: 'Araçlar',
             },
             format: {
@@ -773,6 +770,45 @@ export const langTR = {
                     title: 'Medya Detayı',
                     formats: 'Formatlar',
                     linkedComponents: 'Bağlı Bileşenler',
+                },
+                bind: {
+                    title: 'Medyayı Bağla',
+                    subtitle: 'Bu medyayı bir bileşene veya bileşen girdisine bağlayın.',
+                    open: 'Medyayı Bağla',
+                    submit: 'Bağlantıyı Kaydet',
+                    targetType: 'Hedef Tipi',
+                    responsiveTarget: 'Responsive Hedef',
+                    component: 'Bileşen',
+                    entry: 'Girdi',
+                    search: 'Bileşen Ara',
+                    searchPlaceholder: 'Bileşen adında ara',
+                    noEntries: 'Seçilen bileşen için girdi bulunamadı.',
+                    responsiveTargets: {
+                        desktop: 'Masaüstü',
+                        mobile: 'Mobil',
+                        both: 'Masaüstü + Mobil',
+                    },
+                    targets: {
+                        component: 'Bileşen',
+                        entry: 'Girdi',
+                    },
+                },
+                unlink: {
+                    title: 'Bağlı bileşen kaldırılsın mı?',
+                    messageComponent:
+                        'Bu medyayı seçili bileşenden kaldırmak istiyor musunuz?',
+                    messageEntry:
+                        'Bu medyayı seçili bileşen girdisinden kaldırmak istiyor musunuz?',
+                },
+                uploadResult: {
+                    title: 'Yüklenen Medyalar',
+                    subtitle: 'Yükleme tamamlandı',
+                    description:
+                        'Yüklenen varlıkları tek ekrandan bileşenlere veya girdilere bağlayın.',
+                    bind: 'Bağla',
+                    openDetails: 'Detayı Aç',
+                    done: 'Tamam',
+                    bound: 'Bağlandı',
                 },
                 messages: {
                     noLinkedComponents: 'Bağlı bileşen bulunamadı',
@@ -1109,6 +1145,8 @@ export const langTR = {
                     contactEmail: 'İletişim E-posta',
                     contactPhone: 'İletişim Telefon',
                     whatsappPhone: 'WhatsApp Telefon',
+                    logoMediaUid: 'Logo (Koyu Arka Plan) — Medya UID',
+                    logoDarkMediaUid: 'Logo (Açık Arka Plan) — Medya UID',
                     siteInfo: 'Site Bilgileri',
                     siteName: 'Site Adı',
                     tagline: 'Slogan',
@@ -1181,6 +1219,7 @@ export const langTR = {
                     cookieConsentText: 'Çerez Onay Metni',
                 },
                 placeholders: {
+                    mediaUid: 'örn. abc-123-def',
                     tagline: 'Siteniz için etkileyici bir slogan',
                     footerText: 'Telif hakkı © 2024 Şirket Adı',
                     headerText: 'Duyuru veya kampanya metni',
@@ -2115,8 +2154,6 @@ export const langTR = {
     auth: {
         signIn: {
             title: 'Giriş yap',
-            noAccount: 'Hesabın yok mu?',
-            signUp: 'Kayıt ol',
             demoInfo:
                 'Fuse Demo\'yu görüntülüyorsunuz. Demo ve Dokümantasyona erişmek için "Giriş yap" düğmesine tıklayın.',
             emailLabel: 'E-posta adresi',
@@ -2128,7 +2165,7 @@ export const langTR = {
                 title1: 'Aramıza',
                 title2: 'hoş geldiniz',
                 description:
-                    'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
+                    'AdminCraft, zengin modüllerle kişiselleştirilebilir paneller oluşturmanıza yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
             },
             '2fa': {
                 info: 'E-postanıza bir doğrulama kodu gönderildi.',
