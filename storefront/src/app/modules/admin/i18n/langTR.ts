@@ -782,7 +782,7 @@ export const langTR = {
                     entry: 'Girdi',
                     search: 'Bileşen Ara',
                     searchPlaceholder: 'Bileşen adında ara',
-                    noEntries: 'Secilen bilesen icin girdi bulunamadi.',
+                    noEntries: 'Seçilen bileşen için girdi bulunamadı.',
                     responsiveTargets: {
                         desktop: 'Masaüstü',
                         mobile: 'Mobil',
@@ -801,14 +801,14 @@ export const langTR = {
                         'Bu medyayı seçili bileşen girdisinden kaldırmak istiyor musunuz?',
                 },
                 uploadResult: {
-                    title: 'Yuklenen Medyalar',
-                    subtitle: 'Yukleme tamamlandi',
+                    title: 'Yüklenen Medyalar',
+                    subtitle: 'Yükleme tamamlandı',
                     description:
-                        'Yuklenen varliklari tek ekrandan bilesenlere veya girdilere baglayin.',
-                    bind: 'Bagla',
-                    openDetails: 'Detayi Ac',
+                        'Yüklenen varlıkları tek ekrandan bileşenlere veya girdilere bağlayın.',
+                    bind: 'Bağla',
+                    openDetails: 'Detayı Aç',
                     done: 'Tamam',
-                    bound: 'Baglandi',
+                    bound: 'Bağlandı',
                 },
                 messages: {
                     noLinkedComponents: 'Bağlı bileşen bulunamadı',

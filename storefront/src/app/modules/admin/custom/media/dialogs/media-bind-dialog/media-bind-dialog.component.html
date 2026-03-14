@@ -45,6 +45,7 @@
                         type="text"
                         [formControl]="searchControl"
                         [placeholder]="'admin.media.dialogs.bind.searchPlaceholder' | transloco"
+                        [attr.aria-label]="'admin.media.dialogs.bind.searchPlaceholder' | transloco"
                         class="w-full border-0 bg-transparent text-sm outline-none"
                         (mousedown)="preventPanelClose($event)"
                         (keydown)="preventPanelClose($event)"
@@ -84,7 +85,11 @@
                 }
             </div>
 
-            @if (!isLoadingEntriesSig() && form.controls.componentId.value && entriesSig().length === 0) {
+            @if (entriesLoadErrorSig()) {
+                <div class="rounded-lg border border-dashed border-red-300 p-4 text-sm text-red-500 dark:text-red-400">
+                    {{ 'admin.common.messages.loadError' | transloco }}
+                </div>
+            } @else if (!isLoadingEntriesSig() && form.controls.componentId.value && entriesSig().length === 0) {
                 <div class="rounded-lg border border-dashed p-4 text-sm text-gray-500 dark:text-gray-400">
                     {{ 'admin.media.dialogs.bind.noEntries' | transloco }}
                 </div>

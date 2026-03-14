@@ -4,7 +4,7 @@
 -- Idempotent: safe to run multiple times.
 -- Prerequisites:
 --   1. component_types seeded by Flyway
---   2. seed_liko_pages_and_slots.sql executed for shared Header/Footer slot wiring
+-- Note: seed_liko_pages_and_slots.sql must run AFTER this file.
 
 -- UUID ranges:
 --   d1 = components

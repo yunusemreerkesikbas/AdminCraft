@@ -64,11 +64,11 @@ export class FocalPointPickerComponent implements OnChanges {
             .pipe(finalize(() => this.isUpdating = false))
             .subscribe({
                 next: (response) => {
-                    this.#notificationService.success(response.message!);
+                    this.#notificationService.success(response?.message);
                     this.updated.emit();
                 },
                 error: (error) => {
-                    this.#notificationService.alert(error.error.message);
+                    this.#notificationService.alert(error?.error?.message);
                 },
             });
     }

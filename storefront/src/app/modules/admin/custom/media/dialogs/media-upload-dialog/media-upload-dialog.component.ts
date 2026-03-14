@@ -182,7 +182,7 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
                     this.uploadedMediaSig.set(successes.map(s => s.data!.data));
                     if (failures.length === 0) {
                         this.#notificationService.success(
-                            successes[0].data!.message!
+                            successes[0]?.data?.message
                         );
                     } else {
                         this.#notificationService.warning(
@@ -198,9 +198,9 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
                 }
 
                 if (failures.length > 0 && successes.length === 0) {
-                   this.#notificationService.alert(
-                    failures[0]!.error.error.message
-                   );
+                    const failure = failures[0];
+                    const msg = failure?.error?.error?.message ?? failure?.error?.message;
+                    this.#notificationService.alert(msg);
                 }
 
                 this.isUploadingSig.set(false);

@@ -287,7 +287,7 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
                         },
                         error: (err) => {
                             this.deletingLinkedUsageSig.set(null);
-                            this.#notificationService.alert(err.error.message);
+                            this.onError(err);
                         },
                     });
             });

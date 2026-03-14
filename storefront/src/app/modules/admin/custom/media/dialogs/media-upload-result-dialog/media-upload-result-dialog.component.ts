@@ -19,7 +19,7 @@ import { MediaDetailDialogComponent } from '../media-detail-dialog/media-detail-
 import { Media, MediaUploadResultDialogData } from '../../media.types';
 
 @Component({
-    selector: 'app-media-upload-result-dialog',
+    selector: 'spa-media-upload-result-dialog',
     standalone: true,
     imports: [
         MatButtonModule,

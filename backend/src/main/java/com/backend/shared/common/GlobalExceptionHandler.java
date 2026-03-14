@@ -383,14 +383,20 @@ public class GlobalExceptionHandler {
 
         String translated = messageSource.getMessage(candidate, null, null, LocaleContextHolder.getLocale());
         if (translated != null && !translated.isBlank()) {
-            return translated;
+            return truncate(translated);
         }
 
         if (looksTechnical(candidate)) {
+            log.debug("Suppressed technical message: {}", candidate);
             return getMessage(fallbackKey);
         }
 
-        return candidate;
+        log.debug("Passing through exception message: {}", candidate);
+        return truncate(candidate);
+    }
+
+    private String truncate(String s) {
+        return s != null && s.length() > 500 ? s.substring(0, 500) : s;
     }
 
     private boolean looksTechnical(String candidate) {

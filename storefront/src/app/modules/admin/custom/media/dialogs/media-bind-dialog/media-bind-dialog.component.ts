@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -9,7 +8,6 @@ import {
     signal,
     ViewChild,
 } from '@angular/core';
-import { MatSelectModule } from '@angular/material/select';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -36,13 +34,11 @@ import {
 } from '../../media.types';
 
 @Component({
-    selector: 'app-media-bind-dialog',
+    selector: 'spa-media-bind-dialog',
     standalone: true,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatProgressSpinnerModule,
-        MatSelectModule,
         TranslocoModule,
         SpaSelectComponent,
         SpaDialogHeaderComponent,
@@ -70,6 +66,7 @@ export class MediaBindDialogComponent
     protected readonly entriesSig = signal<ComponentEntry[]>([]);
     protected readonly isLoadingComponentsSig = signal(false);
     protected readonly isLoadingEntriesSig = signal(false);
+    protected readonly entriesLoadErrorSig = signal(false);
     protected readonly canSubmitSig = signal(false);
     protected readonly targetTypeOptions: SpaSelectOption<MediaBindTargetType>[] = [
         {
@@ -263,6 +260,7 @@ export class MediaBindDialogComponent
 
     #loadEntries(componentId: number): void {
         this.isLoadingEntriesSig.set(true);
+        this.entriesLoadErrorSig.set(false);
         this.#componentEntryService
             .listByComponentId(componentId)
             .pipe(take(1))
@@ -275,6 +273,7 @@ export class MediaBindDialogComponent
                     this.#updateCanSubmitState();
                 },
                 error: () => {
+                    this.entriesLoadErrorSig.set(true);
                     this.entriesSig.set([]);
                     this.isLoadingEntriesSig.set(false);
                     this.#updateCanSubmitState();

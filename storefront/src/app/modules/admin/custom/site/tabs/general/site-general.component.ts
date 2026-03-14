@@ -102,7 +102,7 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
         this.saving = true;
         const formValue = this.form.value;
 
-        const toUid = (val: any): string | null => {
+        const toUid = (val: string | { uid?: string } | null | undefined): string | null => {
             if (!val) return null;
             if (typeof val === 'string') return val || null;
             return val.uid ?? null;
@@ -231,7 +231,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
             this.#mediaService.getByUid(logoUid).pipe(
                 take(1),
                 catchError(() => of(null)),
-                takeUntil(this.#destroy$),
             ).subscribe((media) => {
                 this.form.get('global.logoMediaUid')?.setValue(media);
                 this.#cdr.markForCheck();
@@ -242,7 +241,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
             this.#mediaService.getByUid(logoDarkUid).pipe(
                 take(1),
                 catchError(() => of(null)),
-                takeUntil(this.#destroy$),
             ).subscribe((media) => {
                 this.form.get('global.logoDarkMediaUid')?.setValue(media);
                 this.#cdr.markForCheck();

@@ -174,7 +174,7 @@ UI flow:
 
 ### Running a data seed
 
-```
+```text
 1. Write SQL with -- #ADMINCRAFT_IMPEX marker
 2. Use INSERT ... SELECT ... ON DUPLICATE KEY UPDATE pattern
 3. Open /{lang}/impex in Admin UI
@@ -202,7 +202,7 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 
 ### Execution order (when seeding a fresh tenant — default theme example content)
 
-```
+```text
 1. seed_liko_components.sql      — landing page components (Homepage*), i18n, entries, entry i18n
 2. seed_liko_chrome_components.sql — shared Header/Footer components, Home-2 chrome copy, i18n, entries
 3. seed_liko_pages_and_slots.sql — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring

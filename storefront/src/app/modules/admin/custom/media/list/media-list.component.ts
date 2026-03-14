@@ -36,6 +36,7 @@ import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { take, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { MediaDetailDialogComponent } from '../dialogs/media-detail-dialog/media-detail-dialog.component';
 import { MediaUploadResultDialogComponent } from '../dialogs/media-upload-result-dialog/media-upload-result-dialog.component';
 import { MediaUploadDialogComponent } from '../dialogs/media-upload-dialog/media-upload-dialog.component';
@@ -246,7 +247,10 @@ export class MediaListComponent
                 this.store.setLoading(true);
                 this.service
                     .deleteMediaWithResponse(media.id)
-                    .pipe(takeUntil(this.destroy$))
+                    .pipe(
+                        finalize(() => this.store.setLoading(false)),
+                        takeUntil(this.destroy$)
+                    )
                     .subscribe({
                         next: (response) => {
                             this.store.removeItem(media.id);
@@ -254,12 +258,7 @@ export class MediaListComponent
                         },
                         error: (error) => {
                             this.store.setError(this.extractErrorMessage(error));
-                            this.#notificationService.alert(
-                                error.error.message
-                            );
-                        },
-                        complete: () => {
-                            this.store.setLoading(false);
+                            this.#notificationService.alert(error?.error?.message);
                         },
                     });
             }
