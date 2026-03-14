@@ -331,7 +331,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthResult refreshToken(String refreshToken) {
+    public AuthResult refreshToken(String refreshToken, String deviceFingerprint, String ipAddress, String userAgent) {
         log.info("Refreshing token");
         if (!jwtProviderPort.validateToken(refreshToken) ||
                 !jwtProviderPort.isRefreshToken(refreshToken)) {
@@ -345,6 +345,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             PlatformAdminUser admin = platformAdminUserRepository
                     .findByEmailAndIsActiveTrue(email)
                     .orElseThrow(() -> new UserNotFoundException(email));
+
+            if (isPlatformTwoFactorRequired()) {
+                checkOtpRateLimit(admin.getEmail());
+                PlatformLoginOtpResult otpResult = createPlatformLoginOtpToken(admin, ipAddress, userAgent);
+                Language language = resolvePlatformLanguage();
+                emailService.sendOtpEmail(admin.getEmail(), otpResult.otpCode(), language);
+                return AuthResult.requiring2FA(admin.getEmail(), otpResult.sessionToken(), null, null);
+            }
 
             String newAccessToken = jwtProviderPort.createAccessToken(
                     admin.getEmail(),
@@ -383,42 +391,59 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 tenantContext.setTenantDbName(tenant.getDatabaseName());
                 tenantContext.setSubdomain(tenant.getSubdomain());
 
-                // Populate MDC for logging context
                 MDC.put("tenantId", String.valueOf(tenant.getId()));
                 MDC.put("tenantDb", tenant.getDatabaseName());
                 MDC.put("correlationId", UUID.randomUUID().toString());
 
-                User user = userRepository.findByEmail(email)
-                        .orElseThrow(() -> new UserNotFoundException(email));
-                boolean refreshAllowed = user.getRole() == UserRole.TENANT_ADMIN
-                        ? (Boolean.TRUE.equals(user.getIsActive()) && !user.isAccountLocked())
-                        : user.canLogin();
-                if (!refreshAllowed) {
-                    log.warn(
-                            "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
-                            user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
-                    throw new UserAccountDisabledException();
-                }
-                String newAccessToken = jwtProviderPort.createAccessToken(
-                        user.getEmail(),
-                        user.getRole().name(),
-                        user.getId(),
-                        tenantId);
-                String newRefreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
+                TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
+                return transactionTemplate.execute(status -> {
+                    User user = userRepository.findByEmail(email)
+                            .orElseThrow(() -> new UserNotFoundException(email));
+                    boolean refreshAllowed = user.getRole() == UserRole.TENANT_ADMIN
+                            ? (Boolean.TRUE.equals(user.getIsActive()) && !user.isAccountLocked())
+                            : user.canLogin();
+                    if (!refreshAllowed) {
+                        log.warn(
+                                "User cannot refresh token - userId: {}, isActive: {}, emailVerified: {}, isAccountLocked: {}",
+                                user.getId(), user.getIsActive(), user.getEmailVerified(), user.isAccountLocked());
+                        throw new UserAccountDisabledException();
+                    }
 
-                log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
+                    if (tenant.getTwoFactorPolicy() == TwoFactorPolicy.REQUIRED) {
+                        boolean deviceTrusted = deviceFingerprint != null && !deviceFingerprint.isBlank() &&
+                                trustedDeviceService.isDeviceTrusted(user.getId(), deviceFingerprint);
+                        if (!deviceTrusted) {
+                            log.info("2FA required on refresh for userId: {}", user.getId());
+                            checkOtpRateLimit(user.getEmail());
+                            OtpService.LoginOtpResult otpResult = otpService.createLoginOtpToken(user, ipAddress, userAgent);
+                            Language userLanguage = tenant.getDefaultLanguage() != null ? tenant.getDefaultLanguage() : Language.TR;
+                            emailService.sendOtpEmail(user.getEmail(), otpResult.otpCode(), userLanguage);
+                            return AuthResult.requiring2FA(user.getEmail(), otpResult.sessionToken(), tenant.getSubdomain(), tenantId);
+                        }
+                        trustedDeviceService.updateLastUsed(user.getId(), deviceFingerprint);
+                    }
 
-                return AuthResult.success(
-                        newAccessToken,
-                        newRefreshToken,
-                        "Bearer",
-                        jwtProviderPort.getAccessTokenExpiration(),
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFullName(),
-                        user.getRole().name(),
-                        tenant.getSubdomain(),
-                        tenantId);
+                    String newAccessToken = jwtProviderPort.createAccessToken(
+                            user.getEmail(),
+                            user.getRole().name(),
+                            user.getId(),
+                            tenantId);
+                    String newRefreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
+
+                    log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
+
+                    return AuthResult.success(
+                            newAccessToken,
+                            newRefreshToken,
+                            "Bearer",
+                            jwtProviderPort.getAccessTokenExpiration(),
+                            user.getId(),
+                            user.getEmail(),
+                            user.getFullName(),
+                            user.getRole().name(),
+                            tenant.getSubdomain(),
+                            tenantId);
+                });
             } finally {
                 tenantContext.clear();
                 MDC.remove("tenantId");
@@ -727,6 +752,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             User user = verificationToken.getUser();
             String passwordHash = passwordEncoder.encode(newPassword);
             user.changePassword(passwordHash);
+            user.setEmailVerified(true);
             userRepository.save(user);
 
             verificationToken.markAsUsed();
@@ -797,19 +823,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthResult setInitialPassword(
-            String token,
-            String password,
-            String deviceFingerprint,
-            boolean trustDevice,
-            String deviceName,
-            String ipAddress,
-            String userAgent) {
-
+    public void setInitialPassword(String token, String password) {
         log.info("Setting initial password with verification token");
 
-        return new TransactionTemplate(tenantTransactionManager).execute(status -> {
-            // 1. Validate token
+        new TransactionTemplate(tenantTransactionManager).executeWithoutResult(status -> {
             String tokenHash = otpService.hashToken(token);
             VerificationToken verificationToken = verificationTokenRepository.findByTokenHash(tokenHash)
                     .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification token"));
@@ -818,58 +835,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new InvalidTokenException("Verification token is no longer valid");
             }
 
-            // 2. Set password + verify email
             User user = verificationToken.getUser();
             String passwordHash = passwordEncoder.encode(password);
             user.changePassword(passwordHash);
             user.setEmailVerified(true);
-            user.recordSuccessfulLogin(ipAddress);
             userRepository.save(user);
 
-            // 3. Mark token as used + revoke all email verification tokens
             verificationToken.markAsUsed();
             verificationTokenRepository.save(verificationToken);
             otpService.revokeAllUserTokens(user.getId(), TokenType.EMAIL_VERIFY);
 
             log.info("Initial password set and email verified for userId: {}", user.getId());
-
-            // 4. Register trusted device if requested
-            if (trustDevice && deviceFingerprint != null && !deviceFingerprint.isBlank()) {
-                TrustedDeviceService.DeviceInfo deviceInfo = new TrustedDeviceService.DeviceInfo(
-                        deviceName, null, null, ipAddress);
-                trustedDeviceService.addTrustedDevice(user, deviceFingerprint, deviceInfo);
-                log.info("Device trusted for userId: {}", user.getId());
-            }
-
-            // 5. Get tenant info
-            String tenantIdStr = tenantContext.getTenantId();
-            if (tenantIdStr == null) {
-                throw new IllegalStateException("Tenant context is not set");
-            }
-            Long tenantId = Long.parseLong(tenantIdStr);
-            Tenant tenant = tenantRepository.findById(tenantId)
-                    .orElseThrow(() -> new IllegalStateException("Tenant not found"));
-
-            // 6. Generate JWT tokens
-            String accessToken = jwtProviderPort.createAccessToken(
-                    user.getEmail(),
-                    user.getRole().name(),
-                    user.getId(),
-                    tenantId);
-            String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
-
-            // 7. Return AuthResult with tokens
-            return AuthResult.success(
-                    accessToken,
-                    refreshToken,
-                    "Bearer",
-                    jwtProviderPort.getAccessTokenExpiration(),
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFullName(),
-                    user.getRole().name(),
-                    tenant.getSubdomain(),
-                    tenant.getId());
         });
     }
 

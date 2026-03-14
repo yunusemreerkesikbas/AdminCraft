@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.dto.request.ResponsiveMediaRequest;
+import com.backend.application.dto.response.MediaLinkedComponentUsageResponse;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Language;
@@ -43,10 +44,7 @@ public interface ResponsiveMediaService {
    */
   ResponsiveMediaDeliveryResponse toDeliveryResponse(ResponsiveMediaSet entity, Language language);
 
-  /**
-   * Get component IDs that use a specific media.
-   */
-  List<Long> getLinkedComponentIds(Long mediaId);
+  List<MediaLinkedComponentUsageResponse> getLinkedComponentUsages(Long mediaId);
 
   /**
    * Get entity by ID (for internal use).

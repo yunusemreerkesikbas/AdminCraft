@@ -30,6 +30,7 @@ Base path: `/api/media`
 - `GET /api/media/{id}`
 - `GET /api/media/uid/{uid}`
 - `GET /api/media/{id}/detail` (includes container variants + all translations)
+- `POST /api/media/{id}/bind` (bind uploaded media to a component or component entry)
 - `PUT /api/media/{id}` (metadata patch/update)
 - `DELETE /api/media/{id}`
 
@@ -59,7 +60,7 @@ Controller: `backend/src/main/java/com/backend/presentation/controller/Responsiv
 - `GET /api/responsive-media/uid/{uid}`
 - `PUT /api/responsive-media/{id}`
 - `DELETE /api/responsive-media/{id}`
-- `GET /api/responsive-media/media/{mediaId}/linked-components`
+- `GET /api/responsive-media/media/{mediaId}/linked-components` (returns detailed component/entry usages)
 
 Note:
 
@@ -99,8 +100,30 @@ Key files:
     - Supports **Responsive Mode** (Desktop/Mobile): `<spa-media-picker formControlName="responsiveMedia" [responsive]="true">`
 - Dialogs:
   - `dialogs/media-upload-dialog/`
+  - `dialogs/media-upload-result-dialog/`
   - `dialogs/media-detail-dialog/`
   - `dialogs/media-picker-dialog/` (Used by `SpaMediaPickerComponent` for selecting images)
+  - `dialogs/media-bind-dialog/`
+
+Recommended admin flow:
+
+1. Bulk upload one or more assets from Media Library.
+2. Use the upload result dialog or media detail dialog to bind each asset.
+3. Bind to the component itself when the whole component shares the same image/video.
+4. Bind to a component entry when each card/banner item needs its own asset.
+
+Storefront delivery note:
+
+- Public media files are still tenant-scoped in this project.
+- Direct browser requests to `GET /api/media/files/{fileName}` can fail with `Tenant identifier required` if tenant headers are not present.
+- `storefront-nextjs` solves this by rewriting CMS media URLs to its own tenant-aware proxy route: `GET /cms-media/{...path}`.
+- The proxy forwards `X-Tenant-Subdomain` or `X-Tenant-ID` before streaming the file to Next/Image.
+
+Linked usages:
+
+- `linked-components` is driven by responsive media assignments.
+- Component-level bindings and entry-level bindings are both returned by the backend.
+- Legacy string fields such as `customFields.mediaUid` can still exist, but new CMS media linking should prefer responsive media binding.
 
 ## Security & tenant isolation
 

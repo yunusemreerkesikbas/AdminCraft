@@ -88,9 +88,6 @@ public class User {
     @Column(name = "email_verified")
     private Boolean emailVerified = false;
 
-    @Column(name = "two_factor_enabled")
-    private Boolean twoFactorEnabled = false;
-
     @Column(name = "password_changed_at")
     private LocalDateTime passwordChangedAt;
 

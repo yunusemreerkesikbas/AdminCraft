@@ -41,8 +41,8 @@ public interface VerificationTokenJpaRepository extends JpaRepository<Verificati
     void revokeAllActiveTokensForUser(@Param("userId") Long userId, @Param("tokenType") TokenType tokenType);
 
     @Modifying
-    @Query("DELETE FROM VerificationToken t WHERE t.expiresAt < :before AND t.status != 'ACTIVE'")
-    void deleteExpiredTokens(@Param("before") LocalDateTime before);
+    @Query("DELETE FROM VerificationToken t WHERE (t.expiresAt < :before AND t.status != 'ACTIVE') OR (t.status = 'ACTIVE' AND t.expiresAt < :activeCutoff)")
+    void deleteExpiredTokens(@Param("before") LocalDateTime before, @Param("activeCutoff") LocalDateTime activeCutoff);
 
     long countByUserIdAndTokenTypeAndStatus(Long userId, TokenType tokenType, TokenStatus status);
 

@@ -1,0 +1,2 @@
+ALTER TABLE sites ADD COLUMN logo_media_uid VARCHAR(255) NULL;
+ALTER TABLE sites ADD COLUMN logo_dark_media_uid VARCHAR(255) NULL;

@@ -38,6 +38,11 @@ public class ComponentEntryI18nRepositoryImpl implements ComponentEntryI18nRepos
     }
 
     @Override
+    public List<ComponentEntryI18n> findByEntryIdIn(List<Long> entryIds) {
+        return jpaRepository.findByEntryIdIn(entryIds);
+    }
+
+    @Override
     public void delete(ComponentEntryI18n entryI18n) {
         jpaRepository.delete(entryI18n);
     }

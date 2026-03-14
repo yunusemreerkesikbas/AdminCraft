@@ -30,7 +30,7 @@ public interface VerificationTokenRepository {
 
     void revokeAllActiveTokensForUser(Long userId, TokenType tokenType);
 
-    void deleteExpiredTokens(LocalDateTime before);
+    void deleteExpiredTokens(LocalDateTime before, LocalDateTime activeCutoff);
 
     long countByUserIdAndTokenTypeAndStatus(Long userId, TokenType tokenType, TokenStatus status);
 

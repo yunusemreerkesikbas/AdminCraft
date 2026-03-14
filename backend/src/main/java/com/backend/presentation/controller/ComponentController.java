@@ -126,7 +126,7 @@ public class ComponentController {
                                 try {
                                         ComponentType componentType = componentTypeService.getComponentTypeById(
                                                         new GetComponentTypeByIdQuery(component.getComponentTypeId()));
-                                        componentTypeName = componentType.getName();
+                                        componentTypeName = componentType.getUid();
                                 } catch (Exception e) {
                                         log.warn("Could not fetch component type name for id: {}",
                                                         component.getComponentTypeId());

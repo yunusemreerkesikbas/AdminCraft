@@ -25,7 +25,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     boolean existsByUid(String uid);
 
     @Query("""
-                SELECT c, ct.name
+                SELECT c, ct.uid
                 FROM Component c
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
                 ORDER BY c.updatedAt DESC
@@ -33,7 +33,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     List<Object[]> findAllWithTypeNames();
 
     @Query("""
-                SELECT c, ct.name,
+                SELECT c, ct.uid,
                        (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
                 FROM Component c
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
@@ -42,7 +42,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     List<Object[]> findAllWithTypeNamesAndEntryCount();
 
     @Query(value = """
-                SELECT c, ct.name,
+                SELECT c, ct.uid,
                        (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
                 FROM Component c
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id
@@ -53,7 +53,7 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     Page<Object[]> findAllPagedWithTypeNamesAndEntryCount(Pageable pageable);
 
     @Query(value = """
-                SELECT c, ct.name,
+                SELECT c, ct.uid,
                        (SELECT COUNT(e) FROM ComponentEntry e WHERE e.componentId = c.id)
                 FROM Component c
                 LEFT JOIN ComponentType ct ON c.componentTypeId = ct.id

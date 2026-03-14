@@ -90,12 +90,6 @@ public interface UserService {
     List<User> getUsersNeverLoggedIn();
 
     // Security operations
-    void enableTwoFactor(Long userId);
-
-    void disableTwoFactor(Long userId);
-
-    boolean isTwoFactorEnabled(Long userId);
-
     void resetFailedLoginAttempts(Long userId);
 
     List<User> getLockedUsers();

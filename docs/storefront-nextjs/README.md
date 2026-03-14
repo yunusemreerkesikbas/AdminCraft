@@ -32,6 +32,7 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | --- | --- | --- |
 | `resolvePage` | `GET /api/cms/pages` | `lang` required; `pageType`, `pageLabelOrId`, `code` optional |
 | `fetchSiteConfig` | `GET /api/cms/site` | Site metadata, `defaultLanguage`, `enabledLanguages`, `isRtl` |
+| `fetchMediaByUids` | `GET /api/cms/media?uids=...` | Batched media resolution for CMS-driven landing page sections |
 | `fetchProduct` | `GET /api/cms/products/{uid}` | Product detail payload |
 | `fetchProductsByCategory` | `GET /api/cms/products/category/{categoryUid}` | Paged list |
 | `searchProducts` | `GET /api/cms/products/search` | Query param: `q` |
@@ -84,6 +85,7 @@ Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-pa
    - Unknown template → falls back to `DefaultTemplate` (renders all slots as a vertical stack) + `console.warn` (development only).
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
 4. Each template reads its slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each slot.
+   - Exception: homepage `LandingPageTemplate` short-circuits into the theme adapter and renders `LandingPage` from a CMS-built view model instead of directly stacking `CmsSlot`s.
 5. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
 6. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
 7. Unknown component types render with `UnknownComponent`.
@@ -96,7 +98,7 @@ Located in `components/cms/templates/index.ts`.
 
 | Template name | File | Slot positions | Page type |
 |---|---|---|---|
-| `LandingPageTemplate` | `LandingPageTemplate.tsx` | Section1, Section2, Section3 | Home / campaign |
+| `LandingPageTemplate` | `LandingPageTemplate.tsx` | Section1, Section2, Section3, Section4, Section5, Section6, Section7, Section8 | Home / campaign |
 | `ContentPageTemplate` | `ContentPageTemplate.tsx` | TopContent, BodyContent, SideContent | Generic content |
 | `CategoryPageTemplate` | `CategoryPageTemplate.tsx` | TopContent, ProductGrid | Category listing |
 | `ProductDetailsPageTemplate` | `ProductDetailsPageTemplate.tsx` | Summary, Tabs, CrossSelling | Product detail |
@@ -113,6 +115,76 @@ To add a new template:
 1. Add an entry to `TEMPLATE_CONFIGS` in `template-configs.ts` with slot names and positions.
 2. Create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps` (read slots from `TEMPLATE_CONFIGS.MyTemplate`).
 3. Register it in `templateRegistry` in `index.ts`.
+
+### CMS-driven homepage (plugin theme)
+
+Homepage uses a dedicated template-level adapter instead of directly stacking `CmsSlot`s. The theme is pluggable — swapping the three exports from `components/theme/default/index.ts` replaces the entire visual layer.
+
+- Entry point: `components/cms/templates/LandingPageTemplate.tsx`
+- Adapter: `components/theme/default/cms-adapter.ts` (`buildThemePageModel`)
+- Presentational composition: `components/theme/default/LandingPage.tsx`
+- Motion layer: `components/theme/default/Motion.tsx`
+- Section components: `components/theme/default/sections/`
+- Shared UI primitives: `components/theme/default/utils/shared.tsx` (`ThemeTag`, `ThemeButton`, `ThemeCircleButton`)
+- Icons: `components/theme/default/utils/icons.tsx`
+- Theme CSS: `components/theme/default/theme.module.css`
+- Public API (only this file is imported externally): `components/theme/default/index.ts`
+- Generic CMS component registry is unchanged; homepage-specific mapping stays inside the template adapter
+
+#### Slot contract
+
+| Slot | Expected component UID | Component type | Style class | UI section |
+| --- | --- | --- | --- | --- |
+| `Section1` | `HomepageHeroBanner` | `SimpleBannerComponent` | `hero-banner` | Hero |
+| `Section2` | `HomepageAboutSection` | `SimpleBannerComponent` | `about-section` | About |
+| `Section3` | `HomepageVideoSection` | `SimpleBannerComponent` | `video-section` | Video |
+| `Section4` | `HomepageServiceSection` | `FeatureCardComponent` | `service-section` | Services |
+| `Section5` | `HomepageProjectSection` | `FeatureCardComponent` | `project-section` | Projects |
+| `Section6` | `HomepageAwardSection` | `SimpleBannerComponent` | `award-section` | Award |
+| `Section7` | `HomepageMarqueeText` | `CMSParagraphComponent` | `marquee-text` | Marquee |
+| `Section8` | `HomepageInstagramSection` | `FeatureCardComponent` | `instagram-section` | Instagram |
+
+The adapter prefers the expected component `uid`, then `type + styleClass`. This is intentional because tenant data can temporarily contain old and new `slot_components` rows at the same time during seed transitions.
+
+#### Field mapping
+
+The theme adapter (`buildThemePageModel`) reads CMS content from `component_i18n`, `component_entries`, `entry_i18n`, and `customFields`.
+
+| Section | Main fields | Entry/custom field usage |
+| --- | --- | --- |
+| Hero | `title`, `subtitle`, `description` | prefers entry/component `responsive`; falls back to `mediaUid`, `buttonUrl`, `buttonText` |
+| About | `title`, `subtitle`, `description` | 3 entries; each prefers entry `responsive`, falls back to `mediaUid`; entry 2 title used as inner label |
+| Video | `title`, `subtitle`, `description` | `videoUrl`; poster prefers entry/component `responsive`, falls back to `mediaUid` |
+| Services | `title`, `subtitle` | each entry uses `title`, `description`, prefers entry `responsive`, falls back to `mediaUid` |
+| Projects | component wrapper only | each entry uses `title`, `subtitle`, `linkUrl`, prefers entry `responsive`, falls back to `mediaUid` |
+| Award | `title`, `subtitle`, `description` | prefers entry/component `responsive`, falls back to `mediaUid`, `buttonUrl`, `buttonText` |
+| Marquee | `description` | tokenized with `-` separators |
+| Instagram | `title`, `subtitle`, `description` | entries prefer `responsive`, fall back to `mediaUid`; first available image becomes main fallback if full 8-image set is absent |
+
+#### Import / seed order
+
+The landing page depends on both template-slot migration and tenant-scoped content imports.
+
+1. Restart backend so `backend/src/main/resources/db/tenant/pagebuilder/R__seed_page_templates.sql` is applied by Flyway.
+2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen.
+3. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen.
+4. Upload image/video assets in Media Library for the tenant.
+5. Bind uploaded assets from Media Library to the target component or component entry.
+
+If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
+
+#### Header and footer
+
+Landing page body sections are CMS-driven. Header and footer are still rendered from the storefront theme chrome (`components/layout/theme-chrome`) and serve as fallback even when CMS `Header` / `Footer` slots are empty.
+
+#### Tenant-aware media proxy
+
+Tenant media files cannot be fetched safely by the browser or Next/Image via raw backend URLs alone because `GET /api/media/files/{fileName}` still depends on tenant context.
+
+- `lib/utils.ts` rewrites CMS media file paths from `/api/media/...` to storefront-local `/cms-media/...`
+- `app/cms-media/[...path]/route.ts` proxies the request to backend media endpoints
+- The route adds `X-Tenant-Subdomain` or `X-Tenant-ID` before streaming the file
+- This keeps `next/image` compatible with tenant-scoped media delivery and avoids `Tenant identifier required` failures
 
 ### CSS targeting
 
@@ -226,6 +298,7 @@ Read from `.env.local.example` and `lib/utils.ts`:
 | --- | --- |
 | `resolvePage`, `fetchProduct` | `revalidate: 30s` |
 | `fetchSiteConfig`, `fetchCategoryTree` | `revalidate: 300s` |
+| `fetchMediaByUids` | `revalidate: 300s` |
 | `searchProducts` | `cache: "no-store"` |
 
 ## Security and tenant isolation
@@ -321,4 +394,19 @@ When `component.searchBox === true`, a `SearchOverlay` button is rendered alongs
 ## Current limitations and extension points
 
 - Product, category, and search pages include minimal UI beyond CMS slots.
+- Header and footer are storefront theme chrome (`components/layout/theme-chrome`), not CMS-driven section renderers.
+- Instagram section works with partial image sets; full parity is achieved when the tenant imports the complete expected media set.
 - Adding new UI languages requires a new `messages/{lang}.json` file and an entry in `AVAILABLE_MESSAGES` in `lib/i18n.ts`.
+- Navigation node UIDs `LandingMainNavNode` (main nav) and `LandingSocialNavNode` (social links) must be created in each tenant's CMS. These UIDs are defined in `components/cms/navigation/HeaderCmsComponent.tsx` and `FooterCmsComponent.tsx`.
+
+### Replacing the default theme
+
+To swap the visual theme, replace the three exports in `components/theme/default/index.ts`:
+
+| Export | Purpose |
+|---|---|
+| `LandingPage` | Root presentational component for the homepage |
+| `Motion` | GSAP/framer scroll-trigger animation layer |
+| `buildThemePageModel` | Maps raw `CmsPageDeliveryResponse` slots → view model |
+
+Only `LandingPageTemplate.tsx` imports from the plugin index; internal theme components import directly within `components/theme/default/` without going through `index.ts`.

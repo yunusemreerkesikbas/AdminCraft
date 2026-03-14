@@ -34,7 +34,6 @@ public class TenantAdminCreationService {
       adminUser.setRole(UserRole.TENANT_ADMIN);
       adminUser.setIsActive(true);
       adminUser.setEmailVerified(false);
-      adminUser.setTwoFactorEnabled(false);
 
       userRepository.save(adminUser);
       return null;

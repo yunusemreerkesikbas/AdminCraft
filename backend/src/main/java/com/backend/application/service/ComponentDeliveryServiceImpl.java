@@ -195,6 +195,11 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
     }
 
+    ResponsiveMediaDeliveryResponse responsive = null;
+    if (entry.getResponsiveMedia() != null) {
+      responsive = responsiveMediaService.toDeliveryResponse(entry.getResponsiveMedia(), lang);
+    }
+
     return EntryDeliveryResponse.builder()
         .uid(entry.getUid())
         .order(entry.getSortOrder())
@@ -202,6 +207,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18n != null ? i18n.getDescription() : null)
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .responsive(responsive)
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
   }
@@ -262,6 +268,11 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       expandedFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
     }
 
+    ResponsiveMediaDeliveryResponse responsive = null;
+    if (entry.getResponsiveMedia() != null) {
+      responsive = responsiveMediaService.toDeliveryResponse(entry.getResponsiveMedia(), lang);
+    }
+
     return EntryDeliveryResponse.builder()
         .uid(entry.getUid())
         .order(entry.getSortOrder())
@@ -269,6 +280,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentEntryI18n::getDescription).orElse(null))
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .responsive(responsive)
         .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
   }

@@ -59,6 +59,10 @@ Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but *
 Next.js 16 App Router storefront consuming the CMS delivery APIs.
 
 - Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
+- Homepage theme is now `Home 02` and CMS-driven via `LandingPageTemplate` `Section1–8` slots
+- Required tenant seed/import flow for Home 02 (ImpEx, manual via Admin UI `/{lang}/impex`):
+  - Flyway: `db/tenant/pagebuilder/R__seed_page_templates.sql` (auto)
+  - ImpEx: `impex/seed_liko_components.sql` → `impex/seed_liko_pages_and_slots.sql`
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param

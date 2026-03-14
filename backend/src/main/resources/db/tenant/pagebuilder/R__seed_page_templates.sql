@@ -157,6 +157,36 @@ SELECT 'dd000003-0000-4000-8000-000000000003', 'LandingPageSection3Slot', id, 'S
 FROM page_templates WHERE uid = 'LandingPageTemplate'
 ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
 
+-- Section4 (CENTER, 4) — Services
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000004-0000-4000-8000-000000000004', 'LandingPageSection4Slot', id, 'Section4', 'CENTER', 4, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
+-- Section5 (CENTER, 5) — Projects
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000005-0000-4000-8000-000000000005', 'LandingPageSection5Slot', id, 'Section5', 'CENTER', 5, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
+-- Section6 (BOTTOM, 6) — Awards
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000006-0000-4000-8000-000000000006', 'LandingPageSection6Slot', id, 'Section6', 'BOTTOM', 6, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
+-- Section7 (BOTTOM, 7) — Marquee
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000007-0000-4000-8000-000000000007', 'LandingPageSection7Slot', id, 'Section7', 'BOTTOM', 7, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
+-- Section8 (BOTTOM, 8) — Instagram
+INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
+SELECT 'dd000008-0000-4000-8000-000000000008', 'LandingPageSection8Slot', id, 'Section8', 'BOTTOM', 8, FALSE
+FROM page_templates WHERE uid = 'LandingPageTemplate'
+ON DUPLICATE KEY UPDATE uid = VALUES(uid), slot_name = VALUES(slot_name), position = VALUES(position), sort_order = VALUES(sort_order);
+
 -- ContentPageTemplate Slots (Main content with optional sidebar)
 INSERT INTO template_slots (uuid, uid, template_id, slot_name, position, sort_order, is_required)
 SELECT 'a1b2c3d4-e5f6-7890-4567-901234567304', 'ContentPageTopSlot', id, 'TopContent', 'TOP', 0, FALSE 

@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final Set<String> RESERVED_FIELDS = Set.of(
-                        "uid", "order", "title", "description", "isVisible", "styleClasses");
+                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive");
 
         private final PageRepository pageRepository;
         private final PageI18nRepository pageI18nRepository;
@@ -412,6 +412,11 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
                 }
 
+                ResponsiveMediaDeliveryResponse responsive = null;
+                if (entry.getResponsiveMedia() != null) {
+                        responsive = responsiveMediaService.toDeliveryResponse(entry.getResponsiveMedia(), lang);
+                }
+
                 return EntryDeliveryResponse.builder()
                                 .uid(entry.getUid())
                                 .order(entry.getSortOrder())
@@ -419,6 +424,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .description(i18n != null ? i18n.getDescription() : null)
                                 .isVisible(entry.getIsVisible())
                                 .styleClasses(entry.getStyleClasses())
+                                .responsive(responsive)
                                 .customFields(customFields.isEmpty() ? null : customFields)
                                 .build();
         }

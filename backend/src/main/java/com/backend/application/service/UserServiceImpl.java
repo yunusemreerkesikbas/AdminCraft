@@ -433,35 +433,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void enableTwoFactor(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.setTwoFactorEnabled(true);
-        userRepository.save(user);
-        log.info("Two-factor authentication enabled for user: {}", userId);
-    }
-
-    @Override
-    public void disableTwoFactor(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        user.setTwoFactorEnabled(false);
-        userRepository.save(user);
-        log.info("Two-factor authentication disabled for user: {}", userId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isTwoFactorEnabled(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        return user.getTwoFactorEnabled();
-    }
-
-    @Override
     public void resetFailedLoginAttempts(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));

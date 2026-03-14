@@ -69,8 +69,8 @@ class ComponentServiceImplTest {
     component2.setUpdatedAt(LocalDateTime.now());
 
     mockResults = new ArrayList<>();
-    mockResults.add(new Object[] { component1, "Navigation", 5L });
-    mockResults.add(new Object[] { component2, "Footer", 3L });
+    mockResults.add(new Object[] { component1, "NavigationComponent", 5L });
+    mockResults.add(new Object[] { component2, "SimpleBannerComponent", 3L });
   }
 
   @Test
@@ -90,13 +90,13 @@ class ComponentServiceImplTest {
     List<ComponentListItemResponse> result = componentService.getAllComponentsWithTypeNames();
 
     ComponentListItemResponse first = result.get(0);
-    assertThat(first.componentTypeName()).isEqualTo("Navigation");
+    assertThat(first.componentTypeName()).isEqualTo("NavigationComponent");
     assertThat(first.id()).isEqualTo(1L);
     assertThat(first.componentTypeId()).isEqualTo(10L);
     assertThat(first.isVisible()).isTrue();
 
     ComponentListItemResponse second = result.get(1);
-    assertThat(second.componentTypeName()).isEqualTo("Footer");
+    assertThat(second.componentTypeName()).isEqualTo("SimpleBannerComponent");
     assertThat(second.id()).isEqualTo(2L);
     assertThat(second.isVisible()).isFalse();
   }

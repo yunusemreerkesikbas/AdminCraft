@@ -10,6 +10,9 @@ app:
     refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
+  cors:
+    allowed-origins: []
+    allowed-origin-patterns: []
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
@@ -64,6 +67,7 @@ spring:
       jdbc-url-template: jdbc:mysql://${spring.datasource.tenant.host}:${spring.datasource.tenant.port}/{dbName}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Istanbul&characterEncoding=UTF-8&useUnicode=true
 
   jpa:
+    show-sql: false
     hibernate:
       ddl-auto: none
     properties:

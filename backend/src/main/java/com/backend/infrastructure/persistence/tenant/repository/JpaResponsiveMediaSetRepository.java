@@ -31,10 +31,10 @@ public interface JpaResponsiveMediaSetRepository extends JpaRepository<Responsiv
   List<ResponsiveMediaSet> findByIdIn(java.util.Collection<Long> ids);
 
   /**
-   * Batch fetch responsive sets with eagerly loaded media and translations.
-   * Prevents N+1 queries in delivery services.
+   * Batch fetch responsive sets with eagerly loaded media references.
+   * Media translations stay lazy to avoid Hibernate MultipleBagFetchException.
    */
-  @EntityGraph(attributePaths = {"desktopMedia", "desktopMedia.translations", "mobileMedia", "mobileMedia.translations"})
+  @EntityGraph(attributePaths = {"desktopMedia", "mobileMedia"})
   @Query("SELECT r FROM ResponsiveMediaSet r WHERE r.id IN :ids")
   List<ResponsiveMediaSet> findByIdInWithMedia(@Param("ids") java.util.Collection<Long> ids);
 }
