@@ -7,12 +7,14 @@ import {
     FocalPointRequest,
     GenerateFormatRequest,
     GenerateFormatsRequest,
+    MediaBindRequest,
     Language,
     Media,
     MediaDetailResponse,
     MediaFormat,
     MediaI18n,
     MediaI18nRequest,
+    MediaLinkedUsage,
     MediaResponse,
     MediaVariantResponse,
     ResponsiveMediaRequest,
@@ -43,16 +45,14 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         );
     }
 
-    uploadComposite(file: File, uploadedBy: number, translations?: Record<Language, MediaI18nRequest>): Observable<MediaResponse> {
+    uploadComposite(file: File, uploadedBy: number, translations?: Record<Language, MediaI18nRequest>): Observable<ApiResponse<MediaResponse>> {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('uploadedBy', uploadedBy.toString());
         if (translations) {
             formData.append('translations', JSON.stringify(translations));
         }
-        return this.api.upload<ApiResponse<MediaResponse>>('mediaComposite', formData).pipe(
-            map((response) => response.data)
-        );
+        return this.api.upload<ApiResponse<MediaResponse>>('mediaComposite', formData);
     }
 
     getByUid(uid: string): Observable<Media> {
@@ -63,8 +63,8 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         return this.customGet<MediaDetailResponse>('mediaDetail', { id });
     }
 
-    updateComposite(id: number, request: UpdateMediaCompositeRequest): Observable<MediaResponse> {
-        return this.customPut<MediaResponse>('mediaCompositeById', request, { id });
+    updateComposite(id: number, request: UpdateMediaCompositeRequest): Observable<ApiResponse<MediaResponse>> {
+        return this.api.put<ApiResponse<MediaResponse>>('mediaCompositeById', request, { id });
     }
 
     getI18n(mediaId: number, language: Language): Observable<MediaI18n> {
@@ -95,16 +95,12 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         );
     }
 
-    deleteVariant(mediaId: number, variantId: number): Observable<void> {
-        return this.api.delete<ApiResponse<void>>('mediaVariantDelete', { mediaId, variantId }).pipe(
-            map(() => void 0)
-        );
+    deleteVariant(mediaId: number, variantId: number): Observable<ApiResponse<void>> {
+        return this.api.delete<ApiResponse<void>>('mediaVariantDelete', { mediaId, variantId });
     }
 
-    updateFocalPoint(id: number, request: FocalPointRequest): Observable<void> {
-        return this.api.put<ApiResponse<void>>('mediaFocalPoint', request, { id }).pipe(
-            map(() => void 0)
-        );
+    updateFocalPoint(id: number, request: FocalPointRequest): Observable<ApiResponse<void>> {
+        return this.api.put<ApiResponse<void>>('mediaFocalPoint', request, { id });
     }
 
     getCmsMedia(uid: string, format?: string): Observable<Media> {
@@ -126,7 +122,28 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         );
     }
 
-    getLinkedComponents(mediaId: number): Observable<number[]> {
-        return this.customGet<number[]>('linkedComponents', { mediaId });
+    bindMedia(mediaId: number, request: MediaBindRequest): Observable<ApiResponse<void>> {
+        return this.api.post<ApiResponse<void>>('mediaBind', request, { mediaId });
+    }
+
+    unlinkMedia(mediaId: number, usage: MediaLinkedUsage): Observable<ApiResponse<void>> {
+        const queryParams: Record<string, string | number> = {
+            componentId: usage.componentId,
+            linkType: usage.linkType,
+        };
+
+        if (usage.entryId != null) {
+            queryParams['entryId'] = usage.entryId;
+        }
+
+        return this.api.delete<ApiResponse<void>>('mediaLink', { mediaId }, queryParams);
+    }
+
+    deleteMediaWithResponse(id: number): Observable<ApiResponse<void>> {
+        return this.api.delete<ApiResponse<void>>('mediaById', { id });
+    }
+
+    getLinkedComponents(mediaId: number): Observable<MediaLinkedUsage[]> {
+        return this.customGet<MediaLinkedUsage[]>('linkedComponents', { mediaId });
     }
 }

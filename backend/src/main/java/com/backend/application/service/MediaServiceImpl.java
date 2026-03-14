@@ -140,7 +140,7 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
     public Optional<Media> findByUid(String uid) {
         return mediaRepository.findByUid(uid);
     }

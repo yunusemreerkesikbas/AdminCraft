@@ -178,16 +178,36 @@
 
                         <!-- Linked Components Section -->
                         <div class="flex flex-col gap-4">
-                            <div class="flex flex-col gap-1">
-                                <h3 class="text-lg font-semibold">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex flex-col gap-1">
+                                    <h3 class="text-lg font-semibold">
+                                        {{
+                                            'admin.media.dialogs.detail.linkedComponents'
+                                                | transloco
+                                        }}
+                                    </h3>
+                                    <p class="text-secondary text-sm">
+                                        {{
+                                            'admin.media.dialogs.bind.subtitle'
+                                                | transloco
+                                        }}
+                                    </p>
+                                </div>
+
+                                <button
+                                    mat-stroked-button
+                                    type="button"
+                                    color="primary"
+                                    (click)="openBindDialog()"
+                                >
+                                    <mat-icon class="mr-2 icon-size-5"
+                                        >link</mat-icon
+                                    >
                                     {{
-                                        'admin.media.dialogs.detail.linkedComponents'
+                                        'admin.media.dialogs.bind.open'
                                             | transloco
                                     }}
-                                </h3>
-                                <p class="text-secondary text-sm">
-                                    Components using this media.
-                                </p>
+                                </button>
                             </div>
 
                             <div class="rounded-lg border p-4">
@@ -209,61 +229,105 @@
                                 } @else {
                                     <div class="flex flex-col gap-3">
                                         @for (
-                                            component of linkedComponentsSig();
-                                            track component.id
+                                            usage of linkedComponentsSig();
+                                            track usageTrackBy($index, usage)
                                         ) {
                                             <div
                                                 class="flex items-center justify-between rounded bg-gray-50 p-3 dark:bg-gray-800/50"
                                             >
-                                                <div
-                                                    class="flex items-center gap-3"
-                                                >
-                                                    <div
-                                                        class="flex h-8 w-8 items-center justify-center rounded bg-white dark:bg-gray-900"
-                                                    >
-                                                        <mat-icon
-                                                            class="icon-size-4"
-                                                            >{{
-                                                                component.icon ||
-                                                                    'extension'
-                                                            }}</mat-icon
-                                                        >
-                                                    </div>
-                                                    <div class="flex flex-col">
+                                                <div class="flex min-w-0 items-center gap-3">
+                                                    <div class="flex min-w-0 flex-col">
                                                         <span
-                                                            class="text-sm font-medium"
+                                                            class="truncate text-sm font-medium"
                                                             >{{
-                                                                component.title
+                                                                usagePrimaryLabel(
+                                                                    usage
+                                                                )
                                                             }}</span
                                                         >
-                                                        <span
-                                                            class="text-secondary text-xs"
-                                                            >{{
-                                                                component.category
-                                                            }}
-                                                            •
-                                                            {{
-                                                                component.type
-                                                            }}</span
-                                                        >
+                                                        @if (
+                                                            usageEntryLabel(
+                                                                usage
+                                                            );
+                                                            as entryLabel
+                                                        ) {
+                                                            <span
+                                                                class="text-secondary truncate text-xs"
+                                                            >
+                                                                Entry:
+                                                                {{ entryLabel }}
+                                                            </span>
+                                                        }
                                                     </div>
                                                 </div>
 
-                                                <button
-                                                    mat-icon-button
-                                                    (click)="
-                                                        openComponent(component)
-                                                    "
-                                                    [matTooltip]="
-                                                        'admin.common.actions.edit'
-                                                            | transloco
-                                                    "
-                                                >
-                                                    <mat-icon
-                                                        class="icon-size-5"
-                                                        >edit</mat-icon
+                                                <div class="flex items-center gap-2">
+                                                    <span
+                                                        class="rounded-full bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-900 dark:text-gray-300"
                                                     >
-                                                </button>
+                                                        {{ usage.linkType }}
+                                                    </span>
+                                                    <button
+                                                        mat-icon-button
+                                                        type="button"
+                                                        color="warn"
+                                                        [disabled]="
+                                                            isDeletingUsage(
+                                                                usage
+                                                            )
+                                                        "
+                                                        (click)="
+                                                            deleteLinkedUsage(
+                                                                usage
+                                                            )
+                                                        "
+                                                        [matTooltip]="
+                                                            'admin.common.actions.delete'
+                                                                | transloco
+                                                        "
+                                                    >
+                                                        @if (
+                                                            isDeletingUsage(
+                                                                usage
+                                                            )
+                                                        ) {
+                                                            <mat-spinner
+                                                                diameter="18"
+                                                            ></mat-spinner>
+                                                        } @else {
+                                                            <mat-icon
+                                                                class="icon-size-5"
+                                                                svgIcon="heroicons_outline:trash"
+                                                            ></mat-icon>
+                                                        }
+                                                    </button>
+                                                    <button
+                                                        mat-icon-button
+                                                        type="button"
+                                                        [disabled]="
+                                                            isDeletingUsage(
+                                                                usage
+                                                            )
+                                                        "
+                                                        (click)="
+                                                            openLinkedUsage(
+                                                                usage
+                                                            )
+                                                        "
+                                                        [matTooltip]="
+                                                            usage.entryId
+                                                                ? ('admin.media.dialogs.bind.targets.entry'
+                                                                  | transloco)
+                                                                : ('admin.media.dialogs.bind.targets.component'
+                                                                  | transloco)
+                                                        "
+                                                    >
+                                                        <mat-icon
+                                                            class="icon-size-5"
+                                                            >open_in_new</mat-icon
+                                                        >
+                                                    </button>
+                                                </div>
                                             </div>
                                         }
 
@@ -556,8 +620,8 @@
                                                                 >
                                                                     <mat-icon
                                                                         class="text-gray-400 icon-size-4 hover:text-red-500"
-                                                                        >trash</mat-icon
-                                                                    >
+                                                                        svgIcon="heroicons_outline:trash"
+                                                                    ></mat-icon>
                                                                 </button>
                                                             </div>
                                                         </div>

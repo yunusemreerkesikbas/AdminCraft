@@ -200,21 +200,38 @@ Scripts have no file-based registration. Any valid SQL can be submitted. For rep
 
 ImpEx scripts for demo/content data are stored under `backend/src/main/resources/impex/`. These are **not executed automatically** — they serve as versioned reference documents that an admin can paste into the UI when setting up a new tenant with sample data.
 
-### Execution order (when seeding a fresh tenant — Home 02 theme)
+### Execution order (when seeding a fresh tenant — default theme example content)
 
 ```
-1. seed_liko_components.sql      — Home 02 components (Homepage*), i18n, entries, entry i18n
-2. seed_liko_pages_and_slots.sql — homepage, page_i18n, page_slots, slot_components (Section1-8), shared slots
-3. seed_pages_and_slots.sql      — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
-4. seed_navigation.sql          — nav nodes, entries, i18n
-5. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+1. seed_liko_components.sql      — landing page components (Homepage*), i18n, entries, entry i18n
+2. seed_liko_chrome_components.sql — shared Header/Footer components, Home-2 chrome copy, i18n, entries
+3. seed_liko_pages_and_slots.sql — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
+4. seed_pages_and_slots.sql      — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
+5. seed_navigation.sql           — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
+6. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
 
-`seed_liko_pages_and_slots.sql` depends on components from step 1 and on Flyway-managed `page_templates` / `template_slots`.
+`seed_liko_chrome_components.sql` maps the header/footer copy from `liko-next-js/src/pages/homes/home-2.tsx` into standard CMS component data.
+
+`seed_liko_pages_and_slots.sql` depends on components from steps 1-2 and on Flyway-managed `page_templates` / `template_slots`.
 
 `seed_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Seed* components.
 
 `seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
+
+### Storefront chrome seeding
+
+The CMS-driven storefront chrome uses shared slots plus standard CMS components. The reference scripts are:
+
+- `seed_liko_chrome_components.sql`
+  - Creates `StorefrontHeaderMainNavigation`, `StorefrontHeaderSocialLinks`, `StorefrontHeaderContactInfo`
+  - Creates `StorefrontFooterBrandBlock`, `StorefrontFooterSitemapNavigation`, `StorefrontFooterOfficeLinks`, `StorefrontFooterNewsletter`, `StorefrontFooterSocialLinks`
+  - Seeds the Home-2 header/footer text, links, newsletter placeholder, and social links through `component_i18n` and `component_entry_i18n`
+- `seed_liko_pages_and_slots.sql`
+  - Binds the shared `Header` slot (`SharedHeaderSlot`) and shared `Footer` slot (`SharedFooterSlot`) to those components
+- `seed_navigation.sql`
+  - Creates `LandingMainNavNode` and `LandingFooterNavNode`
+  - Attaches those nodes to the navigation-aware chrome components with `UPDATE components ... navigation_node_id = ...`
 
 ### Platform reference script
 

@@ -84,11 +84,15 @@ Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-pa
 2. `resolveTemplate(page.template)` looks up the template component from `templateRegistry`.
    - Unknown template → falls back to `DefaultTemplate` (renders all slots as a vertical stack) + `console.warn` (development only).
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
-4. Each template reads its slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each slot.
+4. `CmsPage` handles shared `Header` and `Footer` slots outside `<main>`.
+   - If a `Header` slot exists and contains renderable components, it renders `ThemeHeaderSlot`.
+   - If a `Footer` slot exists and contains renderable components, it renders `ThemeFooterSlot`.
+   - Empty or unrecognized chrome slots render nothing.
+5. Each template reads its body slot list from `TEMPLATE_CONFIGS` in `template-configs.ts` and renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each slot.
    - Exception: homepage `LandingPageTemplate` short-circuits into the theme adapter and renders `LandingPage` from a CMS-built view model instead of directly stacking `CmsSlot`s.
-5. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
-6. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
-7. Unknown component types render with `UnknownComponent`.
+6. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
+7. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
+8. Unknown component types render with `UnknownComponent`.
 
 `CmsImage` resolves responsive media URLs via `buildMediaUrl`.
 
@@ -166,16 +170,53 @@ The theme adapter (`buildThemePageModel`) reads CMS content from `component_i18n
 The landing page depends on both template-slot migration and tenant-scoped content imports.
 
 1. Restart backend so `backend/src/main/resources/db/tenant/pagebuilder/R__seed_page_templates.sql` is applied by Flyway.
-2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen.
-3. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen.
-4. Upload image/video assets in Media Library for the tenant.
-5. Bind uploaded assets from Media Library to the target component or component entry.
+2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen (example landing page components).
+3. Import `backend/src/main/resources/impex/seed_liko_chrome_components.sql` from the Admin UI ImpEx screen (shared header/footer components + Home-2 chrome copy).
+4. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen (homepage, shared header/footer slots, slot-component bindings).
+5. Import `backend/src/main/resources/impex/seed_pages_and_slots.sql` if the tenant also needs the default content/category/product/search pages.
+6. Import `backend/src/main/resources/impex/seed_navigation.sql` to create `LandingMainNavNode` and `LandingFooterNavNode`, then bind them to the chrome navigation components.
+7. Upload image/video assets in Media Library for the tenant.
+8. Bind uploaded assets from Media Library to the target component or component entry.
 
 If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
 
 #### Header and footer
 
-Landing page body sections are CMS-driven. Header and footer are still rendered from the storefront theme chrome (`components/layout/theme-chrome`) and serve as fallback even when CMS `Header` / `Footer` slots are empty.
+Header and footer are CMS-driven through shared `Header` / `Footer` slots and then adapted into the storefront chrome layer.
+
+- Slot entry point: `components/cms/CmsPage.tsx`
+- Chrome slot renderers: `components/layout/theme-chrome/ThemeHeaderSlot.tsx`, `components/layout/theme-chrome/ThemeFooterSlot.tsx`
+- Slot adapter: `components/layout/theme-chrome/cms-adapter.ts`
+- Presentational chrome: `components/layout/theme-chrome/ThemeHeaderChrome.tsx`, `components/layout/theme-chrome/ThemeFooterChrome.tsx`
+
+The chrome adapter prefers the expected component `uid`, then `type + styleClass`, mirroring the homepage section adapter strategy.
+
+##### Shared chrome slot contract
+
+| Slot | Expected component UID | Component type | Style class | Purpose |
+| --- | --- | --- | --- | --- |
+| `Header` | `StorefrontHeaderMainNavigation` | `NavigationComponent` | `header-main-navigation` | Main off-canvas menu tree |
+| `Header` | `StorefrontHeaderSocialLinks` | `CMSLinkComponent` | `header-social-links` | Social links in the off-canvas meta area |
+| `Header` | `StorefrontHeaderContactInfo` | `CMSLinkComponent` | `header-contact-info` | Contact links + CTA copy |
+| `Footer` | `StorefrontFooterBrandBlock` | `CMSParagraphComponent` | `footer-brand-block` | Brand text / intro copy |
+| `Footer` | `StorefrontFooterSitemapNavigation` | `NavigationComponent` | `footer-sitemap-navigation` | Footer sitemap column |
+| `Footer` | `StorefrontFooterOfficeLinks` | `CMSLinkComponent` | `footer-office-links` | Address / phone / email column |
+| `Footer` | `StorefrontFooterNewsletter` | `CMSLinkComponent` | `footer-newsletter` | Newsletter title + placeholder/button labels via entry `custom_data` |
+| `Footer` | `StorefrontFooterSocialLinks` | `CMSLinkComponent` | `footer-social-links` | Copyright bar social links |
+
+##### Chrome field mapping
+
+| Area | Data source |
+| --- | --- |
+| Header logo / languages | `GET /api/cms/site` |
+| Header main navigation | `navigationNode` on `StorefrontHeaderMainNavigation` |
+| Header social / contact links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
+| Header CTA text | `component_i18n.description` on `StorefrontHeaderContactInfo` |
+| Footer brand text | `component_i18n.description` on `StorefrontFooterBrandBlock` |
+| Footer sitemap | `navigationNode` on `StorefrontFooterSitemapNavigation` |
+| Footer office links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
+| Footer newsletter UI copy | `component_i18n.title` + `component_entry_i18n.custom_data.inputPlaceholder/buttonLabel` |
+| Footer social links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
 
 #### Tenant-aware media proxy
 
@@ -360,12 +401,12 @@ Located in `components/cms/registry/index.ts`. Maps `component.type` (from deliv
 
 | Component type | Renderer | Notes |
 |---|---|---|
-| `HeaderComponent` | `HeaderCmsComponent` | Brand logo + nav + language switcher (async server component) |
-| `FooterComponent` | `FooterCmsComponent` | Footer links + copyright |
 | `NavigationComponent` | `NavigationCmsComponent` | Navigation-aware renderer; delegates to `NavigationRenderer` or `StaticNavRenderer` based on `navigationType` |
 | `FeatureCardComponent` | `PortfolioGridRenderer` | Portfolio/feature card grid |
 | Other known types | `TextBlockRenderer` | Simple title/subtitle/description block |
 | Unknown types | `UnknownComponent` | Dev-visible fallback showing component type |
+
+Header and footer are no longer rendered through special CMS component types. `CmsPage` resolves them at the slot level via `ThemeHeaderSlot` / `ThemeFooterSlot`.
 
 ### NavigationComponent
 
@@ -394,10 +435,10 @@ When `component.searchBox === true`, a `SearchOverlay` button is rendered alongs
 ## Current limitations and extension points
 
 - Product, category, and search pages include minimal UI beyond CMS slots.
-- Header and footer are storefront theme chrome (`components/layout/theme-chrome`), not CMS-driven section renderers.
+- Header and footer render only from CMS shared slots; an empty or incomplete `Header` / `Footer` slot produces no chrome output.
 - Instagram section works with partial image sets; full parity is achieved when the tenant imports the complete expected media set.
 - Adding new UI languages requires a new `messages/{lang}.json` file and an entry in `AVAILABLE_MESSAGES` in `lib/i18n.ts`.
-- Navigation node UIDs `LandingMainNavNode` (main nav) and `LandingSocialNavNode` (social links) must be created in each tenant's CMS. These UIDs are defined in `components/cms/navigation/HeaderCmsComponent.tsx` and `FooterCmsComponent.tsx`.
+- Navigation node UIDs `LandingMainNavNode` (header main menu) and `LandingFooterNavNode` (footer sitemap) must be created in each tenant's CMS.
 
 ### Replacing the default theme
 

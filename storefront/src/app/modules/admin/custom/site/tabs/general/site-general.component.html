@@ -1,5 +1,22 @@
 <div class="max-w-3xl">
     <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="mb-6 flex justify-end">
+            <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving"
+            >
+                @if (saving) {
+                    <mat-icon
+                        class="mr-2 animate-spin"
+                        svgIcon="heroicons_outline:arrow-path"
+                    ></mat-icon>
+                }
+                {{ 'common.save' | transloco }}
+            </button>
+        </div>
+
         <!-- Global Settings -->
         <div class="bg-card mb-6 rounded-2xl p-6 shadow">
             <h3 class="mb-4 text-lg font-medium tracking-tight">
@@ -51,6 +68,23 @@
                     "
                 >
                 </spa-input>
+
+                <spa-media-picker
+                    formControlName="logoMediaUid"
+                    [label]="
+                        'admin.site.dashboard.general.logoMediaUid' | transloco
+                    "
+                >
+                </spa-media-picker>
+
+                <spa-media-picker
+                    formControlName="logoDarkMediaUid"
+                    [label]="
+                        'admin.site.dashboard.general.logoDarkMediaUid'
+                            | transloco
+                    "
+                >
+                </spa-media-picker>
             </div>
         </div>
 
@@ -155,24 +189,6 @@
                     }
                 }
             </div>
-        </div>
-
-        <!-- Save Button -->
-        <div class="flex justify-end">
-            <button
-                mat-flat-button
-                color="primary"
-                type="submit"
-                [disabled]="saving"
-            >
-                @if (saving) {
-                    <mat-icon
-                        class="mr-2 animate-spin"
-                        svgIcon="heroicons_outline:arrow-path"
-                    ></mat-icon>
-                }
-                {{ 'common.save' | transloco }}
-            </button>
         </div>
     </form>
 </div>

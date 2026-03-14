@@ -722,19 +722,17 @@ export const langEN = {
             messages: {
                 noMediaFound: 'No media files found in this folder',
                 uploadFirst: 'Upload files to enter metadata',
+                userNotIdentified: 'User not identified',
+                partialUploadWarning:
+                    'Uploaded {{successCount}} files. Failed: {{failureCount}}',
                 folderCreated: 'Folder created successfully',
                 folderUpdated: 'Folder updated successfully',
                 folderDeleted: 'Folder deleted successfully',
                 folderDeleteError: 'Failed to delete folder',
-                uploadSuccess: 'Files uploaded successfully',
-                updateSuccess: 'Media updated successfully',
-                deleteSuccess: 'File deleted successfully',
-                deleteError: 'Failed to delete file',
                 bulkDeleteSuccess: 'Selected files deleted successfully',
                 noFormats: 'No generated formats available',
                 generatedFormats: 'Generated formats (thumbnails, etc.)',
                 processingFormats: 'Processing formats... Please wait.',
-                variantDeleteSuccess: 'Variant deleted',
             },
             formats: {
                 original: 'Original File',
@@ -742,7 +740,6 @@ export const langEN = {
             focalPoint: {
                 title: 'Focal Point',
                 help: 'Click on the image to select the focal point.',
-                updateSuccess: 'Focal point updated',
                 tab: 'Tools',
             },
             format: {
@@ -778,6 +775,45 @@ export const langEN = {
                     title: 'Media Details',
                     formats: 'Formats',
                     linkedComponents: 'Linked Components',
+                },
+                bind: {
+                    title: 'Bind Media',
+                    subtitle: 'Link this media to a component or one of its entries.',
+                    open: 'Bind Media',
+                    submit: 'Save Binding',
+                    targetType: 'Target Type',
+                    responsiveTarget: 'Responsive Target',
+                    component: 'Component',
+                    entry: 'Entry',
+                    search: 'Component Search',
+                    searchPlaceholder: 'Search components by name',
+                    noEntries: 'No entries found for the selected component.',
+                    responsiveTargets: {
+                        desktop: 'Desktop',
+                        mobile: 'Mobile',
+                        both: 'Desktop + Mobile',
+                    },
+                    targets: {
+                        component: 'Component',
+                        entry: 'Entry',
+                    },
+                },
+                unlink: {
+                    title: 'Remove linked component?',
+                    messageComponent:
+                        'Remove this media from the selected component?',
+                    messageEntry:
+                        'Remove this media from the selected component entry?',
+                },
+                uploadResult: {
+                    title: 'Uploaded Media',
+                    subtitle: 'Upload completed',
+                    description:
+                        'Bind uploaded assets to components or entries from a single place.',
+                    bind: 'Bind',
+                    openDetails: 'Open Details',
+                    done: 'Done',
+                    bound: 'Bound',
                 },
                 messages: {
                     noLinkedComponents: 'No linked components found',
@@ -1134,6 +1170,8 @@ export const langEN = {
                     contactEmail: 'Contact Email',
                     contactPhone: 'Contact Phone',
                     whatsappPhone: 'WhatsApp Phone',
+                    logoMediaUid: 'Logo (Dark Background) — Media UID',
+                    logoDarkMediaUid: 'Logo (Light Background) — Media UID',
                     siteInfo: 'Site Information',
                     siteName: 'Site Name',
                     tagline: 'Tagline',
@@ -1206,6 +1244,7 @@ export const langEN = {
                     cookieConsentText: 'Cookie Consent Text',
                 },
                 placeholders: {
+                    mediaUid: 'e.g. abc-123-def',
                     tagline: 'A catchy tagline for your site',
                     footerText: 'Copyright © 2024 Company Name',
                     headerText: 'Announcement or campaign text',
@@ -2141,8 +2180,6 @@ export const langEN = {
     auth: {
         signIn: {
             title: 'Sign in',
-            noAccount: "Don't have an account?",
-            signUp: 'Sign up',
             demoInfo:
                 'You are browsing Fuse Demo. Click on the "Sign in" button to access the Demo and Documentation.',
             emailLabel: 'Email address',
@@ -2154,7 +2191,7 @@ export const langEN = {
                 title1: 'Welcome to',
                 title2: 'our community',
                 description:
-                    'Fuse helps developers build organized dashboards full of rich modules. Join us and start building your application today.',
+                    'AdminCraft helps you build customizable dashboards with rich modules. Join us and start building your application today.',
             },
             '2fa': {
                 info: 'A verification code has been sent to your email.',

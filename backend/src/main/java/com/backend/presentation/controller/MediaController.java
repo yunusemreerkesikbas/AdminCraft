@@ -111,9 +111,8 @@ public class MediaController {
                                         .body(ApiResponse.success(message, MediaResponse.from(media)));
                 } catch (Exception ex) {
                         log.error("Error uploading file: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.upload.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.upload.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 }
@@ -146,9 +145,8 @@ public class MediaController {
                                         .body(ApiResponse.success(message, MediaResponse.from(media)));
                 } catch (Exception ex) {
                         log.error("Error uploading composite media: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.upload.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.upload.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 }
@@ -171,8 +169,7 @@ public class MediaController {
                         }
                 } catch (Exception ex) {
                         log.error("Error getting media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.get.error", new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.get.error", "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -195,8 +192,7 @@ public class MediaController {
                         }
                 } catch (Exception ex) {
                         log.error("Error getting media by UID {}: {}", uid, ex.getMessage());
-                        String message = messageSource.getMessage("media.get.error", new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.get.error", "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -239,15 +235,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Invalid sort parameter: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.sort.invalid",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.sort.invalid",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error getting all media: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.list.error", new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.list.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -270,16 +265,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, MediaResponse.from(media)));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Media update validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.update.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error updating media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.update.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -294,19 +287,18 @@ public class MediaController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         mediaService.bindMedia(id, request);
-                        String message = messageSource.getMessage("media.bind.success", null,
-                                        Locale.forLanguageTag(languageCode));
+                        String message = getMessage(languageCode, "media.bind.success");
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Media bind validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.bind.error", null,
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.bind.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error binding media {}: {}", id, ex.getMessage(), ex);
-                        String message = messageSource.getMessage("media.bind.error", null,
-                                        Locale.forLanguageTag(languageCode));
+                        log.error("Error binding media {}: {}", id, ex.getMessage());
+                        String message = buildOperationErrorMessage(languageCode, "media.bind.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -323,19 +315,18 @@ public class MediaController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         mediaService.unlinkMedia(mediaId, componentId, entryId, linkType);
-                        String message = messageSource.getMessage("media.unlink.success", null,
-                                        Locale.forLanguageTag(languageCode));
+                        String message = getMessage(languageCode, "media.unlink.success");
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Media unlink validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.unlink.error", null,
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.unlink.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error unlinking media {}: {}", mediaId, ex.getMessage(), ex);
-                        String message = messageSource.getMessage("media.unlink.error", null,
-                                        Locale.forLanguageTag(languageCode));
+                        log.error("Error unlinking media {}: {}", mediaId, ex.getMessage());
+                        String message = buildOperationErrorMessage(languageCode, "media.unlink.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -354,9 +345,8 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (Exception ex) {
                         log.error("Error deleting media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.delete.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.delete.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 }
@@ -428,9 +418,8 @@ public class MediaController {
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error getting i18n for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.i18n.get.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.i18n.get.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -456,16 +445,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, MediaI18nResponse.from(i18n)));
                 } catch (IllegalArgumentException ex) {
                         log.warn("i18n upsert validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.i18n.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.i18n.update.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error upserting i18n for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.i18n.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.i18n.update.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -489,16 +476,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("i18n delete validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.i18n.delete.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.i18n.delete.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error deleting i18n for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.i18n.delete.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.i18n.delete.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -535,8 +520,7 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(detail));
                 } catch (Exception ex) {
                         log.error("Error getting media detail {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.get.error", new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.get.error", "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -564,16 +548,14 @@ public class MediaController {
                                         .body(ApiResponse.success(message, response));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Format generation validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.format.generate.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.format.generate.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error generating format for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.format.generate.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.format.generate.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -602,16 +584,14 @@ public class MediaController {
                                         .body(ApiResponse.success(message, responses));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Batch format generation validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.format.generate.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.format.generate.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error generating formats for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.format.generate.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.format.generate.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -634,16 +614,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Variant delete validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.variant.delete.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.variant.delete.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error deleting variant {} from media {}: {}", variantId, mediaId, ex.getMessage());
-                        String message = messageSource.getMessage("media.variant.delete.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.variant.delete.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -666,16 +644,14 @@ public class MediaController {
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Focal point update validation error: {}", ex.getMessage());
-                        String message = messageSource.getMessage("media.focalpoint.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.focalpoint.update.error",
+                                        "error.invalid.data");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error updating focal point for media {}: {}", id, ex.getMessage());
-                        String message = messageSource.getMessage("media.focalpoint.update.error",
-                                        new Object[] { ex.getMessage() },
-                                        Locale.forLanguageTag(languageCode));
+                        String message = buildOperationErrorMessage(languageCode, "media.focalpoint.update.error",
+                                        "error.general");
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
                 }
@@ -699,6 +675,14 @@ public class MediaController {
                                 variant.getFileSizeFormatted(),
                                 variant.getMimeType(),
                                 variant.getPublicUrl());
+        }
+
+        private String buildOperationErrorMessage(String languageCode, String operationKey, String causeKey) {
+                return getMessage(languageCode, operationKey, getMessage(languageCode, causeKey));
+        }
+
+        private String getMessage(String languageCode, String key, Object... args) {
+                return messageSource.getMessage(key, args, Locale.forLanguageTag(languageCode));
         }
 
         private void validateFileUpload(MultipartFile file) {

@@ -159,7 +159,11 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
         const uploadedBy = this.#userService.user()?.id;
 
         if (!uploadedBy) {
-            this.#notificationService.alert('User not identified');
+            this.isUploadingSig.set(false);
+            this.setSubmitting(false);
+            this.#notificationService.alert(
+                'admin.media.messages.userNotIdentified'
+            );
             return;
         }
 
@@ -175,22 +179,34 @@ export class MediaUploadDialogComponent extends SpaDialogBase<Media[], MediaUplo
                 const successes = results.filter(r => r.success);
                 const failures = results.filter(r => !r.success);
                 if (successes.length > 0) {
-                    this.uploadedMediaSig.set(successes.map(s => s.data!));
+                    this.uploadedMediaSig.set(successes.map(s => s.data!.data));
                     if (failures.length === 0) {
-                        this.#notificationService.success('admin.media.messages.uploadSuccess');
+                        this.#notificationService.success(
+                            successes[0].data!.message!
+                        );
                     } else {
-                        this.#notificationService.warning(`Uploaded ${successes.length} files. Failed: ${failures.length}`);
+                        this.#notificationService.warning(
+                            'admin.media.messages.partialUploadWarning',
+                            {
+                                params: {
+                                    successCount: successes.length,
+                                    failureCount: failures.length,
+                                },
+                            }
+                        );
                     }
                 }
 
                 if (failures.length > 0 && successes.length === 0) {
-                   this.#notificationService.alert('admin.media.messages.uploadError');
+                   this.#notificationService.alert(
+                    failures[0]!.error.error.message
+                   );
                 }
 
                 this.isUploadingSig.set(false);
                 this.setSubmitting(false);
                 if (successes.length > 0) {
-                    this.close(successes.map(s => s.data!));
+                    this.close(successes.map(s => s.data!.data));
                 }
             },
             error: (err) => {
