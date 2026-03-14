@@ -475,7 +475,7 @@ public class MediaServiceImpl implements MediaService {
             return null;
         }
         return findByUid(mediaUid)
-                .map(media -> getFileUrl(media.getId()))
+                .map(media -> "/api/media/files/" + media.getFileName())
                 .orElse(null);
     }
 }

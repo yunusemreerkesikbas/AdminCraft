@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final Set<String> RESERVED_FIELDS = Set.of(
-                        "uid", "order", "title", "description", "isVisible", "styleClasses");
+                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive");
 
         private final PageRepository pageRepository;
         private final PageI18nRepository pageI18nRepository;

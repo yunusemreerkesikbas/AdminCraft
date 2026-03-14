@@ -294,16 +294,21 @@ public class MediaController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         mediaService.bindMedia(id, request);
-                        String message = "Media linked successfully";
+                        String message = messageSource.getMessage("media.bind.success", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Media bind validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.bind.error", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                        .body(ApiResponse.error(ex.getMessage()));
+                                        .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error binding media {}: {}", id, ex.getMessage());
+                        log.error("Error binding media {}: {}", id, ex.getMessage(), ex);
+                        String message = messageSource.getMessage("media.bind.error", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body(ApiResponse.error(ex.getMessage()));
+                                        .body(ApiResponse.error(message));
                 }
         }
 
@@ -318,15 +323,21 @@ public class MediaController {
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
                         mediaService.unlinkMedia(mediaId, componentId, entryId, linkType);
-                        return ResponseEntity.ok(ApiResponse.success("Media link removed successfully", null));
+                        String message = messageSource.getMessage("media.unlink.success", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.ok(ApiResponse.success(message, null));
                 } catch (IllegalArgumentException ex) {
                         log.warn("Media unlink validation error: {}", ex.getMessage());
+                        String message = messageSource.getMessage("media.unlink.error", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                        .body(ApiResponse.error(ex.getMessage()));
+                                        .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error unlinking media {}: {}", mediaId, ex.getMessage());
+                        log.error("Error unlinking media {}: {}", mediaId, ex.getMessage(), ex);
+                        String message = messageSource.getMessage("media.unlink.error", null,
+                                        Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body(ApiResponse.error(ex.getMessage()));
+                                        .body(ApiResponse.error(message));
                 }
         }
 

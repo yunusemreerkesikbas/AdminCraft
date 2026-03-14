@@ -114,7 +114,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<?>> refreshToken(
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
             @RequestHeader("Authorization") @Valid @NotBlank String refreshToken,
             @RequestHeader(value = "X-Device-Fingerprint", required = false) String deviceFingerprint,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
