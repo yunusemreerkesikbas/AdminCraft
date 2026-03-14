@@ -1,7 +1,9 @@
 package com.backend.application.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -11,13 +13,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.dto.request.ResponsiveMediaRequest;
+import com.backend.application.dto.response.MediaLinkedComponentUsageResponse;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
+import com.backend.domain.entity.Component;
+import com.backend.domain.entity.ComponentEntry;
+import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentMediaLink;
+import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Language;
 import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.ComponentEntryI18nRepository;
+import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentMediaLinkRepository;
+import com.backend.domain.repository.ComponentRepository;
+import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 
@@ -35,6 +46,11 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
   private final ResponsiveMediaSetRepository repository;
   private final MediaRepository mediaRepository;
   private final ComponentMediaLinkRepository linkRepository;
+  private final ComponentRepository componentRepository;
+  private final ComponentEntryRepository componentEntryRepository;
+  private final ComponentEntryI18nRepository componentEntryI18nRepository;
+  private final ComponentTypeRepository componentTypeRepository;
+  private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
 
   @Override
   @Transactional
@@ -131,62 +147,9 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
     ResponsiveMediaSet saved = repository.save(entity);
     log.info("Updated responsive media set: {}", id);
 
-    // Update component links for all components using this responsive set
-    updateMediaLinksForResponsiveSet(saved);
+    componentMediaLinkSyncService.rebuildForResponsiveSet(saved);
 
     return ResponsiveMediaResponse.from(saved);
-  }
-
-  private void updateMediaLinksForResponsiveSet(ResponsiveMediaSet responsiveSet) {
-    // Get all component IDs that use this responsive set
-    List<Long> componentIds = linkRepository.findByResponsiveSetId(responsiveSet.getId())
-        .stream()
-        .map(ComponentMediaLink::getComponentId)
-        .distinct()
-        .toList();
-
-    if (componentIds.isEmpty()) {
-      log.debug("No components linked to responsive set {}", responsiveSet.getId());
-      return;
-    }
-
-    // Delete existing links and recreate for all components using this responsive
-    // set
-    for (Long componentId : componentIds) {
-      linkRepository.deleteByComponentId(componentId);
-
-      // Recreate links with updated media references
-      if (responsiveSet.getDesktopMedia() != null) {
-        ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
-            componentId,
-            responsiveSet.getDesktopMedia().getId(),
-            responsiveSet.getId(),
-            true);
-        saveLinkIfMissing(link);
-      }
-      if (responsiveSet.getMobileMedia() != null) {
-        ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
-            componentId,
-            responsiveSet.getMobileMedia().getId(),
-            responsiveSet.getId(),
-            false);
-        saveLinkIfMissing(link);
-      }
-    }
-
-    log.info("Updated media links for {} components using responsive set {}",
-        componentIds.size(), responsiveSet.getId());
-  }
-
-  private void saveLinkIfMissing(ComponentMediaLink link) {
-    boolean exists = linkRepository.existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
-        link.getComponentId(),
-        link.getMediaId(),
-        link.getLinkType(),
-        link.getEntryId());
-    if (!exists) {
-      linkRepository.save(link);
-    }
   }
 
   @Override
@@ -211,19 +174,83 @@ public class ResponsiveMediaServiceImpl implements ResponsiveMediaService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<Long> getLinkedComponentIds(Long mediaId) {
+  public List<MediaLinkedComponentUsageResponse> getLinkedComponentUsages(Long mediaId) {
     log.info("Getting linked components for mediaId: {}", mediaId);
     try {
       List<ComponentMediaLink> links = linkRepository.findByMediaId(mediaId);
       log.info("Found {} links for mediaId: {}", links.size(), mediaId);
-      return links.stream()
+
+      if (links.isEmpty()) {
+        return List.of();
+      }
+
+      List<Long> componentIds = links.stream()
           .map(ComponentMediaLink::getComponentId)
           .distinct()
-          .collect(Collectors.toList());
+          .toList();
+      Map<Long, Component> componentById = componentRepository.findByIdIn(componentIds).stream()
+          .collect(Collectors.toMap(Component::getId, Function.identity()));
+
+      List<Long> componentTypeIds = componentById.values().stream()
+          .map(Component::getComponentTypeId)
+          .distinct()
+          .toList();
+      Map<Long, String> componentTypeNamesById = componentTypeIds.isEmpty()
+          ? Map.of()
+          : componentTypeRepository.findByIdIn(componentTypeIds).stream()
+              .collect(Collectors.toMap(ComponentType::getId, ComponentType::getUid));
+
+      List<Long> entryIds = links.stream()
+          .map(ComponentMediaLink::getEntryId)
+          .filter(entryId -> entryId != null)
+          .distinct()
+          .toList();
+      Map<Long, ComponentEntry> entryById = entryIds.isEmpty()
+          ? Map.of()
+          : componentEntryRepository.findByIdIn(entryIds).stream()
+              .collect(Collectors.toMap(ComponentEntry::getId, Function.identity()));
+      Map<Long, List<ComponentEntryI18n>> entryI18nByEntryId = entryIds.isEmpty()
+          ? Map.of()
+          : componentEntryI18nRepository.findByEntryIdIn(entryIds).stream()
+              .collect(Collectors.groupingBy(ComponentEntryI18n::getEntryId));
+
+      return links.stream()
+          .map(link -> {
+            Component component = componentById.get(link.getComponentId());
+            ComponentEntry entry = link.getEntryId() != null ? entryById.get(link.getEntryId()) : null;
+            String componentTypeName = component != null
+                ? componentTypeNamesById.get(component.getComponentTypeId())
+                : null;
+
+            return new MediaLinkedComponentUsageResponse(
+                link.getComponentId(),
+                component != null ? component.getUid() : null,
+                component != null ? component.getName() : null,
+                componentTypeName,
+                link.getEntryId(),
+                entry != null ? entry.getUid() : null,
+                entry != null ? entry.getSortOrder() : null,
+                entry != null ? resolveEntryTitle(entryI18nByEntryId.get(entry.getId())) : null,
+                link.getLinkType().name(),
+                link.getResponsiveSetId());
+          })
+          .toList();
     } catch (Exception e) {
       log.error("Error getting linked components for mediaId: {}", mediaId, e);
       throw e;
     }
+  }
+
+  private String resolveEntryTitle(List<ComponentEntryI18n> translations) {
+    if (translations == null || translations.isEmpty()) {
+      return null;
+    }
+
+    return translations.stream()
+        .map(ComponentEntryI18n::getTitle)
+        .filter(title -> title != null && !title.isBlank())
+        .findFirst()
+        .orElse(null);
   }
 
   @Override

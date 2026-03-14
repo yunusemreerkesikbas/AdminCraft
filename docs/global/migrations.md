@@ -177,7 +177,7 @@ Before committing a new migration:
 | ------------- | ----------------- | ----------------------------------------------------------- |
 | V1-V40        | core              | Baseline + navigation + site technical + recaptcha + repair + config_properties (V39–V40, HAC-style key-value) |
 | V1–V5         | mail_marketing    | Baseline (templates/subscribers/provider config + campaigns/outbox) + subscriptions + source/lang model + lang backfill + permission model |
-| V1-V22        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean + drop `navigation_link_node_id` |
+| V1-V25        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean + drop `navigation_link_node_id` (V22–V23) + remove Seed* components (V24) + remove unused component types (V25) |
 | V1-V35        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url + restore description |
 | V20-V24       | media             | Baseline + responsive media + link type alignment           |
 | V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

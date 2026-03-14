@@ -73,8 +73,8 @@ public class VerificationTokenRepositoryImpl implements VerificationTokenReposit
 
     @Override
     @Transactional
-    public void deleteExpiredTokens(LocalDateTime before) {
-        jpaRepository.deleteExpiredTokens(before);
+    public void deleteExpiredTokens(LocalDateTime before, LocalDateTime activeCutoff) {
+        jpaRepository.deleteExpiredTokens(before, activeCutoff);
     }
 
     @Override

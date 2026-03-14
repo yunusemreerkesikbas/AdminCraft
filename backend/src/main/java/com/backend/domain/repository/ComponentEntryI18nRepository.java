@@ -15,6 +15,8 @@ public interface ComponentEntryI18nRepository {
 
     List<ComponentEntryI18n> findByEntryId(Long entryId);
 
+    List<ComponentEntryI18n> findByEntryIdIn(List<Long> entryIds);
+
     void delete(ComponentEntryI18n entryI18n);
 
     boolean existsByUid(String uid);

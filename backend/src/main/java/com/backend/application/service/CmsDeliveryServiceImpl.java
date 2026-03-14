@@ -20,13 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional(transactionManager = "tenantTransactionManager", readOnly = true)
 public class CmsDeliveryServiceImpl implements CmsDeliveryService {
 
   private final ComponentDeliveryService componentDeliveryService;
   private final PageDeliveryService pageDeliveryService;
   private final TenantContextPort tenantContext;
   private final SiteRepository siteRepository;
+  private final MediaService mediaService;
 
   @Override
   public Optional<ComponentDeliveryResponse> getComponentByUid(String uid, Language lang) {
@@ -49,8 +50,11 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
 
   @Override
   public Optional<SiteDeliveryResponse> getSiteForDelivery() {
-    return siteRepository.findFirstByOrderByIdAsc()
-        .map(SiteDeliveryResponse::from);
+    return siteRepository.findFirstByOrderByIdAsc().map(site -> {
+      String logoUrl = mediaService.resolvePublicUrl(site.getLogoMediaUid());
+      String logoDarkUrl = mediaService.resolvePublicUrl(site.getLogoDarkMediaUid());
+      return SiteDeliveryResponse.from(site, logoUrl, logoDarkUrl);
+    });
   }
 
   @Override

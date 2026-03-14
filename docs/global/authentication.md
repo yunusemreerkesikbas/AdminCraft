@@ -25,12 +25,12 @@ Base path: `/api/auth`
 |--------|------|-------------|---------------|
 | `POST` | `/login` | User login (may trigger 2FA) | No |
 | `POST` | `/verify-otp` | Verify OTP code for 2FA | No |
-| `POST` | `/refresh` | Refresh access token | Bearer token |
+| `POST` | `/refresh` | Refresh access token (may trigger 2FA if policy changed) | Bearer token |
 | `POST` | `/logout` | Logout user | Bearer token |
 | `POST` | `/forgot-password` | Request password reset email | No |
 | `POST` | `/reset-password` | Reset password with token | No |
 | `GET` | `/verify-reset-token` | Validate reset token | No |
-| `POST` | `/set-initial-password` | New user sets password | No |
+| `POST` | `/set-initial-password` | New user sets password (no JWT returned) | No |
 
 ## Tenant User Login
 
@@ -102,6 +102,34 @@ Token refresh uses the Authorization header:
 
 The refresh flow detects whether the token belongs to a platform admin or a tenant user and issues a new access token accordingly.
 
+### 2FA Policy Enforcement on Refresh
+
+**If the tenant's 2FA policy is `REQUIRED`**, the refresh endpoint also checks whether the device is trusted. If not trusted, the response is identical to the 2FA-required login response — the client must complete OTP verification before receiving a new JWT.
+
+This means: a user who logged in while 2FA was `DISABLED`, then the admin enables `REQUIRED`, will be challenged on their next token refresh.
+
+**Headers**:
+| Header | Required | Description |
+|--------|----------|-------------|
+| `Authorization` | Yes | `Bearer {refreshToken}` |
+| `X-Device-Fingerprint` | No | SHA-256 device fingerprint (same value used at OTP verify) |
+
+**Response when 2FA required** (same shape as login):
+```json
+{
+  "result": "SUCCESS",
+  "data": {
+    "requires2FA": true,
+    "pendingToken": "abc123-session-token",
+    "maskedEmail": "u***@example.com",
+    "subdomain": "acme",
+    "tenantId": 1
+  }
+}
+```
+
+The client should redirect to the OTP form — `POST /auth/verify-otp` completes the flow and returns a new JWT.
+
 ---
 
 ## Two-Factor Authentication (2FA)
@@ -112,6 +140,8 @@ AdminCraft supports:
 
 ### 2FA Policy Levels
 
+2FA is controlled at the **tenant level** (all-or-nothing per tenant). There is no per-user toggle.
+
 Configured per scope:
 - Tenant users: Site Dashboard → Security tab
 - SUPER_ADMIN users: Platform Settings → Security section
@@ -119,11 +149,13 @@ Configured per scope:
 | Policy | Behavior |
 |--------|----------|
 | `DISABLED` | 2FA not used, standard login |
-| `REQUIRED` | 2FA mandatory for all tenant users |
+| `REQUIRED` | 2FA mandatory for all tenant users (or all platform admins) |
 
 For SUPER_ADMIN, the same policy values are used globally from platform settings:
 - `DISABLED`: platform login behaves as standard email/password
 - `REQUIRED`: platform login always returns `requires2FA` and requires OTP verification
+
+> **Policy enforcement applies at login AND token refresh.** If a tenant admin changes policy from `DISABLED` to `REQUIRED`, active sessions will be challenged on their next token refresh (see [Refresh Token](#refresh-token)).
 
 ### Login Flow with 2FA
 
@@ -297,7 +329,10 @@ Secure password reset flow using email tokens.
      "confirmPassword": "NewPass123!"
    }
    └── Response: { "result": "SUCCESS", "message": "Password changed" }
+   └── email_verified=true is set (user proved email access by clicking the reset link)
 ```
+
+> **Note**: Password reset sets `email_verified = true`. This is intentional — the user proved ownership of the email address by clicking the reset link. Without this, a `TENANT_USER` with `email_verified = false` could reset their password but still be unable to log in.
 
 ### Token Configuration
 
@@ -334,8 +369,11 @@ New users created by admin receive a verification email to set their password.
      "confirmPassword": "SecurePass123!"
    }
    └── email_verified=true, password set
-   └── User can now login
+   └── Response: { "result": "SUCCESS", "message": "..." } — no JWT returned
+   └── Frontend redirects to sign-in; user logs in normally (2FA applies if policy requires it)
 ```
+
+> **Note**: `POST /auth/set-initial-password` returns `ApiResponse<Void>` — no access token or refresh token. The client must proceed to `/sign-in` for a fresh login. This ensures 2FA policy is enforced on first login.
 
 ### Token Configuration
 
@@ -533,8 +571,9 @@ ngOnInit():
 
 setPassword():
   - Validate passwords match
-  - Call authService.setInitialPassword(token, password, confirmPassword, ..., subdomain, recaptchaToken)
+  - Call authService.setInitialPassword(token, password, confirmPassword, subdomain, recaptchaToken)
   - On success → Show `response.message` (fallback i18n) → Redirect to /sign-in
+  - Note: no JWT in response — the redirect to sign-in is mandatory, not optional
 ```
 
 ### Forgot Password Component
@@ -568,7 +607,8 @@ resetPassword(token: string, password: string, confirmPassword: string, subdomai
 
 // Email Verification
 verifyEmailToken(token: string, subdomain?: string): Observable<any>
-setInitialPassword(token: string, password: string, confirmPassword: string, deviceFingerprint?: string, trustDevice?: boolean, deviceName?: string, subdomain?: string, recaptchaToken?: string): Observable<any>
+setInitialPassword(token: string, password: string, confirmPassword: string, subdomain?: string, recaptchaToken?: string): Observable<any>
+// Returns ApiResponse<void> — no JWT. Redirect to sign-in after success.
 
 // 2FA
 signIn(credentials): Observable<boolean | 'requires2FA'>
@@ -634,11 +674,13 @@ async generateDeviceFingerprint(): Promise<string> {
 - Tokens are single-use (status changes to USED after consumption)
 - Automatic expiry enforcement
 - Rate limiting on verification attempts (max 5)
+- Expired `ACTIVE` tokens are also cleaned up by the scheduled job (7-day grace window)
 
 ### OTP Security
 
 - 6-digit numeric codes (cryptographically random)
 - **Hash-based storage** (OTP codes stored as SHA-256 hash, never plaintext)
+- **Constant-time comparison** (`MessageDigest.isEqual()`) used during OTP validation — prevents timing attacks
 - 5-minute expiry window
 - Max 5 verification attempts before token invalidation
 - **Request rate limiting**: Max 3 OTP requests per email per 5-minute window

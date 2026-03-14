@@ -141,7 +141,7 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
         try (Connection connection = dataSource.getConnection();
             Statement statement = connection.createStatement()) {
           statement.execute("SELECT 1");
-          log.info("Connection pool pre-warmed successfully for tenant DB: {} (attempt {}/{})",
+          log.debug("Connection pool pre-warmed successfully for tenant DB: {} (attempt {}/{})",
               tenantDbName, attempt, maxAttempts);
           return;
         }

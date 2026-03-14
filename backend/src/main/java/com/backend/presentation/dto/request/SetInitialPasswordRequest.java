@@ -19,15 +19,6 @@ public record SetInitialPasswordRequest(
         @NotBlank(message = "validation.password.confirm.required")
         String confirmPassword,
 
-        // Optional fields for trusted device
-        @Size(max = 128, message = "validation.device.fingerprint.size")
-        String deviceFingerprint,
-
-        Boolean trustDevice,
-
-        @Size(max = 100, message = "validation.device.name.size")
-        String deviceName,
-
         @Size(max = ValidationConstants.RECAPTCHA_TOKEN_MAX_LENGTH, message = "validation.recaptcha.token.size")
         @Pattern(regexp = ValidationConstants.RECAPTCHA_TOKEN_PATTERN, message = "validation.recaptcha.token.invalid")
         String recaptchaToken

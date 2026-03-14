@@ -46,6 +46,11 @@ public interface ComponentMediaLinkRepository {
       Long entryId);
 
   /**
+   * Delete only component-level responsive links for a component.
+   */
+  void deleteComponentLevelByComponentId(Long componentId);
+
+  /**
    * Delete all links for a component.
    */
   void deleteByComponentId(Long componentId);

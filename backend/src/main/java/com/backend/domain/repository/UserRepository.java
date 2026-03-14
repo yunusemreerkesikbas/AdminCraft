@@ -48,8 +48,6 @@ public interface UserRepository {
 
     List<User> findByEmailVerified(Boolean emailVerified);
 
-    List<User> findByTwoFactorEnabled(Boolean twoFactorEnabled);
-
     // Account security queries
     List<User> findByFailedLoginAttemptsGreaterThanEqual(Integer attempts);
 

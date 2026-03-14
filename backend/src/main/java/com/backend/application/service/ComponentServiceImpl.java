@@ -24,7 +24,6 @@ import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.entity.ComponentI18n;
-import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.ComponentType;
 import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.ComponentStatus;
@@ -35,7 +34,6 @@ import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentI18nRepository;
-import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.NavigationNodeRepository;
@@ -58,7 +56,7 @@ public class ComponentServiceImpl implements ComponentService {
     private final ComponentTypeRepository componentTypeRepository;
     private final NavigationNodeRepository navigationNodeRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
-    private final ComponentMediaLinkRepository componentMediaLinkRepository;
+    private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
 
     @Override
     @Transactional
@@ -198,7 +196,7 @@ public class ComponentServiceImpl implements ComponentService {
         Component component = componentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Component", id));
 
-        // Component deletion will cascade to media links via ON DELETE CASCADE
+        componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
         componentRepository.delete(component);
     }
 
@@ -275,7 +273,7 @@ public class ComponentServiceImpl implements ComponentService {
 
         Component savedComponent = componentRepository.save(component);
 
-        String typeName = componentType.getName();
+        String typeName = componentType.getUid();
 
         List<ComponentI18n> i18nList = new ArrayList<>();
         for (var entry : request.translations().entrySet()) {
@@ -340,7 +338,7 @@ public class ComponentServiceImpl implements ComponentService {
         return componentRepository.findById(id)
                 .map(component -> {
                     String typeName = componentTypeRepository.findById(component.getComponentTypeId())
-                            .map(ComponentType::getName)
+                            .map(ComponentType::getUid)
                             .orElse(null);
 
                     List<ComponentI18n> i18nList = componentI18nRepository.findByComponentId(id);
@@ -360,50 +358,18 @@ public class ComponentServiceImpl implements ComponentService {
                     .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", responsiveMediaId));
             component.setResponsiveMedia(responsiveMedia);
             log.info("Assigned responsive media {} to component {}", responsiveMediaId, componentId);
-
-            // Update Media Links
-            componentMediaLinkRepository.deleteByComponentId(componentId);
-
-            if (responsiveMedia.getDesktopMedia() != null) {
-                ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
-                        componentId,
-                        responsiveMedia.getDesktopMedia().getId(),
-                        responsiveMedia.getId(),
-                        true);
-                saveMediaLinkIfMissing(link);
-            }
-            if (responsiveMedia.getMobileMedia() != null) {
-                ComponentMediaLink link = ComponentMediaLink.forComponentResponsive(
-                        componentId,
-                        responsiveMedia.getMobileMedia().getId(),
-                        responsiveMedia.getId(),
-                        false);
-                saveMediaLinkIfMissing(link);
-            }
-
         } else {
             component.setResponsiveMedia(null);
-            componentMediaLinkRepository.deleteByComponentId(componentId);
             log.info("Removed responsive media from component {}", componentId);
         }
 
         Component saved = componentRepository.save(component);
+        componentMediaLinkSyncService.syncComponentResponsiveLinks(saved);
         if (saved.getResponsiveMedia() != null) {
             org.hibernate.Hibernate.initialize(saved.getResponsiveMedia());
         }
 
         return saved;
-    }
-
-    private void saveMediaLinkIfMissing(ComponentMediaLink link) {
-        boolean exists = componentMediaLinkRepository.existsByComponentIdAndMediaIdAndLinkTypeAndEntryId(
-                link.getComponentId(),
-                link.getMediaId(),
-                link.getLinkType(),
-                link.getEntryId());
-        if (!exists) {
-            componentMediaLinkRepository.save(link);
-        }
     }
 
     private void applyNavigationBinding(

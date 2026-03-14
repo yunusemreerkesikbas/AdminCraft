@@ -22,13 +22,19 @@ public record SiteSettingsGlobalDto(
 
         AddressDto address,
 
-        SocialDto social) {
+        SocialDto social,
+
+        @Size(max = 255) String logoMediaUid,
+
+        @Size(max = 255) String logoDarkMediaUid) {
 
     public SiteSettingsGlobalDto {
         contactEmail = sanitize(contactEmail);
         contactPhone = sanitize(contactPhone);
         whatsappPhone = sanitize(whatsappPhone);
         canonicalBaseUrl = sanitize(canonicalBaseUrl);
+        logoMediaUid = sanitize(logoMediaUid);
+        logoDarkMediaUid = sanitize(logoDarkMediaUid);
     }
 
     private static String sanitize(String value) {

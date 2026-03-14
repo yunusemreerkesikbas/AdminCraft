@@ -28,8 +28,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
 
     List<User> findByEmailVerified(Boolean emailVerified);
 
-    List<User> findByTwoFactorEnabled(Boolean twoFactorEnabled);
-
     long countByIsActive(Boolean isActive);
 
     // Account security queries

@@ -125,6 +125,12 @@ public class Site {
     @Column(name = "updated_by")
     private Long updatedBy;
 
+    @Column(name = "logo_media_uid", length = 255)
+    private String logoMediaUid;
+
+    @Column(name = "logo_dark_media_uid", length = 255)
+    private String logoDarkMediaUid;
+
     // reCAPTCHA Configuration
     @Column(name = "recaptcha_enabled")
     private Boolean recaptchaEnabled = false;

@@ -25,9 +25,11 @@ public record SiteDeliveryResponse(
     String facebookPageUrl,
     String domain,
     String customDomain,
-    Boolean sslEnabled) {
+    Boolean sslEnabled,
+    String logoUrl,
+    String logoDarkUrl) {
 
-    public static SiteDeliveryResponse from(Site site) {
+    public static SiteDeliveryResponse from(Site site, String logoUrl, String logoDarkUrl) {
         List<LanguageInfo> enabledLanguages = site.getEnabledLanguages().stream()
                 .map(LanguageInfo::from)
                 .collect(Collectors.toList());
@@ -48,7 +50,9 @@ public record SiteDeliveryResponse(
                 site.getFacebookPageUrl(),
                 site.getDomain(),
                 site.getCustomDomain(),
-                site.getSslEnabled());
+                site.getSslEnabled(),
+                logoUrl,
+                logoDarkUrl);
     }
 
     public record LanguageInfo(String code, String nativeName, Boolean isRtl) {

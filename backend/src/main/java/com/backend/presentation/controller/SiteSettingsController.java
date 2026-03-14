@@ -132,7 +132,9 @@ public class SiteSettingsController {
         dto.canonicalBaseUrl(),
         dto.robots(),
         address,
-        social);
+        social,
+        dto.logoMediaUid(),
+        dto.logoDarkMediaUid());
   }
 
   private SiteSettingsAppDto.SiteSettingsAppI18nDto toAppI18nDto(SiteSettingsI18nDto dto) {
@@ -195,7 +197,9 @@ public class SiteSettingsController {
           dto.global().canonicalBaseUrl(),
           dto.global().robots(),
           address,
-          social);
+          social,
+          dto.global().logoMediaUid(),
+          dto.global().logoDarkMediaUid());
     }
 
     Map<String, SiteSettingsI18nDto> languages = null;

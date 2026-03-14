@@ -26,16 +26,9 @@ public interface AuthenticationService {
 
     TokenValidationResult validateEmailVerificationToken(String token);
 
-    AuthResult setInitialPassword(
-            String token,
-            String password,
-            String deviceFingerprint,
-            boolean trustDevice,
-            String deviceName,
-            String ipAddress,
-            String userAgent);
+    void setInitialPassword(String token, String password);
 
-    AuthResult refreshToken(String refreshToken);
+    AuthResult refreshToken(String refreshToken, String deviceFingerprint, String ipAddress, String userAgent);
 
     void logout(String token);
 }

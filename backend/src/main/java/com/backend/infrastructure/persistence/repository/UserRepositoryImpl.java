@@ -160,11 +160,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public List<User> findByTwoFactorEnabled(Boolean twoFactorEnabled) {
-        return userJpaRepository.findByTwoFactorEnabled(twoFactorEnabled);
-    }
-
-    @Override
     public List<User> findByFailedLoginAttemptsGreaterThanEqual(Integer attempts) {
         return userJpaRepository.findByFailedLoginAttemptsGreaterThanEqual(attempts);
     }

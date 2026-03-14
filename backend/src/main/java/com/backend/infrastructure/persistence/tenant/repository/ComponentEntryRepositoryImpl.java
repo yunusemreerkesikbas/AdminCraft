@@ -27,6 +27,11 @@ public class ComponentEntryRepositoryImpl implements ComponentEntryRepository {
     }
 
     @Override
+    public List<ComponentEntry> findByIdIn(List<Long> ids) {
+        return jpaRepository.findByIdIn(ids);
+    }
+
+    @Override
     public List<ComponentEntry> findByComponentId(Long componentId) {
         return jpaRepository.findByComponentId(componentId);
     }
@@ -56,5 +61,10 @@ public class ComponentEntryRepositoryImpl implements ComponentEntryRepository {
     public List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrder(List<Long> componentIds,
             com.backend.domain.enums.ComponentStatus status) {
         return jpaRepository.findByComponentIdInAndStatusOrderBySortOrderAsc(componentIds, status);
+    }
+
+    @Override
+    public List<ComponentEntry> findByResponsiveMediaId(Long responsiveMediaId) {
+        return jpaRepository.findByResponsiveMediaId(responsiveMediaId);
     }
 }

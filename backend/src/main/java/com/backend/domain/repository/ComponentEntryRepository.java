@@ -10,6 +10,8 @@ public interface ComponentEntryRepository {
 
     Optional<ComponentEntry> findById(Long id);
 
+    List<ComponentEntry> findByIdIn(List<Long> ids);
+
     List<ComponentEntry> findByComponentId(Long componentId);
 
     List<ComponentEntry> findByComponentIdOrderBySortOrder(Long componentId);
@@ -23,4 +25,6 @@ public interface ComponentEntryRepository {
 
     List<ComponentEntry> findByComponentIdInAndStatusOrderBySortOrder(List<Long> componentIds,
             com.backend.domain.enums.ComponentStatus status);
+
+    List<ComponentEntry> findByResponsiveMediaId(Long responsiveMediaId);
 }

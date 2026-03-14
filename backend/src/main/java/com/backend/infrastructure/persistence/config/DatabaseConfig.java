@@ -4,6 +4,7 @@ import com.backend.infrastructure.tenant.MultiTenantConnectionProvider;
 import com.backend.infrastructure.tenant.CurrentTenantIdentifierResolver;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -24,6 +25,9 @@ import java.util.Map;
                 "com.backend.domain.repository"
 }, entityManagerFactoryRef = "tenantEntityManagerFactory", transactionManagerRef = "tenantTransactionManager")
 public class DatabaseConfig {
+
+        @Value("${spring.jpa.show-sql:false}")
+        private boolean showSql;
 
         private final MultiTenantConnectionProvider multiTenantConnectionProvider;
         private final CurrentTenantIdentifierResolver tenantIdentifierResolver;
@@ -47,8 +51,8 @@ public class DatabaseConfig {
 
                 Map<String, Object> properties = new HashMap<>();
                 properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
-                properties.put("hibernate.show_sql", "true");
-                properties.put("hibernate.format_sql", "true");
+                properties.put("hibernate.show_sql", String.valueOf(showSql));
+                properties.put("hibernate.format_sql", String.valueOf(showSql));
                 properties.put("hibernate.hbm2ddl.auto", "none");
                 properties.put("hibernate.multiTenancy", "DATABASE");
                 properties.put("hibernate.multi_tenant_connection_provider", multiTenantConnectionProvider);
