@@ -183,7 +183,9 @@ public class OtpServiceImpl implements OtpService {
         }
 
         String expectedHash = hashToken(otpCode);
-        boolean isValid = token.getTargetValue().equals(expectedHash);
+        boolean isValid = MessageDigest.isEqual(
+                token.getTargetValue().getBytes(StandardCharsets.UTF_8),
+                expectedHash.getBytes(StandardCharsets.UTF_8));
 
         if (!isValid) {
             token.incrementAttempts();
@@ -266,7 +268,7 @@ public class OtpServiceImpl implements OtpService {
     @Transactional("tenantTransactionManager")
     public void cleanupExpiredTokens() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
-        tokenRepository.deleteExpiredTokens(cutoff);
+        tokenRepository.deleteExpiredTokens(cutoff, cutoff);
         log.info("Cleaned up expired tokens older than {}", cutoff);
     }
 }

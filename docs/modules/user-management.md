@@ -35,7 +35,6 @@ User Management provides tenant-level user administration with role-based access
 | department | VARCHAR(100) | Optional |
 | is_active | BOOLEAN | Account status |
 | email_verified | BOOLEAN | Email verification status |
-| two_factor_enabled | BOOLEAN | 2FA status |
 | password_changed_at | DATETIME | Last password change |
 | last_login_at | DATETIME | Last successful login |
 | last_login_ip | VARCHAR(45) | Last login IP |
@@ -222,7 +221,7 @@ Response DTO (excludes `passwordHash` for security):
 
 - id, email, firstName, lastName, role
 - phone, jobTitle, department, notes
-- isActive, emailVerified, twoFactorEnabled
+- isActive, emailVerified
 - lastLoginAt, lastLoginIp, failedLoginAttempts, accountLocked
 - createdAt, updatedAt
 - displayName (computed), isSuperAdmin, isTenantAdmin

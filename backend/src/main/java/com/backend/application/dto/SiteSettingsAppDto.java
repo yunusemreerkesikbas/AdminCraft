@@ -18,7 +18,9 @@ public class SiteSettingsAppDto {
       String canonicalBaseUrl,
       RobotsMetaTag robots,
       AddressDto address,
-      SocialDto social) {
+      SocialDto social,
+      String logoMediaUid,
+      String logoDarkMediaUid) {
 
     public record AddressDto(
         String line1,

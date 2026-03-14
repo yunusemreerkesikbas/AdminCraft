@@ -470,7 +470,7 @@ public class PageSlotServiceImpl implements PageSlotService {
     if (component != null && component.getComponentTypeId() != null) {
       ComponentType type = typeMap.get(component.getComponentTypeId());
       if (type != null) {
-        typeName = type.getName();
+        typeName = type.getUid();
       }
     }
 

@@ -61,6 +61,12 @@ public class ComponentMediaLinkRepositoryImpl implements ComponentMediaLinkRepos
 
   @Override
   @Transactional
+  public void deleteComponentLevelByComponentId(Long componentId) {
+    jpaRepository.deleteComponentLevelByComponentId(componentId);
+  }
+
+  @Override
+  @Transactional
   public void deleteByComponentId(Long componentId) {
     jpaRepository.deleteByComponentId(componentId);
   }

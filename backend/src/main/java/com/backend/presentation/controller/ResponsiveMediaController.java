@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.request.ResponsiveMediaRequest;
+import com.backend.application.dto.response.MediaLinkedComponentUsageResponse;
 import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.application.service.ResponsiveMediaService;
 import com.backend.shared.common.ApiResponse;
@@ -108,13 +109,13 @@ public class ResponsiveMediaController {
 
   @GetMapping("/media/{mediaId}/linked-components")
   @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
-  @Operation(summary = "Get components using a media", description = "Returns component IDs that use the specified media")
+  @Operation(summary = "Get components using a media", description = "Returns component and entry usages for the specified media")
   @ApiResponses(value = {
-      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of component IDs")
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of media usages")
   })
-  public ResponseEntity<ApiResponse<List<Long>>> getLinkedComponents(
+  public ResponseEntity<ApiResponse<List<MediaLinkedComponentUsageResponse>>> getLinkedComponents(
       @Parameter(description = "Media ID") @PathVariable Long mediaId) {
-    List<Long> componentIds = service.getLinkedComponentIds(mediaId);
-    return ResponseEntity.ok(ApiResponse.success(componentIds));
+    List<MediaLinkedComponentUsageResponse> usages = service.getLinkedComponentUsages(mediaId);
+    return ResponseEntity.ok(ApiResponse.success(usages));
   }
 }

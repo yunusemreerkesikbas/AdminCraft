@@ -15,10 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppGlobalDto;
 import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppI18nDto;
 import com.backend.application.dto.SiteSettingsAppDto.SiteSettingsAppResponseDto;
+import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteSetting;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.RobotsMetaTag;
 import com.backend.domain.enums.SettingType;
+import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteSettingRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,12 +34,14 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
   private final SiteSettingRepository repository;
   private final TenantLanguageService tenantLanguageService;
+  private final SiteRepository siteRepository;
 
   @Override
   @Transactional(readOnly = true)
   public SiteSettingsAppResponseDto getAdminSettings(Long tenantId) {
     List<SiteSetting> allSettings = repository.findByTenantId(tenantId);
-    SiteSettingsAppGlobalDto global = buildGlobalResponse(allSettings);
+    Site site = siteRepository.findFirstByOrderByIdAsc().orElse(null);
+    SiteSettingsAppGlobalDto global = buildGlobalResponse(allSettings, site);
 
     Map<String, SiteSettingsAppI18nDto> languages = new HashMap<>();
     tenantLanguageService.getLanguages(tenantId).supportedLanguages().forEach(lang -> {
@@ -55,6 +59,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
     if (global != null) {
       settingsToUpdate.addAll(processGlobalSettings(tenantId, global, updatedBy));
+      persistLogoUids(global);
     }
     if (languages != null) {
       for (Map.Entry<Language, SiteSettingsAppI18nDto> entry : languages.entrySet()) {
@@ -68,7 +73,22 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     return getAdminSettings(tenantId);
   }
 
-  private SiteSettingsAppGlobalDto buildGlobalResponse(List<SiteSetting> allSettings) {
+  private void persistLogoUids(SiteSettingsAppGlobalDto global) {
+    if (global.logoMediaUid() == null && global.logoDarkMediaUid() == null) {
+      return;
+    }
+    siteRepository.findFirstByOrderByIdAsc().ifPresent(site -> {
+      if (global.logoMediaUid() != null) {
+        site.setLogoMediaUid(global.logoMediaUid());
+      }
+      if (global.logoDarkMediaUid() != null) {
+        site.setLogoDarkMediaUid(global.logoDarkMediaUid());
+      }
+      siteRepository.save(site);
+    });
+  }
+
+  private SiteSettingsAppGlobalDto buildGlobalResponse(List<SiteSetting> allSettings, Site site) {
     Map<String, String> globalSettingsMap = allSettings.stream()
         .filter(s -> s.getLanguage() == null)
         .collect(Collectors.toMap(
@@ -104,7 +124,9 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         globalSettingsMap.get("global.canonicalBaseUrl"),
         RobotsMetaTag.fromValue(globalSettingsMap.get("global.robots")),
         address,
-        social);
+        social,
+        site != null ? site.getLogoMediaUid() : null,
+        site != null ? site.getLogoDarkMediaUid() : null);
   }
 
   private SiteSettingsAppI18nDto buildI18nResponse(List<SiteSetting> allSettings, Language language) {

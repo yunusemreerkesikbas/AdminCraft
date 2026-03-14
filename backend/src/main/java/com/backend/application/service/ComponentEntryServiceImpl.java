@@ -30,6 +30,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final ComponentRepository componentRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
 
     @Override
     @Transactional
@@ -94,6 +95,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     public void deleteEntry(Long id) {
         ComponentEntry entry = entryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Entry not found: " + id));
+        componentMediaLinkSyncService.removeEntryResponsiveLinks(id);
         entryRepository.delete(entry);
         log.info("Deleted entry {}", id);
     }
@@ -119,6 +121,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         }
 
         ComponentEntry savedEntry = entryRepository.save(entry);
+        componentMediaLinkSyncService.syncEntryResponsiveLinks(savedEntry);
 
         List<ComponentEntryI18n> i18nList = request.translations().entrySet().stream()
                 .map(e -> {
@@ -172,6 +175,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
         }
 
         ComponentEntry savedEntry = entryRepository.save(entry);
+        componentMediaLinkSyncService.syncEntryResponsiveLinks(savedEntry);
 
         List<ComponentEntryI18n> existingI18n = entryI18nRepository.findByEntryId(id);
         Map<com.backend.domain.enums.Language, ComponentEntryI18n> i18nMap = existingI18n.stream()

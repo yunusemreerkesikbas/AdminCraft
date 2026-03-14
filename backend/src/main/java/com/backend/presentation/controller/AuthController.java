@@ -114,9 +114,11 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
+    public ResponseEntity<ApiResponse<?>> refreshToken(
             @RequestHeader("Authorization") @Valid @NotBlank String refreshToken,
-            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+            @RequestHeader(value = "X-Device-Fingerprint", required = false) String deviceFingerprint,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+            HttpServletRequest httpRequest) {
         try {
             log.info("Token refresh attempt");
 
@@ -127,14 +129,16 @@ public class AuthController {
             if (token.trim().isEmpty()) {
                 throw new IllegalArgumentException("Invalid token format");
             }
-            AuthResult authResult = authenticationService.refreshToken(token);
+            String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
+            String userAgent = RequestUtils.getUserAgent(httpRequest);
+
+            AuthResult authResult = authenticationService.refreshToken(token, deviceFingerprint, ipAddress, userAgent);
             LoginResponse loginResponse = toLoginResponse(authResult);
             String message = messageSource.getMessage("auth.refresh.success", null,
                     Locale.forLanguageTag(languageCode));
-            ApiResponse<LoginResponse> response = ApiResponse.success(message, loginResponse);
 
             log.info("Token refresh successful");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponse.success(message, loginResponse));
         } catch (Exception ex) {
             log.error("Token refresh failed: {}", ex.getMessage());
             String message = messageSource.getMessage("auth.refresh.error", null,
@@ -287,7 +291,7 @@ public class AuthController {
     }
 
     @PostMapping("/set-initial-password")
-    public ResponseEntity<ApiResponse<LoginResponse>> setInitialPassword(
+    public ResponseEntity<ApiResponse<Void>> setInitialPassword(
             @Valid @RequestBody SetInitialPasswordRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
@@ -297,25 +301,13 @@ public class AuthController {
 
             validateRecaptchaIfEnabled(request.recaptchaToken(), "set_password");
 
-            String ipAddress = RequestUtils.getClientIpAddress(httpRequest);
-            String userAgent = RequestUtils.getUserAgent(httpRequest);
-
-            AuthResult authResult = authenticationService.setInitialPassword(
-                    request.token(),
-                    request.password(),
-                    request.deviceFingerprint(),
-                    request.trustDevice() != null && request.trustDevice(),
-                    request.deviceName(),
-                    ipAddress,
-                    userAgent);
-
-            LoginResponse loginResponse = toLoginResponse(authResult);
+            authenticationService.setInitialPassword(request.token(), request.password());
 
             String message = messageSource.getMessage("auth.email.verify.success", null,
                     Locale.forLanguageTag(languageCode));
 
-            log.info("Initial password set successfully, auto-login completed");
-            return ResponseEntity.ok(ApiResponse.success(message, loginResponse));
+            log.info("Initial password set successfully");
+            return ResponseEntity.ok(ApiResponse.success(message, null));
 
         } catch (InvalidTokenException ex) {
             log.error("Invalid token for initial password: {}", ex.getMessage());

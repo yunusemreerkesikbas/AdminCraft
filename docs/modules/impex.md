@@ -200,16 +200,19 @@ Scripts have no file-based registration. Any valid SQL can be submitted. For rep
 
 ImpEx scripts for demo/content data are stored under `backend/src/main/resources/impex/`. These are **not executed automatically** — they serve as versioned reference documents that an admin can paste into the UI when setting up a new tenant with sample data.
 
-### Execution order (when seeding a fresh tenant)
+### Execution order (when seeding a fresh tenant — Home 02 theme)
 
 ```
-1. seed_components.sql      — components, i18n, entries, entry i18n
-2. seed_navigation.sql      — nav nodes, entries, i18n
-3. seed_pages_and_slots.sql — pages, page_i18n, page_slots, slot_components, shared slots
-4. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+1. seed_liko_components.sql      — Home 02 components (Homepage*), i18n, entries, entry i18n
+2. seed_liko_pages_and_slots.sql — homepage, page_i18n, page_slots, slot_components (Section1-8), shared slots
+3. seed_pages_and_slots.sql      — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
+4. seed_navigation.sql          — nav nodes, entries, i18n
+5. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
 
-`seed_pages_and_slots.sql` depends on components from step 1 (FK via `slot_components`) and on Flyway-managed `page_templates` / `template_slots`.
+`seed_liko_pages_and_slots.sql` depends on components from step 1 and on Flyway-managed `page_templates` / `template_slots`.
+
+`seed_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Seed* components.
 
 `seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
 

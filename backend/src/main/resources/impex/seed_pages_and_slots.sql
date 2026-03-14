@@ -3,8 +3,8 @@
 -- Run via Admin UI /{lang}/impex when needed to seed sample pages, slots and slot assignments.
 -- Idempotent: safe to run multiple times.
 -- Prerequisites (run in order):
---   1. seed_components.sql  — components must exist for slot_components assignments
---   2. This file            — pages, page_slots, slot_components, shared slots
+--   1. seed_liko_components.sql + seed_liko_pages_and_slots.sql — for Home 02 homepage slot wiring
+--   2. This file — pages, page_slots, shared slots (no slot_components; use seed_liko_pages_and_slots for homepage)
 -- Flyway prerequisites: page_templates and template_slots must exist (R__seed_page_templates).
 
 -- ============================================
@@ -122,34 +122,3 @@ INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_
 VALUES ('bb000002-0000-4000-8000-000000000002', 'SharedFooterSlot', NULL, 'Footer', 'BOTTOM', 99, TRUE, TRUE, NOW(), NOW())
 ON DUPLICATE KEY UPDATE updated_at = NOW();
 
--- ============================================
--- 5. SLOT_COMPONENTS (wire seed components into page slots)
--- ============================================
-
--- Homepage Section1 → Portfolio Grid
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'SeedLandingPortfolioGrid'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
--- Product Details Summary → CTA
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'productPage-SummarySlot' AND c.uid = 'SeedProductSummaryCta'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
--- Category Top → Hero Banner
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'categoryPage-TopContentSlot' AND c.uid = 'SeedHeroBanner'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
-
--- Search Results Top → Welcome Paragraph
-INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
-SELECT ps.id, c.id, 0, TRUE, NOW()
-FROM page_slots ps, components c
-WHERE ps.uid = 'searchResultsPage-TopContentSlot' AND c.uid = 'SeedWelcomeParagraph'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);

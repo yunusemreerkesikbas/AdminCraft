@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.domain.entity.Media;
+import com.backend.application.dto.request.MediaBindRequest;
 
 public interface MediaService {
 
@@ -98,4 +99,14 @@ public interface MediaService {
      * @param y  vertical focal point (0.0 = top, 1.0 = bottom)
      */
     void updateFocalPoint(Long id, Double x, Double y);
+
+    void bindMedia(Long mediaId, MediaBindRequest request);
+
+    void unlinkMedia(Long mediaId, Long componentId, Long entryId, String linkType);
+
+    /**
+     * Resolve the public URL for a media item by its UID.
+     * Returns null if the UID is blank or no media is found.
+     */
+    String resolvePublicUrl(String mediaUid);
 }

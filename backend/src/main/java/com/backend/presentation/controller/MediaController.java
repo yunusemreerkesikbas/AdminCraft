@@ -33,6 +33,7 @@ import com.backend.application.service.MediaContainerService;
 import com.backend.application.service.MediaI18nService;
 import com.backend.application.service.MediaProcessingService;
 import com.backend.application.service.MediaService;
+import com.backend.application.dto.request.MediaBindRequest;
 import com.backend.domain.entity.Media;
 import com.backend.domain.entity.MediaContainer;
 import com.backend.domain.entity.MediaI18n;
@@ -281,6 +282,51 @@ public class MediaController {
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
+                }
+        }
+
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @PostMapping("/{id}/bind")
+        @Operation(summary = "Bind media to a component or entry", description = "Creates or updates responsive media binding for the specified target.")
+        public ResponseEntity<ApiResponse<Void>> bindMedia(
+                        @PathVariable @Valid @NotNull @Min(1) Long id,
+                        @RequestBody @Valid MediaBindRequest request,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        mediaService.bindMedia(id, request);
+                        String message = "Media linked successfully";
+                        return ResponseEntity.ok(ApiResponse.success(message, null));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Media bind validation error: {}", ex.getMessage());
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(ex.getMessage()));
+                } catch (Exception ex) {
+                        log.error("Error binding media {}: {}", id, ex.getMessage());
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(ex.getMessage()));
+                }
+        }
+
+        @PreAuthorize("hasRole('TENANT_ADMIN')")
+        @DeleteMapping("/{id}/links")
+        @Operation(summary = "Remove a media link", description = "Removes a linked component or entry usage for the specified media.")
+        public ResponseEntity<ApiResponse<Void>> unlinkMedia(
+                        @PathVariable("id") @Valid @NotNull @Min(1) Long mediaId,
+                        @RequestParam @NotNull @Min(1) Long componentId,
+                        @RequestParam(required = false) Long entryId,
+                        @RequestParam @NotNull String linkType,
+                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+                try {
+                        mediaService.unlinkMedia(mediaId, componentId, entryId, linkType);
+                        return ResponseEntity.ok(ApiResponse.success("Media link removed successfully", null));
+                } catch (IllegalArgumentException ex) {
+                        log.warn("Media unlink validation error: {}", ex.getMessage());
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(ex.getMessage()));
+                } catch (Exception ex) {
+                        log.error("Error unlinking media {}: {}", mediaId, ex.getMessage());
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(ApiResponse.error(ex.getMessage()));
                 }
         }
 

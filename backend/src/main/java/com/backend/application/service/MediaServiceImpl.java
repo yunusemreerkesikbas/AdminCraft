@@ -2,7 +2,9 @@ package com.backend.application.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,11 +15,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.backend.application.config.StorageConfigProperties;
 import com.backend.application.dto.ImageDimensions;
+import com.backend.application.dto.request.MediaBindRequest;
+import com.backend.domain.entity.Component;
+import com.backend.domain.entity.ComponentEntry;
+import com.backend.domain.entity.ComponentMediaLink;
 import com.backend.domain.entity.Media;
+import com.backend.domain.entity.ResponsiveMediaSet;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.MediaStatus;
 import com.backend.domain.enums.StorageProvider;
+import com.backend.domain.exception.EntityNotFoundException;
+import com.backend.domain.repository.ComponentEntryRepository;
+import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.MediaRepository;
+import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.presentation.dto.request.MediaI18nRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +46,12 @@ public class MediaServiceImpl implements MediaService {
     private final MediaContainerService containerService;
     private final StorageConfigProperties properties;
     private final TransactionTemplate transactionTemplate;
+    private final ResponsiveMediaService responsiveMediaService;
+    private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
+    private final ComponentService componentService;
+    private final ComponentEntryRepository componentEntryRepository;
+    private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
+    private final ComponentMediaLinkRepository componentMediaLinkRepository;
 
     @Override
     public Media uploadComposite(MultipartFile file, Long uploadedBy,
@@ -282,5 +299,183 @@ public class MediaServiceImpl implements MediaService {
             return List.of();
         }
         return mediaRepository.findByUidIn(uids);
+    }
+
+    @Override
+    @Transactional
+    public void bindMedia(Long mediaId, MediaBindRequest request) {
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new EntityNotFoundException("Media", mediaId));
+
+        if (request.targetType() == MediaBindRequest.TargetType.COMPONENT) {
+            bindComponentMedia(media, request.targetId(), request.responsiveTarget());
+            return;
+        }
+
+        bindEntryMedia(media, request.targetId(), request.responsiveTarget());
+    }
+
+    @Override
+    @Transactional
+    public void unlinkMedia(Long mediaId, Long componentId, Long entryId, String linkType) {
+        mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new EntityNotFoundException("Media", mediaId));
+
+        ComponentMediaLink.LinkType resolvedLinkType = resolveLinkType(linkType);
+        ComponentMediaLink link = componentMediaLinkRepository.findByMediaId(mediaId).stream()
+                .filter(candidate -> componentId.equals(candidate.getComponentId())
+                        && Objects.equals(entryId, candidate.getEntryId())
+                        && resolvedLinkType == candidate.getLinkType())
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "ComponentMediaLink",
+                        "mediaId=%d, componentId=%d, entryId=%s, linkType=%s".formatted(
+                                mediaId,
+                                componentId,
+                                entryId != null ? entryId : "null",
+                                resolvedLinkType.name())));
+
+        if (link.getLinkType() == ComponentMediaLink.LinkType.ENTRY_MEDIA || link.getResponsiveSetId() == null) {
+            throw new IllegalArgumentException("Legacy media links cannot be removed from the media detail dialog");
+        }
+
+        ResponsiveMediaSet responsiveSet = responsiveMediaSetRepository.findById(link.getResponsiveSetId())
+                .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", link.getResponsiveSetId()));
+
+        Long nextDesktopMediaId = responsiveSet.getDesktopMedia() != null
+                ? responsiveSet.getDesktopMedia().getId()
+                : null;
+        Long nextMobileMediaId = responsiveSet.getMobileMedia() != null
+                ? responsiveSet.getMobileMedia().getId()
+                : null;
+
+        if (resolvedLinkType == ComponentMediaLink.LinkType.RESPONSIVE_DESKTOP) {
+            nextDesktopMediaId = null;
+        } else if (resolvedLinkType == ComponentMediaLink.LinkType.RESPONSIVE_MOBILE) {
+            nextMobileMediaId = null;
+        }
+
+        if (nextDesktopMediaId == null && nextMobileMediaId == null) {
+            clearResponsiveMediaTarget(componentId, entryId);
+            return;
+        }
+
+        responsiveMediaService.update(
+                responsiveSet.getId(),
+                new com.backend.application.dto.request.ResponsiveMediaRequest(
+                        responsiveSet.getCode(),
+                        nextDesktopMediaId,
+                        nextMobileMediaId));
+    }
+
+    private void bindComponentMedia(
+            Media media,
+            Long componentId,
+            MediaBindRequest.ResponsiveTarget responsiveTarget
+    ) {
+        Component component = componentService.getComponentById(componentId);
+        Long responsiveSetId = ensureResponsiveMediaSet(
+                media,
+                component.getResponsiveMedia(),
+                responsiveTarget
+        );
+        componentService.assignResponsiveMedia(componentId, responsiveSetId);
+    }
+
+    private void bindEntryMedia(
+            Media media,
+            Long entryId,
+            MediaBindRequest.ResponsiveTarget responsiveTarget
+    ) {
+        ComponentEntry entry = componentEntryRepository.findById(entryId)
+                .orElseThrow(() -> new EntityNotFoundException("ComponentEntry", entryId));
+
+        Long responsiveSetId = ensureResponsiveMediaSet(
+                media,
+                entry.getResponsiveMedia(),
+                responsiveTarget
+        );
+        if (entry.getResponsiveMedia() == null || !responsiveSetId.equals(entry.getResponsiveMedia().getId())) {
+            ResponsiveMediaSet responsiveMediaSet = responsiveMediaSetRepository.findById(responsiveSetId)
+                    .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", responsiveSetId));
+            entry.setResponsiveMedia(responsiveMediaSet);
+            entry = componentEntryRepository.save(entry);
+        }
+
+        componentMediaLinkSyncService.syncEntryResponsiveLinks(entry);
+    }
+
+    private Long ensureResponsiveMediaSet(
+            Media media,
+            ResponsiveMediaSet existingSet,
+            MediaBindRequest.ResponsiveTarget requestedTarget
+    ) {
+        MediaBindRequest.ResponsiveTarget target = requestedTarget != null
+                ? requestedTarget
+                : MediaBindRequest.ResponsiveTarget.DESKTOP;
+        Long desktopMediaId = shouldBindDesktop(target)
+                ? media.getId()
+                : existingSet != null && existingSet.getDesktopMedia() != null
+                        ? existingSet.getDesktopMedia().getId()
+                        : null;
+        Long mobileMediaId = shouldBindMobile(target)
+                ? media.getId()
+                : existingSet != null && existingSet.getMobileMedia() != null
+                        ? existingSet.getMobileMedia().getId()
+                        : null;
+
+        if (existingSet == null) {
+            return responsiveMediaService.create(new com.backend.application.dto.request.ResponsiveMediaRequest(
+                    UUID.randomUUID().toString().replace("-", ""),
+                    desktopMediaId,
+                    mobileMediaId)).id();
+        }
+
+        return responsiveMediaService.update(existingSet.getId(),
+                new com.backend.application.dto.request.ResponsiveMediaRequest(
+                        existingSet.getCode(),
+                        desktopMediaId,
+                        mobileMediaId)).id();
+    }
+
+    private boolean shouldBindDesktop(MediaBindRequest.ResponsiveTarget target) {
+        return target == MediaBindRequest.ResponsiveTarget.DESKTOP
+                || target == MediaBindRequest.ResponsiveTarget.BOTH;
+    }
+
+    private boolean shouldBindMobile(MediaBindRequest.ResponsiveTarget target) {
+        return target == MediaBindRequest.ResponsiveTarget.MOBILE
+                || target == MediaBindRequest.ResponsiveTarget.BOTH;
+    }
+
+    private ComponentMediaLink.LinkType resolveLinkType(String linkType) {
+        try {
+            return ComponentMediaLink.LinkType.valueOf(linkType.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Unsupported media link type: " + linkType);
+        }
+    }
+
+    private void clearResponsiveMediaTarget(Long componentId, Long entryId) {
+        if (entryId != null) {
+            ComponentEntry entry = componentEntryRepository.findById(entryId)
+                    .orElseThrow(() -> new EntityNotFoundException("ComponentEntry", entryId));
+            entry.setResponsiveMedia(null);
+            ComponentEntry savedEntry = componentEntryRepository.save(entry);
+            componentMediaLinkSyncService.syncEntryResponsiveLinks(savedEntry);
+            return;
+        }
+
+        componentService.assignResponsiveMedia(componentId, null);
+    }
+
+    @Override
+    public String resolvePublicUrl(String mediaUid) {
+        if (mediaUid == null || mediaUid.isBlank()) {
+            return null;
+        }
+        return findByUid(mediaUid)
+                .map(media -> getFileUrl(media.getId()))
+                .orElse(null);
     }
 }
