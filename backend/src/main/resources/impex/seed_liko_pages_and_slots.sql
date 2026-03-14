@@ -1,10 +1,11 @@
 -- #ADMINCRAFT_IMPEX
 -- Liko Home-2 Pages & Slot Wiring — ImpEx seed file.
--- Run via Admin UI /{lang}/impex AFTER seed_liko_components.sql.
+-- Run via Admin UI /{lang}/impex AFTER seed_liko_components.sql and seed_liko_chrome_components.sql.
 -- Idempotent: safe to run multiple times.
 -- Prerequisites:
 --   1. R__seed_page_templates.sql applied (Section4-8 slots exist in template_slots)
 --   2. seed_liko_components.sql executed (8 homepage components exist)
+--   3. seed_liko_chrome_components.sql executed (shared header/footer components exist)
 
 -- ============================================================
 -- 1. HOMEPAGE PAGE (idempotent — already created by seed_pages_and_slots.sql)
@@ -60,7 +61,59 @@ VALUES ('bb000002-0000-4000-8000-000000000002', 'SharedFooterSlot', NULL, 'Foote
 ON DUPLICATE KEY UPDATE updated_at = NOW();
 
 -- ============================================================
--- 5. SLOT_COMPONENTS — wire 8 homepage sections to components
+-- 5. SLOT_COMPONENTS — wire shared Header/Footer slots
+-- ============================================================
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderMainNavigation'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderSocialLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 2, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderContactInfo'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterBrandBlock'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterSitemapNavigation'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 2, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterOfficeLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 3, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterNewsletter'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 4, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterSocialLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+-- ============================================================
+-- 6. SLOT_COMPONENTS — wire 8 homepage sections to components
 -- ============================================================
 
 -- Section1 → HomepageHeroBanner

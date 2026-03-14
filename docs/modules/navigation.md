@@ -80,3 +80,20 @@ Navigation is exposed via CMS Delivery:
 
 - `GET /api/cms/navigation/{uid}` (see [`cms-delivery.md`](cms-delivery.md))
 
+## Storefront shared chrome contract
+
+`storefront-nextjs` resolves header and footer navigation through shared CMS slots instead of special `HeaderComponent` / `FooterComponent` delivery types.
+
+### Seeded node UIDs used by the storefront
+
+| UID | Used by | Notes |
+| --- | --- | --- |
+| `LandingMainNavNode` | `StorefrontHeaderMainNavigation` | Main off-canvas header menu (`navigation_type = MAINMENU`) |
+| `LandingFooterNavNode` | `StorefrontFooterSitemapNavigation` | Footer sitemap column (`navigation_type = STATICPAGE`) |
+
+### Rendering notes
+
+- `NavigationComponent` with `navigationType = MAINMENU` is rendered hierarchically in the header off-canvas.
+- `NavigationComponent` with `navigationType = STATICPAGE` is flattened for the footer sitemap.
+- Internal `URL` entries are locale-prefixed in the storefront renderer; external links remain untouched.
+- Header social links, contact links, footer office links, newsletter copy, and footer social links are not modeled as navigation nodes. They come from standard CMS component entries in the shared `Header` / `Footer` slots.

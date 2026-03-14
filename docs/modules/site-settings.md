@@ -30,6 +30,8 @@ Base path: `/api/site-settings`
 
 ## Frontend integration (Admin)
 
+Site Settings forms are integrated into Site Dashboard tabs. Save button is placed at top-right for consistent UX.
+
 Location: `storefront/src/app/modules/admin/custom/settings/`
 
 Routes:

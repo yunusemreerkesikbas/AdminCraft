@@ -63,10 +63,13 @@ export class FocalPointPickerComponent implements OnChanges {
         this.#mediaService.updateFocalPoint(this.media.id, request)
             .pipe(finalize(() => this.isUpdating = false))
             .subscribe({
-                next: () => {
-                    this.#notificationService.success('admin.media.focalPoint.updateSuccess');
+                next: (response) => {
+                    this.#notificationService.success(response.message!);
                     this.updated.emit();
-                }
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error.error.message);
+                },
             });
     }
 

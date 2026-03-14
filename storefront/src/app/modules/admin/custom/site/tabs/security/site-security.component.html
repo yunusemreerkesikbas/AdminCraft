@@ -1,18 +1,33 @@
 <div class="flex flex-col gap-6">
-    <!-- Header -->
-    <div class="flex items-center gap-3">
-        <mat-icon
-            class="text-primary-500"
-            [svgIcon]="'heroicons_outline:shield-check'"
-        ></mat-icon>
-        <div>
-            <h2 class="text-lg font-semibold">
-                {{ 'admin.site.dashboard.security.title' | transloco }}
-            </h2>
-            <p class="text-sm text-gray-500">
-                {{ 'admin.site.dashboard.security.subtitle' | transloco }}
-            </p>
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <mat-icon
+                class="text-primary-500"
+                [svgIcon]="'heroicons_outline:shield-check'"
+            ></mat-icon>
+            <div>
+                <h2 class="text-lg font-semibold">
+                    {{ 'admin.site.dashboard.security.title' | transloco }}
+                </h2>
+                <p class="text-sm text-gray-500">
+                    {{ 'admin.site.dashboard.security.subtitle' | transloco }}
+                </p>
+            </div>
         </div>
+        <button
+            mat-flat-button
+            color="primary"
+            [disabled]="savingSig() || form.invalid || form.pristine"
+            (click)="save()"
+        >
+            @if (savingSig()) {
+                <mat-icon
+                    class="mr-2 animate-spin icon-size-5"
+                    [svgIcon]="'heroicons_outline:arrow-path'"
+                ></mat-icon>
+            }
+            {{ 'common.save' | transloco }}
+        </button>
     </div>
 
     <!-- Two-Factor Authentication Section -->
@@ -64,24 +79,6 @@
                         {{ 'admin.site.dashboard.security.twoFactor.info' | transloco }}
                     </div>
                 </div>
-            </div>
-
-            <!-- Save Button -->
-            <div class="flex justify-end">
-                <button
-                    mat-flat-button
-                    color="primary"
-                    [disabled]="savingSig() || form.invalid || form.pristine"
-                    (click)="save()"
-                >
-                    @if (savingSig()) {
-                        <mat-icon
-                            class="mr-2 animate-spin icon-size-5"
-                            [svgIcon]="'heroicons_outline:arrow-path'"
-                        ></mat-icon>
-                    }
-                    {{ 'common.save' | transloco }}
-                </button>
             </div>
         </form>
     </div>

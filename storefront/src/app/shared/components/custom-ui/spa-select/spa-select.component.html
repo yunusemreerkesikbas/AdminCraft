@@ -14,8 +14,10 @@
         [placeholder]="placeholder || ''"
         [errorStateMatcher]="errorStateMatcher"
         (selectionChange)="onSelectionChange($event.value)"
+        (openedChange)="onOpenedChange($event)"
         (closed)="touched()"
     >
+        <ng-content select="[spaSelectPanelContent]"></ng-content>
         @if (placeholder) {
             <mat-option [value]="null">{{ placeholder }}</mat-option>
         }

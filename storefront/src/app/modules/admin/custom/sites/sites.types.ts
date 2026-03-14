@@ -86,6 +86,8 @@ export interface SiteSettingsGlobalDto {
     social?: SocialLinksDto | null;
     canonicalBaseUrl?: string | null;
     robots?: RobotsMetaTag | null;
+    logoMediaUid?: string | null;
+    logoDarkMediaUid?: string | null;
 }
 
 export enum RobotsMetaTag {
