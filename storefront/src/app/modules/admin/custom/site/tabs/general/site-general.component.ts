@@ -60,12 +60,12 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
     @Input() settings: SiteSettingsResponseDto | null = null;
     @Output() settingsUpdated = new EventEmitter<SiteSettingsResponseDto>();
 
-    form: FormGroup;
+    protected form: FormGroup;
     languages = this.#languageContext.supportedLanguages;
     selectedLanguage = signal<string>(
         this.#languageContext.getDefaultLanguage().toLowerCase()
     );
-    saving = false;
+    protected savingSig = signal(false);
 
     constructor() {
         this.#buildForm();
@@ -87,14 +87,14 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
     }
 
     save(): void {
-        if (this.saving) return;
+        if (this.savingSig()) return;
 
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
         }
 
-        this.saving = true;
+        this.savingSig.set(true);
         const formValue = this.form.value;
 
         const toUid = (val: string | { uid?: string } | null | undefined): string | null => {
@@ -132,14 +132,14 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
                 next: (updatedSettings) => {
-                    this.saving = false;
+                    this.savingSig.set(false);
                     this.#notification.success(
                         'admin.site.dashboard.messages.saveSuccess'
                     );
                     this.settingsUpdated.emit(updatedSettings);
                 },
                 error: (err) => {
-                    this.saving = false;
+                    this.savingSig.set(false);
 
                     if (err.error?.data) {
                         FormUtils.setServerErrors(this.form, err.error.data);

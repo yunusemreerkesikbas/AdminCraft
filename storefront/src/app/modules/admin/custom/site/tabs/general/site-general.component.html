@@ -5,9 +5,9 @@
                 mat-flat-button
                 color="primary"
                 type="submit"
-                [disabled]="saving"
+                [disabled]="savingSig()"
             >
-                @if (saving) {
+                @if (savingSig()) {
                     <mat-icon
                         class="mr-2 animate-spin"
                         svgIcon="heroicons_outline:arrow-path"

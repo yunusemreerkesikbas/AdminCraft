@@ -45,7 +45,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
   private static final Set<String> RESERVED_FIELDS = Set.of(
-      "uid", "order", "title", "description", "isVisible", "styleClasses");
+      "uid", "order", "title", "description", "isVisible", "styleClasses", "isExternal");
 
   private final ComponentRepository componentRepository;
   private final ComponentTypeRepository componentTypeRepository;
@@ -206,6 +206,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18n != null ? i18n.getDescription() : null)
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .isExternal(computeIsExternal(customFields))
         .responsive(responsive)
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
@@ -278,6 +279,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentEntryI18n::getDescription).orElse(null))
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .isExternal(computeIsExternal(expandedFields))
         .responsive(responsive)
         .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
@@ -313,5 +315,19 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private boolean isNavigationAware(ComponentType type) {
     return type != null && type.isNavigationAware();
+  }
+
+  private static boolean isExternalUrl(Object value) {
+    if (!(value instanceof String url)) return false;
+    String trimmed = url.trim();
+    return trimmed.startsWith("http://") || trimmed.startsWith("https://")
+        || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
+  }
+
+  private static Boolean computeIsExternal(Map<String, Object> fields) {
+    Object buttonUrl = fields.get("buttonUrl");
+    Object linkUrl = fields.get("linkUrl");
+    if (buttonUrl == null && linkUrl == null) return null;
+    return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
   }
 }

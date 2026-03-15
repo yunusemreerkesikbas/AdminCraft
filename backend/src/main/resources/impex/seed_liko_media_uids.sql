@@ -92,8 +92,9 @@ UPDATE media SET uid = 'site-logo-light'
 WHERE original_name = 'logo-white.png' AND uid != 'site-logo-light';
 
 UPDATE sites SET
-    logo_media_uid     = 'site-logo-light',
-    logo_dark_media_uid = 'site-logo-dark';
+    logo_media_uid      = (SELECT uid FROM media WHERE original_name = 'logo-white.png' LIMIT 1),
+    logo_dark_media_uid = (SELECT uid FROM media WHERE original_name = 'logo.png' LIMIT 1)
+WHERE logo_media_uid IS NULL OR logo_dark_media_uid IS NULL;
 
 -- ============================================================
 -- MISSING MEDIA (upload required separately):

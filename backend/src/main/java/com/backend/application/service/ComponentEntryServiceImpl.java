@@ -21,7 +21,6 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentRepository;
-import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final ComponentEntryI18nRepository entryI18nRepository;
     private final ComponentRepository componentRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
-    private final MediaRepository mediaRepository;
+    private final MediaService mediaService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
 
@@ -254,7 +253,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
             return customFieldsByLanguage;
         }
 
-        Map<String, ResponsiveMediaResponse.MediaSummary> mediaByUid = mediaRepository.findByUidIn(mediaUids)
+        Map<String, ResponsiveMediaResponse.MediaSummary> mediaByUid = mediaService.findByUids(mediaUids)
                 .stream()
                 .collect(Collectors.toMap(
                         Media::getUid,

@@ -18,6 +18,7 @@ public class EntryDeliveryResponse {
     private String description;
     private Boolean isVisible;
     private String styleClasses;
+    private Boolean isExternal;
     private ResponsiveMediaDeliveryResponse responsive;
 
     @JsonIgnore

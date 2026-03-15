@@ -48,7 +48,7 @@ SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'homepage'
-  AND ts.slot_name NOT IN ('Header', 'Footer')
+  AND ts.slot_name IN ('Section1','Section2','Section3','Section4','Section5','Section6','Section7','Section8')
 ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_order), updated_at = NOW();
 
 -- ============================================================

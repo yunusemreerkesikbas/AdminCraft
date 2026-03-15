@@ -275,10 +275,13 @@ public class ComponentServiceImpl implements ComponentService {
             ResponsiveMediaSet responsiveMedia = responsiveMediaSetRepository.findById(request.responsiveMediaId())
                     .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", request.responsiveMediaId()));
             component.setResponsiveMedia(responsiveMedia);
-            componentMediaLinkSyncService.syncComponentResponsiveLinks(component);
         }
 
         Component savedComponent = componentRepository.save(component);
+
+        if (request.responsiveMediaId() != null) {
+            componentMediaLinkSyncService.syncComponentResponsiveLinks(savedComponent);
+        }
 
         String typeName = componentType.getUid();
 

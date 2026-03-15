@@ -35,14 +35,14 @@ export interface ResponsiveMediaDto {
 
 export interface MediaSummaryDto {
     id: number;
-    uid?: string;
-    fileName?: string;
-    originalName?: string;
-    mimeType?: string;
-    publicUrl?: string;
-    width?: number;
-    height?: number;
-    fileSizeFormatted?: string;
+    uid: string;
+    fileName?: string | null;
+    originalName?: string | null;
+    mimeType?: string | null;
+    publicUrl?: string | null;
+    width?: number | null;
+    height?: number | null;
+    fileSizeFormatted?: string | null;
 }
 
 export interface EntryCustomFields {

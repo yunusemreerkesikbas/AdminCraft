@@ -11,6 +11,7 @@ import com.backend.domain.enums.NavigationType;
 import com.backend.shared.validation.Uid;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public record UpdateComponentCompositeRequest(
@@ -32,7 +33,7 @@ public record UpdateComponentCompositeRequest(
 
         Long responsiveMediaId,
 
-        @Valid Map<Language, ComponentI18nCommand> translations) {
+        @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
     public UpdateComponentCompositeRequest {
         uid = uid == null ? null : uid.trim();

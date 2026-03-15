@@ -98,21 +98,19 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             this.generalForm?.valid && !this.isSubmitting() && !this.isLoadingSig()
     );
 
-    protected get tabs(): TabDefinition[] {
-        return [
-            {
-                id: 'general',
-                label: 'admin.components.entries.tabs.general',
-                icon: 'settings',
-            },
-            { id: 'media', label: 'admin.media.title', icon: 'image' },
-            ...this.languages.map((lang) => ({
-                id: 'lang-' + lang,
-                label: lang.toUpperCase(),
-                icon: 'translate',
-            })),
-        ];
-    }
+    protected readonly tabsSig = computed<TabDefinition[]>(() => [
+        {
+            id: 'general',
+            label: 'admin.components.entries.tabs.general',
+            icon: 'settings',
+        },
+        { id: 'media', label: 'admin.media.title', icon: 'image' },
+        ...this.languages.map((lang) => ({
+            id: 'lang-' + lang,
+            label: lang.toUpperCase(),
+            icon: 'translate',
+        })),
+    ]);
 
     override ngOnInit(): void {
         super.ngOnInit();
@@ -239,7 +237,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     #mapToDynamicConfig(fields: EntryFieldDefinition[]): DynamicFieldConfig[] {
         return fields.map((f) => ({
             key: f.fieldKey,
-            type: f.fieldType as any,
+            type: f.fieldType as DynamicFieldConfig['type'],
             labelKey: `admin.components.entryFields.custom.${f.fieldKey}`,
         }));
     }

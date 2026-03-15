@@ -27,7 +27,7 @@
             </p>
         </div>
     } @else {
-        <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
+        <spa-tab-container [tabs]="tabsSig()" [(activeTabIndex)]="activeTab">
             <ng-template spaTabContent="general">
                 <form [formGroup]="generalForm" class="flex flex-col gap-6">
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">

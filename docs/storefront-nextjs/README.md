@@ -32,11 +32,10 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | --- | --- | --- |
 | `resolvePage` | `GET /api/cms/pages` | `lang` required; `pageType`, `pageLabelOrId`, `code` optional |
 | `fetchSiteConfig` | `GET /api/cms/site` | Site metadata, `defaultLanguage`, `enabledLanguages`, `isRtl` |
-| `fetchMediaByUids` | `GET /api/cms/media?uids=...` | Batched media resolution for CMS-driven landing page sections |
+| `fetchMediaByUids` | `GET /api/cms/media?uids=a,b,c` | Batched media resolution via comma-separated UIDs |
 | `fetchProduct` | `GET /api/cms/products/{uid}` | Product detail payload |
 | `fetchProductsByCategory` | `GET /api/cms/products/category/{categoryUid}` | Paged list |
 | `searchProducts` | `GET /api/cms/products/search` | Query param: `q` |
-| `fetchCategoryTree` | `GET /api/cms/products/categories` | Category tree |
 | `app/robots.ts` | `GET /api/cms/robots.txt` | Plain-text robots.txt; respects `indexingEnabled` from `SiteTechnicalSettings` |
 
 ## Routing and page resolution
@@ -115,18 +114,20 @@ Template names match `page_template.uid` values in the database exactly — do n
 Slot names and positions are centrally defined in `template-configs.ts` (`TEMPLATE_CONFIGS`). Each template reads its own config entry at render time.
 
 To add a new template:
-1. Add an entry to `TEMPLATE_CONFIGS` in `template-configs.ts` with slot names and positions.
-2. Create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps` (read slots from `TEMPLATE_CONFIGS.MyTemplate`).
-3. Register it in `templateRegistry` in `index.ts`.
+1. Create `components/cms/templates/configs/my-page.template.ts` with slot names and positions.
+2. Import and register it in `template-configs.ts` (`TEMPLATE_CONFIGS` map + `TemplateName` union).
+3. Create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps` (read slots from `TEMPLATE_CONFIGS.MyTemplate`).
+4. Register it in `templateRegistry` in `index.ts`.
 
 ### CMS-driven homepage (plugin theme)
 
 Homepage uses the same generic `CmsSlot → CmsComponent → registry` pipeline as every other template. Each slot's component is dispatched by `component.type` to a dedicated renderer — no styleClass or UID dispatch.
 
 - Entry point: `components/cms/templates/LandingPageTemplate.tsx`
-- Central registry config: `components/cms/cms-components.config.ts` (Spartacus `SPA_CMSCOMPONENTS_CONFIG` equivalent)
-- Section renderers: `components/cms/renderers/` — async RSCs; each fetches its own media via `fetchMediaByUids` and calls a `buildXxxModel` function from `lib/cms-utils.ts`
-- Shared model builders + types: `lib/cms-utils.ts` (`buildHeroModel`, `buildAboutModel`, `buildVideoModel`, etc.)
+- Central registry config: `components/cms/cms-components.config.tsx` (Spartacus `SPA_CMSCOMPONENTS_CONFIG` equivalent)
+- Renderer factory: `components/cms/renderers/renderer-factory.tsx` — `makeMediaRenderer(buildFn, renderFn)` produces an async RSC that collects mediaUids, fetches media, builds a typed model, and delegates rendering to the given JSX factory
+- Theme model types: `components/theme/default/models.ts` (`HeroModel`, `AboutModel`, `VideoModel`, etc.)
+- Theme model builders: `components/theme/default/builders.ts` (`buildHeroModel`, `buildAboutModel`, `buildVideoModel`, etc.)
 - Motion layer: `components/theme/default/Motion.tsx`
 - Section components (visual layer, unchanged): `components/theme/default/sections/`
 - Shared UI primitives: `components/theme/default/utils/shared.tsx` (`ThemeTag`, `ThemeButton`, `ThemeCircleButton`)
@@ -137,22 +138,22 @@ Homepage uses the same generic `CmsSlot → CmsComponent → registry` pipeline 
 
 Dispatch is by `component.type` only — no styleClass or UID matching.
 
-| Slot | Expected component UID | Component type | Renderer | UI section |
+| Slot | Expected component UID | Component type | Builder | UI section |
 | --- | --- | --- | --- | --- |
-| `Section1` | `HomepageHeroBanner` | `HeroBannerComponent` | `HeroBannerRenderer` | Hero |
-| `Section2` | `HomepageAboutSection` | `AboutBannerComponent` | `AboutSectionRenderer` | About |
-| `Section3` | `HomepageVideoSection` | `VideoSectionComponent` | `VideoSectionRenderer` | Video |
-| `Section4` | `HomepageServiceSection` | `ServiceCardComponent` | `ServiceSectionRenderer` | Services |
-| `Section5` | `HomepageProjectSection` | `ProjectCardComponent` | `ProjectSectionRenderer` | Projects |
-| `Section6` | `HomepageAwardSection` | `AwardBannerComponent` | `AwardSectionRenderer` | Award |
-| `Section7` | `HomepageMarqueeText` | `MarqueeTextComponent` | `MarqueeTextRenderer` | Marquee |
-| `Section8` | `HomepageInstagramSection` | `InstagramSectionComponent` | `InstagramSectionRenderer` | Instagram |
+| `Section1` | `HomepageHeroBanner` | `HeroBannerComponent` | `buildHeroModel` | Hero |
+| `Section2` | `HomepageAboutSection` | `AboutBannerComponent` | `buildAboutModel` | About |
+| `Section3` | `HomepageVideoSection` | `VideoSectionComponent` | `buildVideoModel` | Video |
+| `Section4` | `HomepageServiceSection` | `ServiceCardComponent` | `buildServiceModel` | Services |
+| `Section5` | `HomepageProjectSection` | `ProjectCardComponent` | `buildProjectsModel` | Projects |
+| `Section6` | `HomepageAwardSection` | `AwardBannerComponent` | `buildAwardModel` | Award |
+| `Section7` | `HomepageMarqueeText` | `MarqueeTextComponent` | `buildMarqueeModel` | Marquee |
+| `Section8` | `HomepageInstagramSection` | `InstagramSectionComponent` | `buildInstagramModel` | Instagram |
 
-Adding a new type to any slot requires only a renderer in `components/cms/renderers/` and an entry in `cms-components.config.ts` — no template changes.
+All 8 landing types use `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` in `cms-components.config.tsx` — there are no separate renderer files for these types. Adding a new type requires: (1) a model type in `components/theme/default/models.ts`, (2) a `buildXxxModel` in `components/theme/default/builders.ts`, (3) one `makeMediaRenderer(...)` line in `cms-components.config.tsx` — no template changes.
 
 #### Field mapping
 
-Each renderer calls a `buildXxxModel` function from `lib/cms-utils.ts`, which reads CMS content from `component_i18n`, `component_entries`, `entry_i18n`, and `customFields`.
+Each renderer calls a `buildXxxModel` function from `components/theme/default/builders.ts`, which reads CMS content from `component_i18n`, `component_entries`, `entry_i18n`, and `customFields`.
 
 | Section | Main fields | Entry/custom field usage |
 | --- | --- | --- |
@@ -292,7 +293,7 @@ Locale configuration is **fully dynamic**, driven by the tenant's `SiteDeliveryR
 | `toApiLocale(lang)` | URL `"tr"` → API `"TR"` |
 | `isRtlByConfig(lang, enabledLanguages)` | Reads `isRtl` from the matching `LanguageInfo` entry |
 | `resolveMessageLocale(lang)` | Maps lang to an available messages file; unknown langs fall back to `FALLBACK_LOCALE` |
-| `normalizeLanguage(v)` | Legacy alias used by `cms-client.ts` — uppercases locale for API calls |
+| `normalizeLanguage(v)` | `string \| undefined` → API locale string; `undefined` returns `""` (filtered by `buildUrl`) |
 | `withLocalePath(locale, path)` | Builds localized links (`/tr/search`) |
 
 ### next-intl (UI chrome translations)
@@ -341,12 +342,14 @@ Read from `.env.local.example` and `lib/utils.ts`:
 
 `cms-client.ts` uses React `cache()` with Next fetch options. `fetchSiteConfig` is deduplicated across `app/layout.tsx` and `app/[lang]/layout.tsx` within the same render.
 
-| Function | Strategy |
-| --- | --- |
-| `resolvePage`, `fetchProduct` | `revalidate: 30s` |
-| `fetchSiteConfig`, `fetchCategoryTree` | `revalidate: 300s` |
-| `fetchMediaByUids` | `revalidate: 300s` |
-| `searchProducts` | `cache: "no-store"` |
+| Function | `cache()` | Strategy | Reason |
+| --- | --- | --- | --- |
+| `resolvePage` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
+| `fetchSiteConfig` | ✅ | `revalidate: 300s` | Called in 6+ files per render |
+| `fetchProduct` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
+| `fetchProductsByCategory` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
+| `fetchMediaByUids` | ❌ | `revalidate: 300s` | Not called multiple times per render |
+| `searchProducts` | ❌ | `cache: "no-store"` | Dynamic query — must be fresh on every request |
 
 ## Security and tenant isolation
 
@@ -403,20 +406,20 @@ No code changes required. Add the language via the admin Site Settings UI. The s
 
 ## Component Registry
 
-Located in `components/cms/cms-components.config.ts` (config) and `components/cms/registry/index.ts` (dispatcher). Maps `component.type` (from delivery API) to a React renderer. To add a new type: create a renderer in `components/cms/renderers/`, then register it in `cms-components.config.ts`.
+Located in `components/cms/cms-components.config.tsx` (config) and `components/cms/registry/index.ts` (dispatcher). Maps `component.type` (from delivery API) to a React renderer. Landing page types are wired inline via `makeMediaRenderer` from `components/cms/renderers/renderer-factory.tsx` — no separate renderer files. Generic types have individual renderer files under `components/cms/renderers/`. To add a new type: add a model type to `components/theme/default/models.ts`, add a `buildXxxModel` to `components/theme/default/builders.ts`, then add one `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` line in `cms-components.config.tsx`.
 
-### Landing page — type-specific renderers
+### Landing page — type-specific (via `makeMediaRenderer` factory)
 
-| Component type | Renderer | UI section |
+| Component type | Builder | UI section |
 |---|---|---|
-| `HeroBannerComponent` | `HeroBannerRenderer` | Hero full-screen |
-| `AboutBannerComponent` | `AboutSectionRenderer` | About 3-column |
-| `VideoSectionComponent` | `VideoSectionRenderer` | Video embed |
-| `AwardBannerComponent` | `AwardSectionRenderer` | Award dark bg |
-| `ServiceCardComponent` | `ServiceSectionRenderer` | Accordion list |
-| `ProjectCardComponent` | `ProjectSectionRenderer` | Horizontal scroll |
-| `InstagramSectionComponent` | `InstagramSectionRenderer` | Floating images |
-| `MarqueeTextComponent` | `MarqueeTextRenderer` | Scrolling marquee |
+| `HeroBannerComponent` | `buildHeroModel` | Hero full-screen |
+| `AboutBannerComponent` | `buildAboutModel` | About 3-column |
+| `VideoSectionComponent` | `buildVideoModel` | Video embed |
+| `AwardBannerComponent` | `buildAwardModel` | Award dark bg |
+| `ServiceCardComponent` | `buildServiceModel` | Accordion list |
+| `ProjectCardComponent` | `buildProjectsModel` | Horizontal scroll |
+| `InstagramSectionComponent` | `buildInstagramModel` | Floating images |
+| `MarqueeTextComponent` | `buildMarqueeModel` | Scrolling marquee |
 
 ### Generic renderers
 
@@ -496,6 +499,6 @@ The script also updates `sites.logo_media_uid` and `sites.logo_dark_media_uid` t
 
 ### Replacing the default theme
 
-To swap the visual theme for the landing page sections, replace the renderers in `components/cms/renderers/` and the corresponding `buildXxxModel` functions in `lib/cms-utils.ts`. The section components in `components/theme/default/sections/` are the visual layer — swap them to change the look without touching routing or CMS delivery logic.
+To swap the visual theme for the landing page sections, replace the section components in `components/theme/default/sections/`, model types in `components/theme/default/models.ts`, and builder functions in `components/theme/default/builders.ts`. Generic CMS utilities in `lib/cms-utils.ts` are theme-independent and remain unchanged.
 
 The `Motion` animation layer (`components/theme/default/Motion.tsx`) is rendered directly by `LandingPageTemplate.tsx`. To disable or replace it, edit the template.

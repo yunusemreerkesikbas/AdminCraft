@@ -1,6 +1,7 @@
 import { Language } from '@shared/types/platform.types';
+import { MediaSummaryDto } from '../components/models/component-entry.types';
 
-export { Language };
+export { Language, MediaSummaryDto };
 
 export interface Site {
     id: number;
@@ -88,20 +89,8 @@ export interface SiteSettingsGlobalDto {
     robots?: RobotsMetaTag | null;
     logoMediaUid?: string | null;
     logoDarkMediaUid?: string | null;
-    logoMedia?: SiteMediaSummaryDto | null;
-    logoDarkMedia?: SiteMediaSummaryDto | null;
-}
-
-export interface SiteMediaSummaryDto {
-    id: number;
-    uid: string;
-    fileName?: string | null;
-    originalName?: string | null;
-    mimeType?: string | null;
-    publicUrl?: string | null;
-    width?: number | null;
-    height?: number | null;
-    fileSizeFormatted?: string | null;
+    logoMedia?: MediaSummaryDto | null;
+    logoDarkMedia?: MediaSummaryDto | null;
 }
 
 export enum RobotsMetaTag {

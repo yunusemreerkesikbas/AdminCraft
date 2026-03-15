@@ -78,8 +78,12 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
   private void persistLogoUids(SiteSettingsAppGlobalDto global) {
     siteRepository.findFirstByOrderByIdAsc().ifPresent(site -> {
-      site.setLogoMediaUid(global.logoMediaUid());
-      site.setLogoDarkMediaUid(global.logoDarkMediaUid());
+      if (global.logoMediaUid() != null) {
+        site.setLogoMediaUid(global.logoMediaUid().isBlank() ? null : global.logoMediaUid());
+      }
+      if (global.logoDarkMediaUid() != null) {
+        site.setLogoDarkMediaUid(global.logoDarkMediaUid().isBlank() ? null : global.logoDarkMediaUid());
+      }
       siteRepository.save(site);
     });
   }
