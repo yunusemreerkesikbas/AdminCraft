@@ -28,7 +28,6 @@ Base path: `/api/media`
 - `POST /api/media` (multipart upload)
 - `POST /api/media/composite` (multipart upload + translations JSON)
 - `GET /api/media/{id}`
-- `GET /api/media/uid/{uid}`
 - `GET /api/media/{id}/detail` (includes container variants + all translations)
 - `POST /api/media/{id}/bind` (bind uploaded media to a component or component entry)
 - `PUT /api/media/{id}` (metadata patch/update)
@@ -124,6 +123,20 @@ Linked usages:
 - `linked-components` is driven by responsive media assignments.
 - Component-level bindings and entry-level bindings are both returned by the backend.
 - Legacy string fields such as `customFields.mediaUid` can still exist, but new CMS media linking should prefer responsive media binding.
+
+### Media UID alignment for seeded content
+
+**Why UIDs mismatch:** The upload endpoint (`POST /api/media`) auto-generates UIDs in the form `cmsitem_<random>` — there is no way to specify a custom UID at upload time. The update endpoint (`PUT /api/media/{id}`) only exposes `isPublic` and `tags`; it does not allow changing the UID. Component entry `custom_data` fields seeded by `seed_liko_components.sql` reference **semantic UIDs** (e.g. `homepage-hero-bg`, `homepage-project-1`). These do not match the auto-generated values, causing `GET /api/cms/media?uids=homepage-hero-bg&...` to return empty results and images to not appear on the storefront.
+
+**Fix:** Run `backend/src/main/resources/impex/seed_liko_media_uids.sql` after uploading all assets. It updates `media.uid` by matching on `original_name` — the only supported way to assign semantic UIDs to uploaded media. See the [ImpEx execution order](./impex.md) for correct sequencing.
+
+### Site logo media fields
+
+`sites.logo_media_uid` and `sites.logo_dark_media_uid` store the media UIDs for the site logo. These are resolved to public URLs by `CmsDeliveryServiceImpl.getSiteForDelivery()` via `MediaService.resolvePublicUrl(uid)`.
+
+`GET /api/site-settings` now also hydrates `global.logoMedia` and `global.logoDarkMedia` summaries for the admin Site Dashboard, so logo pickers no longer need a follow-up media lookup by UID.
+
+**Clearing the logo:** Sending `logoMediaUid: ""` or `null` in a `PATCH /api/site-settings` request previously had no effect because `SiteSettingsServiceImpl.persistLogoUids` skipped null values. This is fixed — null values are now written, allowing the logo to be cleared by omitting or emptying the field in the admin Site Settings form.
 
 ## Security & tenant isolation
 

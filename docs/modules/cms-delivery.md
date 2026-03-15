@@ -94,9 +94,9 @@ From `CmsDeliveryController` and `CmsMediaDeliveryController`:
 ## Response contract (high level)
 
 - Delivery endpoints return `ApiResponse<T>` where `T` is a delivery DTO.
-- Batch endpoints return a wrapper with:
-  - `data`: map of `{ uid -> deliveryDto }`
-  - `meta`: `{ requested, found, notFound[] }`
+- Batch endpoints still return `ApiResponse<T>`, but `T` depends on the endpoint.
+- `GET /api/cms/media?uids=...` currently returns `ApiResponse<List<MediaResponse>>`.
+- The batch contract is not a generic `{ uid -> dto }` map wrapper.
 - Max batch size is enforced server-side (**50**).
 
 ### Page not found behavior

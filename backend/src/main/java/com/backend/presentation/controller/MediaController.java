@@ -176,29 +176,6 @@ public class MediaController {
                 }
         }
 
-        @GetMapping("/uid/{uid}")
-        @Operation(summary = "Get media by UID", description = "Retrieves media metadata by its unique identifier (UID).")
-        public ResponseEntity<ApiResponse<MediaResponse>> getMediaByUid(
-                        @Parameter(description = "Media UID", required = true) @PathVariable String uid,
-                        @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
-                try {
-                        Optional<Media> media = mediaService.findByUid(uid);
-                        if (media.isPresent()) {
-                                return ResponseEntity.ok(ApiResponse.success(MediaResponse.from(media.get())));
-                        } else {
-                                String message = messageSource.getMessage("media.not.found", new Object[] { uid },
-                                                Locale.forLanguageTag(languageCode));
-                                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                                .body(ApiResponse.error(message));
-                        }
-                } catch (Exception ex) {
-                        log.error("Error getting media by UID {}: {}", uid, ex.getMessage(), ex);
-                        String message = buildOperationErrorMessage(languageCode, "media.get.error", "error.general");
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body(ApiResponse.error(message));
-                }
-        }
-
         /**
          * Get all media with optional pagination, sorting, and search.
          * Returns lightweight MediaListResponse with sortConfig for dynamic sort UI.

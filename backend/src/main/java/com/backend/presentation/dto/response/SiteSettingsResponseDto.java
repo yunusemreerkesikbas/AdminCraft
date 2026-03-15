@@ -1,6 +1,5 @@
 package com.backend.presentation.dto.response;
 
-import com.backend.presentation.dto.request.SiteSettingsGlobalDto;
 import com.backend.presentation.dto.request.SiteSettingsI18nDto;
 
 import java.util.Map;
@@ -17,6 +16,6 @@ import java.util.Map;
  * }
  */
 public record SiteSettingsResponseDto(
-    SiteSettingsGlobalDto global,
+    SiteSettingsGlobalResponseDto global,
     Map<String, SiteSettingsI18nDto> languages) {
 }

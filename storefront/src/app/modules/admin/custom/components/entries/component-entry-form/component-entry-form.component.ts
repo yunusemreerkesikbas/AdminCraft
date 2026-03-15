@@ -33,6 +33,7 @@ import {
     CreateComponentEntryCompositeRequest,
     EntryFieldDefinition,
     EntryI18nDto,
+    MediaSummaryDto,
     UpdateComponentEntryCompositeRequest,
 } from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
@@ -129,12 +130,29 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         });
     }
 
-    #buildResponsiveMediaValue(): { desktop: any; mobile: any } | null {
+    #buildResponsiveMediaValue(): { desktopMedia: any; mobileMedia: any } | null {
         const responsive = this.data.entry?.responsiveMedia;
-        if (!responsive) return null;
+        if (responsive) {
+            return {
+                desktopMedia: responsive.desktopMedia || null,
+                mobileMedia: responsive.mobileMedia || null,
+            };
+        }
+
+        const hydratedMedia = Object.values(this.data.translations ?? {})
+            .map((translation) => translation?.customFields?.media)
+            .find(
+                (media): media is MediaSummaryDto =>
+                    typeof media?.id === 'number'
+            );
+
+        if (!hydratedMedia) {
+            return null;
+        }
+
         return {
-            desktop: responsive.desktopMedia || null,
-            mobile: responsive.mobileMedia || null,
+            desktopMedia: hydratedMedia,
+            mobileMedia: null,
         };
     }
 
@@ -143,13 +161,13 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
         const desktopMediaId =
-            typeof mediaValue?.desktop === 'number'
-                ? mediaValue.desktop
-                : mediaValue?.desktop?.id;
+            typeof mediaValue?.desktopMedia === 'number'
+                ? mediaValue.desktopMedia
+                : mediaValue?.desktopMedia?.id;
         const mobileMediaId =
-            typeof mediaValue?.mobile === 'number'
-                ? mediaValue.mobile
-                : mediaValue?.mobile?.id;
+            typeof mediaValue?.mobileMedia === 'number'
+                ? mediaValue.mobileMedia
+                : mediaValue?.mobileMedia?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             return of(undefined);

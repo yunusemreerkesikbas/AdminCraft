@@ -38,7 +38,6 @@ export const SPA_ENDPOINTS_CONFIG = {
     media: 'media',
     mediaById: 'media/${id}',
     mediaDetail: 'media/${id}/detail',
-    mediaByUid: 'media/uid/${uid}',
     mediaUpload: 'media/upload',
     mediaComposite: 'media/composite',
     mediaCompositeById: 'media/${id}/composite',

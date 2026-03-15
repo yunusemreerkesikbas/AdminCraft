@@ -271,35 +271,47 @@ public class ComponentServiceImpl implements ComponentService {
         applyNavigationBinding(component, componentType, request.navigationNodeId(),
                 request.navigationType(), request.searchBox(), true);
 
+        if (request.responsiveMediaId() != null) {
+            ResponsiveMediaSet responsiveMedia = responsiveMediaSetRepository.findById(request.responsiveMediaId())
+                    .orElseThrow(() -> new EntityNotFoundException("ResponsiveMediaSet", request.responsiveMediaId()));
+            component.setResponsiveMedia(responsiveMedia);
+            componentMediaLinkSyncService.syncComponentResponsiveLinks(component);
+        }
+
         Component savedComponent = componentRepository.save(component);
 
         String typeName = componentType.getUid();
 
-        List<ComponentI18n> i18nList = new ArrayList<>();
-        for (var entry : request.translations().entrySet()) {
-            ComponentI18n i18n = componentI18nRepository
-                    .findByComponentIdAndLanguage(id, entry.getKey())
-                    .orElseGet(() -> {
-                        ComponentI18n newI18n = new ComponentI18n();
-                        newI18n.setComponentId(id);
-                        newI18n.setLanguage(entry.getKey());
-                        return newI18n;
-                    });
+        List<ComponentI18n> i18nList;
+        if (request.translations() != null && !request.translations().isEmpty()) {
+            i18nList = new ArrayList<>();
+            for (var entry : request.translations().entrySet()) {
+                ComponentI18n i18n = componentI18nRepository
+                        .findByComponentIdAndLanguage(id, entry.getKey())
+                        .orElseGet(() -> {
+                            ComponentI18n newI18n = new ComponentI18n();
+                            newI18n.setComponentId(id);
+                            newI18n.setLanguage(entry.getKey());
+                            return newI18n;
+                        });
 
-            ComponentI18nCommand data = entry.getValue();
-            if (data != null) {
-                if (data.title() != null) {
-                    i18n.setTitle(data.title());
+                ComponentI18nCommand data = entry.getValue();
+                if (data != null) {
+                    if (data.title() != null) {
+                        i18n.setTitle(data.title());
+                    }
+                    if (data.subtitle() != null) {
+                        i18n.setSubtitle(data.subtitle());
+                    }
+                    if (data.description() != null) {
+                        i18n.setDescription(data.description());
+                    }
                 }
-                if (data.subtitle() != null) {
-                    i18n.setSubtitle(data.subtitle());
-                }
-                if (data.description() != null) {
-                    i18n.setDescription(data.description());
-                }
+
+                i18nList.add(componentI18nRepository.save(i18n));
             }
-
-            i18nList.add(componentI18nRepository.save(i18n));
+        } else {
+            i18nList = componentI18nRepository.findByComponentId(id);
         }
 
         log.info("Updated component with {} translations: id={}", i18nList.size(), id);

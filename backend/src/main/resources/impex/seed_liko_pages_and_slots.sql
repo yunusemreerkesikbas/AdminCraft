@@ -37,15 +37,18 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), title = VALUES(title),
     canonical_url = VALUES(canonical_url), status = VALUES(status);
 
 -- ============================================================
--- 3. PAGE_SLOTS — generate all slots for homepage from template_slots
---    Covers existing Section1-3 + new Section4-8 + Header + Footer
+-- 3. PAGE_SLOTS — generate content slots for homepage from template_slots
+--    Covers Section1-8 only. Header/Footer are handled by shared slots (Section 4).
 -- ============================================================
 
+-- Note: existing homepage-HeaderSlot / homepage-FooterSlot rows (if any) are harmless —
+-- the backend prefers shared slots over page-specific ones when both exist (Fix 2).
 INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
 SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
 FROM pages p
 JOIN template_slots ts ON ts.template_id = p.template_id
 WHERE p.uid = 'homepage'
+  AND ts.slot_name NOT IN ('Header', 'Footer')
 ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_order), updated_at = NOW();
 
 -- ============================================================

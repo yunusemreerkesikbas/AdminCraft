@@ -12,9 +12,6 @@ import com.backend.domain.entity.ComponentEntryI18n;
 import com.backend.domain.enums.ComponentStatus;
 import com.backend.domain.enums.Language;
 
-import lombok.Builder;
-
-@Builder
 public record ComponentEntryCompositeResponse(
     Long id,
     String uuid,
@@ -31,7 +28,7 @@ public record ComponentEntryCompositeResponse(
   public static ComponentEntryCompositeResponse from(
       ComponentEntry entry,
       List<ComponentEntryI18n> i18nList,
-      java.util.function.Function<String, Map<String, Object>> customDataParser) {
+      Map<Language, Map<String, Object>> customFieldsByLanguage) {
 
     if (entry == null) {
       return null;
@@ -42,22 +39,23 @@ public record ComponentEntryCompositeResponse(
         .stream()
         .collect(Collectors.toMap(
             ComponentEntryI18n::getLanguage,
-            i18n -> ComponentEntryI18nDto.from(i18n, customDataParser.apply(i18n.getCustomData())),
+            i18n -> ComponentEntryI18nDto.from(i18n,
+                Optional.ofNullable(customFieldsByLanguage)
+                    .map(fields -> fields.get(i18n.getLanguage()))
+                    .orElseGet(Collections::emptyMap)),
             (existing, replacement) -> replacement));
 
-    return ComponentEntryCompositeResponse.builder()
-        .id(entry.getId())
-        .uuid(entry.getUuid())
-        .componentId(entry.getComponentId())
-        .sortOrder(entry.getSortOrder())
-        .isVisible(entry.getIsVisible())
-        .styleClasses(entry.getStyleClasses())
-        .status(entry.getStatus())
-        .responsiveMedia(
-            entry.getResponsiveMedia() != null ? ResponsiveMediaResponse.from(entry.getResponsiveMedia()) : null)
-        .createdAt(entry.getCreatedAt())
-        .updatedAt(entry.getUpdatedAt())
-        .translations(translationsMap)
-        .build();
+    return new ComponentEntryCompositeResponse(
+        entry.getId(),
+        entry.getUuid(),
+        entry.getComponentId(),
+        entry.getSortOrder(),
+        entry.getIsVisible(),
+        entry.getStyleClasses(),
+        entry.getStatus(),
+        entry.getResponsiveMedia() != null ? ResponsiveMediaResponse.from(entry.getResponsiveMedia()) : null,
+        entry.getCreatedAt(),
+        entry.getUpdatedAt(),
+        translationsMap);
   }
 }

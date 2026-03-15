@@ -3,6 +3,7 @@ package com.backend.application.dto;
 import java.util.List;
 import java.util.Map;
 
+import com.backend.domain.entity.Media;
 import com.backend.domain.enums.RobotsMetaTag;
 
 /**
@@ -10,6 +11,34 @@ import com.backend.domain.enums.RobotsMetaTag;
  * Replaces dependencies on presentation layer DTOs.
  */
 public class SiteSettingsAppDto {
+
+  public record MediaSummaryDto(
+      Long id,
+      String uid,
+      String fileName,
+      String originalName,
+      String mimeType,
+      String publicUrl,
+      Integer width,
+      Integer height,
+      String fileSizeFormatted) {
+
+    public static MediaSummaryDto from(Media media) {
+      if (media == null) {
+        return null;
+      }
+      return new MediaSummaryDto(
+          media.getId(),
+          media.getUid(),
+          media.getFileName(),
+          media.getOriginalName(),
+          media.getMimeType(),
+          media.getPublicUrl(),
+          media.getWidth(),
+          media.getHeight(),
+          media.getFileSizeFormatted());
+    }
+  }
 
   public record SiteSettingsAppGlobalDto(
       String contactEmail,
@@ -20,7 +49,9 @@ public class SiteSettingsAppDto {
       AddressDto address,
       SocialDto social,
       String logoMediaUid,
-      String logoDarkMediaUid) {
+      String logoDarkMediaUid,
+      MediaSummaryDto logoMedia,
+      MediaSummaryDto logoDarkMedia) {
 
     public record AddressDto(
         String line1,

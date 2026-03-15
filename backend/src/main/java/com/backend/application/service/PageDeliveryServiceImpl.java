@@ -382,21 +382,20 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         responsive = responsiveMediaService.toDeliveryResponse(responsiveMedia, lang);
                 }
 
-                return ComponentDeliveryResponse.builder()
-                                .uid(comp.getUid())
-                                .type(type != null ? (type.getUid() != null ? type.getUid() : type.getName()) : null)
-                                .category(type != null ? type.getCategory() : null)
-                                .title(compI18n != null ? compI18n.getTitle() : null)
-                                .subtitle(compI18n != null ? compI18n.getSubtitle() : null)
-                                .description(compI18n != null ? compI18n.getDescription() : null)
-                                .isVisible(comp.getIsVisible())
-                                .styleClasses(comp.getStyleClasses())
-                                .navigationType(resolveNavigationType(type, comp))
-                                .searchBox(resolveSearchBox(type, comp))
-                                .navigationNode(resolveNavigationNode(type, comp, navigationMap))
-                                .responsive(responsive)
-                                .entries(entryResponses)
-                                .build();
+                return new ComponentDeliveryResponse(
+                                comp.getUid(),
+                                type != null ? (type.getUid() != null ? type.getUid() : type.getName()) : null,
+                                type != null ? type.getCategory() : null,
+                                compI18n != null ? compI18n.getTitle() : null,
+                                compI18n != null ? compI18n.getSubtitle() : null,
+                                compI18n != null ? compI18n.getDescription() : null,
+                                comp.getIsVisible(),
+                                comp.getStyleClasses(),
+                                resolveNavigationType(type, comp),
+                                resolveSearchBox(type, comp),
+                                resolveNavigationNode(type, comp, navigationMap),
+                                responsive,
+                                entryResponses);
         }
 
         private EntryDeliveryResponse buildEntryResponseOptimized(ComponentEntry entry, ComponentEntryI18n i18n,
@@ -477,10 +476,12 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 Set<String> templateSlotNames = new LinkedHashSet<>();
                 for (TemplateSlot templateSlot : templateSlots) {
                         templateSlotNames.add(templateSlot.getSlotName());
-                        PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
-                        if (source == null) {
-                                source = sharedBySlotName.get(templateSlot.getSlotName());
-                        }
+                        PageSlot sharedSource = sharedBySlotName.get(templateSlot.getSlotName());
+                        PageSlot source = sharedSource != null
+                                        // Shared slot exists → use it so component bindings are always resolved correctly.
+                                        // This prevents accidentally-created page-specific slots from shadowing shared chrome slots.
+                                        ? sharedSource
+                                        : pageBySlotName.get(templateSlot.getSlotName());
                         effective.add(buildEffectiveSlot(page.getId(), templateSlot, source));
                 }
 
@@ -554,14 +555,13 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 for (PageSlot slot : slots) {
                         List<ComponentDeliveryResponse> compResponses = slotComponentsMap.getOrDefault(slot.getSlotName(), List.of());
 
-                        ContentSlotDeliveryResponse contentSlot = ContentSlotDeliveryResponse.builder()
-                                        .slotId(slot.getSlotName() + "Slot")
-                                        .slotUuid(slot.getUuid())
-                                        .position(slot.getPosition())
-                                        .name(slot.getSlotName() + " Content Slot")
-                                        .slotShared(Boolean.TRUE.equals(slot.getIsShared()))
-                                        .components(ContentSlotDeliveryResponse.ComponentsWrapper.of(compResponses))
-                                        .build();
+                        ContentSlotDeliveryResponse contentSlot = new ContentSlotDeliveryResponse(
+                                        slot.getSlotName() + "Slot",
+                                        slot.getUuid(),
+                                        slot.getPosition(),
+                                        slot.getSlotName() + " Content Slot",
+                                        Boolean.TRUE.equals(slot.getIsShared()),
+                                        ContentSlotDeliveryResponse.ComponentsWrapper.of(compResponses));
 
                         contentSlotList.add(contentSlot);
                 }

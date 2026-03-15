@@ -88,6 +88,20 @@ export interface SiteSettingsGlobalDto {
     robots?: RobotsMetaTag | null;
     logoMediaUid?: string | null;
     logoDarkMediaUid?: string | null;
+    logoMedia?: SiteMediaSummaryDto | null;
+    logoDarkMedia?: SiteMediaSummaryDto | null;
+}
+
+export interface SiteMediaSummaryDto {
+    id: number;
+    uid: string;
+    fileName?: string | null;
+    originalName?: string | null;
+    mimeType?: string | null;
+    publicUrl?: string | null;
+    width?: number | null;
+    height?: number | null;
+    fileSizeFormatted?: string | null;
 }
 
 export enum RobotsMetaTag {

@@ -1,20 +1,27 @@
 package com.backend.application.service;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.response.ComponentEntryCompositeResponse;
+import com.backend.application.dto.response.ResponsiveMediaResponse;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
+import com.backend.domain.entity.Media;
 import com.backend.domain.entity.ResponsiveMediaSet;
+import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentEntryI18nRepository;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentRepository;
+import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +36,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
     private final ComponentEntryI18nRepository entryI18nRepository;
     private final ComponentRepository componentRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
+    private final MediaRepository mediaRepository;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
 
@@ -148,8 +156,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
 
         log.info("Created entry composite: entryId={}, translations={}", savedEntry.getId(), savedI18n.size());
 
-        return com.backend.application.dto.response.ComponentEntryCompositeResponse.from(savedEntry, savedI18n,
-                this::parseCustomData);
+        return toCompositeResponse(savedEntry, savedI18n);
     }
 
     @Override
@@ -206,8 +213,7 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
                 })
                 .collect(Collectors.toList());
 
-        return com.backend.application.dto.response.ComponentEntryCompositeResponse.from(savedEntry, updatedI18n,
-                this::parseCustomData);
+        return toCompositeResponse(savedEntry, updatedI18n);
     }
 
     @Override
@@ -218,8 +224,80 @@ public class ComponentEntryServiceImpl implements ComponentEntryService {
 
         List<ComponentEntryI18n> i18nList = entryI18nRepository.findByEntryId(id);
 
+        return toCompositeResponse(entry, i18nList);
+    }
+
+    private ComponentEntryCompositeResponse toCompositeResponse(
+            ComponentEntry entry,
+            List<ComponentEntryI18n> i18nList) {
         return ComponentEntryCompositeResponse.from(entry, i18nList,
-                this::parseCustomData);
+                buildCustomFieldsByLanguage(i18nList));
+    }
+
+    private Map<Language, Map<String, Object>> buildCustomFieldsByLanguage(List<ComponentEntryI18n> i18nList) {
+        Map<Language, Map<String, Object>> customFieldsByLanguage = Optional.ofNullable(i18nList)
+                .orElseGet(List::of)
+                .stream()
+                .collect(Collectors.toMap(
+                        ComponentEntryI18n::getLanguage,
+                        i18n -> parseCustomData(i18n.getCustomData()),
+                        (existing, replacement) -> replacement,
+                        LinkedHashMap::new));
+
+        List<String> mediaUids = customFieldsByLanguage.values().stream()
+                .map(this::extractMediaUid)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (mediaUids.isEmpty()) {
+            return customFieldsByLanguage;
+        }
+
+        Map<String, ResponsiveMediaResponse.MediaSummary> mediaByUid = mediaRepository.findByUidIn(mediaUids)
+                .stream()
+                .collect(Collectors.toMap(
+                        Media::getUid,
+                        ResponsiveMediaResponse.MediaSummary::from,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new));
+
+        if (mediaByUid.isEmpty()) {
+            return customFieldsByLanguage;
+        }
+
+        return customFieldsByLanguage.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> hydrateLegacyMedia(entry.getValue(), mediaByUid),
+                        (existing, replacement) -> replacement,
+                        LinkedHashMap::new));
+    }
+
+    private Map<String, Object> hydrateLegacyMedia(
+            Map<String, Object> customFields,
+            Map<String, ResponsiveMediaResponse.MediaSummary> mediaByUid) {
+        String mediaUid = extractMediaUid(customFields);
+        if (mediaUid == null) {
+            return customFields;
+        }
+
+        ResponsiveMediaResponse.MediaSummary media = mediaByUid.get(mediaUid);
+        if (media == null || customFields.containsKey("media")) {
+            return customFields;
+        }
+
+        Map<String, Object> hydratedFields = new HashMap<>(customFields);
+        hydratedFields.put("media", media);
+        return hydratedFields;
+    }
+
+    private String extractMediaUid(Map<String, Object> customFields) {
+        Object mediaUid = customFields.get("mediaUid");
+        if (mediaUid instanceof String value && !value.isBlank()) {
+            return value;
+        }
+        return null;
     }
 
     private Map<String, Object> parseCustomData(String json) {

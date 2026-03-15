@@ -157,7 +157,8 @@ export interface UpdateComponentCompositeRequest {
     navigationNodeId?: number;
     navigationType?: NavigationType;
     searchBox?: boolean;
-    translations: Record<Language, ComponentI18nRequest>;
+    responsiveMediaId?: number | null;
+    translations?: Record<Language, ComponentI18nRequest>;
 }
 
 export interface ComponentCompositeResponse {

@@ -11,8 +11,11 @@ app:
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
   cors:
-    allowed-origins: []
-    allowed-origin-patterns: []
+    allowed-origins:
+      - http://localhost:4200
+      - http://127.0.0.1:4200
+    allowed-origin-patterns:
+      - http://*.localhost:4200
   tenant:
     auto-sync-on-startup: ${TENANT_AUTO_SYNC:false}
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}

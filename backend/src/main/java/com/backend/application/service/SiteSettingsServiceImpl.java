@@ -4,11 +4,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.backend.application.dto.SiteSettingsAppDto.MediaSummaryDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +37,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
   private final SiteSettingRepository repository;
   private final TenantLanguageService tenantLanguageService;
   private final SiteRepository siteRepository;
+  private final MediaService mediaService;
 
   @Override
   @Transactional(readOnly = true)
@@ -74,16 +77,9 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
   }
 
   private void persistLogoUids(SiteSettingsAppGlobalDto global) {
-    if (global.logoMediaUid() == null && global.logoDarkMediaUid() == null) {
-      return;
-    }
     siteRepository.findFirstByOrderByIdAsc().ifPresent(site -> {
-      if (global.logoMediaUid() != null) {
-        site.setLogoMediaUid(global.logoMediaUid());
-      }
-      if (global.logoDarkMediaUid() != null) {
-        site.setLogoDarkMediaUid(global.logoDarkMediaUid());
-      }
+      site.setLogoMediaUid(global.logoMediaUid());
+      site.setLogoDarkMediaUid(global.logoDarkMediaUid());
       siteRepository.save(site);
     });
   }
@@ -117,6 +113,20 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         globalSettingsMap.get("global.social.youtube"),
         globalSettingsMap.get("global.social.tiktok"));
 
+    String logoMediaUid = site != null ? site.getLogoMediaUid() : null;
+    String logoDarkMediaUid = site != null ? site.getLogoDarkMediaUid() : null;
+    List<String> logoMediaUids = java.util.stream.Stream.of(logoMediaUid, logoDarkMediaUid)
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList();
+    Map<String, MediaSummaryDto> mediaByUid = logoMediaUids.isEmpty()
+        ? Map.of()
+        : mediaService.findByUids(logoMediaUids).stream().collect(Collectors.toMap(
+            media -> media.getUid(),
+            MediaSummaryDto::from,
+            (existing, replacement) -> existing,
+            LinkedHashMap::new));
+
     return new SiteSettingsAppGlobalDto(
         globalSettingsMap.get("global.contactEmail"),
         globalSettingsMap.get("global.contactPhone"),
@@ -125,8 +135,10 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         RobotsMetaTag.fromValue(globalSettingsMap.get("global.robots")),
         address,
         social,
-        site != null ? site.getLogoMediaUid() : null,
-        site != null ? site.getLogoDarkMediaUid() : null);
+        logoMediaUid,
+        logoDarkMediaUid,
+        logoMediaUid != null ? mediaByUid.get(logoMediaUid) : null,
+        logoDarkMediaUid != null ? mediaByUid.get(logoDarkMediaUid) : null);
   }
 
   private SiteSettingsAppI18nDto buildI18nResponse(List<SiteSetting> allSettings, Language language) {

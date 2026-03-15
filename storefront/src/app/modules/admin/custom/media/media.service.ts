@@ -55,10 +55,6 @@ export class MediaService extends CrudHttpService<Media, FormData, UpdateMediaRe
         return this.api.upload<ApiResponse<MediaResponse>>('mediaComposite', formData);
     }
 
-    getByUid(uid: string): Observable<Media> {
-        return this.customGet<Media>('mediaByUid', { uid });
-    }
-
     getDetails(id: number): Observable<MediaDetailResponse> {
         return this.customGet<MediaDetailResponse>('mediaDetail', { id });
     }

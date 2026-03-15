@@ -95,6 +95,7 @@ Component entries controller:
 
 Composite entry note:
 - Entry composite create/update **do not accept `status`**. Status defaults to `DRAFT` and is managed via publish flows.
+- `GET /api/components/entries/{id}?include=translations` can hydrate legacy `translations[*].customFields.mediaUid` values into `translations[*].customFields.media`, so the admin UI can preview/edit legacy entry media without a follow-up media metadata request.
 
 Navigation-aware binding behavior is driven by the `isNavigationAware()` flag in:
 

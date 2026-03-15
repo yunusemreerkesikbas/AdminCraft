@@ -190,6 +190,8 @@ When `status` is `"PARTIAL"`, inspect `results` where `success: false`:
 - Common cause: FK violation (referenced `uid` does not exist yet) — fix ordering of statements.
 - Blocked statement: `errorMessage` starts with `"Operation not allowed"` — remove or replace the statement.
 
+> **Semicolons in SQL comments:** The ImpEx parser splits statements on `;`. A semicolon inside a `--` comment (e.g. `-- (6 uploaded; 7th slot empty)`) is treated as a statement terminator, splitting the next `UPDATE` into an invalid fragment. **Never use `;` inside comment text** — use `,` or `-` instead.
+
 ### Adding a new script pattern
 
 Scripts have no file-based registration. Any valid SQL can be submitted. For repeatable seeds that belong to the codebase, keep them in version-controlled `.sql` files and paste into the UI as needed. There is no automatic classpath scanning.
@@ -203,13 +205,17 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 ### Execution order (when seeding a fresh tenant — default theme example content)
 
 ```text
-1. seed_liko_components.sql      — landing page components (Homepage*), i18n, entries, entry i18n
+1. seed_liko_components.sql        — landing page components (Homepage*), i18n, entries, entry i18n
 2. seed_liko_chrome_components.sql — shared Header/Footer components, Home-2 chrome copy, i18n, entries
-3. seed_liko_pages_and_slots.sql — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
-4. seed_pages_and_slots.sql      — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
-5. seed_navigation.sql           — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
-6. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+3. seed_liko_pages_and_slots.sql   — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
+4. seed_pages_and_slots.sql        — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
+5. seed_navigation.sql             — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
+6. [upload media via Admin UI]     — upload all image/video assets in the Media Library before running step 7
+7. seed_liko_media_uids.sql        — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
+8. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
+
+> **Media UID alignment (step 7):** Component entry `custom_data` fields reference media by semantic UIDs like `homepage-hero-bg`. When media is uploaded via the Media Library, auto-generated UIDs (`cmsitem_*`) are assigned. `seed_liko_media_uids.sql` corrects this by matching on `original_name` and updating each record's UID to the expected semantic value. It also sets `sites.logo_media_uid` / `sites.logo_dark_media_uid`. Run this script **after** uploading all assets. It is idempotent.
 
 `seed_liko_chrome_components.sql` maps the header/footer copy from `liko-next-js/src/pages/homes/home-2.tsx` into standard CMS component data.
 
