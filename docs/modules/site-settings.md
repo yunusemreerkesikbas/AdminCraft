@@ -25,6 +25,7 @@ Controller: [`backend/src/main/java/com/backend/presentation/controller/SiteSett
 Base path: `/api/site-settings`
 
 - `GET /api/site-settings` (admin view)
+  - response includes `global.logoMedia` / `global.logoDarkMedia` summaries for preloading logo pickers in admin UI
 - `PATCH /api/site-settings` (partial update)
   - body: `{ global: ..., languages: { "tr": ..., "en": ... } }` (see controller request record)
 

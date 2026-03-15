@@ -31,6 +31,7 @@ public record ComponentCompositeResponse(
     ComponentStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
+    ResponsiveMediaResponse responsiveMedia,
     Map<Language, ComponentI18nContentResponse> translations) {
 
   public static ComponentCompositeResponse from(
@@ -45,6 +46,10 @@ public record ComponentCompositeResponse(
             ComponentI18n::getLanguage,
             ComponentI18nContentResponse::from,
             (existing, replacement) -> replacement));
+
+    ResponsiveMediaResponse responsiveMediaDto = component.getResponsiveMedia() != null
+        ? ResponsiveMediaResponse.from(component.getResponsiveMedia())
+        : null;
 
     return ComponentCompositeResponse.builder()
         .id(component.getId())
@@ -62,6 +67,7 @@ public record ComponentCompositeResponse(
         .status(component.getStatus())
         .createdAt(component.getCreatedAt())
         .updatedAt(component.getUpdatedAt())
+        .responsiveMedia(responsiveMediaDto)
         .translations(translationsMap)
         .build();
   }

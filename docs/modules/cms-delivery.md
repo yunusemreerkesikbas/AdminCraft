@@ -94,9 +94,9 @@ From `CmsDeliveryController` and `CmsMediaDeliveryController`:
 ## Response contract (high level)
 
 - Delivery endpoints return `ApiResponse<T>` where `T` is a delivery DTO.
-- Batch endpoints return a wrapper with:
-  - `data`: map of `{ uid -> deliveryDto }`
-  - `meta`: `{ requested, found, notFound[] }`
+- Batch endpoints still return `ApiResponse<T>`, but `T` depends on the endpoint.
+- `GET /api/cms/media?uids=...` currently returns `ApiResponse<List<MediaResponse>>`.
+- The batch contract is not a generic `{ uid -> dto }` map wrapper.
 - Max batch size is enforced server-side (**50**).
 
 ### Page not found behavior
@@ -135,7 +135,8 @@ Source: `backend/src/main/java/com/backend/application/dto/delivery/ContentSlotD
 Template-slot resolution note:
 
 - For pages with `templateId`, delivery slot list is resolved from `template_slots` (slot order/position contract).
-- Component bindings are taken from page slot first, then shared slot fallback for the same `slot_name`.
+- **Slot precedence is intentionally shared-first for template-based pages**: when both a shared slot and a page-specific slot exist for the same `slot_name`, the shared slot's component bindings win. This protects chrome slots (`Header`, `Footer`) from being accidentally shadowed by page-level overrides. Implemented in `PageDeliveryServiceImpl.resolveEffectiveSlotsForDelivery()`.
+- For template-less pages (`mergeSlotsWithoutTemplate()`), precedence is reversed: page slot > shared slot (fallback mode).
 - `contentSlots.contentSlot[].slotId` = `slotName + "Slot"` (e.g. `"Section1Slot"`).
 - `contentSlots.contentSlot[].position` = position enum value (e.g. `"TOP"`, `"CENTER"`, `"BOTTOM"`), **not** slot name.
 - The Next.js storefront's `buildSlotMap` keys by `slotId.replace(/Slot$/, "")` (→ `"Section1"`) so template components can reference slots by their logical name rather than the position enum.

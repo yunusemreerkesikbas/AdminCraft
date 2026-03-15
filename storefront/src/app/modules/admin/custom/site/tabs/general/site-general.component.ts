@@ -1,6 +1,5 @@
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
@@ -21,7 +20,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaMediaPickerComponent } from '@admin/custom/media/components/spa-media-picker/spa-media-picker.component';
@@ -31,8 +30,7 @@ import {
 } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { FormUtils } from '@shared/utils/form.utils';
-import { Subject, catchError, of, take, takeUntil } from 'rxjs';
-import { MediaService } from '@admin/custom/media/media.service';
+import { Subject, takeUntil } from 'rxjs';
 import { SiteService } from '../../site.service';
 import { SiteSettingsResponseDto } from '../../site.types';
 
@@ -55,22 +53,19 @@ import { SiteSettingsResponseDto } from '../../site.types';
 export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
     readonly #fb = inject(FormBuilder);
     readonly #siteService = inject(SiteService);
-    readonly #mediaService = inject(MediaService);
-    readonly #transloco = inject(TranslocoService);
     readonly #notification = inject(NotificationService);
     readonly #languageContext = inject(LanguageContextService);
-    readonly #cdr = inject(ChangeDetectorRef);
     readonly #destroy$ = new Subject<void>();
 
     @Input() settings: SiteSettingsResponseDto | null = null;
     @Output() settingsUpdated = new EventEmitter<SiteSettingsResponseDto>();
 
-    form: FormGroup;
+    protected form: FormGroup;
     languages = this.#languageContext.supportedLanguages;
     selectedLanguage = signal<string>(
         this.#languageContext.getDefaultLanguage().toLowerCase()
     );
-    saving = false;
+    protected savingSig = signal(false);
 
     constructor() {
         this.#buildForm();
@@ -92,14 +87,14 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
     }
 
     save(): void {
-        if (this.saving) return;
+        if (this.savingSig()) return;
 
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             return;
         }
 
-        this.saving = true;
+        this.savingSig.set(true);
         const formValue = this.form.value;
 
         const toUid = (val: string | { uid?: string } | null | undefined): string | null => {
@@ -137,14 +132,14 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
                 next: (updatedSettings) => {
-                    this.saving = false;
+                    this.savingSig.set(false);
                     this.#notification.success(
                         'admin.site.dashboard.messages.saveSuccess'
                     );
                     this.settingsUpdated.emit(updatedSettings);
                 },
                 error: (err) => {
-                    this.saving = false;
+                    this.savingSig.set(false);
 
                     if (err.error?.data) {
                         FormUtils.setServerErrors(this.form, err.error.data);
@@ -219,33 +214,10 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                 contactEmail: this.settings.global?.contactEmail || '',
                 contactPhone: this.settings.global?.contactPhone || '',
                 whatsappPhone: this.settings.global?.whatsappPhone || '',
-                logoMediaUid: null,
-                logoDarkMediaUid: null,
+                logoMediaUid: this.settings.global?.logoMedia || null,
+                logoDarkMediaUid: this.settings.global?.logoDarkMedia || null,
             },
         });
-
-        const logoUid = this.settings.global?.logoMediaUid;
-        const logoDarkUid = this.settings.global?.logoDarkMediaUid;
-
-        if (logoUid) {
-            this.#mediaService.getByUid(logoUid).pipe(
-                take(1),
-                catchError(() => of(null)),
-            ).subscribe((media) => {
-                this.form.get('global.logoMediaUid')?.setValue(media);
-                this.#cdr.markForCheck();
-            });
-        }
-
-        if (logoDarkUid) {
-            this.#mediaService.getByUid(logoDarkUid).pipe(
-                take(1),
-                catchError(() => of(null)),
-            ).subscribe((media) => {
-                this.form.get('global.logoDarkMediaUid')?.setValue(media);
-                this.#cdr.markForCheck();
-            });
-        }
 
         const languagesGroup = this.form.get('languages') as FormGroup;
         this.languages().forEach((lang) => {

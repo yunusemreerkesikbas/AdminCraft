@@ -33,6 +33,7 @@ import {
     CreateComponentEntryCompositeRequest,
     EntryFieldDefinition,
     EntryI18nDto,
+    MediaSummaryDto,
     UpdateComponentEntryCompositeRequest,
 } from '../../models/component-entry.types';
 import { ComponentEntryService } from '../../services/component-entry.service';
@@ -97,21 +98,19 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             this.generalForm?.valid && !this.isSubmitting() && !this.isLoadingSig()
     );
 
-    protected get tabs(): TabDefinition[] {
-        return [
-            {
-                id: 'general',
-                label: 'admin.components.entries.tabs.general',
-                icon: 'settings',
-            },
-            { id: 'media', label: 'admin.media.title', icon: 'image' },
-            ...this.languages.map((lang) => ({
-                id: 'lang-' + lang,
-                label: lang.toUpperCase(),
-                icon: 'translate',
-            })),
-        ];
-    }
+    protected readonly tabsSig = computed<TabDefinition[]>(() => [
+        {
+            id: 'general',
+            label: 'admin.components.entries.tabs.general',
+            icon: 'settings',
+        },
+        { id: 'media', label: 'admin.media.title', icon: 'image' },
+        ...this.languages.map((lang) => ({
+            id: 'lang-' + lang,
+            label: lang.toUpperCase(),
+            icon: 'translate',
+        })),
+    ]);
 
     override ngOnInit(): void {
         super.ngOnInit();
@@ -129,12 +128,29 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         });
     }
 
-    #buildResponsiveMediaValue(): { desktop: any; mobile: any } | null {
+    #buildResponsiveMediaValue(): { desktopMedia: any; mobileMedia: any } | null {
         const responsive = this.data.entry?.responsiveMedia;
-        if (!responsive) return null;
+        if (responsive) {
+            return {
+                desktopMedia: responsive.desktopMedia || null,
+                mobileMedia: responsive.mobileMedia || null,
+            };
+        }
+
+        const hydratedMedia = Object.values(this.data.translations ?? {})
+            .map((translation) => translation?.customFields?.media)
+            .find(
+                (media): media is MediaSummaryDto =>
+                    typeof media?.id === 'number'
+            );
+
+        if (!hydratedMedia) {
+            return null;
+        }
+
         return {
-            desktop: responsive.desktopMedia || null,
-            mobile: responsive.mobileMedia || null,
+            desktopMedia: hydratedMedia,
+            mobileMedia: null,
         };
     }
 
@@ -143,13 +159,13 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
         const currentSetId = this.data.entry?.responsiveMedia?.id;
 
         const desktopMediaId =
-            typeof mediaValue?.desktop === 'number'
-                ? mediaValue.desktop
-                : mediaValue?.desktop?.id;
+            typeof mediaValue?.desktopMedia === 'number'
+                ? mediaValue.desktopMedia
+                : mediaValue?.desktopMedia?.id;
         const mobileMediaId =
-            typeof mediaValue?.mobile === 'number'
-                ? mediaValue.mobile
-                : mediaValue?.mobile?.id;
+            typeof mediaValue?.mobileMedia === 'number'
+                ? mediaValue.mobileMedia
+                : mediaValue?.mobileMedia?.id;
 
         if (!desktopMediaId && !mobileMediaId) {
             return of(undefined);
@@ -221,7 +237,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
     #mapToDynamicConfig(fields: EntryFieldDefinition[]): DynamicFieldConfig[] {
         return fields.map((f) => ({
             key: f.fieldKey,
-            type: f.fieldType as any,
+            type: f.fieldType as DynamicFieldConfig['type'],
             labelKey: `admin.components.entryFields.custom.${f.fieldKey}`,
         }));
     }

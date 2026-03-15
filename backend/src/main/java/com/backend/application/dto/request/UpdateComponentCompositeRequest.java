@@ -31,6 +31,8 @@ public record UpdateComponentCompositeRequest(
 
         Boolean searchBox,
 
+        Long responsiveMediaId,
+
         @NotEmpty(message = "{validation.component.translations.required}") @Valid Map<Language, ComponentI18nCommand> translations) {
 
     public UpdateComponentCompositeRequest {

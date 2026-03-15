@@ -35,13 +35,20 @@ export interface ResponsiveMediaDto {
 
 export interface MediaSummaryDto {
     id: number;
-    uid?: string;
-    fileName?: string;
-    originalName?: string;
-    mimeType?: string;
-    publicUrl?: string;
-    width?: number;
-    height?: number;
+    uid: string;
+    fileName?: string | null;
+    originalName?: string | null;
+    mimeType?: string | null;
+    publicUrl?: string | null;
+    width?: number | null;
+    height?: number | null;
+    fileSizeFormatted?: string | null;
+}
+
+export interface EntryCustomFields {
+    mediaUid?: string;
+    media?: MediaSummaryDto;
+    [key: string]: any;
 }
 
 export interface ComponentEntryDetailDto extends ComponentEntry {
@@ -75,6 +82,7 @@ export interface EntryI18nDto {
     title?: string;
     description?: string;
     status: 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'ARCHIVED';
+    customFields?: EntryCustomFields;
     [key: string]: any;  // For dynamic entry fields
 }
 

@@ -1,6 +1,7 @@
 import { Language } from '@shared/types/platform.types';
+import { MediaSummaryDto } from '../components/models/component-entry.types';
 
-export { Language };
+export { Language, MediaSummaryDto };
 
 export interface Site {
     id: number;
@@ -88,6 +89,8 @@ export interface SiteSettingsGlobalDto {
     robots?: RobotsMetaTag | null;
     logoMediaUid?: string | null;
     logoDarkMediaUid?: string | null;
+    logoMedia?: MediaSummaryDto | null;
+    logoDarkMedia?: MediaSummaryDto | null;
 }
 
 export enum RobotsMetaTag {

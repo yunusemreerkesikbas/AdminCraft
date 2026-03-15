@@ -45,7 +45,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private static final int MAX_BATCH_SIZE = 50;
   private static final Set<String> RESERVED_FIELDS = Set.of(
-      "uid", "order", "title", "description", "isVisible", "styleClasses");
+      "uid", "order", "title", "description", "isVisible", "styleClasses", "isExternal");
 
   private final ComponentRepository componentRepository;
   private final ComponentTypeRepository componentTypeRepository;
@@ -153,21 +153,20 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         responsive = responsiveMediaService.toDeliveryResponse(responsiveMedia, lang);
       }
 
-      ComponentDeliveryResponse response = ComponentDeliveryResponse.builder()
-          .uid(component.getUid())
-          .type(resolveComponentType(type))
-          .category(type != null ? type.getCategory() : null)
-          .title(i18n != null ? i18n.getTitle() : null)
-          .subtitle(i18n != null ? i18n.getSubtitle() : null)
-          .description(i18n != null ? i18n.getDescription() : null)
-          .isVisible(component.getIsVisible())
-          .styleClasses(component.getStyleClasses())
-          .navigationType(resolveNavigationType(type, component))
-          .searchBox(resolveSearchBox(type, component))
-          .navigationNode(resolveNavigationNode(type, component, lang))
-          .responsive(responsive)
-          .entries(entryResponses)
-          .build();
+      ComponentDeliveryResponse response = new ComponentDeliveryResponse(
+          component.getUid(),
+          resolveComponentType(type),
+          type != null ? type.getCategory() : null,
+          i18n != null ? i18n.getTitle() : null,
+          i18n != null ? i18n.getSubtitle() : null,
+          i18n != null ? i18n.getDescription() : null,
+          component.getIsVisible(),
+          component.getStyleClasses(),
+          resolveNavigationType(type, component),
+          resolveSearchBox(type, component),
+          resolveNavigationNode(type, component, lang),
+          responsive,
+          entryResponses);
 
       data.put(uid, response);
     }
@@ -207,6 +206,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18n != null ? i18n.getDescription() : null)
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .isExternal(computeIsExternal(customFields))
         .responsive(responsive)
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
@@ -232,21 +232,20 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       responsive = responsiveMediaService.toDeliveryResponse(component.getResponsiveMedia(), lang);
     }
 
-    return ComponentDeliveryResponse.builder()
-        .uid(component.getUid())
-        .type(resolveComponentType(componentType))
-        .category(componentType != null ? componentType.getCategory() : null)
-        .title(i18nOpt.map(ComponentI18n::getTitle).orElse(null))
-        .subtitle(i18nOpt.map(ComponentI18n::getSubtitle).orElse(null))
-        .description(i18nOpt.map(ComponentI18n::getDescription).orElse(null))
-        .isVisible(component.getIsVisible())
-        .styleClasses(component.getStyleClasses())
-        .navigationType(resolveNavigationType(componentType, component))
-        .searchBox(resolveSearchBox(componentType, component))
-        .navigationNode(resolveNavigationNode(componentType, component, lang))
-        .responsive(responsive)
-        .entries(entryResponses)
-        .build();
+    return new ComponentDeliveryResponse(
+        component.getUid(),
+        resolveComponentType(componentType),
+        componentType != null ? componentType.getCategory() : null,
+        i18nOpt.map(ComponentI18n::getTitle).orElse(null),
+        i18nOpt.map(ComponentI18n::getSubtitle).orElse(null),
+        i18nOpt.map(ComponentI18n::getDescription).orElse(null),
+        component.getIsVisible(),
+        component.getStyleClasses(),
+        resolveNavigationType(componentType, component),
+        resolveSearchBox(componentType, component),
+        resolveNavigationNode(componentType, component, lang),
+        responsive,
+        entryResponses);
   }
 
   private EntryDeliveryResponse buildEntryResponse(ComponentEntry entry, Long componentTypeId, Language lang) {
@@ -280,6 +279,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentEntryI18n::getDescription).orElse(null))
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
+        .isExternal(computeIsExternal(expandedFields))
         .responsive(responsive)
         .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
@@ -315,5 +315,19 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
 
   private boolean isNavigationAware(ComponentType type) {
     return type != null && type.isNavigationAware();
+  }
+
+  private static boolean isExternalUrl(Object value) {
+    if (!(value instanceof String url)) return false;
+    String trimmed = url.trim();
+    return trimmed.startsWith("http://") || trimmed.startsWith("https://")
+        || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
+  }
+
+  private static Boolean computeIsExternal(Map<String, Object> fields) {
+    Object buttonUrl = fields.get("buttonUrl");
+    Object linkUrl = fields.get("linkUrl");
+    if (buttonUrl == null && linkUrl == null) return null;
+    return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
   }
 }

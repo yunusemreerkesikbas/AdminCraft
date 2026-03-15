@@ -21,6 +21,7 @@ import com.backend.application.service.SiteSettingsService;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.SiteSettingsGlobalDto;
 import com.backend.presentation.dto.request.SiteSettingsI18nDto;
+import com.backend.presentation.dto.response.SiteSettingsGlobalResponseDto;
 import com.backend.presentation.dto.response.SiteSettingsResponseDto;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
@@ -134,7 +135,9 @@ public class SiteSettingsController {
         address,
         social,
         dto.logoMediaUid(),
-        dto.logoDarkMediaUid());
+        dto.logoDarkMediaUid(),
+        null,
+        null);
   }
 
   private SiteSettingsAppDto.SiteSettingsAppI18nDto toAppI18nDto(SiteSettingsI18nDto dto) {
@@ -165,11 +168,11 @@ public class SiteSettingsController {
     if (dto == null)
       return null;
 
-    SiteSettingsGlobalDto global = null;
+    SiteSettingsGlobalResponseDto global = null;
     if (dto.global() != null) {
-      SiteSettingsGlobalDto.AddressDto address = null;
+      SiteSettingsGlobalResponseDto.AddressDto address = null;
       if (dto.global().address() != null) {
-        address = new SiteSettingsGlobalDto.AddressDto(
+        address = new SiteSettingsGlobalResponseDto.AddressDto(
             dto.global().address().line1(),
             dto.global().address().line2(),
             dto.global().address().city(),
@@ -179,9 +182,9 @@ public class SiteSettingsController {
             dto.global().address().mapEmbedUrl());
       }
 
-      SiteSettingsGlobalDto.SocialDto social = null;
+      SiteSettingsGlobalResponseDto.SocialDto social = null;
       if (dto.global().social() != null) {
-        social = new SiteSettingsGlobalDto.SocialDto(
+        social = new SiteSettingsGlobalResponseDto.SocialDto(
             dto.global().social().facebook(),
             dto.global().social().instagram(),
             dto.global().social().x(),
@@ -190,7 +193,7 @@ public class SiteSettingsController {
             dto.global().social().tiktok());
       }
 
-      global = new SiteSettingsGlobalDto(
+      global = new SiteSettingsGlobalResponseDto(
           dto.global().contactEmail(),
           dto.global().contactPhone(),
           dto.global().whatsappPhone(),
@@ -199,7 +202,9 @@ public class SiteSettingsController {
           address,
           social,
           dto.global().logoMediaUid(),
-          dto.global().logoDarkMediaUid());
+          dto.global().logoDarkMediaUid(),
+          mapMediaSummaryToPresentation(dto.global().logoMedia()),
+          mapMediaSummaryToPresentation(dto.global().logoDarkMedia()));
     }
 
     Map<String, SiteSettingsI18nDto> languages = null;
@@ -219,6 +224,23 @@ public class SiteSettingsController {
     }
 
     return new SiteSettingsResponseDto(global, languages);
+  }
+
+  private SiteSettingsGlobalResponseDto.MediaSummaryDto mapMediaSummaryToPresentation(
+      SiteSettingsAppDto.MediaSummaryDto mediaSummary) {
+    if (mediaSummary == null) {
+      return null;
+    }
+    return new SiteSettingsGlobalResponseDto.MediaSummaryDto(
+        mediaSummary.id(),
+        mediaSummary.uid(),
+        mediaSummary.fileName(),
+        mediaSummary.originalName(),
+        mediaSummary.mimeType(),
+        mediaSummary.publicUrl(),
+        mediaSummary.width(),
+        mediaSummary.height(),
+        mediaSummary.fileSizeFormatted());
   }
 
   private SiteSettingsI18nDto.SeoDto mapSeoToPresentation(SiteSettingsAppDto.SiteSettingsAppI18nDto.SeoDto seoAppDto) {

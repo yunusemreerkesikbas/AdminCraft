@@ -283,27 +283,32 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
 
     #updateComponentComposite(translations: Record<Language, ComponentI18nRequest>): void {
         if (!this.data.component?.id) return;
+        const componentId = this.data.component.id;
         const generalData = this.generalForm.value;
         const uid = (generalData.uid as string)?.trim();
 
-        const request: UpdateComponentCompositeRequest = {
-            uid: uid,
-            name: uid,
-            displayOrder: generalData.displayOrder,
-            isVisible: generalData.isVisible,
-            styleClasses: generalData.styleClasses,
-            translations: translations,
-            ...this.#buildNavigationPayload(generalData),
-        };
-
-        this.#componentService
-            .updateComposite(this.data.component.id, request)
+        this.#resolveResponsiveMediaIdForComposite(componentId)
             .pipe(
-                switchMap((response) =>
-                    this.#handleResponsiveMedia(response.id).pipe(
-                        map(() => response)
-                    )
-                ),
+                take(1),
+                switchMap(({ responsiveMediaId, clearAfter }) => {
+                    const request: UpdateComponentCompositeRequest = {
+                        uid: uid,
+                        name: uid,
+                        displayOrder: generalData.displayOrder,
+                        isVisible: generalData.isVisible,
+                        styleClasses: generalData.styleClasses,
+                        responsiveMediaId: responsiveMediaId ?? undefined,
+                        translations: Object.keys(translations).length > 0 ? translations : undefined,
+                        ...this.#buildNavigationPayload(generalData),
+                    };
+                    return this.#componentService.updateComposite(componentId, request).pipe(
+                        switchMap((response) =>
+                            clearAfter
+                                ? this.#componentService.assignResponsiveMedia(componentId, null).pipe(map(() => response))
+                                : of(response)
+                        )
+                    );
+                }),
                 take(1)
             )
             .subscribe({
@@ -341,51 +346,66 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         return translations;
     }
 
-    #handleResponsiveMedia(componentId: number): Observable<unknown> {
-        const responsiveValue = this.generalForm.get('responsiveMedia')?.value;
+    #resolveResponsiveMediaIdForComposite(
+        componentId: number
+    ): Observable<{ responsiveMediaId?: number; clearAfter: boolean }> {
+        const raw = this.generalForm.getRawValue?.() ?? this.generalForm.value;
+        const responsiveValue = raw?.responsiveMedia ?? this.generalForm.get('responsiveMedia')?.value;
         const currentSetId = this.data.component?.responsiveMedia?.id;
 
-        const desktopMediaId =
-            typeof responsiveValue?.desktopMedia === 'number'
-                ? responsiveValue.desktopMedia
-                : responsiveValue?.desktopMedia?.id;
-        const mobileMediaId =
-            typeof responsiveValue?.mobileMedia === 'number'
-                ? responsiveValue.mobileMedia
-                : responsiveValue?.mobileMedia?.id;
+        const desktopMediaId = this.#extractMediaId(responsiveValue?.desktopMedia);
+        const mobileMediaId = this.#extractMediaId(responsiveValue?.mobileMedia);
 
         if (!desktopMediaId && !mobileMediaId) {
-            if (currentSetId) {
-                return this.#componentService.assignResponsiveMedia(
-                    componentId,
-                    null
-                );
-            }
-            return of(null);
+            return of({
+                responsiveMediaId: undefined,
+                clearAfter: !!currentSetId,
+            });
         }
 
+        const desktopId = desktopMediaId ?? mobileMediaId;
+        const mobileId = mobileMediaId ?? desktopMediaId;
+        if (!desktopId) {
+            return of({ responsiveMediaId: undefined, clearAfter: !!currentSetId });
+        }
         const responsiveMediaRequest = {
-            desktopMediaId: desktopMediaId,
-            mobileMediaId: mobileMediaId,
             code: `responsive_${componentId}_${Date.now()}`,
+            desktopMediaId: desktopId,
+            mobileMediaId: mobileId ?? desktopId,
         };
 
         if (currentSetId) {
-            return this.#mediaService
-                .updateResponsiveMedia(currentSetId, responsiveMediaRequest)
-                .pipe(map(() => null));
-        } else {
-            return this.#mediaService
-                .createResponsiveMedia(responsiveMediaRequest)
-                .pipe(
-                    switchMap((set) =>
-                        this.#componentService.assignResponsiveMedia(
-                            componentId,
-                            set.id
-                        )
-                    )
-                );
+            return this.#mediaService.updateResponsiveMedia(currentSetId, responsiveMediaRequest).pipe(
+                map(() => ({ responsiveMediaId: currentSetId, clearAfter: false }))
+            );
         }
+        return this.#mediaService.createResponsiveMedia(responsiveMediaRequest).pipe(
+            map((set) => ({ responsiveMediaId: set.id, clearAfter: false }))
+        );
+    }
+
+    #extractMediaId(media: unknown): number | undefined {
+        if (media == null) return undefined;
+        if (typeof media === 'number' && !Number.isNaN(media)) return media;
+        if (typeof media === 'object' && media !== null && 'id' in media) {
+            const id = (media as { id: number }).id;
+            return typeof id === 'number' && !Number.isNaN(id) ? id : undefined;
+        }
+        return undefined;
+    }
+
+    #handleResponsiveMedia(componentId: number): Observable<unknown> {
+        return this.#resolveResponsiveMediaIdForComposite(componentId).pipe(
+            switchMap(({ responsiveMediaId, clearAfter }) => {
+                if (clearAfter) {
+                    return this.#componentService.assignResponsiveMedia(componentId, null);
+                }
+                if (responsiveMediaId != null) {
+                    return this.#componentService.assignResponsiveMedia(componentId, responsiveMediaId);
+                }
+                return of(null);
+            })
+        );
     }
 
     #loadNavigationNodes(): void {
