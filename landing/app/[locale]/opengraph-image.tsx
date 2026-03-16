@@ -21,7 +21,7 @@ export default async function Image({
 
   const isEN = locale === "en";
 
-  const subtitle = isEN ? "Multi-Tenant Platform" : "Çok Kiracılı Platformu";
+  const subtitle = isEN ? "Multi-Tenant Project Platform" : "Çok Kiracılı Proje Platformu";
 
   return new ImageResponse(
     <div
@@ -38,7 +38,7 @@ export default async function Image({
       }}
     >
       <div style={{ fontSize: 64, fontWeight: "bold", letterSpacing: "-2px" }}>
-        AdminCraft
+        Craftive
       </div>
       <div style={{ fontSize: 28, marginTop: 16, opacity: 0.65 }}>
         {subtitle}

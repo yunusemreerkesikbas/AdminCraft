@@ -13,11 +13,13 @@ type FooterContent = {
 };
 
 export function Footer({ content }: { content: FooterContent }) {
-  const groups: FooterGroup[] = [
-    content.links.product,
-    content.links.company,
-    content.links.resources,
-  ].filter((g) => g.items.length > 0);
+  const rawGroups: (FooterGroup | undefined)[] = content?.links
+    ? [content.links.product, content.links.company, content.links.resources]
+    : [];
+
+  const groups: FooterGroup[] = rawGroups
+    .filter((g): g is FooterGroup => Boolean(g && Array.isArray(g.items)))
+    .filter((g) => g.items.length > 0);
 
   return (
     <footer className="border-t border-[var(--color-shade)] bg-[var(--color-light-neutral-1)]">

@@ -251,7 +251,7 @@ export function Segments({ content }: { content: SegmentsContent }) {
                 <div className="border-b border-white/8 px-4 py-3.5">
                   <div className="flex items-center gap-2">
                     <div className="h-5 w-5 rounded-md bg-[var(--color-theme-3)]" />
-                    <span className="font-heading text-sm font-bold text-white">AdminCraft</span>
+                    <span className="font-heading text-sm font-bold text-white">Craftive</span>
                   </div>
                 </div>
 

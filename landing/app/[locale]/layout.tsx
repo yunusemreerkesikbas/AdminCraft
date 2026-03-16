@@ -37,11 +37,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const canonical = `${BASE_URL}/${locale}`;
 
   const title = isEN
-    ? "AdminCraft — Multi-Tenant SaaS Platform"
-    : "AdminCraft — Çok Kiracılı SaaS Platformu";
+    ? "Craftive — Multi-Tenant Project Platform"
+    : "Craftive — Çok Kiracılı Proje Platformu";
   const description = isEN
-    ? "One infrastructure, unlimited configurations. From blog to HR portal, agency to e-commerce — AdminCraft configures to any business."
-    : "Tek altyapı, sınırsız yapılandırma. Blog sitesinden HR portalına, ajans yönetiminden e-ticarete — her işletme için AdminCraft.";
+    ? "One infrastructure, many projects. From blog to HR portal, agency dashboards to e-commerce — Craftive adapts to each client without rebuilding your backend."
+    : "Tek altyapı, birçok proje. Blog sitesinden HR portalına, ajans panellerinden e-ticarete — Craftive her müşteri için altyapıyı baştan kurmadan uyum sağlar.";
 
   return {
     title,
@@ -58,8 +58,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title,
       description,
       url: canonical,
-      siteName: "AdminCraft",
-      images: [{ url: `${BASE_URL}/images/og-image.png`, width: 1200, height: 630, alt: "AdminCraft" }],
+      siteName: "Craftive",
+      images: [{ url: `${BASE_URL}/images/og-image.png`, width: 1200, height: 630, alt: "Craftive" }],
       locale: isEN ? "en_US" : "tr_TR",
       type: "website",
     },
@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "AdminCraft",
+  name: "Craftive",
   url: BASE_URL,
   logo: `${BASE_URL}/images/og-image.png`,
   contactPoint: { "@type": "ContactPoint", email: "hello@craftive.io" },
@@ -84,7 +84,7 @@ const orgJsonLd = {
 const softwareJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "AdminCraft",
+  name: "Craftive",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "1500", priceCurrency: "TRY" },

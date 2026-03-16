@@ -119,7 +119,7 @@ export function DemoRequestModal({ open, onClose, locale }: DemoRequestModalProp
             {/* Logo mark */}
             <div className="relative mb-8 flex items-center gap-2">
               <div className="h-6 w-6 rounded-md bg-[var(--color-theme-3)]" />
-              <span className="font-heading text-sm font-bold text-white">AdminCraft</span>
+              <span className="font-heading text-sm font-bold text-white">Craftive</span>
             </div>
 
             {/* Heading + trust */}
