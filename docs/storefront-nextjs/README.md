@@ -31,7 +31,8 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | Function | Endpoint | Notes |
 | --- | --- | --- |
 | `resolvePage` | `GET /api/cms/pages` | `lang` required; `pageType`, `pageLabelOrId`, `code` optional |
-| `fetchSiteConfig` | `GET /api/cms/site` | Site metadata, `defaultLanguage`, `enabledLanguages`, `isRtl` |
+| `fetchSiteConfig` | `GET /api/cms/site` | Site metadata, `defaultLanguage`, `enabledLanguages`, `isRtl`; optional `lang` query param for localized values |
+| `fetchShell` | `GET /api/cms/shell` | Pre-built header/footer layout with sections; `lang` optional; `revalidate: 300s` |
 | `fetchMediaByUids` | `GET /api/cms/media?uids=a,b,c` | Batched media resolution via comma-separated UIDs |
 | `fetchProduct` | `GET /api/cms/products/{uid}` | Product detail payload |
 | `fetchProductsByCategory` | `GET /api/cms/products/category/{categoryUid}` | Paged list |
@@ -84,10 +85,10 @@ Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-pa
 2. `resolveTemplate(page.template)` looks up the template component from `templateRegistry`.
    - Unknown template → renders `null`. Template contracts are expected to stay in sync with backend `page_templates`.
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
-4. `CmsPage` handles shared `Header` and `Footer` slots outside `<main>`.
-   - If a `Header` slot exists and contains renderable components, it renders `HeaderSlot`.
-   - If a `Footer` slot exists and contains renderable components, it renders `FooterSlot`.
-   - Empty or unrecognized shared layout slots render nothing.
+4. `CmsPage` renders shared `Header` and `Footer` shell outside `<main>`, controlled by the page template's `shell` config.
+   - If the template enables the header (`shellConfig.header !== false`), `HeaderSlot` renders. It fetches shell data from `GET /api/cms/shell` independently of page slots.
+   - If the template enables the footer (`shellConfig.footer !== false`), `FooterSlot` renders the same way.
+   - Header/footer components are no longer sourced from page `contentSlots`; they are fetched from the shell endpoint based on `customFields.layoutRole` on the backend.
 5. Each template renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each of its body slots. `LandingPageTemplate` does this for Section1–Section8 alongside the `<Motion />` animation layer — no longer a special case.
 6. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
 7. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
@@ -114,6 +115,7 @@ Template names match `page_template.uid` values in the database exactly — do n
 Slot names and positions are centrally defined in `template-configs.ts` (`TEMPLATE_CONFIGS`). Each template reads its own config entry at render time.
 
 To add a new template:
+
 1. Create `components/cms/templates/configs/my-page.template.ts` with slot names and positions.
 2. Import and register it in `template-configs.ts` (`TEMPLATE_CONFIGS` map + `TemplateName` union).
 3. Create `components/cms/templates/MyTemplate.tsx` implementing `TemplateProps` (read slots from `TEMPLATE_CONFIGS.MyTemplate`).
@@ -186,41 +188,53 @@ If these imports are missing or partial, homepage can render incomplete sections
 
 #### Header and footer
 
-Header and footer are CMS-driven through shared `Header` / `Footer` slots and then adapted into the storefront shared layout layer.
+Header and footer are CMS-driven through a dedicated shell endpoint. The backend aggregates all published shell components and pre-builds the layout model; the storefront only renders.
 
-- Slot entry point: `components/cms/CmsPage.tsx`
-- Shared layout slot renderers: `components/layout/shell/HeaderSlot.tsx`, `components/layout/shell/FooterSlot.tsx`
-- Slot adapter: `components/layout/shell/cms-adapter.ts`
+- Entry point: `components/cms/CmsPage.tsx`
+- Shell slot renderers: `components/layout/shell/HeaderSlot.tsx`, `components/layout/shell/FooterSlot.tsx`
+- Backend delivery endpoint: `GET /api/cms/shell?lang={lang}`
 - Presentational shell: `components/theme/layout/SiteHeader.tsx`, `components/theme/layout/SiteFooter.tsx`
+- CMS client: `lib/cms-client.ts` → `fetchShell(lang)`
 
-The shared layout adapter resolves components by `component.customFields.layoutRole`. UIDs may stay stable for seeds, but storefront dispatch no longer depends on them.
+The backend (`ShellDeliveryServiceImpl`) queries all `PUBLISHED` components whose `custom_data.layoutRole` matches `header.*` or `footer.*` and groups them into `header.primaryBlocks`, `header.secondaryBlocks`, `header.mainNavigation` (with pre-built `sections[]`), `footer.primaryBlocks`, and `footer.bottomBlocks`. The storefront receives this pre-grouped structure and renders it directly — no client-side `layoutRole` dispatch.
+
+Navigation sections (`mainNavigation.sections[]`) are built by the backend from the navigation tree: entry-based nodes produce standalone links; child nodes with multiple entries produce dropdown sections.
+
+##### Navigation rendering (CMS page components)
+
+Navigation components placed in page slots (e.g. footer sitemap) are rendered via `NavigationCmsComponent`:
+
+- `navigationType = MAINMENU` → `NavigationRenderer` — hierarchical tree using `entries[].resolvedHref`
+- `navigationType = STATICPAGE` → `StaticNavRenderer` — flat list directly from `navigationNode.flatLinks[]`
+
+Locale-prefixing is performed entirely by the backend (`NavigationDeliveryUtils`). The storefront does **not** resolve hrefs — it renders the pre-computed `resolvedHref` and `flatLinks[]` from the delivery response. `nav-utils.ts` (`resolveNavigationEntry`) simply maps `resolvedHref` to a `LayoutLinkModel`; no `lang` parameter is needed.
 
 ##### Shared layout slot contract
 
-| Slot | `layoutRole` | Component type | Example UID | Purpose |
+Components are no longer sourced from page slots. Any `PUBLISHED` component with a matching `customFields.layoutRole` is included by the shell endpoint, regardless of slot binding.
+
+| Area | `layoutRole` | Component type | Example UID | Purpose |
 | --- | --- | --- | --- | --- |
-| `Header` | `header.mainNavigation` | `NavigationComponent` | `StorefrontHeaderMainNavigation` | Main off-canvas menu tree |
-| `Header` | `header.socialLinks` | `CMSLinkComponent` | `StorefrontHeaderSocialLinks` | Social links in the off-canvas meta area |
-| `Header` | `header.contactInfo` | `CMSLinkComponent` | `StorefrontHeaderContactInfo` | Contact links + CTA copy |
-| `Footer` | `footer.brandBlock` | `CMSParagraphComponent` | `StorefrontFooterBrandBlock` | Brand text / intro copy |
-| `Footer` | `footer.sitemapNavigation` | `NavigationComponent` | `StorefrontFooterSitemapNavigation` | Footer sitemap column |
-| `Footer` | `footer.officeLinks` | `CMSLinkComponent` | `StorefrontFooterOfficeLinks` | Address / phone / email column |
-| `Footer` | `footer.newsletter` | `CMSLinkComponent` | `StorefrontFooterNewsletter` | Newsletter title + placeholder/button labels via entry `custom_data` |
-| `Footer` | `footer.socialLinks` | `CMSLinkComponent` | `StorefrontFooterSocialLinks` | Copyright bar social links |
+| Header | `header.mainNavigation` | `NavigationComponent` | `StorefrontHeaderMainNavigation` | Main off-canvas menu tree (with `sections[]`) |
+| Header | `header.primary.*` or `header.contactInfo` | `CMSLinkComponent` | `StorefrontHeaderContactInfo` | Primary info blocks (contact, CTA) |
+| Header | `header.*` (other) | `CMSLinkComponent` | `StorefrontHeaderSocialLinks` | Secondary info blocks (social links) |
+| Footer | `footer.brandBlock` | `CMSParagraphComponent` | `StorefrontFooterBrandBlock` | Brand text / intro copy |
+| Footer | `footer.sitemapNavigation` | `NavigationComponent` | `StorefrontFooterSitemapNavigation` | Footer sitemap column |
+| Footer | `footer.officeLinks` | `CMSLinkComponent` | `StorefrontFooterOfficeLinks` | Address / phone / email column |
+| Footer | `footer.newsletter` | `CMSLinkComponent` | `StorefrontFooterNewsletter` | Newsletter title + placeholder/button labels via entry `custom_data` |
+| Footer | `footer.socialLinks` or `footer.bottom.*` | `CMSLinkComponent` | `StorefrontFooterSocialLinks` | Copyright bar social links (bottomBlocks) |
 
 ##### Shared layout field mapping
 
 | Area | Data source |
 | --- | --- |
-| Header logo / languages | `GET /api/cms/site` |
-| Header main navigation | `navigationNode` on the component whose `customFields.layoutRole = header.mainNavigation` |
-| Header social / contact links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
-| Header CTA / supporting text | `component_i18n.description` on the matching layout block |
-| Footer brand text | `component_i18n.description` on the component whose `customFields.layoutRole = footer.brandBlock` |
-| Footer sitemap | `navigationNode` on the component whose `customFields.layoutRole = footer.sitemapNavigation` |
-| Footer office links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
-| Footer newsletter UI copy | `component_i18n.title` + `component_entry_i18n.custom_data.inputPlaceholder/buttonLabel` |
-| Footer social links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
+| Header logo / languages | `GET /api/cms/site` (via `fetchSiteConfig`) |
+| Header main navigation + sections | `GET /api/cms/shell` → `header.mainNavigation.sections[]` (pre-built by backend) |
+| Header primary/secondary blocks | `GET /api/cms/shell` → `header.primaryBlocks[]` / `header.secondaryBlocks[]` |
+| Footer primary blocks | `GET /api/cms/shell` → `footer.primaryBlocks[]` |
+| Footer bottom blocks (social, copyright) | `GET /api/cms/shell` → `footer.bottomBlocks[]` |
+| Links within each block | `block.links[]` — resolved and localized by backend (`LayoutLinkDelivery`) |
+| Newsletter fields | `block.newsletterPlaceholder`, `block.newsletterButtonLabel` (from first entry's `custom_data`) |
 
 #### Tenant-aware media proxy
 
@@ -293,7 +307,7 @@ Locale configuration is **fully dynamic**, driven by the tenant's `SiteDeliveryR
 | `toUrlLocale(code)` | API `"TR"` → URL `"tr"` |
 | `toApiLocale(lang)` | URL `"tr"` → API `"TR"` |
 | `isRtlByConfig(lang, enabledLanguages)` | Reads `isRtl` from the matching `LanguageInfo` entry |
-| `resolveMessageLocale(lang)` | Maps lang to an available messages file; unknown langs fall back to `FALLBACK_LOCALE` |
+| `requireMessageLocale(lang)` | Maps lang to a bundled messages file; throws if the locale format is invalid or no message catalog exists |
 | `normalizeLanguage(v)` | `string \| undefined` → API locale string; `undefined` returns `""` (filtered by `buildUrl`) |
 | `withLocalePath(locale, path)` | Builds localized links (`/tr/search`) |
 
@@ -302,7 +316,7 @@ Locale configuration is **fully dynamic**, driven by the tenant's `SiteDeliveryR
 Used for static UI strings (navigation labels, page headings, error messages). **Not used for CMS content** — those come from the API with the `lang` param.
 
 - Plugin registered in `next.config.ts` via `createNextIntlPlugin("./i18n/request.ts")`.
-- `i18n/request.ts` resolves the correct message file via `resolveMessageLocale`.
+- `i18n/request.ts` resolves the correct message file via `requireMessageLocale`.
 - Message files: `messages/tr.json`, `messages/en.json`. Unknown tenant locales fall back to `tr.json`.
 - Server components use `getTranslations("Namespace")`, with the result bound to `translate`.
 - Client components use `useTranslations("Namespace")` inside `NextIntlClientProvider` (provided by `[lang]/layout.tsx`).
@@ -331,9 +345,10 @@ Message namespaces:
 ### Robots resolution
 
 `parseRobotsTag(tag, defaultRobots)` resolves in priority order:
+
 1. Page-level `robotTag` (e.g. `NOINDEX_FOLLOW`)
 2. `site.searchEngine.defaultRobots` (set via Site Settings → `global.robots`)
-3. Built-in constant `"index,follow"`
+3. Built-in constant `"noindex,nofollow"` (`SAFE_DEFAULT_ROBOTS` in `lib/seo.ts`)
 
 ### Hreflang
 
@@ -350,12 +365,14 @@ Message namespaces:
 `app/sitemap.ts` generates `/sitemap.xml` from `fetchSitemapPages(lang)` for each enabled language. Returns `[]` when `searchEngine.sitemapEnabled` is false or `canonicalBaseUrl` is unset.
 
 Page inclusion is fully backend-driven — `GET /api/cms/pages/sitemap` returns only eligible published pages. The homepage (canonical_url `/`) is included by the backend when published; priority is derived from `canonicalUrl`:
+
 - `"/"` → `priority: 1`
 - anything else → `priority: 0.8`
 
 ### robots.txt
 
 `app/robots.txt/route.ts` proxies the backend `GET /api/cms/robots.txt` response directly as `text/plain`, with no parsing or re-serialization. This preserves:
+
 - Admin-configured custom rules (e.g. `Disallow: /admin/`)
 - `Sitemap: /sitemap.xml` directive
 - Multi user-agent blocks
@@ -383,6 +400,7 @@ Read from `.env.local.example` and `lib/utils.ts`:
 | --- | --- | --- | --- |
 | `resolvePage` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
 | `fetchSiteConfig` | ✅ | `revalidate: 300s` | Called in 6+ files per render |
+| `fetchShell` | ✅ | `revalidate: 300s` | Called by `HeaderSlot` and `FooterSlot` in the same render tree |
 | `fetchProduct` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
 | `fetchProductsByCategory` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
 | `fetchSitemapPages` | ❌ | `revalidate: 3600s` | Called once per language in `sitemap.ts` |
@@ -458,6 +476,18 @@ Located in `components/cms/cms-components.config.tsx` (config) and `components/c
 | `ProjectCardComponent` | `buildProjectsModel` | Horizontal scroll |
 | `InstagramSectionComponent` | `buildInstagramModel` | Floating images |
 | `MarqueeTextComponent` | `buildMarqueeModel` | Scrolling marquee |
+| `ContentHeroComponent` | `buildContentHeroModel` | Content page hero |
+| `ServiceHeroComponent` | `buildServiceHeroModel` | Service page hero |
+| `ServiceCardsGridComponent` | `buildServiceModel` | Service cards grid |
+| `ServicePanelComponent` | `buildServicePanelModel` | Service detail panel |
+| `SplitMediaIntroComponent` | `buildSplitMediaIntroModel` | Split media intro |
+| `PeopleCarouselComponent` | `buildPeopleCarouselModel` | People carousel |
+| `StatsGridComponent` | `buildStatsGridModel` | Statistics grid |
+| `LogoMarqueeComponent` | `buildLogoMarqueeModel` | Logo marquee |
+| `BrandGridComponent` | `buildBrandGridModel` | Brand grid |
+| `ImageMarqueeComponent` | `buildImageMarqueeModel` | Image marquee |
+| `AwardsShowcaseComponent` | `buildAwardsShowcaseModel` | Awards showcase |
+| `BigTextCtaComponent` | `buildBigTextCtaModel` | Big text CTA |
 
 ### Generic renderers
 
@@ -470,9 +500,6 @@ Located in `components/cms/cms-components.config.tsx` (config) and `components/c
 | `CMSLinkComponent` | `LinkRenderer` | Entry-based link list |
 | `CMSImageComponent` | `ImageRenderer` | Responsive image via `CmsImage` |
 | `RotatingImagesComponent` | `CarouselRenderer` | Simple horizontal image carousel |
-| `CustomerReviewComponent` | `TextBlockRenderer` | Placeholder |
-| `ImageMapComponent` | `TextBlockRenderer` | Placeholder |
-| `PricingTableComponent` | `TextBlockRenderer` | Placeholder |
 | Unknown types | `UnknownComponent` | Dev: red dashed box; prod: `null` |
 
 Header and footer are not rendered through the component registry. `CmsPage` resolves them at the slot level via `HeaderSlot` / `FooterSlot`.
@@ -491,6 +518,7 @@ Header and footer are not rendered through the component registry. `CmsPage` res
 **`searchBox` flag:**
 
 When `component.searchBox === true`, a `SearchOverlay` button is rendered alongside the navigation.
+
 - Clicking the search icon opens a `<dialog>` overlay.
 - Submitting the search form navigates to `/{lang}/search?q={query}`.
 - Escape key or clicking the backdrop closes the overlay.
@@ -530,7 +558,7 @@ The script also updates `sites.logo_media_uid` and `sites.logo_dark_media_uid` t
 ## Current limitations and extension points
 
 - Product, category, and search pages include minimal UI beyond CMS slots.
-- Header and footer render only from CMS shared slots; an empty or incomplete `Header` / `Footer` slot produces no shared layout output.
+- Header and footer render from `GET /api/cms/shell`; if no published components have a matching `layoutRole`, the shell endpoint returns nothing and no shared layout is rendered.
 - Instagram section works with partial image sets; full parity is achieved when the tenant imports the complete expected media set.
 - Adding new UI languages requires a new `messages/{lang}.json` file and an entry in `AVAILABLE_MESSAGES` in `lib/i18n.ts`.
 - Navigation node UIDs `LandingMainNavNode` (header main menu) and `LandingFooterNavNode` (footer sitemap) must be created in each tenant's CMS.
@@ -563,7 +591,7 @@ components/theme/
 2. `builders.ts` — keep the same exported function names (`buildHeroModel`, etc.) as they are the contract with `cms-components.config.tsx`.
 3. `models.ts` — keep the same type names; they are referenced by builders.
 4. `sections/` — write your own UI section components.
-5. `layout/SiteHeader.tsx` + `SiteFooter.tsx` — write your own header/footer; they receive typed props from `components/layout/shell/cms-adapter.ts`.
+5. `layout/SiteHeader.tsx` + `SiteFooter.tsx` — write your own header/footer; they receive typed props (`LayoutBlockDelivery[]`, `NavigationSectionDelivery[]`) from `lib/types.ts` as delivered by `GET /api/cms/shell`.
 6. `cms-components.config.tsx` — only touch this file to register new CMS component types; existing wiring stays unchanged.
 
 The `Motion` animation layer (`components/theme/Motion.tsx`) is rendered directly by `LandingPageTemplate.tsx`. To disable or replace it, edit the template.

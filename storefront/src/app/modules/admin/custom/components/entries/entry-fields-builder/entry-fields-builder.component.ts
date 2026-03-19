@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -20,7 +19,6 @@ import { EntryFieldDialogComponent } from '../entry-field-dialog/entry-field-dia
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatButtonModule,
-        MatIconModule,
         MatTableModule,
         MatProgressSpinnerModule,
         TranslocoModule,

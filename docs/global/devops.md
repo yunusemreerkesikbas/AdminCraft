@@ -77,7 +77,7 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 ```
 ghcr.io/craftive/craftive-backend:{tag}
 ghcr.io/craftive/craftive-frontend:{tag}
-ghcr.io/craftive/craftive-storefront:{tag}   # stage only
+ghcr.io/craftive/craftive-storefront:{tag}
 ghcr.io/craftive/<tenant>-storefront:{tag}   # tenant-specific repo output
 ```
 

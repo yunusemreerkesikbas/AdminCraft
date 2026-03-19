@@ -339,10 +339,10 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
   }
 
-  private static Boolean computeIsExternal(Map<String, Object> fields) {
+  private static boolean computeIsExternal(Map<String, Object> fields) {
     Object buttonUrl = fields.get("buttonUrl");
     Object linkUrl = fields.get("linkUrl");
-    if (buttonUrl == null && linkUrl == null) return null;
+    if (buttonUrl == null && linkUrl == null) return false;
     return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
   }
 }

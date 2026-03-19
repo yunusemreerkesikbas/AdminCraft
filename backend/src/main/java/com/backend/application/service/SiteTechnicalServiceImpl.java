@@ -10,7 +10,6 @@ import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.CookieConsentAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppDto;
-import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteTechnicalSettings;
 import com.backend.domain.enums.Language;
@@ -61,17 +60,6 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
         }
         if (request.indexingEnabled() != null) {
             settings.setIndexingEnabled(request.indexingEnabled());
-        }
-        if (request.googleVerification() != null) {
-            settings.setGoogleVerification(
-                    request.googleVerification().isBlank() ? null : request.googleVerification());
-        }
-        if (request.bingVerification() != null) {
-            settings.setBingVerification(request.bingVerification().isBlank() ? null : request.bingVerification());
-        }
-        if (request.yandexVerification() != null) {
-            settings.setYandexVerification(
-                    request.yandexVerification().isBlank() ? null : request.yandexVerification());
         }
         if (request.cookieConsentEnabled() != null) {
             settings.setCookieConsentEnabled(request.cookieConsentEnabled());
@@ -154,16 +142,10 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
 
     private SiteTechnicalAppDto buildResponse(Site site, SiteTechnicalSettings settings) {
         // Search engine info
-        VerificationAppDto verificationDto = new VerificationAppDto(
-                settings.getGoogleVerification(),
-                settings.getBingVerification(),
-                settings.getYandexVerification());
-
         SearchEngineAppDto searchEngineDto = new SearchEngineAppDto(
                 settings.getRobotsTxt(),
                 settings.getSitemapEnabled(),
-                settings.getIndexingEnabled(),
-                verificationDto);
+                settings.getIndexingEnabled());
 
         CookieConsentAppDto cookieConsentDto = new CookieConsentAppDto(
                 settings.getCookieConsentEnabled(),

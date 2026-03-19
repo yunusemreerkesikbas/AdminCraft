@@ -44,7 +44,10 @@ Public delivery resolution rules:
 
 ### Navigation
 
-- `GET /api/cms/navigation/{uid}`
+- `GET /api/cms/navigation/{uid}?lang=TR`
+  - Returns the navigation tree rooted at `{uid}`.
+  - `entries[].resolvedHref` — locale-prefixed href pre-computed by the backend; `null` for `COMPONENT` type entries.
+  - `flatLinks[]` — deduplicated flat list of all links in the subtree, pre-built for `STATICPAGE` renderers. `null` when empty.
 
 ### Sitemap pages
 

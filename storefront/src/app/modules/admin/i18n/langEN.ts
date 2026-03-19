@@ -1389,6 +1389,7 @@ export const langEN = {
             },
             entryFields: {
                 title: 'Entry Fields',
+                basicInfo: 'Basic Info',
                 subtitle:
                     'These fields will be populated when creating the component',
                 noFieldsDesc:
@@ -1422,6 +1423,7 @@ export const langEN = {
                     textarea: 'Long Text',
                     number: 'Number',
                     boolean: 'Yes/No',
+                    media: 'Media',
                 },
                 custom: {
                     productPrice: 'Product Price',

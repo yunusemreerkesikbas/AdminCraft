@@ -3,7 +3,8 @@
 ## Technology Stack
 
 - **Backend**: Spring Boot 3.3.5, Java 21, Spring Data JPA, MySQL, Flyway, Resilience4j
-- **Frontend**: Angular 19, TypeScript 5.6.3, Signals, RxJS 7, Material Design, TailwindCSS
+- **Admin Panel (storefront/)**: Angular 19, TypeScript 5.6.3, Signals, RxJS 7, Material Design, TailwindCSS
+- **Tenant Storefront (storefront-nextjs/)**: Next.js 15, React 19, TypeScript, next-intl, TailwindCSS — Spartacus-inspired pure renderer (tüm içerik CMS API'dan gelir)
 - **Architecture**: Multi-Tenant Clean Architecture (Database-per-tenant)
 
 ---
@@ -23,8 +24,11 @@ docker compose up -d
 # Backend (root)
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 
-# Frontend (storefront/)
+# Admin Panel (storefront/)
 cd storefront; npm install; npm run start
+
+# Tenant Storefront (storefront-nextjs/)
+cd storefront-nextjs; npm install; npm run dev
 ```
 
 ### Health & Monitoring
@@ -68,14 +72,14 @@ graph LR
 
 ## Naming Conventions
 
-| Element        | Backend (Java)    | Frontend (TS/Angular)      | Database (SQL)   |
-| -------------- | ----------------- | -------------------------- | ---------------- |
-| **Class**      | `PascalCase`      | `Spa{Name}Component`       | -                |
-| **Method/Var** | `camelCase`       | `camelCase` / `varSig`     | `snake_case`     |
-| **Signals**    | -                 | `itemsSig`, `isLoadingSig` | -                |
-| **Private**    | `private`         | `#privateField`            | -                |
-| **Protected**  | `protected`       | `protectedField`           | -                |
-| **File**       | `PascalCase.java` | `kebab-case.ts`            | `V{n}__desc.sql` |
+| Element        | Backend (Java)    | Angular (storefront/)      | Next.js (storefront-nextjs/)  | Database (SQL)   |
+| -------------- | ----------------- | -------------------------- | ----------------------------- | ---------------- |
+| **Class**      | `PascalCase`      | `Spa{Name}Component`       | `PascalCase` (React comp.)    | -                |
+| **Method/Var** | `camelCase`       | `camelCase` / `varSig`     | `camelCase`                   | `snake_case`     |
+| **Signals**    | -                 | `itemsSig`, `isLoadingSig` | -                             | -                |
+| **Private**    | `private`         | `#privateField`            | -                             | -                |
+| **Protected**  | `protected`       | `protectedField`           | -                             | -                |
+| **File**       | `PascalCase.java` | `kebab-case.ts`            | `kebab-case.ts` / `PascalCase.tsx` | `V{n}__desc.sql` |
 
 ---
 
@@ -103,13 +107,22 @@ graph LR
 
 ## Quality & Standards
 
-### Frontend Patterns
+### Frontend Patterns — Angular (storefront/)
 
 - **State**: Signals for local/UI state, RxJS for event streams.
 - **Lifecycle**: `OnPush` detection, standalone components, `spa-` prefix.
 - **DRY**: Extend `BaseCrudListComponent`, `BaseCrudFormComponent`, and `CrudHttpService`.
 - **Subscriptions**: Always use `take(1)` or `takeUntil(#destroy$)`.
 - **UI Components**: Use form fields from `shared/components/custom-ui/`.
+
+### Frontend Patterns — Next.js (storefront-nextjs/)
+
+- **Spartacus mimarisi**: Pure renderer — tüm içerik `/cms/site`, `/cms/pages`, `/cms/components` API'lardan gelir. Hardcoded tenant-specific değer olmamalı.
+- **Component registry**: `cms-components.config.tsx` — CMS component type → React component mapping (Spartacus `SPA_CMSCOMPONENTS_CONFIG` karşılığı).
+- **Shared utilities**: `lib/cms-utils.ts` — `readString`, `isRecord`, `readEntryField`, `readEntryString`, `isExternalHref`, `resolveLocalizedHref`, `EntryRecord` type. Duplike etme, buradan import et.
+- **Locale**: `BUNDLED_MESSAGE_LOCALES` build-time message dosyalarını temsil eder, tenant'ın enabled locale'leri değil. Tenant dilleri API'dan (`enabledLanguages`) gelir.
+- **SEO**: Robots default `noindex,nofollow` (güvenli). Title separator backend'den konfigüre edilebilir (`site.seo.titleSeparator`).
+- **Env config**: Image domain'leri `NEXT_IMAGE_DOMAINS` env var ile, CMS URL `NEXT_PUBLIC_CMS_API_URL` ile. `.env.local.example` referans.
 
 ### Security (OWASP)
 

@@ -77,65 +77,6 @@
             </div>
         </div>
 
-        <!-- Verification Codes -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.technical.verification' | transloco }}
-            </h3>
-            <p class="text-secondary mb-4 text-sm">
-                {{
-                    'admin.site.dashboard.technical.verificationDesc'
-                        | transloco
-                }}
-            </p>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="md:col-span-2">
-                    <spa-input
-                        [label]="
-                            'admin.site.dashboard.technical.googleVerification'
-                                | transloco
-                        "
-                        [labelTooltip]="'googleVerification'"
-                        formControlName="googleVerification"
-                        placeholder="google-site-verification=..."
-                        [showErrors]="true"
-                    >
-                    </spa-input>
-                </div>
-
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.technical.bingVerification'
-                            | transloco
-                    "
-                    [labelTooltip]="'bingVerification'"
-                    formControlName="bingVerification"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.bingVerification'
-                            | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.technical.yandexVerification'
-                            | transloco
-                    "
-                    [labelTooltip]="'yandexVerification'"
-                    formControlName="yandexVerification"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.yandexVerification'
-                            | transloco
-                    "
-                >
-                </spa-input>
-            </div>
-        </div>
-
         <!-- Cookie Consent -->
         <div class="bg-card mb-6 rounded-2xl p-6 shadow">
             <h3 class="mb-4 text-lg font-medium tracking-tight">

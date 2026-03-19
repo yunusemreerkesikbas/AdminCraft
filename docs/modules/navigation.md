@@ -94,6 +94,7 @@ Navigation is exposed via CMS Delivery:
 ### Rendering notes
 
 - `NavigationComponent` with `navigationType = MAINMENU` is rendered hierarchically in the header off-canvas.
-- `NavigationComponent` with `navigationType = STATICPAGE` is flattened for the footer sitemap.
-- Internal `URL` entries are locale-prefixed in the storefront renderer; external links remain untouched.
+- `NavigationComponent` with `navigationType = STATICPAGE` uses `flatLinks[]` from the response — a pre-built flat list of deduplicated links computed by the backend.
+- Locale-prefixing is performed entirely by the backend (`NavigationDeliveryUtils`): `URL` entries get `/{lang}/...` prefixed, `PAGE` entries get `/{lang}/{itemId}` resolved. External links remain untouched.
+- Each `EntryDeliveryDto` includes a `resolvedHref` field (pre-computed; `null` for `COMPONENT` type entries).
 - Header social links, contact links, footer office links, newsletter copy, and footer social links are not modeled as navigation nodes. They come from standard CMS component entries in the shared `Header` / `Footer` slots.

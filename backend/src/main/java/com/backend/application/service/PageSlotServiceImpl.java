@@ -333,13 +333,13 @@ public class PageSlotServiceImpl implements PageSlotService {
   }
 
   private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots) {
-    // Page-specific slot overrides shared slot with same slotName.
+    // Shared slot takes priority over page-specific slot (aligned with delivery behavior).
     Map<String, PageSlot> bySlotName = new LinkedHashMap<>();
-    for (PageSlot shared : sharedSlots) {
-      bySlotName.putIfAbsent(shared.getSlotName(), shared);
-    }
     for (PageSlot pageSlot : pageSlots) {
-      bySlotName.put(pageSlot.getSlotName(), pageSlot);
+      bySlotName.putIfAbsent(pageSlot.getSlotName(), pageSlot);
+    }
+    for (PageSlot shared : sharedSlots) {
+      bySlotName.put(shared.getSlotName(), shared);
     }
     return bySlotName.values().stream()
         .sorted(Comparator
@@ -360,9 +360,10 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     List<PageSlot> effectiveSlots = new ArrayList<>();
     for (TemplateSlot templateSlot : templateSlots) {
-      PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
+      // Shared slot takes priority over page-specific slot (aligned with delivery behavior).
+      PageSlot source = sharedBySlotName.get(templateSlot.getSlotName());
       if (source == null) {
-        source = sharedBySlotName.get(templateSlot.getSlotName());
+        source = pageBySlotName.get(templateSlot.getSlotName());
       }
       effectiveSlots.add(buildEffectiveSlot(pageId, templateSlot, source));
     }

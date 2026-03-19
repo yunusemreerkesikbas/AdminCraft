@@ -1,16 +1,12 @@
 <div class="entry-fields-card">
-    <!-- Header -->
     <div class="entry-fields-header">
-        <div class="flex min-w-0 items-center gap-3">
-            <mat-icon class="text-secondary icon-size-5">extension</mat-icon>
-            <div class="min-w-0">
-                <h2 class="entry-fields-title">
-                    {{ 'admin.components.entryFields.title' | transloco }}
-                </h2>
-                <span class="entry-fields-count">
-                    {{ fieldsSig().length }}
-                </span>
-            </div>
+        <div class="entry-fields-heading">
+            <h2 class="entry-fields-title">
+                {{ 'admin.components.entryFields.title' | transloco }}
+            </h2>
+            <span class="entry-fields-count">
+                {{ fieldsSig().length }}
+            </span>
         </div>
         <button
             mat-flat-button
@@ -18,12 +14,10 @@
             class="entry-fields-action"
             (click)="openAddFieldDialog()"
         >
-            <mat-icon class="mr-2 icon-size-5">add</mat-icon>
             {{ 'admin.components.entryFields.addField' | transloco }}
         </button>
     </div>
 
-    <!-- Content -->
     <div class="flex-auto overflow-auto">
         @if (isLoadingSig()) {
             <div class="flex flex-col items-center justify-center p-12">
@@ -37,7 +31,7 @@
         } @else if (fieldsSig().length === 0) {
             <spa-empty-state
                 class="flex-auto"
-                icon="extension"
+                [icon]="''"
                 [title]="'admin.components.entryFields.noFields' | transloco"
                 [description]="
                     'admin.components.entryFields.noFieldsDesc' | transloco
@@ -48,7 +42,6 @@
                     color="primary"
                     (click)="openAddFieldDialog()"
                 >
-                    <mat-icon class="mr-2 icon-size-5">add</mat-icon>
                     {{ 'admin.components.entryFields.addFirst' | transloco }}
                 </button>
             </spa-empty-state>

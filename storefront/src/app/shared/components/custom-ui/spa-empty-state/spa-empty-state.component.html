@@ -1,5 +1,5 @@
 <div class="spa-empty-state" [ngClass]="'size-' + iconSize">
-    <div class="empty-icon-wrapper">
+    <div class="empty-icon-wrapper" *ngIf="icon">
         <mat-icon class="empty-icon">{{ icon }}</mat-icon>
     </div>
     <h3 class="empty-title">{{ title | transloco }}</h3>

@@ -132,7 +132,8 @@
                                             </div>
                                             <button
                                                 mat-icon-button
-                                                class="!w- !h-6"
+                                                color="warn"
+                                                class="!h-8 !w-8 rounded-md !p-0 !min-w-0 !opacity-0 pointer-events-none transition-opacity group-hover/comp:!opacity-100 group-hover/comp:pointer-events-auto"
                                                 (click)="
                                                     removeComponent(
                                                         slot,
@@ -140,14 +141,18 @@
                                                     );
                                                     $event.stopPropagation()
                                                 "
+                                                aria-label="{{
+                                                    'admin.pageSlots.removeComponent'
+                                                        | transloco
+                                                }}"
                                                 [matTooltip]="
                                                     'admin.pageSlots.removeComponent'
                                                         | transloco
                                                 "
                                             >
                                                 <mat-icon
-                                                    class="text-red-500 icon-size-5"
-                                                    svgIcon="heroicons_outline:x-mark"
+                                                    class="icon-size-5"
+                                                    svgIcon="heroicons_outline:trash"
                                                 ></mat-icon>
                                             </button>
                                         </div>

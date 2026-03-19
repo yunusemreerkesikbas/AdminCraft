@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final Set<String> RESERVED_FIELDS = Set.of(
-                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive");
+                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive", "isExternal");
 
         private final PageRepository pageRepository;
         private final PageI18nRepository pageI18nRepository;
@@ -424,6 +424,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .description(i18n != null ? i18n.getDescription() : null)
                                 .isVisible(entry.getIsVisible())
                                 .styleClasses(entry.getStyleClasses())
+                                .isExternal(computeIsExternal(customFields))
                                 .responsive(responsive)
                                 .customFields(customFields.isEmpty() ? null : customFields)
                                 .build();
@@ -558,6 +559,20 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 effective.setPosition(templateSlot.getPosition());
                 effective.setSortOrder(templateSlot.getSortOrder());
                 return effective;
+        }
+
+        private static boolean isExternalUrl(Object value) {
+                if (!(value instanceof String url)) return false;
+                String trimmed = url.trim();
+                return trimmed.startsWith("http://") || trimmed.startsWith("https://")
+                                || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
+        }
+
+        private static boolean computeIsExternal(Map<String, Object> fields) {
+                Object buttonUrl = fields.get("buttonUrl");
+                Object linkUrl = fields.get("linkUrl");
+                if (buttonUrl == null && linkUrl == null) return false;
+                return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
         }
 
         private ContentSlotsWrapper buildContentSlots(

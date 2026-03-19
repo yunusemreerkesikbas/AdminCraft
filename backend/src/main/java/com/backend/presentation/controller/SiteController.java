@@ -511,18 +511,10 @@ public class SiteController {
 
         SiteTechnicalResponse.SearchEngineDto searchEngine = null;
         if (dto.searchEngine() != null) {
-            SiteTechnicalResponse.VerificationDto verification = null;
-            if (dto.searchEngine().verification() != null) {
-                verification = new SiteTechnicalResponse.VerificationDto(
-                        dto.searchEngine().verification().google(),
-                        dto.searchEngine().verification().bing(),
-                        dto.searchEngine().verification().yandex());
-            }
             searchEngine = new SiteTechnicalResponse.SearchEngineDto(
                     dto.searchEngine().robotsTxt(),
                     dto.searchEngine().sitemapEnabled(),
-                    dto.searchEngine().indexingEnabled(),
-                    verification);
+                    dto.searchEngine().indexingEnabled());
         }
 
         SiteTechnicalResponse.CookieConsentDto cookieConsent = null;

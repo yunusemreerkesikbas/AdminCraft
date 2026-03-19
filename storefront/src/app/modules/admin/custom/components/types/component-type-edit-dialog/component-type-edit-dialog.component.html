@@ -1,6 +1,7 @@
 <spa-dialog
     [title]="'admin.components.types.edit' | transloco"
     [subtitle]="data.type.uid"
+    [size]="'md'"
     [contentType]="'tabbed'"
     [submitDisabled]="form.invalid"
     [isSubmitting]="isSubmitting()"
@@ -10,81 +11,51 @@
     (cancelled)="cancel()"
     (submitted)="save()"
 >
-    <mat-tab-group
-        class="component-tabs"
-        animationDuration="0ms"
-        mat-stretch-tabs="false"
-        [(selectedIndex)]="activeTab"
-    >
-        <mat-tab [label]="'admin.components.types.tabs.general' | transloco">
+    <spa-tab-container [tabs]="tabs" [(activeTabIndex)]="activeTab">
+        <ng-template spaTabContent="general">
             <div class="component-tab-panel">
-                <div
-                    class="mb-6 flex items-center gap-3 rounded-lg border bg-slate-50 px-4 py-3 dark:bg-slate-900/50"
-                >
-                    <mat-icon class="text-secondary">fingerprint</mat-icon>
-                    <div class="flex min-w-0 flex-col">
-                        <span
-                            class="text-secondary text-xs font-medium uppercase tracking-wider"
-                        >
+                <form [formGroup]="form" class="flex flex-col gap-6">
+                    <div class="uid-card">
+                        <span class="text-secondary uid-label">
                             {{ 'admin.common.fields.uid' | transloco }}
                         </span>
-                        <span class="truncate font-mono font-medium">{{
-                            data.type.uid
-                        }}</span>
+                        <span class="truncate font-mono uid-value">{{ data.type.uid }}</span>
                     </div>
-                </div>
 
-                <form
-                    [formGroup]="form"
-                    class="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2"
-                >
-                    <spa-input
-                        class="w-full sm:col-span-2"
-                        formControlName="name"
-                        [label]="'admin.common.fields.name' | transloco"
-                    >
-                    </spa-input>
+                    <div class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2">
+                        <spa-input
+                            class="w-full sm:col-span-2"
+                            formControlName="name"
+                            [label]="'admin.common.fields.name' | transloco"
+                        >
+                        </spa-input>
 
-                    <spa-select
-                        class="w-full sm:col-span-1"
-                        formControlName="category"
-                        [label]="'admin.components.fields.category' | transloco"
-                        [options]="categoryOptions"
-                        [placeholder]="'admin.common.none' | transloco"
-                    >
-                    </spa-select>
+                        <spa-select
+                            class="w-full sm:col-span-2"
+                            formControlName="category"
+                            [label]="'admin.components.fields.category' | transloco"
+                            [options]="categoryOptions"
+                            [placeholder]="'admin.common.none' | transloco"
+                        >
+                        </spa-select>
 
-                    <spa-checkbox
-                        class="w-full sm:col-span-1"
-                        formControlName="navigationAware"
-                        [label]="'admin.components.types.fields.navigationAware' | transloco"
-                        [hint]="'admin.components.types.fields.navigationAwareHint' | transloco"
-                        styleClasses="boxed"
-                    >
-                    </spa-checkbox>
+                        <spa-checkbox
+                            class="w-full sm:col-span-2"
+                            formControlName="navigationAware"
+                            [label]="'admin.components.types.fields.navigationAware' | transloco"
+                            [hint]="'admin.components.types.fields.navigationAwareHint' | transloco"
+                            styleClasses="boxed"
+                        >
+                        </spa-checkbox>
+                    </div>
                 </form>
             </div>
-        </mat-tab>
+        </ng-template>
 
-        <mat-tab
-            [label]="'admin.components.types.tabs.entryFields' | transloco"
-        >
+        <ng-template spaTabContent="entryFields">
             <div class="component-tab-panel">
-                <div class="mb-6 flex items-center gap-2">
-                    <div
-                        class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary"
-                    >
-                        <mat-icon class="icon-size-5">extension</mat-icon>
-                    </div>
-                    <h3 class="text-lg font-semibold">
-                        {{
-                            'admin.components.types.entryFieldsTitle'
-                                | transloco
-                        }}
-                    </h3>
-                </div>
                 <spa-entry-fields-builder [componentTypeId]="data.type.id" />
             </div>
-        </mat-tab>
-    </mat-tab-group>
+        </ng-template>
+    </spa-tab-container>
 </spa-dialog>

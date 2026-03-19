@@ -114,8 +114,7 @@ New endpoints under `/api/sites`:
   "searchEngine": {
     "robotsTxt": "User-agent: *\nAllow: /",
     "sitemapEnabled": true,
-    "indexingEnabled": true,
-    "verification": { "google": "xxx", "bing": null, "yandex": null }
+    "indexingEnabled": true
   },
   "cookieConsent": {
     "enabled": false,

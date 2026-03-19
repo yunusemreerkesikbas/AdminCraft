@@ -163,6 +163,105 @@ FROM component_types ct WHERE ct.uid = 'ContentHeroComponent'
 ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
 
 -- ============================================
+-- SERVICE HERO FIELDS (2 fields)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceHeroComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'overlayMediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceHeroComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
+-- SERVICE CARDS GRID FIELDS (1 field)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceCardsGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
+-- SERVICE PANEL FIELDS (6 fields)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'panelId', 'NUMBER', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'panelSubtitle', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'items', 'TEXTAREA', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
+-- BRAND GRID FIELDS (2 fields)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'texts', 'TEXTAREA', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
+-- IMAGE MARQUEE FIELDS (2 fields)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ImageMarqueeComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'altText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ImageMarqueeComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
+-- BIG TEXT CTA FIELDS (2 fields)
+-- ============================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================
 -- SPLIT MEDIA INTRO FIELDS (3 fields)
 -- ============================================
 

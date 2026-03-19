@@ -1364,6 +1364,7 @@ export const langTR = {
             },
             entryFields: {
                 title: 'Öğe Alanları',
+                basicInfo: 'Temel Bilgiler',
                 subtitle: 'Bu alanlar bileşen oluşturulurken doldurulacaktır',
                 noFieldsDesc:
                     'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
@@ -1396,6 +1397,7 @@ export const langTR = {
                     textarea: 'Uzun Metin',
                     number: 'Sayı',
                     boolean: 'Evet/Hayır',
+                    media: 'Medya',
                 },
                 custom: {
                     productPrice: 'Ürün Fiyatı',

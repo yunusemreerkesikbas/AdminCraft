@@ -84,6 +84,38 @@ services:
       traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://app.${DOMAIN}"
       traefik.http.middlewares.redirect-to-app.redirectregex.permanent: "true"
 
+  storefront:
+    image: ghcr.io/craftive/craftive-storefront:${APP_VERSION:-latest}
+    build:
+      context: ./storefront-nextjs
+      dockerfile: ../docker/storefront/Dockerfile
+      args:
+        - BUILD_ENV=production
+        - NEXT_OUTPUT=standalone
+    container_name: craftive-storefront
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+    networks:
+      - craftive-network
+    labels:
+      - "traefik.enable=true"
+      # Matches tenant subdomains; excludes prod API and admin panel hosts.
+      - "traefik.http.routers.storefront.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`api.${DOMAIN}`) && !Host(`app.${DOMAIN}`)"
+      - "traefik.http.routers.storefront.ruleSyntax=v2"
+      - "traefik.http.routers.storefront.priority=1"
+      - "traefik.http.routers.storefront.entrypoints=websecure"
+      - "traefik.http.routers.storefront.tls.certresolver=letsencrypt"
+      - "traefik.http.services.storefront.loadbalancer.server.port=3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
   traefik:
     image: traefik:v3.0
     container_name: craftive-traefik

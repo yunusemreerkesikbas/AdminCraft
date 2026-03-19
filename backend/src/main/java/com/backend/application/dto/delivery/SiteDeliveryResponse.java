@@ -65,20 +65,14 @@ public record SiteDeliveryResponse(
             List<String> keywords,
             String ogTitle,
             String ogDescription,
-            String twitterCard) {
+            String twitterCard,
+            String titleSeparator) {
     }
 
     public record SearchEngineInfo(
             Boolean sitemapEnabled,
             Boolean indexingEnabled,
-            String defaultRobots,
-            VerificationInfo verification) {
-    }
-
-    public record VerificationInfo(
-            String google,
-            String bing,
-            String yandex) {
+            String defaultRobots) {
     }
 
     public record LanguageInfo(String code, String nativeName, Boolean isRtl) {

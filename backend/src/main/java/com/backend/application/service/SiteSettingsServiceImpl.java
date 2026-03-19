@@ -171,9 +171,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         i18nSettingsMap.get("i18n.tagline"),
         seo,
         i18nSettingsMap.get("i18n.footerText"),
-        i18nSettingsMap.get("i18n.headerTopbarText"),
-        null // addressLocalized - not implemented yet
-    );
+        i18nSettingsMap.get("i18n.headerTopbarText"));
   }
 
   private List<SiteSetting> processGlobalSettings(Long tenantId, SiteSettingsAppGlobalDto global, Long updatedBy) {
