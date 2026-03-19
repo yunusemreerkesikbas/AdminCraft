@@ -7,6 +7,7 @@ import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.dto.delivery.SiteDeliveryResponse;
+import com.backend.application.dto.delivery.SitemapPageEntry;
 import com.backend.domain.enums.Language;
 
 public interface CmsDeliveryService {
@@ -20,5 +21,7 @@ public interface CmsDeliveryService {
 
   Language getDefaultLanguage();
 
-  Optional<SiteDeliveryResponse> getSiteForDelivery();
+  Optional<SiteDeliveryResponse> getSiteForDelivery(Language lang);
+
+  List<SitemapPageEntry> getSitemapPages(Language lang);
 }

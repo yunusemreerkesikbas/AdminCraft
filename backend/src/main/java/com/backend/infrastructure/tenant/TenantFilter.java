@@ -1,7 +1,10 @@
 package com.backend.infrastructure.tenant;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
@@ -122,6 +125,7 @@ public class TenantFilter extends OncePerRequestFilter {
       tenantContext.setCurrency(Currency.fromCodeOrDefault(tenant.getCurrency()));
       tenantContext.setDefaultLanguage(Language.fromCode(tenant.getDefaultLanguage())
           .orElseThrow(() -> new IllegalStateException("Tenant default_language is required")));
+      tenantContext.setSupportedLanguages(parseSupportedLanguages(tenant.getSupportedLanguages()));
 
       MDC.put("tenantId", String.valueOf(tenant.getId()));
       MDC.put("tenantDb", tenant.getDatabaseName());
@@ -277,5 +281,15 @@ public class TenantFilter extends OncePerRequestFilter {
 
   private boolean isConfigAdminEndpoint(String path) {
     return path.startsWith("/api/config/admin");
+  }
+
+  private Set<Language> parseSupportedLanguages(String json) {
+    if (json == null || json.isBlank()) {
+      return Set.of();
+    }
+    return Arrays.stream(json.replaceAll("[\\[\\]\"\\s]", "").split(","))
+        .filter(s -> !s.isBlank())
+        .flatMap(code -> Language.fromCode(code).stream())
+        .collect(Collectors.toSet());
   }
 }

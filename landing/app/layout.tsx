@@ -9,8 +9,9 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "AdminCraft — Multi-Tenant SaaS Platform",
-  description: "One infrastructure, unlimited configurations. From blog to HR portal, agency to e-commerce — AdminCraft configures to any business.",
+  title: "Craftive — Multi-Tenant Project Platform",
+  description:
+    "One infrastructure, many projects. From blog to HR portal, agency dashboards to e-commerce — Craftive adapts to each client without rebuilding your backend.",
 };
 
 export default function RootLayout({

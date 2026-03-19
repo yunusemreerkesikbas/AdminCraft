@@ -391,6 +391,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 compI18n != null ? compI18n.getDescription() : null,
                                 comp.getIsVisible(),
                                 comp.getStyleClasses(),
+                                buildComponentCustomFields(comp, comp.getComponentTypeId(), lang),
                                 resolveNavigationType(type, comp),
                                 resolveSearchBox(type, comp),
                                 resolveNavigationNode(type, comp, navigationMap),
@@ -433,6 +434,19 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                         return null;
                 }
                 return component.getNavigationType();
+        }
+
+        private Map<String, Object> buildComponentCustomFields(Component component, Long componentTypeId, Language lang) {
+                Map<String, Object> customFields = new LinkedHashMap<>();
+                if (component.getCustomData() != null && !component.getCustomData().isBlank()) {
+                        customFields.putAll(mediaFieldExpander.parseCustomData(component.getCustomData()));
+                }
+
+                if (!customFields.isEmpty() && componentTypeId != null) {
+                        customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
+                }
+
+                return customFields.isEmpty() ? null : customFields;
         }
 
         private Boolean resolveSearchBox(ComponentType type, Component component) {

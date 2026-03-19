@@ -2,10 +2,10 @@
   "hero": {
     "badge": "Modüler altyapı, hızlı teslim.",
     "headline": "Tek platform. Sınırsız yapılandırma.",
-    "subheadline": "Blog'dan HR portalına, e-ticaretten ajans yönetimine — aynı altyapı, farklı modüller.",
-    "primaryCta": "Demo Talep Et",
-    "secondaryCta": "Özellikleri Keşfet",
-    "mockupAlt": "AdminCraft platform arayüzü"
+    "subheadline": "Fikrinizi anlatın, Craftive sizin için uygun dijital çözümü üretsin. Blog, HR portalı, e‑ticaret ya da kurumsal site — hepsi tek altyapıda.",
+    "primaryCta": "Fikrinizi Paylaşın",
+    "secondaryCta": "Çözümleri Keşfet",
+    "mockupAlt": "Craftive kontrol paneli arayüzü"
   },
   "stats": [
     { "value": "500+", "label": "Aktif Tenant" },
@@ -23,7 +23,7 @@
     "powerTrio": {
       "label": "İçerik Mimarisi",
       "heading": "Üç katman, sınırsız esneklik",
-      "subheading": "PageTemplate, PageSlot ve CmsComponent — AdminCraft'ın içerik motorunu oluşturan üç katman. Her biri bağımsız yönetilir, birlikte tam bir içerik altyapısı oluşturur.",
+      "subheading": "PageTemplate, PageSlot ve CmsComponent — Craftive'in içerik motorunu oluşturan üç katman. Her biri bağımsız yönetilir, birlikte tam bir içerik altyapısı oluşturur.",
       "items": [
         {
           "key": "template",
@@ -58,8 +58,8 @@
       },
       {
         "icon": "Zap",
-        "title": "Headless API",
-        "description": "REST ve GraphQL API'ler ile frontend'inizi özgürce seçin. Next.js, Angular, React Native — hepsi uyumlu."
+        "title": "Headless REST API",
+        "description": "JSON tabanlı REST API'ler ile frontend'inizi özgürce seçin. Next.js, Angular, React Native — hepsiyle sorunsuz entegre olur."
       },
       {
         "icon": "Globe",
@@ -70,8 +70,8 @@
   },
   "segments": {
     "sectionTag": "Kullanım Senaryoları",
-    "heading": "Tek deployment, sınırsız tenant",
-    "subheading": "Her tenant tamamen farklı bir dijital ürün olabilir. HR portalı, blog, e-ticaret, landing page — hepsini tek AdminCraft altyapısından yönetin."
+    "heading": "Tek platform, sınırsız tenant",
+    "subheading": "Her fikir farklı bir dijital ürüne dönüşebilir. HR portalı, blog, e-ticaret, landing page — her biri için ayrı tenant, aynı Craftive altyapısı."
   },
   "howItWorks": {
     "sectionTag": "Nasıl Çalışır?",
@@ -106,20 +106,20 @@
   },
   "testimonials": {
     "sectionTag": "Referanslar",
-    "heading": "Müşterilerimiz ne diyor?",
-    "subheading": "AdminCraft kullanan ajanslar, KOBİ'ler ve e-ticaret firmaları deneyimlerini paylaşıyor.",
+    "heading": "Craftive hakkında müşterilerimiz ne diyor?",
+    "subheading": "Craftive ile fikirlerini özelleştirilebilir dijital çözümlere dönüştüren ekipler neler söylüyor?",
     "items": [
       {
         "name": "Ayşe Kaya",
         "role": "Kurucu Ortak, NovaMed Dijital",
         "avatar": "/images/avatar-1.png",
-        "quote": "AdminCraft ile müşterilerimize artık saatler yerine dakikalar içinde canlı ortam teslim edebiliyoruz. Multi-tenant yapısı müşteri verilerini tam anlamıyla izole tutuyor."
+        "quote": "Craftive ile müşterilerimize artık saatler yerine dakikalar içinde canlı ortam teslim edebiliyoruz. Çok-tenant mimarisi müşteri verilerini tam anlamıyla izole tutuyor."
       },
       {
         "name": "Mehmet Yılmaz",
         "role": "CTO, RetailBridge",
         "avatar": "/images/avatar-2.png",
-        "quote": "Headless API entegrasyonu sayesinde mevcut Next.js frontend'imizi AdminCraft'a bağladık. Geçiş bir hafta sürdü, performans %40 arttı."
+        "quote": "Headless REST API entegrasyonu sayesinde mevcut Next.js frontend'imizi Craftive'e bağladık. Geçiş bir hafta sürdü, performans %40 arttı."
       },
       {
         "name": "Selin Arslan",
@@ -132,11 +132,11 @@
   "faq": {
     "sectionTag": "SSS",
     "heading": "Sık sorulan sorular",
-    "subheading": "AdminCraft hakkında merak ettiğiniz her şey.",
+    "subheading": "Fikrinizi Craftive ile nasıl dijital çözüme dönüştürebileceğinize dair merak ettikleriniz.",
     "items": [
       {
-        "question": "AdminCraft nedir ve kimler için uygundur?",
-        "answer": "AdminCraft, dijital ajanslar, KOBİ'ler ve e-ticaret firmaları için geliştirilmiş multi-tenant bir SaaS CMS altyapısıdır. Tek bir deployment ile yüzlerce müşteriye izole edilmiş dijital ortam sunabilirsiniz."
+        "question": "Craftive nedir ve kimler için uygundur?",
+        "answer": "Craftive, dijital ajanslar, KOBİ'ler ve e-ticaret firmaları için geliştirilmiş çok-tenant'lı bir proje ve içerik altyapısıdır. Tek bir kurulumla onlarca müşteriye izole edilmiş dijital ortam sunabilirsiniz."
       },
       {
         "question": "Multi-tenant ne anlama geliyor?",
@@ -144,11 +144,11 @@
       },
       {
         "question": "Teknik bilgim olmadan kullanabilir miyim?",
-        "answer": "Evet. Sürükle-bırak sayfa oluşturucu ve hazır modüller sayesinde teknik ekip gerektirmeden içerik yönetebilirsiniz. Geliştirici iseniz Headless API ile tam esnekliğe sahipsiniz."
+        "answer": "Evet. Sürükle-bırak sayfa oluşturucu ve hazır modüller sayesinde teknik ekip gerektirmeden içerik yönetebilirsiniz. Geliştirici iseniz headless REST API ile tam esnekliğe sahipsiniz."
       },
       {
         "question": "Mevcut frontend'imi kullanabilir miyim?",
-        "answer": "Kesinlikle. AdminCraft REST ve GraphQL API'ler sunar. Next.js, Angular, React Native veya istediğiniz herhangi bir frontend framework'ü ile entegre edebilirsiniz."
+        "answer": "Kesinlikle. Craftive REST tabanlı headless API'ler sunar. Next.js, Angular, React Native veya istediğiniz herhangi bir frontend framework'ü ile entegre edebilirsiniz."
       },
       {
         "question": "GDPR uyumlu mu?",
@@ -161,13 +161,13 @@
     ]
   },
   "cta": {
-    "heading": "Platformunuzu bugün başlatın",
+    "heading": "Fikrinizi bugün dijital çözüme dönüştürün",
     "subheading": "Proje fikrinizi paylaşın, ekibimiz en kısa sürede sizinle iletişime geçsin.",
     "primaryCta": "İletişime Geç",
     "secondaryCta": "Dokümantasyonu İncele"
   },
   "footer": {
-    "tagline": "Kurumsal altyapı, ajans hızı.",
+    "tagline": "Her fikir için özelleştirilebilir dijital çözümler.",
     "links": {
       "product": {
         "label": "Ürün",

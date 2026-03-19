@@ -181,29 +181,30 @@ export function Features({ content }: { content: FeaturesContent }) {
         </AnimateInView>
 
         {/* Feature Cards */}
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
           {content.cards.map((card, i) => {
             const Icon = ICONS[card.icon] ?? Layers;
             const style = CARD_STYLES[i % CARD_STYLES.length];
+            const delayClass = i < 3 ? `animate-in-view-delay-${i + 1}` : "animate-in-view-delay-4";
             return (
               <AnimateInView
                 key={card.title}
-                className={`animate-scale-in animate-in-view-delay-${i + 1}`}
+                className={`h-full animate-feature-card-in ${delayClass}`}
               >
                 <div
-                  className={`group relative rounded-2xl bg-gradient-to-br p-px ${style.gradient} transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                  className={`group relative h-full rounded-2xl bg-gradient-to-br p-px ${style.gradient} transition-all duration-300 ease-out hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.99]`}
                 >
-                  <div className="relative h-full rounded-2xl bg-white p-6 flex flex-col gap-4">
+                  <div className="relative h-full rounded-2xl bg-white p-6 flex flex-col gap-4 transition-shadow duration-300 group-hover:shadow-sm">
                     <span
-                      className={`absolute right-5 top-5 font-heading text-4xl font-extrabold leading-none opacity-[0.07] ${style.numColor}`}
+                      className={`absolute right-5 top-5 font-heading text-4xl font-extrabold leading-none opacity-[0.07] transition-transform duration-300 group-hover:scale-110 ${style.numColor}`}
                     >
                       0{i + 1}
                     </span>
-                    <div className={`w-fit rounded-xl p-3 ${style.iconBg}`}>
+                    <div className={`w-fit rounded-xl p-3 shrink-0 transition-transform duration-300 ease-out group-hover:scale-105 ${style.iconBg}`}>
                       <Icon className={`h-5 w-5 ${style.iconColor}`} />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <h3 className="font-heading text-base font-bold text-[var(--color-dark-neutral-1)]">
+                    <div className="flex flex-col gap-2 flex-1 min-h-0">
+                      <h3 className="font-heading text-base font-bold text-[var(--color-dark-neutral-1)] shrink-0">
                         {card.title}
                       </h3>
                       <p className="text-sm leading-relaxed text-[var(--color-dark-neutral-2)]">

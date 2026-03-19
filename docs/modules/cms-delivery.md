@@ -46,12 +46,21 @@ Public delivery resolution rules:
 
 - `GET /api/cms/navigation/{uid}`
 
+### Sitemap pages
+
+- `GET /api/cms/pages/sitemap?lang=TR`
+  - Returns all `PUBLISHED` pages eligible for sitemap inclusion as a flat list.
+  - Filtered by: `indexingEnabled` flag on `SiteTechnicalSettings`; pages with `RobotTag.NOINDEX_FOLLOW` or `NOINDEX_NOFOLLOW` are excluded.
+  - When site record does not exist, returns an empty list.
+  - Response shape: `ApiResponse<List<SitemapPageEntry>>` where each entry has `uid`, `typeCode`, `canonicalUrl`, `updatedAt`.
+  - No auth required — public delivery endpoint.
+
 ### Robots.txt
 
 - `GET /api/cms/robots.txt`
   - Returns `text/plain` content type.
   - Reads the effective robots.txt from `SiteTechnicalService.getRobotsTxt()`.
-  - When `indexingEnabled = false` → `Disallow: /`; otherwise → the admin-configured robots.txt (or a default `Allow: /`).
+  - When `indexingEnabled = false` → `Disallow: /`; otherwise → the admin-configured robots.txt (or a default `Allow: /` with `Sitemap: /sitemap.xml`).
   - No auth required — public delivery endpoint.
   - Subject to the standard 100 req/min tenant rate limit.
 
