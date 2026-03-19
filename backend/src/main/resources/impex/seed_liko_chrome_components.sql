@@ -16,53 +16,53 @@
 -- 1. COMPONENTS
 -- ============================================================
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000001-0000-4000-8000-000000000001', 'StorefrontHeaderMainNavigation', id, 'Storefront Header Main Navigation', 0, TRUE, 'header-main-navigation', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000001-0000-4000-8000-000000000001', 'StorefrontHeaderMainNavigation', id, 'Storefront Header Main Navigation', 0, TRUE, 'header-main-navigation', JSON_OBJECT('layoutRole', 'header.mainNavigation'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'NavigationComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000002-0000-4000-8000-000000000002', 'StorefrontHeaderSocialLinks', id, 'Storefront Header Social Links', 1, TRUE, 'header-social-links', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000002-0000-4000-8000-000000000002', 'StorefrontHeaderSocialLinks', id, 'Storefront Header Social Links', 1, TRUE, 'header-social-links', JSON_OBJECT('layoutRole', 'header.socialLinks'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSLinkComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000003-0000-4000-8000-000000000003', 'StorefrontHeaderContactInfo', id, 'Storefront Header Contact Info', 2, TRUE, 'header-contact-info', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000003-0000-4000-8000-000000000003', 'StorefrontHeaderContactInfo', id, 'Storefront Header Contact Info', 2, TRUE, 'header-contact-info', JSON_OBJECT('layoutRole', 'header.contactInfo'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSLinkComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000004-0000-4000-8000-000000000004', 'StorefrontFooterBrandBlock', id, 'Storefront Footer Brand Block', 0, TRUE, 'footer-brand-block', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000004-0000-4000-8000-000000000004', 'StorefrontFooterBrandBlock', id, 'Storefront Footer Brand Block', 0, TRUE, 'footer-brand-block', JSON_OBJECT('layoutRole', 'footer.brandBlock'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSParagraphComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000005-0000-4000-8000-000000000005', 'StorefrontFooterSitemapNavigation', id, 'Storefront Footer Sitemap Navigation', 1, TRUE, 'footer-sitemap-navigation', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000005-0000-4000-8000-000000000005', 'StorefrontFooterSitemapNavigation', id, 'Storefront Footer Sitemap Navigation', 1, TRUE, 'footer-sitemap-navigation', JSON_OBJECT('layoutRole', 'footer.sitemapNavigation'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'NavigationComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000006-0000-4000-8000-000000000006', 'StorefrontFooterOfficeLinks', id, 'Storefront Footer Office Links', 2, TRUE, 'footer-office-links', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000006-0000-4000-8000-000000000006', 'StorefrontFooterOfficeLinks', id, 'Storefront Footer Office Links', 2, TRUE, 'footer-office-links', JSON_OBJECT('layoutRole', 'footer.officeLinks'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSLinkComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000007-0000-4000-8000-000000000007', 'StorefrontFooterNewsletter', id, 'Storefront Footer Newsletter', 3, TRUE, 'footer-newsletter', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000007-0000-4000-8000-000000000007', 'StorefrontFooterNewsletter', id, 'Storefront Footer Newsletter', 3, TRUE, 'footer-newsletter', JSON_OBJECT('layoutRole', 'footer.newsletter'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSLinkComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
-INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd1000008-0000-4000-8000-000000000008', 'StorefrontFooterSocialLinks', id, 'Storefront Footer Social Links', 4, TRUE, 'footer-social-links', 'PUBLISHED', NOW(), NOW()
+INSERT INTO components (uuid, uid, component_type_id, name, display_order, is_visible, style_classes, custom_data, status, created_at, updated_at)
+SELECT 'd1000008-0000-4000-8000-000000000008', 'StorefrontFooterSocialLinks', id, 'Storefront Footer Social Links', 4, TRUE, 'footer-social-links', JSON_OBJECT('layoutRole', 'footer.socialLinks'), 'PUBLISHED', NOW(), NOW()
 FROM component_types WHERE uid = 'CMSLinkComponent'
-ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), updated_at = NOW();
+ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), style_classes = VALUES(style_classes), custom_data = VALUES(custom_data), updated_at = NOW();
 
 -- ============================================================
--- 2. COMPONENT_I18N (TR mirrors EN per seed strategy)
+-- 2. COMPONENT_I18N (localized TR / EN content)
 -- ============================================================
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000001-0000-4000-8000-000000000001', 'StorefrontHeaderMainNavigationTr', c.id, 'TR',
-    'Main Menu', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Ana Menü', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontHeaderMainNavigation'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -74,7 +74,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000003-0000-4000-8000-000000000003', 'StorefrontHeaderSocialLinksTr', c.id, 'TR',
-    'Social', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Sosyal', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontHeaderSocialLinks'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -86,19 +86,19 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000005-0000-4000-8000-000000000005', 'StorefrontHeaderContactInfoTr', c.id, 'TR',
-    'Contact', NULL, 'If in doubt. reach out.', 'PUBLISHED', NOW(), NOW()
+    'İletişim', NULL, 'Sorularınız için bize ulaşın.', 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontHeaderContactInfo'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000006-0000-4000-8000-000000000006', 'StorefrontHeaderContactInfoEn', c.id, 'EN',
-    'Contact', NULL, 'If in doubt. reach out.', 'PUBLISHED', NOW(), NOW()
+    'Contact', NULL, 'Get in touch.', 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontHeaderContactInfo'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000007-0000-4000-8000-000000000007', 'StorefrontFooterBrandBlockTr', c.id, 'TR',
-    NULL, NULL, 'Drop us a line sed id semper risus in hend rerit.', 'PUBLISHED', NOW(), NOW()
+    NULL, NULL, 'Bize yazın, sed id semper risus in hend rerit.', 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontFooterBrandBlock'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -110,7 +110,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000009-0000-4000-8000-000000000009', 'StorefrontFooterSitemapNavigationTr', c.id, 'TR',
-    'Sitemap', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Site Haritası', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontFooterSitemapNavigation'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -122,7 +122,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000011-0000-4000-8000-000000000011', 'StorefrontFooterOfficeLinksTr', c.id, 'TR',
-    'Office', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Ofis', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontFooterOfficeLinks'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -134,7 +134,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000013-0000-4000-8000-000000000013', 'StorefrontFooterNewsletterTr', c.id, 'TR',
-    'Subscribe to our newsletter', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Bültenimize Abone Olun', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontFooterNewsletter'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -146,7 +146,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description)
 
 INSERT INTO component_i18n (uuid, uid, component_id, language, title, subtitle, description, status, created_at, updated_at)
 SELECT 'd2000015-0000-4000-8000-000000000015', 'StorefrontFooterSocialLinksTr', c.id, 'TR',
-    'Social', NULL, NULL, 'PUBLISHED', NOW(), NOW()
+    'Sosyal', NULL, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontFooterSocialLinks'
 ON DUPLICATE KEY UPDATE title = VALUES(title), description = VALUES(description), status = VALUES(status), updated_at = NOW();
 
@@ -176,9 +176,9 @@ FROM components c WHERE c.uid = 'StorefrontHeaderSocialLinks'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
-SELECT 'd3000004-0000-4000-8000-000000000004', 'StorefrontHeaderSocialLinksEntry4', c.id, 3, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
+SELECT 'd3000004-0000-4000-8000-000000000004', 'StorefrontHeaderSocialLinksEntry4', c.id, 3, FALSE, NULL, 'PUBLISHED', NOW(), NOW()
 FROM components c WHERE c.uid = 'StorefrontHeaderSocialLinks'
-ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), status = VALUES(status), updated_at = NOW();
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible), status = VALUES(status), updated_at = NOW();
 
 INSERT INTO component_entries (uuid, uid, component_id, sort_order, is_visible, style_classes, status, created_at, updated_at)
 SELECT 'd3000005-0000-4000-8000-000000000005', 'StorefrontHeaderContactInfoEntry1', c.id, 0, TRUE, NULL, 'PUBLISHED', NOW(), NOW()
@@ -226,78 +226,78 @@ FROM components c WHERE c.uid = 'StorefrontFooterSocialLinks'
 ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), status = VALUES(status), updated_at = NOW();
 
 -- ============================================================
--- 4. ENTRY_I18N (TR mirrors EN per seed strategy)
+-- 4. ENTRY_I18N (localized TR / EN content)
 -- ============================================================
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000001-0000-4000-8000-000000000001', 'StorefrontHeaderSocialLinksEntry1Tr', e.id, 'TR',
-    'Dribbble', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'LinkedIn', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.linkedin.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry1'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000002-0000-4000-8000-000000000002', 'StorefrontHeaderSocialLinksEntry1En', e.id, 'EN',
-    'Dribbble', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'LinkedIn', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.linkedin.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry1'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000003-0000-4000-8000-000000000003', 'StorefrontHeaderSocialLinksEntry2Tr', e.id, 'TR',
-    'Instagram', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Instagram', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.instagram.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry2'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000004-0000-4000-8000-000000000004', 'StorefrontHeaderSocialLinksEntry2En', e.id, 'EN',
-    'Instagram', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Instagram', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.instagram.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry2'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000005-0000-4000-8000-000000000005', 'StorefrontHeaderSocialLinksEntry3Tr', e.id, 'TR',
-    'Linkedin', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Behance', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.behance.net', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry3'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000006-0000-4000-8000-000000000006', 'StorefrontHeaderSocialLinksEntry3En', e.id, 'EN',
-    'Linkedin', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Behance', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://www.behance.net', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry3'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000007-0000-4000-8000-000000000007', 'StorefrontHeaderSocialLinksEntry4Tr', e.id, 'TR',
-    'Behance', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Dribbble', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://dribbble.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry4'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000008-0000-4000-8000-000000000008', 'StorefrontHeaderSocialLinksEntry4En', e.id, 'EN',
-    'Behance', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', '#'), NOW(), NOW(), NOW()
+    'Dribbble', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'https://dribbble.com', 'target', '_blank'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderSocialLinksEntry4'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000009-0000-4000-8000-000000000009', 'StorefrontHeaderContactInfoEntry1Tr', e.id, 'TR',
-    '+61404093 954', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:61404093954'), NOW(), NOW(), NOW()
+    '+ 725 214 456', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:+725214456'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderContactInfoEntry1'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000010-0000-4000-8000-000000000010', 'StorefrontHeaderContactInfoEntry1En', e.id, 'EN',
-    '+61404093 954', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:61404093954'), NOW(), NOW(), NOW()
+    '+ 725 214 456', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:+725214456'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderContactInfoEntry1'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000011-0000-4000-8000-000000000011', 'StorefrontHeaderContactInfoEntry2Tr', e.id, 'TR',
-    'hello contact@diego.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:hellocontact@diego.com'), NOW(), NOW(), NOW()
+    'contact@liko.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:contact@liko.com'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderContactInfoEntry2'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000012-0000-4000-8000-000000000012', 'StorefrontHeaderContactInfoEntry2En', e.id, 'EN',
-    'hello contact@diego.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:hellocontact@diego.com'), NOW(), NOW(), NOW()
+    'contact@liko.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:contact@liko.com'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontHeaderContactInfoEntry2'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
@@ -315,7 +315,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data)
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000015-0000-4000-8000-000000000015', 'StorefrontFooterOfficeLinksEntry2Tr', e.id, 'TR',
-    'P: + 725 214 456', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:+725214456'), NOW(), NOW(), NOW()
+    'Tel: + 725 214 456', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'tel:+725214456'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontFooterOfficeLinksEntry2'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
@@ -327,7 +327,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data)
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000017-0000-4000-8000-000000000017', 'StorefrontFooterOfficeLinksEntry3Tr', e.id, 'TR',
-    'E: contact@liko.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:contact@liko.com'), NOW(), NOW(), NOW()
+    'E-posta: contact@liko.com', NULL, 'PUBLISHED', JSON_OBJECT('linkUrl', 'mailto:contact@liko.com'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontFooterOfficeLinksEntry3'
 ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 
@@ -339,7 +339,7 @@ ON DUPLICATE KEY UPDATE title = VALUES(title), custom_data = VALUES(custom_data)
 
 INSERT INTO component_entry_i18n (uuid, uid, entry_id, language, title, description, status, custom_data, published_at, created_at, updated_at)
 SELECT 'd4000019-0000-4000-8000-000000000019', 'StorefrontFooterNewsletterEntry1Tr', e.id, 'TR',
-    NULL, NULL, 'PUBLISHED', JSON_OBJECT('inputPlaceholder', 'Enter your email...', 'buttonLabel', 'Subscribe'), NOW(), NOW(), NOW()
+    NULL, NULL, 'PUBLISHED', JSON_OBJECT('inputPlaceholder', 'E-posta adresiniz...', 'buttonLabel', 'Abone Ol'), NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'StorefrontFooterNewsletterEntry1'
 ON DUPLICATE KEY UPDATE custom_data = VALUES(custom_data), status = VALUES(status), published_at = VALUES(published_at), updated_at = NOW();
 

@@ -18,6 +18,7 @@ import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
 import com.backend.application.dto.delivery.SiteDeliveryResponse;
+import com.backend.application.dto.delivery.SitemapPageEntry;
 import com.backend.application.service.CmsDeliveryService;
 import com.backend.application.service.NavigationService;
 import com.backend.application.service.SiteTechnicalService;
@@ -108,12 +109,14 @@ public class CmsDeliveryController {
 
   @GetMapping("/site")
   public ResponseEntity<ApiResponse<SiteDeliveryResponse>> getSiteConfig(
+      @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
 
     Locale locale = Locale.forLanguageTag(acceptLanguage);
+    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
     log.debug("CMS Delivery: Fetching site config");
 
-    return cmsDeliveryService.getSiteForDelivery()
+    return cmsDeliveryService.getSiteForDelivery(resolvedLang)
         .map(response -> ResponseEntity.ok(
             ApiResponse.success(messageSource.getMessage("cms.site.found", null, locale), response)))
         .orElseGet(() -> ResponseEntity.ok(
@@ -134,6 +137,19 @@ public class CmsDeliveryController {
             ApiResponse.success("Navigation found", response)))
         .orElseGet(() -> ResponseEntity.ok(
             ApiResponse.error("Navigation not found")));
+  }
+
+  @GetMapping("/pages/sitemap")
+  public ResponseEntity<ApiResponse<List<SitemapPageEntry>>> getSitemapPages(
+      @RequestParam(required = false) Language lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
+
+    Locale locale = Locale.forLanguageTag(acceptLanguage);
+    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
+    log.debug("CMS Delivery: Fetching sitemap pages, lang={}", resolvedLang);
+    List<SitemapPageEntry> entries = cmsDeliveryService.getSitemapPages(resolvedLang);
+    return ResponseEntity.ok(ApiResponse.success(
+        messageSource.getMessage("cms.sitemap.found", null, locale), entries));
   }
 
   @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)

@@ -36,6 +36,14 @@ export class AuthService {
     readonly #tenantContext = inject(TenantContextService);
     readonly #notificationService = inject(NotificationService);
 
+    #getDisplayName(name?: string | null): string {
+        const trimmed = (name ?? '').trim();
+        if (trimmed && !trimmed.includes('@')) {
+            return trimmed;
+        }
+        return 'Admin';
+    }
+
     #setAccessToken(token: string): void {
         localStorage.setItem('accessToken', token);
     }
@@ -130,10 +138,12 @@ export class AuthService {
 
         this.#storeUserAndTenantInfo(response);
 
+        const displayName = this.#getDisplayName(response.fullName);
+
         const user: User = {
             id: response.userId,
             email: response.email,
-            name: response.fullName ?? response.email,
+            name: displayName,
             role: response.role,
             tenantId: response.tenantId,
             preferredLanguage: response.preferredLanguage,
@@ -234,10 +244,11 @@ export class AuthService {
         this.#setAccessToken(data.accessToken);
         this.#authenticatedSig.set(true);
         this.#storeUserAndTenantInfo(data);
+        const displayName = this.#getDisplayName(data.fullName);
         const user: User = {
             id: data.userId,
             email: data.email,
-            name: data.fullName ?? data.email,
+            name: displayName,
             role: data.role,
             tenantId: data.tenantId,
             preferredLanguage: data.preferredLanguage,
@@ -274,10 +285,11 @@ export class AuthService {
                             return null;
                         }
                     })();
+                    const displayName = this.#getDisplayName(storedName);
                     const user: User = {
                         id: decoded.userId || 0,
                         email: decoded.sub,
-                        name: storedName ?? decoded.sub,
+                        name: displayName,
                         role: decoded.role,
                         tenantId: decoded.tenantId || 0,
                     };
@@ -348,7 +360,7 @@ export class AuthService {
                 const subdomain = data.subdomain;
                 localStorage.setItem('currentTenantSubdomain', subdomain);
             }
-            const displayName = data.fullName ?? data.email;
+            const displayName = this.#getDisplayName(data.fullName);
             if (displayName) {
                 localStorage.setItem('userFullName', displayName);
             }

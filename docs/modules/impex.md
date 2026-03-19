@@ -209,10 +209,11 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 2. seed_liko_chrome_components.sql — shared Header/Footer components, Home-2 chrome copy, i18n, entries
 3. seed_liko_pages_and_slots.sql   — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
 4. seed_pages_and_slots.sql        — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
-5. seed_navigation.sql             — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
-6. [upload media via Admin UI]     — upload all image/video assets in the Media Library before running step 7
-7. seed_liko_media_uids.sql        — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
-8. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+5. seed_about_content_page.sql     — (optional) About page at /about-us: ContentPageTemplate, About* components, page + slots + slot_components; only requires R__seed_page_templates
+6. seed_navigation.sql             — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
+7. [upload media via Admin UI]     — upload all image/video assets in the Media Library before running step 8
+8. seed_liko_media_uids.sql        — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
+9. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
 
 > **Media UID alignment (step 7):** Component entry `custom_data` fields reference media by semantic UIDs like `homepage-hero-bg`. When media is uploaded via the Media Library, auto-generated UIDs (`cmsitem_*`) are assigned. `seed_liko_media_uids.sql` corrects this by matching on `original_name` and updating each record's UID to the expected semantic value. It also sets `sites.logo_media_uid` / `sites.logo_dark_media_uid`. Run this script **after** uploading all assets. It is idempotent.
@@ -222,6 +223,8 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 `seed_liko_pages_and_slots.sql` depends on components from steps 1-2 and on Flyway-managed `page_templates` / `template_slots`.
 
 `seed_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Seed* components.
+
+**About content page (ContentPageTemplate):** `seed_about_content_page.sql` seeds a generic About page at `/about-us` using `ContentPageTemplate` (slots: TopContent, BodyContent, SideContent). It creates components (AboutHeroComponent, AboutStoryComponent, AboutTeamSection, AboutStatsSection, AboutBrandsStrip, AboutAwardsBlock), their i18n and entries, the page `about-us`, page_i18n with `canonical_url = '/about-us'`, page_slots, and slot_components. Run it after Flyway has applied `pagebuilder/R__seed_page_templates.sql`; it does not depend on Liko landing or chrome seeds. Component entries reference semantic media UIDs (e.g. `about-hero-bg`, `about-team-1`); optionally run a separate media-UID alignment script after uploading assets, or bind media via the Admin UI.
 
 `seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
 

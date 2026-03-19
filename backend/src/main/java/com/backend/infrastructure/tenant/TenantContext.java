@@ -1,5 +1,7 @@
 package com.backend.infrastructure.tenant;
 
+import java.util.Set;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +19,7 @@ public class TenantContext implements TenantContextPort {
   private static final ThreadLocal<String> currentSubdomain = new ThreadLocal<>();
   private static final ThreadLocal<Currency> currentCurrency = new ThreadLocal<>();
   private static final ThreadLocal<Language> currentDefaultLanguage = new ThreadLocal<>();
+  private static final ThreadLocal<Set<Language>> currentSupportedLanguages = new ThreadLocal<>();
 
   private final TenantRepository tenantRepository;
 
@@ -77,12 +80,24 @@ public class TenantContext implements TenantContextPort {
   }
 
   @Override
+  public Set<Language> getSupportedLanguages() {
+    Set<Language> langs = currentSupportedLanguages.get();
+    return langs != null ? langs : Set.of(getDefaultLanguage());
+  }
+
+  @Override
+  public void setSupportedLanguages(Set<Language> languages) {
+    currentSupportedLanguages.set(languages);
+  }
+
+  @Override
   public void clear() {
     currentTenantId.remove();
     currentTenantDbName.remove();
     currentSubdomain.remove();
     currentCurrency.remove();
     currentDefaultLanguage.remove();
+    currentSupportedLanguages.remove();
   }
 
   @Override

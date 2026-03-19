@@ -162,6 +162,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
           i18n != null ? i18n.getDescription() : null,
           component.getIsVisible(),
           component.getStyleClasses(),
+          buildComponentCustomFields(component, component.getComponentTypeId(), lang),
           resolveNavigationType(type, component),
           resolveSearchBox(type, component),
           resolveNavigationNode(type, component, lang),
@@ -241,6 +242,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         i18nOpt.map(ComponentI18n::getDescription).orElse(null),
         component.getIsVisible(),
         component.getStyleClasses(),
+        buildComponentCustomFields(component, component.getComponentTypeId(), lang),
         resolveNavigationType(componentType, component),
         resolveSearchBox(componentType, component),
         resolveNavigationNode(componentType, component, lang),
@@ -290,6 +292,19 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
       return null;
     }
     return type.getUid() != null ? type.getUid() : type.getName();
+  }
+
+  private Map<String, Object> buildComponentCustomFields(Component component, Long componentTypeId, Language lang) {
+    Map<String, Object> customFields = new LinkedHashMap<>();
+    if (component.getCustomData() != null && !component.getCustomData().isBlank()) {
+      customFields.putAll(mediaFieldExpander.parseCustomData(component.getCustomData()));
+    }
+
+    if (!customFields.isEmpty() && componentTypeId != null) {
+      customFields = mediaFieldExpander.expandMediaFields(customFields, componentTypeId, lang);
+    }
+
+    return customFields.isEmpty() ? null : customFields;
   }
 
   private NavigationType resolveNavigationType(ComponentType type, Component component) {

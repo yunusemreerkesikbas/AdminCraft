@@ -17,7 +17,13 @@ VALUES
   (UUID(), 'CMSLinkComponent',           'CTA Button',            'cta',        false, NOW(), NOW()),
   (UUID(), 'CMSParagraphComponent',      'Paragraph',             'content',    false, NOW(), NOW()),
   (UUID(), 'RotatingImagesComponent',    'Image Slider',          'gallery',    false, NOW(), NOW()),
-  (UUID(), 'FeatureCardComponent',       'Card',                  'feature',    false, NOW(), NOW())
+  (UUID(), 'FeatureCardComponent',       'Card',                  'feature',    false, NOW(), NOW()),
+  (UUID(), 'ContentHeroComponent',       'Content Hero',          'hero',       false, NOW(), NOW()),
+  (UUID(), 'SplitMediaIntroComponent',   'Split Media Intro',     'content',    false, NOW(), NOW()),
+  (UUID(), 'PeopleCarouselComponent',    'People Carousel',       'people',     false, NOW(), NOW()),
+  (UUID(), 'StatsGridComponent',         'Stats Grid',            'metrics',    false, NOW(), NOW()),
+  (UUID(), 'LogoMarqueeComponent',       'Logo Marquee',          'gallery',    false, NOW(), NOW()),
+  (UUID(), 'AwardsShowcaseComponent',    'Awards Showcase',       'showcase',   false, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   name               = VALUES(name),
   category           = VALUES(category),

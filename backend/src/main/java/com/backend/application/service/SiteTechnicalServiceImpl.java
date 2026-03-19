@@ -14,6 +14,7 @@ import com.backend.application.dto.response.SiteTechnicalAppDto.VerificationAppD
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteTechnicalSettings;
 import com.backend.domain.enums.Language;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
 
@@ -32,6 +33,7 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
 
     private final SiteRepository siteRepository;
     private final SiteTechnicalSettingsRepository technicalSettingsRepository;
+    private final TenantContextPort tenantContext;
 
     @Override
     public SiteTechnicalAppDto getTechnicalSettings() {
@@ -120,11 +122,14 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
             return sites.get(0);
         }
 
+        Language defaultLanguage = tenantContext.getDefaultLanguage();
+        java.util.Set<Language> supportedLanguages = tenantContext.getSupportedLanguages();
+
         Site site = new Site();
         site.setSiteName("Default Site");
-        site.setDomain("localhost"); // Default subdomain
-        site.setDefaultLanguage(Language.EN);
-        site.setEnabledLanguages(Collections.singleton(Language.EN));
+        site.setDomain("localhost");
+        site.setDefaultLanguage(defaultLanguage);
+        site.setEnabledLanguages(supportedLanguages.isEmpty() ? Collections.singleton(defaultLanguage) : supportedLanguages);
         site.setPublished(true);
         return siteRepository.save(site);
     }

@@ -55,6 +55,9 @@ public class Component extends BaseEntity {
     @Column(name = "style_classes", length = 500)
     private String styleClasses;
 
+    @Column(name = "custom_data", columnDefinition = "JSON")
+    private String customData;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @NotNull

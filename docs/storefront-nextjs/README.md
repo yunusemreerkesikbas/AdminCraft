@@ -36,6 +36,7 @@ All requests are tenant-scoped via headers set in `cms-client.ts`:
 | `fetchProduct` | `GET /api/cms/products/{uid}` | Product detail payload |
 | `fetchProductsByCategory` | `GET /api/cms/products/category/{categoryUid}` | Paged list |
 | `searchProducts` | `GET /api/cms/products/search` | Query param: `q` |
+| `fetchSitemapPages` | `GET /api/cms/pages/sitemap` | Sitemap-eligible published pages; `revalidate: 3600s` |
 | `app/robots.ts` | `GET /api/cms/robots.txt` | Plain-text robots.txt; respects `indexingEnabled` from `SiteTechnicalSettings` |
 
 ## Routing and page resolution
@@ -81,12 +82,12 @@ Template-driven rendering — equivalent of Spartacus's `cx-storefront` + `cx-pa
 
 1. `CmsPage` calls `buildSlotMap(page)` → `{ slotName: slot }` map from `contentSlots`. The backend sets `contentSlot[].slotId = slotName + "Slot"` and `contentSlot[].position = positionEnum` (e.g. `"TOP"`). `buildSlotMap` derives the key from `slotId` by stripping the `"Slot"` suffix — so `"Section1Slot"` → `"Section1"` — matching the slot names used in template components.
 2. `resolveTemplate(page.template)` looks up the template component from `templateRegistry`.
-   - Unknown template → falls back to `DefaultTemplate` (renders all slots as a vertical stack) + `console.warn` (development only).
+   - Unknown template → renders `null`. Template contracts are expected to stay in sync with backend `page_templates`.
 3. The resolved `TemplateComponent` receives `{ slotMap, page }` props.
 4. `CmsPage` handles shared `Header` and `Footer` slots outside `<main>`.
-   - If a `Header` slot exists and contains renderable components, it renders `ThemeHeaderSlot`.
-   - If a `Footer` slot exists and contains renderable components, it renders `ThemeFooterSlot`.
-   - Empty or unrecognized chrome slots render nothing.
+   - If a `Header` slot exists and contains renderable components, it renders `HeaderSlot`.
+   - If a `Footer` slot exists and contains renderable components, it renders `FooterSlot`.
+   - Empty or unrecognized shared layout slots render nothing.
 5. Each template renders `<CmsSlot slotName="..." slotMap={slotMap} />` for each of its body slots. `LandingPageTemplate` does this for Section1–Section8 alongside the `<Motion />` animation layer — no longer a special case.
 6. `CmsSlot` renders the components for that slot; returns `null` + `console.warn` (development only) if the slot name isn't in `slotMap`.
 7. `CmsComponent` delegates to the registry (`components/cms/registry`) using `component.type` from delivery.
@@ -107,7 +108,6 @@ Located in `components/cms/templates/index.ts`.
 | `SearchResultsPageTemplate` | `SearchResultsPageTemplate.tsx` | TopContent, Results | Search results |
 | `ErrorPageTemplate` | `ErrorPageTemplate.tsx` | MiddleContent | 500 error |
 | `NotFoundPageTemplate` | `NotFoundPageTemplate.tsx` | MiddleContent | 404 not found |
-| `DefaultTemplate` | `DefaultTemplate.tsx` | all slots in slotMap | Fallback (unknown templates) |
 
 Template names match `page_template.uid` values in the database exactly — do not rename.
 
@@ -126,13 +126,13 @@ Homepage uses the same generic `CmsSlot → CmsComponent → registry` pipeline 
 - Entry point: `components/cms/templates/LandingPageTemplate.tsx`
 - Central registry config: `components/cms/cms-components.config.tsx` (Spartacus `SPA_CMSCOMPONENTS_CONFIG` equivalent)
 - Renderer factory: `components/cms/renderers/renderer-factory.tsx` — `makeMediaRenderer(buildFn, renderFn)` produces an async RSC that collects mediaUids, fetches media, builds a typed model, and delegates rendering to the given JSX factory
-- Theme model types: `components/theme/default/models.ts` (`HeroModel`, `AboutModel`, `VideoModel`, etc.)
-- Theme model builders: `components/theme/default/builders.ts` (`buildHeroModel`, `buildAboutModel`, `buildVideoModel`, etc.)
-- Motion layer: `components/theme/default/Motion.tsx`
-- Section components (visual layer, unchanged): `components/theme/default/sections/`
-- Shared UI primitives: `components/theme/default/utils/shared.tsx` (`ThemeTag`, `ThemeButton`, `ThemeCircleButton`)
-- Icons: `components/theme/default/utils/icons.tsx`
-- Theme CSS: `components/theme/default/theme.module.css`
+- Theme model types: `components/theme/models.ts` (`HeroModel`, `AboutModel`, `VideoModel`, etc.)
+- Theme model builders: `components/theme/builders.ts` (`buildHeroModel`, `buildAboutModel`, `buildVideoModel`, etc.)
+- Motion layer: `components/theme/Motion.tsx`
+- Section components (visual layer, unchanged): `components/theme/sections/`
+- Shared UI primitives: `components/theme/utils/shared.tsx` (`ThemeTag`, `ThemeButton`, `ThemeCircleButton`)
+- Icons: `components/theme/utils/icons.tsx`
+- Theme CSS: `components/theme/theme.module.css`
 
 #### Slot contract
 
@@ -149,11 +149,11 @@ Dispatch is by `component.type` only — no styleClass or UID matching.
 | `Section7` | `HomepageMarqueeText` | `MarqueeTextComponent` | `buildMarqueeModel` | Marquee |
 | `Section8` | `HomepageInstagramSection` | `InstagramSectionComponent` | `buildInstagramModel` | Instagram |
 
-All 8 landing types use `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` in `cms-components.config.tsx` — there are no separate renderer files for these types. Adding a new type requires: (1) a model type in `components/theme/default/models.ts`, (2) a `buildXxxModel` in `components/theme/default/builders.ts`, (3) one `makeMediaRenderer(...)` line in `cms-components.config.tsx` — no template changes.
+All 8 landing types use `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` in `cms-components.config.tsx` — there are no separate renderer files for these types. Adding a new type requires: (1) a model type in `components/theme/models.ts`, (2) a `buildXxxModel` in `components/theme/builders.ts`, (3) one `makeMediaRenderer(...)` line in `cms-components.config.tsx` — no template changes.
 
 #### Field mapping
 
-Each renderer calls a `buildXxxModel` function from `components/theme/default/builders.ts`, which reads CMS content from `component_i18n`, `component_entries`, `entry_i18n`, and `customFields`.
+Each renderer calls a `buildXxxModel` function from `components/theme/builders.ts`, which reads CMS content from `component_i18n`, `component_entries`, `entry_i18n`, and `customFields`.
 
 | Section | Main fields | Entry/custom field usage |
 | --- | --- | --- |
@@ -173,50 +173,51 @@ The landing page depends on both template-slot migration and tenant-scoped conte
 1. Restart backend so `backend/src/main/resources/db/tenant/pagebuilder/R__seed_page_templates.sql` is applied by Flyway.
 2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen (example landing page components, initially typed as generic `SimpleBannerComponent` / `FeatureCardComponent`).
 3. Import `backend/src/main/resources/impex/seed_landing_component_types.sql` from the Admin UI ImpEx screen (creates `HeroBannerComponent`, `AboutBannerComponent`, `VideoSectionComponent`, `AwardBannerComponent`, `ServiceCardComponent`, `ProjectCardComponent`, `InstagramSectionComponent`, `MarqueeTextComponent` and **migrates the 8 homepage components** to their type-specific renderers). Must run after step 2.
-4. Import `backend/src/main/resources/impex/seed_liko_chrome_components.sql` from the Admin UI ImpEx screen (shared header/footer components + Home-2 chrome copy).
+4. Import `backend/src/main/resources/impex/seed_liko_chrome_components.sql` from the Admin UI ImpEx screen (shared header/footer layout components + Home-2 layout copy).
 5. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen (homepage, shared header/footer slots, slot-component bindings).
 6. Import `backend/src/main/resources/impex/seed_pages_and_slots.sql` if the tenant also needs the default content/category/product/search pages.
-7. Import `backend/src/main/resources/impex/seed_navigation.sql` to create `LandingMainNavNode` and `LandingFooterNavNode`, then bind them to the chrome navigation components.
-8. Upload image/video assets in Media Library for the tenant.
-9. Import `backend/src/main/resources/impex/seed_liko_media_uids.sql` to assign semantic UIDs (`homepage-hero-bg`, `homepage-project-1`, etc.) to the uploaded files. This aligns media with the `mediaUid` references embedded in component entry `custom_data`. See [Media UID alignment](#media-uid-alignment) below.
-10. For assets not covered by the seed (video poster, service icons), either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
+7. Import `backend/src/main/resources/impex/seed_about_content_page.sql` (optional) if the tenant should have a sample About page at `/{lang}/about-us` using ContentPageTemplate (TopContent, BodyContent, SideContent slots). Only requires `R__seed_page_templates`; does not depend on Liko landing or shared layout seeds.
+8. Import `backend/src/main/resources/impex/seed_navigation.sql` to create `LandingMainNavNode` and `LandingFooterNavNode`, then bind them to the shared layout navigation components.
+9. Upload image/video assets in Media Library for the tenant.
+10. Import `backend/src/main/resources/impex/seed_liko_media_uids.sql` to assign semantic UIDs (`homepage-hero-bg`, `homepage-project-1`, etc.) to the uploaded files. This aligns media with the `mediaUid` references embedded in component entry `custom_data`. See [Media UID alignment](#media-uid-alignment) below.
+11. For assets not covered by the seed (video poster, service icons), either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
 
 If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
 
 #### Header and footer
 
-Header and footer are CMS-driven through shared `Header` / `Footer` slots and then adapted into the storefront chrome layer.
+Header and footer are CMS-driven through shared `Header` / `Footer` slots and then adapted into the storefront shared layout layer.
 
 - Slot entry point: `components/cms/CmsPage.tsx`
-- Chrome slot renderers: `components/layout/theme-chrome/ThemeHeaderSlot.tsx`, `components/layout/theme-chrome/ThemeFooterSlot.tsx`
-- Slot adapter: `components/layout/theme-chrome/cms-adapter.ts`
-- Presentational chrome: `components/layout/theme-chrome/ThemeHeaderChrome.tsx`, `components/layout/theme-chrome/ThemeFooterChrome.tsx`
+- Shared layout slot renderers: `components/layout/shell/HeaderSlot.tsx`, `components/layout/shell/FooterSlot.tsx`
+- Slot adapter: `components/layout/shell/cms-adapter.ts`
+- Presentational shell: `components/theme/layout/SiteHeader.tsx`, `components/theme/layout/SiteFooter.tsx`
 
-The chrome adapter prefers the expected component `uid`, then `type + styleClass`, mirroring the homepage section adapter strategy.
+The shared layout adapter resolves components by `component.customFields.layoutRole`. UIDs may stay stable for seeds, but storefront dispatch no longer depends on them.
 
-##### Shared chrome slot contract
+##### Shared layout slot contract
 
-| Slot | Expected component UID | Component type | Style class | Purpose |
+| Slot | `layoutRole` | Component type | Example UID | Purpose |
 | --- | --- | --- | --- | --- |
-| `Header` | `StorefrontHeaderMainNavigation` | `NavigationComponent` | `header-main-navigation` | Main off-canvas menu tree |
-| `Header` | `StorefrontHeaderSocialLinks` | `CMSLinkComponent` | `header-social-links` | Social links in the off-canvas meta area |
-| `Header` | `StorefrontHeaderContactInfo` | `CMSLinkComponent` | `header-contact-info` | Contact links + CTA copy |
-| `Footer` | `StorefrontFooterBrandBlock` | `CMSParagraphComponent` | `footer-brand-block` | Brand text / intro copy |
-| `Footer` | `StorefrontFooterSitemapNavigation` | `NavigationComponent` | `footer-sitemap-navigation` | Footer sitemap column |
-| `Footer` | `StorefrontFooterOfficeLinks` | `CMSLinkComponent` | `footer-office-links` | Address / phone / email column |
-| `Footer` | `StorefrontFooterNewsletter` | `CMSLinkComponent` | `footer-newsletter` | Newsletter title + placeholder/button labels via entry `custom_data` |
-| `Footer` | `StorefrontFooterSocialLinks` | `CMSLinkComponent` | `footer-social-links` | Copyright bar social links |
+| `Header` | `header.mainNavigation` | `NavigationComponent` | `StorefrontHeaderMainNavigation` | Main off-canvas menu tree |
+| `Header` | `header.socialLinks` | `CMSLinkComponent` | `StorefrontHeaderSocialLinks` | Social links in the off-canvas meta area |
+| `Header` | `header.contactInfo` | `CMSLinkComponent` | `StorefrontHeaderContactInfo` | Contact links + CTA copy |
+| `Footer` | `footer.brandBlock` | `CMSParagraphComponent` | `StorefrontFooterBrandBlock` | Brand text / intro copy |
+| `Footer` | `footer.sitemapNavigation` | `NavigationComponent` | `StorefrontFooterSitemapNavigation` | Footer sitemap column |
+| `Footer` | `footer.officeLinks` | `CMSLinkComponent` | `StorefrontFooterOfficeLinks` | Address / phone / email column |
+| `Footer` | `footer.newsletter` | `CMSLinkComponent` | `StorefrontFooterNewsletter` | Newsletter title + placeholder/button labels via entry `custom_data` |
+| `Footer` | `footer.socialLinks` | `CMSLinkComponent` | `StorefrontFooterSocialLinks` | Copyright bar social links |
 
-##### Chrome field mapping
+##### Shared layout field mapping
 
 | Area | Data source |
 | --- | --- |
 | Header logo / languages | `GET /api/cms/site` |
-| Header main navigation | `navigationNode` on `StorefrontHeaderMainNavigation` |
+| Header main navigation | `navigationNode` on the component whose `customFields.layoutRole = header.mainNavigation` |
 | Header social / contact links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
-| Header CTA text | `component_i18n.description` on `StorefrontHeaderContactInfo` |
-| Footer brand text | `component_i18n.description` on `StorefrontFooterBrandBlock` |
-| Footer sitemap | `navigationNode` on `StorefrontFooterSitemapNavigation` |
+| Header CTA / supporting text | `component_i18n.description` on the matching layout block |
+| Footer brand text | `component_i18n.description` on the component whose `customFields.layoutRole = footer.brandBlock` |
+| Footer sitemap | `navigationNode` on the component whose `customFields.layoutRole = footer.sitemapNavigation` |
 | Footer office links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
 | Footer newsletter UI copy | `component_i18n.title` + `component_entry_i18n.custom_data.inputPlaceholder/buttonLabel` |
 | Footer social links | `component_entries` + `component_entry_i18n.custom_data.linkUrl` |
@@ -296,7 +297,7 @@ Locale configuration is **fully dynamic**, driven by the tenant's `SiteDeliveryR
 | `normalizeLanguage(v)` | `string \| undefined` → API locale string; `undefined` returns `""` (filtered by `buildUrl`) |
 | `withLocalePath(locale, path)` | Builds localized links (`/tr/search`) |
 
-### next-intl (UI chrome translations)
+### next-intl (Shared layout translations)
 
 Used for static UI strings (navigation labels, page headings, error messages). **Not used for CMS content** — those come from the API with the `lang` param.
 
@@ -322,10 +323,46 @@ Message namespaces:
 
 ## SEO metadata
 
-`buildPageMetadata` derives title/description/canonical/robots/OG image from:
+`buildPageMetadata` (`lib/seo.ts`) derives title/description/canonical/robots/OG/hreflang from:
 
 - CMS page fields (`title`, `description`, `robotTag`, `canonicalUrl`)
-- Site config (`siteTitle`, `siteDescription`, `ogImageUrl`)
+- Site config (`seo.*`, `searchEngine.defaultRobots`, `canonicalBaseUrl`, `enabledLanguages`, `defaultLanguage`, `ogImageUrl`)
+
+### Robots resolution
+
+`parseRobotsTag(tag, defaultRobots)` resolves in priority order:
+1. Page-level `robotTag` (e.g. `NOINDEX_FOLLOW`)
+2. `site.searchEngine.defaultRobots` (set via Site Settings → `global.robots`)
+3. Built-in constant `"index,follow"`
+
+### Hreflang
+
+`buildAlternateLanguages` emits `<link rel="alternate" hreflang="...">` for every enabled language plus `x-default` (pointing to the default language). Skipped when `canonicalBaseUrl` is missing or only one language is enabled.
+
+### JSON-LD structured data
+
+- `lib/schema.ts` — `buildOrganizationSchema(site)` and `buildWebSiteSchema(site, lang)` builders.
+- `app/layout.tsx` — injects `WebSite` schema on every page (when `canonicalBaseUrl` is set).
+- `app/[lang]/[[...slug]]/page.tsx` — injects `Organization` schema on the homepage only.
+
+### Dynamic sitemap
+
+`app/sitemap.ts` generates `/sitemap.xml` from `fetchSitemapPages(lang)` for each enabled language. Returns `[]` when `searchEngine.sitemapEnabled` is false or `canonicalBaseUrl` is unset.
+
+Page inclusion is fully backend-driven — `GET /api/cms/pages/sitemap` returns only eligible published pages. The homepage (canonical_url `/`) is included by the backend when published; priority is derived from `canonicalUrl`:
+- `"/"` → `priority: 1`
+- anything else → `priority: 0.8`
+
+### robots.txt
+
+`app/robots.txt/route.ts` proxies the backend `GET /api/cms/robots.txt` response directly as `text/plain`, with no parsing or re-serialization. This preserves:
+- Admin-configured custom rules (e.g. `Disallow: /admin/`)
+- `Sitemap: /sitemap.xml` directive
+- Multi user-agent blocks
+
+Fail-safe: any network error or non-2xx response returns `User-agent: *\nDisallow: /`.
+
+`app/robots.ts` is superseded by the route handler and kept only as a placeholder; Next.js route handlers take precedence over Metadata API convention files for the same path.
 
 Each route uses `generateMetadata` to combine `resolvePage` and `fetchSiteConfig`.
 
@@ -348,6 +385,7 @@ Read from `.env.local.example` and `lib/utils.ts`:
 | `fetchSiteConfig` | ✅ | `revalidate: 300s` | Called in 6+ files per render |
 | `fetchProduct` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
 | `fetchProductsByCategory` | ✅ | `revalidate: 30s` | Called in both `generateMetadata` and page component |
+| `fetchSitemapPages` | ❌ | `revalidate: 3600s` | Called once per language in `sitemap.ts` |
 | `fetchMediaByUids` | ❌ | `revalidate: 300s` | Not called multiple times per render |
 | `searchProducts` | ❌ | `cache: "no-store"` | Dynamic query — must be fresh on every request |
 
@@ -406,7 +444,7 @@ No code changes required. Add the language via the admin Site Settings UI. The s
 
 ## Component Registry
 
-Located in `components/cms/cms-components.config.tsx` (config) and `components/cms/registry/index.ts` (dispatcher). Maps `component.type` (from delivery API) to a React renderer. Landing page types are wired inline via `makeMediaRenderer` from `components/cms/renderers/renderer-factory.tsx` — no separate renderer files. Generic types have individual renderer files under `components/cms/renderers/`. To add a new type: add a model type to `components/theme/default/models.ts`, add a `buildXxxModel` to `components/theme/default/builders.ts`, then add one `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` line in `cms-components.config.tsx`.
+Located in `components/cms/cms-components.config.tsx` (config) and `components/cms/registry/index.ts` (dispatcher). Maps `component.type` (from delivery API) to a React renderer. Landing page types are wired inline via `makeMediaRenderer` from `components/cms/renderers/renderer-factory.tsx` — no separate renderer files. Generic types have individual renderer files under `components/cms/renderers/`. To add a new type: add a model type to `components/theme/models.ts`, add a `buildXxxModel` to `components/theme/builders.ts`, then add one `makeMediaRenderer(buildXxxModel, (m) => <Section model={m} />)` line in `cms-components.config.tsx`.
 
 ### Landing page — type-specific (via `makeMediaRenderer` factory)
 
@@ -437,7 +475,7 @@ Located in `components/cms/cms-components.config.tsx` (config) and `components/c
 | `PricingTableComponent` | `TextBlockRenderer` | Placeholder |
 | Unknown types | `UnknownComponent` | Dev: red dashed box; prod: `null` |
 
-Header and footer are not rendered through the component registry. `CmsPage` resolves them at the slot level via `ThemeHeaderSlot` / `ThemeFooterSlot`.
+Header and footer are not rendered through the component registry. `CmsPage` resolves them at the slot level via `HeaderSlot` / `FooterSlot`.
 
 ### NavigationComponent
 
@@ -492,13 +530,40 @@ The script also updates `sites.logo_media_uid` and `sites.logo_dark_media_uid` t
 ## Current limitations and extension points
 
 - Product, category, and search pages include minimal UI beyond CMS slots.
-- Header and footer render only from CMS shared slots; an empty or incomplete `Header` / `Footer` slot produces no chrome output.
+- Header and footer render only from CMS shared slots; an empty or incomplete `Header` / `Footer` slot produces no shared layout output.
 - Instagram section works with partial image sets; full parity is achieved when the tenant imports the complete expected media set.
 - Adding new UI languages requires a new `messages/{lang}.json` file and an entry in `AVAILABLE_MESSAGES` in `lib/i18n.ts`.
 - Navigation node UIDs `LandingMainNavNode` (header main menu) and `LandingFooterNavNode` (footer sitemap) must be created in each tenant's CMS.
 
-### Replacing the default theme
+### Replacing the theme
 
-To swap the visual theme for the landing page sections, replace the section components in `components/theme/default/sections/`, model types in `components/theme/default/models.ts`, and builder functions in `components/theme/default/builders.ts`. Generic CMS utilities in `lib/cms-utils.ts` are theme-independent and remain unchanged.
+`storefront-nextjs` is designed as a boilerplate — fork the project and replace `components/theme/` for each tenant's visual identity. The CMS infrastructure (`components/cms/`, `components/layout/shell` adapters, `lib/`) is never modified.
 
-The `Motion` animation layer (`components/theme/default/Motion.tsx`) is rendered directly by `LandingPageTemplate.tsx`. To disable or replace it, edit the template.
+**Theme boundary:** `components/theme/` is the only directory that changes between forks.
+
+```
+components/theme/
+  builders.ts          ← model builder functions (contract with CMS pipeline)
+  models.ts            ← TypeScript model types (contract with builders)
+  sections/            ← 14 visual section components
+  utils/               ← shared UI primitives and icons
+  Motion.tsx           ← landing page animation layer
+  ContentPageMotion.tsx
+  theme.module.css
+  content-page.module.css
+  layout/
+    SiteHeader.tsx     ← visual header component
+    SiteFooter.tsx     ← visual footer component
+    shell.module.css   ← header/footer styles
+```
+
+**To create a new theme:**
+
+1. Replace `components/theme/` with your own implementation.
+2. `builders.ts` — keep the same exported function names (`buildHeroModel`, etc.) as they are the contract with `cms-components.config.tsx`.
+3. `models.ts` — keep the same type names; they are referenced by builders.
+4. `sections/` — write your own UI section components.
+5. `layout/SiteHeader.tsx` + `SiteFooter.tsx` — write your own header/footer; they receive typed props from `components/layout/shell/cms-adapter.ts`.
+6. `cms-components.config.tsx` — only touch this file to register new CMS component types; existing wiring stays unchanged.
+
+The `Motion` animation layer (`components/theme/Motion.tsx`) is rendered directly by `LandingPageTemplate.tsx`. To disable or replace it, edit the template.

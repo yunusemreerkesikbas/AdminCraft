@@ -1,5 +1,7 @@
 package com.backend.domain.port;
 
+import java.util.Set;
+
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 
@@ -24,6 +26,10 @@ public interface TenantContextPort {
   Language getDefaultLanguage();
 
   void setDefaultLanguage(Language language);
+
+  Set<Language> getSupportedLanguages();
+
+  void setSupportedLanguages(Set<Language> languages);
 
   void clear();
 

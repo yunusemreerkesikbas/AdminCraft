@@ -363,3 +363,178 @@ SET c.navigation_node_id = n.id,
     c.search_box = FALSE,
     c.updated_at = NOW()
 WHERE c.uid = 'StorefrontFooterSitemapNavigation';
+
+-- ============================================
+-- 7. MAIN NAV CLEANUP (remove demo navigation noise)
+-- ============================================
+
+-- Hide any direct root-level entries if the tenant previously imported older demo data.
+UPDATE navigation_entries e
+JOIN navigation_nodes n ON n.id = e.node_id
+SET e.is_visible = FALSE,
+    e.updated_at = NOW()
+WHERE n.uid = 'LandingMainNavNode';
+
+-- Keep a minimal, working main nav: Home, About Us, Search.
+UPDATE navigation_nodes
+SET is_visible = CASE uid
+        WHEN 'LandingMainNavHomeNode' THEN TRUE
+        WHEN 'LandingMainNavPagesNode' THEN TRUE
+        WHEN 'LandingMainNavContactNode' THEN TRUE
+        ELSE FALSE
+    END,
+    sort_order = CASE uid
+        WHEN 'LandingMainNavHomeNode' THEN 0
+        WHEN 'LandingMainNavPagesNode' THEN 1
+        WHEN 'LandingMainNavContactNode' THEN 2
+        WHEN 'LandingMainNavPortfolioNode' THEN 3
+        WHEN 'LandingMainNavBlogNode' THEN 4
+        ELSE sort_order
+    END,
+    updated_at = NOW()
+WHERE uid IN (
+    'LandingMainNavHomeNode',
+    'LandingMainNavPagesNode',
+    'LandingMainNavPortfolioNode',
+    'LandingMainNavBlogNode',
+    'LandingMainNavContactNode'
+);
+
+-- Home node -> only homepage.
+UPDATE navigation_entries
+SET url = '/',
+    sort_order = 0,
+    is_visible = TRUE,
+    updated_at = NOW()
+WHERE uid = 'LandingMainNavHome01';
+
+UPDATE navigation_entries
+SET is_visible = FALSE,
+    updated_at = NOW()
+WHERE uid IN (
+    'LandingMainNavHome02',
+    'LandingMainNavHome03',
+    'LandingMainNavHome04',
+    'LandingMainNavHome05',
+    'LandingMainNavHome06',
+    'LandingMainNavHome07',
+    'LandingMainNavHome08',
+    'LandingMainNavHome09',
+    'LandingMainNavHome10',
+    'LandingMainNavHome11',
+    'LandingMainNavHome12'
+);
+
+-- Pages node -> only about page.
+UPDATE navigation_entries
+SET url = '/about-us',
+    sort_order = 0,
+    is_visible = TRUE,
+    updated_at = NOW()
+WHERE uid = 'LandingMainNavPages01';
+
+UPDATE navigation_entries
+SET is_visible = FALSE,
+    updated_at = NOW()
+WHERE uid IN (
+    'LandingMainNavPages02',
+    'LandingMainNavPages03',
+    'LandingMainNavPages04',
+    'LandingMainNavPages05',
+    'LandingMainNavPages06',
+    'LandingMainNavPages07',
+    'LandingMainNavPages08',
+    'LandingMainNavPages09',
+    'LandingMainNavPages10',
+    'LandingMainNavPages11',
+    'LandingMainNavPages12',
+    'LandingMainNavPages13',
+    'LandingMainNavPages14',
+    'LandingMainNavPages15',
+    'LandingMainNavPages16',
+    'LandingMainNavPages17',
+    'LandingMainNavPages18',
+    'LandingMainNavPages19'
+);
+
+-- Contact node is repurposed as a safe search entry because /search is guaranteed to exist in seeds.
+UPDATE navigation_entries
+SET url = '/search',
+    sort_order = 0,
+    is_visible = TRUE,
+    updated_at = NOW()
+WHERE uid = 'LandingMainNavContact01';
+
+UPDATE navigation_entries
+SET is_visible = FALSE,
+    updated_at = NOW()
+WHERE uid = 'LandingMainNavContact02';
+
+-- Hide remaining demo-heavy groups entirely.
+UPDATE navigation_entries e
+JOIN navigation_nodes n ON n.id = e.node_id
+SET e.is_visible = FALSE,
+    e.updated_at = NOW()
+WHERE n.uid IN ('LandingMainNavPortfolioNode', 'LandingMainNavBlogNode');
+
+-- Localize visible node titles.
+UPDATE navigation_node_i18n
+SET title = 'Ana Menü',
+    updated_at = NOW()
+WHERE uid = 'c2000001-0000-4000-8000-000000000001';
+
+UPDATE navigation_node_i18n
+SET title = 'Anasayfa',
+    updated_at = NOW()
+WHERE uid = 'c2000007-0000-4000-8000-000000000007';
+
+UPDATE navigation_node_i18n
+SET title = 'Hakkımızda',
+    updated_at = NOW()
+WHERE uid = 'c2000009-0000-4000-8000-000000000009';
+
+UPDATE navigation_node_i18n
+SET title = 'Arama',
+    updated_at = NOW()
+WHERE uid = 'c2000015-0000-4000-8000-000000000015';
+
+UPDATE navigation_node_i18n
+SET title = 'About Us',
+    updated_at = NOW()
+WHERE uid = 'c2000010-0000-4000-8000-000000000010';
+
+UPDATE navigation_node_i18n
+SET title = 'Search',
+    updated_at = NOW()
+WHERE uid = 'c2000016-0000-4000-8000-000000000016';
+
+-- Keep visible entry labels consistent with the simplified nav.
+UPDATE navigation_entry_i18n
+SET link_name = 'Anasayfa',
+    updated_at = NOW()
+WHERE uid = 'c4000001-0000-4000-8000-000000000001';
+
+UPDATE navigation_entry_i18n
+SET link_name = 'Home',
+    updated_at = NOW()
+WHERE uid = 'c4000002-0000-4000-8000-000000000002';
+
+UPDATE navigation_entry_i18n
+SET link_name = 'Hakkımızda',
+    updated_at = NOW()
+WHERE uid = 'c4000201-0000-4000-8000-000000000401';
+
+UPDATE navigation_entry_i18n
+SET link_name = 'About Us',
+    updated_at = NOW()
+WHERE uid = 'c4000202-0000-4000-8000-000000000402';
+
+UPDATE navigation_entry_i18n
+SET link_name = 'Arama',
+    updated_at = NOW()
+WHERE uid = 'c4000501-0000-4000-8000-000000001001';
+
+UPDATE navigation_entry_i18n
+SET link_name = 'Search',
+    updated_at = NOW()
+WHERE uid = 'c4000502-0000-4000-8000-000000001002';
