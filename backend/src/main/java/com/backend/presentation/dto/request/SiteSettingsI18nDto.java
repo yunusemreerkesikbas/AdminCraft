@@ -11,9 +11,7 @@ public record SiteSettingsI18nDto(
 
         @Size(max = 500, message = "validation.length") String footerText,
 
-        @Size(max = 200, message = "validation.length") String headerTopbarText,
-
-        String addressLocalized // JSON string
+        @Size(max = 200, message = "validation.length") String headerTopbarText
 ) {
 
     public SiteSettingsI18nDto {
@@ -21,7 +19,6 @@ public record SiteSettingsI18nDto(
         tagline = sanitize(tagline);
         footerText = sanitize(footerText);
         headerTopbarText = sanitize(headerTopbarText);
-        addressLocalized = sanitize(addressLocalized);
     }
 
     private static String sanitize(String value) {

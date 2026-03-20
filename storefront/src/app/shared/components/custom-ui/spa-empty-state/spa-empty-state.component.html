@@ -1,11 +1,15 @@
 <div class="spa-empty-state" [ngClass]="'size-' + iconSize">
-    <div class="empty-icon-wrapper" *ngIf="icon">
-        <mat-icon class="empty-icon">{{ icon }}</mat-icon>
-    </div>
+    @if (icon) {
+        <div class="empty-icon-wrapper">
+            <mat-icon class="empty-icon">{{ icon }}</mat-icon>
+        </div>
+    }
     <h3 class="empty-title">{{ title | transloco }}</h3>
-    <p class="empty-description" *ngIf="description">
-        {{ description | transloco }}
-    </p>
+    @if (description) {
+        <p class="empty-description">
+            {{ description | transloco }}
+        </p>
+    }
     <div class="empty-actions">
         <ng-content></ng-content>
     </div>

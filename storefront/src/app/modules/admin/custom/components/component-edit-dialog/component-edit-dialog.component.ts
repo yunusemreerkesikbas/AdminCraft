@@ -6,6 +6,7 @@ import {
     inject,
     Injector,
     runInInjectionContext,
+    signal,
     Signal,
     ViewEncapsulation,
 } from '@angular/core';
@@ -160,21 +161,29 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
         }
         super.ngOnInit();
 
-        const componentTypeId = this.generalForm.get('componentTypeId')!;
-        this.isNavigationAwareSig = runInInjectionContext(this.#injector, () =>
-            toSignal(
-                componentTypeId.valueChanges.pipe(
-                    startWith(componentTypeId.value),
-                    map(value => {
-                        const id = this.#toNullableNumber(value);
-                        return (id !== null ? this.componentTypesById.get(id) : undefined)?.navigationAware ?? false;
-                    })
-                ),
-                { initialValue: false }
-            )
-        );
-
-        this.#loadNavigationNodes();
+        if (this.data?.mode === 'edit') {
+            const component = this.data.component;
+            const isNavAware = !!(component?.navigationType || component?.navigationNodeId);
+            this.isNavigationAwareSig = signal(isNavAware);
+            if (isNavAware) {
+                this.#loadNavigationNodes();
+            }
+        } else {
+            const componentTypeId = this.generalForm.get('componentTypeId')!;
+            this.isNavigationAwareSig = runInInjectionContext(this.#injector, () =>
+                toSignal(
+                    componentTypeId.valueChanges.pipe(
+                        startWith(componentTypeId.value),
+                        map(value => {
+                            const id = this.#toNullableNumber(value);
+                            return (id !== null ? this.componentTypesById.get(id) : undefined)?.navigationAware ?? false;
+                        })
+                    ),
+                    { initialValue: false }
+                )
+            );
+            this.#loadNavigationNodes();
+        }
     }
 
     protected buildGeneralForm(): FormGroup {
@@ -187,6 +196,8 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
               }
             : null;
 
+        const isEdit = this.data?.mode === 'edit';
+
         return this.fb.group({
             uid: [
                 component?.uid || '',
@@ -197,8 +208,11 @@ export class ComponentEditDialogComponent extends SpaLocalizedFormDialog<
                 ],
             ],
             componentTypeId: [
-                component?.componentTypeId || '',
+                { value: component?.componentTypeId || '', disabled: isEdit },
                 Validators.required,
+            ],
+            componentTypeName: [
+                { value: component?.componentTypeName || '', disabled: true },
             ],
             isVisible: [component?.isVisible ?? true],
             styleClasses: [

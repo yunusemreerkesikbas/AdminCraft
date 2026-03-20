@@ -95,8 +95,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
             SiteSetting::getSettingKey,
             SiteSetting::getSettingValue,
             (existing, replacement) -> {
-              log.warn("Duplicate global setting found. Keeping existing: {} over replacement: {}", existing,
-                  replacement);
+              log.warn("Duplicate global setting found - keeping existing value");
               return existing;
             }));
 
@@ -152,8 +151,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
             SiteSetting::getSettingKey,
             SiteSetting::getSettingValue,
             (existing, replacement) -> {
-              log.warn("Duplicate i18n setting found. Keeping existing: {} over replacement: {}", existing,
-                  replacement);
+              log.warn("Duplicate i18n setting found - keeping existing value");
               return existing;
             }));
 

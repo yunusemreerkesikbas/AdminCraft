@@ -128,5 +128,5 @@ graph LR
 
 - **Validation**: Strict Bean Validation (`@Valid`, `@NotNull`) on DTOs.
 - **Database**: Parameterized JPQL only (protect against SQL Injection).
-- **Rate Limiting**: 5 req/min (Provisioning), 100 req/min (CMS Delivery).
+- **Rate Limiting**: 5 req/min (Provisioning). CMS Delivery endpoints have no application-level rate limit — use Traefik per-IP middleware if needed.
 - **Errors**: Truncate API messages (500 chars), log full traces internally.

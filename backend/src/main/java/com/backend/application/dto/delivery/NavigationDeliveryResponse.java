@@ -2,7 +2,6 @@ package com.backend.application.dto.delivery;
 
 import java.util.List;
 
-import com.backend.application.dto.delivery.ShellDeliveryResponse.LayoutLinkDelivery;
 import com.backend.domain.enums.NavigationItemType;
 import com.backend.domain.enums.NodePosition;
 
@@ -25,7 +24,7 @@ public class NavigationDeliveryResponse {
   private List<NavigationDeliveryResponse> children;
   private List<NavigationSectionDelivery> sections; // null = regular nav endpoint
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<LayoutLinkDelivery> flatLinks;
+  private List<LayoutLinkDeliveryDto> flatLinks;
 
   @Data
   @Builder
@@ -53,6 +52,6 @@ public class NavigationDeliveryResponse {
     private String title;
     private String href;
     private boolean isExternal;
-    private List<LayoutLinkDelivery> links;
+    private List<LayoutLinkDeliveryDto> links;
   }
 }

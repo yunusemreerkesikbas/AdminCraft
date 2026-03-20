@@ -217,8 +217,7 @@ public class SiteSettingsController {
                 v.tagline(),
                 mapSeoToPresentation(v.seo()),
                 v.footerText(),
-                v.headerTopbarText(),
-                null);
+                v.headerTopbarText());
           }));
     }
 

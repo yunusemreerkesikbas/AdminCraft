@@ -8,6 +8,7 @@ final class NavigationDeliveryUtils {
   static String resolveLocalizedHref(String href, boolean isExternal, String langCode) {
     if (href == null || href.isBlank()) return null;
     String h = href.trim();
+    if (langCode == null || langCode.isBlank()) return h;
     if (h.startsWith("#")) return h;
     if (isExternal) return h;
     if (h.equals("/")) return "/" + langCode;

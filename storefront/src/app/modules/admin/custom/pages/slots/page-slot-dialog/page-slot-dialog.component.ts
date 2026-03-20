@@ -244,13 +244,10 @@ export class PageSlotDialogComponent
     }
 
     protected editComponent(comp: SlotComponentResponse): void {
-        forkJoin([
-            this.#componentService.getComponentDetail(comp.componentId),
-            this.#componentService.listComponentTypes(),
-        ])
+        this.#componentService.getComponentDetail(comp.componentId)
             .pipe(take(1), takeUntil(this.destroy$))
             .subscribe({
-                next: ([detail, types]) => {
+                next: (detail) => {
                     const dialogRef = this.#dialog.open(
                         ComponentEditDialogComponent,
                         {
@@ -262,7 +259,6 @@ export class PageSlotDialogComponent
                             data: {
                                 mode: 'edit',
                                 component: detail,
-                                componentTypes: types,
                                 languages:
                                     this.#languageContextService.supportedLanguages(),
                             },
@@ -285,24 +281,35 @@ export class PageSlotDialogComponent
     }
 
     removeComponent(slot: PageSlotResponse, componentId: number): void {
-        this.#pageSlotService
-            .removeComponent(this.pageId, slot.slotName, componentId)
-            .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.#notificationService.success(
-                        this.#translocoService.translate(
-                            'admin.pageSlots.removeComponentSuccess'
-                        )
-                    );
-                    this.#loadSlots();
-                },
-                error: () =>
-                    this.#notificationService.alert(
-                        this.#translocoService.translate(
-                            'admin.pageSlots.removeComponentError'
-                        )
-                    ),
+        this.#confirmationService
+            .confirm(
+                'admin.pageSlots.removeComponentTitle',
+                'admin.pageSlots.removeComponentMessage',
+                'admin.common.delete'
+            )
+            .pipe(take(1), takeUntil(this.destroy$))
+            .subscribe((confirmed) => {
+                if (!confirmed) return;
+
+                this.#pageSlotService
+                    .removeComponent(this.pageId, slot.slotName, componentId)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: () => {
+                            this.#notificationService.success(
+                                this.#translocoService.translate(
+                                    'admin.pageSlots.removeComponentSuccess'
+                                )
+                            );
+                            this.#loadSlots();
+                        },
+                        error: () =>
+                            this.#notificationService.alert(
+                                this.#translocoService.translate(
+                                    'admin.pageSlots.removeComponentError'
+                                )
+                            ),
+                    });
             });
     }
 

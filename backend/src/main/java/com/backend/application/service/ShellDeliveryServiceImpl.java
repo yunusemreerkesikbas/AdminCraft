@@ -18,7 +18,7 @@ import com.backend.application.dto.delivery.ShellDeliveryResponse;
 import com.backend.application.dto.delivery.ShellDeliveryResponse.FooterDelivery;
 import com.backend.application.dto.delivery.ShellDeliveryResponse.HeaderDelivery;
 import com.backend.application.dto.delivery.ShellDeliveryResponse.LayoutBlockDelivery;
-import com.backend.application.dto.delivery.ShellDeliveryResponse.LayoutLinkDelivery;
+import com.backend.application.dto.delivery.LayoutLinkDeliveryDto;
 import com.backend.domain.entity.Component;
 import com.backend.domain.enums.Language;
 import com.backend.domain.repository.ComponentRepository;
@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
+  private static final String DEFAULT_LANG_CODE = "tr";
   private static final String HEADER_MAIN_NAVIGATION_ROLE = "header.mainNavigation";
   private static final String HEADER_PRIMARY_ROLE_PREFIX = "header.primary.";
   private static final String HEADER_CONTACT_INFO_ROLE = "header.contactInfo";
@@ -52,7 +53,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
     Map<String, ComponentDeliveryResponse> componentMap =
         componentDeliveryService.getComponentsByUids(uids, lang).data();
 
-    String langCode = lang != null ? lang.getCode() : "tr";
+    String langCode = lang != null ? lang.getCode() : DEFAULT_LANG_CODE;
 
     List<LayoutBlockDelivery> headerPrimary = new ArrayList<>();
     List<LayoutBlockDelivery> headerSecondary = new ArrayList<>();
@@ -114,7 +115,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
   private LayoutBlockDelivery toLayoutBlock(ComponentDeliveryResponse delivery, String role, String langCode) {
     NavigationDeliveryResponse navNode = delivery.navigationNode();
-    List<LayoutLinkDelivery> links;
+    List<LayoutLinkDeliveryDto> links;
     if (navNode != null) {
       links = collectLinks(navNode, langCode);
     } else {
@@ -161,7 +162,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
     if (root.getChildren() != null) {
       for (NavigationDeliveryResponse child : root.getChildren()) {
-        List<LayoutLinkDelivery> childLinks = collectLinks(child, langCode);
+        List<LayoutLinkDeliveryDto> childLinks = collectLinks(child, langCode);
         if (child.getTitle() == null && childLinks.isEmpty()) continue;
 
         String sectionTitle = child.getTitle() != null
@@ -169,7 +170,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
             : (!childLinks.isEmpty() ? childLinks.get(0).label() : child.getUid());
 
         if (childLinks.size() == 1) {
-          LayoutLinkDelivery link = childLinks.get(0);
+          LayoutLinkDeliveryDto link = childLinks.get(0);
           sections.add(NavigationDeliveryResponse.NavigationSectionDelivery.builder()
               .uid(child.getUid())
               .title(sectionTitle)
@@ -190,14 +191,14 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
     return sections;
   }
 
-  private List<LayoutLinkDelivery> collectLinks(NavigationDeliveryResponse node, String langCode) {
-    List<LayoutLinkDelivery> links = new ArrayList<>();
+  private List<LayoutLinkDeliveryDto> collectLinks(NavigationDeliveryResponse node, String langCode) {
+    List<LayoutLinkDeliveryDto> links = new ArrayList<>();
     if (node.getEntries() != null) {
       for (NavigationDeliveryResponse.EntryDeliveryDto entry : node.getEntries()) {
         String href = NavigationDeliveryUtils.resolveLocalizedHref(entry.getUrl(), entry.isExternal(), langCode);
         if (href == null) continue;
         String label = entry.getLinkName() != null ? entry.getLinkName() : entry.getUrl();
-        links.add(new LayoutLinkDelivery(entry.getUid(), label, href, entry.isExternal(),
+        links.add(new LayoutLinkDeliveryDto(entry.getUid(), label, href, entry.isExternal(),
             entry.getTarget(), entry.getLinkColor()));
       }
     }
@@ -209,9 +210,9 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
     return dedupeLinks(links);
   }
 
-  private List<LayoutLinkDelivery> buildLinksFromEntries(List<EntryDeliveryResponse> entries, String langCode) {
+  private List<LayoutLinkDeliveryDto> buildLinksFromEntries(List<EntryDeliveryResponse> entries, String langCode) {
     if (entries == null) return List.of();
-    Map<String, LayoutLinkDelivery> seen = new LinkedHashMap<>();
+    Map<String, LayoutLinkDeliveryDto> seen = new LinkedHashMap<>();
     for (EntryDeliveryResponse entry : entries) {
       if (Boolean.FALSE.equals(entry.getIsVisible())) continue;
 
@@ -235,15 +236,15 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
       String color = readEntryString(entry, "linkColor");
       String dedupKey = label + "|" + href + "|" + (target != null ? target : "") + "|" + (color != null ? color : "");
-      seen.putIfAbsent(dedupKey, new LayoutLinkDelivery(entry.getUid(), label, href, entry.isExternal(), target, color));
+      seen.putIfAbsent(dedupKey, new LayoutLinkDeliveryDto(entry.getUid(), label, href, entry.isExternal(), target, color));
     }
     return new ArrayList<>(seen.values());
   }
 
-  private List<LayoutLinkDelivery> dedupeLinks(List<LayoutLinkDelivery> links) {
+  private List<LayoutLinkDeliveryDto> dedupeLinks(List<LayoutLinkDeliveryDto> links) {
     Set<String> seen = new HashSet<>();
-    List<LayoutLinkDelivery> result = new ArrayList<>();
-    for (LayoutLinkDelivery link : links) {
+    List<LayoutLinkDeliveryDto> result = new ArrayList<>();
+    for (LayoutLinkDeliveryDto link : links) {
       String key = link.label() + "|" + link.href() + "|" + (link.target() != null ? link.target() : "");
       if (seen.add(key)) result.add(link);
     }

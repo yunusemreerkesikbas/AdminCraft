@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse.EntryDeliveryDto;
-import com.backend.application.dto.delivery.ShellDeliveryResponse.LayoutLinkDelivery;
+import com.backend.application.dto.delivery.LayoutLinkDeliveryDto;
 import com.backend.application.dto.request.CreateEntryCompositeRequest;
 import com.backend.application.dto.request.CreateEntryRequest;
 import com.backend.application.dto.request.CreateNodeCompositeRequest;
@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NavigationServiceImpl implements NavigationService {
 
   private static final int MAX_DEPTH = 5;
+  private static final String DEFAULT_LANG_CODE = "tr";
 
   private final NavigationNodeRepository nodeRepository;
   private final NavigationEntryRepository entryRepository;
@@ -843,7 +844,7 @@ public class NavigationServiceImpl implements NavigationService {
         .map(child -> buildDeliveryResponse(child, childrenByParentId, entriesByNodeId, lang))
         .toList();
 
-    List<LayoutLinkDelivery> flatLinks = computeFlatLinks(entries, children);
+    List<LayoutLinkDeliveryDto> flatLinks = computeFlatLinks(entries, children);
 
     return NavigationDeliveryResponse.builder()
         .uid(root.getUid())
@@ -856,22 +857,22 @@ public class NavigationServiceImpl implements NavigationService {
         .build();
   }
 
-  private List<LayoutLinkDelivery> computeFlatLinks(List<EntryDeliveryDto> entries,
+  private List<LayoutLinkDeliveryDto> computeFlatLinks(List<EntryDeliveryDto> entries,
       List<NavigationDeliveryResponse> children) {
-    LinkedHashMap<String, LayoutLinkDelivery> seen = new LinkedHashMap<>();
+    LinkedHashMap<String, LayoutLinkDeliveryDto> seen = new LinkedHashMap<>();
     if (entries != null) {
       for (EntryDeliveryDto e : entries) {
         if (e.getResolvedHref() == null) continue;
         String label = e.getLinkName() != null ? e.getLinkName() : (e.getUrl() != null ? e.getUrl() : e.getItemId());
         String key = label + "|" + e.getResolvedHref() + "|" + (e.getTarget() != null ? e.getTarget() : "");
-        seen.putIfAbsent(key, new LayoutLinkDelivery(e.getUid(), label, e.getResolvedHref(),
+        seen.putIfAbsent(key, new LayoutLinkDeliveryDto(e.getUid(), label, e.getResolvedHref(),
             e.isExternal(), e.getTarget(), e.getLinkColor()));
       }
     }
     if (children != null) {
       for (NavigationDeliveryResponse child : children) {
         if (child.getFlatLinks() != null) {
-          for (LayoutLinkDelivery link : child.getFlatLinks()) {
+          for (LayoutLinkDeliveryDto link : child.getFlatLinks()) {
             String key = link.label() + "|" + link.href() + "|" + (link.target() != null ? link.target() : "");
             seen.putIfAbsent(key, link);
           }
@@ -907,7 +908,7 @@ public class NavigationServiceImpl implements NavigationService {
   }
 
   private EntryDeliveryDto buildEntryDeliveryDto(NavigationEntry entry, String linkName, Language lang) {
-    String langCode = lang != null ? lang.getCode() : "tr";
+    String langCode = lang != null ? lang.getCode() : DEFAULT_LANG_CODE;
     String resolvedHref = NavigationDeliveryUtils.resolveEntryHref(
         entry.getItemType(), entry.getUrl(), entry.getItemId(),
         Boolean.TRUE.equals(entry.getIsExternal()), langCode);

@@ -210,8 +210,8 @@ FROM (
   UNION ALL SELECT 'b1400050-0000-4000-8000-000000000050', 'AboutAward1En', 'AboutAward1', 'EN', 'FWA, Site of the Day', NULL, JSON_OBJECT('subtitle', 'x2', 'date', 'Jun 24, 2024', 'mediaUid', 'homepage-award-1')
   UNION ALL SELECT 'b1400051-0000-4000-8000-000000000051', 'AboutAward2Tr', 'AboutAward2', 'TR', 'Awwwards İç Mekan Mükemmelliği', NULL, JSON_OBJECT('subtitle', 'x3', 'date', '24 Kasım, 2022', 'mediaUid', 'about-award-2')
   UNION ALL SELECT 'b1400052-0000-4000-8000-000000000052', 'AboutAward2En', 'AboutAward2', 'EN', 'Awwwards Interior Excellence', NULL, JSON_OBJECT('subtitle', 'x3', 'date', 'Nov 24, 2022', 'mediaUid', 'about-award-2')
-  UNION ALL SELECT 'b1400053-0000-4000-8000-000000000053', 'AboutAward3Tr', 'AboutAward3', 'TR', 'Loki, Sınırları Zorlayan Yıl Özeti 2022', NULL, JSON_OBJECT('subtitle', 'x1', 'date', '24 Mayıs, 2012', 'mediaUid', 'about-award-3')
-  UNION ALL SELECT 'b1400054-0000-4000-8000-000000000054', 'AboutAward3En', 'AboutAward3', 'EN', 'Loki boundary pushing year in Review 2022', NULL, JSON_OBJECT('subtitle', 'x1', 'date', 'May 24, 2012', 'mediaUid', 'about-award-3')
+  UNION ALL SELECT 'b1400053-0000-4000-8000-000000000053', 'AboutAward3Tr', 'AboutAward3', 'TR', 'Loki, Sınırları Zorlayan Yıl Özeti 2022', NULL, JSON_OBJECT('subtitle', 'x1', 'date', '24 Mayıs, 2022', 'mediaUid', 'about-award-3')
+  UNION ALL SELECT 'b1400054-0000-4000-8000-000000000054', 'AboutAward3En', 'AboutAward3', 'EN', 'Loki boundary pushing year in Review 2022', NULL, JSON_OBJECT('subtitle', 'x1', 'date', 'May 24, 2022', 'mediaUid', 'about-award-3')
   UNION ALL SELECT 'b1400055-0000-4000-8000-000000000055', 'AboutAward4Tr', 'AboutAward4', 'TR', 'Yeni Liko Tools Web Sitesi Yayında.', NULL, JSON_OBJECT('subtitle', 'x1', 'date', '10 Eylül, 2021', 'mediaUid', 'about-award-4')
   UNION ALL SELECT 'b1400056-0000-4000-8000-000000000056', 'AboutAward4En', 'AboutAward4', 'EN', 'The New Liko Tools Website is Live.', NULL, JSON_OBJECT('subtitle', 'x1', 'date', 'Sep 10, 2021', 'mediaUid', 'about-award-4')
   UNION ALL SELECT 'b1400057-0000-4000-8000-000000000057', 'AboutAward5Tr', 'AboutAward5', 'TR', 'Dünya Çapında Dijital Ajanslar', NULL, JSON_OBJECT('subtitle', 'x2', 'date', '12 Haziran, 2021', 'mediaUid', 'about-award-5')
@@ -248,7 +248,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0000005-0000-0001-000000000001', 'about-us-tr', p.id, 'TR', 'Hakkımızda', 'Hakkımızda', '/about-us', 'PUBLISHED'
+SELECT 'f0000005-0000-0001-0000-000000000001', 'about-us-tr', p.id, 'TR', 'Hakkımızda', 'Hakkımızda', '/about-us', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about-us'
 ON DUPLICATE KEY UPDATE
@@ -258,7 +258,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0000005-0000-0001-000000000002', 'about-us-en', p.id, 'EN', 'About Us', 'About Us', '/about-us', 'PUBLISHED'
+SELECT 'f0000005-0000-0001-0000-000000000002', 'about-us-en', p.id, 'EN', 'About Us', 'About Us', '/about-us', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about-us'
 ON DUPLICATE KEY UPDATE

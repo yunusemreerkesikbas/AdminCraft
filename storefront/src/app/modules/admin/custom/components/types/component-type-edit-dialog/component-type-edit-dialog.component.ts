@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,7 +38,6 @@ interface DialogData extends SpaDialogData {
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatIconModule,
         MatButtonModule,

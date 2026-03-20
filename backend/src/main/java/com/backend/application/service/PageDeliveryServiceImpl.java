@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
+import com.backend.application.util.UrlUtils;
 import com.backend.application.dto.delivery.ContentSlotDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotsWrapper;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
@@ -424,7 +425,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .description(i18n != null ? i18n.getDescription() : null)
                                 .isVisible(entry.getIsVisible())
                                 .styleClasses(entry.getStyleClasses())
-                                .isExternal(computeIsExternal(customFields))
+                                .isExternal(UrlUtils.computeIsExternal(customFields))
                                 .responsive(responsive)
                                 .customFields(customFields.isEmpty() ? null : customFields)
                                 .build();
@@ -561,19 +562,6 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 return effective;
         }
 
-        private static boolean isExternalUrl(Object value) {
-                if (!(value instanceof String url)) return false;
-                String trimmed = url.trim();
-                return trimmed.startsWith("http://") || trimmed.startsWith("https://")
-                                || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
-        }
-
-        private static boolean computeIsExternal(Map<String, Object> fields) {
-                Object buttonUrl = fields.get("buttonUrl");
-                Object linkUrl = fields.get("linkUrl");
-                if (buttonUrl == null && linkUrl == null) return false;
-                return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
-        }
 
         private ContentSlotsWrapper buildContentSlots(
                         List<PageSlot> slots,

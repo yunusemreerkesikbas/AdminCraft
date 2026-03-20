@@ -30,18 +30,9 @@ public record ShellDeliveryResponse(
       String title,
       String description,
       NavigationDeliveryResponse navigationNode,
-      List<LayoutLinkDelivery> links,
+      List<LayoutLinkDeliveryDto> links,
       String newsletterPlaceholder,
       String newsletterButtonLabel
   ) {}
 
-  @JsonInclude(NON_NULL)
-  public record LayoutLinkDelivery(
-      String uid,
-      String label,
-      String href,
-      boolean isExternal,
-      String target,
-      String color
-  ) {}
 }

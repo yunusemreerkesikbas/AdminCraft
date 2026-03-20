@@ -142,7 +142,7 @@ com.backend.infrastructure   → Repository Implementations, Config
 ### Rate Limiting
 
 - ✅ Provisioning: 5 req/min per tenant
-- ✅ CMS Delivery: 100 req/min per tenant
+- ℹ️ CMS Delivery: no application-level rate limit — use Traefik per-IP middleware if needed
 
 ### Authorization
 
