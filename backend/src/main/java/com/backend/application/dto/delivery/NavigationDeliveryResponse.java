@@ -5,6 +5,7 @@ import java.util.List;
 import com.backend.domain.enums.NavigationItemType;
 import com.backend.domain.enums.NodePosition;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,9 @@ public class NavigationDeliveryResponse {
   private Boolean isTab;
   private List<EntryDeliveryDto> entries;
   private List<NavigationDeliveryResponse> children;
+  private List<NavigationSectionDelivery> sections; // null = regular nav endpoint
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private List<LayoutLinkDeliveryDto> flatLinks;
 
   @Data
   @Builder
@@ -34,6 +38,20 @@ public class NavigationDeliveryResponse {
     private String linkName;
     private String linkColor;
     private String target;
-    private Boolean isExternal;
+    private boolean isExternal;
+    private String resolvedHref;
+  }
+
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class NavigationSectionDelivery {
+    private String uid;
+    private String title;
+    private String href;
+    private boolean isExternal;
+    private List<LayoutLinkDeliveryDto> links;
   }
 }

@@ -1,9 +1,7 @@
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { fuseAnimations } from '@fuse/animations';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
@@ -12,6 +10,11 @@ import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-
 import { SpaDialogComponent } from '@shared/components/spa-dialog';
 import { SpaDialogData } from '@shared/components/spa-dialog-base/spa-dialog-base.types';
 import { SpaFormDialog } from '@shared/components/spa-form-dialog';
+import {
+    SpaTabContainerComponent,
+    SpaTabContentDirective,
+    TabDefinition
+} from '@shared/components/spa-tab-container';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { take, takeUntil } from 'rxjs';
 import { EntryFieldsBuilderComponent } from '../../entries/entry-fields-builder/entry-fields-builder.component';
@@ -31,12 +34,11 @@ interface DialogData extends SpaDialogData {
     templateUrl: './component-type-edit-dialog.component.html',
     styleUrls: ['./component-type-edit-dialog.component.scss'],
     standalone: true,
+    encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: fuseAnimations,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
-        MatTabsModule,
         MatIconModule,
         MatButtonModule,
         TranslocoModule,
@@ -44,14 +46,20 @@ interface DialogData extends SpaDialogData {
         SpaInputComponent,
         SpaSelectComponent,
         SpaCheckboxComponent,
-        SpaDialogComponent
+        SpaDialogComponent,
+        SpaTabContainerComponent,
+        SpaTabContentDirective
     ]
 })
 export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTypeDto, DialogData> implements OnInit {
     readonly #service = inject(ComponentTypeService);
 
     protected form!: FormGroup;
-    categoryOptions = COMPONENT_CATEGORIES;
+    protected categoryOptions = COMPONENT_CATEGORIES;
+    protected readonly tabs: TabDefinition[] = [
+        { id: 'general', label: 'admin.components.types.tabs.general', icon: 'settings' },
+        { id: 'entryFields', label: 'admin.components.types.tabs.entryFields', icon: 'extension' }
+    ];
 
     override ngOnInit(): void {
         const typeData = this.data!.type;

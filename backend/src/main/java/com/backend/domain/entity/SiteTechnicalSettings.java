@@ -1,7 +1,6 @@
 package com.backend.domain.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,19 +47,6 @@ public class SiteTechnicalSettings {
     @Column(name = "indexing_enabled", nullable = false)
     @Builder.Default
     private Boolean indexingEnabled = true;
-
-    // Verification Codes
-    @Size(max = 100)
-    @Column(name = "google_verification", length = 100)
-    private String googleVerification;
-
-    @Size(max = 100)
-    @Column(name = "bing_verification", length = 100)
-    private String bingVerification;
-
-    @Size(max = 100)
-    @Column(name = "yandex_verification", length = 100)
-    private String yandexVerification;
 
     // Cookie Consent Settings
     @Column(name = "cookie_consent_enabled", nullable = false)

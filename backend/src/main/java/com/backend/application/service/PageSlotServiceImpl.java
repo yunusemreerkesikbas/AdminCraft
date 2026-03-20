@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -102,16 +103,20 @@ public class PageSlotServiceImpl implements PageSlotService {
     List<PageSlot> pageSlots = pageSlotRepository.findByPageId(pageId);
     List<PageSlot> sharedSlots = pageSlotRepository.findSharedSlots();
 
+    // Pre-load which page slots have at least one component, so merge functions can
+    // fall back to the shared slot when a page slot exists but is empty (inherited behaviour).
+    Set<Long> pageSlotIdsWithComponents = buildPageSlotIdsWithComponents(pageSlots);
+
     if (page.getTemplateId() == null) {
-      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots));
+      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots, pageSlotIdsWithComponents));
     }
 
     List<TemplateSlot> templateSlots = templateSlotRepository.findByTemplateId(page.getTemplateId());
     if (templateSlots.isEmpty()) {
-      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots));
+      return mapSlotsToDtos(mergeSlotsWithoutTemplate(pageSlots, sharedSlots, pageSlotIdsWithComponents));
     }
 
-    return mapSlotsToDtos(resolveEffectiveTemplateSlots(pageId, templateSlots, pageSlots, sharedSlots));
+    return mapSlotsToDtos(resolveEffectiveTemplateSlots(pageId, templateSlots, pageSlots, sharedSlots, pageSlotIdsWithComponents));
   }
 
   @Override
@@ -332,14 +337,22 @@ public class PageSlotServiceImpl implements PageSlotService {
     }
   }
 
-  private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots) {
-    // Page-specific slot overrides shared slot with same slotName.
+  private List<PageSlot> mergeSlotsWithoutTemplate(List<PageSlot> pageSlots, List<PageSlot> sharedSlots,
+      Set<Long> pageSlotIdsWithComponents) {
+    // Page-specific slot takes priority over shared slot (Hybris CMS standard).
+    // Exception: if the page slot is empty (no components), inherit from shared slot so
+    // the admin panel reflects what will actually be served to the end user.
     Map<String, PageSlot> bySlotName = new LinkedHashMap<>();
     for (PageSlot shared : sharedSlots) {
       bySlotName.putIfAbsent(shared.getSlotName(), shared);
     }
     for (PageSlot pageSlot : pageSlots) {
-      bySlotName.put(pageSlot.getSlotName(), pageSlot);
+      boolean hasComponents = pageSlot.getId() != null && pageSlotIdsWithComponents.contains(pageSlot.getId());
+      if (hasComponents) {
+        bySlotName.put(pageSlot.getSlotName(), pageSlot);
+      } else {
+        bySlotName.putIfAbsent(pageSlot.getSlotName(), pageSlot);
+      }
     }
     return bySlotName.values().stream()
         .sorted(Comparator
@@ -352,7 +365,8 @@ public class PageSlotServiceImpl implements PageSlotService {
       Long pageId,
       List<TemplateSlot> templateSlots,
       List<PageSlot> pageSlots,
-      List<PageSlot> sharedSlots) {
+      List<PageSlot> sharedSlots,
+      Set<Long> pageSlotIdsWithComponents) {
     Map<String, PageSlot> pageBySlotName = pageSlots.stream()
         .collect(Collectors.toMap(PageSlot::getSlotName, slot -> slot, (first, second) -> first));
     Map<String, PageSlot> sharedBySlotName = sharedSlots.stream()
@@ -360,10 +374,15 @@ public class PageSlotServiceImpl implements PageSlotService {
 
     List<PageSlot> effectiveSlots = new ArrayList<>();
     for (TemplateSlot templateSlot : templateSlots) {
-      PageSlot source = pageBySlotName.get(templateSlot.getSlotName());
-      if (source == null) {
-        source = sharedBySlotName.get(templateSlot.getSlotName());
-      }
+      // Page-specific slot takes priority over shared slot (Hybris CMS standard).
+      // Exception: if the page slot is empty (no components), fall back to shared so
+      // the admin panel reflects what will actually be served to the end user.
+      PageSlot pageSlot = pageBySlotName.get(templateSlot.getSlotName());
+      boolean pageHasComponents = pageSlot != null && pageSlot.getId() != null
+          && pageSlotIdsWithComponents.contains(pageSlot.getId());
+      PageSlot source = pageHasComponents
+          ? pageSlot
+          : sharedBySlotName.getOrDefault(templateSlot.getSlotName(), pageSlot);
       effectiveSlots.add(buildEffectiveSlot(pageId, templateSlot, source));
     }
     return effectiveSlots;
@@ -482,5 +501,13 @@ public class PageSlotServiceImpl implements PageSlotService {
         typeName,
         sc.getSortOrder(),
         sc.getIsVisible());
+  }
+
+  private Set<Long> buildPageSlotIdsWithComponents(List<PageSlot> pageSlots) {
+    List<Long> ids = pageSlots.stream().map(PageSlot::getId).filter(Objects::nonNull).toList();
+    if (ids.isEmpty()) return Set.of();
+    return slotComponentRepository.findBySlotIdIn(ids).stream()
+        .map(SlotComponent::getSlotId)
+        .collect(Collectors.toSet());
   }
 }

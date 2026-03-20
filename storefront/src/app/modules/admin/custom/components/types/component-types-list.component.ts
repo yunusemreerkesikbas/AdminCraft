@@ -161,7 +161,8 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
         }
 
         const dialogRef = this.#matDialog.open(ComponentTypeEditDialogComponent, {
-            width: '800px',
+            width: '560px',
+            maxWidth: '95vw',
             maxHeight: '90vh',
             disableClose: true,
             data: { type }

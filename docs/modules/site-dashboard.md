@@ -12,7 +12,7 @@ Site Dashboard is a unified admin interface that consolidates **Site Management*
 - **Address**: Business address and map embed
 - **Social**: Social media links
 - **SEO**: Meta tags, Open Graph, and search engine settings (per language, dynamic language support)
-- **Technical**: robots.txt, verification codes, cookie consent
+- **Technical**: robots.txt, sitemap, search engine indexing, cookie consent
 - **Security**: Two-factor authentication policy configuration
 
 ## Architecture
@@ -39,7 +39,7 @@ Migrations in `backend/src/main/resources/db/tenant/core/`:
 | Entity                  | Purpose                                                                  |
 | ----------------------- | ------------------------------------------------------------------------ |
 | `SiteActivity`          | Tracks user actions on pages, components, media, products, site settings |
-| `SiteTechnicalSettings` | Stores robots.txt, verification codes, cookie consent    |
+| `SiteTechnicalSettings` | Stores robots.txt, sitemap config, search engine indexing, cookie consent |
 
 ## Admin API (tenant-scoped, authenticated)
 
@@ -57,7 +57,7 @@ New endpoints under `/api/sites`:
 | `GET`   | `/sites/security`  | Security settings (2FA policy)                        |
 | `PATCH` | `/sites/security`  | Update security settings                              |
 
-> **Not:** Public robots.txt endpoint'i `SiteController`'da değil, `CmsDeliveryController`'dadır: `GET /api/cms/robots.txt` (no auth, 100 req/min). Bkz. [cms-delivery.md](./cms-delivery.md#robotstxt).
+> **Not:** Public robots.txt endpoint'i `SiteController`'da değil, `CmsDeliveryController`'dadır: `GET /api/cms/robots.txt` (no auth, no app-level rate limit). Bkz. [cms-delivery.md](./cms-delivery.md#robotstxt).
 
 ### Response DTOs
 
@@ -114,8 +114,7 @@ New endpoints under `/api/sites`:
   "searchEngine": {
     "robotsTxt": "User-agent: *\nAllow: /",
     "sitemapEnabled": true,
-    "indexingEnabled": true,
-    "verification": { "google": "xxx", "bing": null, "yandex": null }
+    "indexingEnabled": true
   },
   "cookieConsent": {
     "enabled": false,
@@ -249,7 +248,7 @@ siteSecuritySettings: 'sites/security',
 #### Backend Validation
 
 - **Validation Limits** (enforced in `SiteTechnicalPatchRequest` via `ValidationConstants`):
-  - `verificationCode`: Max 100 chars
+  - `robotsTxt`: Max 10,000 chars (also listed above)
   - `robotsTxt`: Max 10,000 chars
   - `cookieConsentText`: Max 2,000 chars
 

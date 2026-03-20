@@ -13,12 +13,6 @@ public record SiteTechnicalPatchRequest(
         Boolean sitemapEnabled,
         Boolean indexingEnabled,
 
-        @Size(max = ValidationConstants.VERIFICATION_CODE_MAX_LENGTH, message = "Google verification code must not exceed {max} characters") String googleVerification,
-
-        @Size(max = ValidationConstants.VERIFICATION_CODE_MAX_LENGTH, message = "Bing verification code must not exceed {max} characters") String bingVerification,
-
-        @Size(max = ValidationConstants.VERIFICATION_CODE_MAX_LENGTH, message = "Yandex verification code must not exceed {max} characters") String yandexVerification,
-
         Boolean cookieConsentEnabled,
 
         @Size(max = ValidationConstants.COOKIE_CONSENT_TEXT_MAX_LENGTH) String cookieConsentText) {
@@ -27,9 +21,6 @@ public record SiteTechnicalPatchRequest(
         return robotsTxt != null ||
                 sitemapEnabled != null ||
                 indexingEnabled != null ||
-                googleVerification != null ||
-                bingVerification != null ||
-                yandexVerification != null ||
                 cookieConsentEnabled != null ||
                 cookieConsentText != null;
     }

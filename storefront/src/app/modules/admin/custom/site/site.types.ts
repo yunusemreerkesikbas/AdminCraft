@@ -91,13 +91,6 @@ export interface SearchEngineDto {
     robotsTxt: string | null;
     sitemapEnabled: boolean;
     indexingEnabled: boolean;
-    verification: VerificationDto;
-}
-
-export interface VerificationDto {
-    google: string | null;
-    bing: string | null;
-    yandex: string | null;
 }
 
 export interface CookieConsentDto {
@@ -109,9 +102,6 @@ export interface SiteTechnicalPatchRequest {
     robotsTxt?: string | null;
     sitemapEnabled?: boolean;
     indexingEnabled?: boolean;
-    googleVerification?: string | null;
-    bingVerification?: string | null;
-    yandexVerification?: string | null;
     cookieConsentEnabled?: boolean;
     cookieConsentText?: string | null;
 }

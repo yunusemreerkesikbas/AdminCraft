@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
+import com.backend.application.util.UrlUtils;
 import com.backend.application.dto.delivery.ContentSlotDeliveryResponse;
 import com.backend.application.dto.delivery.ContentSlotsWrapper;
 import com.backend.application.dto.delivery.EntryDeliveryResponse;
@@ -63,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PageDeliveryServiceImpl implements PageDeliveryService {
 
         private static final Set<String> RESERVED_FIELDS = Set.of(
-                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive");
+                        "uid", "order", "title", "description", "isVisible", "styleClasses", "responsive", "isExternal");
 
         private final PageRepository pageRepository;
         private final PageI18nRepository pageI18nRepository;
@@ -424,6 +425,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                                 .description(i18n != null ? i18n.getDescription() : null)
                                 .isVisible(entry.getIsVisible())
                                 .styleClasses(entry.getStyleClasses())
+                                .isExternal(UrlUtils.computeIsExternal(customFields))
                                 .responsive(responsive)
                                 .customFields(customFields.isEmpty() ? null : customFields)
                                 .build();
@@ -559,6 +561,7 @@ public class PageDeliveryServiceImpl implements PageDeliveryService {
                 effective.setSortOrder(templateSlot.getSortOrder());
                 return effective;
         }
+
 
         private ContentSlotsWrapper buildContentSlots(
                         List<PageSlot> slots,

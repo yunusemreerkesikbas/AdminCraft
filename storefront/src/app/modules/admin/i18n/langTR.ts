@@ -616,6 +616,8 @@ export const langTR = {
             deleteError: 'Slot silinemedi',
             addComponentSuccess: 'Bileşen slota eklendi',
             addComponentError: 'Bileşen eklenemedi',
+            removeComponentTitle: 'Bileşeni Kaldır',
+            removeComponentMessage: 'Bu bileşeni slottan kaldırmak istediğinizden emin misiniz?',
             removeComponentSuccess: 'Bileşen slottan kaldırıldı',
             removeComponentError: 'Bileşen kaldırılamadı',
             reorderError: 'Bileşen sıralaması değiştirilemedi',
@@ -1364,6 +1366,7 @@ export const langTR = {
             },
             entryFields: {
                 title: 'Öğe Alanları',
+                basicInfo: 'Temel Bilgiler',
                 subtitle: 'Bu alanlar bileşen oluşturulurken doldurulacaktır',
                 noFieldsDesc:
                     'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
@@ -1396,6 +1399,7 @@ export const langTR = {
                     textarea: 'Uzun Metin',
                     number: 'Sayı',
                     boolean: 'Evet/Hayır',
+                    media: 'Medya',
                 },
                 custom: {
                     productPrice: 'Ürün Fiyatı',
@@ -1438,6 +1442,7 @@ export const langTR = {
                 create: 'Yeni Öğe Oluştur',
                 edit: 'Öğe Düzenle',
                 noEntries: 'Henüz öğe bulunmuyor',
+                noEntriesDesc: 'Bu bileşen için henüz bir öğe oluşturulmadı.',
                 noItems: 'Henüz öğe bulunmuyor',
                 addEntry: 'Öğe Ekle',
                 addItem: 'Öğe Ekle',

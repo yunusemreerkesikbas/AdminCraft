@@ -44,7 +44,10 @@ Public delivery resolution rules:
 
 ### Navigation
 
-- `GET /api/cms/navigation/{uid}`
+- `GET /api/cms/navigation/{uid}?lang=TR`
+  - Returns the navigation tree rooted at `{uid}`.
+  - `entries[].resolvedHref` — locale-prefixed href pre-computed by the backend; `null` for `COMPONENT` type entries.
+  - `flatLinks[]` — deduplicated flat list of all links in the subtree, pre-built for `STATICPAGE` renderers. `null` when empty.
 
 ### Sitemap pages
 
@@ -62,7 +65,7 @@ Public delivery resolution rules:
   - Reads the effective robots.txt from `SiteTechnicalService.getRobotsTxt()`.
   - When `indexingEnabled = false` → `Disallow: /`; otherwise → the admin-configured robots.txt (or a default `Allow: /` with `Sitemap: /sitemap.xml`).
   - No auth required — public delivery endpoint.
-  - Subject to the standard 100 req/min tenant rate limit.
+  - No application-level rate limit; if needed, configure per-IP rate limiting via Traefik middleware.
 
 ### Media
 
@@ -96,9 +99,7 @@ Note:
 
 ## Rate limiting
 
-From `CmsDeliveryController` and `CmsMediaDeliveryController`:
-
-- **100 req/min per tenant**, enforced using `TenantContext.tenantId`
+`CmsDeliveryController` and `CmsMediaDeliveryController` have **no application-level rate limiter**. These are high-traffic public endpoints — a global counter would affect all legitimate users equally. If rate limiting is needed, apply it as a **per-IP Traefik middleware** at the infrastructure level.
 
 ## Response contract (high level)
 

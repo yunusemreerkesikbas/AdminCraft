@@ -95,8 +95,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
             SiteSetting::getSettingKey,
             SiteSetting::getSettingValue,
             (existing, replacement) -> {
-              log.warn("Duplicate global setting found. Keeping existing: {} over replacement: {}", existing,
-                  replacement);
+              log.warn("Duplicate global setting found - keeping existing value");
               return existing;
             }));
 
@@ -152,8 +151,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
             SiteSetting::getSettingKey,
             SiteSetting::getSettingValue,
             (existing, replacement) -> {
-              log.warn("Duplicate i18n setting found. Keeping existing: {} over replacement: {}", existing,
-                  replacement);
+              log.warn("Duplicate i18n setting found - keeping existing value");
               return existing;
             }));
 
@@ -171,9 +169,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
         i18nSettingsMap.get("i18n.tagline"),
         seo,
         i18nSettingsMap.get("i18n.footerText"),
-        i18nSettingsMap.get("i18n.headerTopbarText"),
-        null // addressLocalized - not implemented yet
-    );
+        i18nSettingsMap.get("i18n.headerTopbarText"));
   }
 
   private List<SiteSetting> processGlobalSettings(Long tenantId, SiteSettingsAppGlobalDto global, Long updatedBy) {

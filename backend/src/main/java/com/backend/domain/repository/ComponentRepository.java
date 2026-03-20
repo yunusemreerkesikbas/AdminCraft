@@ -50,4 +50,6 @@ public interface ComponentRepository {
     long countByStatus(ComponentStatus status);
 
     long countByCreatedAtAfter(LocalDateTime date);
+
+    List<Component> findPublishedShellComponents();
 }

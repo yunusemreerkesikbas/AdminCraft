@@ -119,4 +119,9 @@ public class ComponentRepositoryImpl implements ComponentRepository {
     public long countByCreatedAtAfter(LocalDateTime date) {
         return jpaRepository.countByCreatedAtAfter(date);
     }
+
+    @Override
+    public List<Component> findPublishedShellComponents() {
+        return jpaRepository.findPublishedShellComponents();
+    }
 }

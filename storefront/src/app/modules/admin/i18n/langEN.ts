@@ -620,6 +620,8 @@ export const langEN = {
             deleteError: 'Failed to delete slot',
             addComponentSuccess: 'Component added to slot',
             addComponentError: 'Failed to add component',
+            removeComponentTitle: 'Remove Component',
+            removeComponentMessage: 'Are you sure you want to remove this component from the slot?',
             removeComponentSuccess: 'Component removed from slot',
             removeComponentError: 'Failed to remove component',
             reorderError: 'Failed to reorder components',
@@ -1389,6 +1391,7 @@ export const langEN = {
             },
             entryFields: {
                 title: 'Entry Fields',
+                basicInfo: 'Basic Info',
                 subtitle:
                     'These fields will be populated when creating the component',
                 noFieldsDesc:
@@ -1422,6 +1425,7 @@ export const langEN = {
                     textarea: 'Long Text',
                     number: 'Number',
                     boolean: 'Yes/No',
+                    media: 'Media',
                 },
                 custom: {
                     productPrice: 'Product Price',
@@ -1464,6 +1468,7 @@ export const langEN = {
                 create: 'Create New Entry',
                 edit: 'Edit Entry',
                 noEntries: 'No entries yet',
+                noEntriesDesc: 'No entries have been created for this component yet.',
                 noItems: 'No entries yet',
                 addEntry: 'Add Entry',
                 addItem: 'Add Entry',

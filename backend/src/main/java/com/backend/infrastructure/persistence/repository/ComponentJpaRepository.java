@@ -82,4 +82,13 @@ interface ComponentJpaRepository extends JpaRepository<Component, Long> {
     long countByStatus(ComponentStatus status);
 
     long countByCreatedAtAfter(LocalDateTime date);
+
+    @Query(value = """
+                SELECT * FROM components
+                WHERE status = 'PUBLISHED'
+                AND (JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.layoutRole')) LIKE 'header.%'
+                  OR JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.layoutRole')) LIKE 'footer.%')
+                ORDER BY display_order ASC
+                """, nativeQuery = true)
+    List<Component> findPublishedShellComponents();
 }

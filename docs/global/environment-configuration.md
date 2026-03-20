@@ -115,20 +115,22 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 | `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
 | `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
+| `NEXT_IMAGE_DOMAINS`           | `127.0.0.1`                     | `s1.api.craftive.io`                   | `api.craftive.io`                |
 
 Available scripts:
 
 | Script                   | Description                                    |
 | ------------------------ | ---------------------------------------------- |
-| `yarn dev`               | Dev server with `.env.development`             |
-| `yarn dev:stage`         | Dev server with `.env.staging`                 |
-| `yarn build`             | SSR production build                           |
-| `yarn build:dev`         | SSR build with `.env.development`              |
-| `yarn build:stage`       | SSR build with `.env.staging`                  |
-| `yarn build:static`      | Static export (CSR) with `.env.production`     |
-| `yarn start`             | SSR production server                          |
-| `yarn start:stage`       | SSR server with `.env.staging`                 |
-| `yarn start:static`      | Serve `out/` folder (for static export builds) |
+| `npm run dev`            | Dev server with `.env.development`             |
+| `npm run dev:stage`      | Dev server with `.env.staging`                 |
+| `npm run build`          | SSR production build                           |
+| `npm run build:dev`      | SSR build with `.env.development`              |
+| `npm run build:stage`    | SSR build with `.env.staging`                  |
+| `npm run build:prod`     | SSR production build (same as `build`)         |
+| `npm run build:static`   | Static export (CSR) with `.env.production`     |
+| `npm run start`          | SSR production server                          |
+| `npm run start:stage`    | SSR server with `.env.staging`                 |
+| `npm run start:static`   | Serve `out/` folder (for static export builds) |
 
 ### Language Configuration
 
@@ -178,7 +180,7 @@ npm run start:dev
 
 # Next.js headless storefront (uses .env.development + .env.local)
 cd storefront-nextjs
-yarn dev
+npm run dev
 ```
 
 ### Running with Specific Profile
@@ -191,7 +193,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
 npm run start:stage
 
 # Next.js with stage config
-yarn dev:stage
+npm run dev:stage
 ```
 
 ### Build for Production
@@ -205,10 +207,10 @@ java -jar target/*.jar --spring.profiles.active=prod
 npm run build:prod
 
 # Next.js SSR build
-yarn build
+npm run build
 
 # Next.js static (CSR) build
-yarn build:static
+npm run build:static
 ```
 
 ## Required Environment Variables

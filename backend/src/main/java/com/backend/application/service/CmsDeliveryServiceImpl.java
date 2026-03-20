@@ -44,6 +44,7 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
   private static final String SEO_OG_TITLE_KEY = "i18n.seo.ogTitle";
   private static final String SEO_OG_DESCRIPTION_KEY = "i18n.seo.ogDescription";
   private static final String SEO_TWITTER_CARD_KEY = "i18n.seo.twitterCard";
+  private static final String SEO_TITLE_SEPARATOR_KEY = "i18n.seo.titleSeparator";
 
   // Global contact
   private static final String CONTACT_EMAIL_KEY   = "global.contactEmail";
@@ -177,32 +178,25 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
     String ogTitle = readValue(localizedSettings, SEO_OG_TITLE_KEY);
     String ogDescription = readValue(localizedSettings, SEO_OG_DESCRIPTION_KEY);
     String twitterCard = readValue(localizedSettings, SEO_TWITTER_CARD_KEY);
+    String titleSeparator = readValue(localizedSettings, SEO_TITLE_SEPARATOR_KEY);
 
     if (title == null && description == null && keywords == null && ogTitle == null && ogDescription == null
-        && twitterCard == null) {
+        && twitterCard == null && titleSeparator == null) {
       return null;
     }
 
-    return new SiteDeliveryResponse.SeoInfo(title, description, keywords, ogTitle, ogDescription, twitterCard);
+    return new SiteDeliveryResponse.SeoInfo(title, description, keywords, ogTitle, ogDescription, twitterCard, titleSeparator);
   }
 
   private SiteDeliveryResponse.SearchEngineInfo buildSearchEngineInfo(Site site, Map<String, String> globalSettings) {
     SiteTechnicalSettings settings = siteTechnicalSettingsRepository.findBySiteId(site.getId()).orElse(null);
-    String googleVerification = settings != null ? readValue(settings.getGoogleVerification()) : null;
-    String bingVerification = settings != null ? readValue(settings.getBingVerification()) : null;
-    String yandexVerification = settings != null ? readValue(settings.getYandexVerification()) : null;
-    SiteDeliveryResponse.VerificationInfo verification =
-        googleVerification == null && bingVerification == null && yandexVerification == null
-            ? null
-            : new SiteDeliveryResponse.VerificationInfo(googleVerification, bingVerification, yandexVerification);
 
     String defaultRobots = readValue(globalSettings, DEFAULT_ROBOTS_KEY);
 
     return new SiteDeliveryResponse.SearchEngineInfo(
         settings != null ? settings.getSitemapEnabled() : Boolean.TRUE,
         settings != null ? settings.getIndexingEnabled() : Boolean.TRUE,
-        defaultRobots,
-        verification);
+        defaultRobots);
   }
 
   private SiteDeliveryResponse.ContactInfo buildContactInfo(Map<String, String> g) {

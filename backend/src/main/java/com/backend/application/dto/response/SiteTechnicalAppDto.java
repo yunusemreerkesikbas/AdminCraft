@@ -11,14 +11,7 @@ public record SiteTechnicalAppDto(
   public record SearchEngineAppDto(
       String robotsTxt,
       Boolean sitemapEnabled,
-      Boolean indexingEnabled,
-      VerificationAppDto verification) {
-  }
-
-  public record VerificationAppDto(
-      String google,
-      String bing,
-      String yandex) {
+      Boolean indexingEnabled) {
   }
 
   public record CookieConsentAppDto(

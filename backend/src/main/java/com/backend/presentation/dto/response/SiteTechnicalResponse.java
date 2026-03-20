@@ -16,15 +16,7 @@ public record SiteTechnicalResponse(
     public record SearchEngineDto(
             String robotsTxt,
             Boolean sitemapEnabled,
-            Boolean indexingEnabled,
-            VerificationDto verification) {
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record VerificationDto(
-            String google,
-            String bing,
-            String yandex) {
+            Boolean indexingEnabled) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

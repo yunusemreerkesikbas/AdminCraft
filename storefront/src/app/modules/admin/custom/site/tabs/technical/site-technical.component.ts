@@ -19,7 +19,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoModule } from '@jsverse/transloco';
-import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
@@ -40,7 +39,6 @@ import { SiteTechnicalResponse } from '../../site.types';
         MatButtonModule,
         MatIconModule,
         TranslocoModule,
-        SpaInputComponent,
         SpaTextareaComponent,
         SpaToggleComponent,
     ],
@@ -87,9 +85,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
             robotsTxt: formValue.robotsTxt,
             sitemapEnabled: formValue.sitemapEnabled,
             indexingEnabled: formValue.indexingEnabled,
-            googleVerification: formValue.googleVerification,
-            bingVerification: formValue.bingVerification,
-            yandexVerification: formValue.yandexVerification,
             cookieConsentEnabled: formValue.cookieConsentEnabled,
             cookieConsentText: formValue.cookieConsentText,
         };
@@ -131,18 +126,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
             ],
             sitemapEnabled: [true],
             indexingEnabled: [true],
-            googleVerification: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.VERIFICATION_CODE_MAX)],
-            ],
-            bingVerification: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.VERIFICATION_CODE_MAX)],
-            ],
-            yandexVerification: [
-                '',
-                [Validators.maxLength(VALIDATION_LIMITS.VERIFICATION_CODE_MAX)],
-            ],
             cookieConsentEnabled: [false],
             cookieConsentText: [
                 '',
@@ -163,12 +146,6 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
             sitemapEnabled: this.technical.searchEngine?.sitemapEnabled ?? true,
             indexingEnabled:
                 this.technical.searchEngine?.indexingEnabled ?? true,
-            googleVerification:
-                this.technical.searchEngine?.verification?.google || '',
-            bingVerification:
-                this.technical.searchEngine?.verification?.bing || '',
-            yandexVerification:
-                this.technical.searchEngine?.verification?.yandex || '',
             cookieConsentEnabled:
                 this.technical.cookieConsent?.enabled ?? false,
             cookieConsentText: this.technical.cookieConsent?.text || '',

@@ -18,6 +18,7 @@ import com.backend.application.dto.delivery.EntryDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.ResponsiveMediaDeliveryResponse;
 import com.backend.application.util.MediaFieldExpander;
+import com.backend.application.util.UrlUtils;
 import com.backend.domain.entity.Component;
 import com.backend.domain.entity.ComponentEntry;
 import com.backend.domain.entity.ComponentEntryI18n;
@@ -207,7 +208,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18n != null ? i18n.getDescription() : null)
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
-        .isExternal(computeIsExternal(customFields))
+        .isExternal(UrlUtils.computeIsExternal(customFields))
         .responsive(responsive)
         .customFields(customFields.isEmpty() ? null : customFields)
         .build();
@@ -281,7 +282,7 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
         .description(i18nOpt.map(ComponentEntryI18n::getDescription).orElse(null))
         .isVisible(entry.getIsVisible())
         .styleClasses(entry.getStyleClasses())
-        .isExternal(computeIsExternal(expandedFields))
+        .isExternal(UrlUtils.computeIsExternal(expandedFields))
         .responsive(responsive)
         .customFields(expandedFields.isEmpty() ? null : expandedFields)
         .build();
@@ -332,17 +333,4 @@ public class ComponentDeliveryServiceImpl implements ComponentDeliveryService {
     return type != null && type.isNavigationAware();
   }
 
-  private static boolean isExternalUrl(Object value) {
-    if (!(value instanceof String url)) return false;
-    String trimmed = url.trim();
-    return trimmed.startsWith("http://") || trimmed.startsWith("https://")
-        || trimmed.startsWith("mailto:") || trimmed.startsWith("tel:");
-  }
-
-  private static Boolean computeIsExternal(Map<String, Object> fields) {
-    Object buttonUrl = fields.get("buttonUrl");
-    Object linkUrl = fields.get("linkUrl");
-    if (buttonUrl == null && linkUrl == null) return null;
-    return isExternalUrl(buttonUrl) || isExternalUrl(linkUrl);
-  }
 }

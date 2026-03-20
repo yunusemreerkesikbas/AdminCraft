@@ -17,10 +17,12 @@ import com.backend.application.dto.delivery.BatchDeliveryResponse;
 import com.backend.application.dto.delivery.ComponentDeliveryResponse;
 import com.backend.application.dto.delivery.NavigationDeliveryResponse;
 import com.backend.application.dto.delivery.PageDeliveryResponse;
+import com.backend.application.dto.delivery.ShellDeliveryResponse;
 import com.backend.application.dto.delivery.SiteDeliveryResponse;
 import com.backend.application.dto.delivery.SitemapPageEntry;
 import com.backend.application.service.CmsDeliveryService;
 import com.backend.application.service.NavigationService;
+import com.backend.application.service.ShellDeliveryService;
 import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
 import com.backend.shared.common.ApiResponse;
@@ -39,6 +41,7 @@ public class CmsDeliveryController {
   private final CmsDeliveryService cmsDeliveryService;
   private final NavigationService navigationService;
   private final SiteTechnicalService siteTechnicalService;
+  private final ShellDeliveryService shellDeliveryService;
   private final MessageSource messageSource;
 
   @GetMapping("/components/{uid}")
@@ -150,6 +153,22 @@ public class CmsDeliveryController {
     List<SitemapPageEntry> entries = cmsDeliveryService.getSitemapPages(resolvedLang);
     return ResponseEntity.ok(ApiResponse.success(
         messageSource.getMessage("cms.sitemap.found", null, locale), entries));
+  }
+
+  @GetMapping("/shell")
+  public ResponseEntity<ApiResponse<ShellDeliveryResponse>> getShell(
+      @RequestParam(required = false) Language lang,
+      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
+
+    Locale locale = Locale.forLanguageTag(acceptLanguage);
+    Language resolvedLang = resolveLanguage(lang, acceptLanguage);
+    log.debug("CMS Delivery: Fetching shell, lang={}", resolvedLang);
+
+    return shellDeliveryService.getShellForDelivery(resolvedLang)
+        .map(shell -> ResponseEntity.ok(
+            ApiResponse.success(messageSource.getMessage("cms.shell.found", null, locale), shell)))
+        .orElseGet(() -> ResponseEntity.ok(
+            ApiResponse.error(messageSource.getMessage("cms.shell.not.found", null, locale))));
   }
 
   @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)

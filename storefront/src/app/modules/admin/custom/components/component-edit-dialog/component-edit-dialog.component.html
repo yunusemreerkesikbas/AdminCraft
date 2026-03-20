@@ -23,16 +23,24 @@
                     >
                     </spa-input>
 
-                    <spa-select
-                        formControlName="componentTypeId"
-                        [label]="'admin.components.fields.type' | transloco"
-                        [options]="componentTypeOptions"
-                        [placeholder]="
-                            'admin.common.placeholders.selectType' | transloco
-                        "
-                        [required]="true"
-                    >
-                    </spa-select>
+                    @if (data.mode === 'edit') {
+                        <spa-input
+                            formControlName="componentTypeName"
+                            [label]="'admin.components.fields.type' | transloco"
+                        >
+                        </spa-input>
+                    } @else {
+                        <spa-select
+                            formControlName="componentTypeId"
+                            [label]="'admin.components.fields.type' | transloco"
+                            [options]="componentTypeOptions"
+                            [placeholder]="
+                                'admin.common.placeholders.selectType' | transloco
+                            "
+                            [required]="true"
+                        >
+                        </spa-select>
+                    }
 
                 </div>
 

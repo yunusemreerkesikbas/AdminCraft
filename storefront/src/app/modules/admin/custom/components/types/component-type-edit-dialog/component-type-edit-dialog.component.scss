@@ -1,33 +1,110 @@
-:host {
+spa-component-type-edit-dialog {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-}
-
-:host ::ng-deep .component-tabs {
-    width: 100%;
-    min-width: 0;
-}
-
-:host ::ng-deep .component-tabs .mat-mdc-tab-body-wrapper {
     overflow: hidden;
 }
 
-:host ::ng-deep .component-tabs .mat-mdc-tab-body-content {
-    overflow-x: hidden;
-    max-width: 100%;
+spa-component-type-edit-dialog .spa-dialog-content.spa-dialog-content--tabbed {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+
+    .mat-mdc-tab-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .mat-mdc-tab-body-wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .mat-mdc-tab-body {
+        height: 100%;
+    }
+
+    .mat-mdc-tab-body-content {
+        height: 100%;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+    }
 }
 
-.component-tab-panel {
-    padding: 1.5rem;
+spa-component-type-edit-dialog .spa-dialog-content.spa-dialog-content--tabbed .mat-mdc-tab-body-content {
+    padding: 0 !important;
+}
+
+spa-component-type-edit-dialog .spa-tab-content {
+    padding: 1.5rem !important;
+}
+
+spa-component-type-edit-dialog .mat-mdc-tab-header .mat-icon {
+    display: none;
+}
+
+spa-component-type-edit-dialog .mat-mdc-tab-header .mdc-tab__content {
+    gap: 0;
+}
+
+spa-component-type-edit-dialog .component-tab-panel {
+    padding: 0;
+    width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     overflow-x: hidden;
 }
 
-@media (min-width: 640px) {
-    .component-tab-panel {
-        padding: 2rem;
-    }
+spa-component-type-edit-dialog .uid-card {
+    display: grid;
+    width: 100%;
+    gap: 0.25rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 0 0 0.875rem;
+}
+
+spa-component-type-edit-dialog .uid-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+spa-component-type-edit-dialog .uid-value {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+spa-component-type-edit-dialog spa-entry-fields-builder .entry-fields-title {
+    font-size: 1.05rem;
+}
+
+spa-component-type-edit-dialog spa-entry-fields-builder {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+spa-component-type-edit-dialog spa-entry-fields-builder .entry-fields-table table {
+    table-layout: auto;
+}
+
+spa-component-type-edit-dialog spa-entry-fields-builder .entry-fields-th,
+spa-component-type-edit-dialog spa-entry-fields-builder .entry-fields-td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.dark spa-component-type-edit-dialog .uid-card {
+    border-color: rgba(71, 85, 105, 0.55);
 }
