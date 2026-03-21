@@ -41,6 +41,8 @@ craftive:
       bucket: craftive-media-stage
       region: fra1
       cdn-base-url: https://s1.media.craftive.io
+      access-key: ${SPACES_ACCESS_KEY}
+      secret-key: ${SPACES_SECRET_KEY}
 
 app:
   jwt:
