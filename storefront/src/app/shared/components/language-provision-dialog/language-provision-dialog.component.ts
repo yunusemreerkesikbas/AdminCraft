@@ -1,11 +1,10 @@
-import { CommonModule } from '@angular/common';
 import { Component, Inject, OnInit, signal, computed, DestroyRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { interval, switchMap } from 'rxjs';
+import { interval, switchMap, takeWhile } from 'rxjs';
 import { TenantsService } from '@modules/admin/custom/tenants/tenants.service';
 import { LanguageProvisionDialogData, LanguageProvisioningJob } from './language-provision.types';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -14,7 +13,6 @@ import { NotificationService } from '@shared/notifications/notification.service'
     selector: 'spa-language-provision-dialog',
     standalone: true,
     imports: [
-        CommonModule,
         MatDialogModule,
         MatButtonModule,
         MatProgressBarModule,
@@ -96,6 +94,12 @@ export class LanguageProvisionDialogComponent implements OnInit {
         interval(2000)
             .pipe(
                 switchMap(() => this.#tenantsService.getLanguageProvisioningJobStatus(jobUuid)),
+                takeWhile(
+                    (response) =>
+                        response.data?.status !== 'COMPLETED' &&
+                        response.data?.status !== 'FAILED',
+                    true
+                ),
                 takeUntilDestroyed(this.#destroyRef)
             )
             .subscribe({

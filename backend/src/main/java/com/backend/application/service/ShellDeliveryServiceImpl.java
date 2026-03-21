@@ -70,7 +70,7 @@ public class ShellDeliveryServiceImpl implements ShellDeliveryService {
 
       String role = readCustomString(delivery, "layoutRole");
       if (role == null) {
-        log.debug("[Shell] Component {} ({}) has no layoutRole, skipping", delivery.uid(), delivery.type());
+        log.warn("[Shell] Component {} ({}) has no layoutRole custom field, skipping — check seed data", delivery.uid(), delivery.type());
         continue;
       }
 

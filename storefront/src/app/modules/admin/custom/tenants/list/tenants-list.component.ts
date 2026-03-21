@@ -347,8 +347,9 @@ export class TenantsListComponent extends BasePaginatedListComponent<
             () => this.service.getProvisioningJobById(jobId),
             2000,
             (response) =>
-                response.data.status === SyncJobStatus.SUCCEEDED ||
-                response.data.status === SyncJobStatus.FAILED,
+                response.result === 'SUCCESS' &&
+                (response.data?.status === SyncJobStatus.SUCCEEDED ||
+                response.data?.status === SyncJobStatus.FAILED),
             this.destroy$
         ).subscribe({
             next: (response) => {

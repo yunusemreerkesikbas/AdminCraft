@@ -23,7 +23,7 @@ import com.backend.domain.repository.MediaRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "s3")
+@ConditionalOnProperty(name = "craftive.storage.provider", havingValue = "s3")
 @Slf4j
 public class MediaMigrationServiceImpl implements MediaMigrationService {
 
@@ -55,14 +55,23 @@ public class MediaMigrationServiceImpl implements MediaMigrationService {
     @Override
     public void startMigration() {
         String subdomain = tenantContext.getSubdomain();
-        MigrationStatus current = statusMap.get(subdomain);
-        if (current != null && current.state() == MigrationState.RUNNING) {
-            log.warn("Migration already running for tenant: {}", subdomain);
-            return;
+        if (subdomain == null || subdomain.isBlank()) {
+            throw new IllegalStateException("Tenant subdomain must be resolved to start media migration");
         }
-        statusMap.put(subdomain, new MigrationStatus(subdomain, 0, 0, 0, List.of(), MigrationState.RUNNING));
-        // Submitting to taskExecutor — TenantContextTaskDecorator propagates tenant context
-        taskExecutor.execute(() -> runMigration(subdomain));
+        MigrationStatus[] started = {null};
+        statusMap.compute(subdomain, (key, current) -> {
+            if (current != null && current.state() == MigrationState.RUNNING) {
+                log.warn("Migration already running for tenant: {}", subdomain);
+                return current;
+            }
+            MigrationStatus running = new MigrationStatus(subdomain, 0, 0, 0, List.of(), MigrationState.RUNNING);
+            started[0] = running;
+            return running;
+        });
+        if (started[0] != null) {
+            // Submitting to taskExecutor — TenantContextTaskDecorator propagates tenant context
+            taskExecutor.execute(() -> runMigration(subdomain));
+        }
     }
 
     private void runMigration(String subdomain) {

@@ -96,7 +96,7 @@ services:
       context: ./storefront-nextjs
       dockerfile: ../docker/storefront/Dockerfile
       args:
-        - BUILD_ENV=prod
+        - BUILD_ENV=${SPRING_PROFILE:-prod}
         - NEXT_OUTPUT=standalone
     container_name: craftive-storefront
     restart: unless-stopped

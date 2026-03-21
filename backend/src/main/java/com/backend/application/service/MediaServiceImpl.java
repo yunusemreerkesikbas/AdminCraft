@@ -479,7 +479,13 @@ public class MediaServiceImpl implements MediaService {
             return null;
         }
         return findByUid(mediaUid)
-                .map(Media::getPublicUrl)
+                .map(media -> {
+                    String external = media.getPublicUrl();
+                    if (external != null && !external.isBlank()) {
+                        return external;
+                    }
+                    return "/api/media/files/" + media.getFileName();
+                })
                 .orElse(null);
     }
 }

@@ -237,7 +237,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleMediaNotFound(MediaNotFoundException ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Media not found: {}", correlationId, ex.getMessage());
-        ApiResponse<?> response = new ApiResponse<>("ERROR", resolveExceptionMessage(ex.getMessage(), "error.not.found"),
+        ApiResponse<?> response = new ApiResponse<>("ERROR",
+                resolveExceptionMessage(ex.getMessage(), "error.not.found"),
                 null);
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
@@ -273,7 +274,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleContainerNotFound(ContainerNotFoundException ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Container not found: {}", correlationId, ex.getMessage());
-        ApiResponse<?> response = new ApiResponse<>("ERROR", resolveExceptionMessage(ex.getMessage(), "error.not.found"),
+        ApiResponse<?> response = new ApiResponse<>("ERROR",
+                resolveExceptionMessage(ex.getMessage(), "error.not.found"),
                 null);
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }

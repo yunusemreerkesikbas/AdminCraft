@@ -22,11 +22,12 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Component
 @Primary
-@ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "s3")
+@ConditionalOnProperty(name = "craftive.storage.provider", havingValue = "s3")
 @RequiredArgsConstructor
 @Slf4j
 public class S3StorageAdapter implements StorageAdapter {
@@ -101,6 +102,11 @@ public class S3StorageAdapter implements StorageAdapter {
             return true;
         } catch (NoSuchKeyException e) {
             return false;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                return false;
+            }
+            throw e;
         }
     }
 
@@ -116,7 +122,10 @@ public class S3StorageAdapter implements StorageAdapter {
     @Override
     public String getPublicUrl(String objectKey) {
         String base = properties.getS3().getCdnBaseUrl();
-        if (base != null && base.endsWith("/")) {
+        if (base == null || base.isBlank()) {
+            throw new IllegalStateException("craftive.storage.s3.cdn-base-url must be set when storage provider is s3");
+        }
+        if (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);
         }
         return base + "/" + objectKey;
@@ -131,7 +140,7 @@ public class S3StorageAdapter implements StorageAdapter {
     private String buildObjectKey(String fileName, String subPath) {
         String subdomain = tenantContext.getSubdomain();
         if (subdomain == null || subdomain.isBlank()) {
-            subdomain = "default";
+            throw new IllegalStateException("Tenant subdomain must be resolved for S3 storage operations");
         }
         String sanitizedSubPath = (subPath != null) ? subPath.replaceAll("\\.\\.", "").strip() : "";
         if (sanitizedSubPath.isEmpty()) {

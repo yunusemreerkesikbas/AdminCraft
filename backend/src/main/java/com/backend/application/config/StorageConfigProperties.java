@@ -5,12 +5,15 @@ import java.util.Set;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Application-layer storage configuration properties.
  * Moved from infrastructure layer for Clean Architecture compliance.
  */
-@ConfigurationProperties(prefix = "admincraft.storage")
+@ConfigurationProperties(prefix = "craftive.storage")
 @Data
 public class StorageConfigProperties {
 
@@ -37,7 +40,9 @@ public class StorageConfigProperties {
   private Processing processing = new Processing();
   private S3 s3 = new S3();
 
-  @Data
+  @Getter
+  @Setter
+  @ToString(exclude = {"accessKey", "secretKey"})
   public static class S3 {
     private String endpoint;
     private String bucket;

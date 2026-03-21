@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.service.MediaMigrationService;
 import com.backend.application.service.MediaMigrationService.MigrationStatus;
+import com.backend.shared.common.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/media/migration")
-@ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "s3")
+@ConditionalOnProperty(name = "craftive.storage.provider", havingValue = "s3")
 @RequiredArgsConstructor
 public class MediaMigrationController {
 
@@ -23,14 +24,14 @@ public class MediaMigrationController {
 
     @PostMapping("/start")
     @PreAuthorize("hasRole('TENANT_ADMIN')")
-    public ResponseEntity<Void> startMigration() {
+    public ResponseEntity<ApiResponse<Void>> startMigration() {
         migrationService.startMigration();
-        return ResponseEntity.accepted().build();
+        return ResponseEntity.accepted().body(ApiResponse.success("Media migration started", null));
     }
 
     @GetMapping("/status")
     @PreAuthorize("hasRole('TENANT_ADMIN')")
-    public ResponseEntity<MigrationStatus> getMigrationStatus() {
-        return ResponseEntity.ok(migrationService.getMigrationStatus());
+    public ResponseEntity<ApiResponse<MigrationStatus>> getMigrationStatus() {
+        return ResponseEntity.ok(ApiResponse.success(migrationService.getMigrationStatus()));
     }
 }

@@ -15,7 +15,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-@ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "s3")
+@ConditionalOnProperty(name = "craftive.storage.provider", havingValue = "s3")
 @RequiredArgsConstructor
 public class S3Config {
 
@@ -29,6 +29,12 @@ public class S3Config {
         }
         if (s3.getSecretKey() == null || s3.getSecretKey().isBlank()) {
             throw new IllegalStateException("SPACES_SECRET_KEY must be set when storage provider is s3");
+        }
+        if (s3.getEndpoint() == null || s3.getEndpoint().isBlank()) {
+            throw new IllegalStateException("SPACES_ENDPOINT must be set when storage provider is s3");
+        }
+        if (s3.getBucket() == null || s3.getBucket().isBlank()) {
+            throw new IllegalStateException("SPACES_BUCKET must be set when storage provider is s3");
         }
         return S3Client.builder()
                 .endpointOverride(URI.create(s3.getEndpoint()))

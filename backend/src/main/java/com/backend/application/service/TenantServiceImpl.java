@@ -320,7 +320,10 @@ public class TenantServiceImpl implements TenantService {
         if (tenant.getCustomDomain() != null && !tenant.getCustomDomain().isBlank()) {
             return tenant.getCustomDomain().trim();
         }
-        String formatted = String.format(frontendConfig.getBaseUrl(), tenant.getSubdomain()).trim();
+        String baseUrl = frontendConfig.getBaseUrl();
+        String formatted = (baseUrl != null && baseUrl.contains("%s"))
+                ? String.format(baseUrl, tenant.getSubdomain()).trim()
+                : (baseUrl != null ? baseUrl.trim() : "");
         formatted = formatted.replaceFirst("^https?://", "");
         return formatted.replaceFirst("/.*$", "");
     }

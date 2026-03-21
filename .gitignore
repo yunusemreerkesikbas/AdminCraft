@@ -107,7 +107,7 @@ landing/node_modules/
 ### Local Artifacts ###
 backend/build_errors.txt
 backend/compile_output.txt
-backend/[Help
+backend/HELP.md
 storefront/tmpclaude-*
 storefront-nextjs/.next-dev-*.log
 storefront-nextjs/dev-server*.log
