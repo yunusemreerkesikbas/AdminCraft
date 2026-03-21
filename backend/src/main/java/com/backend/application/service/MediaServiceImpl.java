@@ -108,7 +108,11 @@ public class MediaServiceImpl implements MediaService {
                 media.setFileSize(stored.fileSize());
                 media.setFileExtension(stored.extension());
                 media.setUploadedBy(uploadedBy);
-                media.setStorageProvider(StorageProvider.valueOf(properties.getProvider().toUpperCase()));
+                StorageProvider storageProvider = StorageProvider.valueOf(properties.getProvider().toUpperCase());
+                media.setStorageProvider(storageProvider);
+                if (storageProvider == StorageProvider.S3) {
+                    media.setExternalUrl(storageService.getPublicUrl(stored.filePath()));
+                }
                 media.setIsPublic(true);
                 media.setUsageCount(0);
 
@@ -475,7 +479,7 @@ public class MediaServiceImpl implements MediaService {
             return null;
         }
         return findByUid(mediaUid)
-                .map(media -> "/api/media/files/" + media.getFileName())
+                .map(Media::getPublicUrl)
                 .orElse(null);
     }
 }

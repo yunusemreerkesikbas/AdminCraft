@@ -472,7 +472,7 @@ app:
   email:
     enabled: true
     provider: smtp
-    from-address: noreply@admincraft.com
+    from-address: noreply@craftive.io
     from-name: AdminCraft
 
 # application-dev.yml

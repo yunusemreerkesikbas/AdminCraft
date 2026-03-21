@@ -31,6 +31,8 @@ public interface MediaStorageService {
         }
     }
 
+    String getPublicUrl(String filePath);
+
     StoredFileResult store(MultipartFile file, String folder);
 
     StoredFileResult storeProcessedImage(byte[] imageData, String fileName, String folder);

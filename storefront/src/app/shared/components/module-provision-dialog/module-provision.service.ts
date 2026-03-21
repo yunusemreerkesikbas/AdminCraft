@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CrudEndpoints, CrudHttpService } from '@core/crud';
+import { ApiResponse } from '@core/crud/api.types';
 import { Observable } from 'rxjs';
-import { ApiResponse, InstalledModule, ModuleCatalog, ProvisioningJob, ProvisionRequest } from './module-provision.types';
+import { InstalledModule, ModuleCatalog, ProvisioningJob, ProvisionRequest } from './module-provision.types';
 
 @Injectable({
     providedIn: 'root'

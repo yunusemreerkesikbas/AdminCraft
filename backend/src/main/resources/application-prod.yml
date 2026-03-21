@@ -34,6 +34,15 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+craftive:
+  storage:
+    provider: s3
+    s3:
+      endpoint: https://fra1.digitaloceanspaces.com
+      bucket: craftive-media-prod
+      region: fra1
+      cdn-base-url: https://media.craftive.io
+
 app:
   jwt:
     secret: ${JWT_SECRET}

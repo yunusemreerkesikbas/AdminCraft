@@ -1,6 +1,6 @@
 # Storefront Next.js
 
-Headless storefront for AdminCraft CMS delivery APIs using the Next.js App Router.
+Headless demo/reference storefront for the platform CMS delivery APIs using the Next.js App Router. The project in this repository is deployed directly for the demo tenant and serves as the base fork for tenant-specific storefronts.
 
 ## Purpose
 
@@ -562,7 +562,7 @@ The script also updates `sites.logo_media_uid` and `sites.logo_dark_media_uid` t
 
 ### Replacing the theme
 
-`storefront-nextjs` is designed as a boilerplate — fork the project and replace `components/theme/` for each tenant's visual identity. The CMS infrastructure (`components/cms/`, `components/layout/shell` adapters, `lib/`) is never modified.
+`storefront-nextjs` is the demo/reference storefront and tenant base project. Fork the project and replace `components/theme/` for each tenant's visual identity. The CMS infrastructure (`components/cms/`, `components/layout/shell` adapters, `lib/`) is never modified.
 
 **Theme boundary:** `components/theme/` is the only directory that changes between forks.
 

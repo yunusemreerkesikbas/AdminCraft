@@ -205,46 +205,48 @@ ImpEx scripts for demo/content data are stored under `backend/src/main/resources
 ### Execution order (when seeding a fresh tenant — default theme example content)
 
 ```text
-1. seed_liko_components.sql        — landing page components (Homepage*), i18n, entries, entry i18n
-2. seed_liko_chrome_components.sql — shared Header/Footer components, Home-2 chrome copy, i18n, entries
-3. seed_liko_pages_and_slots.sql   — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
-4. seed_pages_and_slots.sql        — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
-5. seed_about_content_page.sql     — (optional) About page at /about-us: ContentPageTemplate, About* components, page + slots + slot_components; only requires R__seed_page_templates
-6. seed_navigation.sql             — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
-7. [upload media via Admin UI]     — upload all image/video assets in the Media Library before running step 8
-8. seed_liko_media_uids.sql        — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
-9. seed_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+1. base_site_settings.sql          — default site settings and i18n
+2. base_page_templates.sql         — system page templates and slots
+3. theme_liko_components.sql       — landing page components (Homepage*), i18n, entries, entry i18n
+4. theme_liko_chrome_components.sql— shared Header/Footer components, Home-2 chrome copy, i18n, entries
+5. theme_liko_pages_and_slots.sql  — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
+6. base_pages_and_slots.sql        — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
+7. theme_liko_about_content_page.sql— (optional) About page at /about-us: ContentPageTemplate, About* components, page + slots + slot_components
+8. theme_liko_navigation.sql       — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
+9. [upload media via Admin UI]     — upload all image/video assets in the Media Library before running step 10
+10. theme_liko_media_uids.sql      — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
+11. base_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
 ```
 
-> **Media UID alignment (step 7):** Component entry `custom_data` fields reference media by semantic UIDs like `homepage-hero-bg`. When media is uploaded via the Media Library, auto-generated UIDs (`cmsitem_*`) are assigned. `seed_liko_media_uids.sql` corrects this by matching on `original_name` and updating each record's UID to the expected semantic value. It also sets `sites.logo_media_uid` / `sites.logo_dark_media_uid`. Run this script **after** uploading all assets. It is idempotent.
+> **Media UID alignment (step 9):** Component entry `custom_data` fields reference media by semantic UIDs like `homepage-hero-bg`. When media is uploaded via the Media Library, auto-generated UIDs (`cmsitem_*`) are assigned. `theme_liko_media_uids.sql` corrects this by matching on `original_name` and updating each record's UID to the expected semantic value. It also sets `sites.logo_media_uid` / `sites.logo_dark_media_uid`. Run this script **after** uploading all assets. It is idempotent.
 
-`seed_liko_chrome_components.sql` maps the header/footer copy from `liko-next-js/src/pages/homes/home-2.tsx` into standard CMS component data.
+`theme_liko_chrome_components.sql` maps the header/footer copy from `liko-next-js/src/pages/homes/home-2.tsx` into standard CMS component data.
 
-`seed_liko_pages_and_slots.sql` depends on components from steps 1-2 and on Flyway-managed `page_templates` / `template_slots`.
+`theme_liko_pages_and_slots.sql` depends on components from steps 3-4 and on `base_page_templates.sql`.
 
-`seed_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Seed* components.
+`base_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Liko components.
 
-**About content page (ContentPageTemplate):** `seed_about_content_page.sql` seeds a generic About page at `/about-us` using `ContentPageTemplate` (slots: TopContent, BodyContent, SideContent). It creates components (AboutHeroComponent, AboutStoryComponent, AboutTeamSection, AboutStatsSection, AboutBrandsStrip, AboutAwardsBlock), their i18n and entries, the page `about-us`, page_i18n with `canonical_url = '/about-us'`, page_slots, and slot_components. Run it after Flyway has applied `pagebuilder/R__seed_page_templates.sql`; it does not depend on Liko landing or chrome seeds. Component entries reference semantic media UIDs (e.g. `about-hero-bg`, `about-team-1`); optionally run a separate media-UID alignment script after uploading assets, or bind media via the Admin UI.
+**About content page (ContentPageTemplate):** `theme_liko_about_content_page.sql` seeds a generic About page at `/about-us` using `ContentPageTemplate` (slots: TopContent, BodyContent, SideContent). It creates components (AboutHeroComponent, AboutStoryComponent, AboutTeamSection, AboutStatsSection, AboutBrandsStrip, AboutAwardsBlock), their i18n and entries, the page `about-us`, page_i18n with `canonical_url = '/about-us'`, page_slots, and slot_components. Run it after `base_page_templates.sql`; it does not depend on Liko landing or chrome seeds. Component entries reference semantic media UIDs (e.g. `about-hero-bg`, `about-team-1`); optionally run a separate media-UID alignment script after uploading assets, or bind media via the Admin UI.
 
-`seed_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned through `V5` (Flyway `mail_marketing/V1__baseline.sql` ... `V5__add_subscription_permission.sql`).
+`base_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned.
 
 ### Storefront chrome seeding
 
 The CMS-driven storefront chrome uses shared slots plus standard CMS components. The reference scripts are:
 
-- `seed_liko_chrome_components.sql`
+- `theme_liko_chrome_components.sql`
   - Creates `StorefrontHeaderMainNavigation`, `StorefrontHeaderSocialLinks`, `StorefrontHeaderContactInfo`
   - Creates `StorefrontFooterBrandBlock`, `StorefrontFooterSitemapNavigation`, `StorefrontFooterOfficeLinks`, `StorefrontFooterNewsletter`, `StorefrontFooterSocialLinks`
   - Seeds the Home-2 header/footer text, links, newsletter placeholder, and social links through `component_i18n` and `component_entry_i18n`
-- `seed_liko_pages_and_slots.sql`
+- `theme_liko_pages_and_slots.sql`
   - Binds the shared `Header` slot (`SharedHeaderSlot`) and shared `Footer` slot (`SharedFooterSlot`) to those components
-- `seed_navigation.sql`
+- `theme_liko_navigation.sql`
   - Creates `LandingMainNavNode` and `LandingFooterNavNode`
   - Attaches those nodes to the navigation-aware chrome components with `UPDATE components ... navigation_node_id = ...`
 
 ### Platform reference script
 
-`seed_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
+`base_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
 
 ### What remains in Flyway (R__ repeatable migrations)
 
@@ -252,11 +254,10 @@ These seeds are structural / system data and still run automatically via Flyway:
 
 | File | Purpose |
 |------|---------|
-| `core/R__seed_system_user.sql` | System user required by FK on `created_by` |
-| `core/R__seed_roles.sql` | Default site settings |
+| `platform/R__seed_modules.sql` | Module catalog |
 | `media/R__seed_media_formats.sql` | Media format definitions |
 | `component_library/R__seed_component_types.sql` | Component type catalog |
 | `component_library/R__seed_entry_field_definitions.sql` | Field schema per type |
-| `pagebuilder/R__seed_page_templates.sql` | Page templates + template slots |
+| `product/R__seed_product_types.sql` | Product type catalog |
 
-The former content seeds (`R__seed_components.sql`, `R__seed_navigation.sql`, `R__seed_sample_pages.sql`, `R__zz_seed_page_slots.sql`) have been stubbed out and their content moved to the `impex/` directory.
+Content seeds (like roles/settings, page templates, components, navigation) are managed via the `impex/` directory and applied on-demand.

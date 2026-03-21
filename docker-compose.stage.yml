@@ -5,6 +5,9 @@
 
 services:
   backend:
+    environment:
+      SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
+      SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
     labels:
       traefik.http.routers.backend.rule: "Host(`s1.api.${DOMAIN}`)"
 
@@ -32,8 +35,8 @@ services:
       - craftive-network
     labels:
       - "traefik.enable=true"
-      # Matches tenant subdomains; excludes stage API and admin panel hosts.
-      - "traefik.http.routers.storefront.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`s1.api.${DOMAIN}`) && !Host(`s1.app.${DOMAIN}`)"
+      # Matches stage tenant domains in s1-<tenant>.domain format; excludes stage API and admin panel hosts.
+      - "traefik.http.routers.storefront.rule=HostRegexp(`s1-{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`s1.api.${DOMAIN}`) && !Host(`s1.app.${DOMAIN}`)"
       - "traefik.http.routers.storefront.ruleSyntax=v2"
       - "traefik.http.routers.storefront.priority=1"
       - "traefik.http.routers.storefront.entrypoints=websecure"

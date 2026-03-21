@@ -4,10 +4,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { interval, switchMap } from 'rxjs';
 import { TenantsService } from '@modules/admin/custom/tenants/tenants.service';
 import { LanguageProvisionDialogData, LanguageProvisioningJob } from './language-provision.types';
+import { NotificationService } from '@shared/notifications/notification.service';
 
 @Component({
     selector: 'spa-language-provision-dialog',
@@ -26,7 +27,7 @@ import { LanguageProvisionDialogData, LanguageProvisioningJob } from './language
 export class LanguageProvisionDialogComponent implements OnInit {
     #tenantsService = inject(TenantsService);
     #destroyRef = inject(DestroyRef);
-    #transloco = inject(TranslocoService);
+    #notification = inject(NotificationService);
 
     protected languageJob = signal<LanguageProvisioningJob | null>(null);
     protected isConfirmationPhase = signal<boolean>(false);
@@ -98,11 +99,22 @@ export class LanguageProvisionDialogComponent implements OnInit {
                 takeUntilDestroyed(this.#destroyRef)
             )
             .subscribe({
-                next: (job) => {
+                next: (response) => {
+                    const job = response.data;
+                    if (!job) {
+                        this.#notification.alert(response.message ?? '');
+                        return;
+                    }
                     this.languageJob.set(job);
+                    if (job.status === 'COMPLETED') {
+                        this.#notification.success(response.message ?? '');
+                    } else if (job.status === 'FAILED') {
+                        this.#notification.alert(response.message ?? job.errorMessage ?? '');
+                    }
                 },
                 error: (err) => {
                     const current = this.languageJob();
+                    this.#notification.alert(err?.error?.message ?? '');
                     if (current) {
                         this.languageJob.set({
                             ...current,

@@ -25,7 +25,7 @@ Singleton pattern -- the table always contains exactly one row (`id = 1`).
 | `platform_name`      | VARCHAR(100) | `AdminCraft`           |
 | `default_language`   | VARCHAR(2)   | `TR`                   |
 | `default_currency`   | VARCHAR(3)   | `TRY`                  |
-| `email_from_address` | VARCHAR(255) | `noreply@admincraft.com` |
+| `email_from_address` | VARCHAR(255) | `noreply@craftive.io` |
 | `email_from_name`    | VARCHAR(100) | `AdminCraft`           |
 | `two_factor_policy`  | ENUM         | `DISABLED`             |
 | `recaptcha_enabled`  | BOOLEAN      | `false`                |

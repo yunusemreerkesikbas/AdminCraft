@@ -195,7 +195,12 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                 .provisionLanguages(tenantId, { languages: newLanguages })
                 .pipe(take(1))
                 .subscribe({
-                    next: (job) => {
+                    next: (response) => {
+                        const job = response.data;
+                        if (!job) {
+                            this.#notify.alert(response.message ?? '');
+                            return;
+                        }
                         this.#dialog.open(LanguageProvisionDialogComponent, {
                             data: {
                                 tenantId,
@@ -209,6 +214,7 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                             disableClose: true,
                             width: '500px',
                         });
+                        this.#notify.info(response.message ?? '');
                     },
                     error: (err) => {
                         this.#notify.alert(err?.error?.message ?? '');
@@ -340,12 +346,17 @@ export class TenantsListComponent extends BasePaginatedListComponent<
         PollingUtils.poll(
             () => this.service.getProvisioningJobById(jobId),
             2000,
-            (job) => job.status === SyncJobStatus.SUCCEEDED || job.status === SyncJobStatus.FAILED,
+            (response) =>
+                response.data.status === SyncJobStatus.SUCCEEDED ||
+                response.data.status === SyncJobStatus.FAILED,
             this.destroy$
         ).subscribe({
-            next: (job) => {
-                if (job.status === SyncJobStatus.FAILED) {
-                    this.#notify.alert(job.error ?? '');
+            next: (response) => {
+                const job = response.data;
+                if (job.status === SyncJobStatus.SUCCEEDED) {
+                    this.#notify.success(response.message ?? '');
+                } else if (job.status === SyncJobStatus.FAILED) {
+                    this.#notify.alert(response.message ?? job.error ?? '');
                 }
             },
             error: (err) => {

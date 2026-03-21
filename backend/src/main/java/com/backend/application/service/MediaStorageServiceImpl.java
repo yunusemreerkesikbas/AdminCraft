@@ -29,6 +29,11 @@ public class MediaStorageServiceImpl implements MediaStorageService {
             "application/pdf", new byte[] { 0x25, 0x50, 0x44, 0x46 });
 
     @Override
+    public String getPublicUrl(String filePath) {
+        return storageAdapter.getPublicUrl(filePath);
+    }
+
+    @Override
     public StoredFileResult store(MultipartFile file, String folder) {
         ValidationResult validation = validate(file);
         if (!validation.valid()) {

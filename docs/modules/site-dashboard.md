@@ -95,7 +95,7 @@ New endpoints under `/api/sites`:
     "canPreview": true,
     "canEnableMaintenance": true,
     "canDisableMaintenance": false,
-    "previewUrl": "https://acme.admincraft.com?preview=true"
+    "previewUrl": "https://acme.craftive.io?preview=true"
   }
 }
 ```
@@ -106,8 +106,8 @@ New endpoints under `/api/sites`:
 {
   "domain": {
     "subdomain": "acme",
-    "platformDomain": "admincraft.com",
-    "fullUrl": "https://acme.admincraft.com",
+    "platformDomain": "craftive.io",
+    "fullUrl": "https://acme.craftive.io",
     "customDomain": "www.acme.com",
     "sslEnabled": true
   },

@@ -2,7 +2,6 @@ package com.backend.shared.common;
 
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -380,48 +379,11 @@ public class GlobalExceptionHandler {
         if (candidate == null || candidate.isBlank()) {
             return getMessage(fallbackKey);
         }
-
         String translated = messageSource.getMessage(candidate, null, null, LocaleContextHolder.getLocale());
         if (translated != null && !translated.isBlank()) {
-            return truncate(translated);
+            return translated.length() > 500 ? translated.substring(0, 500) : translated;
         }
-
-        if (looksTechnical(candidate)) {
-            log.debug("Suppressed technical message: {}", candidate);
-            return getMessage(fallbackKey);
-        }
-
-        log.debug("Passing through exception message: {}", candidate);
-        return truncate(candidate);
+        return getMessage(fallbackKey);
     }
 
-    private String truncate(String s) {
-        return s != null && s.length() > 500 ? s.substring(0, 500) : s;
-    }
-
-    private boolean looksTechnical(String candidate) {
-        String normalized = candidate.toLowerCase(Locale.ROOT);
-        List<String> technicalMarkers = List.of(
-                "sql",
-                "select ",
-                "insert into",
-                "delete from",
-                " from ",
-                " join ",
-                " where ",
-                "constraint",
-                "hibernate",
-                "jdbc",
-                "sqlstate",
-                "syntax error",
-                "duplicate entry",
-                "foreign key",
-                "table ",
-                "column ",
-                "exception",
-                "org.",
-                "com.mysql");
-
-        return technicalMarkers.stream().anyMatch(normalized::contains);
-    }
 }

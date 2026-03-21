@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.backend.application.config.StorageConfigProperties;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(name = "admincraft.storage.provider", havingValue = "local", matchIfMissing = true)
 public class LocalStorageAdapter implements StorageAdapter {
 
     private final StorageConfigProperties properties;

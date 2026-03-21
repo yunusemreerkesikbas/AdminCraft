@@ -25,13 +25,6 @@ export interface ProvisioningJob {
     completedAt?: string;
 }
 
-export interface ApiResponse<T> {
-    result: 'SUCCESS' | 'ERROR';
-    message?: string;
-    data: T;
-    code?: number;
-}
-
 export interface ProvisionRequest {
     modules: string[];
 }

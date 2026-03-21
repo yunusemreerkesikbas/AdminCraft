@@ -98,7 +98,7 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 | Setting              | Dev            | Stage                           | Prod                         |
 | -------------------- | -------------- | ------------------------------- | ---------------------------- |
 | `production`         | `false`        | `false`                         | `true`                       |
-| `apiBaseUrl`         | `/api` (proxy) | `https://s1.api.admincraft.com` | `https://api.admincraft.com` |
+| `apiBaseUrl`         | `/api` (proxy) | `https://s1.api.craftive.io` | `https://api.craftive.io` |
 | `apiTimeout`         | `30000`        | `30000`                         | `30000`                      |
 | `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                  | `['tr', 'en']`               |
 | `defaultLanguage`    | `en`           | `en`                            | `en`                         |
@@ -110,12 +110,12 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 
 | Variable                       | Dev                             | Stage                                  | Prod                             |
 | ------------------------------ | ------------------------------- | -------------------------------------- | -------------------------------- |
-| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://api-staging.admincraft.io/api`| `https://api.admincraft.io/api`  |
+| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://s1.api.craftive.io/api`       | `https://api.craftive.io/api`    |
 | `TENANT_SUBDOMAIN`             | `demo`                          | tenant subdomain                       | tenant subdomain                 |
 | `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
 | `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
-| `NEXT_IMAGE_DOMAINS`           | `127.0.0.1`                     | `s1.api.craftive.io`                   | `api.craftive.io`                |
+| `NEXT_IMAGE_DOMAINS`           | _(not set)_                     | `s1.media.craftive.io`                 | `media.craftive.io`              |
 
 Available scripts:
 
@@ -225,8 +225,25 @@ npm run build:static
 | `DB_HOST`               | Database host                  | Yes                |
 | `PLATFORM_DB_URL`       | Full JDBC URL for platform DB  | Yes                |
 | `DB_PORT`               | Database port                  | No (default: 3306) |
-| `APP_FRONTEND_BASE_URL` | Frontend URL pattern           | No                 |
-| `PLATFORM_DOMAIN`       | Platform domain                | No                 |
+| `APP_FRONTEND_BASE_URL` | Frontend URL pattern           | Yes                |
+| `PLATFORM_DOMAIN`       | Platform domain                | Yes                |
+| `EMAIL_FROM_ADDRESS`    | Default sender email           | Yes                |
+| `EMAIL_FROM_NAME`       | Default sender name            | Yes                |
+| `SPACES_ACCESS_KEY`     | DO Spaces access key (S3)      | Yes (stage/prod)   |
+| `SPACES_SECRET_KEY`     | DO Spaces secret key (S3)      | Yes (stage/prod)   |
+
+### Stage/Prod Observability and Edge
+
+| Variable                   | Description                             | Required |
+| -------------------------- | --------------------------------------- | -------- |
+| `LOG_ENV`                  | Log environment label (`stage`/`prod`) | Yes      |
+| `LOG_HOST`                 | Host label for Loki                     | Yes      |
+| `GRAFANA_CLOUD_LOKI_URL`   | Loki ingest URL                         | Yes      |
+| `GRAFANA_CLOUD_LOKI_USER`  | Loki username / tenant                  | Yes      |
+| `GRAFANA_CLOUD_LOKI_TOKEN` | Loki API token                          | Yes      |
+| `DOMAIN`                   | Base platform domain                    | Yes      |
+| `ACME_EMAIL`               | Let's Encrypt email                     | Yes      |
+| `CF_API_TOKEN`             | Cloudflare DNS challenge token          | Yes      |
 
 ### Example Stage Deployment
 
@@ -236,6 +253,12 @@ $env:DB_USERNAME = "stage_user"
 $env:DB_PASSWORD = "stage_pass"
 $env:DB_HOST = "stage-db.internal"
 $env:PLATFORM_DB_URL = "jdbc:mysql://stage-db.internal:3306/platform_management?useSSL=true"
+$env:APP_FRONTEND_BASE_URL = "https://s1-%s.craftive.io"
+$env:PLATFORM_DOMAIN = "s1.craftive.io"
+$env:EMAIL_FROM_ADDRESS = "noreply@craftive.io"
+$env:EMAIL_FROM_NAME = "Craftive"
+$env:LOG_ENV = "stage"
+$env:LOG_HOST = "do-fra1-stage-01"
 
 mvn spring-boot:run -Dspring-boot.run.profiles=stage
 ```
@@ -269,16 +292,20 @@ AdminCraft uses Docker Compose with environment-specific override files.
 AdminCraft/
 ├── docker-compose.yml          # Base config (MySQL only)
 ├── docker-compose.dev.yml      # Dev overrides (+ phpMyAdmin)
-├── docker-compose.prod.yml     # Prod overrides (+ Backend + Frontend + Traefik)
+├── docker-compose.prod.yml     # Prod overrides (+ Backend + Admin Frontend + Demo Storefront + Traefik + Alloy)
+├── docker-compose.stage.yml    # Stage overrides on top of prod
 ├── .env.example                # Environment template
 ├── .env.dev                    # Local dev values (gitignored)
+├── .env.stage                  # Stage values (gitignored)
 ├── .env.prod                   # Production values (gitignored)
 └── docker/
     ├── mysql/                  # MySQL config (existing)
     ├── backend/Dockerfile      # Spring Boot image
-    └── frontend/
-        ├── Dockerfile          # Angular + Nginx image
-        └── nginx.conf          # Nginx configuration
+    ├── frontend/
+    │   ├── Dockerfile          # Angular + Nginx image
+    │   └── nginx.conf          # Nginx configuration
+    └── storefront/
+        └── Dockerfile          # Next.js demo/reference storefront image
 ```
 
 ### Environment Overview
@@ -286,7 +313,7 @@ AdminCraft/
 | Environment    | Services                             | Use Case                                     |
 | -------------- | ------------------------------------ | -------------------------------------------- |
 | **Dev**        | MySQL + phpMyAdmin                   | Local development (Backend/Frontend via IDE) |
-| **Prod/Stage** | MySQL + Backend + Frontend + Traefik | VPS deployment with SSL                      |
+| **Prod/Stage** | MySQL + Backend + Admin Frontend + Demo Storefront + Traefik + Alloy | VPS deployment with SSL and centralized logs |
 
 ### Local Development
 
@@ -333,16 +360,18 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 
 **Access Points (with example domain):**
 
-- Frontend: `https://admincraft.example.com`
-- Backend API: `https://api.admincraft.example.com`
+- Admin Frontend: `https://app.craftive.example.com`
+- Demo Storefront: `https://craftive.example.com` or `https://{tenant}.craftive.example.com`
+- Backend API: `https://api.craftive.example.com`
 
 ### Environment Variables
 
-Create `.env.dev` and `.env.prod` from `.env.example`:
+Create `.env.dev`, `.env.stage`, and `.env.prod` from `.env.example`:
 
 ```powershell
 # Copy template
 cp .env.example .env.dev
+cp .env.example .env.stage
 cp .env.example .env.prod
 ```
 
@@ -355,6 +384,9 @@ cp .env.example .env.prod
 | `SPRING_PROFILE` | `dev`           | `prod` or `stage`       |
 | `DOMAIN`         | -               | your domain             |
 | `ACME_EMAIL`     | -               | your email (for SSL)    |
+| `CF_API_TOKEN`   | -               | Cloudflare DNS token    |
+| `LOG_ENV`        | -               | `stage` or `prod`       |
+| `LOG_HOST`       | -               | host label for Loki     |
 
 ### Traefik Configuration
 
@@ -366,8 +398,10 @@ Production uses Traefik v3 for:
 
 **DNS Requirements:**
 
-- `admincraft.example.com` → VPS IP
-- `api.admincraft.example.com` → VPS IP
+- `craftive.example.com` → VPS IP
+- `app.craftive.example.com` → VPS IP
+- `api.craftive.example.com` → VPS IP
+- `*.craftive.example.com` → VPS IP (or explicit tenant records)
 
 ### Docker Image Build Arguments
 
@@ -401,7 +435,7 @@ Set-Service -Name "mysql" -StartupType Manual
 ```powershell
 # Verify MySQL is healthy
 docker ps
-docker logs admincraft-mysql
+docker logs craftive-mysql
 
 # Wait for MySQL health check
 docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --wait
@@ -410,5 +444,5 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 **SSL certificate not issued:**
 
 - Verify DNS A records point to VPS IP
-- Check Traefik logs: `docker logs admincraft-traefik`
+- Check Traefik logs: `docker logs craftive-traefik`
 - Verify ports 80/443 are open on VPS firewall

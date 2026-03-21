@@ -31,6 +31,7 @@ import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.SiteActivityRepository;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.UserRepository;
+import com.backend.domain.port.FrontendConfigPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SiteOverviewServiceImpl implements SiteOverviewService {
 
     private static final int DEFAULT_ACTIVITY_LIMIT = 10;
-    private static final String PLATFORM_DOMAIN = "admincraft.com";
 
     private final SiteRepository siteRepository;
     private final SiteActivityRepository siteActivityRepository;
@@ -56,6 +56,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     private final ProductRepository productRepository;
     private final MessageSource messageSource;
     private final UserRepository userRepository;
+    private final FrontendConfigPort frontendConfig;
 
     @Override
     public SiteOverviewAppDto getOverview() {
@@ -222,8 +223,23 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
 
     private String buildPreviewUrl(Site site) {
         String protocol = Boolean.TRUE.equals(site.getSslEnabled()) ? "https://" : "http://";
-        String domain = site.getDomain() != null ? site.getDomain() : "preview";
-        return protocol + domain + "." + PLATFORM_DOMAIN + "?preview=true";
+        return protocol + resolvePreviewHost(site) + "?preview=true";
+    }
+
+    private String resolvePreviewHost(Site site) {
+        if (site.getCustomDomain() != null && !site.getCustomDomain().isBlank()) {
+            return site.getCustomDomain().trim();
+        }
+        if (site.getDomain() != null && !site.getDomain().isBlank()) {
+            return site.getDomain().trim();
+        }
+        return resolveFrontendHost("preview");
+    }
+
+    private String resolveFrontendHost(String subdomain) {
+        String formatted = String.format(frontendConfig.getBaseUrl(), subdomain).trim();
+        formatted = formatted.replaceFirst("^https?://", "");
+        return formatted.replaceFirst("/.*$", "");
     }
 
     private ActivityAppDto toActivityDto(SiteActivity activity, com.backend.domain.entity.User user) {

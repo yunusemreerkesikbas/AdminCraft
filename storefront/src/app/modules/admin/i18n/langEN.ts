@@ -1787,7 +1787,7 @@ export const langEN = {
                 notes: 'Notes',
                 adminName: 'Admin Name',
                 adminEmail: 'Admin Email',
-                domainSuffix: '.admincraft.com',
+                domainSuffix: '.craftive.io',
             },
             sections: {
                 general: 'General Information',

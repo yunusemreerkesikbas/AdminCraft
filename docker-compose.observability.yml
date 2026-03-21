@@ -36,7 +36,7 @@ services:
       - grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
     ports:
-      - "3000:3000"
+      - "3002:3000"
     depends_on:
       loki:
         condition: service_healthy

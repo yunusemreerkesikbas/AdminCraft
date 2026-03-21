@@ -1760,7 +1760,7 @@ export const langTR = {
                 notes: 'Notlar',
                 adminName: 'Yönetici Adı',
                 adminEmail: 'Yönetici E-posta',
-                domainSuffix: '.admincraft.com',
+                domainSuffix: '.craftive.io',
             },
             sections: {
                 general: 'Genel Bilgiler',

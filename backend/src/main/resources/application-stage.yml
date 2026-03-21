@@ -33,11 +33,20 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+craftive:
+  storage:
+    provider: s3
+    s3:
+      endpoint: https://fra1.digitaloceanspaces.com
+      bucket: craftive-media-stage
+      region: fra1
+      cdn-base-url: https://s1.media.craftive.io
+
 app:
   jwt:
     secret: ${JWT_SECRET}
   frontend:
-    base-url: ${APP_FRONTEND_BASE_URL:https://s1.%s.craftive.io}
+    base-url: ${APP_FRONTEND_BASE_URL:https://s1-%s.craftive.io}
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
@@ -47,7 +56,7 @@ app:
     allowed-origins:
       - https://s1.app.craftive.io
     allowed-origin-patterns:
-      - https://*.s1.craftive.io
+      - https://s1-*.craftive.io
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 

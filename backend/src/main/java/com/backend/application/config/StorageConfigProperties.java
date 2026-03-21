@@ -35,6 +35,18 @@ public class StorageConfigProperties {
       "exe", "bat", "cmd", "scr", "js", "vbs", "ps1", "sh");
 
   private Processing processing = new Processing();
+  private S3 s3 = new S3();
+
+  @Data
+  public static class S3 {
+    private String endpoint;
+    private String bucket;
+    private String region = "fra1";
+    private String accessKey;
+    private String secretKey;
+    private String cdnBaseUrl;
+    private boolean deleteLocalAfterMigration = false;
+  }
 
   @Data
   public static class Processing {
