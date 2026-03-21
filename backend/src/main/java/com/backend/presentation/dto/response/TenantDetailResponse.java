@@ -36,7 +36,8 @@ public record TenantDetailResponse(
             com.backend.domain.entity.Tenant tenant,
             Language displayLanguage,
             ProvisioningStatus provisioningStatus,
-            Integer modulesCount) {
+            Integer modulesCount,
+            String fullDomain) {
         return new TenantDetailResponse(
                 tenant.getId(),
                 tenant.getSubdomain(),
@@ -54,7 +55,7 @@ public record TenantDetailResponse(
                 tenant.getCustomDomain(),
                 tenant.getDatabaseName(),
                 tenant.getStorageUsedMb(),
-                tenant.getFullDomain(),
+                fullDomain,
                 tenant.getUpdatedAt(),
                 tenant.getLastBackupAt(),
                 tenant.getNotes());

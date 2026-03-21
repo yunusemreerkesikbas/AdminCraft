@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -31,6 +32,7 @@ import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.Currency;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
@@ -64,6 +66,9 @@ class TenantServiceImplTest {
         @Mock
         private ProvisioningJobRepository provisioningJobRepository;
 
+        @Mock
+        private FrontendConfigPort frontendConfig;
+
         @InjectMocks
         private TenantServiceImpl tenantService;
 
@@ -85,6 +90,7 @@ class TenantServiceImplTest {
                 testTenant.setStorageUsedMb(100L);
                 testTenant.setCreatedAt(LocalDateTime.now());
                 testTenant.setUpdatedAt(LocalDateTime.now());
+                lenient().when(frontendConfig.getBaseUrl()).thenReturn("https://%s.craftive.io");
 
                 createRequest = new CreateTenantRequest(
                                 "newcompany",
@@ -125,6 +131,7 @@ class TenantServiceImplTest {
                 assertThat(response).isNotNull();
                 assertThat(response.id()).isEqualTo(1L);
                 assertThat(response.companyName()).isEqualTo("Test Company");
+                assertThat(response.fullDomain()).isEqualTo("testcompany.com");
                 assertThat(response.provisioningStatus()).isEqualTo("idle");
                 assertThat(response.provisionedModulesCount()).isEqualTo(0);
 
@@ -189,6 +196,7 @@ class TenantServiceImplTest {
                 // Then
                 assertThat(response).isNotNull();
                 assertThat(response.id()).isEqualTo(1L);
+                assertThat(response.fullDomain()).isEqualTo("updated.com");
                 assertThat(response.provisioningStatus()).isEqualTo("idle");
                 assertThat(response.provisionedModulesCount()).isEqualTo(3);
 
@@ -251,10 +259,10 @@ class TenantServiceImplTest {
                 tenant2.setCreatedAt(LocalDateTime.now());
 
                 when(tenantRepository.findAll()).thenReturn(Arrays.asList(testTenant, tenant2));
-                when(provisioningJobRepository.findFirstByTenantIdOrderByCreatedAtDesc(anyLong()))
-                                .thenReturn(Optional.empty());
-                when(tenantModuleRepository.countEnabledModulesByTenantId(anyLong()))
-                                .thenReturn(0);
+                when(provisioningJobRepository.findLatestStatusesByTenantIds(List.of(1L, 2L)))
+                                .thenReturn(List.of());
+                when(tenantModuleRepository.countEnabledModulesByTenantIds(List.of(1L, 2L)))
+                                .thenReturn(List.<Object[]>of(new Object[] { 1L, 0 }, new Object[] { 2L, 0 }));
 
                 // When
                 List<TenantListResponse> responses = tenantService.getAllTenantsAsList(Language.TR);
@@ -265,8 +273,8 @@ class TenantServiceImplTest {
                 assertThat(responses.get(1).id()).isEqualTo(2L);
 
                 verify(tenantRepository).findAll();
-                verify(provisioningJobRepository, times(2)).findFirstByTenantIdOrderByCreatedAtDesc(anyLong());
-                verify(tenantModuleRepository, times(2)).countEnabledModulesByTenantId(anyLong());
+                verify(provisioningJobRepository).findLatestStatusesByTenantIds(List.of(1L, 2L));
+                verify(tenantModuleRepository).countEnabledModulesByTenantIds(List.of(1L, 2L));
         }
 
         @Test
@@ -275,10 +283,10 @@ class TenantServiceImplTest {
                 // Given
                 when(tenantRepository.findByStatus(TenantStatus.ACTIVE))
                                 .thenReturn(List.of(testTenant));
-                when(provisioningJobRepository.findFirstByTenantIdOrderByCreatedAtDesc(1L))
-                                .thenReturn(Optional.empty());
-                when(tenantModuleRepository.countEnabledModulesByTenantId(1L))
-                                .thenReturn(3);
+                when(provisioningJobRepository.findLatestStatusesByTenantIds(List.of(1L)))
+                                .thenReturn(List.of());
+                when(tenantModuleRepository.countEnabledModulesByTenantIds(List.of(1L)))
+                                .thenReturn(List.<Object[]>of(new Object[] { 1L, 3 }));
 
                 // When
                 List<TenantListResponse> responses = tenantService.getTenantsByStatusAsList(
@@ -312,6 +320,22 @@ class TenantServiceImplTest {
                 assertThat(response.storageUsedMb()).isEqualTo(100L);
                 assertThat(response.provisioningStatus()).isEqualTo("idle");
                 assertThat(response.provisionedModulesCount()).isEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("Should build stage full domain from configured platform domain when custom domain is missing")
+        void testGetTenantDetailById_UsesConfiguredPlatformDomainFallback() {
+                testTenant.setCustomDomain(null);
+                when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+                when(provisioningJobRepository.findFirstByTenantIdOrderByCreatedAtDesc(1L))
+                                .thenReturn(Optional.empty());
+                when(tenantModuleRepository.countEnabledModulesByTenantId(1L))
+                                .thenReturn(5);
+                when(frontendConfig.getBaseUrl()).thenReturn("https://s1-%s.craftive.io");
+
+                TenantDetailResponse response = tenantService.getTenantDetailById(1L, Language.TR);
+
+                assertThat(response.fullDomain()).isEqualTo("s1-testcompany.craftive.io");
         }
 
         // ========================================

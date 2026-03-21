@@ -110,7 +110,7 @@ admincraft:
     default-language: TR
     supported-languages: TR,EN
   storage:
-    provider: local
+    provider: ${STORAGE_PROVIDER:local}
     base-path: ${STORAGE_PATH:uploads}
     temp-path: ${TEMP_PATH:temp}
     max-file-size: ${MAX_FILE_SIZE:10485760}
@@ -121,6 +121,14 @@ admincraft:
       thumbnail-quality: 80
       auto-generate-formats: THUMBNAIL,SMALL,MEDIUM
       supported-image-types: image/jpeg,image/png,image/gif,image/webp
+    s3:
+      endpoint: ${SPACES_ENDPOINT:}
+      bucket: ${SPACES_BUCKET:}
+      region: ${SPACES_REGION:fra1}
+      access-key: ${SPACES_ACCESS_KEY:}
+      secret-key: ${SPACES_SECRET_KEY:}
+      cdn-base-url: ${SPACES_CDN_URL:}
+      delete-local-after-migration: false
 
 resilience4j:
   ratelimiter:

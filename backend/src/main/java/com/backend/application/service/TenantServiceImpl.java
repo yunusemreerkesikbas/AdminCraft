@@ -24,15 +24,16 @@ import com.backend.domain.enums.Language;
 import com.backend.domain.enums.ProvisioningStatus;
 import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.exception.TenantNotFoundException;
+import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
+import com.backend.presentation.dto.response.TenantDetailResponse;
+import com.backend.presentation.dto.response.TenantListResponse;
+import com.backend.shared.constants.ValidationConstants;
 import com.backend.infrastructure.persistence.platform.entity.ProvisioningJob;
 import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import com.backend.infrastructure.persistence.platform.repository.ProvisioningJobRepository;
 import com.backend.infrastructure.persistence.platform.repository.TenantModuleRepository;
-import com.backend.presentation.dto.response.TenantDetailResponse;
-import com.backend.presentation.dto.response.TenantListResponse;
-import com.backend.shared.constants.ValidationConstants;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class TenantServiceImpl implements TenantService {
     private final TenantModuleRepository tenantModuleRepository;
     private final ProvisioningJobRepository provisioningJobRepository;
     private final com.backend.infrastructure.tenant.TenantContext tenantContext;
+    private final FrontendConfigPort frontendConfig;
 
     @Override
     @Transactional
@@ -73,7 +75,8 @@ public class TenantServiceImpl implements TenantService {
         ProvisioningStatus provisioningStatus = calculateProvisioningStatus(savedTenant.getId());
         Integer modulesCount = countProvisionedModules(savedTenant.getId());
 
-        return TenantDetailResponse.from(savedTenant, displayLanguage, provisioningStatus, modulesCount);
+        return TenantDetailResponse.from(savedTenant, displayLanguage, provisioningStatus, modulesCount,
+                resolveTenantFullDomain(savedTenant));
     }
 
     @Override
@@ -110,7 +113,8 @@ public class TenantServiceImpl implements TenantService {
         ProvisioningStatus provisioningStatus = calculateProvisioningStatus(updatedTenant.getId());
         Integer modulesCount = countProvisionedModules(updatedTenant.getId());
 
-        return TenantDetailResponse.from(updatedTenant, displayLanguage, provisioningStatus, modulesCount);
+        return TenantDetailResponse.from(updatedTenant, displayLanguage, provisioningStatus, modulesCount,
+                resolveTenantFullDomain(updatedTenant));
     }
 
     @Override
@@ -268,7 +272,8 @@ public class TenantServiceImpl implements TenantService {
                     .orElseThrow(() -> new TenantNotFoundException(id));
             ProvisioningStatus provisioningStatus = calculateProvisioningStatus(id);
             Integer modulesCount = countProvisionedModules(id);
-            return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+            return TenantDetailResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount,
+                    resolveTenantFullDomain(tenant));
         });
     }
 
@@ -309,6 +314,18 @@ public class TenantServiceImpl implements TenantService {
                 .getOrDefault(tenant.getId(), ProvisioningStatus.IDLE);
         Integer modulesCount = metrics.moduleCountByTenantId().getOrDefault(tenant.getId(), 0);
         return TenantListResponse.from(tenant, displayLanguage, provisioningStatus, modulesCount);
+    }
+
+    private String resolveTenantFullDomain(Tenant tenant) {
+        if (tenant.getCustomDomain() != null && !tenant.getCustomDomain().isBlank()) {
+            return tenant.getCustomDomain().trim();
+        }
+        String baseUrl = frontendConfig.getBaseUrl();
+        String formatted = (baseUrl != null && baseUrl.contains("%s"))
+                ? String.format(baseUrl, tenant.getSubdomain()).trim()
+                : (baseUrl != null ? baseUrl.trim() : "");
+        formatted = formatted.replaceFirst("^https?://", "");
+        return formatted.replaceFirst("/.*$", "");
     }
 
     private TenantMetrics loadTenantMetrics(List<Long> tenantIds) {

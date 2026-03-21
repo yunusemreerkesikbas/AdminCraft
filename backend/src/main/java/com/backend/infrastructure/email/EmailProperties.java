@@ -14,8 +14,8 @@ public class EmailProperties implements MailConfigPort {
 
     private boolean enabled = true;
     private String provider = "console";
-    private String fromAddress = "noreply@admincraft.com";
-    private String fromName = "AdminCraft";
+    private String fromAddress = "noreply@craftive.io";
+    private String fromName = "Craftive";
     private boolean logContent = false;
     private boolean logSimplified = true;
 }

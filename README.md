@@ -1,22 +1,24 @@
 # AdminCraft
 
-AdminCraft is a configurable project solutions platform built with Clean Architecture, emphasizing modular delivery, security, scalability, and performance.
+AdminCraft is a configurable multi-tenant platform built with Clean Architecture, emphasizing modular delivery, security, scalability, and performance. The monorepo ships the backend control plane, the Angular admin application, and the Next.js demo/reference storefront used as the tenant storefront base.
 
 Documentation: [`docs/README.md`](docs/README.md)
 
-## ?? Project Anatomy
+## Project Anatomy
 
-The project is structured as a monorepo containing both the backend and frontend applications:
+The project is structured as a monorepo containing the backend, admin frontend, and demo/reference storefront:
 
 ```
 AdminCraft/
 +-- backend/            # Spring Boot 3 application (API)
-+-- storefront/         # Angular 19 application (UI)
++-- storefront/         # Angular 19 admin application
++-- storefront-nextjs/  # Next.js demo/reference storefront
 +-- docker/             # Docker configuration
++-- docs/               # Architecture, module, and ops documentation
 +-- uploads/            # Tenant file uploads
 ```
 
-## ?? Tech Stack
+## Tech Stack
 
 ### Backend
 
@@ -29,14 +31,13 @@ AdminCraft/
 
 ### Frontend
 
-- **Core**: Angular 19, TypeScript, RxJS
+- **Admin UI**: Angular 19, TypeScript, RxJS, Angular Signals
+- **Headless Storefront**: Next.js App Router, React Server Components, next-intl
 - **UI/UX**: Angular Material 19, Tailwind CSS
-- **State Management**: Angular Signals, RxJS
-- **i18n**: Transloco
 - **Charts**: ApexCharts
 - **Editor**: Quill
 
-## ?? Architecture
+## Architecture
 
 ### Multi-Tenancy (Database-per-Tenant)
 
@@ -55,7 +56,13 @@ The backend follows strict Clean Architecture principles to ensure maintainabili
 3. **Domain**: Entities, Business Logic (Framework agnostic)
 4. **Infrastructure**: Implementations (Persistence, Security, External Services)
 
-## ?? Security Features
+## Storefront Model
+
+- `storefront-nextjs/` is the demo/reference storefront deployed by this platform repository in stage and prod.
+- Tenant storefronts are created by forking `storefront-nextjs/`, keeping the shared core CMS/runtime contract, and replacing theme-specific implementation under `components/theme/`.
+- The Angular `storefront/` app remains the admin/control-panel frontend. Public tenant storefront delivery is handled by Next.js.
+
+## Security Features
 
 - **Input Validation**: Strict validation on all DTOs.
 - **Sanitization**: XSS protection via OWASP Encoder and HTML sanitization.

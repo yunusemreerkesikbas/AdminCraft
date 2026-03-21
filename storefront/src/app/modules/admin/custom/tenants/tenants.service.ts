@@ -37,19 +37,19 @@ export class TenantsService extends CrudHttpService<Tenant, CreateTenantRequest,
         return this.customPut<TenantLanguagesDto>('tenantLanguages', req, { tenantId });
     }
 
-    provisionLanguages(tenantId: number, req: ProvisionLanguagesRequest): Observable<ProvisioningJobDto> {
-        return this.customPost<ProvisioningJobDto>('tenantLanguagesProvision', req, { tenantId });
+    provisionLanguages(tenantId: number, req: ProvisionLanguagesRequest): Observable<ApiResponse<ProvisioningJobDto>> {
+        return this.api.post<ApiResponse<ProvisioningJobDto>>('tenantLanguagesProvision', req, { tenantId });
     }
 
-    getProvisioningJob(jobUuid: string): Observable<ProvisioningJobDto> {
-        return this.customGet<ProvisioningJobDto>('provisioningJob', { jobUuid });
+    getProvisioningJob(jobUuid: string): Observable<ApiResponse<ProvisioningJobDto>> {
+        return this.api.get<ApiResponse<ProvisioningJobDto>>('provisioningJob', { jobUuid });
     }
 
-    getProvisioningJobById(jobId: number): Observable<SyncJobDto> {
-        return this.customGet<SyncJobDto>('provisioningJob', { jobId });
+    getProvisioningJobById(jobId: number): Observable<ApiResponse<SyncJobDto>> {
+        return this.api.get<ApiResponse<SyncJobDto>>('provisioningJob', { jobId });
     }
 
-    getLanguageProvisioningJobStatus(jobUuid: string): Observable<ProvisioningJobDto> {
+    getLanguageProvisioningJobStatus(jobUuid: string): Observable<ApiResponse<ProvisioningJobDto>> {
         return this.getProvisioningJob(jobUuid);
     }
 

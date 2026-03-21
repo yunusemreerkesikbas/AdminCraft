@@ -172,8 +172,4 @@ public class Tenant {
         }
         supportedLanguages.remove(language);
     }
-    
-    public String getFullDomain() {
-        return customDomain != null ? customDomain : subdomain + ".admincraft.com";
-    }
 }

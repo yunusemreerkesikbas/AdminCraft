@@ -1,6 +1,6 @@
 # AdminCraft Documentation
 
-AdminCraft is a platform for **customizable project solutions** built with **Spring Boot (Java 21)** and **Angular 19**.
+AdminCraft is a platform for **customizable project solutions** built with **Spring Boot (Java 21)**, **Angular 19**, and a **Next.js headless storefront**.
 The platform uses **database-per-tenant** isolation (`platform_management` + `ac_subdomain_{id}`) and a Clean Architecture layout.
 
 ## How to use these docs
@@ -8,6 +8,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
 - Start here for architecture and conventions: [`global/architecture.md`](global/architecture.md)
 - If you are touching security, always read: [`global/security-multi-tenancy.md`](global/security-multi-tenancy.md)
 - For patterns that apply everywhere:
+  - Prelaunch checklist: [`prelaunch.md`](prelaunch.md)
   - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
   - Backend conventions: [`global/backend-patterns.md`](global/backend-patterns.md)
   - Frontend conventions: [`global/frontend-patterns.md`](global/frontend-patterns.md)
@@ -18,7 +19,6 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - List views (pagination/sort/search): [`global/list-pagination-search.md`](global/list-pagination-search.md)
   - Validation framework: [`global/validation.md`](global/validation.md)
   - Database migrations: [`global/migrations.md`](global/migrations.md)
-  - Migration governance: [`global/migration-governance.md`](global/migration-governance.md)
   - Testing patterns: [`global/testing.md`](global/testing.md)
   - DevOps & deployment: [`global/devops.md`](global/devops.md)
 
@@ -56,13 +56,13 @@ Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but *
 
 ### Headless storefront (`storefront-nextjs/`)
 
-Next.js 16 App Router storefront consuming the CMS delivery APIs.
+Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 
 - Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
+- This repository deploys the demo/reference storefront in stage and prod. Tenant storefronts fork this project and customize the theme layer while keeping the shared core CMS/runtime contract.
 - Homepage body and shared chrome are CMS-driven. `LandingPageTemplate` renders Sections 1–8 via the generic `CmsSlot → CmsComponent → registry` pipeline; each slot dispatches by `component.type` to a dedicated async RSC renderer. Shared `Header` / `Footer` slots use the chrome adapter layer.
 - Required tenant seed/import flow for the default landing page (ImpEx, manual via Admin UI `/{lang}/impex`):
-  - Flyway: `db/tenant/pagebuilder/R__seed_page_templates.sql` (auto)
-  - ImpEx: `impex/seed_liko_components.sql` → `impex/seed_landing_component_types.sql` (type migration, must follow liko_components) → `impex/seed_liko_chrome_components.sql` → `impex/seed_liko_pages_and_slots.sql` → `impex/seed_pages_and_slots.sql` → `impex/seed_about_content_page.sql` (optional, ContentPageTemplate About page at `/about-us`) → `impex/seed_navigation.sql`
+  - ImpEx: `impex/theme_liko_components.sql` → `impex/base_landing_component_types.sql` (type migration, must follow liko_components) → `impex/theme_liko_chrome_components.sql` → `impex/theme_liko_pages_and_slots.sql` → `impex/base_pages_and_slots.sql` → `impex/theme_liko_about_content_page.sql` (optional, ContentPageTemplate About page at `/about-us`) → `impex/theme_liko_navigation.sql`
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param

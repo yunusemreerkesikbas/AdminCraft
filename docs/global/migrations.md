@@ -1,15 +1,50 @@
 # Database Migrations (Flyway)
 
+## 1. What it is / why it exists
+
 AdminCraft uses **Flyway** for database migrations with a **modular, per-tenant** approach. Each tenant database is migrated independently with module-specific migration scripts.
 
-## Migration Architecture
+This architecture ensures that tenant databases can be provisioned with only the required modules and allows the platform to maintain schema consistency across isolated databases while providing a robust mechanism to manage schema evolution.
 
-### File Structure
+Legacy tenants may experience schema drift. The migration system includes governance rules (forward-only, idempotent repairs) to ensure that sync operations remain deterministic and safe across all environments.
 
-```
+## 2. Source of truth
+
+| Concern | File |
+|---------|------|
+| Migration Files | `backend/src/main/resources/db/` |
+| Module Execution Order | `backend/src/main/java/com/backend/application/service/provisioning/TenantMigrationService.java` |
+| CI Governance Script | `scripts/migrations/check-versioned-immutability.sh` |
+| CI Lint Script | `scripts/migrations/lint-migrations.sh` |
+| GitHub Workflow | `.github/workflows/migration-guardrails.yml` |
+
+## 3. Rules and invariants
+
+### Core Policy
+
+1. **Forward-only**: Existing versioned migrations (`V*.sql`) are immutable after merge. Modifying or deleting previously released `V*.sql` files is prohibited.
+2. **Repair via new versions**: Legacy drift fixes must be implemented as new `V*__repair_*.sql` migrations.
+3. **Repeatable safety**: `R__*.sql` must use explicit column lists for every `INSERT`. Do not rely on implicit column order.
+4. **Module order**: The execution order `core -> mail_marketing -> media -> component_library -> pagebuilder -> product` is mandatory. Do not create cross-module FK changes that violate this order.
+5. **Idempotent Repairs**: Repair migrations must use `INFORMATION_SCHEMA` checks to guard DDL operations (`AddColumnIfNotExists`, `AddIndexIfNotExists`, `CreateTableIfNotExists`).
+
+> **Pre-launch note:** All pre-launch migrations were squashed into `V1.0.0__baseline.sql` per module. The forward-only policy applies strictly to any changes merged after this baseline.
+
+### CI Requirements
+
+Every PR touching migration files must pass the Migration Guardrails workflow, which includes:
+1. Versioned migration immutability check
+2. Migration lint checks
+3. Backend compile sanity
+
+## 4. Common patterns
+
+### File Structure and Naming
+
+```text
 backend/src/main/resources/db/
 ├── platform/           # Platform database migrations
-│   └── V1__baseline.sql
+│   └── V1.0.0__baseline.sql
 └── tenant/             # Tenant database migrations (per module)
     ├── core/           # Always runs first
     ├── mail_marketing/ # Optional mail marketing module
@@ -19,23 +54,19 @@ backend/src/main/resources/db/
     └── product/
 ```
 
-### Naming Convention
-
 | Type       | Pattern                   | Example                       |
 | ---------- | ------------------------- | ----------------------------- |
-| Versioned  | `V{n}__{description}.sql` | `V23__responsive_media.sql`   |
+| Versioned  | `V{n}__{description}.sql` | `V2__add_new_feature.sql`     |
 | Repeatable | `R__{description}.sql`    | `R__seed_component_types.sql` |
 
-- **Versioned migrations** run once, in order
-- **Repeatable migrations** run whenever their checksum changes
+- **Versioned migrations** run once, in order.
+- **Repeatable migrations** run whenever their checksum changes. Only structural system data (e.g., component types, media formats, product types) remains in `R__*.sql` files. Content-heavy seeds are managed via **ImpEx** (`backend/src/main/resources/impex/`).
 
----
+### Module Execution Order
 
-## Module Execution Order
+Modules are executed in this fixed order to ensure dependencies are satisfied:
 
-**CRITICAL**: Modules are executed in this fixed order to ensure dependencies are satisfied:
-
-```
+```text
 1. core              → Base tables (users, sites)
 2. mail_marketing    → Optional tenant mail marketing tables
 3. media             → Media, responsive_media_set
@@ -44,140 +75,44 @@ backend/src/main/resources/db/
 6. product           → Product catalog
 ```
 
-This order is enforced in `TenantMigrationService.java`:
+### Migration Runbook (Rollout Strategy)
 
-```java
-private static final List<String> MODULE_ORDER = List.of(
-    "core", "mail_marketing", "media", "component_library", "pagebuilder", "product"
-);
-```
+When deploying new migrations to production:
+1. **Canary First:** Run sync on a small canary tenant set.
+2. **Validate:** Check key APIs (`/api/cms/pages`, provisioning status endpoints).
+3. **Expand:** Roll out to a medium tenant wave.
+4. **Global:** Roll out globally.
 
-Provisioning request mapping:
-
-- Provisioning catalog exposes `core`, `product`, and `mail_marketing` as selectable modules.
-- Before `MODULE_ORDER` is applied, backend canonicalizes `core` selection to execution modules:
-  - `core`, `media`, `component_library`, `pagebuilder`
-- Optional `product` and `mail_marketing` are appended when requested.
-
----
-
-## Migration Rules
-
-### ✅ DO
-
-1. **Follow module order for foreign keys**
-   - If Table A references Table B, Table B's migration must be in an earlier module
-   - Example: `component_entries.responsive_id → media.responsive_media_set.id`
-   - Solution: Put the FK migration in the `media` module, not `component_library`
-
-2. **Use explicit column lists in INSERT statements**
-
-   ```sql
-   -- ✅ Correct
-   INSERT INTO table (id, name, code) VALUES (1, 'Name', 'code');
-   ```
-
-3. **Keep migrations atomic and focused**
-   - One logical change per migration
-   - Include rollback-safe operations where possible
-
-4. **Update seed files after schema changes**
-   - When removing/adding columns, update corresponding `R__seed_*.sql` files
-5. **Use forward-only repair migrations for legacy drift**
-   - Do not edit old released `V*.sql`
-   - Add a new `V*__repair_*.sql` with `INFORMATION_SCHEMA` guards
-
-### ❌ DON'T
-
-1. **No direct `IF NOT EXISTS` on `ALTER TABLE`** (MySQL support is limited/inconsistent)
-
-   ```sql
-   -- ❌ Wrong (MySQL doesn't support this for ALTER)
-   ALTER TABLE pages ADD COLUMN IF NOT EXISTS robot_tag VARCHAR(50);
-
-   -- ✅ Correct (for legacy drift): use forward-only repair migration with INFORMATION_SCHEMA guards
-   -- e.g. AddColumnIfNotExists procedure in V*__repair_*.sql
-   ```
-
-2. **No cross-module foreign keys in wrong order**
-
-   ```sql
-   -- ❌ Wrong: V14 (component_library) references media table created in V23 (media)
-   -- media module runs AFTER component_library!
-
-   -- ✅ Correct: Move to media module as V25
-   ALTER TABLE component_entries ADD COLUMN responsive_id BIGINT;
-   ```
-
-3. **No assumptions about column existence**
-   - If a column was removed in migration VN, update all R\_\_ files that reference it
-4. **Do not modify historical versioned migrations**
-   - This causes checksum drift and unstable sync behavior in legacy tenants
-
----
-
-## Governance
-
-- Policy and CI guardrails: [`migration-governance.md`](migration-governance.md)
-
----
-
-## Troubleshooting
+## 5. Gotchas
 
 ### Common Errors
 
 | Error                                     | Cause                                    | Solution                                            |
 | ----------------------------------------- | ---------------------------------------- | --------------------------------------------------- |
 | `Failed to open the referenced table 'X'` | FK references table from later module    | Move migration to the module that creates table X   |
-| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update R\__seed_\*.sql to match current schema      |
+| `Unknown column 'X' in field list`        | Column removed but seed file not updated | Update `R__seed_*.sql` to match current schema      |
 | `Duplicate column name 'X'`               | Legacy drift / partial previous schema   | Add forward-only `V*__repair_*.sql` guard migration |
 
-### Repair Failed Migration (Forward-Only)
+### `IF NOT EXISTS` limitation
+Do not use direct `IF NOT EXISTS` on `ALTER TABLE` operations, as MySQL support is limited/inconsistent. Use a forward-only repair migration with `INFORMATION_SCHEMA` guards (e.g., `AddColumnIfNotExists` procedure).
 
-```powershell
-# Check migration history
-docker exec -it admincraft-mysql mysql -u root -p1234 -e \
-  "USE tenant_democompany_db; SELECT * FROM flyway_<module>_history ORDER BY installed_rank DESC LIMIT 5;"
+### Failure Triage and Recovery
 
-# Prefer: add a new repair migration and rerun sync.
-# Avoid editing old migration files.
+When a sync job fails:
+1. Capture `jobId`, module name, migration name, and SQL error.
+2. Check Flyway history tables (e.g., `flyway_pagebuilder_history`) for the specific tenant database.
+3. Classify error (Duplicate column/table, Unknown column in repeatable seed, FK constraint error).
+4. **Recovery:** Do not edit the old `V*.sql` file to fix the drift. Instead, add a new `V*__repair_*.sql` migration, redeploy, and rerun the sync.
+
+```sql
+-- Useful SQL for triage
+SELECT version, description, success, installed_on
+FROM flyway_pagebuilder_history
+ORDER BY installed_rank DESC
+LIMIT 20;
+
+SELECT table_name, column_name, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_schema = 'tenant_<db_name>'
+  AND column_name IN ('created_by', 'page_type', 'responsive_id');
 ```
-
----
-
-## Testing Migrations
-
-Before committing a new migration:
-
-1. **Fresh database test**
-
-   ```powershell
-   # Drop and recreate tenant database
-   docker exec -it admincraft-mysql mysql -u root -p1234 -e "DROP DATABASE IF EXISTS tenant_test_db; CREATE DATABASE tenant_test_db;"
-   ```
-
-2. **Run application**
-
-   ```powershell
-   mvn spring-boot:run "-Dspring-boot.run.profiles=dev"
-   ```
-
-3. **Verify all modules migrated**
-
-   ```powershell
-   docker exec -it admincraft-mysql mysql -u root -p1234 -e \
-     "USE tenant_democompany_db; SHOW TABLES LIKE 'flyway_%';"
-   ```
-
----
-
-## Version Bundles (Current State)
-
-| Version Range | Module            | Notes                                                       |
-| ------------- | ----------------- | ----------------------------------------------------------- |
-| V1-V40        | core              | Baseline + navigation + site technical + recaptcha + repair + config_properties (V39–V40, HAC-style key-value) |
-| V1–V5         | mail_marketing    | Baseline (templates/subscribers/provider config + campaigns/outbox) + subscriptions + source/lang model + lang backfill + permission model |
-| V1-V25        | component_library | Baseline + responsive links + navigation bindings + cleanup + profile simplification + `is_navigation_aware` boolean + drop `navigation_link_node_id` (V22–V23) + remove Seed* components (V24) + remove unused component types (V25) |
-| V1-V35        | pagebuilder       | Baseline + templates + page type + legacy page repair + page_i18n name/canonical_url + restore description |
-| V20-V24       | media             | Baseline + responsive media + link type alignment           |
-| V27-V34       | product           | Baseline + responsive refactor + fields + legacy repair     |

@@ -53,6 +53,8 @@ logs/
 .env.prod
 .env.stage
 !.env.example
+*.b64
+backend/.env
 backend/src/main/resources/application-dev.yml
 
 ### OS ###
@@ -96,7 +98,17 @@ gha-creds-*.json
 
 ### MCP (may contain secrets) ###
 .mcp.json
+.mcp.local.json
 
 ### Landing (Next.js) ###
 landing/.next/
 landing/node_modules/
+
+### Local Artifacts ###
+backend/build_errors.txt
+backend/compile_output.txt
+backend/HELP.md
+storefront/tmpclaude-*
+storefront-nextjs/.next-dev-*.log
+storefront-nextjs/dev-server*.log
+liko-next-js/

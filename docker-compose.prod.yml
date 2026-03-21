@@ -29,7 +29,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
       DB_HOST: mysql-db
       DB_PORT: 3306
-      DB_USERNAME: root
+      DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       RECAPTCHA_MASTER_KEY: ${RECAPTCHA_MASTER_KEY}
@@ -38,6 +38,12 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
+      APP_FRONTEND_BASE_URL: ${APP_FRONTEND_BASE_URL}
+      PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
+      SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
+      SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
@@ -90,7 +96,7 @@ services:
       context: ./storefront-nextjs
       dockerfile: ../docker/storefront/Dockerfile
       args:
-        - BUILD_ENV=production
+        - BUILD_ENV=${SPRING_PROFILE:-prod}
         - NEXT_OUTPUT=standalone
     container_name: craftive-storefront
     restart: unless-stopped
@@ -102,6 +108,8 @@ services:
       - craftive-network
     labels:
       - "traefik.enable=true"
+      # Demo/reference storefront shipped from this repo.
+      # Tenant-specific storefronts are deployed separately via deploy-tenant-storefront.sh.
       # Matches tenant subdomains; excludes prod API and admin panel hosts.
       - "traefik.http.routers.storefront.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`api.${DOMAIN}`) && !Host(`app.${DOMAIN}`)"
       - "traefik.http.routers.storefront.ruleSyntax=v2"

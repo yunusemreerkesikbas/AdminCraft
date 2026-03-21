@@ -5,13 +5,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { forkJoin, interval, switchMap, takeWhile } from 'rxjs';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { heroCheckCircle, heroXCircle, heroExclamationTriangle } from '@ng-icons/heroicons/outline';
 import { ModuleCardComponent } from './module-card/module-card.component';
 import { ModuleProvisionService } from './module-provision.service';
 import { ModuleCatalog, ModuleProvisionDialogData, ProvisioningJob } from './module-provision.types';
+import { NotificationService } from '@shared/notifications/notification.service';
 
 @Component({
     selector: 'spa-module-provision-dialog',
@@ -37,7 +38,7 @@ export class ModuleProvisionDialogComponent implements OnInit {
     #destroyRef = inject(DestroyRef);
     #dialogRef = inject(MatDialogRef<ModuleProvisionDialogComponent>);
     #data = inject<ModuleProvisionDialogData>(MAT_DIALOG_DATA);
-    #transloco = inject(TranslocoService);
+    #notification = inject(NotificationService);
 
     protected modulesSig = signal<ModuleCatalog[]>([]);
     protected selectedModulesSig = signal<Set<string>>(new Set());
@@ -138,7 +139,9 @@ export class ModuleProvisionDialogComponent implements OnInit {
                     this.isLoadingSig.set(false);
                 },
                 error: (err) => {
-                    this.errorSig.set(err?.error?.message ?? '');
+                    const message = this.#resolveErrorMessage(err);
+                    this.errorSig.set(message);
+                    this.#notification.alert(message);
                     this.isLoadingSig.set(false);
                 }
             });
@@ -178,14 +181,19 @@ export class ModuleProvisionDialogComponent implements OnInit {
                 next: (response) => {
                     if (response.result === 'SUCCESS' && response.data) {
                         this.currentJobSig.set(response.data);
+                        this.#notification.info(response.message ?? '');
                         this.#startPolling(response.data.jobId);
                     } else {
-                        this.errorSig.set(response.message ?? '');
+                        const message = response.message ?? '';
+                        this.errorSig.set(message);
+                        this.#notification.alert(message);
                         this.isProvisioningSig.set(false);
                     }
                 },
                 error: (err) => {
-                    this.errorSig.set(err?.error?.message ?? '');
+                    const message = this.#resolveErrorMessage(err);
+                    this.errorSig.set(message);
+                    this.#notification.alert(message);
                     this.isProvisioningSig.set(false);
                 }
             });
@@ -207,15 +215,27 @@ export class ModuleProvisionDialogComponent implements OnInit {
                         this.currentJobSig.set(response.data);
 
                         if (response.data.status === 'succeeded' || response.data.status === 'failed') {
+                            if (response.data.status === 'succeeded') {
+                                this.#notification.success(response.message ?? '');
+                            } else {
+                                this.#notification.alert(response.message ?? response.data.error ?? '');
+                            }
                             this.isProvisioningSig.set(false);
                         }
                     }
                 },
                 error: (err) => {
-                    this.errorSig.set(err?.error?.message ?? '');
+                    const message = this.#resolveErrorMessage(err);
+                    this.errorSig.set(message);
+                    this.#notification.alert(message);
                     this.isProvisioningSig.set(false);
                 }
             });
+    }
+
+    #resolveErrorMessage(err: unknown): string {
+        const typedError = err as { error?: { message?: string } };
+        return typedError?.error?.message ?? '';
     }
 
     protected retry(): void {

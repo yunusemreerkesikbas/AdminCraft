@@ -125,7 +125,8 @@ class TenantDTOTest {
                 testTenant,
                 Language.EN,
                 testProvisioningStatus,
-                testModulesCount);
+                testModulesCount,
+                "testcompany.com");
 
         // Then
         assertThat(response).isNotNull();
@@ -151,7 +152,8 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount);
+                testModulesCount,
+                "testcompany.com");
 
         assertThat(response.databaseName()).isEqualTo("ac_tenant_1");
         assertThat(response.storageUsedMb()).isEqualTo(100L);
@@ -168,7 +170,8 @@ class TenantDTOTest {
                 testTenant,
                 Language.TR,
                 testProvisioningStatus,
-                testModulesCount);
+                testModulesCount,
+                "testcompany.com");
 
         assertThat(response.getClass().getRecordComponents())
                 .extracting("name")

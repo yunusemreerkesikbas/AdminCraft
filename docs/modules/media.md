@@ -50,6 +50,13 @@ Formats and tools:
 - `DELETE /api/media/{mediaId}/variants/{variantId}`
 - `PUT /api/media/{id}/focal-point`
 
+Storage migration (available only when `admincraft.storage.provider=s3`):
+
+- `POST /api/media/migration/start` — Triggers async LOCAL → S3 migration for all media in the current tenant. Returns `202 Accepted`. If a migration is already RUNNING, the second call is silently ignored.
+- `GET /api/media/migration/status` — Returns current migration progress: `{ tenantSubdomain, total, migrated, failed, failedFileNames, state }` where `state` is one of `IDLE | RUNNING | COMPLETED | PARTIAL_FAILURE`.
+
+Both migration endpoints require `TENANT_ADMIN`.
+
 Responsive sets (desktop/mobile pair):
 
 Controller: `backend/src/main/java/com/backend/presentation/controller/ResponsiveMediaController.java`
@@ -113,10 +120,16 @@ Recommended admin flow:
 
 Storefront delivery note:
 
-- Public media files are still tenant-scoped in this project.
+Media URL resolution depends on `storageProvider` stored on the `Media` entity:
+
+| `storageProvider` | `externalUrl` | `Media.getPublicUrl()` | Storefront delivery |
+|---|---|---|---|
+| `LOCAL` | `null` | `/api/media/files/{fileName}` | `/cms-media/` proxy in `storefront-nextjs` adds tenant headers before streaming |
+| `S3` | `https://media.craftive.io/…` | CDN URL directly | Absolute URL — no proxy, served from Cloudflare CDN |
+
 - Direct browser requests to `GET /api/media/files/{fileName}` can fail with `Tenant identifier required` if tenant headers are not present.
-- `storefront-nextjs` solves this by rewriting CMS media URLs to its own tenant-aware proxy route: `GET /cms-media/{...path}`.
-- The proxy forwards `X-Tenant-Subdomain` or `X-Tenant-ID` before streaming the file to Next/Image.
+- `storefront-nextjs` solves this for LOCAL media by rewriting CMS media URLs to its own tenant-aware proxy route: `GET /cms-media/{...path}`.
+- S3 media bypasses the proxy entirely — `externalUrl` is the Cloudflare CDN URL and is returned as-is.
 
 Linked usages:
 
@@ -137,6 +150,139 @@ Linked usages:
 `GET /api/site-settings` now also hydrates `global.logoMedia` and `global.logoDarkMedia` summaries for the admin Site Dashboard, so logo pickers no longer need a follow-up media lookup by UID.
 
 **Clearing the logo:** Sending `logoMediaUid: ""` or `null` in a `PATCH /api/site-settings` request previously had no effect because `SiteSettingsServiceImpl.persistLogoUids` skipped null values. This is fixed — null values are now written, allowing the logo to be cleared by omitting or emptying the field in the admin Site Settings form.
+
+## Storage providers & CDN
+
+AdminCraft supports pluggable storage backends via `StorageAdapter`. The active provider is set by `admincraft.storage.provider`.
+
+| Provider | Bean | Active when | File path stored |
+|---|---|---|---|
+| `local` | `LocalStorageAdapter` | Default (dev, always registered) | Absolute filesystem path: `uploads/{subdomain}/media/{fileName}` |
+| `s3` | `S3StorageAdapter` (`@Primary`) | `provider=s3` (stage/prod) | S3 object key: `{subdomain}/media/{fileName}` |
+
+### CDN architecture (stage/prod)
+
+```
+Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
+                              ↓
+                       Cloudflare CDN (orange-cloud proxy)
+                              ↓
+               media.craftive.io  /  s1.media.craftive.io
+```
+
+- DO Spaces CDN is **disabled** — Cloudflare CDN covers this at 330 PoP.
+- UUID-based file names are immutable → `Cache-Control: public, max-age=31536000, immutable` → near-100% Cloudflare cache hit rate.
+- Object key isolation: `{tenantSubdomain}/media/{uuid}.{ext}` (cross-tenant collision impossible).
+
+### Buckets and CDN domains
+
+| Env | Bucket | CDN domain |
+|---|---|---|
+| Stage | `craftive-media-stage` | `s1.media.craftive.io` |
+| Prod | `craftive-media-prod` | `media.craftive.io` |
+
+### Local development with MinIO
+
+MinIO is a Docker-based S3-compatible storage server for testing S3 behavior without real DO Spaces credentials.
+
+```powershell
+# Start MinIO alongside MySQL
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d
+
+# MinIO Console → http://localhost:9001  (minioadmin / minioadmin)
+# MinIO S3 API  → http://localhost:9000
+```
+
+1. Open `http://localhost:9001`, create a bucket named `craftive-media-dev`.
+2. Set an access key in MinIO Console (Access Keys → Create).
+3. Start the backend with S3 env vars:
+
+```powershell
+$env:STORAGE_PROVIDER = "s3"
+$env:SPACES_ACCESS_KEY = "your-minio-key"
+$env:SPACES_SECRET_KEY = "your-minio-secret"
+$env:SPACES_ENDPOINT   = "http://localhost:9000"
+$env:SPACES_BUCKET     = "craftive-media-dev"
+$env:SPACES_CDN_URL    = "http://localhost:9000/craftive-media-dev"
+
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+4. Upload a file via Admin Panel → Media Library.
+5. Verify in MinIO Console that the file appears under `craftive-media-dev/{subdomain}/media/`.
+6. Check `media.external_url` in DB — should be `http://localhost:9000/craftive-media-dev/…`.
+
+### Migration: LOCAL → S3
+
+One-time per-tenant migration. Idempotent: files already at S3 are skipped.
+
+```
+POST /api/media/migration/start    → 202 Accepted (async, runs in background)
+GET  /api/media/migration/status   → { state: IDLE|RUNNING|COMPLETED|PARTIAL_FAILURE, total, migrated, failed, failedFileNames }
+```
+
+Local files are preserved after migration (`delete-local-after-migration: false` by default). Set to `true` only after validating CDN delivery end-to-end.
+
+### Infrastructure setup (one-time)
+
+**DigitalOcean Spaces:**
+1. Create two buckets in FRA1: `craftive-media-stage`, `craftive-media-prod`
+2. Add CORS policy to each: `GET` allowed from `https://*.craftive.io`
+3. Create separate Spaces key pairs (Spaces Keys page, **not** Personal Access Tokens):
+   - `craftive-stage` → Limited Access → `craftive-media-stage` only (Read & Write)
+   - `craftive-prod`  → Limited Access → `craftive-media-prod` only (Read & Write)
+
+**Cloudflare DNS (craftive.io zone):**
+4. `CNAME media    → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
+5. `CNAME s1.media → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
+
+**Cloudflare Cache Rule:**
+6. Caching → Cache Rules → Create:
+   - Match: `Hostname equals media.craftive.io OR s1.media.craftive.io`
+   - Cache eligibility: Eligible for cache
+   - Edge TTL: Use cache-control header if present (backend sends `max-age=31536000, immutable`)
+   - Browser TTL: Respect origin TTL
+
+**GitHub Secrets:**
+7. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+8. Add to `.env.prod`  → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+
+### Verification checklist (post-deploy)
+
+Run these checks after each stage/prod deploy:
+
+```
+□ 1. Upload test  — Admin Panel → Media Library → upload an image
+      → DO Spaces dashboard: file appears under craftive-media-{env}/{subdomain}/media/
+      → DB: media.storage_provider = 'S3'
+             media.external_url    = 'https://[s1.]media.craftive.io/...'
+
+□ 2. CDN delivery — open storefront page that uses the uploaded image
+      → Browser Network tab: image request goes to media.craftive.io (not /cms-media/)
+      → Response header: CF-Cache-Status: HIT (after first request)
+
+□ 3. Migration    — POST /api/media/migration/start  (Bearer token, TENANT_ADMIN)
+      → 202 Accepted
+      → Poll: GET /api/media/migration/status
+              { "state": "COMPLETED", "total": N, "migrated": N, "failed": 0 }
+
+□ 4. Legacy files — open a page that used a previously local image
+      → After migration: image now loads from CDN, not /cms-media/ proxy
+
+□ 5. DELETE test  — delete a media item from Admin Panel
+      → DO Spaces dashboard: file no longer exists in bucket
+```
+
+**Quick curl for migration (replace token and host):**
+```bash
+# Start migration
+curl -X POST https://s1.api.craftive.io/api/media/migration/start \
+  -H "Authorization: Bearer <token>"
+
+# Poll status
+curl https://s1.api.craftive.io/api/media/migration/status \
+  -H "Authorization: Bearer <token>"
+```
 
 ## Security & tenant isolation
 

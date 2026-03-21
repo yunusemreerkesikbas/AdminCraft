@@ -12,6 +12,8 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 
 ## 2. Source of truth
 
+Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md)
+
 | Concern | File |
 |---------|------|
 | Base services | [`../../docker-compose.yml`](../../docker-compose.yml) |
@@ -77,7 +79,7 @@ Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose 
 ```
 ghcr.io/craftive/craftive-backend:{tag}
 ghcr.io/craftive/craftive-frontend:{tag}
-ghcr.io/craftive/craftive-storefront:{tag}   # stage only; prod uses tenant-specific storefront images
+ghcr.io/craftive/craftive-storefront:{tag}   # demo/reference storefront shipped from this repo
 ghcr.io/craftive/<tenant>-storefront:{tag}   # tenant-specific repo output
 ```
 
@@ -178,12 +180,18 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 4. Production deploy:
      deploy-prod.yml → branch: release/release-DD.MM.YYYY
      → branch naming convention is `release/release-DD.MM.YYYY` (recommended, not enforced)
-     → build backend + frontend, push release-DD.MM.YYYY + latest tags
+     → build backend + frontend + demo storefront, push release-DD.MM.YYYY + latest tags
      → wait for GitHub Environment "production" reviewer approval
      → SSH to Prod Droplet, save current tag → pull and restart → write new tag to `.last-deployed-tag`
      → health check (exponential backoff, 10 attempts) + admin panel smoke test
      → on failure: automatic rollback to previous tag from `.last-deployed-tag.prev`
 ```
+
+### Demo storefront flow — Platform repository
+
+1. `storefront-nextjs/` in this repository is the demo/reference storefront.
+2. Stage and prod platform deploy workflows build and publish `ghcr.io/craftive/craftive-storefront:{tag}`.
+3. The platform compose stack runs this demo storefront centrally for shared demo/reference usage.
 
 ### Tenant storefront flow — Separate repository (recommended)
 
@@ -207,7 +215,7 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    bash /opt/craftive/scripts/remove-tenant-storefront.sh prod democompany
    ```
 
-This model keeps platform deploy workflows independent from tenant storefront deploy workflows.
+This model keeps tenant-specific deploy workflows independent from the platform deploy workflow, while still allowing the platform repo to ship a demo/reference storefront.
 
 ### Tenant storefront repository CI/CD policy
 
@@ -260,7 +268,7 @@ app:
     allowed-origins:
       - https://s1.app.craftive.io
     allowed-origin-patterns:
-      - https://*.s1.craftive.io
+      - https://s1-*.craftive.io
 ```
 
 CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — tenant storefronts run on arbitrary domains.
@@ -273,8 +281,10 @@ CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — t
 | `PROD_DROPLET_IP` | `deploy-prod.yml` |
 | `STAGE_DROPLET_IP` | `deploy-stage.yml` |
 | `CF_API_TOKEN` | Traefik DNS-01 (injected via `.env.*`) |
-| `ENV_PROD` | `.env.prod` content, base64-encoded |
-| `ENV_STAGE` | `.env.stage` content, base64-encoded |
+| `ENV_PROD` | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket |
+| `ENV_STAGE` | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+
+Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
 
 `GITHUB_TOKEN` is auto-injected by GitHub Actions (no explicit secret needed for GHCR push).
 
@@ -425,6 +435,6 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **Reserved subdomains cannot be assigned to tenants:** `www`, `api`, `app`, `admin`, `s1`, `s2`, `mail`, `docs`, `status`, `blog`, `demo`, `cdn`. Enforce at the tenant subdomain validation layer.
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
 - **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.
-- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
-- **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax (`HostRegexp(`[a-z0-9-]+\.craftive\.io`)`).
+- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
+- **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.
