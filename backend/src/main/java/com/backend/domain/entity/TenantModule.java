@@ -20,4 +20,5 @@ public class TenantModule {
     private String targetVersion;
     private LocalDateTime installedAt;
     private LocalDateTime updatedAt;
+    private String moduleCatalogName;
 }

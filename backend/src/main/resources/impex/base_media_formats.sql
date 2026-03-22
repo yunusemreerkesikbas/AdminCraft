@@ -1,9 +1,8 @@
--- ============================================
--- Media Module Seed Data
--- Description: System format presets and root folder
--- ============================================
+-- #ADMINCRAFT_IMPEX
 
 -- System format presets (SAP Hybris style)
+-- Source: R__seed_media_formats.sql
+
 INSERT INTO media_formats (uuid, uid, code, name, width, height, quality, crop_mode, is_system)
 VALUES
     (UUID(), 'mediaformat_thumb', 'THUMBNAIL', 'Thumbnail', 100, 100, 80, 'COVER', TRUE),
@@ -12,6 +11,3 @@ VALUES
     (UUID(), 'mediaformat_large', 'LARGE', 'Large', 1200, 1200, 90, 'FIT', TRUE),
     (UUID(), 'mediaformat_zoom', 'ZOOM', 'Zoom', 2000, 2000, 95, 'FIT', TRUE)
 ON DUPLICATE KEY UPDATE name = VALUES(name), width = VALUES(width), height = VALUES(height);
-
--- Root folder
-

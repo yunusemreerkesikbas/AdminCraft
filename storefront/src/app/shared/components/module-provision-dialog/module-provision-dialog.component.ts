@@ -57,12 +57,12 @@ export class ModuleProvisionDialogComponent implements OnInit {
 		this.#getStatusAnimationClass(this.currentJobSig()?.status)
 	);
 
-	protected canStartSig = computed(() =>
-		this.selectedModulesSig().size > 0 &&
-		!this.isLoadingSig() &&
-		!this.isProvisioningSig() &&
-		!this.showProgressSig()
-	);
+	protected canStartSig = computed(() => {
+		const selected = this.selectedModulesSig();
+		const installed = this.installedModulesSig();
+		const hasNewModules = [...selected].some(code => !installed.has(code));
+		return hasNewModules && !this.isLoadingSig() && !this.isProvisioningSig() && !this.showProgressSig();
+	});
 
 	protected showProgressSig = computed(() => this.currentJobSig() !== null);
 

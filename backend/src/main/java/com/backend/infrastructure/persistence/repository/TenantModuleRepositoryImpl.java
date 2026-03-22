@@ -25,8 +25,22 @@ public class TenantModuleRepositoryImpl implements TenantModuleRepository {
     }
 
     @Override
+    public List<TenantModule> findByTenantIdAndStatus(Long tenantId, String status) {
+        return jpaRepository.findByTenantIdAndStatus(tenantId, status).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TenantModule> findByTenantIdInAndStatus(List<Long> tenantIds, String status) {
+        return jpaRepository.findByTenantIdInAndStatus(tenantIds, status).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public boolean existsByTenantIdAndModuleCodeAndStatus(Long tenantId, String moduleCode, String status) {
-		return jpaRepository.existsByTenantIdAndModuleCodeAndStatus(tenantId, moduleCode, status);
+        return jpaRepository.existsByTenantIdAndModuleCodeAndStatus(tenantId, moduleCode, status);
     }
 
     @Override
@@ -50,6 +64,8 @@ public class TenantModuleRepositoryImpl implements TenantModuleRepository {
                 .targetVersion(source.getTargetVersion())
                 .installedAt(source.getInstalledAt())
                 .updatedAt(source.getUpdatedAt())
+                .moduleCatalogName(source.getModuleCatalog() != null
+                        ? source.getModuleCatalog().getName() : null)
                 .build();
     }
 

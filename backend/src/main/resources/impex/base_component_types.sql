@@ -1,5 +1,7 @@
+-- #ADMINCRAFT_IMPEX
+
 -- Seed data for component types
--- Repeatable migration: runs on every checksum change
+-- Source: R__seed_component_types.sql
 
 INSERT INTO component_types (
   uuid,

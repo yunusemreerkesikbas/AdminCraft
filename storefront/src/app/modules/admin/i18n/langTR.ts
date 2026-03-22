@@ -1334,6 +1334,7 @@ export const langTR = {
                 noSearchResults: 'Arama kriterlerine uygun tür bulunamadı',
                 createFirst: 'İlk Türü Oluştur',
                 manageFields: 'Genişletilmiş Alanları Yönet',
+                confirmDeleteTitle: 'Bileşen türünü sil',
                 confirmDelete:
                     '{{name}} türünü silmek istediğinize emin misiniz?',
                 tabs: {
