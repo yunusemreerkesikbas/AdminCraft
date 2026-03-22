@@ -51,6 +51,13 @@ Tenant-scoped access for tenant admins (guarded by tenant header matching):
 - `GET /api/tenants/current/modules`
 - `GET /api/tenants/current/detail`
 
+Module visibility semantics:
+
+- `GET /api/tenants/{tenantId}/modules` and `GET /api/tenants/current/modules` return only user-facing enabled modules.
+- Current user-facing module set is `core`, `product`, `mail_marketing`.
+- Core execution dependencies (`media`, `component_library`, `pagebuilder`) are runtime migration modules, not tenant-facing module flags.
+- Legacy internal `tenant_modules` rows for `media`, `component_library`, and `pagebuilder` are cleaned by platform repair migration `V1.0.1__repair_internal_tenant_modules.sql`.
+
 ### Provisioning jobs
 
 Controller: [`backend/src/main/java/com/backend/presentation/ProvisioningController.java`](../../backend/src/main/java/com/backend/presentation/ProvisioningController.java)
@@ -132,6 +139,9 @@ Provisioning module canonicalization:
 - When request includes `core`, backend expands execution set to:
   - `core`, `media`, `component_library`, `pagebuilder`
 - `product` and `mail_marketing` remain optional and are appended only when requested.
+- Only provisioning-selectable module codes are accepted in full provision requests:
+  - `core`, `product`, `mail_marketing`
+- Core execution modules cannot be sent directly in `POST /api/provisioning/tenants/{tenantId}/provision`; they are derived by backend normalization.
 
 DTO references (source of truth):
 
@@ -185,8 +195,8 @@ Update these files in order. See also [Module Execution Order](../global/migrati
 
    ```typescript
    export const NAVIGATION_MODULES = {
-       // ... existing
-       NEW_MODULE: 'new_module'
+     // ... existing
+     NEW_MODULE: "new_module",
    } as const;
    ```
 

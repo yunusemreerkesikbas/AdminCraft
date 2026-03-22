@@ -1360,6 +1360,7 @@ export const langEN = {
                 noSearchResults: 'No types match search criteria',
                 createFirst: 'Create First Type',
                 manageFields: 'Manage Extended Fields',
+                confirmDeleteTitle: 'Delete component type',
                 confirmDelete: 'Are you sure you want to delete {{name}} type?',
                 tabs: {
                     general: 'General',

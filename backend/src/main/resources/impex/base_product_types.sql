@@ -1,7 +1,7 @@
--- =====================================================
+-- #ADMINCRAFT_IMPEX
+
 -- Seed: Product Types and Attribute Definitions
--- Sprint 40: Product Module
--- =====================================================
+-- Source: R__seed_product_types.sql
 
 -- Product Types
 INSERT INTO product_types (id, uuid, uid, code, name, category) VALUES

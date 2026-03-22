@@ -1,6 +1,7 @@
 package com.backend.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import org.springframework.context.MessageSource;
 
 import com.backend.application.dto.response.SiteOverviewAppDto.ActionsAppDto;
 import com.backend.domain.entity.Site;
+import com.backend.domain.enums.ModuleCode;
 import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.MediaRepository;
@@ -54,6 +56,9 @@ class SiteOverviewServiceImplTest {
 
     @Mock
     private FrontendConfigPort frontendConfig;
+
+    @Mock
+    private TenantModuleAccessService tenantModuleAccessService;
 
     @InjectMocks
     private SiteOverviewServiceImpl siteOverviewService;
@@ -98,5 +103,34 @@ class SiteOverviewServiceImplTest {
         ActionsAppDto actions = siteOverviewService.getAvailableActions();
 
         assertThat(actions.previewUrl()).isEqualTo("http://s1-preview.craftive.io?preview=true");
+    }
+
+    @Test
+    @DisplayName("getStats should omit product stats when product module is disabled")
+    void getStats_ShouldOmitProductStats_WhenProductModuleDisabled() {
+	when(tenantModuleAccessService.isEnabledForCurrentTenant(ModuleCode.PRODUCT_CATALOG)).thenReturn(false);
+
+	var stats = siteOverviewService.getStats();
+
+	assertThat(stats.products()).isNull();
+	verifyNoInteractions(productRepository);
+    }
+
+    @Test
+    @DisplayName("getStats should include product stats when product module is enabled")
+    void getStats_ShouldIncludeProductStats_WhenProductModuleEnabled() {
+	when(tenantModuleAccessService.isEnabledForCurrentTenant(ModuleCode.PRODUCT_CATALOG)).thenReturn(true);
+	when(productRepository.count()).thenReturn(12L);
+	when(productRepository.countByStatus(com.backend.domain.enums.ProductStatus.PUBLISHED)).thenReturn(8L);
+	when(productRepository.countByStatus(com.backend.domain.enums.ProductStatus.DRAFT)).thenReturn(3L);
+	when(productRepository.countByCreatedAtAfter(org.mockito.ArgumentMatchers.any())).thenReturn(2L);
+
+	var stats = siteOverviewService.getStats();
+
+	assertThat(stats.products()).isNotNull();
+	assertThat(stats.products().total()).isEqualTo(12L);
+	assertThat(stats.products().published()).isEqualTo(8L);
+	assertThat(stats.products().draft()).isEqualTo(3L);
+	assertThat(stats.products().weeklyChange()).isEqualTo(2L);
     }
 }

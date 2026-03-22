@@ -4,10 +4,8 @@ import com.backend.infrastructure.persistence.platform.entity.TenantModule;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -18,23 +16,15 @@ public interface TenantModuleRepository extends JpaRepository<TenantModule, Long
   @EntityGraph(attributePaths = "moduleCatalog")
   List<TenantModule> findByTenantIdAndStatus(Long tenantId, String status);
 
-  boolean existsByTenantIdAndModuleCode(Long tenantId, String moduleCode);
+  @EntityGraph(attributePaths = "moduleCatalog")
+  List<TenantModule> findByTenantIdInAndStatus(List<Long> tenantIds, String status);
 
-  @Query("SELECT COUNT(tm) FROM TenantModule tm WHERE tm.tenantId = :tenantId AND tm.status = 'enabled'")
-  Integer countEnabledModulesByTenantId(@Param("tenantId") Long tenantId);
+  boolean existsByTenantIdAndModuleCodeAndStatus(Long tenantId, String moduleCode, String status);
 
   @Query("SELECT tm.moduleCode, mc.name, COUNT(DISTINCT tm.tenantId) FROM TenantModule tm " +
-         "JOIN tm.moduleCatalog mc " +
-         "WHERE tm.status = 'enabled' " +
-         "AND EXISTS (SELECT 1 FROM Tenant t WHERE t.id = tm.tenantId) " +
-         "GROUP BY tm.moduleCode, mc.name ORDER BY COUNT(DISTINCT tm.tenantId) DESC")
+		 "JOIN tm.moduleCatalog mc " +
+		 "WHERE tm.status = 'enabled' " +
+		 "AND EXISTS (SELECT 1 FROM Tenant t WHERE t.id = tm.tenantId) " +
+		 "GROUP BY tm.moduleCode, mc.name ORDER BY COUNT(DISTINCT tm.tenantId) DESC")
   List<Object[]> findModuleDistribution();
-
-  @Query("""
-      SELECT tm.tenantId, COUNT(tm)
-      FROM TenantModule tm
-      WHERE tm.tenantId IN :tenantIds AND tm.status = 'enabled'
-      GROUP BY tm.tenantId
-      """)
-  List<Object[]> countEnabledModulesByTenantIds(@Param("tenantIds") Collection<Long> tenantIds);
 }

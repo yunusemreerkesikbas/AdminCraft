@@ -11,6 +11,14 @@ Current scope:
 - super admin global runtime overrides (email + platform reCAPTCHA whitelisted keys)
 - immutable backend audit trail for config changes
 
+Important clarification:
+
+- `/config` new credential "generate" etmez; mevcut runtime degerlerini override eder ve gerekiyorsa saklar.
+- Google reCAPTCHA site/secret key'leri uygulama tarafinda uretilmez; Google reCAPTCHA console'dan alinip sisteme girilir.
+- SMTP transport credential'lari (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`) `/config` tarafindan yonetilmez.
+- `/config` yalnizca email runtime davranisinin bir kismini yonetir: `app.email.provider`, `app.email.from-address`, `app.email.from-name`.
+- `RECAPTCHA_MASTER_KEY` ise `/config` degeri degil; backend'in DB'de tutulan secret alanlari encrypt/decrypt etmesi icin deploy-time environment secret'idir.
+
 Out of scope:
 
 - tenant 2FA policy management (`Site Dashboard -> Security` tab remains source of truth)
@@ -53,6 +61,19 @@ Global runtime whitelist (CONFIG_SUPER_ADMIN):
 
 Note: `security.recaptcha.threshold` remains in platform settings and is not managed from Config Panel.
 Namespace invariant: tenant `security.recaptcha.*` and platform `platform.security.recaptcha.*` are isolated and never cross-read.
+
+Not managed by Config Panel:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `JWT_SECRET`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `CF_API_TOKEN`
+- `GRAFANA_CLOUD_LOKI_*`
+- `RECAPTCHA_MASTER_KEY`
 
 ## Admin API
 

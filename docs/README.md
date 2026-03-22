@@ -39,6 +39,10 @@ Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/M
 Provisioning catalog note:
 `core`, `product`, and `mail_marketing` are selectable modules in `/api/provisioning/modules/catalog`. `core` expands to core-managed capabilities at execution time. See [`modules/platform-provisioning.md`](modules/platform-provisioning.md).
 
+Tenant module API note:
+`/api/tenants/{id}/modules` and `/api/tenants/current/modules` expose only user-facing enabled modules. Runtime core dependencies (`media`, `component_library`, `pagebuilder`) are not returned as tenant feature flags.
+Legacy internal rows for those core dependencies are removed by platform repair migration `V1.0.1__repair_internal_tenant_modules.sql`.
+
 ## Platform features (control-plane)
 
 Platform features are not tenant modules, but they are critical for operating the system.

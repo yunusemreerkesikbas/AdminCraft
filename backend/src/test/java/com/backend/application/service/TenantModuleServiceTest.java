@@ -58,9 +58,9 @@ class TenantModuleServiceTest {
                                 .name("Core System")
                                 .build();
 
-                ModuleCatalog pageBuilderCatalog = ModuleCatalog.builder()
-                                .code("pagebuilder")
-                                .name("Page Builder")
+                ModuleCatalog productCatalog = ModuleCatalog.builder()
+                .code("product")
+                .name("Product Catalog")
                                 .build();
 
                 TenantModule coreModule = TenantModule.builder()
@@ -72,16 +72,16 @@ class TenantModuleServiceTest {
                                 .moduleCatalog(coreCatalog)
                                 .build();
 
-                TenantModule pageBuilderModule = TenantModule.builder()
+                TenantModule productModule = TenantModule.builder()
                                 .id(2L)
                                 .tenantId(1L)
-                                .moduleCode("pagebuilder")
+                .moduleCode("product")
                                 .status("enabled")
                                 .installedAt(LocalDateTime.now())
-                                .moduleCatalog(pageBuilderCatalog)
+                                .moduleCatalog(productCatalog)
                                 .build();
 
-                testModules = Arrays.asList(coreModule, pageBuilderModule);
+                testModules = Arrays.asList(coreModule, productModule);
         }
 
         @Test
@@ -99,8 +99,8 @@ class TenantModuleServiceTest {
                 assertThat(result.get(0).getModuleCode()).isEqualTo("core");
                 assertThat(result.get(0).getModuleName()).isEqualTo("Core System");
                 assertThat(result.get(0).getStatus()).isEqualTo("enabled");
-                assertThat(result.get(1).getModuleCode()).isEqualTo("pagebuilder");
-                assertThat(result.get(1).getModuleName()).isEqualTo("Page Builder");
+        assertThat(result.get(1).getModuleCode()).isEqualTo("product");
+        assertThat(result.get(1).getModuleName()).isEqualTo("Product Catalog");
 
                 verify(tenantRepository).findById(1L);
                 verify(tenantModuleRepository).findByTenantIdAndStatus(1L, "enabled");
@@ -142,7 +142,7 @@ class TenantModuleServiceTest {
                 TenantModule moduleWithoutCatalog = TenantModule.builder()
                                 .id(3L)
                                 .tenantId(1L)
-                                .moduleCode("custom_module")
+                .moduleCode("product")
                                 .status("enabled")
                                 .installedAt(LocalDateTime.now())
                                 .moduleCatalog(null)
@@ -157,8 +157,8 @@ class TenantModuleServiceTest {
 
                 // Then
                 assertThat(result).hasSize(1);
-                assertThat(result.get(0).getModuleCode()).isEqualTo("custom_module");
-                assertThat(result.get(0).getModuleName()).isEqualTo("custom_module"); // Falls back to code
+        assertThat(result.get(0).getModuleCode()).isEqualTo("product");
+        assertThat(result.get(0).getModuleName()).isEqualTo("product");
         }
 
         @Test
@@ -178,4 +178,24 @@ class TenantModuleServiceTest {
                 assertThat(result).extracting(TenantModuleResponse::getModuleCode)
                                 .doesNotContain("disabled_module");
         }
+
+    @Test
+    void shouldFilterOutInternalCoreExecutionModules() {
+        TenantModule internalModule = TenantModule.builder()
+                .id(3L)
+                .tenantId(1L)
+                .moduleCode("pagebuilder")
+                .status("enabled")
+                .installedAt(LocalDateTime.now())
+                .moduleCatalog(ModuleCatalog.builder().code("pagebuilder").name("Page Builder").build())
+                .build();
+
+        when(tenantRepository.findById(1L)).thenReturn(Optional.of(testTenant));
+        when(tenantModuleRepository.findByTenantIdAndStatus(1L, "enabled"))
+                .thenReturn(List.of(internalModule));
+
+        List<TenantModuleResponse> result = tenantService.getTenantModules(1L, Language.EN);
+
+        assertThat(result).isEmpty();
+    }
 }

@@ -1,6 +1,7 @@
 package com.backend.application.service;
 
 import com.backend.application.dto.provisioning.ModuleCatalogResponse;
+import com.backend.domain.enums.ModuleCode;
 import com.backend.infrastructure.persistence.platform.entity.ModuleCatalog;
 import com.backend.infrastructure.persistence.platform.repository.ModuleCatalogRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,13 +20,11 @@ import java.util.stream.Collectors;
 @Service
 public class ModuleCatalogServiceImpl implements ModuleCatalogService {
 
-  private static final List<String> PROVISIONING_CATALOG_CODES = List.of("core", "product", "mail_marketing");
-
   private final ModuleCatalogRepository moduleCatalogRepository;
   private final ObjectMapper objectMapper;
 
   public ModuleCatalogServiceImpl(ModuleCatalogRepository moduleCatalogRepository,
-      ObjectMapper objectMapper) {
+          ObjectMapper objectMapper) {
     this.moduleCatalogRepository = moduleCatalogRepository;
     this.objectMapper = objectMapper;
   }
@@ -37,7 +36,7 @@ public class ModuleCatalogServiceImpl implements ModuleCatalogService {
             ModuleCatalog::getCode,
             Function.identity(),
             (existing, replacement) -> existing));
-    return PROVISIONING_CATALOG_CODES.stream()
+    return ModuleCode.provisioningSelectableCodes().stream()
         .map(catalogByCode::get)
         .filter(Objects::nonNull)
         .map(this::mapToResponse)
@@ -48,12 +47,14 @@ public class ModuleCatalogServiceImpl implements ModuleCatalogService {
     List<String> deps = Collections.emptyList();
 
     if (module.getDeps() != null && !module.getDeps().isBlank()) {
-      try {
+          try {
         deps = objectMapper.readValue(module.getDeps(), new TypeReference<List<String>>() {
         });
-      } catch (Exception e) {
-        log.warn("Failed to parse deps for module {}: {}", module.getCode(), e.getMessage());
-      }
+          } catch (Exception e) {
+        String errorMsg = e.getMessage();
+        log.warn("Failed to parse deps for module {}: {}", module.getCode(),
+            errorMsg != null && errorMsg.length() > 500 ? errorMsg.substring(0, 500) : errorMsg);
+          }
     }
 
     return ModuleCatalogResponse.builder()

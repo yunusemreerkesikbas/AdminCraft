@@ -38,9 +38,6 @@ logging:
 resilience4j:
   ratelimiter:
     instances:
-      runtimeMigration:
-        limit-for-period: 1000
-        limit-refresh-period: 1s
       entryFieldDefinition:
         limit-for-period: 1000
         limit-refresh-period: 1s

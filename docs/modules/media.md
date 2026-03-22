@@ -50,13 +50,6 @@ Formats and tools:
 - `DELETE /api/media/{mediaId}/variants/{variantId}`
 - `PUT /api/media/{id}/focal-point`
 
-Storage migration (available only when `admincraft.storage.provider=s3`):
-
-- `POST /api/media/migration/start` — Triggers async LOCAL → S3 migration for all media in the current tenant. Returns `202 Accepted`. If a migration is already RUNNING, the second call is silently ignored.
-- `GET /api/media/migration/status` — Returns current migration progress: `{ tenantSubdomain, total, migrated, failed, failedFileNames, state }` where `state` is one of `IDLE | RUNNING | COMPLETED | PARTIAL_FAILURE`.
-
-Both migration endpoints require `TENANT_ADMIN`.
-
 Responsive sets (desktop/mobile pair):
 
 Controller: `backend/src/main/java/com/backend/presentation/controller/ResponsiveMediaController.java`
@@ -212,17 +205,6 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 5. Verify in MinIO Console that the file appears under `craftive-media-dev/{subdomain}/media/`.
 6. Check `media.external_url` in DB — should be `http://localhost:9000/craftive-media-dev/…`.
 
-### Migration: LOCAL → S3
-
-One-time per-tenant migration. Idempotent: files already at S3 are skipped.
-
-```
-POST /api/media/migration/start    → 202 Accepted (async, runs in background)
-GET  /api/media/migration/status   → { state: IDLE|RUNNING|COMPLETED|PARTIAL_FAILURE, total, migrated, failed, failedFileNames }
-```
-
-Local files are preserved after migration (`delete-local-after-migration: false` by default). Set to `true` only after validating CDN delivery end-to-end.
-
 ### Infrastructure setup (one-time)
 
 **DigitalOcean Spaces:**
@@ -261,27 +243,8 @@ Run these checks after each stage/prod deploy:
       → Browser Network tab: image request goes to media.craftive.io (not /cms-media/)
       → Response header: CF-Cache-Status: HIT (after first request)
 
-□ 3. Migration    — POST /api/media/migration/start  (Bearer token, TENANT_ADMIN)
-      → 202 Accepted
-      → Poll: GET /api/media/migration/status
-              { "state": "COMPLETED", "total": N, "migrated": N, "failed": 0 }
-
-□ 4. Legacy files — open a page that used a previously local image
-      → After migration: image now loads from CDN, not /cms-media/ proxy
-
-□ 5. DELETE test  — delete a media item from Admin Panel
+□ 3. DELETE test  — delete a media item from Admin Panel
       → DO Spaces dashboard: file no longer exists in bucket
-```
-
-**Quick curl for migration (replace token and host):**
-```bash
-# Start migration
-curl -X POST https://s1.api.craftive.io/api/media/migration/start \
-  -H "Authorization: Bearer <token>"
-
-# Poll status
-curl https://s1.api.craftive.io/api/media/migration/status \
-  -H "Authorization: Bearer <token>"
 ```
 
 ## Security & tenant isolation

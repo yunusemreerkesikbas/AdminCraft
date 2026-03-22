@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "admincraft.tenant")
+@ConfigurationProperties(prefix = "craftive.tenant")
 public class TenantProperties {
     private String defaultSchema = "public";
     private String schemaPrefix = "tenant_";

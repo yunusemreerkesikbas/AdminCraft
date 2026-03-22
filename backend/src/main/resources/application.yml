@@ -102,7 +102,7 @@ logging:
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [Tenant:%X{tenantId}][Corr:%X{correlationId}] - %msg%n"
 
-admincraft:
+craftive:
   tenant:
     default-schema: public
     schema-prefix: tenant_
@@ -133,11 +133,6 @@ admincraft:
 resilience4j:
   ratelimiter:
     instances:
-      runtimeMigration:
-        limit-for-period: 3
-        limit-refresh-period: 300s
-        timeout-duration: 0s
-        allow-health-indicator-to-fail: true
       entryFieldDefinition:
         limit-for-period: 5
         limit-refresh-period: 60s

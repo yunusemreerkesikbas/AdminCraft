@@ -1,7 +1,7 @@
 # Site Dashboard
 
 > **Status**: ✅ Production-Ready (Core + Phase 1 & 2 Refactoring Complete)
-> **Last Updated**: 2026-01-27
+> **Last Updated**: 2026-03-22
 
 ## Purpose
 
@@ -36,9 +36,9 @@ Migrations in `backend/src/main/resources/db/tenant/core/`:
 
 ### Entities
 
-| Entity                  | Purpose                                                                  |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `SiteActivity`          | Tracks user actions on pages, components, media, products, site settings |
+| Entity                  | Purpose                                                                   |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `SiteActivity`          | Tracks user actions on pages, components, media, products, site settings  |
 | `SiteTechnicalSettings` | Stores robots.txt, sitemap config, search engine indexing, cookie consent |
 
 ## Admin API (tenant-scoped, authenticated)
@@ -100,6 +100,11 @@ New endpoints under `/api/sites`:
 }
 ```
 
+Product stats note:
+
+- `stats.products` is optional.
+- If tenant does not have the `product` module enabled, backend does not query product tables and frontend hides the product stats card.
+
 #### SiteTechnicalResponse
 
 ```json
@@ -136,10 +141,10 @@ New endpoints under `/api/sites`:
 
 **Two-Factor Policy Options**:
 
-| Policy | Description |
-|--------|-------------|
+| Policy     | Description                                |
+| ---------- | ------------------------------------------ |
 | `DISABLED` | 2FA not used, standard login for all users |
-| `REQUIRED` | 2FA mandatory for all tenant users |
+| `REQUIRED` | 2FA mandatory for all tenant users         |
 
 See [authentication.md](../global/authentication.md) for full 2FA documentation.
 
@@ -149,7 +154,7 @@ See [authentication.md](../global/authentication.md) for full 2FA documentation.
 
 | Service                   | Purpose                                                                                                         |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `SiteOverviewService`     | Aggregates stats using optimized count queries (avoiding N+1) from Page, Component, Media, Product repositories |
+| `SiteOverviewService`     | Aggregates stats using optimized count queries (avoiding N+1) from Page, Component, Media repositories and conditionally Product repository when `product` module is enabled |
 | `SiteTechnicalService`    | Manages technical settings CRUD                                                                                 |
 | `SecuritySettingsService` | Manages tenant 2FA policy configuration                                                                         |
 | `SiteActivityPublisher`   | Async event publisher for activity tracking                                                                     |
@@ -342,14 +347,14 @@ Legacy routes (`/sites`, `/settings`) remain functional for backward compatibili
 
 ### Phase 2: User Experience
 
-| Feature              | Implementation                     | Benefit                     |
-| -------------------- | ---------------------------------- | --------------------------- |
-| Save Button Placement | Sağ üstte (General, Address, Social, SEO, Technical, Security) | Tutarlı UX, hızlı erişim     |
-| Custom UI Components | 44 form fields migrated            | ✅ -35% template code       |
-| Auto Validation      | `VALIDATION_MESSAGES` integration  | ✅ No manual error handling |
-| User Feedback        | NotificationService (5 components) | ✅ Success/error toasts     |
-| Safety Dialogs       | ConfirmationService (3 actions)    | ✅ Prevent accidents        |
-| Multi-Language       | LanguageContextService integration | ✅ Dynamic tenant languages |
+| Feature               | Implementation                                                 | Benefit                     |
+| --------------------- | -------------------------------------------------------------- | --------------------------- |
+| Save Button Placement | Sağ üstte (General, Address, Social, SEO, Technical, Security) | Tutarlı UX, hızlı erişim    |
+| Custom UI Components  | 44 form fields migrated                                        | ✅ -35% template code       |
+| Auto Validation       | `VALIDATION_MESSAGES` integration                              | ✅ No manual error handling |
+| User Feedback         | NotificationService (5 components)                             | ✅ Success/error toasts     |
+| Safety Dialogs        | ConfirmationService (3 actions)                                | ✅ Prevent accidents        |
+| Multi-Language        | LanguageContextService integration                             | ✅ Dynamic tenant languages |
 
 ### Files Modified
 
