@@ -1,0 +1,45 @@
+{
+  "name": "storefront-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:ssr": "next dev",
+    "dev:csr": "cross-env NEXT_OUTPUT=export next build && npx serve out",
+    "dev:stage": "dotenv -e .env.staging -- next dev",
+    "dev:ssr:stage": "dotenv -e .env.staging -- next dev",
+    "dev:csr:stage": "cross-env NEXT_OUTPUT=export dotenv -e .env.staging -- next build && npx serve out",
+    "build": "next build",
+    "build:dev": "dotenv -e .env.development -- next build",
+    "build:stage": "dotenv -e .env.staging -- next build",
+    "build:prod": "next build",
+    "build:static": "cross-env NEXT_OUTPUT=export next build",
+    "build:static:stage": "cross-env NEXT_OUTPUT=export dotenv -e .env.staging -- next build",
+    "start": "next start",
+    "start:dev": "dotenv -e .env.development -- next start",
+    "start:stage": "dotenv -e .env.staging -- next start",
+    "start:prod": "next start",
+    "start:static": "npx serve out",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.1.6",
+    "next-intl": "^4.8.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "swiper": "^12.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
+    "dotenv-cli": "^7.4.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "serve": "^14.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

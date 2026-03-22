@@ -1,0 +1,41 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "search": "Search"
+  },
+  "Search": {
+    "title": "Search Results",
+    "emptyQuery": "Enter a query to start searching.",
+    "open": "Open search",
+    "placeholder": "Search...",
+    "close": "Close",
+    "submit": "Search"
+  },
+  "Product": {
+    "sku": "SKU"
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "The requested page could not be resolved by the CMS."
+  },
+  "Maintenance": {
+    "title": "We will be back soon",
+    "description": "The site is temporarily unavailable due to scheduled maintenance."
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "An error occurred while loading the page.",
+    "retry": "Try again"
+  },
+  "ThemeChrome": {
+    "closeLabel": "Close",
+    "ctaText": "Get in touch with us",
+    "social": "Follow us",
+    "language": "Language",
+    "sitemap": "Sitemap",
+    "office": "Our Office",
+    "newsletter": "Newsletter",
+    "newsletterPlaceholder": "Your email address",
+    "newsletterButton": "Subscribe"
+  }
+}

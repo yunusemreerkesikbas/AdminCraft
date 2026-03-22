@@ -1,0 +1,948 @@
+.servicePageShell {
+  background: #fff;
+}
+
+.serviceHeroRegion {
+  padding: 0;
+}
+
+.serviceNarrativeRegion {
+  width: 100%;
+  margin: 0;
+  padding-bottom: 80px;
+}
+
+.serviceNarrativeColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.revealBase {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+}
+
+.revealUp {
+  transform: translate3d(0, 72px, 0);
+}
+
+.revealLeft {
+  transform: translate3d(-100px, 0, 0);
+}
+
+.revealRight {
+  transform: translate3d(100px, 0, 0);
+}
+
+.revealVisible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.serviceContainer {
+  width: min(1530px, calc(100% - 30px));
+  margin: 0 auto;
+}
+
+.serviceHeroSection {
+  padding: 225px 0 120px;
+  background: #fff;
+}
+
+.serviceHeroTitleWrap {
+  padding-left: 165px;
+  max-width: 1000px;
+  margin-bottom: 90px;
+}
+
+.serviceHeroTitle {
+  margin: 0;
+  color: #19191a;
+  font-size: clamp(3.75rem, 8.1vw, 7.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  transform: translateX(-8px);
+}
+
+.serviceHeroTitle span {
+  display: block;
+}
+
+.serviceHeroTitleAnimated span {
+  opacity: 0;
+  transform: translate3d(100px, 0, 0);
+}
+
+.revealVisible.serviceHeroTitleAnimated span {
+  animation: service-char-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(180ms + (var(--line-index, 0) * 90ms));
+}
+
+.serviceHeroLead {
+  max-width: 520px;
+  margin: 12px 0 0;
+  color: #5d5d63;
+  font-size: 22px;
+  line-height: 1.36;
+}
+
+.serviceHeroMediaWrap {
+  position: relative;
+}
+
+.serviceHeroMedia {
+  height: 700px;
+  overflow: hidden;
+}
+
+.serviceHeroImage {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  margin-top: -250px;
+}
+
+.serviceHeroShape {
+  position: absolute;
+  top: -70px;
+  right: 165px;
+  width: clamp(150px, 15vw, 220px);
+  height: auto;
+}
+
+.serviceCardsSection {
+  padding: 0 0 70px;
+}
+
+.serviceCardsHeading {
+  max-width: 1140px;
+  margin-bottom: 90px;
+}
+
+.serviceCardsEyebrow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #19191a;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.serviceCardsEyebrowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.serviceCardsTitle {
+  position: relative;
+  margin: 0;
+  color: #19191a;
+  font-size: clamp(2.5rem, 3.9vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.serviceCardsTitleSpacer {
+  display: inline-block;
+  width: 155px;
+}
+
+.serviceCardsTitleLine {
+  display: block;
+}
+
+.serviceCardsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 0;
+  margin-left: 70px;
+}
+
+.serviceCardsSpacer {
+  display: block;
+}
+
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-height: 100%;
+  padding: 0 70px 0 30px;
+  border: 0;
+  background: #fff;
+}
+
+.serviceCardIconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+  min-height: 70px;
+  margin-bottom: 30px;
+}
+
+.serviceCardIcon {
+  width: auto;
+  height: auto;
+}
+
+.serviceCardContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 255px;
+}
+
+.serviceCardTitle {
+  margin: 0;
+  color: #19191a;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.serviceCardDescription {
+  margin: 0;
+  color: #5d5d63;
+  font-size: 17px;
+  line-height: 1.53;
+}
+
+.servicePanelSection {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.servicePanelInner {
+  display: flex;
+  flex-direction: column;
+}
+
+.servicePanelCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  background: #19191a;
+}
+
+.servicePanelMedia {
+  background: #ece9e2;
+}
+
+.servicePanelImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.servicePanelContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 84px min(7vw, 110px);
+  background: #19191a;
+}
+
+.servicePanelTitleBox {
+  margin-bottom: 32px;
+}
+
+.servicePanelSubtitle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.servicePanelSubtitle i {
+  font-style: normal;
+  color: inherit;
+}
+
+.servicePanelSubtitle i::after {
+  display: inline-block;
+  width: 40px;
+  height: 1px;
+  margin: 0 11px;
+  content: "";
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.servicePanelTitle {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 4vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.servicePanelDescription {
+  max-width: 435px;
+  margin: 0 0 40px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.44;
+}
+
+.servicePanelSpaceWrap {
+  padding-left: 50px;
+}
+
+.servicePanelList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin: 0 0 50px;
+  padding: 0;
+  list-style: none;
+}
+
+.servicePanelList li {
+  position: relative;
+  padding-left: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.servicePanelList li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  content: "";
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.servicePanelButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 130px;
+  height: 130px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+
+.servicePanelButtonLabel {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transform: translateX(5px);
+}
+
+.servicePanelButtonLabel > span {
+  display: block;
+}
+
+.servicePanelButtonArrow {
+  display: inline-flex;
+  margin-top: 7px;
+  transition: transform 0.7s ease;
+}
+
+.servicePanelButtonSvg {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.servicePanelButtonSvg svg {
+  transition: transform 0.7s linear;
+}
+
+.servicePanelButton:hover .servicePanelButtonSvg svg {
+  transform: rotate(360deg);
+}
+
+.servicePanelButton:hover .servicePanelButtonArrow {
+  transform: translateX(30px);
+}
+
+.brandGridSection {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  position: relative;
+  padding: 120px 0;
+  overflow: hidden;
+  background: rgba(25, 25, 26, 0.08);
+}
+
+.brandGridSection::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.8), transparent 45%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12));
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.brandGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  position: relative;
+  width: min(1170px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+.brandGridItem {
+  position: relative;
+  height: 150px;
+  margin: -1px 0 0 -1px;
+  padding: 60px 30px;
+  border: 1px solid rgba(25, 25, 26, 0.1);
+  overflow: hidden;
+}
+
+.brandGridImageWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding-inline: 10px;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.brandGridImage {
+  width: auto;
+  height: auto;
+  max-width: min(190px, 100%);
+  max-height: var(--brand-logo-max-height, 52px);
+  object-fit: contain;
+  opacity: 1;
+  filter: brightness(0) saturate(0) opacity(0.46);
+  transform: scale(var(--brand-logo-scale, 1));
+  transform-origin: center;
+}
+
+.brandGridTexts {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  animation: brand-grid-scroll 25s linear infinite;
+  color: #19191a;
+  font-size: 20px;
+  font-family: var(--font-marcellus), Georgia, serif;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.brandGridTexts span {
+  margin: 0 15px;
+}
+
+.brandGridItem:hover .brandGridImageWrap {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.brandGridItem:hover .brandGridTexts {
+  opacity: 1;
+  visibility: visible;
+}
+
+.imageMarqueeSection {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 36px 0 120px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.imageMarqueeTrack {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+  animation: service-marquee-scroll 23s linear infinite;
+}
+
+.imageMarqueeCard {
+  flex: 0 0 auto;
+  margin-right: 40px;
+  overflow: hidden;
+}
+
+.imageMarqueeCardPrimary {
+  width: clamp(260px, 32vw, 460px);
+  border-radius: 300px;
+}
+
+.imageMarqueeCardSecondary {
+  width: clamp(260px, 32vw, 460px);
+  border-radius: 40px;
+}
+
+.imageMarqueeImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.bigTextSection {
+  padding: 0 0 80px;
+  background: #fff;
+}
+
+.bigTextMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 16px;
+  color: #19191a;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.bigTextLink {
+  display: block;
+  color: inherit;
+}
+
+.bigTextLinkText {
+  display: inline-block;
+  color: #19191a;
+  font-size: clamp(5.25rem, 13vw, 12.4375rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-12px);
+}
+
+@keyframes service-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes service-char-in {
+  from {
+    opacity: 0;
+    transform: translate3d(100px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes brand-grid-scroll {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, -50%, 0);
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .serviceHeroMedia {
+    height: 550px;
+  }
+
+  .serviceCardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-left: 0;
+    gap: 0 12px;
+  }
+
+  .serviceCardsSpacer {
+    display: none;
+  }
+
+  .serviceCard {
+    padding-right: 42px;
+  }
+
+  .bigTextLinkText {
+    font-size: 151px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .serviceHeroSection {
+    padding-top: 170px;
+  }
+
+  .serviceHeroTitleWrap {
+    padding-left: 60px;
+  }
+
+  .serviceHeroTitle {
+    font-size: 110px;
+  }
+
+  .serviceHeroMedia {
+    height: 400px;
+  }
+
+  .serviceCardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-left: 0;
+    gap: 0 12px;
+  }
+
+  .serviceCardsSpacer {
+    display: none;
+  }
+
+  .serviceCard {
+    padding-left: 0;
+    padding-right: 50px;
+  }
+
+  .serviceCardsTitleLine {
+    display: inline;
+  }
+
+  .servicePanelContent {
+    padding: 80px;
+  }
+
+  .bigTextLinkText {
+    font-size: 129px;
+  }
+}
+
+@media (min-width: 992px) {
+  .servicePanelCard {
+    position: sticky;
+    top: 0;
+    z-index: var(--panel-z-index, 1);
+  }
+}
+
+@media (max-width: 991px) {
+  .serviceHeroSection {
+    padding-top: 140px;
+    padding-bottom: 120px;
+  }
+
+  .serviceHeroTitleWrap {
+    padding-left: 0;
+    margin-bottom: 45px;
+  }
+
+  .serviceHeroTitle {
+    font-size: 90px;
+  }
+
+  .serviceHeroMedia {
+    height: 200px;
+  }
+
+  .serviceHeroImage {
+    margin-top: -120px;
+  }
+
+  .serviceCardsHeading {
+    margin-bottom: 72px;
+  }
+
+  .serviceCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 56px 24px;
+  }
+
+  .serviceCard {
+    padding: 0;
+  }
+
+  .serviceCardsTitleLine {
+    display: inline;
+  }
+
+  .brandGridSection {
+    padding-top: 0;
+    padding-bottom: 120px;
+  }
+
+  .brandGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .serviceHeroShape {
+    display: none;
+  }
+
+  .servicePanelCard {
+    grid-template-columns: 1fr;
+  }
+
+  .servicePanelContent {
+    padding: 110px 48px;
+  }
+
+  .servicePanelMedia {
+    min-height: 380px;
+  }
+
+  .servicePanelDescription,
+  .servicePanelList {
+    max-width: none;
+  }
+
+  .imageMarqueeCardPrimary,
+  .imageMarqueeCardSecondary {
+    width: clamp(240px, 45vw, 360px);
+  }
+
+  .imageMarqueeCard {
+    margin-right: 28px;
+  }
+
+  .bigTextLinkText {
+    font-size: 101px;
+  }
+}
+
+@media (max-width: 767px) {
+  .serviceContainer {
+    width: min(1530px, calc(100% - 30px));
+  }
+
+  .serviceCardsHeading {
+    margin-bottom: 56px;
+  }
+
+  .serviceCardsEyebrow {
+    position: static;
+    display: block;
+    margin-bottom: 18px;
+  }
+
+  .serviceCardsEyebrowIcon {
+    display: inline-flex;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .serviceCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 56px 0;
+  }
+
+  .serviceCardsTitle {
+    font-size: 33px;
+  }
+
+  .serviceCardsTitleSpacer {
+    display: none;
+  }
+
+  .serviceCardsTitleLine {
+    display: inline;
+  }
+
+  .brandGridSection,
+  .imageMarqueeSection {
+    padding-bottom: 90px;
+  }
+
+  .brandGridSection {
+    padding-top: 0;
+  }
+
+  .imageMarqueeSection {
+    padding-top: 24px;
+  }
+
+  .serviceHeroSection {
+    padding-top: 110px;
+    padding-bottom: 60px;
+  }
+
+  .serviceHeroTitle {
+    font-size: 60px;
+    transform: none;
+  }
+
+  .serviceHeroLead {
+    font-size: 18px;
+    line-height: 1.55;
+  }
+
+  .serviceHeroMedia {
+    height: 200px;
+  }
+
+  .serviceHeroImage {
+    margin-top: 0;
+    height: 400px;
+    object-fit: cover;
+  }
+
+  .serviceCard {
+    gap: 14px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .serviceCardIconWrap {
+    min-height: 0;
+    margin-bottom: 10px;
+  }
+
+  .serviceCardIcon {
+    max-width: 46px;
+    max-height: 46px;
+  }
+
+  .serviceCardContent {
+    max-width: none;
+  }
+
+  .serviceCardTitle {
+    font-size: 28px;
+  }
+
+  .serviceCardDescription {
+    line-height: 1.45;
+  }
+
+  .servicePanelContent {
+    padding: 80px 30px;
+  }
+
+  .servicePanelMedia {
+    min-height: 260px;
+  }
+
+  .servicePanelSpaceWrap {
+    padding-left: 0;
+  }
+
+  .brandGrid {
+    grid-template-columns: 1fr;
+    width: min(1170px, calc(100% - 30px));
+  }
+
+  .brandGridItem {
+    height: 150px;
+    padding: 48px 24px;
+  }
+
+  .brandGridImageWrap {
+    padding-inline: 8px;
+  }
+
+  .brandGridImage {
+    width: min(var(--brand-logo-target-width-mobile, 150px), 58vw);
+    max-width: 100%;
+    max-height: var(--brand-logo-max-height-mobile, 68px);
+    filter: brightness(0) saturate(0) opacity(0.56);
+    transform: scale(var(--brand-logo-scale-mobile, var(--brand-logo-scale, 1)));
+  }
+
+  .brandGridTexts {
+    font-size: 24px;
+  }
+
+  .imageMarqueeCardPrimary,
+  .imageMarqueeCardSecondary {
+    width: clamp(230px, 72vw, 320px);
+  }
+
+  .imageMarqueeCard {
+    margin-right: 20px;
+  }
+
+  .bigTextMeta {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .bigTextLinkText {
+    font-size: 84px;
+    white-space: break-spaces;
+    transform: none;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .bigTextLinkText {
+    font-size: 80px;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revealBase,
+  .serviceHeroTitleAnimated span,
+  .servicePanelButtonSvg svg,
+  .servicePanelButtonArrow {
+    animation: none;
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .imageMarqueeTrack,
+  .brandGridTexts {
+    animation: none;
+  }
+}

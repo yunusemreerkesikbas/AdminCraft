@@ -1,0 +1,839 @@
+.headerShell {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  transition: background-color 0.35s ease, box-shadow 0.35s ease, opacity 0.25s ease;
+}
+
+.headerHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.headerSticky {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+  animation: shell-slide-down 0.95s ease forwards;
+}
+
+.headerSticky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(4px);
+  z-index: -1;
+}
+
+.headerInner {
+  width: min(1870px, calc(100% - 2rem));
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  padding: 15px 0;
+}
+
+.logoGroup {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 85px;
+  height: 26px;
+}
+
+.logoLink {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+.brandLogoImage {
+  object-fit: contain;
+}
+
+.logoDark {
+  opacity: 0;
+}
+
+.logoLight {
+  opacity: 1;
+}
+
+.headerSticky .logoDark {
+  opacity: 1;
+}
+
+.headerSticky .logoLight {
+  opacity: 0;
+}
+
+.menuColumn {
+  display: flex;
+  justify-content: center;
+}
+
+.menuButton {
+  padding: 0.5rem 0;
+  line-height: 0;
+}
+
+.menuButtonLine {
+  display: block;
+  width: 80px;
+  height: 2px;
+  margin: 8px auto;
+  background: var(--landing-ink);
+  transform-origin: center;
+  transition: transform 0.35s ease, opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.menuButton:hover .menuButtonLine {
+  animation: shell-bar 0.8s cubic-bezier(0.44, 1.1, 0.53, 0.99) 1 forwards;
+}
+
+.menuButton:hover .menuButtonLine:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.menuButtonOpen .menuButtonLine:first-child {
+  transform: translateY(5px) rotate(18deg);
+}
+
+.menuButtonOpen .menuButtonLine:last-child {
+  transform: translateY(-5px) rotate(-18deg);
+}
+
+.panelBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 25, 26, 0.38);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  z-index: 70;
+}
+
+.panelBackdropVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.offcanvasShell {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.offcanvasShellOpen {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.offcanvasBg {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  transform: scale(1, 0);
+  transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+  z-index: 80;
+}
+
+.offcanvasShellOpen .offcanvasBg {
+  transform: scale(1, 1);
+}
+
+.offcanvasBgLeft {
+  left: 0;
+  width: 60%;
+  background: #f5f5f5;
+  transform-origin: top center;
+}
+
+.offcanvasBgRight {
+  right: 0;
+  width: 40%;
+  background: #fff;
+  transform-origin: bottom center;
+}
+
+.offcanvasWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 81;
+  display: grid;
+  grid-template-columns: 60% 40%;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.45s ease 0.28s, visibility 0s linear 0.28s;
+}
+
+.offcanvasShellOpen .offcanvasWrapper {
+  visibility: visible;
+  opacity: 1;
+}
+
+.offcanvasLeft,
+.offcanvasRight {
+  height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.55s ease 0.5s, transform 0.55s ease 0.5s;
+}
+
+.offcanvasLeft::-webkit-scrollbar,
+.offcanvasRight::-webkit-scrollbar {
+  display: none;
+}
+
+.offcanvasShellOpen .offcanvasLeft,
+.offcanvasShellOpen .offcanvasRight {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.offcanvasLeftTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 35px 90px 0;
+}
+
+.offcanvasLogo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 85px;
+  height: 26px;
+}
+
+.panelCloseButton.panelCloseMobile {
+  display: none;
+}
+
+.panelNav {
+  counter-reset: theme-nav-index;
+  display: grid;
+  padding: 80px 130px 50px 90px;
+}
+
+.panelNavSection {
+  border-bottom: 1px solid rgba(6, 7, 40, 0.1);
+}
+
+.panelNavSection:last-child {
+  border-bottom: 0;
+}
+
+.panelNavLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 23px 0 23px 85px;
+  border: 0;
+  background: transparent;
+  color: #19191a;
+  font-size: clamp(2rem, 4vw, 3.875rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  counter-increment: theme-nav-index;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.panelNavLink::after {
+  content: "0" counter(theme-nav-index);
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  color: #19191a;
+  font-size: 18px;
+  font-weight: 400;
+  transform: rotate(-90deg) translateY(100%);
+  transform-origin: center;
+}
+
+.panelNavLink:hover {
+  color: rgba(25, 25, 26, 0.72);
+  transform: translateX(10px);
+}
+
+.panelNavTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panelNavTriggerOpen {
+  color: rgba(25, 25, 26, 0.72);
+}
+
+.panelNavLinkStandalone {
+  padding-right: 0;
+}
+
+.panelNavToggle {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.panelNavSubmenu {
+  display: grid;
+  gap: 0.9rem;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 0 0 85px;
+  transition: max-height 0.35s ease, opacity 0.3s ease, padding-bottom 0.3s ease;
+}
+
+.panelNavSubmenuOpen {
+  max-height: 1400px;
+  opacity: 1;
+  padding-bottom: 24px;
+}
+
+.panelNavSubmenuLink {
+  display: inline-block;
+  color: rgba(25, 25, 26, 0.72);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.4;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.panelNavSubmenuLink:hover {
+  color: #19191a;
+  transform: translateX(8px);
+}
+
+.offcanvasRight {
+  padding-bottom: 50px;
+}
+
+.panelCloseRow {
+  display: flex;
+  justify-content: flex-end;
+  padding: 30px 90px 0 40px;
+}
+
+.panelCloseButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #19191a;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.panelCloseLabel {
+  width: 60px;
+  height: 20px;
+  overflow: hidden;
+}
+
+.panelCloseLabel span {
+  display: inline-block;
+  transform: translateX(120%);
+  transition: transform 0.35s ease;
+}
+
+.panelCloseIcon {
+  display: inline-flex;
+  transition: transform 0.35s ease;
+}
+
+.panelCloseButton:hover .panelCloseLabel span {
+  transform: translateX(0);
+}
+
+.panelCloseButton:hover .panelCloseIcon {
+  transform: rotate(90deg);
+}
+
+.offcanvasRightInner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: calc(100vh - 76px);
+  padding: 100px;
+}
+
+.panelSideInfo {
+  display: grid;
+  justify-items: end;
+}
+
+.panelInfoLink,
+.panelInfoText {
+  display: inline-block;
+  margin: 0;
+  padding: 8px 0;
+  color: #19191a;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 20px;
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+.panelInfoLink:hover {
+  color: rgba(25, 25, 26, 0.72);
+}
+
+.panelMeta {
+  display: grid;
+  gap: 2rem;
+}
+
+.panelLabel {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(25, 25, 26, 0.45);
+}
+
+.panelSocial {
+  display: grid;
+  justify-items: end;
+  gap: 0.65rem;
+}
+
+.panelSocialTextLink {
+  position: relative;
+  display: inline-block;
+  padding-left: 16px;
+  color: #19191a;
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1.3;
+}
+
+.panelSocialTextLink::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  bottom: 3px;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.panelSocialTextLink:hover::before {
+  width: calc(100% - 16px);
+}
+
+.panelLocaleLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 0 20px;
+  border: 1.5px solid rgba(25, 25, 26, 0.2);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #19191a;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.panelLocaleLink:hover,
+.panelLocaleActive {
+  background: #19191a;
+  border-color: #19191a;
+  color: #fff;
+}
+
+.panelLocales {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.footerShell {
+  margin-top: 0;
+}
+
+.footerLifted {
+  margin-top: 400px;
+}
+
+.footerPrimary {
+  padding: 100px 0 20px;
+  background: #19191a;
+  color: #fff;
+}
+
+.footerContainer {
+  width: min(1480px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.7fr 0.85fr 1.05fr;
+  gap: 2rem;
+}
+
+.footerColumnBrand {
+  min-width: 0;
+}
+
+.footerColumnSitemap {
+  padding-left: 35px;
+}
+
+.footerColumnOffice {
+  padding-left: 10px;
+}
+
+.footerColumnNewsletter {
+  padding-left: 40px;
+}
+
+.footerLogo {
+  position: relative;
+  display: inline-flex;
+  margin-bottom: 30px;
+  width: 85px;
+  height: 26px;
+}
+
+.footerBrandText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.footerWidgetTitle {
+  margin: 0 0 30px;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.footerMenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footerMenuItem {
+  margin-bottom: 7px;
+}
+
+.footerMenuItem:last-child {
+  margin-bottom: 0;
+}
+
+.footerMenuLink {
+  display: inline;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  background-image: linear-gradient(#fff, #fff), linear-gradient(#fff, #fff);
+  background-size: 0% 1px, 0 1px;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s linear, color 0.3s ease;
+}
+
+.footerMenuLink:hover {
+  background-size: 0% 1px, 100% 1px;
+  color: #fff;
+}
+
+.footerContactList {
+  display: grid;
+  gap: 18px;
+}
+
+.footerContactLink {
+  display: inline;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.6;
+  background-image: linear-gradient(#fff, #fff), linear-gradient(#fff, #fff);
+  background-size: 0% 1px, 0 1px;
+  background-position: 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s linear, color 0.3s ease;
+}
+
+.footerContactLink:hover {
+  background-size: 0% 1px, 100% 1px;
+  color: #fff;
+}
+
+.newsletterField {
+  position: relative;
+}
+
+.newsletterInput {
+  width: 100%;
+  padding: 0 50px 20px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 14px;
+}
+
+.newsletterInput::placeholder {
+  color: #fff;
+}
+
+.newsletterInput:focus {
+  outline: none;
+  border-bottom-color: #fff;
+}
+
+.newsletterButton {
+  position: absolute;
+  top: -2px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f3f3f4;
+}
+
+.footerCopyright {
+  padding: 35px 0 25px;
+  background: #19191a;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footerCopyrightInner {
+  width: min(1480px, calc(100% - 2rem));
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.footerCopyrightText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+}
+
+.footerSocial {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.footerSocialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 0 35px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #fff;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.footerSocialLink:hover {
+  background: #fff;
+  border-color: #fff;
+  color: #19191a;
+}
+
+@keyframes shell-slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes shell-bar {
+  0% {
+    transform: scaleX(1);
+  }
+
+  50% {
+    transform: scaleX(0.68);
+  }
+
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 1199px) {
+  .panelNav {
+    padding-left: 50px;
+    padding-right: 50px;
+  }
+
+  .offcanvasRightInner {
+    padding-left: 50px;
+    padding-right: 50px;
+  }
+
+  .footerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footerLifted {
+    margin-top: 170px;
+  }
+
+  .footerColumnSitemap,
+  .footerColumnOffice,
+  .footerColumnNewsletter {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 991px) {
+  .menuButtonLine {
+    width: 45px;
+  }
+
+  .panelNav {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .footerGrid,
+  .footerCopyrightInner {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footerSocial {
+    justify-content: flex-start;
+  }
+
+  .footerLifted {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .headerInner,
+  .footerContainer,
+  .footerCopyrightInner {
+    width: min(100%, calc(100% - 1rem));
+  }
+
+  .headerInner {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+
+  .menuColumn {
+    justify-content: flex-end;
+  }
+
+  .offcanvasBgLeft {
+    width: 100%;
+  }
+
+  .offcanvasBgRight,
+  .offcanvasRight {
+    display: none;
+  }
+
+  .offcanvasWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .offcanvasLeftTop {
+    padding-inline: 30px;
+  }
+
+  .panelCloseButton.panelCloseMobile {
+    display: inline-flex;
+  }
+
+  .panelNav {
+    padding: 30px;
+  }
+
+  .panelNavLink {
+    padding-left: 0;
+    font-size: 30px;
+  }
+
+  .panelNavLink::after {
+    display: none;
+  }
+
+  .panelNavSubmenu,
+  .panelNavSubmenuOpen {
+    padding-left: 0;
+  }
+
+  .footerLifted {
+    margin-top: 100px;
+  }
+
+  .footerPrimary {
+    padding-top: 72px;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerWidgetTitle {
+    font-size: 24px;
+  }
+
+  .footerCopyrightText {
+    font-size: 17px;
+  }
+
+  .footerSocialLink,
+  .panelLocaleLink {
+    padding-inline: 20px;
+    font-size: 12px;
+  }
+}

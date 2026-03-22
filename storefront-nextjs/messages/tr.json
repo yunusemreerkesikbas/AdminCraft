@@ -1,0 +1,41 @@
+{
+  "Navigation": {
+    "home": "Ana Sayfa",
+    "search": "Ara"
+  },
+  "Search": {
+    "title": "Arama Sonuçları",
+    "emptyQuery": "Aramak için bir sorgu girin.",
+    "open": "Aramayı aç",
+    "placeholder": "Ara...",
+    "close": "Kapat",
+    "submit": "Ara"
+  },
+  "Product": {
+    "sku": "SKU"
+  },
+  "NotFound": {
+    "title": "Sayfa Bulunamadı",
+    "description": "İstenen sayfa CMS tarafından çözümlenemedi."
+  },
+  "Maintenance": {
+    "title": "Yakında geri döneceğiz",
+    "description": "Planlı bakım nedeniyle site geçici olarak kullanılamıyor."
+  },
+  "Error": {
+    "title": "Bir şeyler yanlış gitti",
+    "description": "Sayfa yüklenirken bir hata oluştu.",
+    "retry": "Tekrar dene"
+  },
+  "ThemeChrome": {
+    "closeLabel": "Kapat",
+    "ctaText": "Bizimle iletişime geçin",
+    "social": "Bizi takip edin",
+    "language": "Dil",
+    "sitemap": "Site Haritası",
+    "office": "Ofisimiz",
+    "newsletter": "Bülten",
+    "newsletterPlaceholder": "E-posta adresiniz",
+    "newsletterButton": "Abone Ol"
+  }
+}
