@@ -63,6 +63,24 @@ apt-get install -y -qq \
 log "System packages updated"
 
 # -----------------------------------------------------------------------------
+# 1b. Swap (critical for 2 GB droplets)
+# -----------------------------------------------------------------------------
+section "Configuring swap"
+
+if swapon --show | grep -q '/swapfile'; then
+  warn "Swap already configured"
+else
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo 'vm.swappiness=10' >> /etc/sysctl.conf
+  sysctl vm.swappiness=10
+  log "2 GB swap enabled (swappiness=10)"
+fi
+
+# -----------------------------------------------------------------------------
 # 2. Docker CE install (official Docker repo, not snap)
 # -----------------------------------------------------------------------------
 section "Installing Docker CE"
@@ -146,7 +164,7 @@ sed -i 's/^#*PubkeyAuthentication.*/PubkeyAuthentication yes/' "${SSH_CONFIG}"
 sed -i 's/^#*X11Forwarding.*/X11Forwarding no/' "${SSH_CONFIG}"
 sed -i 's/^#*MaxAuthTries.*/MaxAuthTries 3/' "${SSH_CONFIG}"
 
-systemctl reload sshd
+systemctl reload ssh
 log "SSH hardened: root login and password auth disabled"
 
 # -----------------------------------------------------------------------------

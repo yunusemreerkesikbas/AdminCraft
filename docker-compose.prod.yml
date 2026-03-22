@@ -9,11 +9,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
           cpus: '1'
-          memory: 1G
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   backend:
     image: ghcr.io/craftive/craftive-backend:${APP_VERSION:-latest}
