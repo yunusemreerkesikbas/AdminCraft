@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Liko Media UID Alignment — ImpEx seed file.
 -- Run via Admin UI /{lang}/impex AFTER seed_liko_components.sql.
 -- Purpose: Assigns semantic UIDs to uploaded media so component mediaUid

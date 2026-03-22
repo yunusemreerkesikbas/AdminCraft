@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.backend</groupId>
-    <artifactId>admincraft</artifactId>
+    <artifactId>craftive</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>AdminCraft</name>
-    <description>SaaS CMS Platform with Clean Architecture and Multi-Language Support</description>
+    <name>Craftive</name>
+    <description>CMS Platform with Clean Architecture and Multi-Language Support</description>
     <url/>
     <licenses>
         <license/>

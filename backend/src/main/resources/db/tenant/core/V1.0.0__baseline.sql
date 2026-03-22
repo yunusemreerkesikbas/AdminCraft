@@ -1,4 +1,4 @@
--- AdminCraft Tenant Core Baseline
+-- Craftive Tenant Core Baseline
 -- Consolidated from V1 to V43
 -- Created: 2026-03-20
 

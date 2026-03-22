@@ -1,8 +1,8 @@
-# GitHub Copilot Instructions for AdminCraft
+# GitHub Copilot Instructions for Craftive
 
 ## Project Context
 
-AdminCraft is a **multi-tenant SaaS platform** built with Clean Architecture principles.
+Craftive is a **multi-tenant platform** built with Clean Architecture principles.
 
 **Stack:**
 - Backend: Spring Boot 3.3.5, Java 21, MySQL (database-per-tenant)

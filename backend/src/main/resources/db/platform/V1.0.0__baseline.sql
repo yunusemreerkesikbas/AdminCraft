@@ -1,4 +1,4 @@
--- AdminCraft Platform Management Baseline
+-- Craftive Platform Management Baseline
 -- Consolidated from V1 to V52
 -- Created: 2026-03-20
 
@@ -114,11 +114,11 @@ CREATE TABLE provisioning_jobs (
 -- 6. Platform Settings table (Singleton)
 CREATE TABLE platform_settings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    platform_name VARCHAR(100) NOT NULL DEFAULT 'AdminCraft',
+    platform_name VARCHAR(100) NOT NULL DEFAULT 'Craftive',
     default_language VARCHAR(2) NOT NULL DEFAULT 'TR',
     default_currency VARCHAR(3) NOT NULL DEFAULT 'TRY',
-    email_from_address VARCHAR(255) NOT NULL DEFAULT 'noreply@admincraft.com',
-    email_from_name VARCHAR(100) NOT NULL DEFAULT 'AdminCraft',
+    email_from_address VARCHAR(255) NOT NULL DEFAULT 'noreply@craftive.com',
+    email_from_name VARCHAR(100) NOT NULL DEFAULT 'Craftive',
     two_factor_policy ENUM('DISABLED', 'REQUIRED') NOT NULL DEFAULT 'DISABLED',
     recaptcha_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     recaptcha_site_key VARCHAR(255) NULL,

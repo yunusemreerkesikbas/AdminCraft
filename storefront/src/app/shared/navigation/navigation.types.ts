@@ -1,13 +1,13 @@
 import { FuseNavigationItem } from '@fuse/components/navigation';
 
-export interface AdminCraftNavigationItem extends FuseNavigationItem {
+export interface NavigationItem extends FuseNavigationItem {
     requiredModule?: string | null;
     requiredRole?: string;
     excludedRoles?: string[];
-    children?: AdminCraftNavigationItem[];
+    children?: NavigationItem[];
 }
 
 export interface NavigationConfig {
-    items: AdminCraftNavigationItem[];
+    items: NavigationItem[];
     language: string;
 }

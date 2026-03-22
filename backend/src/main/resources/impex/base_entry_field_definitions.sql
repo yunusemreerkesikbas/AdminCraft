@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 
 -- Seed data for entry field definitions
 -- Source: R__seed_entry_field_definitions.sql

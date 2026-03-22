@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Media module is AdminCraft’s **Digital Asset Management** system. It supports:
+The Media module is Craftive’s **Digital Asset Management** system. It supports:
 
 - Uploading files (single and composite)
 - Localized metadata (alt/title/description)
@@ -146,7 +146,7 @@ Linked usages:
 
 ## Storage providers & CDN
 
-AdminCraft supports pluggable storage backends via `StorageAdapter`. The active provider is set by `admincraft.storage.provider`.
+Craftive supports pluggable storage backends via `StorageAdapter`. The active provider is set by `craftive.storage.provider`.
 
 | Provider | Bean | Active when | File path stored |
 |---|---|---|---|

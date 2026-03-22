@@ -87,11 +87,6 @@ Sitemap: https://www.craftive.io/sitemap.xml
 - `Navbar.tsx`: `#comparison` → `#howitworks`
 - `home.en.json` + `home.tr.json`: footer product linklerinde `#comparison` → `#howitworks`
 
-### Footer Temizliği
-- "Why AdminCraft?" / "Neden AdminCraft?" kaldırıldı (Comparison section sayfaya eklenmedi)
-- Tüm `href="#"` placeholder company linkleri (About, Contact, Privacy) kaldırıldı
-- `Footer.tsx`: boş `items` olan grupları atlamak için `.filter(g => g.items.length > 0)` eklendi
-
 ### Erişilebilirlik / SEO İyileştirmeleri
 | Bileşen | Değişiklik |
 |---------|-----------|

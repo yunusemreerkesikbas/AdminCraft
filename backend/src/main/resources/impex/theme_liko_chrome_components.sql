@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Liko Home-2 Header/Footer Chrome Components — ImpEx seed file.
 -- Run via Admin UI /{lang}/impex before seed_navigation.sql.
 -- Idempotent: safe to run multiple times.

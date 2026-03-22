@@ -181,7 +181,7 @@ class ProductTypeControllerIntegrationTest {
                                 responseBody = result.getResponse().getContentAsString();
 
                                 try (var writer = new java.io.FileWriter(
-                                                "c:\\Users\\emreerkesikbas\\Documents\\AdminCraft\\.cursor\\debug.log",
+                                                "c:\\Users\\emreerkesikbas\\Documents\\Craftive\\.cursor\\debug.log",
                                                 true)) {
                                         writer.write(new com.fasterxml.jackson.databind.ObjectMapper()
                                                         .writeValueAsString(java.util.Map.of(
@@ -214,7 +214,7 @@ class ProductTypeControllerIntegrationTest {
                                 }
                         } catch (Exception e) {
                                 try (var writer = new java.io.FileWriter(
-                                                "c:\\Users\\emreerkesikbas\\Documents\\AdminCraft\\.cursor\\debug.log",
+                                                "c:\\Users\\emreerkesikbas\\Documents\\Craftive\\.cursor\\debug.log",
                                                 true)) {
                                         writer.write(new com.fasterxml.jackson.databind.ObjectMapper()
                                                         .writeValueAsString(java.util.Map.of(

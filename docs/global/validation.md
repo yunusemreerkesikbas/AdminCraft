@@ -1,6 +1,6 @@
 # Validation Framework
 
-AdminCraft uses a synchronized validation framework across frontend and backend to ensure consistent field validation with i18n error messages.
+Craftive uses a synchronized validation framework across frontend and backend to ensure consistent field validation with i18n error messages.
 
 ## Overview
 

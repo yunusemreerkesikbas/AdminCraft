@@ -2,7 +2,7 @@
 
 ## Entity-level i18n pattern
 
-AdminCraft models localized data using a split-table approach:
+Craftive models localized data using a split-table approach:
 
 - Base entity: language-agnostic fields
 - I18n entity: language-specific fields, unique by `(base_id, language)`

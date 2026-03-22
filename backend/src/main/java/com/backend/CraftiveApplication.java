@@ -11,10 +11,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 })
 @ConfigurationPropertiesScan
 @EnableConfigurationProperties(JwtProperties.class)
-public class AdminCraftApplication {
+public class CraftiveApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AdminCraftApplication.class, args);
+        SpringApplication.run(CraftiveApplication.class, args);
     }
 
 }

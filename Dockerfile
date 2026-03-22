@@ -1,4 +1,4 @@
-# Multi-stage build for AdminCraft Spring Boot Application
+# Multi-stage build for craftive Spring Boot Application
 FROM openjdk:21-jdk-slim as builder
 
 # Set working directory

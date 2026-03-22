@@ -2,7 +2,7 @@
 
 ## 1. What it is / why it exists
 
-AdminCraft uses **Flyway** for database migrations with a **modular, per-tenant** approach. Each tenant database is migrated independently with module-specific migration scripts.
+Craftive uses **Flyway** for database migrations with a **modular, per-tenant** approach. Each tenant database is migrated independently with module-specific migration scripts.
 
 This architecture ensures that tenant databases can be provisioned with only the required modules and allows the platform to maintain schema consistency across isolated databases while providing a robust mechanism to manage schema evolution.
 

@@ -2014,7 +2014,7 @@ export const langEN = {
                 title: 'SQL Editor',
                 hint: 'Paste your SQL script here. Only INSERT and UPDATE statements are allowed.',
                 label: 'SQL Script',
-                placeholder: '-- #ADMINCRAFT_IMPEX\n-- Paste your SQL here...\n\nINSERT INTO ...',
+                placeholder: '-- #CRAFTIVE_IMPEX\n-- Paste your SQL here...\n\nINSERT INTO ...',
                 markerInfo: 'Script must start with the marker:',
                 run: 'Execute',
                 running: 'Executing...',
@@ -2197,7 +2197,7 @@ export const langEN = {
                 title1: 'Welcome to',
                 title2: 'our community',
                 description:
-                    'AdminCraft helps you build customizable dashboards with rich modules. Join us and start building your application today.',
+                    'Craftive helps you build customizable dashboards with rich modules. Join us and start building your application today.',
             },
             '2fa': {
                 info: 'A verification code has been sent to your email.',
@@ -2282,7 +2282,7 @@ export const langEN = {
             successAutoLogin: 'Password set successfully! Logging you in...',
             right: {
                 title1: 'Welcome to',
-                title2: 'AdminCraft',
+                title2: 'Craftive',
                 description:
                     "You've been invited to join the platform. Set your password to get started and access your dashboard.",
             },

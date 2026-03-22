@@ -2,7 +2,7 @@
 
 ## What it is
 
-Backend test infrastructure and conventions for AdminCraft. All modules follow the same testing patterns using JUnit 5 + Mockito + AssertJ with Builder Pattern for test data.
+Backend test infrastructure and conventions for Craftive. All modules follow the same testing patterns using JUnit 5 + Mockito + AssertJ with Builder Pattern for test data.
 
 ## Source of truth
 

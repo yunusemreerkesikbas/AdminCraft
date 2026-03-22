@@ -1,4 +1,4 @@
--- AdminCraft Tenant Mail Marketing Baseline
+-- Craftive Tenant Mail Marketing Baseline
 -- Consolidated from V1 to V5
 -- Created: 2026-03-20
 

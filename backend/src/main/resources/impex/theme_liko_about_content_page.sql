@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- About Content Page — dedicated CMS types for ContentPageTemplate.
 -- Run via Admin UI /{lang}/impex after component library repeatable seeds are applied.
 -- Idempotent: safe to run multiple times.

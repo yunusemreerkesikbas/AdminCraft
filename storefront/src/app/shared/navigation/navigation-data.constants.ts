@@ -1,7 +1,5 @@
 import { NAVIGATION_MODULES } from 'app/core/navigation/navigation-modules.constants';
-import { AdminCraftNavigationItem } from './navigation.types';
-
-export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
+export const DEFAULT_NAVIGATION_ITEMS: NavigationItem[] = [
     {
         id: 'site-content',
         title: 'admin.nav.siteContent',
@@ -211,3 +209,5 @@ export const DEFAULT_NAVIGATION_ITEMS: AdminCraftNavigationItem[] = [
         ],
     },
 ];
+
+import { NavigationItem } from './navigation.types';

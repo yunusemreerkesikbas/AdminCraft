@@ -22,11 +22,11 @@ Singleton pattern -- the table always contains exactly one row (`id = 1`).
 
 | Column               | Type         | Default                |
 |----------------------|--------------|------------------------|
-| `platform_name`      | VARCHAR(100) | `AdminCraft`           |
+| `platform_name`      | VARCHAR(100) | `Craftive`           |
 | `default_language`   | VARCHAR(2)   | `TR`                   |
 | `default_currency`   | VARCHAR(3)   | `TRY`                  |
 | `email_from_address` | VARCHAR(255) | `noreply@craftive.io` |
-| `email_from_name`    | VARCHAR(100) | `AdminCraft`           |
+| `email_from_name`    | VARCHAR(100) | `Craftive`           |
 | `two_factor_policy`  | ENUM         | `DISABLED`             |
 | `recaptcha_enabled`  | BOOLEAN      | `false`                |
 | `recaptcha_site_key` | VARCHAR(255) | `null`                 |

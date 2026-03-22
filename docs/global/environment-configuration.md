@@ -1,6 +1,6 @@
 # Environment Configuration
 
-Multi-environment setup for AdminCraft with dev, stage, and prod configurations.
+Multi-environment setup for Craftive with dev, stage, and prod configurations.
 
 ## Source of Truth
 
@@ -284,12 +284,12 @@ For whitelisted global runtime keys managed by Config Panel, `platform_config_pr
 
 ## Docker Multi-Environment Setup
 
-AdminCraft uses Docker Compose with environment-specific override files.
+Craftive uses Docker Compose with environment-specific override files.
 
 ### File Structure
 
 ```
-AdminCraft/
+Craftive/
 ├── docker-compose.yml          # Base config (MySQL only)
 ├── docker-compose.dev.yml      # Dev overrides (+ phpMyAdmin)
 ├── docker-compose.prod.yml     # Prod overrides (+ Backend + Admin Frontend + Demo Storefront + Traefik + Alloy)

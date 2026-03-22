@@ -20,7 +20,7 @@ Executes a SQL script submitted in the request body.
 
 ```json
 {
-  "sqlContent": "-- #ADMINCRAFT_IMPEX\n\nINSERT INTO ..."
+  "sqlContent": "-- #CRAFTIVE_IMPEX\n\nINSERT INTO ..."
 }
 ```
 
@@ -34,7 +34,7 @@ Executes a SQL script submitted in the request body.
 |--------|-----------|
 | `200 OK` | All statements succeeded (`status: "SUCCESS"`) |
 | `207 Multi-Status` | At least one statement failed (`status: "PARTIAL"`) |
-| `400 Bad Request` | Missing `-- #ADMINCRAFT_IMPEX` marker |
+| `400 Bad Request` | Missing `-- #CRAFTIVE_IMPEX` marker |
 | `500 Internal Server Error` | Unexpected execution error |
 
 **Response body** (`ApiResponse<ImpExResult>`):
@@ -78,7 +78,7 @@ Executes a SQL script submitted in the request body.
 
 Execution pipeline:
 
-1. Validate `-- #ADMINCRAFT_IMPEX` marker — throws `ImpExInvalidScriptException` if missing.
+1. Validate `-- #CRAFTIVE_IMPEX` marker — throws `ImpExInvalidScriptException` if missing.
 2. Split content on `;`, strip comment lines (`--`) and blank lines per statement.
 3. For each statement: check against allowed/blocked keyword whitelist.
 4. Execute via `JdbcTemplate.update()` — `JdbcTemplate` uses the active tenant `DataSource` already set by `TenantFilter`.
@@ -96,7 +96,7 @@ Every script submitted to ImpEx must follow these rules:
 The first line must contain the marker (anywhere in the content):
 
 ```sql
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 ```
 
 Requests without this marker are rejected with `400`.
@@ -120,7 +120,7 @@ Blocked statements are not executed — they appear in `results` with `success: 
 All scripts should be written with `ON DUPLICATE KEY UPDATE` so they can be run multiple times safely:
 
 ```sql
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 
 INSERT INTO pages (uuid, uid, template_id, status, robot_tag, page_type, is_home, created_by)
 SELECT 'f0000001-0000-0000-0000-000000000001', 'homepage', pt.id,
@@ -175,7 +175,7 @@ UI flow:
 ### Running a data seed
 
 ```text
-1. Write SQL with -- #ADMINCRAFT_IMPEX marker
+1. Write SQL with -- #CRAFTIVE_IMPEX marker
 2. Use INSERT ... SELECT ... ON DUPLICATE KEY UPDATE pattern
 3. Open /{lang}/impex in Admin UI
 4. Paste SQL → Execute → Confirm

@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Service Page — generic CMS seed (TR + EN)
 -- Content source: liko-next-js/src/pages/service/service.tsx (+ dependent components)
 -- Idempotent: safe to run multiple times.

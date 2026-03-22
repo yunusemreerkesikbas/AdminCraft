@@ -1,6 +1,6 @@
 # Authentication
 
-AdminCraft supports two login modes via the same endpoint:
+Craftive supports two login modes via the same endpoint:
 
 - **Tenant user login** (tenant-scoped)
 - **Platform admin login (SUPER_ADMIN)** (no tenant)
@@ -134,7 +134,7 @@ The client should redirect to the OTP form — `POST /auth/verify-otp` completes
 
 ## Two-Factor Authentication (2FA)
 
-AdminCraft supports:
+Craftive supports:
 - **Tenant-level 2FA** with email OTP and trusted device management
 - **Platform admin (SUPER_ADMIN) 2FA** with email OTP (always OTP when policy is required, no trusted-device bypass)
 
@@ -473,7 +473,7 @@ app:
     enabled: true
     provider: smtp
     from-address: noreply@craftive.io
-    from-name: AdminCraft
+    from-name: Craftive
 
 # application-dev.yml
 app:
@@ -767,7 +767,7 @@ All authentication events are logged with:
 
 ## reCAPTCHA v3 Protection
 
-AdminCraft provides reCAPTCHA v3 bot protection for authentication endpoints in two scopes:
+Craftive provides reCAPTCHA v3 bot protection for authentication endpoints in two scopes:
 - **Tenant scope**: configured per tenant in Config Control Panel (`/config/recaptcha`)
 - **Platform scope (SUPER_ADMIN login)**: configured globally via Config Global Properties (`platform.security.recaptcha.*`)
 

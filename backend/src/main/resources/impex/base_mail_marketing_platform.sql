@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Version-controlled ImpEx reference script.
 -- Run via Admin UI /{lang}/impex when needed to seed platform mail marketing sample data.
 -- Idempotent: safe to run multiple times.

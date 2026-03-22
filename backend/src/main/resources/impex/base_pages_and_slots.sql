@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Version-controlled ImpEx reference script.
 -- Run via Admin UI /{lang}/impex when needed to seed sample pages, slots and slot assignments.
 -- Idempotent: safe to run multiple times.

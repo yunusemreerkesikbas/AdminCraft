@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImpExServiceImpl implements ImpExService {
 
-    private static final String IMPEX_MARKER = "-- #ADMINCRAFT_IMPEX";
+    private static final String IMPEX_MARKER = "-- #CRAFTIVE_IMPEX";
     private static final int PREVIEW_LENGTH = 80;
     private static final Set<String> ALLOWED_KEYWORDS = Set.of("INSERT", "UPDATE", "SELECT");
     private static final Set<String> BLOCKED_KEYWORDS = Set.of(

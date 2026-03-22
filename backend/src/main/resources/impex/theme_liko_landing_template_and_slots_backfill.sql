@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Liko Home-2 landing backfill for tenants that still have only Section1-3.
 -- Run via Admin UI /{lang}/impex AFTER seed_liko_components.sql.
 -- Safe to run multiple times.

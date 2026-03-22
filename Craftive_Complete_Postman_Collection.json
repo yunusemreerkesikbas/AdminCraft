@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "admincraft-sprint1-complete",
-		"name": "AdminCraft Sprint 1 - Complete API Collection",
-		"description": "AdminCraft SaaS CMS Platform - Clean Architecture + Multi-Language\nComplete API collection for all Sprint 1 controllers with dummy data scenarios",
+		"_postman_id": "craftive-sprint1-complete",
+		"name": "craftive Sprint 1 - Complete API Collection",
+		"description": "Craftive CMS Platform - Clean Architecture + Multi-Language\nComplete API collection for all Sprint 1 controllers with dummy data scenarios",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "admincraft-2025"
+		"_exporter_id": "craftive-2025"
 	},
 	"item": [
 		{
@@ -262,7 +262,7 @@
 						"url": "{{baseUrl}}/api/tenants/1"
 					}
 				},
-                
+
 				{
 					"name": "Update Tenant",
 					"request": {
@@ -284,11 +284,11 @@
 						"url": "{{baseUrl}}/api/tenants/1"
 					}
 				}
-                
-                
-                
-                
-                
+
+
+
+
+
 			]
 		},
 		{
@@ -310,7 +310,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"admin@admincraft.com\",\n  \"password\": \"AdminCraft123!\",\n  \"fullName\": \"Sistem Yöneticisi\",\n  \"firstName\": \"Sistem\",\n  \"lastName\": \"Yöneticisi\",\n  \"role\": \"SUPER_ADMIN\",\n  \"preferredLanguage\": \"TR\",\n  \"tenantId\": 1,\n  \"phone\": \"+90 555 000 0001\",\n  \"jobTitle\": \"Sistem Yöneticisi\",\n  \"department\": \"IT\"\n}"
+							"raw": "{\n  \"email\": \"admin@craftive.com\",\n  \"password\": \"craftive123!\",\n  \"fullName\": \"Sistem Yöneticisi\",\n  \"firstName\": \"Sistem\",\n  \"lastName\": \"Yöneticisi\",\n  \"role\": \"SUPER_ADMIN\",\n  \"preferredLanguage\": \"TR\",\n  \"tenantId\": 1,\n  \"phone\": \"+90 555 000 0001\",\n  \"jobTitle\": \"Sistem Yöneticisi\",\n  \"department\": \"IT\"\n}"
 						},
 						"url": "{{baseUrl}}/api/users"
 					}
@@ -1187,7 +1187,7 @@
 						"url": "{{baseUrl}}/api/page-categories/1"
 					}
 				}
-                
+
 			]
 		},
 		{

@@ -236,7 +236,7 @@ Asagidaki liste deploy sorumlulugu devredilmeden once tamamlanmis olmali.
 - [ ] Local-only dosyalar repoda tracked degil
 - [ ] `.env.local`, debug loglari, tmp dosyalari `.gitignore` tarafindan kapsaniyor
 - [ ] Repo icinde gercek credential kalmadi
-- [ ] Legacy `admincraft` domain referanslari dokumantasyonda ve aktif configlerde temizlendi
+- [ ] Legacy `craftive` domain referanslari dokumantasyonda ve aktif configlerde temizlendi
 
 ## Manual Inputs Needed From Owner
 

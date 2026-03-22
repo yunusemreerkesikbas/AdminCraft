@@ -431,7 +431,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 ## 5. Gotchas
 
 - **`NEXT_OUTPUT` controls Next.js build output.** `standalone` for Docker SSR (stage demo); `export` for static hosting (tenant self-deploy). Controlled via `process.env.NEXT_OUTPUT` in `next.config.ts` — not a hardcoded config value.
-- **`admincraft:` is the YAML root key** in `application.yml`. Renaming it would break `@ConfigurationProperties(prefix = "admincraft")` bindings without a corresponding Java refactor.
+- **`craftive:` is the YAML root key** in `application.yml`. Renaming it would break `@ConfigurationProperties(prefix = "craftive")` bindings without a corresponding Java refactor.
 - **Reserved subdomains cannot be assigned to tenants:** `www`, `api`, `app`, `admin`, `s1`, `s2`, `mail`, `docs`, `status`, `blog`, `demo`, `cdn`. Enforce at the tenant subdomain validation layer.
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
 - **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.

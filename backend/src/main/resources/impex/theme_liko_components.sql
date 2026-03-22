@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Liko Home-2 Components — ImpEx seed file.
 -- Run via Admin UI /{lang}/impex after R__seed_page_templates migration is applied.
 -- Idempotent: safe to run multiple times.

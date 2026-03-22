@@ -16,7 +16,7 @@ import { cloneDeep } from 'lodash-es';
 import { skip } from 'rxjs';
 import { DEFAULT_NAVIGATION_ITEMS } from './navigation-data.constants';
 import { NavigationFilterService } from './navigation-filter.service';
-import { AdminCraftNavigationItem } from './navigation.types';
+import { NavigationItem } from './navigation.types';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationDataService {
@@ -24,7 +24,7 @@ export class NavigationDataService {
     #filterService = inject(NavigationFilterService);
     #translocoService = inject(TranslocoService);
     #destroyRef = inject(DestroyRef);
-    #baseNavigationSig = signal<AdminCraftNavigationItem[]>(
+    #baseNavigationSig = signal<NavigationItem[]>(
         DEFAULT_NAVIGATION_ITEMS
     );
     #currentLanguageSig = signal<string>(this.#detectLanguage());
@@ -87,7 +87,7 @@ export class NavigationDataService {
         }
     }
 
-    updateNavigationItems(items: AdminCraftNavigationItem[]): void {
+    updateNavigationItems(items: NavigationItem[]): void {
         this.#baseNavigationSig.set(items);
     }
 

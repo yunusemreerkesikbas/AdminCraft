@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Service Page Media UID Alignment — run after media uploads.
 -- Purpose: assign stable semantic media UIDs used by seed_service_content_page.sql.
 -- Safety: uses MAX(id) per original_name and no-ops when the target UID is owned by a different record.

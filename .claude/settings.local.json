@@ -44,17 +44,17 @@
       "mcp__serena__find_file",
       "mcp__serena__get_symbols_overview",
       "mcp__serena__find_symbol",
-      "Bash(del \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\AdminCraft\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\tenant\\\\component_library\\\\V14__create_component_media_links.sql\")",
+      "Bash(del \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\craftive\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\tenant\\\\component_library\\\\V14__create_component_media_links.sql\")",
       "Skill(code-review)",
       "mcp__serena__list_dir",
       "mcp__serena__list_memories",
       "mcp__serena__search_for_pattern",
       "mcp__serena__think_about_collected_information",
-      "Bash(Get-ChildItem \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\AdminCraft\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\migration\" -Recurse -Filter \"*user*\")",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\craftive\\\\backend\\\\src\\\\main\\\\resources\\\\db\\\\migration\" -Recurse -Filter \"*user*\")",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Select-Object -First 100)",
-      "Bash(del \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\AdminCraft\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\backend\\\\shared\\\\validation\\\\PasswordMatchValidator.class\")",
-      "Bash(Remove-Item \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\AdminCraft\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\backend\\\\shared\\\\validation\\\\PasswordMatchValidator.class\" -Force)",
+      "Bash(del \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\craftive\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\backend\\\\shared\\\\validation\\\\PasswordMatchValidator.class\")",
+      "Bash(Remove-Item \"C:\\\\Users\\\\emreerkesikbas\\\\Documents\\\\craftive\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\backend\\\\shared\\\\validation\\\\PasswordMatchValidator.class\" -Force)",
       "Bash(ls:*)",
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(npx ng build:*)",
@@ -70,7 +70,7 @@
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\c\\Users\\emreerkesikbas\\Documents\\AdminCraft"
+      "C:\\c\\Users\\emreerkesikbas\\Documents\\craftive"
     ]
   },
   "enabledMcpjsonServers": [

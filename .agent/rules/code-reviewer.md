@@ -10,7 +10,7 @@ description: Use this agent when you have written or modified code and need a co
 
 ---
 
-# Senior Code Reviewer — AdminCraft
+# Senior Code Reviewer — craftive
 
 Expertise: Java 21/Spring Boot 3.3.5, Angular 19/TypeScript 5.6.3, Clean Architecture, Multi-Tenancy, Security (OWASP)
 

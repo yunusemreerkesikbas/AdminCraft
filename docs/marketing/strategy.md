@@ -1,4 +1,4 @@
-# AdminCraft — Strateji Dokümanı
+# Craftive — Strateji Dokümanı
 
 > Son güncelleme: 2026-02-11
 
@@ -25,7 +25,7 @@
 
 ### Platform Vizyonu
 
-AdminCraft, **müşteri ihtiyaçlarına göre modül bazlı özelleştirilebilir proje çözümleri** sunan bir platformdur.
+Craftive, **müşteri ihtiyaçlarına göre modül bazlı özelleştirilebilir proje çözümleri** sunan bir platformdur.
 
 Geleneksel ajans yaklaşımının aksine her proje sıfırdan yazılmaz. Her proje, aynı güçlü altyapının farklı bir konfigürasyonudur.
 
@@ -92,7 +92,7 @@ Dünyaca tanınan ürünler bu yolla doğdu:
 ```
 FAZ 1 — SERVİS MODU (0-18 Ay)
 ────────────────────────────────────────────────────────────
-Her müşteri projesi = AdminCraft modülü olarak inşa et
+Her müşteri projesi = Craftive modülü olarak inşa et
 Gelir   : Kurulum ücreti + aylık platform ücreti
 Öğrenme : Müşteri gerçek ihtiyaçlarını söyler ve parasını öder
 Risk    : Düşük — nakit akışı baştan başlar
@@ -128,7 +128,7 @@ Piyasaya çık                   Gerçek ihtiyacı öğren
 Kimse almaz                    Modülü doğrula
 Neden? Yanlış özellik          Sonra paketle ve sat
 
-↑ Çoğu SaaS'ın başarısız        ↑ AdminCraft'ın yolu
+↑ Çoğu SaaS'ın başarısız        ↑ Craftive'ın yolu
   olma nedeni
 ```
 
@@ -138,10 +138,10 @@ Neden? Yanlış özellik          Sonra paketle ve sat
 
 ### Neden Hybris Referans Alındı?
 
-AdminCraft'ın mimarisi, Hybris'in temel felsefesini modern stack ile hayata geçiriyor.
+Craftive'ın mimarisi, Hybris'in temel felsefesini modern stack ile hayata geçiriyor.
 
 ```
-Hybris (1997-bugün)              AdminCraft
+Hybris (1997-bugün)              Craftive
 ──────────────────────           ──────────────────────
 Extensions (modüller)        ←→  Modules
 Accelerators (paketler)      ←→  Solution Templates
@@ -151,7 +151,7 @@ OCC API (headless)           ←→  CMS Delivery API
 Database-per-deployment      ←→  Database-per-tenant
 ```
 
-### Hybris'in İş Stratejisi ve AdminCraft İçin Dersler
+### Hybris'in İş Stratejisi ve Craftive İçin Dersler
 
 **Ders 1: Accelerator Modeli**
 Hybris, sektöre özel hazır başlangıç paketleri satar:
@@ -159,12 +159,12 @@ Hybris, sektöre özel hazır başlangıç paketleri satar:
 - B2B Accelerator → Kurumsal sipariş yönetimi
 - Financial Accelerator → Bankacılık ürünleri
 
-AdminCraft karşılığı: **Solution Templates** (Paket 1-5).
+Craftive karşılığı: **Solution Templates** (Paket 1-5).
 Her paket = pre-configured modül seti + demo data + yapılandırma.
 
 **Ders 2: Her Şey Modül, Hiçbir Şey Core'a Dokunmaz**
 Hybris'te özelleştirme her zaman extension ile yapılır, core değiştirilmez.
-AdminCraft'ta: her özellik modül, core değişmez. Modül disiplini.
+Craftive'ta: her özellik modül, core değişmez. Modül disiplini.
 
 **Ders 3: Partner Ekosistemi = Ölçek Çarpanı**
 Hybris'in gerçek büyümesi partner ağından geldi:
@@ -172,12 +172,12 @@ Hybris'in gerçek büyümesi partner ağından geldi:
 - Accenture, Deloitte gibi partnerlar implement eder
 - Müşteri her ikisine de öder
 
-İleride: "Certified AdminCraft Partner" programı.
+İleride: "Certified Craftive Partner" programı.
 
 ### Piyasadaki Boşluk
 
 ```
-SAP Commerce Cloud                AdminCraft Fırsatı
+SAP Commerce Cloud                Craftive Fırsatı
 ──────────────────────            ──────────────────────
 500K$+/yıl lisans                 15-40K TL kurulum + 1.5-4K TL/ay
 12-24 ay implementasyon           2-8 hafta kurulum
@@ -186,7 +186,7 @@ Sadece Fortune 500                KOBİ + Orta ölçek + Ajanslar
 Türkiye'de 5-10 müşteri           Binlerce potansiyel müşteri
 ```
 
-**AdminCraft, Hybris'in ulaşamadığı segmenti alıyor.**
+**Craftive, Hybris'in ulaşamadığı segmenti alıyor.**
 
 ---
 
@@ -210,7 +210,7 @@ Türkiye'de 5-10 müşteri           Binlerce potansiyel müşteri
 
 ### Rakip Farklılaştırması
 
-| Rakip | Onların Sınırı | AdminCraft Avantajı |
+| Rakip | Onların Sınırı | Craftive Avantajı |
 |-------|---------------|---------------------|
 | Contentful / Strapi | Sadece CMS, iş süreçleri yok | CMS + proje + HR + e-ticaret tek platformda |
 | WordPress | Güvenlik riskleri, teknik borç | Modern stack, database izolasyonu, API-first |
@@ -503,10 +503,10 @@ Platinum  10+ proje     %25        Dedicated
 ### İçerik Planı
 
 **Blog kategorileri:**
-1. **Vaka Çalışmaları** — "X firması AdminCraft ile Y sorunu çözdü"
+1. **Vaka Çalışmaları** — "X firması Craftive ile Y sorunu çözdü"
 2. **Rehberler** — "Ajansınız için doğru CMS", "İzin yönetimi nasıl dijitalleştirilir"
 3. **Teknik** — "Database-per-tenant nedir", "Multi-tenant mimari avantajları"
-4. **Karşılaştırma** — "AdminCraft vs SAP Hybris", "AdminCraft vs WordPress"
+4. **Karşılaştırma** — "Craftive vs SAP Hybris", "Craftive vs WordPress"
 
 **Takvim:**
 - Haftalık: 2 blog yazısı (TR)
