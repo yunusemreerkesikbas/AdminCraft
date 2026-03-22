@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  ORG: craftive
+  ORG: ${{ github.repository_owner }}
 
 jobs:
   build-and-push:
@@ -108,6 +108,7 @@ jobs:
             echo "${{ secrets.ENV_PROD }}" | base64 -d > .env.prod
 
             export APP_VERSION=${{ needs.build-and-push.outputs.tag }}
+            export GHCR_ORG=${{ github.repository_owner }}
 
             docker compose -f docker-compose.yml -f docker-compose.prod.yml \
               --env-file .env.prod pull
@@ -145,6 +146,7 @@ jobs:
             fi
             echo "Rolling back to: $PREV_TAG"
             export APP_VERSION="$PREV_TAG"
+            export GHCR_ORG=${{ github.repository_owner }}
             docker compose -f docker-compose.yml -f docker-compose.prod.yml \
               --env-file .env.prod up -d --remove-orphans
             echo "Rollback complete: $PREV_TAG"
