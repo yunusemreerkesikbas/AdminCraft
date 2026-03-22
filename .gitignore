@@ -108,6 +108,7 @@ landing/node_modules/
 backend/build_errors.txt
 backend/compile_output.txt
 backend/HELP.md
+backend/.m2/
 storefront/tmpclaude-*
 storefront-nextjs/.next-dev-*.log
 storefront-nextjs/dev-server*.log

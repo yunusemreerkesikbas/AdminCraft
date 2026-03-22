@@ -45,7 +45,7 @@ export interface SiteStatsDto {
     pages: EntityStatsDto;
     components: EntityStatsDto;
     media: MediaStatsDto;
-    products: EntityStatsDto;
+    products: EntityStatsDto | null;
 }
 
 export interface EntityStatsDto {
