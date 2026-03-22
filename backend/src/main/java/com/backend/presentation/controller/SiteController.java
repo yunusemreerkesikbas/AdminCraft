@@ -463,11 +463,14 @@ public class SiteController {
                     dto.stats().media().totalCount(),
                     dto.stats().media().totalSizeMb(),
                     Math.toIntExact(dto.stats().media().dailyChange()));
-            SiteOverviewResponse.EntityStatsDto productStats = new SiteOverviewResponse.EntityStatsDto(
-                    dto.stats().products().total(),
-                    dto.stats().products().published(),
-                    dto.stats().products().draft(),
-                    Math.toIntExact(dto.stats().products().weeklyChange()));
+	    SiteOverviewResponse.EntityStatsDto productStats = null;
+	    if (dto.stats().products() != null) {
+		productStats = new SiteOverviewResponse.EntityStatsDto(
+			dto.stats().products().total(),
+			dto.stats().products().published(),
+			dto.stats().products().draft(),
+			Math.toIntExact(dto.stats().products().weeklyChange()));
+	    }
             stats = new SiteOverviewResponse.SiteStatsDto(pageStats, componentStats, mediaStats, productStats);
         }
 

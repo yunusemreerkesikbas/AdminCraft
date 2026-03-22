@@ -22,6 +22,7 @@ import com.backend.application.dto.response.SiteOverviewAppDto.UserAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteActivity;
 import com.backend.domain.enums.ComponentStatus;
+import com.backend.domain.enums.ModuleCode;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.enums.ProductStatus;
 import com.backend.domain.repository.ComponentRepository;
@@ -57,6 +58,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     private final MessageSource messageSource;
     private final UserRepository userRepository;
     private final FrontendConfigPort frontendConfig;
+    private final TenantModuleAccessService tenantModuleAccessService;
 
     @Override
     public SiteOverviewAppDto getOverview() {
@@ -113,14 +115,16 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         MediaStatsAppDto mediaStats = new MediaStatsAppDto(totalMedia, Math.round(totalSizeMb * 100.0) / 100.0,
                 dailyMediaChange);
 
-        // Product stats
-        long totalProducts = productRepository.count();
-        long activeProducts = productRepository.countByStatus(ProductStatus.PUBLISHED);
-        long draftProducts = productRepository.countByStatus(ProductStatus.DRAFT);
-        long weeklyProductChange = productRepository.countByCreatedAtAfter(weekAgo);
+	EntityStatsAppDto productStats = null;
+	if (tenantModuleAccessService.isEnabledForCurrentTenant(ModuleCode.PRODUCT_CATALOG)) {
+	    long totalProducts = productRepository.count();
+	    long activeProducts = productRepository.countByStatus(ProductStatus.PUBLISHED);
+	    long draftProducts = productRepository.countByStatus(ProductStatus.DRAFT);
+	    long weeklyProductChange = productRepository.countByCreatedAtAfter(weekAgo);
 
-        EntityStatsAppDto productStats = new EntityStatsAppDto(totalProducts, activeProducts, draftProducts,
-                weeklyProductChange);
+	    productStats = new EntityStatsAppDto(totalProducts, activeProducts, draftProducts,
+		    weeklyProductChange);
+	}
 
         return new SiteStatsAppDto(pageStats, componentStats, mediaStats, productStats);
     }
@@ -203,7 +207,8 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     }
 
     private Site getFirstSite() {
-        // Use JOIN FETCH to eagerly load enabledLanguages and avoid LazyInitializationException
+	// Use JOIN FETCH to eagerly load enabledLanguages and avoid
+	// LazyInitializationException
         List<Site> sites = siteRepository.findAllWithEnabledLanguages();
         if (sites.isEmpty()) {
             return null;

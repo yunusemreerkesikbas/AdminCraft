@@ -81,10 +81,11 @@ class AsyncProvisioningExecutorTest {
         void executeProvisioning_setsJobToFailed_whenDatabaseCreationFails() {
                 // DB creation will fail in unit tests (no real MySQL) — verify error path
                 List<String> modules = Arrays.asList("core", "pagebuilder");
+		List<String> registeredModules = List.of("core");
                 lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(false);
                 when(jobRepository.findById(1L)).thenReturn(Optional.of(jobMock));
 
-                executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, "corr-001");
+		executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, registeredModules, "corr-001");
 
                 verify(jobMock).setStatus(eq("failed"));
                 verify(tenantModuleRegistrar, never()).registerModules(any(), any());
@@ -93,10 +94,11 @@ class AsyncProvisioningExecutorTest {
         @Test
         void executeProvisioning_doesNotCallMigration_whenDatabaseCreationFails() {
                 List<String> modules = List.of("core");
+		List<String> registeredModules = List.of("core");
                 lenient().when(environment.acceptsProfiles(any(Profiles.class))).thenReturn(false);
                 when(jobRepository.findById(1L)).thenReturn(Optional.of(jobMock));
 
-                executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, "corr-002");
+		executor.executeProvisioning(1L, testTenantId, "ac_test_10001", modules, registeredModules, "corr-002");
 
                 verify(tenantMigrationService, never()).migrateTenant(any(), any());
         }

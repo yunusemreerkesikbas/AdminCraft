@@ -52,14 +52,16 @@ public class AsyncProvisioningExecutor {
   private String dbPassword;
 
   @Async
-  public void executeProvisioning(Long jobId, Long tenantId, String dbName, List<String> modules, String correlationId) {
+  public void executeProvisioning(Long jobId, Long tenantId, String dbName, List<String> runtimeModules,
+      List<String> registeredModules, String correlationId) {
     log.info("Async provisioning started on thread: {}", Thread.currentThread().getName());
 
     MDC.put("correlationId", correlationId);
     MDC.put("tenantId", String.valueOf(tenantId));
     MDC.put("tenantDb", dbName);
 
-    log.info("Starting provisioning for tenant {} with modules: {}", tenantId, modules);
+    log.info("Starting provisioning for tenant {} with runtimeModules={} registeredModules={}",
+	tenantId, runtimeModules, registeredModules);
 
     try {
       updateJobStatus(jobId, "running", 0, null, LocalDateTime.now(), null);
@@ -68,10 +70,10 @@ public class AsyncProvisioningExecutor {
       prepareDatabaseForProvisioning(tenantId, dbName);
 
       updateJobProgress(jobId, 60);
-      tenantMigrationService.migrateTenant(dbName, modules);
+      tenantMigrationService.migrateTenant(dbName, runtimeModules);
 
       updateJobProgress(jobId, 90);
-      tenantModuleRegistrar.registerModules(tenantId, modules);
+      tenantModuleRegistrar.registerModules(tenantId, registeredModules);
 
       updateTenantStatus(tenantId, TenantStatus.ACTIVE);
       updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());

@@ -8,5 +8,7 @@ public interface TenantModuleRepository {
 
     List<TenantModule> findByTenantId(Long tenantId);
 
+    boolean existsByTenantIdAndModuleCodeAndStatus(Long tenantId, String moduleCode, String status);
+
     List<TenantModule> saveAll(Iterable<TenantModule> modules);
 }

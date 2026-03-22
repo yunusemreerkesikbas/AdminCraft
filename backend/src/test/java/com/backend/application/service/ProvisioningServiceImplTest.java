@@ -92,7 +92,8 @@ class ProvisioningServiceImplTest {
 
     List<String> expected = List.of("core", "media", "component_library", "pagebuilder");
     verify(migrationService).getOrderedModules(eq(expected));
-    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)), eq(expected), anyString());
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)),
+	eq(expected), eq(List.of("core")), anyString());
   }
 
   @Test
@@ -106,7 +107,8 @@ class ProvisioningServiceImplTest {
 
     List<String> expected = List.of("core", "media", "component_library", "pagebuilder", "product");
     verify(migrationService).getOrderedModules(eq(expected));
-    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)), eq(expected), anyString());
+    verify(asyncExecutor).executeProvisioning(eq(42L), eq(1L), eq(Tenant.formatDatabaseName("tenant-a", 1L)),
+	eq(expected), eq(List.of("core", "product")), anyString());
   }
 
   @Test
@@ -118,5 +120,16 @@ class ProvisioningServiceImplTest {
     assertThatThrownBy(() -> provisioningService.provisionTenant(1L, request))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Core module is required");
+  }
+
+  @Test
+  void shouldRejectCoreExecutionModulesInProvisioningRequest() {
+    ProvisionRequest request = ProvisionRequest.builder()
+	.modules(List.of("core", "media"))
+	.build();
+
+    assertThatThrownBy(() -> provisioningService.provisionTenant(1L, request))
+	.isInstanceOf(IllegalArgumentException.class)
+	.hasMessageContaining("Invalid provisioning module code");
   }
 }

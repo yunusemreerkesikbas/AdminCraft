@@ -25,6 +25,11 @@ public class TenantModuleRepositoryImpl implements TenantModuleRepository {
     }
 
     @Override
+    public boolean existsByTenantIdAndModuleCodeAndStatus(Long tenantId, String moduleCode, String status) {
+		return jpaRepository.existsByTenantIdAndModuleCodeAndStatus(tenantId, moduleCode, status);
+    }
+
+    @Override
     public List<TenantModule> saveAll(Iterable<TenantModule> modules) {
         List<com.backend.infrastructure.persistence.platform.entity.TenantModule> platformModules =
                 StreamSupport.stream(modules.spliterator(), false)

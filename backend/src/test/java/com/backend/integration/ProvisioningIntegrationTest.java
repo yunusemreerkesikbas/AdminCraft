@@ -77,7 +77,7 @@ public class ProvisioningIntegrationTest {
     tenant = tenantRepository.save(tenant);
 
     ProvisionRequest request = ProvisionRequest.builder()
-        .modules(List.of("core", "media", "component_library", "pagebuilder"))
+	.modules(List.of("core"))
         .build();
 
     ProvisioningJobResponse response = provisioningService.provisionTenant(tenant.getId(), request);
@@ -123,7 +123,7 @@ public class ProvisioningIntegrationTest {
         .build());
 
     ProvisionRequest request = ProvisionRequest.builder()
-        .modules(List.of("core"))
+	.modules(List.of("core"))
         .build();
 
     ProvisioningJobResponse job1 = provisioningService.provisionTenant(tenant1.getId(), request);
@@ -154,7 +154,7 @@ public class ProvisioningIntegrationTest {
     tenant = tenantRepository.save(tenant);
 
     ProvisionRequest request = ProvisionRequest.builder()
-        .modules(List.of("core", "media", "component_library", "pagebuilder"))
+	.modules(List.of("core"))
         .build();
 
     // First provisioning
