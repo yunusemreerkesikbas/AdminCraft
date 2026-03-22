@@ -49,6 +49,7 @@ export const resolveLocalizedHref = (
   if (!normalizedHref) return null;
 
   if (normalizedHref.startsWith("#")) return normalizedHref;
+  if (/^(mailto:|tel:|ftp:|\/\/)/.test(normalizedHref)) return normalizedHref;
   if (isExternal) return normalizedHref;
 
   if (normalizedHref === "/") return `/${lang}`;

@@ -1,6 +1,7 @@
 import CmsPage from "@/components/cms/CmsPage";
 import { loadContentPage, loadHomepage } from "@/lib/core/cms/loaders";
 import { buildOrganizationSchema } from "@/lib/core/seo/schema";
+import { safeJsonLd } from "@/lib/core/seo/json-ld";
 import { buildPageMetadata } from "@/lib/core/seo/metadata";
 import { getTranslations } from "next-intl/server";
 
@@ -55,7 +56,7 @@ export default async function ContentPage({
       {orgSchema ? (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(orgSchema) }}
         />
       ) : null}
       <CmsPage page={page} lang={lang} />

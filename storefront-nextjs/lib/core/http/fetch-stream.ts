@@ -15,6 +15,7 @@ const DEFAULT_RESPONSE_HEADERS = [
   "last-modified",
   "content-disposition",
   "accept-ranges",
+  "content-range",
 ];
 
 export const fetchCmsStream = async (

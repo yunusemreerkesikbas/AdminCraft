@@ -55,7 +55,7 @@ export const getShell = async (lang?: string): Promise<ShellDeliveryResponse | n
 export const getSitemapPages = async (lang: string): Promise<SitemapPageEntry[] | null> =>
   fetchCmsJson<SitemapPageEntry[]>(
     resolveCmsEndpoint("cmsSitemapPages"),
-    { lang },
+    { lang: normalizeLanguage(lang) },
     { revalidate: 3600 },
   );
 

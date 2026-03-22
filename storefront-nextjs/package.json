@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "dev:ssr": "next dev",
-    "dev:csr": "cross-env NEXT_OUTPUT=export next build && npx serve@latest out",
+    "dev:csr": "cross-env NEXT_OUTPUT=export next build && npx serve out",
     "dev:stage": "dotenv -e .env.staging -- next dev",
     "dev:ssr:stage": "dotenv -e .env.staging -- next dev",
-    "dev:csr:stage": "cross-env NEXT_OUTPUT=export dotenv -e .env.staging -- next build && npx serve@latest out",
+    "dev:csr:stage": "cross-env NEXT_OUTPUT=export dotenv -e .env.staging -- next build && npx serve out",
     "build": "next build",
     "build:dev": "dotenv -e .env.development -- next build",
     "build:stage": "dotenv -e .env.staging -- next build",
@@ -19,7 +19,7 @@
     "start:dev": "dotenv -e .env.development -- next start",
     "start:stage": "dotenv -e .env.staging -- next start",
     "start:prod": "next start",
-    "start:static": "npx serve@latest out",
+    "start:static": "npx serve out",
     "lint": "eslint"
   },
   "dependencies": {
@@ -38,6 +38,7 @@
     "dotenv-cli": "^7.4.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "serve": "^14.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

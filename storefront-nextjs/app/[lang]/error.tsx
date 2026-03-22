@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 export default function LocaleError({
   error,
@@ -10,7 +10,7 @@ export default function LocaleError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = useTranslations("Error");
+  const translate = useTranslations("Error");
 
   useEffect(() => {
     console.error("[Storefront] Unhandled error:", error);
@@ -18,13 +18,13 @@ export default function LocaleError({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-      <h2 className="text-2xl font-semibold">{t("title")}</h2>
-      <p className="text-muted-foreground">{t("description")}</p>
+      <h2 className="text-2xl font-semibold">{translate("title")}</h2>
+      <p className="text-slate-500">{translate("description")}</p>
       <button
         onClick={reset}
-        className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+        className="rounded-md bg-slate-900 px-4 py-2 text-white hover:bg-slate-800"
       >
-        {t("retry")}
+        {translate("retry")}
       </button>
     </div>
   );

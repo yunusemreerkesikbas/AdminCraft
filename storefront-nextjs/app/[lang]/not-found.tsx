@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { isValidLocaleFormat, requireMessageLocale, FALLBACK_LOCALE } from "@/lib/core/i18n/locale";
+import { isBundledLocale, FALLBACK_LOCALE } from "@/lib/core/i18n/locale";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default async function NotFound() {
   const requestHeaders = await headers();
   const rawLang = requestHeaders.get("x-lang");
-  const lang = rawLang && isValidLocaleFormat(rawLang) ? requireMessageLocale(rawLang) : FALLBACK_LOCALE;
+  const lang = rawLang && isBundledLocale(rawLang) ? rawLang : FALLBACK_LOCALE;
 
   setRequestLocale(lang);
   const translate = await getTranslations("NotFound");

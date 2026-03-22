@@ -128,6 +128,9 @@ export const buildServiceHeroModel = (
   };
 };
 
+const visibleEntry = (entry: EntryRecord | undefined): EntryRecord | undefined =>
+  entry?.isVisible === false ? undefined : entry;
+
 export const buildAboutModel = (
   component: ComponentDeliveryResponse | null,
   mediaByUid: Record<string, CmsMediaDelivery>,
@@ -137,15 +140,18 @@ export const buildAboutModel = (
   }
 
   const entries = (component.entries ?? []) as EntryRecord[];
+  const e0 = visibleEntry(entries[0]);
+  const e1 = visibleEntry(entries[1]);
+  const e2 = visibleEntry(entries[2]);
 
   return {
     title: readString(component.title) ?? "",
     eyebrow: readString(component.subtitle),
     paragraphs: buildParagraphs(component.description),
-    mainImage: toMediaModel(readEntryMediaSource(entries[0]), mediaByUid, readString(entries[0]?.title) ?? ""),
-    innerImage: toMediaModel(readEntryMediaSource(entries[1]), mediaByUid, readString(entries[1]?.title) ?? ""),
-    innerLabel: readString(entries[1]?.title),
-    sideImage: toMediaModel(readEntryMediaSource(entries[2]), mediaByUid, readString(entries[2]?.title) ?? ""),
+    mainImage: toMediaModel(readEntryMediaSource(e0), mediaByUid, readString(e0?.title) ?? ""),
+    innerImage: toMediaModel(readEntryMediaSource(e1), mediaByUid, readString(e1?.title) ?? ""),
+    innerLabel: readString(e1?.title),
+    sideImage: toMediaModel(readEntryMediaSource(e2), mediaByUid, readString(e2?.title) ?? ""),
   };
 };
 
@@ -426,7 +432,11 @@ export const buildSplitMediaIntroModel = (
   }
 
   const entries = (component.entries ?? []) as EntryRecord[];
+  const e0 = visibleEntry(entries[0]);
+  const e1 = visibleEntry(entries[1]);
+  const e2 = visibleEntry(entries[2]);
   const listGroups = entries.slice(3)
+    .filter((entry) => entry.isVisible !== false)
     .map((entry) => ({
       id: entry.uid,
       title: readString(entry.title),
@@ -437,12 +447,12 @@ export const buildSplitMediaIntroModel = (
   return {
     heading: readString(component.title) ?? "",
     headingAccent: readString(component.subtitle),
-    introLabel: readEntryString(entries[0], "introLabel"),
+    introLabel: readEntryString(e0, "introLabel"),
     paragraphs: buildParagraphs(component.description),
-    mainImage: toMediaModel(readEntryMediaSource(entries[0]), mediaByUid, readString(entries[0]?.title) ?? ""),
-    innerImage: toMediaModel(readEntryMediaSource(entries[1]), mediaByUid, readString(entries[1]?.title) ?? ""),
-    innerLabel: readString(entries[1]?.title),
-    sideImage: toMediaModel(readEntryMediaSource(entries[2]), mediaByUid, readString(entries[2]?.title) ?? ""),
+    mainImage: toMediaModel(readEntryMediaSource(e0), mediaByUid, readString(e0?.title) ?? ""),
+    innerImage: toMediaModel(readEntryMediaSource(e1), mediaByUid, readString(e1?.title) ?? ""),
+    innerLabel: readString(e1?.title),
+    sideImage: toMediaModel(readEntryMediaSource(e2), mediaByUid, readString(e2?.title) ?? ""),
     listGroups,
   };
 };

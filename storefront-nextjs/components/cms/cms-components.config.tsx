@@ -23,8 +23,7 @@ import {
   buildBigTextCtaModel,
 } from "@/components/theme/builders";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyRenderer = React.ComponentType<CmsComponentProps> | ((props: CmsComponentProps) => Promise<any>);
+type AnyRenderer = React.ComponentType<CmsComponentProps> | ((props: CmsComponentProps) => Promise<React.ReactElement | null>);
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 const NavigationCmsComponent = dynamic(() => import("./navigation/NavigationCmsComponent"));

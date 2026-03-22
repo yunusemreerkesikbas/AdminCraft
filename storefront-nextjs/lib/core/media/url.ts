@@ -14,5 +14,6 @@ export const buildMediaUrl = (path?: string | null): string => {
     return `/cms-media/${path.slice(mediaPrefix.length)}`;
   }
 
-  return `${getCmsBaseUrl()}/${path}`;
+  const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${getCmsBaseUrl()}/${cleanPath}`;
 };

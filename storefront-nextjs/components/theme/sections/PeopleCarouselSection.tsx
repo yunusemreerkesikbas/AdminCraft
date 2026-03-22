@@ -3,7 +3,7 @@
 import "swiper/css";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useId, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { PeopleCarouselModel, PersonCardModel } from "@/components/theme/models";
@@ -62,32 +62,29 @@ function ProfileLink({ person }: { person: PersonCardModel }) {
 
 export default function PeopleCarouselSection({ model }: { model: PeopleCarouselModel }) {
   const [activePerson, setActivePerson] = useState<PersonCardModel | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogTitleId = useId();
   const ariaLabel = model.title ?? model.subtitle ?? "Team";
   const loopPeople = buildLoopPeople(model.people);
   const enableLoop = model.people.length > 1;
 
   useEffect(() => {
-    if (!activePerson) {
-      return undefined;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (activePerson) {
+      dialog.showModal();
+    } else {
+      dialog.close();
     }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setActivePerson(null);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
   }, [activePerson]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleClose = () => setActivePerson(null);
+    dialog.addEventListener("close", handleClose);
+    return () => dialog.removeEventListener("close", handleClose);
+  }, []);
 
   return (
     <>
@@ -151,21 +148,18 @@ export default function PeopleCarouselSection({ model }: { model: PeopleCarousel
         </Swiper>
       </section>
 
-      {activePerson ? (
-        <div
-          className={styles.teamModalOverlay}
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              setActivePerson(null);
-            }
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={dialogTitleId}
-            className={styles.teamModal}
-          >
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={dialogTitleId}
+        className={styles.teamModalOverlay}
+        onClick={(event) => {
+          if (event.target === dialogRef.current) {
+            setActivePerson(null);
+          }
+        }}
+      >
+        {activePerson ? (
+          <div className={styles.teamModal}>
             <div className={styles.teamModalHeader}>
               <button
                 type="button"
@@ -200,8 +194,8 @@ export default function PeopleCarouselSection({ model }: { model: PeopleCarousel
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </dialog>
     </>
   );
 }

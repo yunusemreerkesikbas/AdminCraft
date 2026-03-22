@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files — .env.local is gitignored (local overrides, may contain secrets)
 # .env.development, .env.staging, .env.production are committed (public URLs only)
+.env
 .env.local
 .env*.local
 

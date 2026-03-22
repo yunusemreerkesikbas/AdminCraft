@@ -8,6 +8,7 @@ import {
   resolveSiteDefaultLocale,
 } from "@/lib/core/i18n/locale";
 import { buildWebSiteSchema } from "@/lib/core/seo/schema";
+import { safeJsonLd } from "@/lib/core/seo/json-ld";
 import { getGoogleAnalyticsId, getGtmId } from "@/lib/core/config/runtime-env";
 import "./globals.css";
 
@@ -82,7 +83,7 @@ export default async function RootLayout({
         {webSiteSchema ? (
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteSchema) }}
           />
         ) : null}
         {gtmId ? (

@@ -1,32 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { buildMediaUrl } from "@/lib/core/media/url";
-import type { EntryDeliveryResponse } from "@/lib/types";
 import type { CmsComponentProps } from "./index";
-
-type EntryRecord = EntryDeliveryResponse & Record<string, unknown>;
-
-const readStringField = (entry: EntryRecord, key: string): string | undefined => {
-  const direct = entry[key];
-  if (typeof direct === "string" && direct.trim().length > 0) {
-    return direct.trim();
-  }
-
-  const mapValue = entry.customFields?.[key];
-  if (typeof mapValue === "string" && mapValue.trim().length > 0) {
-    return mapValue.trim();
-  }
-
-  return undefined;
-};
+import { type EntryRecord, readEntryString } from "@/lib/cms-utils";
 
 function PortfolioCard({ entry }: { entry: EntryRecord }) {
-  const href = readStringField(entry, "linkUrl");
-  const imageUrl = readStringField(entry, "imageUrl");
-  const category = readStringField(entry, "category") ?? readStringField(entry, "badgeText");
+  const href = readEntryString(entry, "linkUrl");
+  const imageUrl = readEntryString(entry, "imageUrl");
+  const category = readEntryString(entry, "category") ?? readEntryString(entry, "badgeText");
   const title = entry.title ?? "";
   const description = entry.description;
-  const altText = readStringField(entry, "altText") ?? title;
+  const altText = readEntryString(entry, "altText") ?? title;
   const cardClasses = [
     "group overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors duration-200",
     href ? "block cursor-pointer hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" : "",

@@ -4,7 +4,7 @@ import type { VideoModel } from "@/components/theme/models";
 
 export default function VideoSection({ model }: { model: VideoModel }) {
   return (
-    <section className={styles.videoArea}>
+    <section className={styles.videoArea} aria-label={model.title}>
       <div className={styles.heroContainer}>
         <div className={styles.videoPin}>
           <div className={styles.videoWrap}>

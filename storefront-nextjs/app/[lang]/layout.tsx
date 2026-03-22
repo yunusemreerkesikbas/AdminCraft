@@ -12,9 +12,14 @@ export default async function LocaleLayout({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+
+  if (!isValidLocaleFormat(lang)) {
+    notFound();
+  }
+
   const site = await loadSiteConfig(lang);
 
-  if (!isValidLocaleFormat(lang) || !isLocaleEnabled(lang, site.enabledLanguages)) {
+  if (!isLocaleEnabled(lang, site.enabledLanguages)) {
     notFound();
   }
 

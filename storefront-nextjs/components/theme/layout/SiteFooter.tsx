@@ -95,15 +95,16 @@ function renderNewsletterBlock(block: LayoutBlockDelivery) {
   return (
     <div key={block.uid} className={styles.footerColumnNewsletter}>
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
-      <form>
+      <form onSubmit={(e) => e.preventDefault()}>
         <div className={styles.newsletterField}>
           <input
             type="email"
             placeholder={block.newsletterPlaceholder}
+            aria-label={block.newsletterPlaceholder}
             className={styles.newsletterInput}
           />
           <button
-            type="button"
+            type="submit"
             className={styles.newsletterButton}
             aria-label={block.newsletterButtonLabel}
           >
