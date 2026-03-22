@@ -1,4 +1,4 @@
--- AdminCraft Tenant Product Baseline
+-- Craftive Tenant Product Baseline
 -- Consolidated from V27 to V35
 -- Created: 2026-03-20
 
@@ -14,7 +14,7 @@ CREATE TABLE product_types (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by BIGINT NULL,
     updated_by BIGINT NULL,
-    
+
     CONSTRAINT uk_product_type_uuid UNIQUE (uuid),
     CONSTRAINT uk_product_type_uid UNIQUE (uid),
     CONSTRAINT uk_product_type_code UNIQUE (code),
@@ -32,11 +32,11 @@ CREATE TABLE product_attribute_definitions (
     field_type VARCHAR(30) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT uk_product_attr_def_uuid UNIQUE (uuid),
     CONSTRAINT uk_product_attr_def_uid UNIQUE (uid),
     CONSTRAINT uk_product_attr_type_code UNIQUE (product_type_id, code),
-    CONSTRAINT fk_product_attr_def_type FOREIGN KEY (product_type_id) 
+    CONSTRAINT fk_product_attr_def_type FOREIGN KEY (product_type_id)
         REFERENCES product_types(id) ON DELETE CASCADE,
     INDEX idx_product_attr_def_type (product_type_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=10000;
@@ -54,11 +54,11 @@ CREATE TABLE categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by BIGINT NULL,
     updated_by BIGINT NULL,
-    
+
     CONSTRAINT uk_category_uuid UNIQUE (uuid),
     CONSTRAINT uk_category_uid UNIQUE (uid),
     CONSTRAINT uk_category_code UNIQUE (code),
-    CONSTRAINT fk_category_parent FOREIGN KEY (parent_id) 
+    CONSTRAINT fk_category_parent FOREIGN KEY (parent_id)
         REFERENCES categories(id) ON DELETE RESTRICT,
     INDEX idx_category_parent (parent_id),
     INDEX idx_category_sort (sort_order),
@@ -78,11 +78,11 @@ CREATE TABLE category_i18n (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by BIGINT NULL,
     updated_by BIGINT NULL,
-    
+
     CONSTRAINT uk_category_i18n_uuid UNIQUE (uuid),
     CONSTRAINT uk_category_i18n_uid UNIQUE (uid),
     CONSTRAINT uk_category_i18n_lang UNIQUE (category_id, language),
-    CONSTRAINT fk_category_i18n_category FOREIGN KEY (category_id) 
+    CONSTRAINT fk_category_i18n_category FOREIGN KEY (category_id)
         REFERENCES categories(id) ON DELETE CASCADE,
     INDEX idx_category_i18n_category (category_id),
     INDEX idx_category_i18n_language (language)
@@ -103,13 +103,13 @@ CREATE TABLE products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by BIGINT NULL,
     updated_by BIGINT NULL,
-    
+
     CONSTRAINT uk_product_uuid UNIQUE (uuid),
     CONSTRAINT uk_product_uid UNIQUE (uid),
     CONSTRAINT uk_product_sku UNIQUE (sku),
-    CONSTRAINT fk_product_type FOREIGN KEY (product_type_id) 
+    CONSTRAINT fk_product_type FOREIGN KEY (product_type_id)
         REFERENCES product_types(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_product_responsive FOREIGN KEY (responsive_id) 
+    CONSTRAINT fk_product_responsive FOREIGN KEY (responsive_id)
         REFERENCES responsive_media_set(id) ON DELETE SET NULL,
     INDEX idx_product_type (product_type_id),
     INDEX idx_product_status (status),
@@ -133,11 +133,11 @@ CREATE TABLE product_i18n (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by BIGINT NULL,
     updated_by BIGINT NULL,
-    
+
     CONSTRAINT uk_product_i18n_uuid UNIQUE (uuid),
     CONSTRAINT uk_product_i18n_uid UNIQUE (uid),
     CONSTRAINT uk_product_i18n_lang UNIQUE (product_id, language),
-    CONSTRAINT fk_product_i18n_product FOREIGN KEY (product_id) 
+    CONSTRAINT fk_product_i18n_product FOREIGN KEY (product_id)
         REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product_i18n_product (product_id),
     INDEX idx_product_i18n_language (language)
@@ -155,13 +155,13 @@ CREATE TABLE product_attributes (
     value_media_id BIGINT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT uk_product_attr UNIQUE (product_id, attribute_definition_id),
-    CONSTRAINT fk_product_attr_product FOREIGN KEY (product_id) 
+    CONSTRAINT fk_product_attr_product FOREIGN KEY (product_id)
         REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_product_attr_def FOREIGN KEY (attribute_definition_id) 
+    CONSTRAINT fk_product_attr_def FOREIGN KEY (attribute_definition_id)
         REFERENCES product_attribute_definitions(id) ON DELETE CASCADE,
-    CONSTRAINT fk_product_attr_media FOREIGN KEY (value_media_id) 
+    CONSTRAINT fk_product_attr_media FOREIGN KEY (value_media_id)
         REFERENCES media(id) ON DELETE SET NULL,
     INDEX idx_product_attr_product (product_id),
     INDEX idx_product_attr_def (attribute_definition_id),
@@ -175,11 +175,11 @@ CREATE TABLE product_category_links (
     is_primary BOOLEAN DEFAULT FALSE,
     sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     PRIMARY KEY (product_id, category_id),
-    CONSTRAINT fk_pcl_product FOREIGN KEY (product_id) 
+    CONSTRAINT fk_pcl_product FOREIGN KEY (product_id)
         REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_pcl_category FOREIGN KEY (category_id) 
+    CONSTRAINT fk_pcl_category FOREIGN KEY (category_id)
         REFERENCES categories(id) ON DELETE CASCADE,
     INDEX idx_pcl_category (category_id),
     INDEX idx_pcl_primary (is_primary)
@@ -193,11 +193,11 @@ CREATE TABLE product_media (
     media_type VARCHAR(30) DEFAULT 'GALLERY',
     sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     CONSTRAINT uk_product_media UNIQUE (product_id, responsive_media_set_id),
-    CONSTRAINT fk_pm_product FOREIGN KEY (product_id) 
+    CONSTRAINT fk_pm_product FOREIGN KEY (product_id)
         REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_product_media_responsive_set FOREIGN KEY (responsive_media_set_id) 
+    CONSTRAINT fk_product_media_responsive_set FOREIGN KEY (responsive_media_set_id)
         REFERENCES responsive_media_set(id) ON DELETE SET NULL,
     INDEX idx_pm_product (product_id),
     INDEX idx_pm_responsive_set (responsive_media_set_id),
@@ -256,9 +256,9 @@ CREATE TABLE product_field_values (
 
     CONSTRAINT uk_pfv_uuid UNIQUE (uuid),
     CONSTRAINT uk_pfv_uid UNIQUE (uid),
-    CONSTRAINT fk_pfv_product FOREIGN KEY (product_id) 
+    CONSTRAINT fk_pfv_product FOREIGN KEY (product_id)
         REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_pfv_definition FOREIGN KEY (field_definition_id) 
+    CONSTRAINT fk_pfv_definition FOREIGN KEY (field_definition_id)
         REFERENCES product_field_definitions(id) ON DELETE CASCADE,
     CONSTRAINT uk_pfv_product_field UNIQUE (product_id, field_definition_id),
     INDEX idx_pfv_product (product_id),

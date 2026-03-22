@@ -100,7 +100,7 @@ public void deleteByProductId(Long productId) {
 
 ### Multi-datasource repository binding
 
-AdminCraft uses package-level repository binding for datasource selection:
+Craftive uses package-level repository binding for datasource selection:
 
 - Platform repositories are bound in `PlatformDataSourceConfig` via:
   - `@EnableJpaRepositories(basePackages = "com.backend.infrastructure.persistence.platform.repository", ...)`

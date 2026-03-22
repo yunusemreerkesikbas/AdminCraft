@@ -1,8 +1,8 @@
 {
-    "name": "admincraft",
+    "name": "craftive",
     "version": "1.0.0",
-    "description": "AdminCraft - Multi-Tenant CMS Platform",
-    "author": "AdminCraft Team",
+    "description": "Craftive - Multi-Tenant CMS Platform",
+    "author": "Craftive Team",
     "license": "UNLICENSED",
     "private": true,
     "scripts": {

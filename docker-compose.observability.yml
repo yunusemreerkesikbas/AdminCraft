@@ -1,4 +1,4 @@
-# AdminCraft - Local Observability Override
+# Craftive - Local Observability Override
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.observability.yml --env-file .env.dev up -d
 #
 # Adds Loki + Grafana + Alloy for local log pipeline testing.

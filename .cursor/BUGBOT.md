@@ -631,12 +631,12 @@ mysql tenant_1_db < previous_version_backup.sql
 
 ```bash
 # Docker deployment rollback
-docker service update --rollback admincraft-backend
-docker service update --rollback admincraft-frontend
+docker service update --rollback craftive-backend
+docker service update --rollback craftive-frontend
 
 # Kubernetes rollback
-kubectl rollout undo deployment/admincraft-backend
-kubectl rollout undo deployment/admincraft-frontend
+kubectl rollout undo deployment/craftive-backend
+kubectl rollout undo deployment/craftive-frontend
 ```
 
 ---

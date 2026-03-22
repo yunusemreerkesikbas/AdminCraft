@@ -1,6 +1,6 @@
 name: craftive
 
-# AdminCraft - Base Docker Compose Configuration
+# Craftive - Base Docker Compose Configuration
 # This file contains shared services used across all environments.
 # Use with environment-specific override files:
 #   - Dev:  docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d

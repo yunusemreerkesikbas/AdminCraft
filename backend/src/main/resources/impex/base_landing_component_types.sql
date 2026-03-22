@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Landing Page Component Types — ImpEx seed file.
 -- Run via Admin UI /{lang}/impex after seed_liko_components.sql is applied.
 -- Idempotent: safe to run multiple times.

@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 
 -- System format presets (SAP Hybris style)
 -- Source: R__seed_media_formats.sql

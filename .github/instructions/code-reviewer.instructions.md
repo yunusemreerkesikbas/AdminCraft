@@ -4,7 +4,7 @@ applyTo: "**"
 excludeAgent: ["coding-agent"]
 ---
 
-# Senior Code Reviewer — AdminCraft
+# Senior Code Reviewer — Craftive
 
 Expertise: Java 21/Spring Boot 3.3.5, Angular 19/TypeScript 5.6.3, Clean Architecture, Multi-Tenancy, Security (OWASP)
 

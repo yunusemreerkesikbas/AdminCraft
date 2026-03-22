@@ -47,11 +47,11 @@ class PlatformSettingsControllerIntegrationTest {
     void getSettings_ShouldReturnSuccess() throws Exception {
         when(platformSettingsService.getSettings()).thenReturn(
                 new PlatformSettingsData(
-                        "AdminCraft",
+                        "Craftive",
                         "TR",
                         "TRY",
                         "noreply@craftive.io",
-                        "AdminCraft",
+                        "Craftive",
                         TwoFactorPolicy.DISABLED,
                         false,
                         null,
@@ -60,7 +60,7 @@ class PlatformSettingsControllerIntegrationTest {
         mockMvc.perform(get("/platform/settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.platformName").value("AdminCraft"))
+                .andExpect(jsonPath("$.data.platformName").value("Craftive"))
                 .andExpect(jsonPath("$.data.defaultCurrency").value("TRY"));
     }
 
@@ -84,7 +84,7 @@ class PlatformSettingsControllerIntegrationTest {
                         "TR",
                         "TRY",
                         "noreply@craftive.io",
-                        "AdminCraft",
+                        "Craftive",
                         TwoFactorPolicy.DISABLED,
                         false,
                         null,

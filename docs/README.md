@@ -1,6 +1,6 @@
-# AdminCraft Documentation
+# Craftive Documentation
 
-AdminCraft is a platform for **customizable project solutions** built with **Spring Boot (Java 21)**, **Angular 19**, and a **Next.js headless storefront**.
+Craftive is a platform for **customizable project solutions** built with **Spring Boot (Java 21)**, **Angular 19**, and a **Next.js headless storefront**.
 The platform uses **database-per-tenant** isolation (`platform_management` + `ac_subdomain_{id}`) and a Clean Architecture layout.
 
 ## How to use these docs

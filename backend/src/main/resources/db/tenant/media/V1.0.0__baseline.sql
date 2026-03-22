@@ -1,4 +1,4 @@
--- AdminCraft Tenant Media Baseline
+-- Craftive Tenant Media Baseline
 -- Consolidated from V20 to V24
 -- Created: 2026-03-20
 

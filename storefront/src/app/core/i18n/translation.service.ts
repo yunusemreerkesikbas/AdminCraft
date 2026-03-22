@@ -58,15 +58,15 @@ export class TranslationService {
         ]).pipe(
             map(([tenant, userPreference, config]) => {
                 let effectiveLang = config.defaultLang;
-                
+
                 if (tenant?.defaultLanguage) {
                     effectiveLang = this.mapTenantLanguageToSupported(tenant.defaultLanguage);
                 }
-                
+
                 if (userPreference?.manuallySet && userPreference?.language && this.isLanguageSupported(userPreference.language, tenant)) {
                     effectiveLang = userPreference.language;
                 }
-                
+
                 return effectiveLang;
             })
         );
@@ -74,7 +74,7 @@ export class TranslationService {
 
     async initializeTranslations(forceReload: boolean = false): Promise<void> {
         this._loadingState$.next(true);
-        
+
         try {
             this._loadErrors$.next([]);
             const tenantSettings = await this.loadTenantLanguageSettings();
@@ -208,7 +208,7 @@ export class TranslationService {
     }
 
     private async loadUserLanguagePreference(): Promise<void> {
-        const stored = localStorage.getItem('admincraft-user-language-preference');
+        const stored = localStorage.getItem('craftive-user-language-preference');
         if (stored) {
             try {
                 const preference = JSON.parse(stored) as UserLanguagePreference;
@@ -227,7 +227,7 @@ export class TranslationService {
             defaultLang: tenantSettings.defaultLanguage,
             supportedLanguages: tenantSettings.supportedLanguages
         };
-        
+
         this._config$.next(updatedConfig);
     }
 
@@ -235,15 +235,15 @@ export class TranslationService {
         if (!tenant) {
             return this._config$.getValue().supportedLanguages.includes(language);
         }
-        
-        return tenant.supportedLanguages?.some((lang: Language | { code: string }) => 
+
+        return tenant.supportedLanguages?.some((lang: Language | { code: string }) =>
             this.mapTenantLanguageToSupported(lang) === language
         ) ?? false;
     }
 
     private mapTenantLanguageToSupported(tenantLanguage: Language | { code: string }): SupportedLanguage {
         const code = typeof tenantLanguage === 'object' ? tenantLanguage.code : tenantLanguage;
-        
+
         switch (code) {
             case Language.TR:
             case 'TR':
@@ -284,7 +284,7 @@ export class TranslationService {
     }
 
     private persistUserLanguagePreference(preference: UserLanguagePreference): void {
-        localStorage.setItem('admincraft-user-language-preference', JSON.stringify(preference));
+        localStorage.setItem('craftive-user-language-preference', JSON.stringify(preference));
     }
 
     private getCurrentUserId(): number {
@@ -298,7 +298,7 @@ export class TranslationService {
             module,
             error: error instanceof Error ? error : new Error(String(error))
         };
-        
+
         this._loadErrors$.next([...currentErrors, newError]);
     }
 

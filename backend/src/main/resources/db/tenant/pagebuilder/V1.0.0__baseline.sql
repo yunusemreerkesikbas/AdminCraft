@@ -1,4 +1,4 @@
--- AdminCraft Tenant Page Builder Baseline
+-- Craftive Tenant Page Builder Baseline
 -- Consolidated from V1 to V38
 -- Created: 2026-03-20
 

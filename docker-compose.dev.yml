@@ -1,4 +1,4 @@
-# AdminCraft - Local Development Override
+# Craftive - Local Development Override
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d
 #
 # This configuration runs MySQL + phpMyAdmin locally.

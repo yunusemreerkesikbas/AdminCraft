@@ -3,7 +3,7 @@
     "version": 1,
     "newProjectRoot": "projects",
     "projects": {
-        "admincraft": {
+        "craftive": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:component": {
@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:application",
                     "options": {
-                        "outputPath": "dist/admincraft",
+                        "outputPath": "dist/craftive",
                         "index": "src/index.html",
                         "browser": "src/main.ts",
                         "polyfills": ["zone.js"],
@@ -144,13 +144,13 @@
                     },
                     "configurations": {
                         "production": {
-                            "buildTarget": "admincraft:build:production"
+                            "buildTarget": "craftive:build:production"
                         },
                         "stage": {
-                            "buildTarget": "admincraft:build:stage"
+                            "buildTarget": "craftive:build:stage"
                         },
                         "development": {
-                            "buildTarget": "admincraft:build:development"
+                            "buildTarget": "craftive:build:development"
                         }
                     },
                     "defaultConfiguration": "development"

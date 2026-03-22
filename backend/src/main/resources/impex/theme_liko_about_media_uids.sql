@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- About Page Media UID Alignment — run after media uploads and after seed_liko_media_uids.sql.
 -- Purpose: assign stable media UIDs used by seed_about_content_page.sql.
 -- Note: about award #1 reuses homepage-award-1 from seed_liko_media_uids.sql.

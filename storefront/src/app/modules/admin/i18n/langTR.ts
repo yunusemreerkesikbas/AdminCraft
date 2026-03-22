@@ -1988,7 +1988,7 @@ export const langTR = {
                 title: 'SQL Editörü',
                 hint: "SQL script'inizi buraya yapıştırın. Yalnızca INSERT ve UPDATE ifadelerine izin verilmektedir.",
                 label: "SQL Script'i",
-                placeholder: "-- #ADMINCRAFT_IMPEX\n-- SQL'inizi buraya yapıştırın...\n\nINSERT INTO ...",
+                placeholder: "-- #CRAFTIVE_IMPEX\n-- SQL'inizi buraya yapıştırın...\n\nINSERT INTO ...",
                 markerInfo: "Script şu işaretleyiciyle başlamalıdır:",
                 run: 'Çalıştır',
                 running: 'Çalışıyor...',
@@ -2171,7 +2171,7 @@ export const langTR = {
                 title1: 'Aramıza',
                 title2: 'hoş geldiniz',
                 description:
-                    'AdminCraft, zengin modüllerle kişiselleştirilebilir paneller oluşturmanıza yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
+                    'Craftive, zengin modüllerle kişiselleştirilebilir paneller oluşturmanıza yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
             },
             '2fa': {
                 info: 'E-postanıza bir doğrulama kodu gönderildi.',
@@ -2256,7 +2256,7 @@ export const langTR = {
                 'Şifren başarıyla ayarlandı! Artık bilgilerinizle giriş yapabilirsiniz.',
             successAutoLogin: 'Şifre başarıyla oluşturuldu! Giriş yapılıyor...',
             right: {
-                title1: 'AdminCraft',
+                title1: 'Craftive',
                 title2: 'ekibine hoş geldin',
                 description:
                     'Platforma katılman için davet edildin. Başlamak ve panele erişmek için şifreni belirle.',

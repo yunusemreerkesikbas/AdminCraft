@@ -1,6 +1,6 @@
-# AdminCraft
+# craftive
 
-AdminCraft is a configurable multi-tenant platform built with Clean Architecture, emphasizing modular delivery, security, scalability, and performance. The monorepo ships the backend control plane, the Angular admin application, and the Next.js demo/reference storefront used as the tenant storefront base.
+craftive is a configurable multi-tenant platform built with Clean Architecture, emphasizing modular delivery, security, scalability, and performance. The monorepo ships the backend control plane, the Angular admin application, and the Next.js demo/reference storefront used as the tenant storefront base.
 
 Documentation: [`docs/README.md`](docs/README.md)
 
@@ -9,7 +9,7 @@ Documentation: [`docs/README.md`](docs/README.md)
 The project is structured as a monorepo containing the backend, admin frontend, and demo/reference storefront:
 
 ```
-AdminCraft/
+craftive/
 +-- backend/            # Spring Boot 3 application (API)
 +-- storefront/         # Angular 19 admin application
 +-- storefront-nextjs/  # Next.js demo/reference storefront
@@ -41,7 +41,7 @@ AdminCraft/
 
 ### Multi-Tenancy (Database-per-Tenant)
 
-AdminCraft uses a robust **Database-per-Tenant** architecture for maximum data isolation and security.
+craftive uses a robust **Database-per-Tenant** architecture for maximum data isolation and security.
 
 - **Platform DB**: Manages tenant registry and global configurations.
 - **Tenant DBs**: Each tenant has a dedicated physical database (`ac_subdomain_{id}`).

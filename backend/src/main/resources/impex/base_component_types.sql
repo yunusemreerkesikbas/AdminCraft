@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 
 -- Seed data for component types
 -- Source: R__seed_component_types.sql

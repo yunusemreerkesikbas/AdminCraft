@@ -1,4 +1,4 @@
--- AdminCraft Tenant Component Library Baseline
+-- Craftive Tenant Component Library Baseline
 -- Consolidated from V1 to V26
 -- Created: 2026-03-20
 

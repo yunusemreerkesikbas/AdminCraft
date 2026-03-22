@@ -1,4 +1,4 @@
-# AdminCraft — Project Context & Developer Guide
+# craftive — Project Context & Developer Guide
 
 ## Technology Stack
 

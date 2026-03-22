@@ -1,4 +1,4 @@
-# AdminCraft Backend - Multi-stage Dockerfile
+# Craftive Backend - Multi-stage Dockerfile
 # Builds a production-ready Spring Boot JAR
 
 FROM eclipse-temurin:21-jdk-alpine AS build

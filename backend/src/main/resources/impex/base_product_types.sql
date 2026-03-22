@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 
 -- Seed: Product Types and Attribute Definitions
 -- Source: R__seed_product_types.sql

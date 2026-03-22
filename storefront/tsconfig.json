@@ -40,7 +40,7 @@
             "@fuse": ["@fuse/index"],
             "@fuse/*": ["@fuse/*"],
             "@i18n/*": ["app/i18n/*"],
-            "@admincraft/*": ["app/modules/admin/custom/*"],
+            "@craftive/*": ["app/modules/admin/custom/*"],
             "@tenants/*": ["app/modules/admin/custom/tenants/*"],
             "@content/*": ["app/modules/admin/custom/content/*"],
             "@media/*": ["app/modules/admin/custom/media/*"],

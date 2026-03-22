@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Liko Home-2 Pages & Slot Wiring — ImpEx seed file.
 -- Run via Admin UI /{lang}/impex AFTER seed_liko_components.sql and seed_liko_chrome_components.sql.
 -- Idempotent: safe to run multiple times.

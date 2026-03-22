@@ -2,14 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { FuseNavigationItem } from '@fuse/components/navigation';
 import { TranslocoService } from '@jsverse/transloco';
 import { User } from 'app/core/user/user.types';
-import { AdminCraftNavigationItem } from './navigation.types';
+import { NavigationItem } from './navigation.types';
 
 @Injectable({ providedIn: 'root' })
 export class NavigationFilterService {
     #transloco = inject(TranslocoService);
 
     filterAndUpdateLinks(
-        items: AdminCraftNavigationItem[],
+        items: NavigationItem[],
         user: User | null,
         enabledModules: string[],
         language: string
@@ -26,10 +26,10 @@ export class NavigationFilterService {
     }
 
     #filterByModulesAndRoles(
-        items: AdminCraftNavigationItem[],
+        items: NavigationItem[],
         userRole: string | undefined,
         enabledModules: string[]
-    ): AdminCraftNavigationItem[] {
+    ): NavigationItem[] {
         return items
             .map((item) => {
                 const itemCopy = { ...item };
@@ -64,28 +64,13 @@ export class NavigationFilterService {
                 }
                 return null;
             })
-            .filter((item) => item !== null) as AdminCraftNavigationItem[];
-    }
-
-    #removeEmptyGroups(
-        items: AdminCraftNavigationItem[]
-    ): AdminCraftNavigationItem[] {
-        return items.filter((item) => {
-            if (item.children?.length) {
-                item.children = this.#removeEmptyGroups(item.children);
-                return item.children.length > 0;
-            }
-            if (Array.isArray(item.children) && item.children.length === 0) {
-                return false;
-            }
-            return true;
-        });
+            .filter((item) => item !== null) as NavigationItem[];
     }
 
     #updateLinksWithLanguage(
-        items: AdminCraftNavigationItem[],
+        items: NavigationItem[],
         language: string
-    ): AdminCraftNavigationItem[] {
+    ): NavigationItem[] {
         return items.map((item) => {
             const itemCopy = { ...item };
             if (
@@ -122,6 +107,21 @@ export class NavigationFilterService {
                 );
             }
             return itemCopy;
+        });
+    }
+
+    #removeEmptyGroups(
+        items: NavigationItem[]
+    ): NavigationItem[] {
+        return items.filter((item) => {
+            if (item.children?.length) {
+                item.children = this.#removeEmptyGroups(item.children);
+                return item.children.length > 0;
+            }
+            if (Array.isArray(item.children) && item.children.length === 0) {
+                return false;
+            }
+            return true;
         });
     }
 }

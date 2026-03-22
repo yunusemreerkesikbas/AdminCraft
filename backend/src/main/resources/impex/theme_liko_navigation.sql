@@ -1,4 +1,4 @@
--- #ADMINCRAFT_IMPEX
+-- #CRAFTIVE_IMPEX
 -- Version-controlled ImpEx reference script.
 -- Run via Admin UI /{lang}/impex after seed_liko_chrome_components.sql.
 -- Idempotent: safe to run multiple times.
