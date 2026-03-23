@@ -62,6 +62,15 @@ app:
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 springdoc:
   api-docs:
     enabled: true

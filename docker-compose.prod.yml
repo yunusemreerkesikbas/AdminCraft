@@ -138,6 +138,7 @@ services:
     restart: unless-stopped
     command:
       - "--api.dashboard=false"
+      - "--log.level=INFO"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
