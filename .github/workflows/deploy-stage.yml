@@ -118,22 +118,30 @@ jobs:
               --env-file .env.stage pull
 
             docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.stage.yml \
-              --env-file .env.stage up -d --remove-orphans
+              --env-file .env.stage up -d --remove-orphans --force-recreate
 
             echo "${APP_VERSION}" > .last-deployed-tag
 
       - name: Health check
-        run: |
-          echo "Waiting 180s for backend startup and Traefik discovery..."
-          sleep 180
-          for i in $(seq 1 10); do
-            STATUS=$(curl -sf https://s1.api.craftive.io/api/actuator/health | jq -r '.status' 2>/dev/null || echo "FAIL")
-            [ "$STATUS" = "UP" ] && echo "Stage deploy OK — ${{ needs.build-and-push.outputs.tag }}" && exit 0
-            echo "Attempt $i/10: $STATUS — retrying in 15s"
-            sleep 15
-          done
-          echo "Health check failed — triggering rollback"
-          exit 1
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGE_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          command_timeout: 10m
+          script: |
+            echo "Waiting for backend startup..."
+            for i in $(seq 1 20); do
+              STATUS=$(docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health 2>/dev/null | grep -o '"status":"[^"]*"' | head -1 || echo "")
+              if echo "$STATUS" | grep -q '"UP"'; then
+                echo "Backend healthy — $STATUS (attempt $i)"
+                exit 0
+              fi
+              echo "Attempt $i/20: $STATUS — retrying in 15s"
+              sleep 15
+            done
+            echo "Health check failed after 20 attempts"
+            exit 1
 
       - name: Rollback on failure
         if: failure()
