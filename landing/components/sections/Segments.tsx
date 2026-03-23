@@ -18,7 +18,7 @@ type Tenant = {
   domain: string;
   color: string;
   lightBg: string;
-  Icon: React.ComponentType<{ className?: string }>;
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   modules: string[];
   stats: { label: string; value: string }[];
 };

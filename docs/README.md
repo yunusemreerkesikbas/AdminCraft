@@ -73,6 +73,15 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 - Multi-environment scripts: `npm run dev`, `npm run dev:stage`, `npm run build`, `npm run build:static`, `npm run start:stage`, etc.
 - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
 
+### Marketing landing (`landing/`)
+
+Static Next.js landing project for `landing.craftive.io`.
+
+- Deploy target: Cloudflare Pages (static export, no SSR runtime dependency)
+- Output: `out/` directory
+- Domain: `landing.craftive.io` as primary custom domain
+- Operational guide: [`global/devops.md`](global/devops.md)
+
 ## Cross-cutting features
 
 - Navigation (hierarchical nodes/entries): [`modules/navigation.md`](modules/navigation.md)
