@@ -3,7 +3,7 @@
  */
 export const environment = {
     production: true,
-    apiBaseUrl: 'https://api.craftive.io',
+    apiBaseUrl: 'https://api.craftive.io/api',
     apiTimeout: 30000,
     supportedLanguages: ['tr', 'en'],
     defaultLanguage: 'en',
