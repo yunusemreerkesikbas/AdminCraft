@@ -133,7 +133,7 @@ services:
           cpus: '0.25'
 
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.3
     container_name: craftive-traefik
     restart: unless-stopped
     command:
