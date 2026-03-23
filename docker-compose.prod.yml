@@ -151,6 +151,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     environment:
       CF_API_TOKEN: ${CF_API_TOKEN}
+      CLOUDFLARE_DNS_API_TOKEN: ${CF_API_TOKEN}
       DOCKER_API_VERSION: "1.43"
     ports:
       - "80:80"
