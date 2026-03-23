@@ -8,7 +8,7 @@ type NavLabels = {
   home: string;
   features: string;
   segments: string;
-  comparison: string;
+  howItWorks: string;
   faq: string;
   docs: string;
   cta: string;
@@ -20,7 +20,7 @@ type FooterContent = {
   tagline: string;
   links: {
     product: { label: string; items: { label: string; href: string }[] };
-    company: { label: string; items: { label: string; href: string }[] };
+    company?: { label: string; items: { label: string; href: string }[] };
     resources: { label: string; items: { label: string; href: string }[] };
   };
   copyright: string;

@@ -6,11 +6,10 @@ import navTr from "@/i18n/nav.tr.json";
 import navEn from "@/i18n/nav.en.json";
 import homeTr from "@/content/home.tr.json";
 import homeEn from "@/content/home.en.json";
+import { OG_IMAGE_PATH, SITE_URL } from "@/lib/site";
 
 const SUPPORTED_LOCALES = ["tr", "en"] as const;
 type Locale = (typeof SUPPORTED_LOCALES)[number];
-
-const BASE_URL = "https://www.craftive.io";
 
 const navByLocale = {
   tr: navTr.nav,
@@ -34,7 +33,7 @@ type LayoutProps = {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const isEN = locale === "en";
-  const canonical = `${BASE_URL}/${locale}`;
+  const canonical = `${SITE_URL}/${locale}`;
 
   const title = isEN
     ? "Craftive — Multi-Tenant Project Platform"
@@ -49,9 +48,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     alternates: {
       canonical,
       languages: {
-        tr: `${BASE_URL}/tr`,
-        en: `${BASE_URL}/en`,
-        "x-default": `${BASE_URL}/en`,
+        tr: `${SITE_URL}/tr`,
+        en: `${SITE_URL}/en`,
+        "x-default": `${SITE_URL}/en`,
       },
     },
     openGraph: {
@@ -59,7 +58,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description,
       url: canonical,
       siteName: "Craftive",
-      images: [{ url: `${BASE_URL}/images/og-image.png`, width: 1200, height: 630, alt: "Craftive" }],
+      images: [{ url: `${SITE_URL}${OG_IMAGE_PATH}`, width: 1200, height: 630, alt: "Craftive" }],
       locale: isEN ? "en_US" : "tr_TR",
       type: "website",
     },
@@ -67,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       card: "summary_large_image",
       title,
       description,
-      images: [`${BASE_URL}/images/og-image.png`],
+      images: [`${SITE_URL}${OG_IMAGE_PATH}`],
     },
   };
 }
@@ -76,8 +75,8 @@ const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Craftive",
-  url: BASE_URL,
-  logo: `${BASE_URL}/images/og-image.png`,
+  url: SITE_URL,
+  logo: `${SITE_URL}${OG_IMAGE_PATH}`,
   contactPoint: { "@type": "ContactPoint", email: "hello@craftive.io" },
 };
 
