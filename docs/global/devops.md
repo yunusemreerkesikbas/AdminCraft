@@ -217,6 +217,22 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 
 This model keeps tenant-specific deploy workflows independent from the platform deploy workflow, while still allowing the platform repo to ship a demo/reference storefront.
 
+### Landing flow — Cloudflare Pages (static)
+
+`landing/` is deployed independently from droplet-based platform services.
+
+1. Connect repository to Cloudflare Pages.
+2. Set root directory to `landing`.
+3. Build command: `npm run pages:build`.
+4. Output directory: `out`.
+5. Set custom domain to `landing.craftive.io`.
+6. Keep Cloudflare SSL mode `Full (strict)`.
+
+Notes:
+- `landing/next.config.ts` uses static export (`output: "export"`).
+- Primary site URL is controlled by `NEXT_PUBLIC_SITE_URL` at build time (defaults to `https://landing.craftive.io`).
+- This flow is separate from Traefik tenant storefront scripts and does not require droplet deployment scripts.
+
 ### Tenant storefront repository CI/CD policy
 
 1. Keep each tenant storefront in its own repository (`<tenant>-storefront`).
