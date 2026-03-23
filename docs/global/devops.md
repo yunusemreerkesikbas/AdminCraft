@@ -2,8 +2,9 @@
 
 ## 1. What it is / why it exists
 
-Craftive runs two isolated environments on DigitalOcean (Frankfurt, FRA1), fronted by Cloudflare CDN.
+Craftive runs two isolated environments on DigitalOcean (Frankfurt, FRA1).
 Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose project.
+Prod uses Cloudflare proxy (orange cloud) for CDN/DDoS protection; Stage uses DNS-only (grey cloud) due to multi-level subdomain SSL limitations (see Gotchas).
 
 **Platform services** (managed by Craftive): Backend API + Admin Panel.
 **Tenant storefront** (`storefront-nextjs/`): Deployable boilerplate. Each tenant storefront can be deployed independently from its own repository onto the same environment droplet with isolated routing.
@@ -49,7 +50,10 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 - **Production requires reviewer approval.** The `production` GitHub Environment gate must not be bypassed.
 - **Ports 3306, 8080, 3000 are never externally reachable.** UFW allows only 22, 80, 443.
 - **Wildcard SSL (`*.craftive.io`) requires DNS-01.** HTTP-01 cannot issue wildcard certs; Cloudflare is the DNS provider.
-- **Cloudflare SSL mode must be Full (strict).** Flexible mode breaks backend TLS validation.
+- **Cloudflare SSL mode must be Full (strict) for prod.** Flexible mode breaks backend TLS validation. Stage DNS records use DNS-only (grey cloud) — Traefik serves Let's Encrypt certs directly.
+- **Stage multi-level subdomains must be DNS-only.** Cloudflare Universal SSL covers `*.craftive.io` but NOT `s1.app.craftive.io` or `s1.api.craftive.io` (two levels deep). Proxied mode causes `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Prod subdomains are single-level (`app.craftive.io`) and work with Cloudflare proxy.
+- **Backend requires `spring-boot-starter-actuator`.** Health checks depend on `/api/actuator/health`. Without this dependency, all health checks fail and Traefik marks the backend as unhealthy.
+- **Mail health indicator must be disabled** (`management.health.mail.enabled: false`). DigitalOcean blocks outbound SMTP port 587 by default; the mail health check causes a 132s timeout that keeps the backend permanently unhealthy.
 - **CORS is profile-driven, not hardcoded.** `allowedOrigins` and `allowedOriginPatterns` come from `CorsProperties` bound to `application-{env}.yml`; `SecurityConfig` must not contain hardcoded origin strings.
 - **`deploy` user has docker group only — no sudo.** Workflows SSH as `deploy`, never root.
 - **Prod images are tagged with release date** (`release-DD.MM.YYYY` + `latest`). Stage images use `stage-{sha}`.
@@ -63,25 +67,31 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 
 ### Environment URLs
 
-| Env | Service | URL |
-|-----|---------|-----|
-| Dev | Backend API | `http://localhost:8080/api` |
-| Dev | Admin Panel | `http://localhost:4200` |
-| Stage | Backend API | `https://s1.api.craftive.io` |
-| Stage | Admin Panel | `https://s1.app.craftive.io` |
-| Prod | Backend API | `https://api.craftive.io` |
-| Prod | Admin Panel | `https://app.craftive.io` |
+| Env | Service | URL | Cloudflare |
+|-----|---------|-----|------------|
+| Dev | Backend API | `http://localhost:8080/api` | — |
+| Dev | Admin Panel | `http://localhost:4200` | — |
+| Stage | Backend API | `https://s1.api.craftive.io/api` | DNS only |
+| Stage | Admin Panel | `https://s1.app.craftive.io` | DNS only |
+| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | DNS only |
+| Prod | Backend API | `https://api.craftive.io/api` | Proxied |
+| Prod | Admin Panel | `https://app.craftive.io` | Proxied |
+| Prod | Tenant storefront | `https://{tenant}.craftive.io` | Proxied |
 
 `craftive.io` and `www.craftive.io` redirect to `app.craftive.io` via Traefik `redirectregex` middleware.
+
+> **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1.api.craftive.io/api`, not `https://s1.api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
 
 ### GHCR image names and tags
 
 ```
-ghcr.io/craftive/craftive-backend:{tag}
-ghcr.io/craftive/craftive-frontend:{tag}
-ghcr.io/craftive/craftive-storefront:{tag}   # demo/reference storefront shipped from this repo
-ghcr.io/craftive/<tenant>-storefront:{tag}   # tenant-specific repo output
+ghcr.io/{github.repository_owner}/craftive-backend:{tag}
+ghcr.io/{github.repository_owner}/craftive-frontend:{tag}
+ghcr.io/{github.repository_owner}/craftive-storefront:{tag}   # demo/reference storefront shipped from this repo
+ghcr.io/{github.repository_owner}/<tenant>-storefront:{tag}   # tenant-specific repo output
 ```
+
+> **Note:** GHCR org is derived from `${{ github.repository_owner }}` — never hardcode. Docker Compose uses `${GHCR_ORG}` variable, set by deploy workflows.
 
 | Source | Tag format | Example |
 |--------|-----------|---------|
@@ -162,9 +172,11 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - `stage` branch → `stage-{git-sha}`
    - `release/release-27.02.2026` → `release-27.02.2026`
 4. Build 3 images (backend, frontend, storefront), push to GHCR
-5. SSH to Stage Droplet, save current tag → pull and restart services → write new tag to `.last-deployed-tag`
-6. Health check: `https://s1.api.craftive.io/api/actuator/health` → `{"status":"UP"}` (exponential backoff, 10 attempts)
+5. SSH to Stage Droplet → GHCR login → decode `ENV_STAGE` secret → pull images → `docker compose up -d --force-recreate` → write tag to `.last-deployed-tag`
+6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout)
 7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
+
+> **Why SSH-based health check?** External HTTPS health checks fail during first deploy because Let's Encrypt cert issuance takes time. SSH + `docker exec` bypasses DNS/SSL and checks the backend directly inside the container.
 
 ### Deploy flow — Production (release)
 
@@ -183,14 +195,14 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
      → build backend + frontend + demo storefront, push release-DD.MM.YYYY + latest tags
      → wait for GitHub Environment "production" reviewer approval
      → SSH to Prod Droplet, save current tag → pull and restart → write new tag to `.last-deployed-tag`
-     → health check (exponential backoff, 10 attempts) + admin panel smoke test
+     → SSH-based health check (20 attempts, 15s interval) + admin panel smoke test
      → on failure: automatic rollback to previous tag from `.last-deployed-tag.prev`
 ```
 
 ### Demo storefront flow — Platform repository
 
 1. `storefront-nextjs/` in this repository is the demo/reference storefront.
-2. Stage and prod platform deploy workflows build and publish `ghcr.io/craftive/craftive-storefront:{tag}`.
+2. Stage and prod platform deploy workflows build and publish `ghcr.io/{owner}/craftive-storefront:{tag}`.
 3. The platform compose stack runs this demo storefront centrally for shared demo/reference usage.
 
 ### Tenant storefront flow — Separate repository (recommended)
@@ -202,12 +214,12 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 3. Deploy command on droplet:
    ```bash
    bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
-     stage democompany ghcr.io/craftive/democompany-storefront:stage-a3f9c12
+     stage democompany ghcr.io/{owner}/democompany-storefront:stage-a3f9c12
    ```
 4. Optional custom domains can be passed as additional arguments:
    ```bash
    bash /opt/craftive/scripts/deploy-tenant-storefront.sh \
-     prod democompany ghcr.io/craftive/democompany-storefront:release-27.02.2026 \
+     prod democompany ghcr.io/{owner}/democompany-storefront:release-27.02.2026 \
      democompany.com "www.democompany.com,shop.democompany.com"
    ```
 5. Rollback/remove:
@@ -232,8 +244,19 @@ This model keeps tenant-specific deploy workflows independent from the platform 
 1. Stage default: `s1-<tenant>.craftive.io`
 2. Prod default: `<tenant>.craftive.io`
 3. Optional custom domains (e.g. `democompany.com`) can be attached as additional router hosts.
-4. DNS records must point to the correct environment droplet behind Cloudflare proxy.
-5. For custom domains, cert issuance happens via Traefik on first request.
+4. For custom domains, cert issuance happens via Traefik on first request.
+
+**DNS strategy — Wildcard vs explicit records:**
+
+| Approach | When to use |
+|----------|-------------|
+| Wildcard `*.craftive.io` → Droplet IP | Recommended. All tenant subdomains auto-resolve. Explicit records (e.g. `s1.app`, `api`) override the wildcard. Unknown tenants hit storefront → backend returns 404. |
+| Per-tenant A records | If strict control is needed. Requires manual DNS management per tenant (automatable via Cloudflare API). |
+
+> **Stage DNS records must be DNS-only (grey cloud)** — multi-level subdomains like `s1-{tenant}.craftive.io` are single-level and work with both modes, but `s1.app` and `s1.api` are multi-level and require DNS-only.
+> **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and can use Cloudflare proxy (orange cloud).
+
+TODO: Evaluate Cloudflare API integration for automatic DNS record creation when tenants are provisioned.
 
 ### Wildcard SSL via DNS-01
 
@@ -242,7 +265,11 @@ This model keeps tenant-specific deploy workflows independent from the platform 
 - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
 - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
 - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-# CF_API_TOKEN env var passed from .env.{prod|stage}
+# Traefik environment — both env vars required:
+environment:
+  CF_API_TOKEN: ${CF_API_TOKEN}
+  CLOUDFLARE_DNS_API_TOKEN: ${CF_API_TOKEN}   # Traefik v3.6 reads this
+  DOCKER_API_VERSION: "1.43"                   # Required for Docker Engine 28.x
 ```
 
 Custom tenant domains (e.g. `democompany.com`) use HTTP-01 — Traefik auto-issues certs on first request.
@@ -309,7 +336,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  ORG: craftive
+  ORG: ${{ github.repository_owner }}
   TENANT: democompany
 
 jobs:
@@ -357,7 +384,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  ORG: craftive
+  ORG: ${{ github.repository_owner }}
   TENANT: democompany
 
 jobs:
@@ -434,7 +461,13 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **`craftive:` is the YAML root key** in `application.yml`. Renaming it would break `@ConfigurationProperties(prefix = "craftive")` bindings without a corresponding Java refactor.
 - **Reserved subdomains cannot be assigned to tenants:** `www`, `api`, `app`, `admin`, `s1`, `s2`, `mail`, `docs`, `status`, `blog`, `demo`, `cdn`. Enforce at the tenant subdomain validation layer.
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
-- **Cloudflare proxies both Droplets on the same IPs from the public perspective.** The actual Droplet IPs must not be published; always route through Cloudflare orange-cloud records.
+- **Prod DNS records should use Cloudflare proxy (orange cloud).** The actual Droplet IPs should not be published. Stage DNS records must use DNS-only (grey cloud) due to multi-level subdomain SSL — see first gotcha below.
+- **Multi-level subdomains break Cloudflare Universal SSL.** `*.craftive.io` covers `app.craftive.io` (single-level) but NOT `s1.app.craftive.io` (two levels). Proxied multi-level subdomains cause `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Fix: use DNS-only for stage records; Traefik serves Let's Encrypt certs directly.
+- **Backend health check uses `wget`, not `curl`.** The distroless backend image does not include `curl`. Docker Compose and deploy workflows use `wget -qO-` for health checks.
+- **Backend `start_period` must be at least 150s.** Spring Boot takes ~120s to start. A shorter `start_period` causes Docker to mark the container as permanently unhealthy before it finishes starting, and Traefik stops routing to it.
+- **Deploy uses `--force-recreate`.** Ensures Traefik picks up new container IDs after image updates. Without this, Traefik may route to stale containers after rollback/redeploy cycles.
+- **GHCR images are private.** Deploy workflows must authenticate to GHCR on the droplet via `docker login` before pulling. The `GITHUB_TOKEN` is passed as `GHCR_TOKEN` env var through SSH.
+- **DigitalOcean blocks outbound SMTP port 587 by default.** Request unblock via DO support ticket for email functionality. Until then, `management.health.mail.enabled` must be `false` to prevent health check timeouts.
 - **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.
