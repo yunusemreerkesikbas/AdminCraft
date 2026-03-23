@@ -18,7 +18,7 @@ services:
       traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://s1.app.${DOMAIN}"
 
   storefront:
-    image: ghcr.io/craftive/craftive-storefront:${APP_VERSION:-latest}
+    image: ghcr.io/${GHCR_ORG}/craftive-storefront:${APP_VERSION:-latest}
     build:
       context: ./storefront-nextjs
       dockerfile: ../docker/storefront/Dockerfile
