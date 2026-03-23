@@ -124,11 +124,13 @@ jobs:
 
       - name: Health check
         run: |
+          echo "Waiting 180s for backend startup and Traefik discovery..."
+          sleep 180
           for i in $(seq 1 10); do
             STATUS=$(curl -sf https://s1.api.craftive.io/api/actuator/health | jq -r '.status' 2>/dev/null || echo "FAIL")
             [ "$STATUS" = "UP" ] && echo "Stage deploy OK — ${{ needs.build-and-push.outputs.tag }}" && exit 0
-            echo "Attempt $i/10: $STATUS — retrying in $((i * 3))s"
-            sleep $((i * 3))
+            echo "Attempt $i/10: $STATUS — retrying in 15s"
+            sleep 15
           done
           echo "Health check failed — triggering rollback"
           exit 1
