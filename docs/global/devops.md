@@ -51,7 +51,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 - **Ports 3306, 8080, 3000 are never externally reachable.** UFW allows only 22, 80, 443.
 - **Wildcard SSL (`*.craftive.io`) requires DNS-01.** HTTP-01 cannot issue wildcard certs; Cloudflare is the DNS provider.
 - **Cloudflare SSL mode must be Full (strict) for prod.** Flexible mode breaks backend TLS validation. Stage DNS records use DNS-only (grey cloud) — Traefik serves Let's Encrypt certs directly.
-- **Stage multi-level subdomains must be DNS-only.** Cloudflare Universal SSL covers `*.craftive.io` but NOT `s1.app.craftive.io` or `s1.api.craftive.io` (two levels deep). Proxied mode causes `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Prod subdomains are single-level (`app.craftive.io`) and work with Cloudflare proxy.
+- **Stage subdomains use single-level `s1-*` convention.** Cloudflare Universal SSL covers `*.craftive.io` (single level only). Stage services use `s1-api`, `s1-app`, `s1-cdn` (hyphen, single-level) so Cloudflare proxy (orange cloud) works. Old two-level patterns (`s1.api`, `s1.app`) caused `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` and required DNS-only mode.
 - **Backend requires `spring-boot-starter-actuator`.** Health checks depend on `/api/actuator/health`. Without this dependency, all health checks fail and Traefik marks the backend as unhealthy.
 - **Mail health indicator must be disabled** (`management.health.mail.enabled: false`). DigitalOcean blocks outbound SMTP port 587 by default; the mail health check causes a 132s timeout that keeps the backend permanently unhealthy.
 - **CORS is profile-driven, not hardcoded.** `allowedOrigins` and `allowedOriginPatterns` come from `CorsProperties` bound to `application-{env}.yml`; `SecurityConfig` must not contain hardcoded origin strings.
@@ -71,16 +71,16 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 |-----|---------|-----|------------|
 | Dev | Backend API | `http://localhost:8080/api` | — |
 | Dev | Admin Panel | `http://localhost:4200` | — |
-| Stage | Backend API | `https://s1.api.craftive.io/api` | DNS only |
-| Stage | Admin Panel | `https://s1.app.craftive.io` | DNS only |
-| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | DNS only |
+| Stage | Backend API | `https://s1-api.craftive.io/api` | Proxied |
+| Stage | Admin Panel | `https://s1-app.craftive.io` | Proxied |
+| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | Proxied |
 | Prod | Backend API | `https://api.craftive.io/api` | Proxied |
 | Prod | Admin Panel | `https://app.craftive.io` | Proxied |
 | Prod | Tenant storefront | `https://{tenant}.craftive.io` | Proxied |
 
 `craftive.io` and `www.craftive.io` redirect to `app.craftive.io` via Traefik `redirectregex` middleware.
 
-> **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1.api.craftive.io/api`, not `https://s1.api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
+> **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1-api.craftive.io/api`, not `https://s1-api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
 
 ### GHCR image names and tags
 
@@ -187,7 +187,7 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 2. Smoke test on stage:
      deploy-stage.yml → branch: release/release-DD.MM.YYYY
 
-3. Manual verification on https://s1.api.craftive.io
+3. Manual verification on https://s1-api.craftive.io/api/actuator/health
 
 4. Production deploy:
      deploy-prod.yml → branch: release/release-DD.MM.YYYY
@@ -269,8 +269,8 @@ Notes:
 | Wildcard `*.craftive.io` → Droplet IP | Recommended. All tenant subdomains auto-resolve. Explicit records (e.g. `s1.app`, `api`) override the wildcard. Unknown tenants hit storefront → backend returns 404. |
 | Per-tenant A records | If strict control is needed. Requires manual DNS management per tenant (automatable via Cloudflare API). |
 
-> **Stage DNS records must be DNS-only (grey cloud)** — multi-level subdomains like `s1-{tenant}.craftive.io` are single-level and work with both modes, but `s1.app` and `s1.api` are multi-level and require DNS-only.
-> **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and can use Cloudflare proxy (orange cloud).
+> **Stage DNS records use orange cloud** — all stage service subdomains (`s1-api`, `s1-app`, `s1-cdn`, `s1-{tenant}`) are single-level and work with Cloudflare Universal SSL.
+> **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and use Cloudflare proxy (orange cloud). Real tenants in prod use whitelabel custom domains (e.g. `democompany.com`), not craftive subdomains.
 
 TODO: Evaluate Cloudflare API integration for automatic DNS record creation when tenants are provisioned.
 
@@ -309,7 +309,7 @@ app:
 app:
   cors:
     allowed-origins:
-      - https://s1.app.craftive.io
+      - https://s1-app.craftive.io
     allowed-origin-patterns:
       - https://s1-*.craftive.io
 ```
@@ -477,8 +477,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **`craftive:` is the YAML root key** in `application.yml`. Renaming it would break `@ConfigurationProperties(prefix = "craftive")` bindings without a corresponding Java refactor.
 - **Reserved subdomains cannot be assigned to tenants:** `www`, `api`, `app`, `admin`, `s1`, `s2`, `mail`, `docs`, `status`, `blog`, `demo`, `cdn`. Enforce at the tenant subdomain validation layer.
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
-- **Prod DNS records should use Cloudflare proxy (orange cloud).** The actual Droplet IPs should not be published. Stage DNS records must use DNS-only (grey cloud) due to multi-level subdomain SSL — see first gotcha below.
-- **Multi-level subdomains break Cloudflare Universal SSL.** `*.craftive.io` covers `app.craftive.io` (single-level) but NOT `s1.app.craftive.io` (two levels). Proxied multi-level subdomains cause `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Fix: use DNS-only for stage records; Traefik serves Let's Encrypt certs directly.
+- **Both Prod and Stage DNS records use Cloudflare proxy (orange cloud).** The actual Droplet IPs should not be published. Stage uses single-level `s1-*` convention so Cloudflare Universal SSL covers all stage subdomains.
+- **Multi-level subdomains break Cloudflare Universal SSL.** `*.craftive.io` covers `app.craftive.io` (single-level) but NOT `s1.app.craftive.io` (two levels). Proxied multi-level subdomains cause `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Stage domain refactor resolved this by switching to single-level `s1-*` convention (`s1-api`, `s1-app`, `s1-cdn`) — all stage services now work with Cloudflare orange cloud.
 - **Backend health check uses `wget`, not `curl`.** The distroless backend image does not include `curl`. Docker Compose and deploy workflows use `wget -qO-` for health checks.
 - **Backend `start_period` must be at least 150s.** Spring Boot takes ~120s to start. A shorter `start_period` causes Docker to mark the container as permanently unhealthy before it finishes starting, and Traefik stops routing to it.
 - **Deploy uses `--force-recreate`.** Ensures Traefik picks up new container IDs after image updates. Without this, Traefik may route to stale containers after rollback/redeploy cycles.

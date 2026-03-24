@@ -160,7 +160,7 @@ Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
                               ↓
                        Cloudflare CDN (orange-cloud proxy)
                               ↓
-               media.craftive.io  /  s1.media.craftive.io
+               media.craftive.io  /  s1-cdn.craftive.io
 ```
 
 - DO Spaces CDN is **disabled** — Cloudflare CDN covers this at 330 PoP.
@@ -171,7 +171,7 @@ Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
 
 | Env | Bucket | CDN domain |
 |---|---|---|
-| Stage | `craftive-media-stage` | `s1.media.craftive.io` |
+| Stage | `craftive-media-stage` | `s1-cdn.craftive.io` |
 | Prod | `craftive-media-prod` | `media.craftive.io` |
 
 ### Local development with MinIO
@@ -216,11 +216,11 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 
 **Cloudflare DNS (craftive.io zone):**
 4. `CNAME media    → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
-5. `CNAME s1.media → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
+5. `CNAME s1-cdn → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
 
 **Cloudflare Cache Rule:**
 6. Caching → Cache Rules → Create:
-   - Match: `Hostname equals media.craftive.io OR s1.media.craftive.io`
+   - Match: `Hostname equals media.craftive.io OR s1-cdn.craftive.io`
    - Cache eligibility: Eligible for cache
    - Edge TTL: Use cache-control header if present (backend sends `max-age=31536000, immutable`)
    - Browser TTL: Respect origin TTL
