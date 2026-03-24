@@ -93,7 +93,8 @@ public class SecurityConfig {
                                 "Cache-Control",
                                 "X-Tenant-ID",
                                 "X-Tenant-Subdomain",
-                                "X-User-ID"));
+                                "X-User-ID",
+                                "X-Client-Version"));
 
                 // Allow credentials (cookies, authorization headers)
                 configuration.setAllowCredentials(true);
