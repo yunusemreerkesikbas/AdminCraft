@@ -5,7 +5,7 @@ import { Twitter, Github, Linkedin } from "lucide-react";
 
 type FooterLink = { label: string; href: string };
 type FooterGroup = { label: string; items: FooterLink[] };
-type FooterLinks = { product: FooterGroup; company: FooterGroup; resources: FooterGroup };
+type FooterLinks = { product: FooterGroup; company?: FooterGroup; resources: FooterGroup };
 type FooterContent = {
   tagline: string;
   links: FooterLinks;

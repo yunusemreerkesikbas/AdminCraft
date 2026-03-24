@@ -9,13 +9,13 @@ services:
       SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
       SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
     labels:
-      traefik.http.routers.backend.rule: "Host(`s1.api.${DOMAIN}`)"
+      traefik.http.routers.backend.rule: "Host(`s1-api.${DOMAIN}`)"
 
   frontend:
     labels:
-      traefik.http.routers.frontend.rule: "Host(`s1.app.${DOMAIN}`)"
-      traefik.http.routers.root-redirect.rule: "Host(`s1.${DOMAIN}`) || Host(`www.s1.${DOMAIN}`)"
-      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://s1.app.${DOMAIN}"
+      traefik.http.routers.frontend.rule: "Host(`s1-app.${DOMAIN}`)"
+      traefik.http.routers.root-redirect.rule: "Host(`s1.${DOMAIN}`)"
+      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://s1-app.${DOMAIN}"
 
   storefront:
     image: ghcr.io/${GHCR_ORG}/craftive-storefront:${APP_VERSION:-latest}
@@ -36,7 +36,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Matches stage tenant domains in s1-<tenant>.domain format; excludes stage API and admin panel hosts.
-      - "traefik.http.routers.storefront.rule=HostRegexp(`s1-{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`s1.api.${DOMAIN}`) && !Host(`s1.app.${DOMAIN}`)"
+      - "traefik.http.routers.storefront.rule=HostRegexp(`s1-{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`s1-api.${DOMAIN}`) && !Host(`s1-app.${DOMAIN}`)"
       - "traefik.http.routers.storefront.ruleSyntax=v2"
       - "traefik.http.routers.storefront.priority=1"
       - "traefik.http.routers.storefront.entrypoints=websecure"

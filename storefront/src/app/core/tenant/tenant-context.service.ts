@@ -225,9 +225,13 @@ export class TenantContextService {
         }
         const parts = hostname.split('.');
         const subdomain = parts[0];
-        if (subdomain === 'admin') {
+
+        // Platform admin panel hosts:
+        //   admin.localhost, app.craftive.io (prod), s1-app.craftive.io (stage)
+        if (subdomain === 'admin' || subdomain === 'app' || subdomain === 's1-app') {
             return 'admin';
         }
+
         if (!this.isValidSubdomain(subdomain)) {
             this.#notify.alert(
                 'Invalid tenant subdomain. Please contact your administrator.',

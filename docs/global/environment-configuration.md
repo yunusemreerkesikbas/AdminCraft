@@ -98,7 +98,7 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 | Setting              | Dev            | Stage                           | Prod                         |
 | -------------------- | -------------- | ------------------------------- | ---------------------------- |
 | `production`         | `false`        | `false`                         | `true`                       |
-| `apiBaseUrl`         | `/api` (proxy) | `https://s1.api.craftive.io` | `https://api.craftive.io` |
+| `apiBaseUrl`         | `/api` (proxy) | `https://s1-api.craftive.io/api` | `https://api.craftive.io/api` |
 | `apiTimeout`         | `30000`        | `30000`                         | `30000`                      |
 | `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                  | `['tr', 'en']`               |
 | `defaultLanguage`    | `en`           | `en`                            | `en`                         |
@@ -110,12 +110,12 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 
 | Variable                       | Dev                             | Stage                                  | Prod                             |
 | ------------------------------ | ------------------------------- | -------------------------------------- | -------------------------------- |
-| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://s1.api.craftive.io/api`       | `https://api.craftive.io/api`    |
+| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://s1-api.craftive.io/api`       | `https://api.craftive.io/api`    |
 | `TENANT_SUBDOMAIN`             | `demo`                          | tenant subdomain                       | tenant subdomain                 |
 | `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
 | `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
-| `NEXT_IMAGE_DOMAINS`           | _(not set)_                     | `s1.media.craftive.io`                 | `media.craftive.io`              |
+| `NEXT_IMAGE_DOMAINS`           | _(not set)_                     | `s1-cdn.craftive.io`                   | `media.craftive.io`              |
 
 Available scripts:
 
