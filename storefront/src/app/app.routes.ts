@@ -246,6 +246,14 @@ export const appRoutes: Route[] = [
                     ),
             },
             {
+                path: 'demo-requests',
+                canActivate: [superAdminGuard],
+                loadComponent: () =>
+                    import(
+                        'app/modules/admin/custom/demo-requests/demo-requests-list.component'
+                    ).then((m) => m.SpaDemoRequestsListComponent),
+            },
+            {
                 path: 'platform-mail',
                 canActivate: [superAdminGuard],
                 children: [

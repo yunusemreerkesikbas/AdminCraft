@@ -124,6 +124,19 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("unsubscribedAt,asc", "admin.sort.unsubscribedAtAsc"),
                         SortOptionDto.of("unsubscribedAt,desc", "admin.sort.unsubscribedAtDesc"));
 
+        public static final Set<String> DEMO_REQUEST_ALLOWED_FIELDS = Set.of(
+                        "createdAt", "fullName", "email", "locale", "source");
+
+        public static final String DEMO_REQUEST_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> DEMO_REQUEST_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"),
+                        SortOptionDto.of("fullName,asc", "admin.sort.nameAsc"),
+                        SortOptionDto.of("fullName,desc", "admin.sort.nameDesc"),
+                        SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
+                        SortOptionDto.of("email,desc", "admin.sort.emailDesc"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");
@@ -151,6 +164,7 @@ public final class SortableFieldsConfig {
                         "ComponentType", COMPONENT_TYPE_ALLOWED_FIELDS,
                         "User", USER_ALLOWED_FIELDS,
                         "MailSubscriber", MAIL_SUBSCRIBER_ALLOWED_FIELDS,
+                        "DemoRequest", DEMO_REQUEST_ALLOWED_FIELDS,
                         "Tenant", TENANT_ALLOWED_FIELDS);
 
         public static final Map<String, List<SortOptionDto>> ENTITY_SORT_OPTIONS = Map.of(
@@ -161,6 +175,7 @@ public final class SortableFieldsConfig {
                         "ComponentType", COMPONENT_TYPE_SORT_OPTIONS,
                         "User", USER_SORT_OPTIONS,
                         "MailSubscriber", MAIL_SUBSCRIBER_SORT_OPTIONS,
+                        "DemoRequest", DEMO_REQUEST_SORT_OPTIONS,
                         "Tenant", TENANT_SORT_OPTIONS);
 
         public static final Map<String, String> ENTITY_DEFAULT_SORT = Map.of(
@@ -171,5 +186,6 @@ public final class SortableFieldsConfig {
                         "ComponentType", COMPONENT_TYPE_DEFAULT_SORT,
                         "User", USER_DEFAULT_SORT,
                         "MailSubscriber", MAIL_SUBSCRIBER_DEFAULT_SORT,
+                        "DemoRequest", DEMO_REQUEST_DEFAULT_SORT,
                         "Tenant", TENANT_DEFAULT_SORT);
 }

@@ -1728,6 +1728,7 @@ export const langTR = {
             platformDashboard: 'Platform Paneli',
             platformSettings: 'Platform Ayarları',
             platformMail: 'Platform Mail',
+            platformDemoRequests: 'Demo talepleri',
             tenantManagement: 'Tenant Yönetimi',
         },
         tenants: {
@@ -1952,6 +1953,28 @@ export const langTR = {
                 confirm: {
                     resetTitle: 'Ayarları Sıfırla',
                     resetMessage: 'Varsayılan değerlere sıfırlamak istediğinizden emin misiniz?',
+                },
+            },
+            demoRequests: {
+                title: 'Landing demo talepleri',
+                subtitle: 'Pazarlama landing sitesinden gelen iletişim talepleri',
+                searchPlaceholder: 'Ad, e-posta, telefon veya mesaja göre ara',
+                detail: {
+                    title: 'Demo talep detayı',
+                },
+                grid: {
+                    noData: 'Henüz demo talebi yok',
+                },
+                fields: {
+                    fullName: 'Ad Soyad',
+                    email: 'E-posta',
+                    phone: 'Telefon',
+                    message: 'Mesaj',
+                    locale: 'Dil',
+                    source: 'Kaynak',
+                    clientIp: 'IP',
+                    userAgent: 'Tarayıcı',
+                    createdAt: 'Gönderim',
                 },
             },
         },
@@ -2351,10 +2374,10 @@ export const langTR = {
             otpLabel: 'Doğrulama Kodu',
             verify: 'Doğrula',
             right: {
-                title1: 'Yapılandırma',
-                title2: 'paneli',
+                title1: 'Aramıza',
+                title2: 'hoş geldiniz',
                 description:
-                    'Güvenli giriş ile yapılandırma ayarlarınıza erişin.',
+                    'Craftive, zengin modüllerle kişiselleştirilebilir paneller oluşturmanıza yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
             },
         },
     },

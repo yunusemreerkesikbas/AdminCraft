@@ -1,0 +1,20 @@
+CREATE TABLE platform_demo_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    locale VARCHAR(10) NOT NULL,
+    source VARCHAR(64) NOT NULL DEFAULT 'landing',
+    client_ip VARCHAR(45) NULL,
+    user_agent VARCHAR(500) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by BIGINT NULL,
+    updated_by BIGINT NULL,
+    UNIQUE KEY uk_platform_demo_request_uuid (uuid),
+    UNIQUE KEY uk_platform_demo_request_uid (uid),
+    INDEX idx_platform_demo_requests_created_at (created_at),
+    INDEX idx_platform_demo_requests_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

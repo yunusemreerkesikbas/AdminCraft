@@ -48,7 +48,7 @@ Legacy internal rows for those core dependencies are removed by platform repair 
 Platform features are not tenant modules, but they are critical for operating the system.
 
 - Tenants, provisioning, module enablement, migration sync: [`modules/platform-provisioning.md`](modules/platform-provisioning.md)
-- Platform Dashboard, Tenant Detail, Platform Settings: [`modules/platform-admin.md`](modules/platform-admin.md)
+- Platform Dashboard, Tenant Detail, Platform Settings, **landing demo requests (SUPER_ADMIN inbox)**: [`modules/platform-admin.md`](modules/platform-admin.md)
 - Platform newsletter + mail campaign flows (+ admin UI routes `/:lang/mail-marketing`, `/:lang/platform-mail`): [`modules/mail-marketing.md`](modules/mail-marketing.md)
 - Config Control Panel (`/config`) for reCAPTCHA recovery + global runtime overrides (email + platform reCAPTCHA keys): [`modules/config-control-panel.md`](modules/config-control-panel.md)
 
@@ -57,6 +57,11 @@ Platform features are not tenant modules, but they are critical for operating th
 Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but **do not require authentication**.
 
 - CMS delivery (`/api/cms/**`): [`modules/cms-delivery.md`](modules/cms-delivery.md)
+
+**Platform public (no tenant context)** — used by the marketing `landing/` site and CMS tooling, not tenant databases:
+
+- `GET /api/platform/cms/config` — public reCAPTCHA flags / site key (see [`modules/platform-admin.md`](modules/platform-admin.md))
+- `POST /api/platform/public/demo-requests` — landing contact/demo form ingest (same doc: **Landing demo requests**)
 
 ### Headless storefront (`storefront-nextjs/`)
 
@@ -77,10 +82,14 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 
 Static Next.js landing project for `landing.craftive.io`.
 
+- **Demo / contact flow**: [`landing/components/modals/DemoRequestModal.tsx`](../landing/components/modals/DemoRequestModal.tsx) and API helpers [`landing/lib/platform-api.ts`](../landing/lib/platform-api.ts) call `GET /api/platform/cms/config` (reCAPTCHA) then `POST /api/platform/public/demo-requests` with action **`landing_demo_request`** when platform reCAPTCHA is enabled (`platform_settings` / config overrides). Payload: `fullName`, `email`, optional `phone` (same digit rules as platform phone validation), `message`, `locale`, optional `recaptchaToken`. Both requests send **`Accept-Language`** aligned with the page locale (`tr` / `en`) so `ApiResponse.message` and validation text resolve correctly. Success and error copy for submit are taken from the API (`message` plus optional `data.followUpNote` on success); the UI keeps only chrome labels and client-only fallbacks (network, missing env, reCAPTCHA script in the browser).
+- **Build-time env**: `NEXT_PUBLIC_CRAFTIVE_API_URL` = API origin **without** `/api` suffix (e.g. `http://localhost:8080`); see [`landing/.env.local.example`](../landing/.env.local.example). For Cloudflare Pages, set the same variable for the build. Backend CORS must list every **browser Origin** you use: the Cloudflare default (`https://<project>.pages.dev` and preview hosts `https://*.<project>.pages.dev`) is not the same origin as a custom domain (`https://craftive.io`, `https://landing.craftive.io`, etc.). Add each to `app.cors` for the target API profile (see `application-stage.yml` / `application-prod.yml`).
+- **Admin**: SUPER_ADMIN only — `GET /api/platform/demo-requests`, UI `/:lang/demo-requests` (see [`modules/platform-admin.md`](modules/platform-admin.md)).
 - Deploy target: Cloudflare Pages (static export, no SSR runtime dependency)
 - Output: `out/` directory
-- Domain: `landing.craftive.io` as primary custom domain
+- Domain: `landing.craftive.io` documented as the primary marketing hostname; you may attach `craftive.io` / `www.craftive.io` on Cloudflare Pages instead. The default Pages URL (`*.pages.dev`) still appears in the dashboard and for preview deployments—keep CORS in sync with whichever origins actually load the site.
 - Operational guide: [`global/devops.md`](global/devops.md)
+- Environment overview: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ## Cross-cutting features
 

@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     context-path: /api
 
@@ -14,6 +15,8 @@ app:
     allowed-origins:
       - http://localhost:4200
       - http://127.0.0.1:4200
+      - http://localhost:3000
+      - http://127.0.0.1:3000
     allowed-origin-patterns:
       - http://*.localhost:4200
   tenant:

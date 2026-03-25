@@ -1755,6 +1755,7 @@ export const langEN = {
             platformDashboard: 'Platform Dashboard',
             platformSettings: 'Platform Settings',
             platformMail: 'Platform Mail',
+            platformDemoRequests: 'Demo requests',
             tenantManagement: 'Tenant Management',
         },
         tenants: {
@@ -1978,6 +1979,28 @@ export const langEN = {
                 confirm: {
                     resetTitle: 'Reset Settings',
                     resetMessage: 'Are you sure you want to reset to default values?',
+                },
+            },
+            demoRequests: {
+                title: 'Landing demo requests',
+                subtitle: 'Inquiries submitted from the marketing landing site',
+                searchPlaceholder: 'Search by name, email, phone or message',
+                detail: {
+                    title: 'Demo request details',
+                },
+                grid: {
+                    noData: 'No demo requests yet',
+                },
+                fields: {
+                    fullName: 'Name',
+                    email: 'Email',
+                    phone: 'Phone',
+                    message: 'Message',
+                    locale: 'Locale',
+                    source: 'Source',
+                    clientIp: 'IP',
+                    userAgent: 'User agent',
+                    createdAt: 'Submitted',
                 },
             },
         },
@@ -2341,10 +2364,10 @@ export const langEN = {
             otpLabel: 'Verification Code',
             verify: 'Verify',
             right: {
-                title1: 'Config',
-                title2: 'panel',
+                title1: 'Welcome to',
+                title2: 'our community',
                 description:
-                    'Access your configuration settings with secure sign-in.',
+                    'Craftive helps you build customizable dashboards with rich modules. Join us and start building your application today.',
             },
         },
     },

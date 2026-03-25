@@ -173,6 +173,8 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - `release/release-27.02.2026` → `release-27.02.2026`
 4. Build 3 images (backend, frontend, storefront), push to GHCR
 5. SSH to Stage Droplet → GHCR login → decode `ENV_STAGE` secret → pull images → `docker compose up -d --force-recreate` → write tag to `.last-deployed-tag`
+
+> **Compose file sync:** The deploy job checks out the branch and copies `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.stage.yml` to the droplet via `scp-action` before deploying. This ensures Traefik routing rules and service definitions are always in sync with the repository — no manual `deploy-files.sh` needed for compose changes.
 6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout)
 7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
 
@@ -315,6 +317,27 @@ app:
 ```
 
 CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — tenant storefronts run on arbitrary domains.
+
+### Rate limiting — public platform endpoints
+
+`POST /api/platform/public/demo-requests` is unauthenticated and has no application-level rate limit. Protect it with a Traefik rate-limit middleware applied per source IP.
+
+Add the middleware definition to `docker-compose.yml` (or the relevant prod/stage override) under the Traefik `labels` of the backend service:
+
+```yaml
+# docker-compose.yml — backend service labels
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.average=3"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.burst=5"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.period=10m"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+# Attach the middleware to the public demo-requests router:
+- "traefik.http.routers.backend-public-demo.rule=Host(`api.craftive.io`) && PathPrefix(`/api/platform/public/demo-requests`)"
+- "traefik.http.routers.backend-public-demo.middlewares=demo-request-ratelimit@docker"
+```
+
+> **Note:** `ipstrategy.depth=1` trusts the first real IP from `X-Forwarded-For` when Cloudflare is the upstream proxy. Adjust `depth` if you add additional proxy hops.
+
+This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thresholds based on observed traffic patterns.
 
 ### GitHub Secrets
 
@@ -484,6 +507,10 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **Deploy uses `--force-recreate`.** Ensures Traefik picks up new container IDs after image updates. Without this, Traefik may route to stale containers after rollback/redeploy cycles.
 - **GHCR images are private.** Deploy workflows must authenticate to GHCR on the droplet via `docker login` before pulling. The `GITHUB_TOKEN` is passed as `GHCR_TOKEN` env var through SSH.
 - **DigitalOcean blocks outbound SMTP port 587 by default.** Request unblock via DO support ticket for email functionality. Until then, `management.health.mail.enabled` must be `false` to prevent health check timeouts.
-- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
+- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1-api.*`, `s1-app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
+- **Cloudflare Origin Rule (Host Header Override) is Enterprise-only.** Cloudflare proxy sends `Host: s1-cdn.craftive.io` to DO Spaces, which cannot resolve the bucket and returns `AccessDenied`. Origin Rules that override the Host header require Enterprise plan. Solution: use a **Cloudflare Worker** as reverse proxy — it rewrites the hostname to the DO Spaces CDN endpoint before forwarding (`craftive-media-stage.fra1.cdn.digitaloceanspaces.com`). CDN DNS records use `AAAA 100::` (dummy IPv6, Proxied) so the Worker intercepts all requests.
+- **DO Spaces CDN must be enabled (without custom domain).** Worker proxies to the DO CDN endpoint (`fra1.cdn.digitaloceanspaces.com`), so origin-level caching is active. Do not add a custom subdomain in DO Spaces CDN settings — custom subdomain requires the domain to be managed on DigitalOcean DNS.
+- **S3 objects must be uploaded with `public-read` ACL.** DO Spaces objects are private by default. Without `ObjectCannedACL.PUBLIC_READ` on `PutObjectRequest`, CDN delivery always returns `AccessDenied` regardless of DNS or proxy configuration.
+- **Cloudflare Cache Rule hostname must match the actual CDN subdomain exactly.** A rule matching `s1.media.craftive.io` does not apply to `s1-cdn.craftive.io`. Verify the Cache Rule expression after any CDN domain rename. When using Workers, the Worker route (`s1-cdn.craftive.io/*`) takes precedence — Cache Rules apply to Worker responses as normal.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

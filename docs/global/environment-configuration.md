@@ -39,6 +39,7 @@ Multi-environment setup for Craftive with dev, stage, and prod configurations.
 2. **Default profile**: `dev` (set via `SPRING_PROFILES_ACTIVE` env var)
 3. **Credentials**: Dev uses defaults, Stage/Prod require environment variables
 4. **No defaults for sensitive values in Stage/Prod**: `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD` must be set
+5. **Reverse proxy / client IP**: Base `application.yml` sets `server.forward-headers-strategy: framework` so `Forwarded` / `X-Forwarded-*` are honored and `HttpServletRequest.getRemoteAddr()` reflects the client when Traefik, Cloudflare, or similar sets those headers. Ensure the proxy overwrites or sanitizes `X-Forwarded-For` to prevent spoofing on direct-to-app access.
 
 #### Tenant runtime configuration (Config Control Panel)
 
@@ -78,6 +79,16 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 2. **Staging**: Not a native `NODE_ENV` value — use `dotenv-cli` (`dotenv -e .env.staging -- next ...`)
 3. **`.env.local` always wins**: Use this for local overrides (tenant ID, API URL, etc.) — never commit it
 4. **SSR vs Static export**: Default mode is SSR (`next start`). Set `NEXT_OUTPUT=export` for static HTML export (no server required, but server-only features like `cache()` and `revalidate` are disabled)
+
+### Frontend — Marketing landing (`landing/`)
+
+Static export (e.g. Cloudflare Pages). Public demo/contact form calls the Craftive API from the browser.
+
+| Variable | Purpose |
+| -------- | ------- |
+| `NEXT_PUBLIC_CRAFTIVE_API_URL` | Backend **origin only** — no `/api` suffix (e.g. `http://localhost:8080`, `https://api.example.com`). Client code appends `/api/...`. Baked in at **build** time. |
+
+See [`landing/.env.local.example`](../../landing/.env.local.example). Contract and CORS: [`modules/platform-admin.md`](../modules/platform-admin.md) (Landing demo requests), index: [`README.md`](../README.md).
 
 ## Environment Comparison
 
