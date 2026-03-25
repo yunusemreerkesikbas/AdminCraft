@@ -206,6 +206,15 @@ export const DEFAULT_NAVIGATION_ITEMS: NavigationItem[] = [
                 requiredModule: null,
                 requiredRole: 'SUPER_ADMIN',
             },
+            {
+                id: 'platform.demoRequests',
+                title: 'admin.nav.platformDemoRequests',
+                type: 'basic',
+                icon: 'heroicons_outline:chat-bubble-left-right',
+                link: 'demo-requests',
+                requiredModule: null,
+                requiredRole: 'SUPER_ADMIN',
+            },
         ],
     },
 ];

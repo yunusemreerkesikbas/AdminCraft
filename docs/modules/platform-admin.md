@@ -7,6 +7,7 @@ Platform admin features provide SUPER_ADMIN users with:
 - **Platform Dashboard** -- aggregated statistics across all tenants (counts, storage, recent activity, module distribution)
 - **Tenant Detail** -- tab-based view of a single tenant (overview, modules, provisioning jobs)
 - **Platform Settings** -- global configuration (platform name, default language/currency, email display settings, SUPER_ADMIN security policy)
+- **Landing demo requests** -- inbox for marketing-site contact/demo submissions (`platform_demo_requests`; list UI `/:lang/demo-requests`)
 
 These features read exclusively from the `platform_management` database. No cross-DB queries or tenant DB access.
 
@@ -55,7 +56,7 @@ Repository enhancements:
 
 ## Admin API (SUPER_ADMIN)
 
-All endpoints require `ROLE_SUPER_ADMIN` via `@PreAuthorize`.
+Most endpoints in this document require `ROLE_SUPER_ADMIN` via `@PreAuthorize`. **Exception:** landing demo public `POST` is documented under [Landing demo requests (marketing site)](#landing-demo-requests-marketing-site) (`permitAll`).
 
 ### Platform Dashboard
 
@@ -118,9 +119,23 @@ Request DTO: [`PatchPlatformSettingsRequest`](../../backend/src/main/java/com/ba
 
 Service: [`PlatformSettingsService`](../../backend/src/main/java/com/backend/application/service/PlatformSettingsService.java) / [`PlatformSettingsServiceImpl`](../../backend/src/main/java/com/backend/application/service/PlatformSettingsServiceImpl.java)
 
+## Landing demo requests (marketing site)
+
+Database table: `platform_demo_requests` (platform migration `V1.0.2__platform_demo_requests.sql`). Stores name, email, message, locale, source (`landing`), optional `client_ip` / `user_agent`, audit timestamps.
+
+**Public (unauthenticated)**
+
+- `POST /api/platform/public/demo-requests` — Bean-validated JSON body: `fullName`, `email`, optional `phone`, `message`, `locale`, optional `recaptchaToken`. When platform reCAPTCHA is enabled, the backend verifies the token with action **`landing_demo_request`** (same family as `/api/platform/cms/config` for the site key). Success: `ApiResponse` with `message` = `platform.demo.request.submitted` and `data.followUpNote` = `platform.demo.request.submitted.note` (i18n via `Accept-Language`). Errors: `message` from validation or `recaptcha.verification.failed` (HTTP 400, `code` 400 on reCAPTCHA path).
+- Permitted in [`SecurityConfig`](../../backend/src/main/java/com/backend/infrastructure/config/SecurityConfig.java); excluded from tenant requirement in [`TenantFilter`](../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java) (same pattern as newsletter).
+
+**Admin (`ROLE_SUPER_ADMIN`)**
+
+- `GET /api/platform/demo-requests` — Server-side pagination, sort, and search (`page`, `size`, `sort`, `search`). Response shape matches other admin list APIs (`PageableResponse`). Each row includes `phone` (nullable), full `message` plus `messagePreview` (first 120 characters, ellipsis when truncated) for list UIs.
+- Angular route: `/:lang/demo-requests` ([`DemoRequestsListComponent`](../../storefront/src/app/modules/admin/custom/demo-requests/demo-requests-list.component.ts)), `superAdminGuard`, nav id `platform.demoRequests`.
+
 ## Public delivery APIs
 
-Not applicable. Platform Admin endpoints are control-plane APIs and require `ROLE_SUPER_ADMIN`.
+Platform admin list/settings/dashboard endpoints require `ROLE_SUPER_ADMIN`. The **landing demo** `POST /platform/public/demo-requests` endpoint is public (control-plane ingest only).
 
 ## Frontend integration
 
@@ -165,32 +180,55 @@ Entry point: clicking a tenant's company name in the tenants list navigates to t
 
 URL: `/:lang/platform-settings`
 
+### Landing demo requests (admin UI)
+
+| File | Path |
+|------|------|
+| List component | [`storefront/.../demo-requests/demo-requests-list.component.ts`](../../storefront/src/app/modules/admin/custom/demo-requests/demo-requests-list.component.ts) |
+| List template | [`storefront/.../demo-requests/demo-requests-list.component.html`](../../storefront/src/app/modules/admin/custom/demo-requests/demo-requests-list.component.html) |
+| HTTP service | [`storefront/.../demo-requests/platform-demo-request-admin.service.ts`](../../storefront/src/app/modules/admin/custom/demo-requests/platform-demo-request-admin.service.ts) |
+| Types | [`storefront/.../demo-requests/demo-request.types.ts`](../../storefront/src/app/modules/admin/custom/demo-requests/demo-request.types.ts) |
+| Public controller | [`PlatformPublicDemoRequestController`](../../backend/src/main/java/com/backend/presentation/controller/PlatformPublicDemoRequestController.java) |
+| Admin controller | [`PlatformDemoRequestController`](../../backend/src/main/java/com/backend/presentation/controller/PlatformDemoRequestController.java) |
+| Application service | [`PlatformDemoRequestServiceImpl`](../../backend/src/main/java/com/backend/application/service/impl/PlatformDemoRequestServiceImpl.java) |
+
+URL: `/:lang/demo-requests`
+
+### Landing site (Next.js modal)
+
+| File | Path |
+|------|------|
+| Modal | [`landing/components/modals/DemoRequestModal.tsx`](../../landing/components/modals/DemoRequestModal.tsx) |
+| API client | [`landing/lib/platform-api.ts`](../../landing/lib/platform-api.ts) |
+
 ### Navigation
 
-Two new items added to the `platform` group in [`navigation-data.constants.ts`](../../storefront/src/app/shared/navigation/navigation-data.constants.ts):
+Items in the `platform` group in [`navigation-data.constants.ts`](../../storefront/src/app/shared/navigation/navigation-data.constants.ts) include:
 
 - **Platform Dashboard** (`platform.dashboard`) -- `heroicons_outline:chart-bar-square`
 - **Platform Settings** (`platform.settings`) -- `heroicons_outline:cog-6-tooth`
+- **Demo requests** (`platform.demoRequests`) — `heroicons_outline:chat-bubble-left-right`
 
-Both are filtered by `requiredRole: 'SUPER_ADMIN'` and are invisible to tenant admins.
+All are filtered by `requiredRole: 'SUPER_ADMIN'` and are invisible to tenant admins.
 
 ### API endpoints
 
-Three keys added to [`api-endpoints.ts`](../../storefront/src/app/modules/admin/api-endpoints.ts):
+Keys in [`api-endpoints.ts`](../../storefront/src/app/modules/admin/api-endpoints.ts) include:
 
 - `platformDashboard` -> `platform/dashboard`
 - `platformSettings` -> `platform/settings`
+- `platformDemoRequests` -> `platform/demo-requests`
 - `tenantProvisioningJobs` -> `tenants/${tenantId}/provisioning-jobs`
 
 ### i18n keys
 
-Keys added under `admin.platform.dashboard.*`, `admin.platform.settings.*`, and `admin.tenants.detail.*` in both [`langEN.ts`](../../storefront/src/app/modules/admin/i18n/langEN.ts) and [`langTR.ts`](../../storefront/src/app/modules/admin/i18n/langTR.ts).
+Keys include `admin.platform.dashboard.*`, `admin.platform.settings.*`, `admin.platform.demoRequests.*`, `admin.nav.platformDemoRequests`, and `admin.tenants.detail.*` in both [`langEN.ts`](../../storefront/src/app/modules/admin/i18n/langEN.ts) and [`langTR.ts`](../../storefront/src/app/modules/admin/i18n/langTR.ts).
 
 ## Security & tenant isolation
 
-- All endpoints are `@PreAuthorize("hasRole('SUPER_ADMIN')")`.
+- Super-admin-only platform APIs use `@PreAuthorize("hasRole('SUPER_ADMIN')")`. The public landing demo `POST` is `permitAll` (see above).
 - All data comes from `platform_management` database only -- no tenant DB access.
-- `TenantFilter` classifies `/platform/**` paths as platform routes (no tenant context required).
+- `TenantFilter` classifies `/platform/**` paths as platform routes (no tenant context required), except documented public prefixes (`/platform/cms/config`, `/platform/public/newsletter`, `/platform/public/demo-requests`).
 - Tenant admin email is read from the `tenants` table in platform DB (KVKK-compliant: no cross-DB PII access).
 - Frontend routes are protected by `superAdminGuard`; navigation items are filtered by role.
 
@@ -221,3 +259,15 @@ Keys added under `admin.platform.dashboard.*`, `admin.platform.settings.*`, and 
 3. Edit form fields (only dirty fields are included in PATCH)
 4. Submit calls `PATCH /api/platform/settings` with only changed fields
 5. Backend applies non-null fields to the singleton row and returns updated state
+
+### View landing demo requests
+
+1. SUPER_ADMIN opens `/:lang/demo-requests`
+2. Frontend calls `GET /api/platform/demo-requests` with `page`, `size`, `sort`, optional `search`
+3. Grid shows rows from `platform_demo_requests` (name, email, `messagePreview` from API for list display, full `message` in payload, locale, submitted time)
+
+### Submit from marketing landing (runtime)
+
+1. Browser loads `GET /api/platform/cms/config` for reCAPTCHA site key / enabled flag
+2. If enabled, client runs reCAPTCHA v3 with action `landing_demo_request`
+3. Client `POST /api/platform/public/demo-requests` with JSON body; backend verifies token when reCAPTCHA is on and inserts into `platform_demo_requests`

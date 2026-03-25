@@ -173,6 +173,8 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - `release/release-27.02.2026` → `release-27.02.2026`
 4. Build 3 images (backend, frontend, storefront), push to GHCR
 5. SSH to Stage Droplet → GHCR login → decode `ENV_STAGE` secret → pull images → `docker compose up -d --force-recreate` → write tag to `.last-deployed-tag`
+
+> **Compose file sync:** The deploy job checks out the branch and copies `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.stage.yml` to the droplet via `scp-action` before deploying. This ensures Traefik routing rules and service definitions are always in sync with the repository — no manual `deploy-files.sh` needed for compose changes.
 6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout)
 7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
 
@@ -484,6 +486,10 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **Deploy uses `--force-recreate`.** Ensures Traefik picks up new container IDs after image updates. Without this, Traefik may route to stale containers after rollback/redeploy cycles.
 - **GHCR images are private.** Deploy workflows must authenticate to GHCR on the droplet via `docker login` before pulling. The `GITHUB_TOKEN` is passed as `GHCR_TOKEN` env var through SSH.
 - **DigitalOcean blocks outbound SMTP port 587 by default.** Request unblock via DO support ticket for email functionality. Until then, `management.health.mail.enabled` must be `false` to prevent health check timeouts.
-- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
+- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1-api.*`, `s1-app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
+- **Cloudflare proxy + DO Spaces requires an Origin Rule (Host Header Override).** Cloudflare sends `Host: <cdn-domain>` (e.g. `s1-cdn.craftive.io`) to the origin. DO Spaces cannot resolve a bucket from this hostname and returns `AccessDenied`. Fix: add a Cloudflare Origin Rule per CDN domain that overrides the Host header to the raw Spaces endpoint (e.g. `craftive-media-stage.fra1.digitaloceanspaces.com`).
+- **DO Spaces CDN must be disabled when Cloudflare proxies the CDN domain.** Running both DO Spaces CDN and Cloudflare proxy on the same domain causes double-proxy conflicts (SSL cert mismatch, Host header confusion). Cloudflare CDN is the sole caching layer; DO Spaces CDN must remain disabled on all media buckets.
+- **S3 objects must be uploaded with `public-read` ACL.** DO Spaces objects are private by default. Without `ObjectCannedACL.PUBLIC_READ` on `PutObjectRequest`, CDN delivery always returns `AccessDenied` regardless of DNS or proxy configuration.
+- **Cloudflare Cache Rule hostname must match the actual CDN subdomain exactly.** A rule matching `s1.media.craftive.io` does not apply to `s1-cdn.craftive.io`. Verify the Cache Rule expression after any CDN domain rename.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

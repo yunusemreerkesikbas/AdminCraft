@@ -6,6 +6,13 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
+## Local environment modes
+
+- `yarn start:dev`: local UI + local backend via `proxy.conf.json` (`http://localhost:8080`)
+- `yarn start:stage`: local UI + direct stage API calls (`https://s1-api.craftive.io/api`)
+- `yarn start:prod`: local UI + direct prod API calls (`https://api.craftive.io/api`)
+- `yarn build:stage`: stage build configuration for production-like artifact generation
+
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.

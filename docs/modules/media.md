@@ -156,14 +156,18 @@ Craftive supports pluggable storage backends via `StorageAdapter`. The active pr
 ### CDN architecture (stage/prod)
 
 ```
-Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
+Upload  →  Backend  →  DO Spaces FRA1 (origin, raw endpoint)
                               ↓
-                       Cloudflare CDN (orange-cloud proxy)
+                    Cloudflare CDN (orange-cloud proxy, 330+ PoP)
+                    - Origin Rule: Host Header Override → raw Spaces endpoint
+                    - Cache Rule: max-age=31536000, immutable
+                    - WAF + DDoS protection
                               ↓
                media.craftive.io  /  s1-cdn.craftive.io
 ```
 
-- DO Spaces CDN is **disabled** — Cloudflare CDN covers this at 330 PoP.
+- DO Spaces CDN is **disabled** — Cloudflare CDN is the sole CDN layer (330+ PoP, WAF, DDoS protection, analytics).
+- **Cloudflare Origin Rule required:** Cloudflare proxy sends `Host: media.craftive.io` by default, but DO Spaces resolves buckets by the raw endpoint hostname. An Origin Rule must override the Host header to `craftive-media-{env}.fra1.digitaloceanspaces.com` for each CDN domain.
 - UUID-based file names are immutable → `Cache-Control: public, max-age=31536000, immutable` → near-100% Cloudflare cache hit rate.
 - Object key isolation: `{tenantSubdomain}/media/{uuid}.{ext}` (cross-tenant collision impossible).
 
@@ -215,19 +219,26 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
    - `craftive-prod`  → Limited Access → `craftive-media-prod` only (Read & Write)
 
 **Cloudflare DNS (craftive.io zone):**
-4. `CNAME media    → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
+4. `CNAME media  → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
 5. `CNAME s1-cdn → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
 
+> CNAME targets must point to the **raw** Spaces endpoint (`fra1.digitaloceanspaces.com`), NOT the CDN endpoint (`fra1.cdn.digitaloceanspaces.com`). DO Spaces CDN must be disabled on both buckets.
+
+**Cloudflare Origin Rules:**
+6. Rules → Origin Rules → Create (one rule per CDN domain):
+   - **Stage:** Match `Hostname equals s1-cdn.craftive.io` → Host Header override: `craftive-media-stage.fra1.digitaloceanspaces.com`
+   - **Prod:** Match `Hostname equals media.craftive.io` → Host Header override: `craftive-media-prod.fra1.digitaloceanspaces.com`
+
 **Cloudflare Cache Rule:**
-6. Caching → Cache Rules → Create:
-   - Match: `Hostname equals media.craftive.io OR s1-cdn.craftive.io`
+7. Caching → Cache Rules → Create (or update existing):
+   - Match expression: `(http.host eq "media.craftive.io") or (http.host eq "s1-cdn.craftive.io")`
    - Cache eligibility: Eligible for cache
    - Edge TTL: Use cache-control header if present (backend sends `max-age=31536000, immutable`)
    - Browser TTL: Respect origin TTL
 
 **GitHub Secrets:**
-7. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
-8. Add to `.env.prod`  → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+8. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+9. Add to `.env.prod`  → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
 
 ### Verification checklist (post-deploy)
 

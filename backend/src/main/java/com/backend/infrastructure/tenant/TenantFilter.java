@@ -259,6 +259,7 @@ public class TenantFilter extends OncePerRequestFilter {
         path.startsWith("/api/platform/cms/config") ||
         path.startsWith("/api/config/auth") ||
         path.startsWith("/api/platform/public/newsletter") ||
+        path.startsWith("/api/platform/public/demo-requests") ||
         path.startsWith("/api/swagger-ui") ||
         path.startsWith("/api/v3/api-docs");
   }
@@ -268,6 +269,9 @@ public class TenantFilter extends OncePerRequestFilter {
       return false;
     }
     if (path.startsWith("/api/platform/public/newsletter")) {
+      return false;
+    }
+    if (path.startsWith("/api/platform/public/demo-requests")) {
       return false;
     }
     if (path.startsWith("/api/tenants/current")) {
