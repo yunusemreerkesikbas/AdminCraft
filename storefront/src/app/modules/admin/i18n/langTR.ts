@@ -1959,6 +1959,9 @@ export const langTR = {
                 title: 'Landing demo talepleri',
                 subtitle: 'Pazarlama landing sitesinden gelen iletişim talepleri',
                 searchPlaceholder: 'Ad, e-posta, telefon veya mesaja göre ara',
+                detail: {
+                    title: 'Demo talep detayı',
+                },
                 grid: {
                     noData: 'Henüz demo talebi yok',
                 },

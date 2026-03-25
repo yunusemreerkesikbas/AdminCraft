@@ -24,9 +24,10 @@
             <spa-admin-grid
                 [items]="store.items()"
                 [columns]="columnsSig()"
-                [actions]="[]"
+                [actions]="actionsSig()"
                 [isLoading]="store.isLoading()"
                 [emptyTitle]="'admin.platform.demoRequests.grid.noData' | transloco"
+                (actionClick)="onGridAction($event)"
             >
             </spa-admin-grid>
         </div>

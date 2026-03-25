@@ -1985,6 +1985,9 @@ export const langEN = {
                 title: 'Landing demo requests',
                 subtitle: 'Inquiries submitted from the marketing landing site',
                 searchPlaceholder: 'Search by name, email, phone or message',
+                detail: {
+                    title: 'Demo request details',
+                },
                 grid: {
                     noData: 'No demo requests yet',
                 },

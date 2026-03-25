@@ -1,11 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { CrudStore } from '@core/crud/crud-store';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
-import { SpaAdminGridComponent, GridColumn } from '@shared/components/spa-admin-grid';
+import {
+    GridAction,
+    GridActionEvent,
+    GridColumn,
+    SpaAdminGridComponent,
+} from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
+import { DemoRequestDetailDialogComponent } from './dialogs/demo-request-detail-dialog/demo-request-detail-dialog.component';
 import { PlatformDemoRequestAdminService } from './platform-demo-request-admin.service';
 import { PlatformDemoRequestRow } from './demo-request.types';
 
@@ -29,12 +36,22 @@ export class DemoRequestsListComponent extends BasePaginatedListComponent<
 > {
     protected override service = inject(PlatformDemoRequestAdminService);
     protected override store = new CrudStore<PlatformDemoRequestRow>();
+    readonly #matDialog = inject(MatDialog);
     protected override defaultSort = 'createdAt,desc';
     protected override defaultPageSize = 20;
 
     protected readonly columnsSig = signal<GridColumn<PlatformDemoRequestRow>[]>([]);
+    protected readonly actionsSig = signal<GridAction<PlatformDemoRequestRow>[]>([]);
 
     protected override onInit(): void {
+        this.actionsSig.set([
+            {
+                icon: 'heroicons_outline:eye',
+                label: 'admin.common.grid.details',
+                action: 'view',
+            },
+        ]);
+
         this.columnsSig.set([
             {
                 key: 'fullName',
@@ -75,5 +92,18 @@ export class DemoRequestsListComponent extends BasePaginatedListComponent<
                 width: '160px',
             },
         ]);
+    }
+
+    protected onGridAction(event: GridActionEvent<PlatformDemoRequestRow>): void {
+        if (event.action !== 'view') {
+            return;
+        }
+        this.#matDialog.open(DemoRequestDetailDialogComponent, {
+            width: '760px',
+            maxHeight: '90vh',
+            panelClass: 'spa-compact-dialog',
+            autoFocus: false,
+            data: event.item,
+        });
     }
 }

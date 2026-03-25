@@ -156,18 +156,20 @@ Craftive supports pluggable storage backends via `StorageAdapter`. The active pr
 ### CDN architecture (stage/prod)
 
 ```
-Upload  →  Backend  →  DO Spaces FRA1 (origin, raw endpoint)
+Upload  →  Backend  →  DO Spaces FRA1 (origin, CDN enabled)
                               ↓
-                    Cloudflare CDN (orange-cloud proxy, 330+ PoP)
-                    - Origin Rule: Host Header Override → raw Spaces endpoint
-                    - Cache Rule: max-age=31536000, immutable
-                    - WAF + DDoS protection
+                    Cloudflare Worker (reverse proxy)
+                    - s1-cdn.craftive.io/* → craftive-media-stage.fra1.cdn.digitaloceanspaces.com
+                    - media.craftive.io/*  → craftive-media-prod.fra1.cdn.digitaloceanspaces.com
+                    + Cloudflare edge cache (Cache-Control: public, max-age=31536000, immutable)
+                    + WAF + DDoS protection
                               ↓
                media.craftive.io  /  s1-cdn.craftive.io
 ```
 
-- DO Spaces CDN is **disabled** — Cloudflare CDN is the sole CDN layer (330+ PoP, WAF, DDoS protection, analytics).
-- **Cloudflare Origin Rule required:** Cloudflare proxy sends `Host: media.craftive.io` by default, but DO Spaces resolves buckets by the raw endpoint hostname. An Origin Rule must override the Host header to `craftive-media-{env}.fra1.digitaloceanspaces.com` for each CDN domain.
+- DO Spaces CDN is **enabled** (without custom domain) — Worker proxies to the DO CDN endpoint so origin-level caching is also active.
+- **Cloudflare Origin Rule (Host Header Override) is Enterprise-only** and cannot be used on free/pro plans. Cloudflare Worker is the alternative: it rewrites the hostname before forwarding the request to DO Spaces CDN, bypassing the Host header restriction.
+- DNS records for CDN domains use `AAAA 100::` (dummy IPv6) with Proxy ON — the Worker intercepts all requests before they reach the origin, so no real IP is needed.
 - UUID-based file names are immutable → `Cache-Control: public, max-age=31536000, immutable` → near-100% Cloudflare cache hit rate.
 - Object key isolation: `{tenantSubdomain}/media/{uuid}.{ext}` (cross-tenant collision impossible).
 
@@ -218,27 +220,44 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
    - `craftive-stage` → Limited Access → `craftive-media-stage` only (Read & Write)
    - `craftive-prod`  → Limited Access → `craftive-media-prod` only (Read & Write)
 
+**DigitalOcean Spaces CDN:**
+4. Enable CDN on each bucket (Settings → CDN → Enable CDN, **no custom subdomain**):
+   - `craftive-media-stage` CDN endpoint: `craftive-media-stage.fra1.cdn.digitaloceanspaces.com`
+   - `craftive-media-prod`  CDN endpoint: `craftive-media-prod.fra1.cdn.digitaloceanspaces.com`
+
 **Cloudflare DNS (craftive.io zone):**
-4. `CNAME media  → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
-5. `CNAME s1-cdn → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
+5. `AAAA s1-cdn → 100::` — Proxy ON (orange cloud)
+6. `AAAA media  → 100::` — Proxy ON (orange cloud)
 
-> CNAME targets must point to the **raw** Spaces endpoint (`fra1.digitaloceanspaces.com`), NOT the CDN endpoint (`fra1.cdn.digitaloceanspaces.com`). DO Spaces CDN must be disabled on both buckets.
+> `100::` is a dummy IPv6 address. Cloudflare Worker intercepts all requests before they reach the origin, so no real IP is needed. Do NOT use CNAME pointing to Spaces endpoint — that caused Host header issues.
 
-**Cloudflare Origin Rules:**
-6. Rules → Origin Rules → Create (one rule per CDN domain):
-   - **Stage:** Match `Hostname equals s1-cdn.craftive.io` → Host Header override: `craftive-media-stage.fra1.digitaloceanspaces.com`
-   - **Prod:** Match `Hostname equals media.craftive.io` → Host Header override: `craftive-media-prod.fra1.digitaloceanspaces.com`
+**Cloudflare Workers:**
+7. Workers & Pages → Create Worker → `craftive-media-stage`:
+```javascript
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    url.hostname = 'craftive-media-stage.fra1.cdn.digitaloceanspaces.com';
+    const response = await fetch(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+    });
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    return new Response(response.body, { status: response.status, headers: newHeaders });
+  }
+}
+```
+   Worker → Settings → Triggers → Routes → Add Route: `s1-cdn.craftive.io/*` (zone: `craftive.io`)
 
-**Cloudflare Cache Rule:**
-7. Caching → Cache Rules → Create (or update existing):
-   - Match expression: `(http.host eq "media.craftive.io") or (http.host eq "s1-cdn.craftive.io")`
-   - Cache eligibility: Eligible for cache
-   - Edge TTL: Use cache-control header if present (backend sends `max-age=31536000, immutable`)
-   - Browser TTL: Respect origin TTL
+8. Create Worker → `craftive-media-prod` (same code, hostname → `craftive-media-prod.fra1.cdn.digitaloceanspaces.com`):
+   Worker route: `media.craftive.io/*` (zone: `craftive.io`)
+
+> Worker free tier: 100k req/day. Sufficient for stage. For prod with high traffic, upgrade to Workers Paid ($5/month for 10M req).
 
 **GitHub Secrets:**
-8. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
-9. Add to `.env.prod`  → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+9. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+10. Add to `.env.prod` → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
 
 ### Verification checklist (post-deploy)
 
