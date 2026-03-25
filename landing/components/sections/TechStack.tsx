@@ -5,14 +5,14 @@
 const SpringIcon = () => (
   <img
     src="/spring-boot.svg"
-    alt="Spring Boot"
-    className="h-7 w-7 shrink-0 brightness-0 invert"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
 
 const JavaIcon = () => (
-  <svg className="h-7 w-7 shrink-0" viewBox="0 0 256 256" aria-hidden="true">
+  <svg className="h-5 w-5 shrink-0 opacity-70" viewBox="0 0 256 256" aria-hidden="true">
     <g fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round">
       <path d="M96 52c-8 20 12 32 4 48" />
       <path d="M136 44c-10 22 18 36 8 56" />
@@ -42,8 +42,8 @@ const JavaIcon = () => (
 const MySQLIcon = () => (
   <img
     src="/mysql.svg"
-    alt="MySQL"
-    className="h-7 w-7 shrink-0 brightness-0 invert"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -51,8 +51,8 @@ const MySQLIcon = () => (
 const AngularIcon = () => (
   <img
     src="/angular.svg"
-    alt="Angular"
-    className="h-7 w-7 shrink-0 brightness-0 invert"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -60,8 +60,8 @@ const AngularIcon = () => (
 const TypeScriptIcon = () => (
   <img
     src="/typescript.svg"
-    alt="TypeScript"
-    className="h-7 w-7 shrink-0"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -69,8 +69,8 @@ const TypeScriptIcon = () => (
 const NextjsIcon = () => (
   <img
     src="/nextjs.svg"
-    alt="Next.js"
-    className="h-7 w-7 shrink-0 brightness-0 invert"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -78,8 +78,8 @@ const NextjsIcon = () => (
 const DockerIcon = () => (
   <img
     src="/docker.svg"
-    alt="Docker"
-    className="h-7 w-7 shrink-0"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -87,8 +87,8 @@ const DockerIcon = () => (
 const CloudflareIcon = () => (
   <img
     src="/cloudflare.svg"
-    alt="Cloudflare"
-    className="h-7 w-7 shrink-0"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -96,8 +96,8 @@ const CloudflareIcon = () => (
 const DigitalOceanIcon = () => (
   <img
     src="/digitalocean.svg"
-    alt="DigitalOcean"
-    className="h-7 w-7 shrink-0"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -105,8 +105,8 @@ const DigitalOceanIcon = () => (
 const GitHubIcon = () => (
   <img
     src="/github.svg"
-    alt="GitHub"
-    className="h-7 w-7 shrink-0 brightness-0 invert"
+    alt=""
+    className="h-5 w-5 shrink-0 opacity-70 grayscale"
     loading="lazy"
   />
 );
@@ -131,15 +131,11 @@ const STACK: Tech[] = [
 
 function TechItem({ tech }: { tech: Tech }) {
   return (
-    <div
-      className="group flex cursor-default flex-col items-center gap-2 px-4 opacity-70 transition-all duration-300 hover:opacity-100"
-    >
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/5 shadow-sm shadow-black/40 group-hover:bg-white/10 group-hover:ring-white/20">
-        <span className="text-white" role="img" aria-label={tech.name}>
-          {tech.icon}
-        </span>
-      </div>
-      <span className="text-[11px] font-semibold tracking-wide text-white/70 whitespace-nowrap">
+    <div className="group flex cursor-default items-center gap-2.5 px-1.5 py-2 text-neutral-400 transition-[color,opacity,transform] duration-200 hover:text-neutral-700 hover:opacity-100">
+      <span className="flex h-5 w-5 items-center justify-center text-current" aria-hidden="true">
+        {tech.icon}
+      </span>
+      <span className="whitespace-nowrap text-[0.72rem] font-semibold tracking-[0.08em] text-current uppercase">
         {tech.name}
       </span>
     </div>
@@ -150,35 +146,31 @@ type TechStackProps = { label: string };
 
 export function TechStack({ label }: TechStackProps) {
   return (
-    <section
-      className="relative overflow-hidden py-14"
-      style={{
-        background: "linear-gradient(160deg, #040d1c 0%, #060f22 60%, #0a1530 100%)",
-      }}
-    >
-      {/* Dot pattern */}
+    <section className="relative overflow-hidden border-y border-neutral-200/80 bg-[linear-gradient(180deg,#f7f8fa_0%,#ffffff_52%,#ffffff_100%)] py-8 sm:py-10">
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
+          backgroundImage: "radial-gradient(circle, #0f172a 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
         }}
         aria-hidden
       />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07) 50%, transparent)" }}
-        aria-hidden />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07) 50%, transparent)" }}
-        aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-10"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0.74) 0%, rgba(255,255,255,0) 100%)",
+        }}
+        aria-hidden
+      />
 
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-20">
-        <p className="mb-10 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-white/30">
+        <p className="mb-5 text-center text-[0.66rem] font-semibold uppercase tracking-[0.28em] text-neutral-400">
           {label}
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {STACK.map(tech => <TechItem key={tech.name} tech={tech} />)}
+        <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 sm:gap-x-9">
+          {STACK.map((tech) => <TechItem key={tech.name} tech={tech} />)}
         </div>
       </div>
     </section>

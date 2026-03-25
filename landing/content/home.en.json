@@ -70,8 +70,101 @@
   },
   "segments": {
     "sectionTag": "Use Cases",
-    "heading": "One platform, unlimited tenants",
-    "subheading": "Every idea can turn into a different digital product. HR portals, blogs, ecommerce, landing pages — each gets its own tenant on the same Craftive infrastructure."
+    "heading": "Modular delivery systems shaped around the project",
+    "subheading": "Corporate sites, publishing hubs, storefront foundations, campaign launches, and agency rollouts all run on the same reusable platform core.",
+    "labels": {
+      "domain": "Whitelabel Domain",
+      "keyMetrics": "Key Metrics",
+      "enabledModules": "Enabled Modules",
+      "deliveryLayer": "Delivery Layer",
+      "platformModel": "Reusable Foundation",
+      "tenantDomain": "Live Domain",
+      "isolation": "Isolation",
+      "dedicatedDataSurface": "Database-per-tenant",
+      "previousUseCase": "Previous use case",
+      "nextUseCase": "Next use case",
+      "goToUseCase": "Go to",
+      "sharedOperationalCore": "Shared operational core",
+      "tenantIsolation": "Dedicated tenant isolation",
+      "activeModulesSuffix": "active modules"
+    },
+    "useCases": [
+      {
+        "key": "corporate-site",
+        "name": "MediCore",
+        "type": "Corporate Web Platform",
+        "tabLabel": "Corporate Site",
+        "domain": "www.medicore.com",
+        "eyebrow": "Structured Content Operations",
+        "summary": "Launch a multilingual corporate web presence on a reusable foundation instead of rebuilding CMS, media, and publishing flows from scratch for every project.",
+        "modules": ["Core CMS", "Page Builder", "Media Library", "Navigation"],
+        "stats": [
+          { "label": "Languages", "value": "5" },
+          { "label": "Pages", "value": "200+" },
+          { "label": "Teams", "value": "3" }
+        ]
+      },
+      {
+        "key": "content-hub",
+        "name": "Nova Insights",
+        "type": "Content & Publishing Hub",
+        "tabLabel": "Content Hub",
+        "domain": "insights.novamed.com",
+        "eyebrow": "Editorial Delivery",
+        "summary": "Give content teams reusable structures, SEO-ready publishing flows, and governed media operations without turning every update into a custom dev task.",
+        "modules": ["Articles", "Categories", "Media", "SEO Tools"],
+        "stats": [
+          { "label": "Articles", "value": "124" },
+          { "label": "Languages", "value": "6" },
+          { "label": "Drafts", "value": "14" }
+        ]
+      },
+      {
+        "key": "storefront",
+        "name": "Lumena Store",
+        "type": "Headless Catalog Storefront",
+        "tabLabel": "Storefront",
+        "domain": "shop.lumena.com",
+        "eyebrow": "Headless Commerce",
+        "summary": "Run catalog and product operations on Craftive while keeping the storefront fully themeable, frontend-independent, and ready for controlled expansion.",
+        "modules": ["Product Catalog", "CMS Delivery API", "Media Library", "Component Library"],
+        "stats": [
+          { "label": "Products", "value": "248" },
+          { "label": "Categories", "value": "42" },
+          { "label": "Markets", "value": "4" }
+        ]
+      },
+      {
+        "key": "campaign-system",
+        "name": "Finovo Launch",
+        "type": "Campaign Landing System",
+        "tabLabel": "Campaign System",
+        "domain": "go.finovo.com",
+        "eyebrow": "Campaign Operations",
+        "summary": "Ship launch pages, capture flows, and campaign variants faster by reusing one modular base instead of creating a new stack for every initiative.",
+        "modules": ["Page Builder", "Forms", "Analytics", "Mail Marketing"],
+        "stats": [
+          { "label": "Campaigns", "value": "12" },
+          { "label": "Leads", "value": "340" },
+          { "label": "Variants", "value": "8" }
+        ]
+      },
+      {
+        "key": "agency-foundation",
+        "name": "Northstar Studio",
+        "type": "Agency Delivery Foundation",
+        "tabLabel": "Agency Foundation",
+        "domain": "clients.northstarstudio.com",
+        "eyebrow": "Reusable Client Delivery",
+        "summary": "Deliver multiple client projects on one operational base with tenant-safe isolation, reusable modules, and controlled customization at each rollout.",
+        "modules": ["Provisioning", "Core CMS", "Mail Marketing", "Product Catalog"],
+        "stats": [
+          { "label": "Clients", "value": "12" },
+          { "label": "Reuse Rate", "value": "78%" },
+          { "label": "Go-live", "value": "<2w" }
+        ]
+      }
+    ]
   },
   "howItWorks": {
     "sectionTag": "How it Works",
@@ -131,34 +224,114 @@
   },
   "faq": {
     "sectionTag": "FAQ",
-    "heading": "Frequently asked questions",
-    "subheading": "Everything you need to know about Craftive.",
-    "items": [
+    "heading": "What you should know before deciding",
+    "subheading": "Short answers to the questions that matter most when evaluating fit, delivery model, technical flexibility, and rollout process.",
+    "groups": [
       {
-        "question": "What is Craftive and who is it for?",
-        "answer": "Craftive is a multi-tenant project and content infrastructure built for digital agencies, SMBs, and ecommerce businesses. With a single deployment, you can serve dozens of clients with fully isolated digital environments."
+        "title": "Fit",
+        "items": [
+          {
+            "question": "Who is Craftive a strong fit for?",
+            "answer": "Craftive is strongest today for teams that need a corporate web platform, publishing hub, headless catalog/storefront foundation, or a reusable delivery base for multiple client projects. It works best when you want to avoid rebuilding common capabilities from scratch each time."
+          },
+          {
+            "question": "Is Craftive the right choice for every project?",
+            "answer": "No. Craftive is not positioned as a one-size-fits-all product. It is the right fit when your project can benefit from a shared platform foundation, modular capability selection, tenant-safe isolation, and controlled customization instead of a fully bespoke rebuild."
+          }
+        ]
       },
       {
-        "question": "What does multi-tenant mean?",
-        "answer": "Each customer (tenant) joins the system with their own separate database and subdomain. Data is physically isolated — one tenant's data never mixes with another's."
+        "title": "Solution Model",
+        "items": [
+          {
+            "question": "What am I actually buying with Craftive?",
+            "answer": "You are not buying a fixed package product. You are buying the right solution foundation for your use case, typically including the platform base, the right module set, setup and configuration, any required adaptation or integration work, and ongoing operational support where needed."
+          },
+          {
+            "question": "Is Craftive a self-serve SaaS product?",
+            "answer": "No. Craftive's main model is project-based delivery, not self-serve SaaS. The goal is not to fit every customer into the same package, but to shape a modular solution around the actual needs of the project."
+          }
+        ]
       },
       {
-        "question": "Can I use it without technical knowledge?",
-        "answer": "Yes. With the drag-and-drop page builder and ready-made modules, you can manage content without a technical team. If you're a developer, the headless REST API gives you full flexibility."
+        "title": "Technical Flexibility",
+        "items": [
+          {
+            "question": "Can I keep my existing frontend or integrations?",
+            "answer": "Yes. Craftive is built as a headless-ready foundation, so you can keep an existing frontend or build a new presentation layer based on the needs of the project. Next.js, Angular, and other frontend approaches can all fit into that model."
+          },
+          {
+            "question": "What does tenant isolation give me in practice?",
+            "answer": "Database-per-tenant isolation creates clearer operational boundaries between projects or customers. It reduces cross-tenant risk and makes maintenance, backup, recovery, and long-term expansion easier to manage with confidence."
+          }
+        ]
       },
       {
-        "question": "Can I use my existing frontend?",
-        "answer": "Absolutely. Craftive provides REST-based headless APIs. You can integrate with Next.js, Angular, React Native, or any frontend framework of your choice."
-      },
-      {
-        "question": "Is it GDPR compliant?",
-        "answer": "Yes. Database isolation ensures each tenant's data is independently managed, backed up, and deletable — making GDPR compliance straightforward."
-      },
-      {
-        "question": "How can I get in touch?",
-        "answer": "Click the 'Get in Touch' button at the top of the page and fill out the form. Share your project idea or need, and we'll get back to you within 24 hours."
+        "title": "Commercial & Delivery Process",
+        "items": [
+          {
+            "question": "How is pricing determined?",
+            "answer": "Pricing is project-based rather than package-based. The main drivers are the module set involved, tenant and content complexity, frontend adaptation needs, integration scope, and the level of operational support required after launch."
+          },
+          {
+            "question": "What does the delivery process look like?",
+            "answer": "The usual flow starts with a discovery call, then moves into needs and scope clarification, a recommended solution and module set, and a demo or proposal where useful. After alignment, setup, implementation, and go-live are handled in a structured rollout."
+          },
+          {
+            "question": "Can the solution expand after launch?",
+            "answer": "Yes. Craftive is designed to support maintenance, operational continuity, and future expansion after the initial delivery. New modules, new tenant rollouts, and deeper adaptations can be added on top of the same reusable foundation."
+          }
+        ]
       }
     ]
+  },
+  "demoRequestModal": {
+    "panelBadge": "Craftive Discovery",
+    "panelTitle": "Let's clarify what you actually need",
+    "panelSub": "Share your goal, content operation, or delivery model. We'll help frame the right approach and module set before anything is built.",
+    "trust": [
+      {
+        "icon": "sparkles",
+        "title": "Use-case specific guidance",
+        "text": "We shape the solution around the project instead of forcing a fixed package."
+      },
+      {
+        "icon": "users",
+        "title": "Direct technical evaluation",
+        "text": "You talk through the real requirement, not just a sales script."
+      },
+      {
+        "icon": "clock",
+        "title": "First response within 24 hours",
+        "text": "Your request is reviewed quickly and answered clearly."
+      },
+      {
+        "icon": "shield",
+        "title": "Free and non-binding",
+        "text": "The first conversation is purely about fit and direction."
+      }
+    ],
+    "formEyebrow": "Quick briefing",
+    "formTitle": "Get in Touch",
+    "formSub": "Leave a few details and our team will come back with the right next step.",
+    "submitHint": "Most replies land within 24 hours.",
+    "name": "Full Name",
+    "namePlaceholder": "Jane Smith",
+    "email": "Email",
+    "emailPlaceholder": "jane@company.com",
+    "phone": "Phone (optional)",
+    "phonePlaceholder": "+1 555 123 4567",
+    "message": "Your project or need",
+    "messagePlaceholder": "Briefly describe your project goal, delivery need, or questions...",
+    "submit": "Send Message",
+    "submitting": "Sending…",
+    "successBadge": "Request received",
+    "close": "Close",
+    "errApiNotConfigured": "Server URL is not configured. Please try again later.",
+    "errRecaptchaClient": "Security check could not run in the browser. Refresh the page and try again.",
+    "errNetwork": "Could not reach the server. Check your connection and try again.",
+    "errHttpNoMessage": "The request could not be completed. Please try again.",
+    "errConfigFallback": "Could not load security config. You can still try submitting the form."
   },
   "cta": {
     "heading": "Turn your idea into a live digital solution",

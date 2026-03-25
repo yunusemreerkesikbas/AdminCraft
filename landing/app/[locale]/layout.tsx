@@ -21,6 +21,11 @@ const footerByLocale = {
   en: homeEn.footer,
 };
 
+const demoRequestModalByLocale = {
+  tr: homeTr.demoRequestModal,
+  en: homeEn.demoRequestModal,
+} as const;
+
 export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
 }
@@ -98,11 +103,13 @@ function buildFaqJsonLd(locale: Locale) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: content.faq.items.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: { "@type": "Answer", text: item.answer },
-    })),
+    mainEntity: content.faq.groups.flatMap((group) =>
+      group.items.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      }))
+    ),
   };
 }
 
@@ -135,6 +142,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         locale={locale}
         navLabels={navByLocale[locale]}
         footerContent={footerByLocale[locale]}
+        demoRequestModalContent={demoRequestModalByLocale[locale]}
       >
         {children}
       </LocaleShell>

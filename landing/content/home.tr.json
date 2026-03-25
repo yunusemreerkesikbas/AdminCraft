@@ -70,8 +70,101 @@
   },
   "segments": {
     "sectionTag": "Kullanım Senaryoları",
-    "heading": "Tek platform, sınırsız tenant",
-    "subheading": "Her fikir farklı bir dijital ürüne dönüşebilir. HR portalı, blog, e-ticaret, landing page — her biri için ayrı tenant, aynı Craftive altyapısı."
+    "heading": "Projeye göre şekillenen modüler teslim sistemleri",
+    "subheading": "Kurumsal web siteleri, içerik merkezleri, storefront altyapıları, kampanya lansmanları ve ajans teslimatları aynı yeniden kullanılabilir platform çekirdeğinde çalışır.",
+    "labels": {
+      "domain": "Whitelabel Domain",
+      "keyMetrics": "Temel Metrikler",
+      "enabledModules": "Aktif Modüller",
+      "deliveryLayer": "Teslim Katmanı",
+      "platformModel": "Yeniden Kullanılabilir Temel",
+      "tenantDomain": "Canlı Domain",
+      "isolation": "İzolasyon",
+      "dedicatedDataSurface": "Tenant başına veritabanı",
+      "previousUseCase": "Önceki kullanım senaryosu",
+      "nextUseCase": "Sonraki kullanım senaryosu",
+      "goToUseCase": "Git",
+      "sharedOperationalCore": "Paylaşılan operasyonel çekirdek",
+      "tenantIsolation": "Tenant bazlı izolasyon",
+      "activeModulesSuffix": "aktif modül"
+    },
+    "useCases": [
+      {
+        "key": "corporate-site",
+        "name": "MediCore",
+        "type": "Kurumsal Web Platformu",
+        "tabLabel": "Kurumsal Site",
+        "domain": "www.medicore.com",
+        "eyebrow": "Yapılandırılmış İçerik Operasyonu",
+        "summary": "Her proje için CMS, medya ve yayın akışlarını sıfırdan kurmak yerine çok dilli kurumsal web varlığını yeniden kullanılabilir bir temel üzerinde yayına alın.",
+        "modules": ["Core CMS", "Sayfa Oluşturucu", "Medya Kütüphanesi", "Navigasyon"],
+        "stats": [
+          { "label": "Dil", "value": "5" },
+          { "label": "Sayfa", "value": "200+" },
+          { "label": "Ekip", "value": "3" }
+        ]
+      },
+      {
+        "key": "content-hub",
+        "name": "Nova Insights",
+        "type": "İçerik ve Yayın Merkezi",
+        "tabLabel": "İçerik Merkezi",
+        "domain": "insights.novamed.com",
+        "eyebrow": "Editoryal Teslim",
+        "summary": "İçerik ekiplerine yeniden kullanılabilir yapılar, SEO odaklı yayın akışları ve kontrollü medya operasyonu verin; her güncellemeyi özel geliştirme işine çevirmeyin.",
+        "modules": ["Yazılar", "Kategoriler", "Medya", "SEO Araçları"],
+        "stats": [
+          { "label": "İçerik", "value": "124" },
+          { "label": "Dil", "value": "6" },
+          { "label": "Taslak", "value": "14" }
+        ]
+      },
+      {
+        "key": "storefront",
+        "name": "Lumena Store",
+        "type": "Headless Katalog Storefront",
+        "tabLabel": "Storefront",
+        "domain": "shop.lumena.com",
+        "eyebrow": "Headless Commerce",
+        "summary": "Katalog ve ürün operasyonlarını Craftive üzerinde yönetin; storefront tarafını ise temalanabilir, frontend bağımsız ve kontrollü büyümeye açık tutun.",
+        "modules": ["Ürün Kataloğu", "CMS Delivery API", "Medya Kütüphanesi", "Bileşen Kütüphanesi"],
+        "stats": [
+          { "label": "Ürün", "value": "248" },
+          { "label": "Kategori", "value": "42" },
+          { "label": "Pazar", "value": "4" }
+        ]
+      },
+      {
+        "key": "campaign-system",
+        "name": "Finovo Launch",
+        "type": "Kampanya Landing Sistemi",
+        "tabLabel": "Kampanya Sistemi",
+        "domain": "go.finovo.com",
+        "eyebrow": "Kampanya Operasyonları",
+        "summary": "Her kampanya için yeni bir stack kurmak yerine tek modüler temel üzerinden lansman sayfalarını, lead akışlarını ve varyantları çok daha hızlı çıkarın.",
+        "modules": ["Sayfa Oluşturucu", "Formlar", "Analitik", "Mail Marketing"],
+        "stats": [
+          { "label": "Kampanya", "value": "12" },
+          { "label": "Lead", "value": "340" },
+          { "label": "Varyant", "value": "8" }
+        ]
+      },
+      {
+        "key": "agency-foundation",
+        "name": "Northstar Studio",
+        "type": "Ajans Teslim Altyapısı",
+        "tabLabel": "Ajans Altyapısı",
+        "domain": "clients.northstarstudio.com",
+        "eyebrow": "Yeniden Kullanılabilir Müşteri Teslimi",
+        "summary": "Birden fazla müşteri projesini tenant güvenli izolasyon, yeniden kullanılabilir modüller ve kontrollü özelleştirme ile tek operasyonel tabanda yönetin.",
+        "modules": ["Provisioning", "Core CMS", "Mail Marketing", "Ürün Kataloğu"],
+        "stats": [
+          { "label": "Müşteri", "value": "12" },
+          { "label": "Yeniden Kullanım", "value": "78%" },
+          { "label": "Canlıya Geçiş", "value": "<2 hf" }
+        ]
+      }
+    ]
   },
   "howItWorks": {
     "sectionTag": "Nasıl Çalışır?",
@@ -131,34 +224,114 @@
   },
   "faq": {
     "sectionTag": "SSS",
-    "heading": "Sık sorulan sorular",
-    "subheading": "Fikrinizi Craftive ile nasıl dijital çözüme dönüştürebileceğinize dair merak ettikleriniz.",
-    "items": [
+    "heading": "Karar vermeden önce bilmek isteyecekleriniz",
+    "subheading": "Craftive'in hangi projeler için doğru fit olduğunu, nasıl teslim edildiğini ve süreçte neler beklemeniz gerektiğini netleştiren kısa cevaplar.",
+    "groups": [
       {
-        "question": "Craftive nedir ve kimler için uygundur?",
-        "answer": "Craftive, dijital ajanslar, KOBİ'ler ve e-ticaret firmaları için geliştirilmiş çok-tenant'lı bir proje ve içerik altyapısıdır. Tek bir kurulumla onlarca müşteriye izole edilmiş dijital ortam sunabilirsiniz."
+        "title": "Uygunluk",
+        "items": [
+          {
+            "question": "Craftive kimler için doğru bir çözüm?",
+            "answer": "Craftive bugün en güçlü şekilde kurumsal web platformu, içerik merkezi, headless katalog/storefront temeli ve ajans teslim altyapısı ihtiyacı olan ekipler için konumlanır. Özellikle tekrar eden teslim ihtiyaçlarını sıfırdan değil, yeniden kullanılabilir bir temel üzerinden çözmek isteyen firmalarda güçlü bir fit sunar."
+          },
+          {
+            "question": "Craftive her proje için doğru seçim mi?",
+            "answer": "Hayır. Craftive tek tip herkese uyan bir ürün olarak konumlanmıyor. En doğru kullanım, ortak bir platform temeli üzerinde modül seçimi, tenant izolasyonu ve kontrollü özelleştirme ile ilerleyebilen projelerdir."
+          }
+        ]
       },
       {
-        "question": "Multi-tenant ne anlama geliyor?",
-        "answer": "Her müşteri (tenant), kendi ayrı veritabanı ve subdomain'iyle sisteme dahil olur. Veriler fiziksel olarak birbirinden izole edilir; bir müşterinin verisi asla diğerine karışmaz."
+        "title": "Çözüm Modeli",
+        "items": [
+          {
+            "question": "Craftive ile tam olarak ne satın alıyorum?",
+            "answer": "Sabit bir paket ürün değil; proje ihtiyacınıza göre şekillenen çözüm temelini satın alırsınız. Bu genelde platform altyapısı, doğru modül seti, kurulum ve yapılandırma, gerekiyorsa özel adaptasyonlar ve operasyonel destekten oluşur."
+          },
+          {
+            "question": "Craftive bir self-serve SaaS ürünü mü?",
+            "answer": "Hayır. Craftive'nin ana modeli self-serve SaaS değil, proje bazlı teslimdir. Amaç size herkese aynı gelen tek paket sunmak değil; ihtiyaçlarınıza uygun modüler çözümü daha hızlı ve daha kontrollü şekilde teslim etmektir."
+          }
+        ]
       },
       {
-        "question": "Teknik bilgim olmadan kullanabilir miyim?",
-        "answer": "Evet. Sürükle-bırak sayfa oluşturucu ve hazır modüller sayesinde teknik ekip gerektirmeden içerik yönetebilirsiniz. Geliştirici iseniz headless REST API ile tam esnekliğe sahipsiniz."
+        "title": "Teknik Esneklik",
+        "items": [
+          {
+            "question": "Mevcut frontend veya entegrasyonlarımı kullanabilir miyim?",
+            "answer": "Evet. Craftive headless-ready bir temel sunar; mevcut frontend'inizi koruyabilir veya proje ihtiyacına göre yeni bir sunum katmanı geliştirebilirsiniz. Next.js, Angular veya farklı frontend tercihleri bu modele rahatça uyarlanabilir."
+          },
+          {
+            "question": "Tenant izolasyonu pratikte bana ne kazandırır?",
+            "answer": "Her tenant'ın ayrı veritabanında çalışması, veri ayrışmasını ve operasyonel güveni güçlendirir. Bu yapı hem müşteri bazlı teslimleri yönetmeyi kolaylaştırır hem de bakım, yedekleme ve genişleme süreçlerinde daha kontrollü hareket etmenizi sağlar."
+          }
+        ]
       },
       {
-        "question": "Mevcut frontend'imi kullanabilir miyim?",
-        "answer": "Kesinlikle. Craftive REST tabanlı headless API'ler sunar. Next.js, Angular, React Native veya istediğiniz herhangi bir frontend framework'ü ile entegre edebilirsiniz."
-      },
-      {
-        "question": "GDPR uyumlu mu?",
-        "answer": "Evet. Veritabanı izolasyonu sayesinde her tenant'ın verisi bağımsız olarak yönetilir, yedeklenir ve silinebilir. Bu da GDPR ve KVKK uyumluluğunu kolaylaştırır."
-      },
-      {
-        "question": "Nasıl iletişime geçebilirim?",
-        "answer": "Sayfanın üst kısmındaki 'İletişime Geç' butonuna tıklayarak formu doldurabilirsiniz. Proje fikrinizi veya ihtiyacınızı paylaşın, 24 saat içinde sizinle iletişime geçiyoruz."
+        "title": "Süreç ve Ticari Model",
+        "items": [
+          {
+            "question": "Fiyatlama nasıl belirleniyor?",
+            "answer": "Fiyatlama sabit paket mantığıyla değil, proje kapsamına göre belirlenir. Kullanılacak modüller, içerik ve tenant yapısının karmaşıklığı, frontend uyarlaması, entegrasyon ihtiyacı ve operasyon desteği seviyesi toplam maliyeti belirleyen ana faktörlerdir."
+          },
+          {
+            "question": "İlk görüşmeden canlıya geçişe süreç nasıl ilerliyor?",
+            "answer": "Süreç genelde discovery görüşmesi ile başlar; ardından ihtiyaç ve kapsam netleştirilir, uygun çözüm ve modül seti önerilir, gerekiyorsa demo veya teklif hazırlanır. Onay sonrası kurulum, teslim ve yayına alma adımları yürütülür."
+          },
+          {
+            "question": "Canlıya çıktıktan sonra genişleme veya destek mümkün mü?",
+            "answer": "Evet. Craftive yalnızca ilk teslim için değil, sonrasındaki bakım, operasyon ve genişleme ihtiyaçları için de tasarlanır. Yeni modüller eklemek, mevcut yapıyı büyütmek veya yeni tenant'larla ilerlemek aynı temel üzerinde daha yönetilebilir hale gelir."
+          }
+        ]
       }
     ]
+  },
+  "demoRequestModal": {
+    "panelBadge": "Craftive Discovery",
+    "panelTitle": "İhtiyacınızı birlikte netleştirelim",
+    "panelSub": "Hedefinizi, içerik operasyonunuzu veya proje teslim modelinizi paylaşın. Size en uygun yaklaşımı ve modül setini birlikte çerçeveleyelim.",
+    "trust": [
+      {
+        "icon": "sparkles",
+        "title": "Kullanım senaryosuna özel yaklaşım",
+        "text": "Tekliften önce çözüm çerçevesini netleştiririz."
+      },
+      {
+        "icon": "users",
+        "title": "Teknik ekiple doğrudan değerlendirme",
+        "text": "Genel satış dili yerine gerçek ihtiyaç üzerinden konuşuruz."
+      },
+      {
+        "icon": "clock",
+        "title": "24 saat içinde ilk geri dönüş",
+        "text": "Talebiniz kısa sürede değerlendirilir ve yanıtlanır."
+      },
+      {
+        "icon": "shield",
+        "title": "Ücretsiz ve bağlayıcı değil",
+        "text": "İlk görüşme sadece doğru çözümü anlamaya odaklanır."
+      }
+    ],
+    "formEyebrow": "Kısa briefing",
+    "formTitle": "İletişime Geç",
+    "formSub": "Birkaç bilgi bırakın, ekibimiz size uygun ilerleyişi en kısa sürede paylaşsın.",
+    "submitHint": "Yanıt genelde 24 saat içinde gelir.",
+    "name": "Ad Soyad",
+    "namePlaceholder": "Ayşe Kaya",
+    "email": "E-posta",
+    "emailPlaceholder": "ayse@sirket.com",
+    "phone": "Telefon (isteğe bağlı)",
+    "phonePlaceholder": "+90 555 123 4567",
+    "message": "Projeniz veya ihtiyacınız",
+    "messagePlaceholder": "Proje hedefinizi, teslim ihtiyacınızı veya sorularınızı kısaca anlatın...",
+    "submit": "Gönder",
+    "submitting": "Gönderiliyor…",
+    "successBadge": "Talep alındı",
+    "close": "Kapat",
+    "errApiNotConfigured": "Sunucu adresi yapılandırılmamış. Lütfen daha sonra tekrar deneyin.",
+    "errRecaptchaClient": "Güvenlik doğrulaması tarayıcıda tamamlanamadı. Sayfayı yenileyip tekrar deneyin.",
+    "errNetwork": "Bağlantı kurulamadı. İnternetinizi kontrol edip tekrar deneyin.",
+    "errHttpNoMessage": "İstek tamamlanamadı. Lütfen tekrar deneyin.",
+    "errConfigFallback": "Güvenlik yapılandırması yüklenemedi. Formu yine de göndermeyi deneyebilirsiniz."
   },
   "cta": {
     "heading": "Fikrinizi bugün dijital çözüme dönüştürün",
