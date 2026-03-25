@@ -12,7 +12,7 @@ import {
 } from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
-import { DemoRequestDetailDialogComponent } from './dialogs/demo-request-detail-dialog/demo-request-detail-dialog.component';
+import { SpaDemoRequestDetailDialogComponent } from './dialogs/demo-request-detail-dialog/demo-request-detail-dialog.component';
 import { PlatformDemoRequestAdminService } from './platform-demo-request-admin.service';
 import { PlatformDemoRequestRow } from './demo-request.types';
 
@@ -29,7 +29,7 @@ import { PlatformDemoRequestRow } from './demo-request.types';
     templateUrl: './demo-requests-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DemoRequestsListComponent extends BasePaginatedListComponent<
+export class SpaDemoRequestsListComponent extends BasePaginatedListComponent<
     PlatformDemoRequestRow,
     Partial<PlatformDemoRequestRow>,
     Partial<PlatformDemoRequestRow>
@@ -98,7 +98,7 @@ export class DemoRequestsListComponent extends BasePaginatedListComponent<
         if (event.action !== 'view') {
             return;
         }
-        this.#matDialog.open(DemoRequestDetailDialogComponent, {
+        this.#matDialog.open(SpaDemoRequestDetailDialogComponent, {
             width: '760px',
             maxHeight: '90vh',
             panelClass: 'spa-compact-dialog',

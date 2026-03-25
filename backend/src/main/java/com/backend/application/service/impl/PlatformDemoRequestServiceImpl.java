@@ -9,8 +9,8 @@ import com.backend.application.dto.platform.PlatformDemoRequestAdminDto;
 import com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand;
 import com.backend.application.service.PlatformDemoRequestService;
 import com.backend.application.service.RecaptchaService;
-import com.backend.infrastructure.persistence.platform.entity.PlatformDemoRequest;
-import com.backend.infrastructure.persistence.platform.repository.PlatformDemoRequestRepository;
+import com.backend.domain.entity.PlatformDemoRequest;
+import com.backend.domain.repository.PlatformDemoRequestRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,15 +28,16 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
     @Transactional("platformTransactionManager")
     public void submit(PlatformDemoRequestSubmitCommand command) {
         recaptchaService.verifyToken(command.recaptchaToken(), RECAPTCHA_ACTION);
-        PlatformDemoRequest entity = new PlatformDemoRequest();
-        entity.setFullName(command.fullName().trim());
-        entity.setEmail(command.email().trim());
-        entity.setPhone(command.phone() != null ? truncate(command.phone(), 40) : null);
-        entity.setMessage(command.message().trim());
-        entity.setLocale(command.locale().trim());
-        entity.setSource("landing");
-        entity.setClientIp(truncate(command.clientIp(), 45));
-        entity.setUserAgent(truncate(command.userAgent(), 500));
+        PlatformDemoRequest entity = PlatformDemoRequest.builder()
+                .fullName(command.fullName().trim())
+                .email(command.email().trim())
+                .phone(command.phone() != null ? truncate(command.phone(), 40) : null)
+                .message(command.message().trim())
+                .locale(command.locale().trim())
+                .source("landing")
+                .clientIp(truncate(command.clientIp(), 45))
+                .userAgent(truncate(command.userAgent(), 500))
+                .build();
         repository.save(entity);
     }
 

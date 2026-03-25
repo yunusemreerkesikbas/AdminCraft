@@ -19,8 +19,8 @@ import { PlatformDemoRequestRow } from '../../demo-request.types';
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DemoRequestDetailDialogComponent {
-    readonly dialogRef = inject(MatDialogRef<DemoRequestDetailDialogComponent>);
+export class SpaDemoRequestDetailDialogComponent {
+    readonly dialogRef = inject(MatDialogRef<SpaDemoRequestDetailDialogComponent>);
     readonly data = inject<PlatformDemoRequestRow>(MAT_DIALOG_DATA);
 
     protected close(): void {

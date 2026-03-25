@@ -251,7 +251,7 @@ export const appRoutes: Route[] = [
                 loadComponent: () =>
                     import(
                         'app/modules/admin/custom/demo-requests/demo-requests-list.component'
-                    ).then((m) => m.DemoRequestsListComponent),
+                    ).then((m) => m.SpaDemoRequestsListComponent),
             },
             {
                 path: 'platform-mail',

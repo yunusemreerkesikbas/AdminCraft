@@ -47,6 +47,24 @@
             </p>
         </div>
 
+        @if (data.clientIp) {
+            <div class="spa-demo-request-detail__field">
+                <p class="spa-demo-request-detail__label">
+                    {{ 'admin.platform.demoRequests.fields.clientIp' | transloco }}
+                </p>
+                <p class="spa-demo-request-detail__value">{{ data.clientIp }}</p>
+            </div>
+        }
+
+        @if (data.userAgent) {
+            <div class="spa-demo-request-detail__field sm:col-span-2">
+                <p class="spa-demo-request-detail__label">
+                    {{ 'admin.platform.demoRequests.fields.userAgent' | transloco }}
+                </p>
+                <p class="spa-demo-request-detail__value">{{ data.userAgent }}</p>
+            </div>
+        }
+
         <div class="spa-demo-request-detail__field sm:col-span-2">
             <p class="spa-demo-request-detail__label">
                 {{ 'admin.platform.demoRequests.fields.message' | transloco }}

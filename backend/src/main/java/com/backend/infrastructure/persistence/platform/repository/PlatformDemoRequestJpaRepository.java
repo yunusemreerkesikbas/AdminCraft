@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.backend.infrastructure.persistence.platform.entity.PlatformDemoRequest;
 
 @Repository
-public interface PlatformDemoRequestRepository extends JpaRepository<PlatformDemoRequest, Long> {
+public interface PlatformDemoRequestJpaRepository extends JpaRepository<PlatformDemoRequest, Long> {
 
     @Query("""
         SELECT d FROM PlatformDemoRequest d
@@ -18,8 +18,8 @@ public interface PlatformDemoRequestRepository extends JpaRepository<PlatformDem
             OR LOWER(d.fullName) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(d.email) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(COALESCE(d.phone, '')) LIKE LOWER(CONCAT('%', :search, '%'))
-            OR LOWER(COALESCE(d.message, '')) LIKE LOWER(CONCAT('%', :search, '%'))
-            OR LOWER(COALESCE(d.locale, '')) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(d.message) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(d.locale) LIKE LOWER(CONCAT('%', :search, '%'))
         )
         """)
     Page<PlatformDemoRequest> search(@Param("search") String search, Pageable pageable);

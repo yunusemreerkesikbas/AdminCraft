@@ -25,6 +25,7 @@ import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -42,7 +43,7 @@ public class PlatformDemoRequestController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) @Size(max = 200) String search
     ) {
         try {
             String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,

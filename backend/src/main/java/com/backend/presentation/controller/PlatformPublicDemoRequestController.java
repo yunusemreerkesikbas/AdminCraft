@@ -1,6 +1,5 @@
 package com.backend.presentation.controller;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.service.PlatformDemoRequestService;
-import com.backend.domain.exception.RecaptchaVerificationException;
 import com.backend.presentation.dto.request.PlatformPublicDemoRequestSubmitRequest;
 import com.backend.shared.common.ApiResponse;
 
@@ -33,19 +31,21 @@ public class PlatformPublicDemoRequestController {
     public ResponseEntity<ApiResponse<Map<String, String>>> submit(
             @Valid @RequestBody PlatformPublicDemoRequestSubmitRequest request,
             HttpServletRequest httpRequest) {
-        try {
-            String clientIp = httpRequest.getRemoteAddr();
-            String userAgent = httpRequest.getHeader("User-Agent");
-            platformDemoRequestService.submit(request.toCommand(clientIp, userAgent));
-            Locale locale = LocaleContextHolder.getLocale();
-            String followUpNote = messageSource.getMessage("platform.demo.request.submitted.note", null, "", locale);
-            Map<String, String> data = new HashMap<>();
-            data.put("followUpNote", followUpNote != null ? followUpNote : "");
-            return ResponseEntity.ok(ApiResponse.success(messageCode("platform.demo.request.submitted"), data));
-        } catch (RecaptchaVerificationException ex) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(400, messageCode("recaptcha.verification.failed")));
+        String clientIp = resolveClientIp(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        platformDemoRequestService.submit(request.toCommand(clientIp, userAgent));
+        Locale locale = LocaleContextHolder.getLocale();
+        String followUpNote = messageSource.getMessage("platform.demo.request.submitted.note", null, "", locale);
+        return ResponseEntity.ok(ApiResponse.success(messageCode("platform.demo.request.submitted"),
+                Map.of("followUpNote", followUpNote)));
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String cfIp = request.getHeader("CF-Connecting-IP");
+        if (cfIp != null && !cfIp.isBlank()) {
+            return cfIp.trim();
         }
+        return request.getRemoteAddr();
     }
 
     private String messageCode(String key) {
