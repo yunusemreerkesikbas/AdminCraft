@@ -7,6 +7,7 @@ import {
 import { inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { LanguageService } from 'app/core/language/language.service';
 import { environment } from '@environments/environment';
 import { Observable, catchError, throwError } from 'rxjs';
@@ -18,6 +19,7 @@ export const errorRedirectInterceptor = (
     const router = inject(Router);
     const languageService = inject(LanguageService);
     const dialog = inject(MatDialog);
+    const tenantContext = inject(TenantContextService);
 
     return next(req).pipe(
         catchError((error) => {
@@ -45,7 +47,10 @@ export const errorRedirectInterceptor = (
             }
 
             if (status === 401) {
-                router.navigate(['/sign-in']);
+                const subdomain = tenantContext.subdomain();
+                router.navigate(['/sign-in'], {
+                    queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                });
                 return throwError(() => error);
             }
 

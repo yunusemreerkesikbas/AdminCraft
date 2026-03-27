@@ -1,5 +1,6 @@
 "use client";
 
+import type { DemoRequestModalContent } from "@/content/home";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { DemoProvider, useDemoContext } from "@/components/layout/DemoContext";
@@ -30,10 +31,16 @@ type LocaleShellProps = {
   locale: string;
   navLabels: NavLabels;
   footerContent: FooterContent;
+  demoRequestModalContent: DemoRequestModalContent;
   children: React.ReactNode;
 };
 
-function ShellInner({ locale, navLabels, footerContent, children }: LocaleShellProps) {
+function ShellInner({
+  locale,
+  navLabels,
+  footerContent,
+  children,
+}: Omit<LocaleShellProps, "demoRequestModalContent">) {
   const { openContact } = useDemoContext();
   return (
     <>
@@ -46,9 +53,15 @@ function ShellInner({ locale, navLabels, footerContent, children }: LocaleShellP
   );
 }
 
-export function LocaleShell({ locale, navLabels, footerContent, children }: LocaleShellProps) {
+export function LocaleShell({
+  locale,
+  navLabels,
+  footerContent,
+  demoRequestModalContent,
+  children,
+}: LocaleShellProps) {
   return (
-    <DemoProvider locale={locale}>
+    <DemoProvider locale={locale} content={demoRequestModalContent}>
       <ShellInner locale={locale} navLabels={navLabels} footerContent={footerContent}>
         {children}
       </ShellInner>

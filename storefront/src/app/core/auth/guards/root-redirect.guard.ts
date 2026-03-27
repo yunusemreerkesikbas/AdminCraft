@@ -12,6 +12,12 @@ export const rootRedirectGuard: CanActivateFn = () => {
     const userService = inject(UserService);
     const translocoService = inject(TranslocoService);
 
+    const params = new URLSearchParams(window.location.search);
+    const subdomain = params.get('subdomain');
+    if (subdomain) {
+        return of(router.parseUrl(`/sign-in?subdomain=${encodeURIComponent(subdomain)}`));
+    }
+
     return authService.check().pipe(
         switchMap((authenticated) => {
             if (!authenticated) {

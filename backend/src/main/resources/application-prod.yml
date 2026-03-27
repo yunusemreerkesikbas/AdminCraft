@@ -50,6 +50,7 @@ app:
     secret: ${JWT_SECRET}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:https://%s.craftive.io}
+    admin-url: ${APP_FRONTEND_ADMIN_URL:https://app.craftive.io}
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}

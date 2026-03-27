@@ -86,6 +86,11 @@ body {
   50% { transform: translateY(-8px); }
 }
 
+@keyframes float-soft {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+
 @keyframes scale-in {
   from {
     opacity: 0;
@@ -149,8 +154,17 @@ body {
   animation: float 5s ease-in-out infinite;
 }
 
+.animate-float-subtle {
+  animation: float-soft 7s ease-in-out infinite;
+}
+
 .animate-glow-pulse {
   animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-shimmer-slow {
+  background-size: 200% 100%;
+  animation: shimmer 9s linear infinite;
 }
 
 .font-heading {
@@ -179,7 +193,7 @@ body {
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-lg bg-[var(--color-dark-neutral-1)] px-5 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-lg bg-[var(--color-dark-neutral-1)] px-5 py-2.5 text-sm font-medium text-white transition-[background-color,box-shadow,transform,opacity] duration-300 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98];
   outline: none;
 }
 .btn-primary:focus-visible {
@@ -187,7 +201,7 @@ body {
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-lg border border-[var(--color-shade)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--color-dark-neutral-2)] transition-all duration-300 hover:bg-[var(--color-light-neutral-2)] hover:scale-[1.02] active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-lg border border-[var(--color-shade)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--color-dark-neutral-2)] transition-[background-color,border-color,box-shadow,transform,color] duration-300 hover:bg-[var(--color-light-neutral-2)] hover:scale-[1.02] active:scale-[0.98];
   outline: none;
 }
 .btn-secondary:focus-visible {
@@ -195,7 +209,7 @@ body {
 }
 
 .card-hover {
-  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+  @apply transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-lg;
 }
 
 /* Ensure form inputs use brand blue on focus */
@@ -203,4 +217,30 @@ body {
 [data-slot="textarea"]:focus-visible {
   border-color: var(--color-theme-3);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-in-view.is-in-view,
+  .animate-in-view.is-in-view.animate-scale-in,
+  .animate-in-view.is-in-view.animate-feature-card-in,
+  .animate-float,
+  .animate-float-subtle,
+  .animate-glow-pulse,
+  .animate-shimmer-slow {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-fade-in-up-delay-1,
+  .animate-fade-in-up-delay-2,
+  .animate-fade-in-up-delay-3,
+  .animate-in-view-delay-1.is-in-view,
+  .animate-in-view-delay-2.is-in-view,
+  .animate-in-view-delay-3.is-in-view,
+  .animate-in-view-delay-4.is-in-view {
+    animation-delay: 0ms !important;
+  }
 }

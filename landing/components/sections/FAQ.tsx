@@ -3,15 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { AnimateInView } from "@/components/AnimateInView";
 
 type FAQItem = { question: string; answer: string };
+type FAQGroup = { title: string; items: FAQItem[] };
 
 type FAQContent = {
   sectionTag: string;
   heading: string;
   subheading: string;
-  items: FAQItem[];
+  groups: FAQGroup[];
 };
 
 export function FAQ({ content }: { content: FAQContent }) {
+  const items = content.groups.flatMap((group) => group.items);
+
   return (
     <section id="faq" className="bg-[var(--color-light-neutral-1)] px-4 py-24 sm:px-6 lg:px-20">
       <div className="mx-auto max-w-[1440px]">
@@ -34,13 +37,13 @@ export function FAQ({ content }: { content: FAQContent }) {
 
           <AnimateInView className="animate-in-view-delay-2">
             <Accordion type="single" collapsible className="w-full space-y-3">
-              {content.items.map((item, i) => (
+              {items.map((item, index) => (
                 <AccordionItem
-                  key={i}
-                  value={`faq-${i}`}
+                  key={item.question}
+                  value={`faq-${index}`}
                   className="rounded-xl border border-[var(--color-shade)] bg-white px-5 shadow-sm"
                 >
-                  <AccordionTrigger className="font-heading text-sm font-semibold text-[var(--color-dark-neutral-1)] hover:no-underline py-4">
+                  <AccordionTrigger className="py-4 text-left font-heading text-sm font-semibold text-[var(--color-dark-neutral-1)] hover:no-underline">
                     {item.question}
                   </AccordionTrigger>
                   <AccordionContent className="pb-4 text-sm leading-relaxed text-[var(--color-dark-neutral-2)]">

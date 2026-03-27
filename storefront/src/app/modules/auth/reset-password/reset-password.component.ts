@@ -209,7 +209,10 @@ export class AuthResetPasswordComponent implements OnInit, OnDestroy {
                     this.resetPasswordNgForm.resetForm();
 
                     setTimeout(() => {
-                        this.#router.navigate(['/sign-in']);
+                        const subdomain = this.#tenantContext.subdomain();
+                        this.#router.navigate(['/sign-in'], {
+                            queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                        });
                     }, 3000);
                 },
                 error: (error) => {

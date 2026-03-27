@@ -10,10 +10,10 @@ import com.backend.application.service.EmailService;
 import com.backend.domain.enums.EmailType;
 import com.backend.domain.enums.Language;
 import com.backend.domain.port.EmailTemplateRendererPort;
-import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailConfigPort;
 import com.backend.domain.port.MailSenderPort;
 
+import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,8 @@ public class EmailServiceImpl implements EmailService {
     private final MailSenderPort emailSender;
     private final EmailTemplateRendererPort templateRenderer;
     private final MailConfigPort mailConfig;
-    private final FrontendConfigPort frontendConfig;
+    @Value("${app.frontend.admin-url:http://localhost:4200}")
+    private String adminPanelUrl;
 
     @Override
     public EmailResult sendEmail(EmailContext context) {
@@ -116,21 +117,15 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildPasswordResetLink(String token, String subdomain) {
-        String baseUrl = buildBaseUrl(subdomain);
-        return String.format("%s/reset-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
+        return String.format("%s/reset-password?token=%s&subdomain=%s", buildBaseUrl(), token, subdomain);
     }
 
     private String buildEmailVerificationLink(String token, String subdomain) {
-        String baseUrl = buildBaseUrl(subdomain);
-        return String.format("%s/set-password?token=%s&subdomain=%s", baseUrl, token, subdomain);
+        return String.format("%s/set-password?token=%s&subdomain=%s", buildBaseUrl(), token, subdomain);
     }
 
-    private String buildBaseUrl(String subdomain) {
-        String urlTemplate = frontendConfig.getBaseUrl();
-        if (urlTemplate.contains("%s")) {
-            return String.format(urlTemplate, subdomain);
-        }
-        return urlTemplate;
+    private String buildBaseUrl() {
+        return adminPanelUrl;
     }
 
     private String formatSimplifiedContent(EmailContext context) {

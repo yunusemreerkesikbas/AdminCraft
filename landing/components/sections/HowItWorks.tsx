@@ -1,6 +1,7 @@
-import { Badge } from "@/components/ui/badge";
-import { ChevronRight, LayoutDashboard, Layers, Monitor, Rocket, Server } from "lucide-react";
 import { AnimateInView } from "@/components/AnimateInView";
+import { Badge } from "@/components/ui/badge";
+import { Layers, LayoutDashboard, Monitor, Rocket, Server } from "lucide-react";
+import type { ComponentType } from "react";
 
 type Step = {
   key: string;
@@ -16,128 +17,251 @@ type HowItWorksContent = {
   steps: Step[];
 };
 
-const STEP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+type TimelineStep = {
+  step: Step;
+  stepNum: string;
+  delayClass: string;
+  isTop: boolean;
+};
+
+const STEP_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   tenant: LayoutDashboard,
   content: Layers,
   frontend: Monitor,
   deploy: Rocket,
 };
 
+function buildTimelineSteps(steps: Step[]): TimelineStep[] {
+  return steps.map((step, index) => ({
+    step,
+    stepNum: String(index + 1).padStart(2, "0"),
+    delayClass:
+      index < 4
+        ? `animate-in-view-delay-${Math.min(index + 1, 4)}`
+        : "animate-in-view-delay-4",
+    isTop: index % 2 === 0,
+  }));
+}
+
+function StepCard({ item }: { item: TimelineStep }) {
+  const { step, stepNum } = item;
+  const Icon = STEP_ICONS[step.key] ?? Server;
+
+  return (
+    <div className="group relative w-full max-w-[320px] overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.82)_0%,rgba(10,15,30,0.9)_100%)] p-6 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.78)] backdrop-blur-sm transition-[border-color,box-shadow,background-color] duration-300 motion-reduce:transition-none hover:border-[#3b82f6]/40 hover:bg-[linear-gradient(180deg,rgba(15,23,42,0.9)_0%,rgba(10,15,30,0.96)_100%)] hover:shadow-[0_40px_100px_-56px_rgba(59,130,246,0.34)]">
+      <div
+        className="pointer-events-none absolute -left-10 top-0 h-28 w-28 rounded-full bg-[#60a5fa]/10 blur-2xl opacity-0 transition-[opacity,transform] duration-300 motion-reduce:transition-none group-hover:translate-x-4 group-hover:opacity-100"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-[linear-gradient(90deg,rgba(96,165,250,0)_0%,rgba(96,165,250,0.75)_50%,rgba(96,165,250,0)_100%)] opacity-0 transition-opacity duration-300 motion-reduce:transition-none group-hover:opacity-100"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-80"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(96,165,250,0.95) 50%, rgba(59,130,246,0) 100%)",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute right-5 top-3 select-none font-heading text-8xl font-black leading-none text-white/[0.05]"
+        aria-hidden="true"
+      >
+        {stepNum}
+      </div>
+
+      <div className="relative flex flex-col gap-5">
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-[#60a5fa]/20 bg-[linear-gradient(135deg,rgba(37,99,235,0.28)_0%,rgba(29,78,216,0.12)_100%)] shadow-[0_14px_32px_-20px_rgba(37,99,235,0.55)] transition-[transform,border-color,box-shadow] duration-300 motion-reduce:transition-none group-hover:-translate-y-0.5 group-hover:border-[#93c5fd]/32 group-hover:shadow-[0_22px_40px_-20px_rgba(37,99,235,0.68)]"
+          aria-hidden="true"
+        >
+          <Icon className="h-6 w-6 text-[#93c5fd] transition-transform duration-300 motion-reduce:transition-none group-hover:-rotate-3" />
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <h3 className="font-heading text-lg font-bold tracking-tight text-white transition-colors duration-300 motion-reduce:transition-none group-hover:text-[#dbeafe]">
+              {step.title}
+            </h3>
+          </div>
+          <p className="text-sm leading-7 text-white/62 transition-colors duration-300 motion-reduce:transition-none group-hover:text-white/74">
+            {step.description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressNode() {
+  return (
+    <div className="relative flex items-center justify-center">
+      <div
+        className="pointer-events-none absolute h-16 w-16 rounded-full border border-[#93c5fd]/10 bg-[radial-gradient(circle,rgba(96,165,250,0.12)_0%,rgba(96,165,250,0.03)_45%,transparent_72%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute h-11 w-11 rounded-full border border-[#60a5fa]/18 bg-[#081225]/92 shadow-[0_0_0_10px_rgba(15,23,42,0.42)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute h-6 w-6 rounded-full border border-[#bfdbfe]/18 bg-[#60a5fa]/22 shadow-[0_0_26px_rgba(96,165,250,0.42)]"
+        aria-hidden="true"
+      />
+      <div>
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-[#7dd3fc] shadow-[0_0_10px_rgba(125,211,252,0.9)]"
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}
+
+function DesktopTimeline({ items }: { items: TimelineStep[] }) {
+  return (
+    <div className="relative mt-20 hidden lg:block">
+      <div
+        className="pointer-events-none absolute left-[7%] right-[7%] top-1/2 h-px -translate-y-1/2 bg-[linear-gradient(90deg,rgba(96,165,250,0.05)_0%,rgba(96,165,250,0.65)_20%,rgba(125,211,252,0.85)_50%,rgba(96,165,250,0.65)_80%,rgba(96,165,250,0.05)_100%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute left-[10%] right-[10%] top-1/2 h-24 -translate-y-1/2 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.08) 40%, transparent 75%)",
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="grid min-h-[34rem] grid-cols-4 gap-6">
+        {items.map((item) => {
+          return (
+            <AnimateInView
+              key={item.step.key}
+              className={`h-full ${item.delayClass}`}
+            >
+              <div className="grid h-full grid-rows-[1fr_auto_1fr] justify-items-center">
+                {item.isTop ? (
+                  <div className="flex h-full flex-col items-center justify-end">
+                    <StepCard item={item} />
+                    <div
+                      className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0)_0%,rgba(96,165,250,0.82)_100%)]"
+                      aria-hidden="true"
+                    />
+                  </div>
+                ) : (
+                  <div />
+                )}
+
+                <ProgressNode />
+
+                {!item.isTop ? (
+                  <div className="flex h-full flex-col items-center justify-start">
+                    <div
+                      className="h-16 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0.82)_0%,rgba(96,165,250,0)_100%)]"
+                      aria-hidden="true"
+                    />
+                    <StepCard item={item} />
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
+            </AnimateInView>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MobileTimeline({ items }: { items: TimelineStep[] }) {
+  return (
+    <div className="relative mt-14 lg:hidden">
+      <div
+        className="pointer-events-none absolute left-[27px] top-6 bottom-6 w-px bg-[linear-gradient(180deg,rgba(96,165,250,0.08)_0%,rgba(96,165,250,0.72)_16%,rgba(125,211,252,0.82)_50%,rgba(96,165,250,0.72)_84%,rgba(96,165,250,0.08)_100%)]"
+        aria-hidden="true"
+      />
+
+      <div className="space-y-5">
+        {items.map((item) => {
+          return (
+            <AnimateInView key={item.step.key} className={item.delayClass}>
+              <div className="relative pl-16">
+                <div
+                  className="absolute left-[15px] top-8 flex h-6 w-6 items-center justify-center rounded-full bg-[#60a5fa] shadow-[0_0_24px_rgba(96,165,250,0.65)]"
+                  aria-hidden="true"
+                >
+                  <div className="h-2.5 w-2.5 rounded-full bg-white" />
+                </div>
+                <StepCard item={item} />
+              </div>
+            </AnimateInView>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function HowItWorks({ content }: { content: HowItWorksContent }) {
+  const timelineSteps = buildTimelineSteps(content.steps);
+
   return (
     <section
       id="howitworks"
       className="relative overflow-hidden px-4 py-24 sm:px-6 lg:px-20"
-      style={{ background: "linear-gradient(160deg, #000000 0%, #060f22 40%, #0a1530 70%, #000000 100%)" }}
+      style={{
+        background:
+          "linear-gradient(180deg, #01050d 0%, #071121 34%, #0b1730 68%, #020611 100%)",
+      }}
     >
-      {/* Blue radial glow */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 65%)",
+            "radial-gradient(ellipse 68% 44% at 50% 0%, rgba(59,130,246,0.16) 0%, rgba(29,78,216,0.08) 34%, transparent 72%)",
         }}
-        aria-hidden
+        aria-hidden="true"
       />
-      {/* Dot pattern */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(circle, #ffffff 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
-        aria-hidden
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(147,197,253,0.06)_0%,rgba(147,197,253,0)_100%)]"
+        aria-hidden="true"
       />
 
       <div className="relative mx-auto max-w-[1440px]">
-        {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">
           <AnimateInView>
-            <Badge className="rounded-full border border-white/10 bg-white/10 px-4 py-1 text-xs font-semibold text-white/70 backdrop-blur-sm">
+            <Badge className="rounded-full border border-white/10 bg-white/8 px-4 py-1 text-xs font-semibold text-white/72 backdrop-blur-sm">
               {content.sectionTag}
             </Badge>
           </AnimateInView>
           <AnimateInView className="animate-in-view-delay-1">
-            <h2 className="font-heading max-w-xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h2 className="font-heading max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
               {content.heading}
             </h2>
           </AnimateInView>
           <AnimateInView className="animate-in-view-delay-2">
-            <p className="max-w-xl text-white/50">{content.subheading}</p>
+            <p className="max-w-2xl text-white/54 sm:text-base">
+              {content.subheading}
+            </p>
           </AnimateInView>
         </div>
 
-        {/* Step cards */}
-        <AnimateInView className="mt-16 animate-in-view-delay-2">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {content.steps.map((step, index) => {
-              const Icon = STEP_ICONS[step.key] ?? Server;
-              const stepNum = String(index + 1).padStart(2, "0");
-              const isLast = index === content.steps.length - 1;
-
-              return (
-                <div key={step.key} className="relative">
-                  {/* Connector */}
-                  {!isLast && (
-                    <div className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 lg:flex h-6 w-6 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
-                      <ChevronRight className="h-3.5 w-3.5 text-white/30" />
-                    </div>
-                  )}
-
-                  <div className="group relative flex h-full flex-col gap-6 overflow-hidden rounded-2xl bg-white/[0.04] p-7 ring-1 ring-white/10 transition-all duration-300 hover:bg-white/[0.07] hover:ring-[var(--color-theme-3)]/40">
-                    {/* Accent top line */}
-                    <div
-                      className="absolute inset-x-0 top-0 h-px"
-                      style={{
-                        background: "linear-gradient(90deg, var(--color-theme-3) 0%, #1D4ED8 100%)",
-                        opacity: 0.7,
-                      }}
-                    />
-
-                    {/* Ghost step number */}
-                    <span
-                      className="pointer-events-none absolute right-5 top-3 select-none font-heading text-8xl font-black leading-none text-white/[0.05]"
-                      aria-hidden
-                    >
-                      {stepNum}
-                    </span>
-
-                    {/* Icon */}
-                    <div
-                      className="relative flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(29,78,216,0.15) 100%)",
-                        boxShadow: "0 0 0 1px rgba(37,99,235,0.25), 0 8px 24px rgba(37,99,235,0.15)",
-                      }}
-                    >
-                      <Icon className="h-6 w-6 text-[#93c5fd]" />
-                    </div>
-
-                    {/* Text */}
-                    <div className="relative flex flex-col gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[9px] font-black text-white"
-                          style={{
-                            background: "linear-gradient(135deg, var(--color-theme-3) 0%, #1D4ED8 100%)",
-                          }}
-                        >
-                          {stepNum}
-                        </span>
-                        <h3 className="font-heading text-base font-bold text-white">
-                          {step.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm leading-relaxed text-white/45">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </AnimateInView>
+        <DesktopTimeline items={timelineSteps} />
+        <MobileTimeline items={timelineSteps} />
       </div>
     </section>
   );
