@@ -1,0 +1,1 @@
+ALTER TABLE pages ADD COLUMN style_classes VARCHAR(255) NULL;

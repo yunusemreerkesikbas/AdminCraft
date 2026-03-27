@@ -31,6 +31,9 @@ services:
       - backend
     environment:
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      TENANT_SUBDOMAIN: ${STOREFRONT_TENANT_SUBDOMAIN:-demo}
+      NEXT_PUBLIC_CMS_API_URL: ${STOREFRONT_CMS_API_URL:-https://s1-api.craftive.io/api}
     networks:
       - craftive-network
     labels:
@@ -43,7 +46,7 @@ services:
       - "traefik.http.routers.storefront.tls.certresolver=letsencrypt"
       - "traefik.http.services.storefront.loadbalancer.server.port=3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
