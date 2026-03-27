@@ -11,6 +11,7 @@ app:
     refreshExpiration: ${JWT_REFRESH_EXPIRATION:604800000}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
+    admin-url: ${APP_FRONTEND_ADMIN_URL:http://localhost:4200}
   cors:
     allowed-origins:
       - http://localhost:4200

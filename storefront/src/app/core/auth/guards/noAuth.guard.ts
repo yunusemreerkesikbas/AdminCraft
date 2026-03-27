@@ -15,6 +15,10 @@ export const NoAuthGuard: CanActivateFn | CanActivateChildFn = (
     const userService = inject(UserService);
     const translocoService = inject(TranslocoService);
 
+    if (route.queryParamMap.has('subdomain')) {
+        return of(true);
+    }
+
     return authService.check().pipe(
         switchMap((authenticated) => {
             if (authenticated) {

@@ -16,8 +16,8 @@ public class GenerateTenantAdminUserUseCase {
   private final TenantAdminCreationService tenantAdminCreationService;
   private final PasswordGeneratorService passwordGeneratorService;
 
-  @Value("${app.frontend.base-url:http://%s.localhost:4200}")
-  private String frontendBaseUrl;
+  @Value("${app.frontend.admin-url:http://localhost:4200}")
+  private String adminPanelUrl;
 
   public GenerateTenantAdminUserUseCase(TenantPlatformRepository tenantRepository,
       TenantAdminCreationService tenantAdminCreationService,
@@ -53,12 +53,6 @@ public class GenerateTenantAdminUserUseCase {
   }
 
   private String resolveLoginUrl(String subdomain) {
-    if (frontendBaseUrl.contains("%s")) {
-      return String.format(frontendBaseUrl, subdomain);
-    }
-    if (frontendBaseUrl.contains("{subdomain}")) {
-      return frontendBaseUrl.replace("{subdomain}", subdomain);
-    }
-    return "http://" + subdomain + ".localhost:4200";
+    return adminPanelUrl + "?subdomain=" + subdomain;
   }
 }

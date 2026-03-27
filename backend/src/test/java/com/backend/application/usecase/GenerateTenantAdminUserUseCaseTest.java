@@ -48,7 +48,7 @@ class GenerateTenantAdminUserUseCaseTest {
         .hasAdminUser(false)
         .build();
 
-    ReflectionTestUtils.setField(useCase, "frontendBaseUrl", "http://%s.localhost:4200");
+    ReflectionTestUtils.setField(useCase, "adminPanelUrl", "http://localhost:4200");
   }
 
   @Test
@@ -63,7 +63,7 @@ class GenerateTenantAdminUserUseCaseTest {
 
     assertThat(response.email()).isEqualTo("admin@acme.com");
     assertThat(response.subdomain()).isEqualTo("acme");
-    assertThat(response.loginUrl()).isEqualTo("http://acme.localhost:4200");
+    assertThat(response.loginUrl()).isEqualTo("http://localhost:4200?subdomain=acme");
     assertThat(response.temporaryPassword()).isEqualTo("Temp#Pass1!");
   }
 

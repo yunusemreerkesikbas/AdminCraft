@@ -218,9 +218,14 @@ export class TenantContextService {
     }
 
     extractSubdomainFromHost(): string | null {
+        const params = new URLSearchParams(window.location.search);
+        const querySubdomain = params.get('subdomain');
+        if (querySubdomain && this.isValidSubdomain(querySubdomain)) {
+            return querySubdomain;
+        }
+
         const hostname = window.location.hostname;
         if (hostname === 'localhost') {
-            this.#redirectToAdminLocalhost();
             return 'admin';
         }
         const parts = hostname.split('.');
@@ -251,15 +256,7 @@ export class TenantContextService {
         return pattern.test(subdomain);
     }
 
-    #redirectToAdminLocalhost(): void {
-        const currentUrl = window.location.href;
-        const newUrl = currentUrl.replace('localhost', 'admin.localhost');
-        if (currentUrl !== newUrl) {
-            window.location.replace(newUrl);
-        }
-    }
-
-    initializeFromHostname(): void {
+initializeFromHostname(): void {
         const subdomain = this.extractSubdomainFromHost();
         if (subdomain) {
             this.setSubdomain(subdomain);
