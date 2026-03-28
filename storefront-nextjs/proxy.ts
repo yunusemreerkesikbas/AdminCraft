@@ -20,13 +20,9 @@ export async function proxy(request: NextRequest) {
 
   const expectedHostname = process.env.TENANT_HOSTNAME?.trim().toLowerCase();
   if (expectedHostname) {
-    // X-Forwarded-Host: Traefik/Cloudflare'in ilettiği orijinal hostname (öncelikli)
-    // Host: fallback (doğrudan erişimde veya Traefik host passthrough'da)
-    const requestHost = (
-      request.headers.get("x-forwarded-host") ??
-      request.headers.get("host") ??
-      request.nextUrl.hostname
-    ).toLowerCase().split(":")[0];
+    // request.nextUrl.hostname: Next.js middleware'in X-Forwarded-Host/Host'tan
+    // otomatik olarak çözümlediği güvenilir hostname değeri.
+    const requestHost = request.nextUrl.hostname.toLowerCase();
     if (requestHost && requestHost !== expectedHostname) {
       return new NextResponse(null, { status: 404 });
     }
