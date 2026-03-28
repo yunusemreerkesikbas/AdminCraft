@@ -191,6 +191,8 @@ POST /api/auth/login
 }
 ```
 
+> `expiresIn` is in **seconds** (OAuth2 standard). Frontend computes absolute expiry as `issuedAt + expiresIn * 1000` (ms).
+
 **2FA required**:
 ```json
 {
@@ -248,7 +250,7 @@ Response (success):
 | Max Attempts | 5 | All |
 | Request Rate Limit | 3 per 5 minutes | All |
 | Rate Limit Cleanup | Every 5 minutes | All |
-| Bypass Code | `123456` | Dev only (auto-disabled in prod) |
+| Bypass Code | `123456` | Dev + Stage (auto-disabled in prod) |
 
 Configuration in `application.yml`:
 ```yaml
@@ -257,13 +259,14 @@ app:
     length: 6
     expiry-seconds: 300
     max-attempts: 5
-    bypass-code: null  # Set to "123456" in dev profile
+    bypass-code: null  # Set to "123456" in dev/stage profiles
 ```
 
 **Security Notes**:
 - OTP codes are stored as SHA-256 hashes (never plaintext)
-- Bypass code is automatically disabled in non-dev profiles via `@PostConstruct` validation
+- Bypass code is automatically disabled outside `dev` and `stage` profiles via `@PostConstruct` validation
 - Rate limiting: Max 3 OTP requests per email per 5-minute window (returns HTTP 429)
+- The same shared bypass code applies to both standard auth 2FA and `/config` OTP verification because both flows read `OtpConfig`
 
 ---
 
@@ -762,7 +765,8 @@ All authentication events are logged with:
 
 **Active Status Validation**:
 - Inactive tenants blocked from all token operations:
-  - `refreshToken()`: Checks tenant status before issuing new tokens
+  - `refreshToken()` (`/api/auth/refresh`): Checks tenant status before issuing new tokens
+  - `refreshToken()` (`/api/config/auth/refresh`): Config auth refresh also checks tenant `ACTIVE` status — suspended tenants cannot renew config sessions
   - `validateResetToken()`: Ensures tenant is ACTIVE before validation
   - `validateEmailVerificationToken()`: Ensures tenant is ACTIVE before validation
 - Prevents token abuse after tenant suspension

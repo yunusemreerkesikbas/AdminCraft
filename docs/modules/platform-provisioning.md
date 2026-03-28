@@ -136,12 +136,11 @@ Request/response shape (high level):
 Provisioning module canonicalization:
 
 - `core` is required for full provision.
-- When request includes `core`, backend expands execution set to:
-  - `core`, `media`, `component_library`, `pagebuilder`
+- When request includes `core`, backend uses `ModuleCode.resolveExecutionCodes(List<String>)` to expand the execution set to: `core`, `media`, `component_library`, `pagebuilder`
 - `product` and `mail_marketing` remain optional and are appended only when requested.
-- Only provisioning-selectable module codes are accepted in full provision requests:
-  - `core`, `product`, `mail_marketing`
+- Only provisioning-selectable module codes are accepted in full provision requests: `core`, `product`, `mail_marketing`
 - Core execution modules cannot be sent directly in `POST /api/provisioning/tenants/{tenantId}/provision`; they are derived by backend normalization.
+- `ModuleCode.resolveExecutionCodes()` is the single source of truth for core expansion — used by both `ProvisioningServiceImpl` (full provision) and `TenantStartupMigrator` (sync/startup migration) to guarantee identical behavior.
 
 DTO references (source of truth):
 

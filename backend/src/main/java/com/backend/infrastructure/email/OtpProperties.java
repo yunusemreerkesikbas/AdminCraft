@@ -30,12 +30,13 @@ public class OtpProperties {
     @PostConstruct
     public void validateBypassCode() {
         if (bypassCode != null && !bypassCode.isBlank()) {
-            boolean isDevProfile = Arrays.asList(environment.getActiveProfiles()).contains("dev");
-            if (!isDevProfile) {
-                log.error("SECURITY ALERT: OTP bypass code configured in non-dev profile! Disabling.");
+            boolean isAllowedProfile = Arrays.stream(environment.getActiveProfiles())
+                    .anyMatch(profile -> "dev".equals(profile) || "stage".equals(profile));
+            if (!isAllowedProfile) {
+                log.error("SECURITY ALERT: OTP bypass code configured outside dev/stage profiles! Disabling.");
                 bypassCode = null;
             } else {
-                log.warn("SECURITY WARNING: OTP bypass code is enabled in dev profile.");
+                log.warn("SECURITY WARNING: OTP bypass code is enabled in dev/stage profile.");
             }
         }
     }

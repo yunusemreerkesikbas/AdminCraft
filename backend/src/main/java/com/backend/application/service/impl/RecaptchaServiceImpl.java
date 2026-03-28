@@ -4,7 +4,6 @@ import com.backend.application.service.RecaptchaService;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.port.EncryptionServicePort;
-import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.RecaptchaVerificationException;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,6 @@ public class RecaptchaServiceImpl implements RecaptchaService {
     private static final String KEY_RECAPTCHA_SITE_KEY = "security.recaptcha.site_key";
     private static final String KEY_RECAPTCHA_SECRET_KEY = "security.recaptcha.secret_key";
 
-    private final PlatformSettingsPort platformSettings;
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
     private final ConfigPropertyService configPropertyService;
     private final TenantContextPort tenantContext;
@@ -195,29 +193,25 @@ public class RecaptchaServiceImpl implements RecaptchaService {
                     siteKey);
         }
 
-        var settings = platformSettings.getSingleton();
         Boolean enabledOverride = globalRuntimeConfigService.getRecaptchaEnabled();
         String siteKeyOverride = globalRuntimeConfigService.getRecaptchaSiteKey();
-        boolean enabled = enabledOverride != null ? enabledOverride : Boolean.TRUE.equals(settings.getRecaptchaEnabled());
-        String siteKey = (siteKeyOverride != null && !siteKeyOverride.isBlank())
-                ? siteKeyOverride
-                : settings.getRecaptchaSiteKey();
+        boolean enabled = Boolean.TRUE.equals(enabledOverride);
+        String siteKey = siteKeyOverride != null ? siteKeyOverride : "";
         return new RecaptchaPublicConfig(enabled, siteKey);
     }
 
     private RecaptchaContext resolvePlatformRecaptchaContext() {
-        var settings = platformSettings.getSingleton();
         Boolean globalEnabled = globalRuntimeConfigService.getRecaptchaEnabled();
         String globalSecretEncrypted = globalRuntimeConfigService.getRecaptchaSecretKeyEncrypted();
-        boolean enabled = globalEnabled != null ? globalEnabled : Boolean.TRUE.equals(settings.getRecaptchaEnabled());
+        boolean enabled = Boolean.TRUE.equals(globalEnabled);
         String encryptedSecret = (globalSecretEncrypted != null && !globalSecretEncrypted.isBlank())
                 ? globalSecretEncrypted
-                : settings.getRecaptchaSecretKeyEncrypted();
+                : null;
         return new RecaptchaContext(
                 "platform runtime config",
                 enabled,
                 encryptedSecret,
-                settings.getRecaptchaThreshold());
+                new BigDecimal("0.5"));
     }
 
     private record RecaptchaContext(

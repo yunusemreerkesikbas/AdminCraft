@@ -22,7 +22,6 @@ import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.ConfigChangeAudit;
 import com.backend.domain.entity.PlatformConfigProperty;
 import com.backend.domain.port.EncryptionServicePort;
-import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
 import com.backend.shared.constants.ValidationConstants;
@@ -85,7 +84,6 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private final ObjectMapper objectMapper;
     private final Environment environment;
     private final EncryptionServicePort encryptionService;
-    private final PlatformSettingsPort platformSettingsPort;
 
     @Override
     @Transactional(readOnly = true)
@@ -215,7 +213,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public Boolean getRecaptchaEnabled() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_ENABLED);
         if (!StringUtils.hasText(configured)) {
-            configured = resolveFallbackValue(KEY_RECAPTCHA_ENABLED);
+            configured = DEFAULT_RECAPTCHA_ENABLED;
         }
         if (!StringUtils.hasText(configured)) {
             return false;
@@ -228,7 +226,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public String getRecaptchaSiteKey() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_SITE_KEY);
         if (!StringUtils.hasText(configured)) {
-            return resolveFallbackValue(KEY_RECAPTCHA_SITE_KEY);
+            return null;
         }
         return configured.trim();
     }
@@ -238,7 +236,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public String getRecaptchaSecretKeyEncrypted() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_SECRET_KEY);
         if (!StringUtils.hasText(configured)) {
-            return resolveFallbackValue(KEY_RECAPTCHA_SECRET_KEY);
+            return null;
         }
         return configured;
     }
@@ -363,27 +361,10 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                     yield DEFAULT_FRONTEND_BASE_URL;
                 }
             }
-            case KEY_RECAPTCHA_ENABLED -> resolvePlatformRecaptchaEnabledFallback();
-            case KEY_RECAPTCHA_SITE_KEY -> resolvePlatformRecaptchaSiteKeyFallback();
-            case KEY_RECAPTCHA_SECRET_KEY -> resolvePlatformRecaptchaSecretFallback();
+            case KEY_RECAPTCHA_ENABLED -> DEFAULT_RECAPTCHA_ENABLED;
+            case KEY_RECAPTCHA_SITE_KEY, KEY_RECAPTCHA_SECRET_KEY -> null;
             default -> environment.getProperty(key);
         };
-    }
-
-    private String resolvePlatformRecaptchaEnabledFallback() {
-        var settings = platformSettingsPort.getSingleton();
-        if (settings.getRecaptchaEnabled() != null) {
-            return String.valueOf(settings.getRecaptchaEnabled());
-        }
-        return DEFAULT_RECAPTCHA_ENABLED;
-    }
-
-    private String resolvePlatformRecaptchaSiteKeyFallback() {
-        return platformSettingsPort.getSingleton().getRecaptchaSiteKey();
-    }
-
-    private String resolvePlatformRecaptchaSecretFallback() {
-        return platformSettingsPort.getSingleton().getRecaptchaSecretKeyEncrypted();
     }
 
     private boolean isSecretKey(String key) {

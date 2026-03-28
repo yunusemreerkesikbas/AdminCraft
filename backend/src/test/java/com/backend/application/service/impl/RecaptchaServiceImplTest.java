@@ -15,15 +15,11 @@ import org.springframework.web.client.RestTemplate;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.port.EncryptionServicePort;
-import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.testutil.BaseServiceTest;
 
 class RecaptchaServiceImplTest extends BaseServiceTest {
 
     private static final Long TEST_TENANT_ID_LONG = 1L;
-
-    @Mock
-    private PlatformSettingsPort platformSettingsPort;
 
     @Mock
     private GlobalRuntimeConfigService globalRuntimeConfigService;
@@ -42,7 +38,6 @@ class RecaptchaServiceImplTest extends BaseServiceTest {
     @BeforeEach
     void setUp() {
         service = new RecaptchaServiceImpl(
-                platformSettingsPort,
                 globalRuntimeConfigService,
                 configPropertyService,
                 getTenantContext(),

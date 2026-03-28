@@ -52,10 +52,7 @@ class PlatformSettingsControllerIntegrationTest {
                         "TRY",
                         "noreply@craftive.io",
                         "Craftive",
-                        TwoFactorPolicy.DISABLED,
-                        false,
-                        null,
-                        new java.math.BigDecimal("0.5")));
+                        TwoFactorPolicy.DISABLED));
 
         mockMvc.perform(get("/platform/settings"))
                 .andExpect(status().isOk())
@@ -74,21 +71,14 @@ class PlatformSettingsControllerIntegrationTest {
                         && request.defaultCurrency() == null
                         && request.emailFromAddress() == null
                         && request.emailFromName() == null
-                        && request.twoFactorPolicy() == null
-                        && request.recaptchaEnabled() == null
-                        && request.recaptchaSiteKey() == null
-                        && request.recaptchaSecretKey() == null
-                        && request.recaptchaThreshold() == null)))
+                        && request.twoFactorPolicy() == null)))
                 .thenReturn(new PlatformSettingsData(
                         "Acme Platform",
                         "TR",
                         "TRY",
                         "noreply@craftive.io",
                         "Craftive",
-                        TwoFactorPolicy.DISABLED,
-                        false,
-                        null,
-                        new java.math.BigDecimal("0.5")));
+                        TwoFactorPolicy.DISABLED));
 
         mockMvc.perform(patch("/platform/settings")
                 .contentType(MediaType.APPLICATION_JSON)

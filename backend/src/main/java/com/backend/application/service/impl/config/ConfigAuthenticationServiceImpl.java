@@ -103,6 +103,10 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
 
         Tenant tenant = resolveTenant(tenantId, null);
 
+        if (tenant.getStatus() != TenantStatus.ACTIVE) {
+            throw new InvalidTokenException("Tenant is not active");
+        }
+
         try {
             setTenantContext(tenant);
             TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
@@ -137,7 +141,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                         accessToken,
                         rotatedRefreshToken,
                         "Bearer",
-                        jwtProviderPort.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration() / 1000,
                         issuedAt,
                         user.getId(),
                         user.getEmail(),
@@ -271,7 +275,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                         accessToken,
                         refreshToken,
                         "Bearer",
-                        jwtProviderPort.getAccessTokenExpiration(),
+                        jwtProviderPort.getAccessTokenExpiration() / 1000,
                         issuedAt,
                         user.getId(),
                         user.getEmail(),
@@ -329,7 +333,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                 accessToken,
                 null,
                 "Bearer",
-                jwtProviderPort.getAccessTokenExpiration(),
+                jwtProviderPort.getAccessTokenExpiration() / 1000,
                 issuedAt,
                 admin.getId(),
                 admin.getEmail(),

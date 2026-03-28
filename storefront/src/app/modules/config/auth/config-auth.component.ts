@@ -13,7 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ApiResponse } from '@core/crud';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
@@ -48,6 +48,7 @@ export class ConfigAuthComponent {
     readonly #fb = inject(FormBuilder);
     readonly #service = inject(ConfigConsoleService);
     readonly #tenantContext = inject(TenantContextService);
+    readonly #transloco = inject(TranslocoService);
 
     stage = input<'login' | 'otp'>('login');
     challenge = input<ConfigAuthChallengeResponse | null>(null);
@@ -111,7 +112,7 @@ export class ConfigAuthComponent {
 
         const ch = this.challenge();
         if (!ch) {
-            this.errorSig.set('OTP challenge is missing');
+            this.errorSig.set(this.#transloco.translate('admin.common.errors.unexpected'));
             return;
         }
 

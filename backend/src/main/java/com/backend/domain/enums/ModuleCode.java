@@ -53,12 +53,13 @@ public enum ModuleCode {
 	}
 
 	public static boolean isValidCode(String code) {
-		try {
-			fromCode(code);
-			return true;
-		} catch (IllegalArgumentException e) {
-			return false;
+		String normalized = normalize(code);
+		for (ModuleCode module : values()) {
+			if (module.code.equals(normalized)) {
+				return true;
+			}
 		}
+		return false;
 	}
 
 	public static boolean isProvisioningSelectableCode(String code) {
