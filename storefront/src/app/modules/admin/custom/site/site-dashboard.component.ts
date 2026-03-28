@@ -3,6 +3,7 @@ import {
     Component,
     OnDestroy,
     OnInit,
+    ViewChild,
     ViewEncapsulation,
     inject,
     signal,
@@ -23,12 +24,10 @@ import {
     SiteSettingsResponseDto,
     SiteTechnicalResponse,
 } from './site.types';
-import { SpaSiteAddressComponent } from './tabs/address/site-address.component';
-import { SpaSiteGeneralComponent } from './tabs/general/site-general.component';
 import { SpaSiteOverviewComponent } from './tabs/overview/site-overview.component';
 import { SpaSiteSecurityComponent } from './tabs/security/site-security.component';
 import { SpaSiteSeoComponent } from './tabs/seo/site-seo.component';
-import { SpaSiteSocialComponent } from './tabs/social/site-social.component';
+import { SpaSiteSettingsComponent } from './tabs/settings/site-settings.component';
 import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.component';
 
 @Component({
@@ -44,9 +43,7 @@ import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.compo
         MatTabsModule,
         TranslocoModule,
         SpaSiteOverviewComponent,
-        SpaSiteGeneralComponent,
-        SpaSiteAddressComponent,
-        SpaSiteSocialComponent,
+        SpaSiteSettingsComponent,
         SpaSiteSeoComponent,
         SpaSiteTechnicalComponent,
         SpaSiteSecurityComponent,
@@ -68,6 +65,9 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     readonly tenantSig = this.#siteService.tenantSig;
     readonly modulesSig = this.#siteService.modulesSig;
     readonly loadingSig = signal<boolean>(true);
+
+    @ViewChild(SpaSiteOverviewComponent)
+    protected overviewComponent?: SpaSiteOverviewComponent;
 
     ngOnInit(): void {
         this.#loadData();
@@ -97,20 +97,16 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     this.#loadOverview();
                 }
                 break;
-            case 'general':
-            case 'address':
-            case 'social':
+            case 'settings':
             case 'seo':
                 if (!this.settingsSig()) {
                     this.#loadSettings();
                 }
                 break;
-            case 'technical':
+            case 'advanced':
                 if (!this.technicalSig()) {
                     this.#loadTechnical();
                 }
-                break;
-            case 'security':
                 if (!this.securitySig()) {
                     this.#loadSecurity();
                 }
@@ -132,6 +128,18 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
 
     refreshOverview(): void {
         this.#loadOverview();
+    }
+
+    onHeroPreview(): void {
+        this.overviewComponent?.onPreview();
+    }
+
+    onHeroEnableMaintenance(): void {
+        this.overviewComponent?.onEnableMaintenance();
+    }
+
+    onHeroDisableMaintenance(): void {
+        this.overviewComponent?.onDisableMaintenance();
     }
 
     #loadData(): void {

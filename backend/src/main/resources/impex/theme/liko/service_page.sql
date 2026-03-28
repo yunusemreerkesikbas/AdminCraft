@@ -1,4 +1,7 @@
 -- #CRAFTIVE_IMPEX
+-- Liko service page seed.
+-- Run via Admin UI /{lang}/impex after theme/liko/liko_foundation.sql and after media uploads.
+-- Seeds the service page and aligns its semantic media UIDs.
 -- Service Page — generic CMS seed (TR + EN)
 -- Content source: liko-next-js/src/pages/service/service.tsx (+ dependent components)
 -- Idempotent: safe to run multiple times.
@@ -22,7 +25,86 @@ ON DUPLICATE KEY UPDATE
   updated_at = NOW();
 
 -- ============================================================
--- 2. COMPONENTS
+-- 2. ENTRY FIELD DEFINITIONS
+-- ============================================================
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceHeroComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'overlayMediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceHeroComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServiceCardsGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'panelId', 'NUMBER', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'panelSubtitle', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'items', 'TEXTAREA', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ServicePanelComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'texts', 'TEXTAREA', NOW()
+FROM component_types ct WHERE ct.uid = 'BrandGridComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'mediaUid', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ImageMarqueeComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'altText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'ImageMarqueeComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonText', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+INSERT INTO entry_field_definitions (component_type_id, field_key, field_type, created_at)
+SELECT ct.id, 'buttonUrl', 'TEXT', NOW()
+FROM component_types ct WHERE ct.uid = 'BigTextCtaComponent'
+ON DUPLICATE KEY UPDATE field_type = VALUES(field_type);
+
+-- ============================================================
+-- 3. COMPONENTS
 -- ============================================================
 
 INSERT INTO components (
@@ -465,7 +547,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
-SELECT 'f0100001-0000-0000-0000-000000000001', 'service',
+SELECT UUID(), 'service',
   (SELECT id FROM page_templates WHERE uid = 'ContentPageTemplate'),
   'PUBLISHED', 'CONTENT', FALSE, 'INDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE
@@ -480,7 +562,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0100001-0000-0001-0000-000000000001', 'service-tr', p.id, 'TR', 'Hizmetler', 'Hizmetler', '/service', 'PUBLISHED'
+SELECT UUID(), 'service-tr', p.id, 'TR', 'Hizmetler', 'Hizmetler', '/service', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'service'
 ON DUPLICATE KEY UPDATE
@@ -490,7 +572,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0100001-0000-0001-0000-000000000002', 'service-en', p.id, 'EN', 'Services', 'Services', '/service', 'PUBLISHED'
+SELECT UUID(), 'service-en', p.id, 'EN', 'Services', 'Services', '/service', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'service'
 ON DUPLICATE KEY UPDATE
@@ -533,4 +615,154 @@ JOIN components c ON c.uid = seed.component_uid
 ON DUPLICATE KEY UPDATE
   sort_order = VALUES(sort_order),
   is_visible = VALUES(is_visible);
+
+-- Service Page Media UID Alignment — run after media uploads.
+-- Purpose: assign stable semantic media UIDs used by seed_service_content_page.sql.
+-- Safety: uses MAX(id) per original_name and no-ops when the target UID is owned by a different record.
+
+-- ============================================================
+-- 1. HERO
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'hero-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-hero-bg' AND existing.id <> m.id
+SET m.uid = 'service-hero-bg'
+WHERE m.uid != 'service-hero-bg' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'hero-shape-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-hero-shape' AND existing.id <> m.id
+SET m.uid = 'service-hero-shape'
+WHERE m.uid != 'service-hero-shape' AND existing.id IS NULL;
+
+-- ============================================================
+-- 2. SERVICE ICONS
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-icon-1.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-icon-1' AND existing.id <> m.id
+SET m.uid = 'service-icon-1'
+WHERE m.uid != 'service-icon-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-icon-2.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-icon-2' AND existing.id <> m.id
+SET m.uid = 'service-icon-2'
+WHERE m.uid != 'service-icon-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-icon-3.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-icon-3' AND existing.id <> m.id
+SET m.uid = 'service-icon-3'
+WHERE m.uid != 'service-icon-3' AND existing.id IS NULL;
+
+-- ============================================================
+-- 3. SERVICE PANELS
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-panel-img-1' AND existing.id <> m.id
+SET m.uid = 'service-panel-img-1'
+WHERE m.uid != 'service-panel-img-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-2.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-panel-img-2' AND existing.id <> m.id
+SET m.uid = 'service-panel-img-2'
+WHERE m.uid != 'service-panel-img-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-3.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-panel-img-3' AND existing.id <> m.id
+SET m.uid = 'service-panel-img-3'
+WHERE m.uid != 'service-panel-img-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'service-4.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-panel-img-4' AND existing.id <> m.id
+SET m.uid = 'service-panel-img-4'
+WHERE m.uid != 'service-panel-img-4' AND existing.id IS NULL;
+
+-- ============================================================
+-- 4. BRANDS
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-1.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-1' AND existing.id <> m.id
+SET m.uid = 'service-brand-1'
+WHERE m.uid != 'service-brand-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-2.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-2' AND existing.id <> m.id
+SET m.uid = 'service-brand-2'
+WHERE m.uid != 'service-brand-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-3.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-3' AND existing.id <> m.id
+SET m.uid = 'service-brand-3'
+WHERE m.uid != 'service-brand-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-4.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-4' AND existing.id <> m.id
+SET m.uid = 'service-brand-4'
+WHERE m.uid != 'service-brand-4' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-5.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-5' AND existing.id <> m.id
+SET m.uid = 'service-brand-5'
+WHERE m.uid != 'service-brand-5' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-6.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-6' AND existing.id <> m.id
+SET m.uid = 'service-brand-6'
+WHERE m.uid != 'service-brand-6' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-7.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-7' AND existing.id <> m.id
+SET m.uid = 'service-brand-7'
+WHERE m.uid != 'service-brand-7' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-8.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-brand-8' AND existing.id <> m.id
+SET m.uid = 'service-brand-8'
+WHERE m.uid != 'service-brand-8' AND existing.id IS NULL;
+
+-- ============================================================
+-- 5. PORT IMAGES (line image slider)
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'port-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-port-1' AND existing.id <> m.id
+SET m.uid = 'service-port-1'
+WHERE m.uid != 'service-port-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'port-2.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-port-2' AND existing.id <> m.id
+SET m.uid = 'service-port-2'
+WHERE m.uid != 'service-port-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'port-3.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-port-3' AND existing.id <> m.id
+SET m.uid = 'service-port-3'
+WHERE m.uid != 'service-port-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'port-4.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'service-port-4' AND existing.id <> m.id
+SET m.uid = 'service-port-4'
+WHERE m.uid != 'service-port-4' AND existing.id IS NULL;
 

@@ -1,6 +1,9 @@
 -- #CRAFTIVE_IMPEX
+-- Liko homepage seed.
+-- Run via Admin UI /{lang}/impex after theme/liko/liko_foundation.sql and after media uploads.
+-- Seeds homepage components, homepage slot wiring, homepage type remapping and homepage media UID alignment.
 -- Liko Home-2 Components — ImpEx seed file.
--- Run via Admin UI /{lang}/impex after R__seed_page_templates migration is applied.
+-- Run via Admin UI /{lang}/impex after `theme/liko/liko_foundation.sql` is applied.
 -- Idempotent: safe to run multiple times.
 -- UUID ranges: b1=components, b2=component_i18n, b3=entries, b4=entry_i18n
 
@@ -720,3 +723,338 @@ SELECT 'b4000048-0000-4000-8000-000000000048', 'HomepageInstagramSectionEntry7En
     NOW(), NOW(), NOW()
 FROM component_entries e WHERE e.uid = 'HomepageInstagramSectionEntry7'
 ON DUPLICATE KEY UPDATE status = VALUES(status), custom_data = VALUES(custom_data), published_at = VALUES(published_at), updated_at = NOW();
+
+-- Landing page component type migration.
+-- Run via Admin UI /{lang}/impex as part of `theme/liko/homepage.sql`.
+-- Idempotent: safe to run multiple times.
+-- Creates type-specific component types for the Liko landing page sections.
+-- Each type maps 1:1 to a frontend renderer — no styleClass dispatch needed.
+
+-- ============================================================
+-- 1. NEW COMPONENT TYPES
+-- ============================================================
+
+INSERT INTO component_types (uuid, uid, name, category, is_navigation_aware, created_at, updated_at)
+VALUES
+  (UUID(), 'HeroBannerComponent',       'Hero Banner',       'layout',  false, NOW(), NOW()),
+  (UUID(), 'AboutBannerComponent',      'About Section',     'layout',  false, NOW(), NOW()),
+  (UUID(), 'VideoSectionComponent',     'Video Section',     'media',   false, NOW(), NOW()),
+  (UUID(), 'AwardBannerComponent',      'Award Section',     'layout',  false, NOW(), NOW()),
+  (UUID(), 'ServiceCardComponent',      'Service Cards',     'layout',  false, NOW(), NOW()),
+  (UUID(), 'ProjectCardComponent',      'Project Cards',     'layout',  false, NOW(), NOW()),
+  (UUID(), 'InstagramSectionComponent', 'Instagram Section', 'social',  false, NOW(), NOW()),
+  (UUID(), 'MarqueeTextComponent',      'Marquee Text',      'content', false, NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+  name                = VALUES(name),
+  category            = VALUES(category),
+  is_navigation_aware = VALUES(is_navigation_aware),
+  updated_at          = NOW();
+
+-- ============================================================
+-- 2. MIGRATE EXISTING COMPONENTS TO NEW TYPES
+-- ============================================================
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'HeroBannerComponent')
+WHERE uid = 'HomepageHeroBanner';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'AboutBannerComponent')
+WHERE uid = 'HomepageAboutSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'VideoSectionComponent')
+WHERE uid = 'HomepageVideoSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'AwardBannerComponent')
+WHERE uid = 'HomepageAwardSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'ServiceCardComponent')
+WHERE uid = 'HomepageServiceSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'ProjectCardComponent')
+WHERE uid = 'HomepageProjectSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'InstagramSectionComponent')
+WHERE uid = 'HomepageInstagramSection';
+
+UPDATE components SET component_type_id = (SELECT id FROM component_types WHERE uid = 'MarqueeTextComponent')
+WHERE uid = 'HomepageMarqueeText';
+
+-- Liko homepage page and slot wiring.
+-- Run via Admin UI /{lang}/impex as part of `theme/liko/homepage.sql`.
+-- Idempotent: safe to run multiple times.
+-- Prerequisites:
+--   1. theme/liko/liko_foundation.sql executed
+--   2. homepage component seed in this file executed
+--   3. shared header/footer chrome exists from theme foundation
+
+-- ============================================================
+-- 1. HOMEPAGE PAGE
+-- ============================================================
+
+INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
+SELECT UUID(), 'homepage',
+    (SELECT id FROM page_templates WHERE uid = 'LandingPageTemplate'),
+    'PUBLISHED', 'LANDING', TRUE, 'INDEX_FOLLOW', NULL
+ON DUPLICATE KEY UPDATE template_id = VALUES(template_id), status = VALUES(status),
+    page_type = VALUES(page_type), is_home = VALUES(is_home), robot_tag = VALUES(robot_tag);
+
+-- ============================================================
+-- 2. PAGE_I18N (idempotent)
+-- ============================================================
+
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
+SELECT UUID(), 'homepage-tr',
+    (SELECT id FROM pages WHERE uid = 'homepage'),
+    'TR', 'Anasayfa', 'Hoş Geldiniz', '/', 'PUBLISHED'
+ON DUPLICATE KEY UPDATE name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
+
+INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
+SELECT UUID(), 'homepage-en',
+    (SELECT id FROM pages WHERE uid = 'homepage'),
+    'EN', 'Homepage', 'Welcome', '/', 'PUBLISHED'
+ON DUPLICATE KEY UPDATE name = VALUES(name), title = VALUES(title),
+    canonical_url = VALUES(canonical_url), status = VALUES(status);
+
+-- ============================================================
+-- 3. PAGE_SLOTS — generate content slots for homepage from template_slots
+--    Covers Section1-8 only. Header/Footer are handled by shared slots (Section 4).
+-- ============================================================
+
+-- Note: existing homepage-HeaderSlot / homepage-FooterSlot rows (if any) are harmless —
+-- the backend prefers shared slots over page-specific ones when both exist (Fix 2).
+INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
+SELECT UUID(), CONCAT(p.uid, '-', ts.slot_name, 'Slot'), p.id, ts.slot_name, ts.position, ts.sort_order, TRUE, FALSE, NOW(), NOW()
+FROM pages p
+JOIN template_slots ts ON ts.template_id = p.template_id
+WHERE p.uid = 'homepage'
+  AND ts.slot_name IN ('Section1','Section2','Section3','Section4','Section5','Section6','Section7','Section8')
+ON DUPLICATE KEY UPDATE position = VALUES(position), sort_order = VALUES(sort_order), updated_at = NOW();
+
+-- ============================================================
+-- 4. SHARED SLOTS (idempotent)
+-- ============================================================
+
+INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
+VALUES (UUID(), 'SharedHeaderSlot', NULL, 'Header', 'TOP', -1, TRUE, TRUE, NOW(), NOW())
+ON DUPLICATE KEY UPDATE updated_at = NOW();
+
+INSERT INTO page_slots (uuid, uid, page_id, slot_name, position, sort_order, is_active, is_shared, created_at, updated_at)
+VALUES (UUID(), 'SharedFooterSlot', NULL, 'Footer', 'BOTTOM', 99, TRUE, TRUE, NOW(), NOW())
+ON DUPLICATE KEY UPDATE updated_at = NOW();
+
+-- ============================================================
+-- 5. SLOT_COMPONENTS — wire shared Header/Footer slots
+-- ============================================================
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderMainNavigation'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderSocialLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 2, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedHeaderSlot' AND c.uid = 'StorefrontHeaderContactInfo'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterBrandBlock'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 1, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterSitemapNavigation'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 2, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterOfficeLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 3, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterNewsletter'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 4, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'SharedFooterSlot' AND c.uid = 'StorefrontFooterSocialLinks'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order), is_visible = VALUES(is_visible);
+
+-- ============================================================
+-- 6. SLOT_COMPONENTS — wire 8 homepage sections to components
+-- ============================================================
+
+-- Section1 → HomepageHeroBanner
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section1Slot' AND c.uid = 'HomepageHeroBanner'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section2 → HomepageAboutSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section2Slot' AND c.uid = 'HomepageAboutSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section3 → HomepageVideoSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section3Slot' AND c.uid = 'HomepageVideoSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section4 → HomepageServiceSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section4Slot' AND c.uid = 'HomepageServiceSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section5 → HomepageProjectSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section5Slot' AND c.uid = 'HomepageProjectSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section6 → HomepageAwardSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section6Slot' AND c.uid = 'HomepageAwardSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section7 → HomepageMarqueeText
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section7Slot' AND c.uid = 'HomepageMarqueeText'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Section8 → HomepageInstagramSection
+INSERT INTO slot_components (slot_id, component_id, sort_order, is_visible, created_at)
+SELECT ps.id, c.id, 0, TRUE, NOW()
+FROM page_slots ps, components c
+WHERE ps.uid = 'homepage-Section8Slot' AND c.uid = 'HomepageInstagramSection'
+ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order);
+
+-- Homepage media UID alignment.
+-- Run via Admin UI /{lang}/impex as part of `theme/liko/homepage.sql` after media uploads.
+-- Purpose: Assigns semantic UIDs to uploaded media so component mediaUid
+--          references (e.g. 'homepage-hero-bg') resolve to the correct files.
+-- Idempotent: safe to run multiple times (uses ON DUPLICATE KEY / WHERE original_name).
+
+-- ============================================================
+-- 1. HERO BANNER
+-- ============================================================
+UPDATE media SET uid = 'homepage-hero-bg'
+WHERE original_name = 'hero-bg-1.jpg' AND uid != 'homepage-hero-bg';
+
+-- ============================================================
+-- 2. ABOUT SECTION
+--    Entry1 = main left image (ab-1)
+--    Entry2 = inner/overlay image (ab-2)
+--    Entry3 = right/side image   (ab-3)
+-- ============================================================
+UPDATE media SET uid = 'homepage-about-1'
+WHERE original_name = 'ab-1.jpg' AND uid != 'homepage-about-1';
+
+UPDATE media SET uid = 'homepage-about-2'
+WHERE original_name = 'ab-2.jpg' AND uid != 'homepage-about-2';
+
+UPDATE media SET uid = 'homepage-about-3'
+WHERE original_name = 'ab-3.jpg' AND uid != 'homepage-about-3';
+
+-- ============================================================
+-- 3. PROJECTS (7 images)
+-- ============================================================
+UPDATE media SET uid = 'homepage-project-1'
+WHERE original_name = 'project-1.jpg' AND uid != 'homepage-project-1';
+
+UPDATE media SET uid = 'homepage-project-2'
+WHERE original_name = 'project-2.jpg' AND uid != 'homepage-project-2';
+
+UPDATE media SET uid = 'homepage-project-3'
+WHERE original_name = 'project-3.jpg' AND uid != 'homepage-project-3';
+
+UPDATE media SET uid = 'homepage-project-4'
+WHERE original_name = 'project-4.jpg' AND uid != 'homepage-project-4';
+
+UPDATE media SET uid = 'homepage-project-5'
+WHERE original_name = 'project-5.jpg' AND uid != 'homepage-project-5';
+
+UPDATE media SET uid = 'homepage-project-6'
+WHERE original_name = 'project-6.jpg' AND uid != 'homepage-project-6';
+
+UPDATE media SET uid = 'homepage-project-7'
+WHERE original_name = 'project-7.jpg' AND uid != 'homepage-project-7';
+
+-- ============================================================
+-- 4. AWARD SECTION
+-- ============================================================
+UPDATE media SET uid = 'homepage-award-1'
+WHERE original_name = 'award-1.png' AND uid != 'homepage-award-1';
+
+-- ============================================================
+-- 5. INSTAGRAM SECTION (6 uploaded - 7th slot will remain empty)
+--    insta-1    = main large image
+--    insta-2    = floating
+--    insta-inner-3/5/6/7 = floating (insta-inner-4 not uploaded)
+-- ============================================================
+UPDATE media SET uid = 'homepage-instagram-1'
+WHERE original_name = 'insta-1.jpg' AND uid != 'homepage-instagram-1';
+
+UPDATE media SET uid = 'homepage-instagram-2'
+WHERE original_name = 'insta-2.jpg' AND uid != 'homepage-instagram-2';
+
+UPDATE media SET uid = 'homepage-instagram-3'
+WHERE original_name = 'insta-inner-3.jpg' AND uid != 'homepage-instagram-3';
+
+UPDATE media SET uid = 'homepage-instagram-4'
+WHERE original_name = 'insta-inner-5.jpg' AND uid != 'homepage-instagram-4';
+
+UPDATE media SET uid = 'homepage-instagram-5'
+WHERE original_name = 'insta-inner-6.jpg' AND uid != 'homepage-instagram-5';
+
+UPDATE media SET uid = 'homepage-instagram-6'
+WHERE original_name = 'insta-inner-7.jpg' AND uid != 'homepage-instagram-6';
+
+-- ============================================================
+-- 6. SITE LOGOS
+--    logo.png       = dark-colored logo (used on light backgrounds → logoDarkUrl)
+--    logo-white.png = white/light logo  (used on dark backgrounds  → logoUrl)
+-- ============================================================
+UPDATE media SET uid = 'site-logo-dark'
+WHERE original_name = 'logo.png' AND uid != 'site-logo-dark';
+
+UPDATE media SET uid = 'site-logo-light'
+WHERE original_name = 'logo-white.png' AND uid != 'site-logo-light';
+
+UPDATE sites SET
+    logo_media_uid      = (SELECT uid FROM media WHERE original_name = 'logo-white.png' LIMIT 1),
+    logo_dark_media_uid = (SELECT uid FROM media WHERE original_name = 'logo.png' LIMIT 1)
+WHERE logo_media_uid IS NULL OR logo_dark_media_uid IS NULL;
+
+-- ============================================================
+-- MISSING MEDIA (upload required separately):
+--   homepage-video-poster  → video poster image (any format)
+--   homepage-service-icon-1 through -4 → 4 service icon images (SVG/PNG)
+--   homepage-instagram-7   → 7th instagram floating image
+-- ============================================================
+

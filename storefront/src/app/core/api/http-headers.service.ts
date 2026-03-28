@@ -116,7 +116,7 @@ export class HttpHeadersService {
 
     private getAccessToken(): string | null {
         try {
-            return localStorage.getItem('accessToken');
+            return sessionStorage.getItem('accessToken');
         } catch {
             return null;
         }
@@ -129,7 +129,7 @@ export class HttpHeadersService {
 
     private addUserHeaders(headers: HttpHeaders): HttpHeaders {
         try {
-            const userId = localStorage.getItem('userId');
+            const userId = sessionStorage.getItem('userId');
             if (userId) {
                 headers = headers.set('X-User-ID', userId);
             }

@@ -202,55 +202,81 @@ Scripts have no file-based registration. Any valid SQL can be submitted. For rep
 
 ImpEx scripts for demo/content data are stored under `backend/src/main/resources/impex/`. These are **not executed automatically** — they serve as versioned reference documents that an admin can paste into the UI when setting up a new tenant with sample data.
 
-### Execution order (when seeding a fresh tenant — default theme example content)
+### Ownership model
+
+Fresh tenant databases start with **empty theme-owned CMS data**. The following tables are populated only when an admin runs the relevant ImpEx scripts for the chosen theme:
+
+- `page_templates`
+- `template_slots`
+- `pages`
+- `page_slots`
+- `components`
+- `slot_components`
+- theme navigation/chrome content
+
+The `base/` folder now contains only theme-neutral catalogs and optional non-theme sample data. The `theme/liko/` folder owns all Liko CMS structure and content.
+
+### Execution order (fresh tenant — Liko example)
 
 ```text
-1. base_site_settings.sql          — default site settings and i18n
-2. base_media_formats.sql          — system format presets (THUMBNAIL, SMALL, etc.)
-3. base_component_types.sql        — component type catalog (Banner, Image, etc.)
-4. base_entry_field_definitions.sql— field schema per component type
-5. base_product_types.sql          — product types and attribute definitions
-6. base_page_templates.sql         — system page templates and slots
-7. theme_liko_components.sql       — landing page components (Homepage*), i18n, entries, entry i18n
-8. theme_liko_chrome_components.sql— shared Header/Footer components, Home-2 chrome copy, i18n, entries
-9. theme_liko_pages_and_slots.sql  — homepage, page_i18n, page_slots, slot_components (Section1-8), shared Header/Footer slot wiring
-10. base_pages_and_slots.sql       — productPage, categoryPage, searchResultsPage, page_i18n, page_slots, shared slots (no slot_components)
-11. theme_liko_about_content_page.sql— (optional) About page at /about-us: ContentPageTemplate, About* components, page + slots + slot_components
-12. theme_liko_navigation.sql      — nav nodes, entries, i18n, and navigation bindings for header/footer chrome components
-13. [upload media via Admin UI]    — upload all image/video assets in the Media Library before running step 14
-14. theme_liko_media_uids.sql     — assigns semantic UIDs to uploaded media so component mediaUid references resolve correctly (see note below)
-15. base_mail_marketing_tenant.sql (optional) — mail templates, subscribers, template subscriptions (`source`, `preferred_language`)
+1. base/base_site_settings.sql           — default site settings and i18n
+2. base/base_media_formats.sql           — system media format presets
+3. base/base_component_types.sql         — reusable component type catalog
+4. base/base_entry_field_definitions.sql — reusable field schema per base component type
+5. base/base_product_types.sql           — product types and attribute definitions
+6. theme/liko/liko_foundation.sql        — theme-owned page templates, template slots, shared chrome components, navigation
+7. [upload media via Admin UI]           — upload all assets referenced by the selected theme pages
+8. theme/liko/homepage.sql               — homepage components, type remapping, slot wiring, homepage media UID alignment, shared logo UIDs
+9. theme/liko/about_page.sql             — optional About page + about media UID alignment
+10. theme/liko/service_page.sql          — optional Service page + service-specific component types/field definitions + media UID alignment
+11. base/base_mail_marketing_tenant.sql  — optional tenant mail marketing sample data
 ```
 
-> **Media UID alignment (step 13):** Component entry `custom_data` fields reference media by semantic UIDs like `homepage-hero-bg`. When media is uploaded via the Media Library, auto-generated UIDs (`cmsitem_*`) are assigned. `theme_liko_media_uids.sql` corrects this by matching on `original_name` and updating each record's UID to the expected semantic value. It also sets `sites.logo_media_uid` / `sites.logo_dark_media_uid`. Run this script **after** uploading all assets. It is idempotent.
+Platform sample data remains separate:
 
-`theme_liko_chrome_components.sql` maps the header/footer copy from `liko-next-js/src/pages/homes/home-2.tsx` into standard CMS component data.
+- `base/base_mail_marketing_platform.sql` — platform DB sample data, run only from Platform → ImpEx with no tenant selected
 
-`theme_liko_pages_and_slots.sql` depends on components from steps 3-4 and on `base_page_templates.sql`.
+### Folder layout
 
-`base_pages_and_slots.sql` creates pages and page_slots but no slot_components; it does not depend on Liko components.
+- `backend/src/main/resources/impex/base/`
+  - Theme-neutral catalogs and optional shared sample data
+- `backend/src/main/resources/impex/theme/liko/`
+  - Theme-owned templates, chrome, navigation, page data, slot wiring and semantic media UID alignment
 
-**About content page (ContentPageTemplate):** `theme_liko_about_content_page.sql` seeds a generic About page at `/about-us` using `ContentPageTemplate` (slots: TopContent, BodyContent, SideContent). It creates components (AboutHeroComponent, AboutStoryComponent, AboutTeamSection, AboutStatsSection, AboutBrandsStrip, AboutAwardsBlock), their i18n and entries, the page `about-us`, page_i18n with `canonical_url = '/about-us'`, page_slots, and slot_components. Run it after `base_page_templates.sql`; it does not depend on Liko landing or chrome seeds. Component entries reference semantic media UIDs (e.g. `about-hero-bg`, `about-team-1`); optionally run a separate media-UID alignment script after uploading assets, or bind media via the Admin UI.
+### Theme script responsibilities
 
-`base_mail_marketing_tenant.sql` requires the tenant module `mail_marketing` to be provisioned.
+- `theme/liko/liko_foundation.sql`
+  - Creates all theme-owned page templates and template slots
+  - Seeds shared storefront chrome components
+  - Seeds navigation nodes, entries and navigation bindings
+- `theme/liko/homepage.sql`
+  - Seeds homepage components, i18n, entries and entry i18n
+  - Migrates homepage components from generic base types to theme-specific renderer types
+  - Creates homepage page, page_i18n, page_slots, shared header/footer slots and slot bindings
+  - Aligns homepage media UIDs and updates `sites.logo_media_uid` / `sites.logo_dark_media_uid`
+- `theme/liko/about_page.sql`
+  - Seeds the `/about-us` page using `ContentPageTemplate`
+  - Includes semantic media UID alignment for about assets
+- `theme/liko/service_page.sql`
+  - Seeds the `/service` page using `ContentPageTemplate`
+  - Owns service-specific component types and `entry_field_definitions`
+  - Includes semantic media UID alignment for service assets
 
-### Storefront chrome seeding
+### Media UID alignment
 
-The CMS-driven storefront chrome uses shared slots plus standard CMS components. The reference scripts are:
+Component entry `custom_data` fields reference semantic UIDs like `homepage-hero-bg`, `about-hero-bg`, and `service-hero-bg`. Media uploads still generate runtime UIDs like `cmsitem_########`, so page scripts that include media UID alignment must be executed **after the related files are uploaded**.
 
-- `theme_liko_chrome_components.sql`
-  - Creates `StorefrontHeaderMainNavigation`, `StorefrontHeaderSocialLinks`, `StorefrontHeaderContactInfo`
-  - Creates `StorefrontFooterBrandBlock`, `StorefrontFooterSitemapNavigation`, `StorefrontFooterOfficeLinks`, `StorefrontFooterNewsletter`, `StorefrontFooterSocialLinks`
-  - Seeds the Home-2 header/footer text, links, newsletter placeholder, and social links through `component_i18n` and `component_entry_i18n`
-- `theme_liko_pages_and_slots.sql`
-  - Binds the shared `Header` slot (`SharedHeaderSlot`) and shared `Footer` slot (`SharedFooterSlot`) to those components
-- `theme_liko_navigation.sql`
-  - Creates `LandingMainNavNode` and `LandingFooterNavNode`
-  - Attaches those nodes to the navigation-aware chrome components with `UPDATE components ... navigation_node_id = ...`
+These alignment statements are idempotent:
+
+- homepage logo and media mappings live in `theme/liko/homepage.sql`
+- about page mappings live in `theme/liko/about_page.sql`
+- service page mappings live in `theme/liko/service_page.sql`
+
+`base/base_mail_marketing_tenant.sql` still requires the tenant module `mail_marketing` to be provisioned.
 
 ### Platform reference script
 
-`base_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
+`base/base_mail_marketing_platform.sql` is version-controlled under `backend/src/main/resources/impex/` for platform DB sample data. **SUPER_ADMIN** can execute it via the Admin UI: open **Platform → ImpEx**, do **not** select a tenant, paste the script and run. The backend runs it against the platform database.
 
 ### What remains in Flyway (R__ repeatable migrations)
 
@@ -261,4 +287,4 @@ These seeds are structural / system data and still run automatically via Flyway:
 | `platform/R__seed_modules.sql` | Module catalog |
 | `platform/R__seed_platform_admin.sql` | Initial platform admin user |
 
-Content and schema seeds (like roles/settings, formats, types, page templates, components, navigation) are managed via the `impex/` directory and applied on-demand.
+Content and theme-owned schema data (site settings, formats, component catalogs, page templates, components, navigation and sample pages) are managed via the `impex/` directory and applied on-demand.

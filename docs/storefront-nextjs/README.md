@@ -64,6 +64,10 @@ Maintenance mode is enforced at the edge in [`proxy.ts`](../../storefront-nextjs
 - `/_next/*`, `/api/*`, `/cms-media/*`, `/robots.txt`, `/sitemap.xml`, and `/{lang}/maintenance` are excluded.
 - Fail-open: if the CMS call fails, no redirect is applied.
 
+### Hostname validation
+
+`proxy.ts` also enforces hostname isolation when `TENANT_HOSTNAME` env var is set. Requests whose `host` header does not match `TENANT_HOSTNAME` receive HTTP 404 immediately — before any CMS call. This prevents wildcard DNS rules (e.g. `*.craftive.io → same server`) from serving one tenant's storefront for another tenant's subdomain. Leave `TENANT_HOSTNAME` unset in local dev.
+
 The maintenance page itself is rendered in the catch-all route:
 `app/[lang]/[[...slug]]/page.tsx`.
 
@@ -170,19 +174,19 @@ Each renderer calls a `buildXxxModel` function from `components/theme/builders.t
 
 #### Import / seed order
 
-The landing page depends on both template-slot migration and tenant-scoped content imports.
+The landing page depends on tenant-scoped content imports. Theme-owned page templates, slots and components are not preloaded on tenant creation.
 
-1. Restart backend so `backend/src/main/resources/db/tenant/pagebuilder/R__seed_page_templates.sql` is applied by Flyway.
-2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen (example landing page components, initially typed as generic `SimpleBannerComponent` / `FeatureCardComponent`).
-3. Import `backend/src/main/resources/impex/seed_landing_component_types.sql` from the Admin UI ImpEx screen (creates `HeroBannerComponent`, `AboutBannerComponent`, `VideoSectionComponent`, `AwardBannerComponent`, `ServiceCardComponent`, `ProjectCardComponent`, `InstagramSectionComponent`, `MarqueeTextComponent` and **migrates the 8 homepage components** to their type-specific renderers). Must run after step 2.
-4. Import `backend/src/main/resources/impex/seed_liko_chrome_components.sql` from the Admin UI ImpEx screen (shared header/footer layout components + Home-2 layout copy).
-5. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen (homepage, shared header/footer slots, slot-component bindings).
-6. Import `backend/src/main/resources/impex/seed_pages_and_slots.sql` if the tenant also needs the default content/category/product/search pages.
-7. Import `backend/src/main/resources/impex/seed_about_content_page.sql` (optional) if the tenant should have a sample About page at `/{lang}/about-us` using ContentPageTemplate (TopContent, BodyContent, SideContent slots). Only requires `R__seed_page_templates`; does not depend on Liko landing or shared layout seeds.
-8. Import `backend/src/main/resources/impex/seed_navigation.sql` to create `LandingMainNavNode` and `LandingFooterNavNode`, then bind them to the shared layout navigation components.
-9. Upload image/video assets in Media Library for the tenant.
-10. Import `backend/src/main/resources/impex/seed_liko_media_uids.sql` to assign semantic UIDs (`homepage-hero-bg`, `homepage-project-1`, etc.) to the uploaded files. This aligns media with the `mediaUid` references embedded in component entry `custom_data`. See [Media UID alignment](#media-uid-alignment) below.
-11. For assets not covered by the seed (video poster, service icons), either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
+1. Import `backend/src/main/resources/impex/base/base_site_settings.sql`.
+2. Import `backend/src/main/resources/impex/base/base_media_formats.sql`.
+3. Import `backend/src/main/resources/impex/base/base_component_types.sql`.
+4. Import `backend/src/main/resources/impex/base/base_entry_field_definitions.sql`.
+5. Import `backend/src/main/resources/impex/base/base_product_types.sql`.
+6. Import `backend/src/main/resources/impex/theme/liko/liko_foundation.sql` (theme-owned page templates, template slots, shared header/footer chrome and navigation data).
+7. Upload image/video assets in Media Library for the tenant.
+8. Import `backend/src/main/resources/impex/theme/liko/homepage.sql` (homepage components, homepage slot wiring, homepage component type migration and homepage media UID alignment).
+9. Import `backend/src/main/resources/impex/theme/liko/about_page.sql` (optional) if the tenant should have a sample About page at `/{lang}/about-us`.
+10. Import `backend/src/main/resources/impex/theme/liko/service_page.sql` (optional) if the tenant should have a sample Service page at `/{lang}/service`.
+11. For assets not covered by the seed, either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
 
 If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
 
@@ -530,7 +534,7 @@ When `component.searchBox === true`, a `SearchOverlay` button is rendered alongs
 
 Component entries store media references as `mediaUid` strings in `component_entry_i18n.custom_data` (e.g. `{"mediaUid": "homepage-hero-bg"}`). The storefront batch-fetches these via `GET /api/cms/media?uids=homepage-hero-bg&...`. When media is uploaded through the admin Media Library, the system assigns auto-generated UIDs (`cmsitem_26597598`). These do not match the semantic UIDs the component seed expects, so images do not appear on the storefront.
 
-**Solution:** `seed_liko_media_uids.sql` updates media record UIDs to match the semantic names the component entries reference, identified by `original_name`:
+**Solution:** `theme/liko/homepage.sql` updates media record UIDs to match the semantic names the homepage component entries reference, identified by `original_name`:
 
 | Semantic UID | `original_name` | Section |
 |---|---|---|

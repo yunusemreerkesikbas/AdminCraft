@@ -1,10 +1,27 @@
-<div class="max-w-3xl">
-    <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="mb-6 flex justify-end">
+<div class="mx-auto w-full max-w-5xl">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <div
+            class="flex flex-col gap-4 rounded-[18px] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.48)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        >
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-[12px] bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:code-bracket"
+                    ></mat-icon>
+                </div>
+                <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.technical.searchEngine' | transloco }}
+                </h3>
+            </div>
+
             <button
                 mat-flat-button
                 color="primary"
                 type="submit"
+                class="min-h-12 rounded-[12px] px-5"
                 [disabled]="saving"
             >
                 @if (saving) {
@@ -17,22 +34,37 @@
             </button>
         </div>
 
-        <!-- Search Engine Settings -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.technical.searchEngine' | transloco }}
-            </h3>
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] sm:p-6"
+        >
+            <div
+                class="mb-6 flex items-center gap-3 border-b border-slate-200 pb-5"
+            >
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-100"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:globe-alt"
+                    ></mat-icon>
+                </div>
+                <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.technical.searchEngine' | transloco }}
+                </h3>
+            </div>
 
             <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium">
+                <div
+                    class="flex items-center justify-between gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
+                >
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-900">
                             {{
                                 'admin.site.dashboard.technical.indexingEnabled'
                                     | transloco
                             }}
                         </p>
-                        <p class="text-secondary text-sm">
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
                             {{
                                 'admin.site.dashboard.technical.indexingEnabledDesc'
                                     | transloco
@@ -42,15 +74,17 @@
                     <spa-toggle formControlName="indexingEnabled"></spa-toggle>
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium">
+                <div
+                    class="flex items-center justify-between gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
+                >
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-900">
                             {{
                                 'admin.site.dashboard.technical.sitemapEnabled'
                                     | transloco
                             }}
                         </p>
-                        <p class="text-secondary text-sm">
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
                             {{
                                 'admin.site.dashboard.technical.sitemapEnabledDesc'
                                     | transloco
@@ -60,39 +94,58 @@
                     <spa-toggle formControlName="sitemapEnabled"></spa-toggle>
                 </div>
 
-                <spa-textarea
-                    label="robots.txt"
-                    [labelTooltip]="'robotsTxt'"
-                    formControlName="robotsTxt"
-                    [rows]="6"
-                    styleClasses="font-mono text-sm"
-                    placeholder="User-agent: *&#10;Allow: /&#10;&#10;Sitemap: /sitemap.xml"
-                    [hint]="
-                        'admin.site.dashboard.technical.robotsTxtHint'
-                            | transloco
-                    "
-                    [showErrors]="true"
+                <div
+                    class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
                 >
-                </spa-textarea>
+                    <spa-textarea
+                        label="robots.txt"
+                        [labelTooltip]="'robotsTxt'"
+                        formControlName="robotsTxt"
+                        [rows]="6"
+                        styleClasses="font-mono text-sm"
+                        placeholder="User-agent: *&#10;Allow: /&#10;&#10;Sitemap: /sitemap.xml"
+                        [hint]="
+                            'admin.site.dashboard.technical.robotsTxtHint'
+                                | transloco
+                        "
+                        [showErrors]="true"
+                    >
+                    </spa-textarea>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Cookie Consent -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.technical.cookieConsent' | transloco }}
-            </h3>
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] sm:p-6"
+        >
+            <div
+                class="mb-6 flex items-center gap-3 border-b border-slate-200 pb-5"
+            >
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-amber-50 text-amber-600 ring-1 ring-amber-100"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:shield-check"
+                    ></mat-icon>
+                </div>
+                <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.technical.cookieConsent' | transloco }}
+                </h3>
+            </div>
 
             <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium">
+                <div
+                    class="flex items-center justify-between gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
+                >
+                    <div class="min-w-0">
+                        <p class="font-semibold text-slate-900">
                             {{
                                 'admin.site.dashboard.technical.cookieConsentEnabled'
                                     | transloco
                             }}
                         </p>
-                        <p class="text-secondary text-sm">
+                        <p class="mt-1 text-sm leading-6 text-slate-500">
                             {{
                                 'admin.site.dashboard.technical.cookieConsentEnabledDesc'
                                     | transloco
@@ -105,23 +158,27 @@
                 </div>
 
                 @if (form.get('cookieConsentEnabled')?.value) {
-                    <spa-textarea
-                        [label]="
-                            'admin.site.dashboard.technical.cookieConsentText'
-                                | transloco
-                        "
-                        [labelTooltip]="'cookieConsentText'"
-                        formControlName="cookieConsentText"
-                        [rows]="3"
-                        [showErrors]="true"
-                        [placeholder]="
-                            'admin.site.dashboard.placeholders.cookieConsentText'
-                                | transloco
-                        "
+                    <div
+                        class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
                     >
-                    </spa-textarea>
+                        <spa-textarea
+                            [label]="
+                                'admin.site.dashboard.technical.cookieConsentText'
+                                    | transloco
+                            "
+                            [labelTooltip]="'cookieConsentText'"
+                            formControlName="cookieConsentText"
+                            [rows]="3"
+                            [showErrors]="true"
+                            [placeholder]="
+                                'admin.site.dashboard.placeholders.cookieConsentText'
+                                    | transloco
+                            "
+                        >
+                        </spa-textarea>
+                    </div>
                 }
             </div>
-        </div>
+        </section>
     </form>
 </div>

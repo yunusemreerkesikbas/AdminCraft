@@ -4,21 +4,191 @@
 }
 
 .spa-site-dashboard {
-    &__tabs {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8fafc 0%, #eff4ff 44%, #f8fafc 100%);
 
-        &::-webkit-scrollbar {
-            height: 4px;
+    &__hero {
+        position: relative;
+    }
+
+    &__hero::before,
+    &__hero::after {
+        content: '';
+        position: absolute;
+        inset: auto;
+        pointer-events: none;
+        border-radius: 9999px;
+        filter: blur(80px);
+        opacity: 0.55;
+    }
+
+    &__hero::before {
+        top: -4rem;
+        left: -3rem;
+        width: 14rem;
+        height: 14rem;
+        background: rgba(59, 130, 246, 0.22);
+    }
+
+    &__hero::after {
+        right: 0;
+        top: 1rem;
+        width: 16rem;
+        height: 16rem;
+        background: rgba(99, 102, 241, 0.18);
+    }
+
+    &__tabs {
+        overflow: hidden;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 36px 90px -58px rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(16px);
+    }
+
+    &__tab-group {
+        .mat-mdc-tab-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 250, 252, 0.92));
         }
 
-        &::-webkit-scrollbar-track {
+        .mat-mdc-tab-header-pagination {
+            display: none;
+        }
+
+        .mat-mdc-tab-label-container {
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+        }
+
+        .mat-mdc-tab-label-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .mat-mdc-tab-label-container::-webkit-scrollbar-track {
             background: transparent;
         }
 
-        &::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 2px;
+        .mat-mdc-tab-label-container::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.55);
+            border-radius: 9999px;
         }
+
+        .mat-mdc-tab-labels {
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .mat-mdc-tab {
+            padding: 0;
+            opacity: 1;
+            min-width: max-content;
+        }
+
+        .mdc-tab {
+            min-width: max-content;
+            min-height: 3.25rem;
+            padding: 0 1rem;
+            border: 1px solid transparent;
+            border-radius: 9999px;
+            color: #64748b;
+            background: transparent;
+            transition:
+                background-color 180ms ease,
+                border-color 180ms ease,
+                color 180ms ease,
+                box-shadow 180ms ease,
+                transform 180ms ease;
+        }
+
+        .mdc-tab:hover {
+            border-color: rgba(203, 213, 225, 0.9);
+            background: rgba(255, 255, 255, 0.8);
+            color: #0f172a;
+        }
+
+        .mdc-tab--active {
+            border-color: rgba(129, 140, 248, 0.24);
+            background:
+                linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(59, 130, 246, 0.06));
+            box-shadow: 0 16px 30px -24px rgba(79, 70, 229, 0.85);
+            color: #312e81;
+        }
+
+        .mdc-tab__content {
+            gap: 0.65rem;
+        }
+
+        .mdc-tab__text-label {
+            color: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .mdc-tab-indicator {
+            display: none;
+        }
+
+        .mat-mdc-tab-body-wrapper,
+        .mat-mdc-tab-body-content {
+            overflow: visible;
+        }
+    }
+
+    &__tab-panel {
+        min-height: 32rem;
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 1023px) {
+    .spa-site-dashboard {
+        &__tab-group {
+            .mat-mdc-tab-header {
+                padding-inline: 0.75rem;
+            }
+        }
+
+        &__tab-panel {
+            padding: 1rem;
+        }
+    }
+}
+
+@media (max-width: 639px) {
+    .spa-site-dashboard {
+        &__tabs {
+            border-radius: 1.5rem;
+        }
+
+        &__tab-group {
+            .mdc-tab {
+                min-height: 3rem;
+                padding-inline: 0.85rem;
+            }
+
+            .mdc-tab__text-label {
+                font-size: 0.82rem;
+            }
+        }
+
+        &__tab-panel {
+            padding: 0.85rem;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spa-site-dashboard__tab-group .mdc-tab,
+    .spa-site-dashboard__tab-group .mdc-tab:hover {
+        transition: none;
+        transform: none;
     }
 }
