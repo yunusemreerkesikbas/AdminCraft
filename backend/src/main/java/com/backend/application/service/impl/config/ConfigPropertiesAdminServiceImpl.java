@@ -1,7 +1,10 @@
 package com.backend.application.service.impl.config;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.MDC;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,6 +36,14 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     private static final String AUDIT_SCOPE = "CONFIG_PROPERTIES";
     private static final String AUDIT_ACTION_UPSERT = "UPSERT";
     private static final String AUDIT_ACTION_DELETE = "DELETE";
+    private static final String KEY_RECAPTCHA_ENABLED = "security.recaptcha.enabled";
+    private static final String KEY_RECAPTCHA_SITE_KEY = "security.recaptcha.site_key";
+    private static final String KEY_RECAPTCHA_SECRET_KEY = "security.recaptcha.secret_key";
+    private static final List<String> MANAGED_KEYS = List.of(
+            KEY_RECAPTCHA_ENABLED,
+            KEY_RECAPTCHA_SITE_KEY,
+            KEY_RECAPTCHA_SECRET_KEY);
+    private static final Set<String> MANAGED_KEYS_SET = Set.copyOf(MANAGED_KEYS);
 
     private final TenantRepository tenantRepository;
     private final TenantDbExecutor tenantDbExecutor;
@@ -44,17 +55,45 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     @Transactional(readOnly = true)
     public List<ConfigPropertyResult> listProperties(ConfigPrincipal principal) {
         Tenant tenant = resolveTargetTenant(principal);
-        List<ConfigProperty> properties = configPropertyService.findAll(tenant.getId(), tenant.getDatabaseName());
-        return properties.stream().map(this::toResult).toList();
+        return tenantDbExecutor.withTenant(tenant.getId(), tenant.getDatabaseName(), () -> {
+            Map<String, ConfigProperty> overridesByKey = configPropertyService.findAll(tenant.getId(), tenant.getDatabaseName())
+                    .stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                            prop -> prop.getConfigKey().trim().toLowerCase(),
+                            prop -> prop,
+                            (left, right) -> left,
+                            LinkedHashMap::new));
+
+            List<ConfigPropertyResult> results = new ArrayList<>();
+            MANAGED_KEYS.forEach(key -> results.add(toManagedResult(key, overridesByKey.remove(key))));
+            overridesByKey.values().stream()
+                    .sorted(java.util.Comparator.comparing(ConfigProperty::getConfigKey, String.CASE_INSENSITIVE_ORDER))
+                    .map(this::toResult)
+                    .forEach(results::add);
+            return results;
+        });
     }
 
     @Override
     @Transactional(readOnly = true)
     public ConfigPropertyResult getProperty(ConfigPrincipal principal, String key) {
         Tenant tenant = resolveTargetTenant(principal);
-        return configPropertyService.find(tenant.getId(), tenant.getDatabaseName(), key)
-                .map(this::toResult)
-                .orElseThrow(() -> new IllegalArgumentException("Property not found: " + key));
+        String normalizedKey = normalizeKey(key);
+
+        return tenantDbExecutor.withTenant(tenant.getId(), tenant.getDatabaseName(), () -> {
+            ConfigProperty override = configPropertyService.find(tenant.getId(), tenant.getDatabaseName(), normalizedKey)
+                    .orElse(null);
+
+            if (MANAGED_KEYS_SET.contains(normalizedKey)) {
+                return toManagedResult(normalizedKey, override);
+            }
+
+            if (override == null) {
+                throw new IllegalArgumentException("Property not found: " + key);
+            }
+
+            return toResult(override);
+        });
     }
 
     @Override
@@ -130,5 +169,40 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
                 Boolean.TRUE.equals(prop.getSecret()),
                 prop.getUpdatedAt(),
                 prop.getUpdatedBy());
+    }
+
+    private ConfigPropertyResult toManagedResult(String key, ConfigProperty override) {
+        if (override != null) {
+            return toResult(override);
+        }
+
+        return switch (key) {
+            case KEY_RECAPTCHA_ENABLED -> new ConfigPropertyResult(
+                    key,
+                    "false",
+                    false,
+                    null,
+                    null);
+            case KEY_RECAPTCHA_SITE_KEY -> new ConfigPropertyResult(
+                    key,
+                    null,
+                    false,
+                    null,
+                    null);
+            case KEY_RECAPTCHA_SECRET_KEY -> new ConfigPropertyResult(
+                    key,
+                    null,
+                    true,
+                    null,
+                    null);
+            default -> throw new IllegalArgumentException("Unsupported managed property key: " + key);
+        };
+    }
+
+    private String normalizeKey(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("Property key is required");
+        }
+        return key.trim().toLowerCase();
     }
 }

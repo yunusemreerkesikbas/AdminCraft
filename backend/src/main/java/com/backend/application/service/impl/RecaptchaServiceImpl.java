@@ -1,13 +1,12 @@
 package com.backend.application.service.impl;
 
 import com.backend.application.service.RecaptchaService;
+import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
-import com.backend.domain.entity.Site;
 import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.exception.RecaptchaVerificationException;
-import com.backend.domain.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +27,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RecaptchaServiceImpl implements RecaptchaService {
 
-    private final SiteRepository siteRepository;
+    private static final String KEY_RECAPTCHA_ENABLED = "security.recaptcha.enabled";
+    private static final String KEY_RECAPTCHA_SITE_KEY = "security.recaptcha.site_key";
+    private static final String KEY_RECAPTCHA_SECRET_KEY = "security.recaptcha.secret_key";
+
     private final PlatformSettingsPort platformSettings;
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
+    private final ConfigPropertyService configPropertyService;
     private final TenantContextPort tenantContext;
     private final EncryptionServicePort encryptionService;
     private final RestTemplate restTemplate;
@@ -144,17 +147,27 @@ public class RecaptchaServiceImpl implements RecaptchaService {
 
     private RecaptchaContext resolveRecaptchaContext() {
         if (tenantContext.isSet()) {
-            var siteOpt = siteRepository.findFirstByOrderByIdAsc();
-            if (siteOpt.isEmpty()) {
-                log.debug("No site configured for tenant, reCAPTCHA treated as disabled");
-                return new RecaptchaContext("tenant (no site)", false, null, new BigDecimal("0.5"));
+            String tenantIdRaw = tenantContext.getTenantId();
+            String tenantDbName = tenantContext.getTenantDbName();
+            if (tenantIdRaw == null || tenantDbName == null || tenantDbName.isBlank()) {
+                log.debug("Tenant context is missing identifiers, reCAPTCHA treated as disabled");
+                return new RecaptchaContext("tenant (missing context)", false, null, new BigDecimal("0.5"));
             }
-            Site site = siteOpt.get();
+
+            Long tenantId = Long.parseLong(tenantIdRaw);
+            boolean enabled = configPropertyService.getBoolean(
+                    tenantId,
+                    tenantDbName,
+                    KEY_RECAPTCHA_ENABLED,
+                    false);
+            String encryptedSecret = configPropertyService.findRaw(tenantId, tenantDbName, KEY_RECAPTCHA_SECRET_KEY)
+                    .filter(value -> value != null && !value.isBlank())
+                    .orElse(null);
             return new RecaptchaContext(
-                    "tenant siteId=" + site.getId(),
-                    Boolean.TRUE.equals(site.getRecaptchaEnabled()),
-                    site.getRecaptchaSecretKeyEncrypted(),
-                    site.getRecaptchaThreshold());
+                    "tenant tenantId=" + tenantId,
+                    enabled,
+                    encryptedSecret,
+                    new BigDecimal("0.5"));
         }
 
         return resolvePlatformRecaptchaContext();
@@ -162,14 +175,24 @@ public class RecaptchaServiceImpl implements RecaptchaService {
 
     private RecaptchaPublicConfig resolvePublicConfig() {
         if (tenantContext.isSet()) {
-            var siteOpt = siteRepository.findFirstByOrderByIdAsc();
-            if (siteOpt.isEmpty()) {
+            String tenantIdRaw = tenantContext.getTenantId();
+            String tenantDbName = tenantContext.getTenantDbName();
+            if (tenantIdRaw == null || tenantDbName == null || tenantDbName.isBlank()) {
                 return new RecaptchaPublicConfig(false, "");
             }
-            Site site = siteOpt.get();
+
+            Long tenantId = Long.parseLong(tenantIdRaw);
+            boolean enabled = configPropertyService.getBoolean(
+                    tenantId,
+                    tenantDbName,
+                    KEY_RECAPTCHA_ENABLED,
+                    false);
+            String siteKey = configPropertyService.findRaw(tenantId, tenantDbName, KEY_RECAPTCHA_SITE_KEY)
+                    .filter(value -> value != null && !value.isBlank())
+                    .orElse(null);
             return new RecaptchaPublicConfig(
-                    Boolean.TRUE.equals(site.getRecaptchaEnabled()),
-                    site.getRecaptchaSiteKey());
+                    enabled,
+                    siteKey);
         }
 
         var settings = platformSettings.getSingleton();

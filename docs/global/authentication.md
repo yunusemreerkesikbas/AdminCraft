@@ -17,6 +17,10 @@ Craftive supports two login modes via the same endpoint:
 | Verification Token Entity | [`backend/.../entity/VerificationToken.java`](../../backend/src/main/java/com/backend/domain/entity/VerificationToken.java) |
 | Email Templates | `backend/src/main/resources/templates/email/` |
 
+## Admin SPA sign-in routing (`storefront/`)
+
+The Angular admin app applies `NoAuthGuard` to unauthenticated routes (including `/sign-in`). When `AuthService.check()` is true (valid JWT in browser storage), opening `/sign-in` redirects to the default post-login destination: `/{lang}/site` for tenant users and `/{lang}/tenants` for `SUPER_ADMIN` (see `getAuthenticatedRedirectUrl` in `storefront/src/app/core/auth/auth.redirect.helper.ts`). Two cases still allow the sign-in page while authenticated: the `subdomain` query param differs from the current session subdomain (switching tenant), or the user is `SUPER_ADMIN` and a `subdomain` query is present (opening a tenant-scoped sign-in URL). Submitting the login form always calls the API so a new session can replace the existing one.
+
 ## API Endpoints
 
 Base path: `/api/auth`

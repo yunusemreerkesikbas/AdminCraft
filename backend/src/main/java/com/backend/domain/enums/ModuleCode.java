@@ -2,6 +2,7 @@ package com.backend.domain.enums;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashSet;
 
 public enum ModuleCode {
 	CORE("core", "Core"),
@@ -87,5 +88,29 @@ public enum ModuleCode {
 		return CORE_EXECUTION_MODULES.stream()
 				.map(ModuleCode::getCode)
 				.toList();
+	}
+
+	public static List<String> resolveExecutionCodes(List<String> moduleCodes) {
+		if (moduleCodes == null || moduleCodes.isEmpty()) {
+			return List.of();
+		}
+
+		LinkedHashSet<String> resolved = new LinkedHashSet<>();
+		for (String rawCode : moduleCodes) {
+			String normalized = normalize(rawCode);
+			if (normalized.isBlank()) {
+				continue;
+			}
+			if (!isValidCode(normalized)) {
+				throw new IllegalArgumentException("Unsupported module code: " + rawCode);
+			}
+			if (CORE.code.equals(normalized)) {
+				resolved.add(CORE.code);
+				resolved.addAll(coreExecutionCodes());
+			} else {
+				resolved.add(normalized);
+			}
+		}
+		return List.copyOf(resolved);
 	}
 }

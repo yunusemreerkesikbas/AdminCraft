@@ -7,6 +7,8 @@ import {
     signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { ConfigAuthComponent } from '../auth/config-auth.component';
 import { ConfigDashboardComponent } from '../dashboard/config-dashboard.component';
 import {
@@ -14,7 +16,6 @@ import {
     ConfigTokenState,
 } from './config-console.types';
 import {
-    CONFIG_CONSOLE_STORAGE_KEY,
     ConfigSessionService,
 } from './config-session.service';
 
@@ -27,9 +28,9 @@ import {
     imports: [ConfigAuthComponent, ConfigDashboardComponent],
 })
 export class ConfigConsoleComponent implements OnInit {
-    protected readonly storageKey = CONFIG_CONSOLE_STORAGE_KEY;
-
+    #activatedRoute = inject(ActivatedRoute);
     #session = inject(ConfigSessionService);
+    #tenantContext = inject(TenantContextService);
     #destroyRef = inject(DestroyRef);
 
     protected stageSig = signal<'login' | 'otp' | 'panel'>('login');
@@ -37,10 +38,31 @@ export class ConfigConsoleComponent implements OnInit {
     protected challengeSig = signal<ConfigAuthChallengeResponse | null>(null);
 
     ngOnInit(): void {
+        const routeSubdomain =
+            this.#activatedRoute.snapshot.queryParamMap.get('subdomain');
+        if (routeSubdomain) {
+            this.#tenantContext.setSubdomain(routeSubdomain);
+        } else {
+            const hostSubdomain = this.#tenantContext.extractSubdomainFromHost();
+            if (hostSubdomain) {
+                this.#tenantContext.setSubdomain(hostSubdomain);
+            }
+        }
+
         this.#restoreSession();
-        this.#session.onInvalidSession
+        this.#session.onSessionChanged
             .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(() => this.#resetToLogin());
+            .subscribe((session) => {
+                this.tokenSig.set(session);
+                if (session) {
+                    this.stageSig.set('panel');
+                    return;
+                }
+
+                if (this.stageSig() === 'panel') {
+                    this.#resetToLogin();
+                }
+            });
     }
 
     protected onChallengeReceived(
@@ -51,9 +73,7 @@ export class ConfigConsoleComponent implements OnInit {
     }
 
     protected onAuthenticated(token: ConfigTokenState): void {
-        this.tokenSig.set(token);
-        localStorage.setItem(this.storageKey, JSON.stringify(token));
-        this.stageSig.set('panel');
+        this.#session.setStoredSession(token);
     }
 
     protected onCancelOtp(): void {
@@ -75,24 +95,28 @@ export class ConfigConsoleComponent implements OnInit {
     }
 
     #restoreSession(): void {
-        const raw = localStorage.getItem(this.storageKey);
-        if (!raw) {
+        const storedSession = this.#session.getStoredSession();
+        if (!storedSession) {
             return;
         }
-        try {
-            const parsed = JSON.parse(raw) as ConfigTokenState;
-            if (!parsed?.accessToken || parsed.issuedAt == null) {
-                this.#session.clearStoredSession();
-                return;
-            }
-            if (Date.now() > parsed.issuedAt + parsed.expiresIn * 1000) {
-                this.#session.clearStoredSession();
-                return;
-            }
-            this.tokenSig.set(parsed);
+
+        if (!this.#session.isAccessTokenExpired(storedSession)) {
+            this.tokenSig.set(storedSession);
             this.stageSig.set('panel');
-        } catch {
-            this.#session.clearStoredSession();
+            return;
         }
+
+        this.#session
+            .tryRefreshStoredSession()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((session) => {
+                if (session) {
+                    this.tokenSig.set(session);
+                    this.stageSig.set('panel');
+                    return;
+                }
+
+                this.#resetToLogin();
+            });
     }
 }

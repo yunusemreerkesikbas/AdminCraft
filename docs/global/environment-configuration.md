@@ -24,11 +24,11 @@ Multi-environment setup for Craftive with dev, stage, and prod configurations.
 
 ### Frontend — Headless Storefront (Next.js)
 
-| File                                    | Purpose                                        |
-| --------------------------------------- | ---------------------------------------------- |
-| `../../storefront-nextjs/.env.development` | Development config (loaded by `next dev`)   |
-| `../../storefront-nextjs/.env.staging`     | Staging config (loaded via `dotenv-cli`)    |
-| `../../storefront-nextjs/.env.production`  | Production config (loaded by `next build`)  |
+| File                                       | Purpose                                        |
+| ------------------------------------------ | ---------------------------------------------- |
+| `../../storefront-nextjs/.env.development` | Development config (loaded by `next dev`)      |
+| `../../storefront-nextjs/.env.staging`     | Staging config (loaded via `dotenv-cli`)       |
+| `../../storefront-nextjs/.env.production`  | Production config (loaded by `next build`)     |
 | `../../storefront-nextjs/.env.local`       | Local overrides — highest priority, gitignored |
 
 ## Rules and Invariants
@@ -84,8 +84,8 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 
 Static export (e.g. Cloudflare Pages). Public demo/contact form calls the Craftive API from the browser.
 
-| Variable | Purpose |
-| -------- | ------- |
+| Variable                       | Purpose                                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_CRAFTIVE_API_URL` | Backend **origin only** — no `/api` suffix (e.g. `http://localhost:8080`, `https://api.example.com`). Client code appends `/api/...`. Baked in at **build** time. |
 
 See [`landing/.env.local.example`](../../landing/.env.local.example). Contract and CORS: [`modules/platform-admin.md`](../modules/platform-admin.md) (Landing demo requests), index: [`README.md`](../README.md).
@@ -102,46 +102,46 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | SQL Logging    | `true`   | `false`         | `false`         |
 | Swagger UI     | enabled  | enabled         | disabled        |
 | Log Level      | `DEBUG`  | `INFO`          | `INFO`          |
-| Auto-sync      | `false`  | `true`          | `true`          |
+| Auto-sync      | `true`   | `true`          | `true`          |
 
 ### Frontend — Angular
 
-| Setting              | Dev            | Stage                           | Prod                         |
-| -------------------- | -------------- | ------------------------------- | ---------------------------- |
-| `production`         | `false`        | `false`                         | `true`                       |
+| Setting              | Dev            | Stage                            | Prod                          |
+| -------------------- | -------------- | -------------------------------- | ----------------------------- |
+| `production`         | `false`        | `false`                          | `true`                        |
 | `apiBaseUrl`         | `/api` (proxy) | `https://s1-api.craftive.io/api` | `https://api.craftive.io/api` |
-| `apiTimeout`         | `30000`        | `30000`                         | `30000`                      |
-| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                  | `['tr', 'en']`               |
-| `defaultLanguage`    | `en`           | `en`                            | `en`                         |
-| `maxRetryAttempts`   | `0`            | `0`                             | `3`                          |
-| Source Maps          | yes            | yes                             | no                           |
-| Optimization         | no             | yes                             | yes                          |
+| `apiTimeout`         | `30000`        | `30000`                          | `30000`                       |
+| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                   | `['tr', 'en']`                |
+| `defaultLanguage`    | `en`           | `en`                             | `en`                          |
+| `maxRetryAttempts`   | `0`            | `0`                              | `3`                           |
+| Source Maps          | yes            | yes                              | no                            |
+| Optimization         | no             | yes                              | yes                           |
 
 ### Frontend — Next.js Storefront
 
-| Variable                       | Dev                             | Stage                                  | Prod                             |
-| ------------------------------ | ------------------------------- | -------------------------------------- | -------------------------------- |
-| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://s1-api.craftive.io/api`       | `https://api.craftive.io/api`    |
-| `TENANT_SUBDOMAIN`             | `demo`                          | tenant subdomain                       | tenant subdomain                 |
-| `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
-| `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
-| `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
-| `NEXT_IMAGE_DOMAINS`           | _(not set)_                     | `s1-cdn.craftive.io`                   | `media.craftive.io`              |
+| Variable                       | Dev                         | Stage                            | Prod                          |
+| ------------------------------ | --------------------------- | -------------------------------- | ----------------------------- |
+| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api` | `https://s1-api.craftive.io/api` | `https://api.craftive.io/api` |
+| `TENANT_SUBDOMAIN`             | `demo`                      | tenant subdomain                 | tenant subdomain              |
+| `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                      | tenant subdomain                 | tenant subdomain              |
+| `TENANT_ID`                    | `28` (local tenant)         | tenant ID                        | tenant ID                     |
+| `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
+| `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
 
 Available scripts:
 
-| Script                   | Description                                    |
-| ------------------------ | ---------------------------------------------- |
-| `npm run dev`            | Dev server with `.env.development`             |
-| `npm run dev:stage`      | Dev server with `.env.staging`                 |
-| `npm run build`          | SSR production build                           |
-| `npm run build:dev`      | SSR build with `.env.development`              |
-| `npm run build:stage`    | SSR build with `.env.staging`                  |
-| `npm run build:prod`     | SSR production build (same as `build`)         |
-| `npm run build:static`   | Static export (CSR) with `.env.production`     |
-| `npm run start`          | SSR production server                          |
-| `npm run start:stage`    | SSR server with `.env.staging`                 |
-| `npm run start:static`   | Serve `out/` folder (for static export builds) |
+| Script                 | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `npm run dev`          | Dev server with `.env.development`             |
+| `npm run dev:stage`    | Dev server with `.env.staging`                 |
+| `npm run build`        | SSR production build                           |
+| `npm run build:dev`    | SSR build with `.env.development`              |
+| `npm run build:stage`  | SSR build with `.env.staging`                  |
+| `npm run build:prod`   | SSR production build (same as `build`)         |
+| `npm run build:static` | Static export (CSR) with `.env.production`     |
+| `npm run start`        | SSR production server                          |
+| `npm run start:stage`  | SSR server with `.env.staging`                 |
+| `npm run start:static` | Serve `out/` folder (for static export builds) |
 
 ### Language Configuration
 
@@ -170,6 +170,7 @@ The `supportedLanguages` and `defaultLanguage` values control the Admin UI langu
    ```
 
 3. **Create translation file** - `storefront/src/app/modules/admin/i18n/langDE.ts`:
+
    ```typescript
    export const langDE = {
      // translations...
@@ -245,16 +246,16 @@ npm run build:static
 
 ### Stage/Prod Observability and Edge
 
-| Variable                   | Description                             | Required |
-| -------------------------- | --------------------------------------- | -------- |
+| Variable                   | Description                            | Required |
+| -------------------------- | -------------------------------------- | -------- |
 | `LOG_ENV`                  | Log environment label (`stage`/`prod`) | Yes      |
-| `LOG_HOST`                 | Host label for Loki                     | Yes      |
-| `GRAFANA_CLOUD_LOKI_URL`   | Loki ingest URL                         | Yes      |
-| `GRAFANA_CLOUD_LOKI_USER`  | Loki username / tenant                  | Yes      |
-| `GRAFANA_CLOUD_LOKI_TOKEN` | Loki API token                          | Yes      |
-| `DOMAIN`                   | Base platform domain                    | Yes      |
-| `ACME_EMAIL`               | Let's Encrypt email                     | Yes      |
-| `CF_API_TOKEN`             | Cloudflare DNS challenge token          | Yes      |
+| `LOG_HOST`                 | Host label for Loki                    | Yes      |
+| `GRAFANA_CLOUD_LOKI_URL`   | Loki ingest URL                        | Yes      |
+| `GRAFANA_CLOUD_LOKI_USER`  | Loki username / tenant                 | Yes      |
+| `GRAFANA_CLOUD_LOKI_TOKEN` | Loki API token                         | Yes      |
+| `DOMAIN`                   | Base platform domain                   | Yes      |
+| `ACME_EMAIL`               | Let's Encrypt email                    | Yes      |
+| `CF_API_TOKEN`             | Cloudflare DNS challenge token         | Yes      |
 
 ### Example Stage Deployment
 
@@ -321,9 +322,9 @@ Craftive/
 
 ### Environment Overview
 
-| Environment    | Services                             | Use Case                                     |
-| -------------- | ------------------------------------ | -------------------------------------------- |
-| **Dev**        | MySQL + phpMyAdmin                   | Local development (Backend/Frontend via IDE) |
+| Environment    | Services                                                             | Use Case                                     |
+| -------------- | -------------------------------------------------------------------- | -------------------------------------------- |
+| **Dev**        | MySQL + phpMyAdmin                                                   | Local development (Backend/Frontend via IDE) |
 | **Prod/Stage** | MySQL + Backend + Admin Frontend + Demo Storefront + Traefik + Alloy | VPS deployment with SSL and centralized logs |
 
 ### Local Development

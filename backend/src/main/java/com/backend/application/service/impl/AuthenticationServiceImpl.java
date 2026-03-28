@@ -256,7 +256,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getRole().name(),
                 user.getId(),
                 tenantId);
-        String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(
+                user.getEmail(),
+                user.getRole().name(),
+                user.getId(),
+                tenantId);
 
         log.info("Authentication successful for userId: {}", user.getId());
 
@@ -313,7 +317,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "SUPER_ADMIN",
                 admin.getId(),
                 null);
-        String refreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(
+                admin.getEmail(),
+                "SUPER_ADMIN",
+                admin.getId(),
+                null);
 
         log.info("Authentication successful for platform admin userId: {}", admin.getId());
 
@@ -359,7 +367,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     "SUPER_ADMIN",
                     admin.getId(),
                     null);
-            String newRefreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
+            String newRefreshToken = jwtProviderPort.createRefreshToken(
+                    admin.getEmail(),
+                    "SUPER_ADMIN",
+                    admin.getId(),
+                    null);
 
             log.info("Token refresh successful for platform admin: {}", admin.getEmail());
 
@@ -428,7 +440,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             user.getRole().name(),
                             user.getId(),
                             tenantId);
-                    String newRefreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
+                    String newRefreshToken = jwtProviderPort.createRefreshToken(
+                            user.getEmail(),
+                            user.getRole().name(),
+                            user.getId(),
+                            tenantId);
 
                     log.info("Token refresh successful for userId: {}, tenantId: {}", user.getId(), tenantId);
 
@@ -584,7 +600,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         user.getRole().name(),
                         user.getId(),
                         tenant.getId());
-                String refreshToken = jwtProviderPort.createRefreshToken(user.getEmail());
+                String refreshToken = jwtProviderPort.createRefreshToken(
+                        user.getEmail(),
+                        user.getRole().name(),
+                        user.getId(),
+                        tenant.getId());
 
                 log.info("OTP verification successful for userId: {}", user.getId());
 
@@ -651,7 +671,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "SUPER_ADMIN",
                 admin.getId(),
                 null);
-        String refreshToken = jwtProviderPort.createRefreshToken(admin.getEmail());
+        String refreshToken = jwtProviderPort.createRefreshToken(
+                admin.getEmail(),
+                "SUPER_ADMIN",
+                admin.getId(),
+                null);
 
         log.info("OTP verification successful for platform admin userId: {}", admin.getId());
 

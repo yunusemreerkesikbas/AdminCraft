@@ -17,6 +17,7 @@ import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
 import com.backend.presentation.dto.request.config.ConfigLoginRequest;
+import com.backend.presentation.dto.request.config.ConfigRefreshTokenRequest;
 import com.backend.presentation.dto.request.config.ConfigVerifyOtpRequest;
 import com.backend.presentation.dto.response.config.ConfigAuthChallengeResponse;
 import com.backend.presentation.dto.response.config.ConfigAuthResponse;
@@ -91,6 +92,28 @@ public class ConfigAuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Config auth OTP verification failed", ex);
+            String message = messageSource.getMessage("auth.error.generic", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<ConfigAuthResponse>> refreshToken(
+            @Valid @RequestBody ConfigRefreshTokenRequest request,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
+            HttpServletRequest httpRequest) {
+        try {
+            var result = configAuthenticationService.refreshToken(
+                    request.refreshToken(),
+                    RequestUtils.getClientIpAddress(httpRequest));
+
+            String message = messageSource.getMessage("auth.refresh.success", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.ok(ApiResponse.success(message, ConfigAuthResponse.from(result)));
+        } catch (InvalidTokenException | InvalidCredentialsException | AccountLockedException ex) {
+            String message = messageSource.getMessage("auth.refresh.error", null, Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(message));
+        } catch (Exception ex) {
+            log.error("Config auth refresh failed", ex);
             String message = messageSource.getMessage("auth.error.generic", null, Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
         }

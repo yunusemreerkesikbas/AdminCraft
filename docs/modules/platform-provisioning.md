@@ -245,3 +245,4 @@ Sync behavior note:
 
 - `sync-migrations` applies the same module normalization logic as full provisioning.
 - If tenant has `core`, requests for core-covered modules (`media`, `component_library`, `pagebuilder`) are treated as covered.
+- Startup auto-sync uses the same runtime expansion. An active tenant with only the user-facing `core` flag still runs `core`, `media`, `component_library`, and `pagebuilder` tenant migrations on boot.

@@ -78,22 +78,27 @@ export class ConfigAuthComponent {
         this.errorSig.set(null);
         this.loadingSig.set(true);
 
-        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        const subdomain =
+            this.#tenantContext.getCurrentSubdomain() ??
+            this.#tenantContext.extractSubdomainFromHost();
+        if (subdomain) {
+            this.#tenantContext.setSubdomain(subdomain);
+        }
         const { email, password } = this.loginForm.getRawValue();
 
         this.#service.login(email!, password!, subdomain).subscribe({
             next: (response: ApiResponse<ConfigAuthChallengeResponse>) => {
                 this.loadingSig.set(false);
                 if (response.result !== 'SUCCESS' || !response.data) {
-                    this.errorSig.set(response.message || 'Login failed');
+                    this.errorSig.set(response.message ?? null);
                     return;
                 }
-                this.messageSig.set(response.message || 'OTP sent');
+                this.messageSig.set(response.message ?? null);
                 this.challengeReceived.emit(response.data);
             },
             error: (error) => {
                 this.loadingSig.set(false);
-                this.errorSig.set(error?.error?.message || 'Login failed');
+                this.errorSig.set(error?.error?.message ?? null);
             },
         });
     }
@@ -119,11 +124,12 @@ export class ConfigAuthComponent {
                 next: (response: ApiResponse<ConfigAuthResponse>) => {
                     this.loadingSig.set(false);
                     if (response.result !== 'SUCCESS' || !response.data) {
-                        this.errorSig.set(response.message || 'OTP verification failed');
+                        this.errorSig.set(response.message ?? null);
                         return;
                     }
                     const tokenState: ConfigTokenState = {
                         accessToken: response.data.accessToken,
+                        refreshToken: response.data.refreshToken,
                         tokenType: response.data.tokenType,
                         expiresIn: response.data.expiresIn,
                         userId: response.data.userId,
@@ -132,13 +138,13 @@ export class ConfigAuthComponent {
                         role: response.data.role,
                         tenantId: response.data.tenantId,
                         subdomain: response.data.subdomain,
-                        issuedAt: response.data.issuedAt ?? Date.now(),
+                        issuedAt: response.data.issuedAt,
                     };
                     this.authenticated.emit(tokenState);
                 },
                 error: (error) => {
                     this.loadingSig.set(false);
-                    this.errorSig.set(error?.error?.message || 'OTP verification failed');
+                    this.errorSig.set(error?.error?.message ?? null);
                 },
             });
     }

@@ -161,10 +161,6 @@ export class AuthService {
         deviceFingerprint?: string;
         recaptchaToken?: string;
     }): Observable<boolean | 'requires2FA'> {
-        if (this.#authenticatedSig()) {
-            this.#notificationService.alert('User is already logged in.');
-            return of(false);
-        }
         return this.#apiClient.post<LoginResponse>('login', credentials).pipe(
             switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {

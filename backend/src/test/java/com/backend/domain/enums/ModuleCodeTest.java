@@ -3,6 +3,8 @@ package com.backend.domain.enums;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 class ModuleCodeTest {
@@ -118,5 +120,17 @@ class ModuleCodeTest {
 		assertThat(ModuleCode.isCoreCoveredCode("core")).isTrue();
 		assertThat(ModuleCode.isCoreCoveredCode("pagebuilder")).isTrue();
 		assertThat(ModuleCode.isCoreCoveredCode("product")).isFalse();
+	}
+
+	@Test
+	void shouldResolveCoreToRuntimeExecutionModules() {
+		assertThat(ModuleCode.resolveExecutionCodes(List.of("core", "product")))
+				.containsExactly("core", "media", "component_library", "pagebuilder", "product");
+	}
+
+	@Test
+	void shouldDeDuplicateResolvedExecutionModules() {
+		assertThat(ModuleCode.resolveExecutionCodes(List.of("core", "pagebuilder", "core", "product")))
+				.containsExactly("core", "media", "component_library", "pagebuilder", "product");
 	}
 }

@@ -59,17 +59,29 @@ public class JwtTokenProvider {
         return createAccessToken(email, role, null, tenantId);
     }
 
-    public String createRefreshToken(String email) {
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .claim("type", "refresh")
                 .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
+                .expiration(expiryDate);
+
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        if (userId != null) {
+            builder.claim("userId", userId);
+        }
+
+        if (tenantId != null) {
+            builder.claim("tenantId", tenantId);
+        }
+
+        return builder.signWith(secretKey).compact();
     }
 
     public String getEmailFromToken(String token) {

@@ -26,6 +26,7 @@ import com.backend.domain.enums.UserRole;
 import com.backend.domain.exception.AccountLockedException;
 import com.backend.domain.exception.InvalidCredentialsException;
 import com.backend.domain.exception.InvalidTokenException;
+import com.backend.domain.exception.UserNotFoundException;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.PlatformVerificationTokenRepository;
 import com.backend.domain.repository.TenantRepository;
@@ -78,6 +79,76 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
             return verifyPlatformOtp(pendingToken, otpCode, ipAddress);
         }
         return verifyTenantOtp(pendingToken, otpCode, tenantId, subdomain, ipAddress);
+    }
+
+    @Override
+    public ConfigAuthResult refreshToken(String refreshToken, String ipAddress) {
+        if (!jwtProviderPort.validateToken(refreshToken) || !jwtProviderPort.isRefreshToken(refreshToken)) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+
+        String role = jwtProviderPort.getRoleFromToken(refreshToken);
+        if (ConfigPrincipal.ROLE_CONFIG_SUPER_ADMIN.equals(role)) {
+            throw new InvalidTokenException("Config refresh is not available for super admin");
+        }
+
+        if (!ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN.equals(role)) {
+            throw new InvalidTokenException("Unsupported config refresh role");
+        }
+
+        Long tenantId = jwtProviderPort.getTenantIdFromToken(refreshToken);
+        if (tenantId == null) {
+            throw new InvalidTokenException("Tenant ID required for config refresh");
+        }
+
+        Tenant tenant = resolveTenant(tenantId, null);
+
+        try {
+            setTenantContext(tenant);
+            TransactionTemplate transactionTemplate = new TransactionTemplate(tenantTransactionManager);
+            return transactionTemplate.execute(status -> {
+                User user = userRepository.findByEmail(jwtProviderPort.getEmailFromToken(refreshToken))
+                        .orElseThrow(() -> new UserNotFoundException(jwtProviderPort.getEmailFromToken(refreshToken)));
+
+                if (user.getRole() != UserRole.TENANT_ADMIN || !Boolean.TRUE.equals(user.getIsActive())) {
+                    throw new InvalidTokenException("Tenant admin account is not active");
+                }
+
+                if (user.isAccountLocked()) {
+                    throw new AccountLockedException(user.getRemainingLockMinutes());
+                }
+
+                user.recordSuccessfulLogin(ipAddress);
+                userRepository.save(user);
+
+                long issuedAt = System.currentTimeMillis();
+                String accessToken = jwtProviderPort.createAccessToken(
+                        user.getEmail(),
+                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                        user.getId(),
+                        tenant.getId());
+                String rotatedRefreshToken = jwtProviderPort.createRefreshToken(
+                        user.getEmail(),
+                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                        user.getId(),
+                        tenant.getId());
+
+                return new ConfigAuthResult(
+                        accessToken,
+                        rotatedRefreshToken,
+                        "Bearer",
+                        jwtProviderPort.getAccessTokenExpiration(),
+                        issuedAt,
+                        user.getId(),
+                        user.getEmail(),
+                        user.getFullName(),
+                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                        tenant.getId(),
+                        tenant.getSubdomain());
+            });
+        } finally {
+            clearTenantContext();
+        }
     }
 
     private ConfigAuthChallengeResult loginTenantAdmin(String email, String password, Long tenantId, String subdomain,
@@ -190,9 +261,15 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
                         ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
                         user.getId(),
                         tenant.getId());
+                String refreshToken = jwtProviderPort.createRefreshToken(
+                        user.getEmail(),
+                        ConfigPrincipal.ROLE_CONFIG_TENANT_ADMIN,
+                        user.getId(),
+                        tenant.getId());
 
                 return new ConfigAuthResult(
                         accessToken,
+                        refreshToken,
                         "Bearer",
                         jwtProviderPort.getAccessTokenExpiration(),
                         issuedAt,
@@ -250,6 +327,7 @@ public class ConfigAuthenticationServiceImpl implements ConfigAuthenticationServ
 
         return new ConfigAuthResult(
                 accessToken,
+                null,
                 "Bearer",
                 jwtProviderPort.getAccessTokenExpiration(),
                 issuedAt,
