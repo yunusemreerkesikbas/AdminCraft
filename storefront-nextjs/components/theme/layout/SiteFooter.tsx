@@ -2,15 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { LayoutBlockDelivery, LayoutLinkDelivery } from "@/lib/types";
 import styles from "./shell.module.css";
-
-function ArrowIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <path d="M3 9H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M10 4L15 9L10 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
+import NewsletterForm from "./NewsletterForm";
 
 function renderLink(
   link: LayoutLinkDelivery,
@@ -95,23 +87,10 @@ function renderNewsletterBlock(block: LayoutBlockDelivery) {
   return (
     <div key={block.uid} className={styles.footerColumnNewsletter}>
       {block.title ? <h4 className={styles.footerWidgetTitle}>{block.title}</h4> : null}
-      <form onSubmit={(e) => e.preventDefault()}>
-        <div className={styles.newsletterField}>
-          <input
-            type="email"
-            placeholder={block.newsletterPlaceholder}
-            aria-label={block.newsletterPlaceholder}
-            className={styles.newsletterInput}
-          />
-          <button
-            type="submit"
-            className={styles.newsletterButton}
-            aria-label={block.newsletterButtonLabel}
-          >
-            <ArrowIcon />
-          </button>
-        </div>
-      </form>
+      <NewsletterForm
+        placeholder={block.newsletterPlaceholder}
+        buttonLabel={block.newsletterButtonLabel}
+      />
     </div>
   );
 }

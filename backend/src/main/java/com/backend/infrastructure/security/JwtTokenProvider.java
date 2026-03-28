@@ -3,7 +3,6 @@ package com.backend.infrastructure.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -17,7 +16,6 @@ public class JwtTokenProvider {
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
 
-    @Autowired
     public JwtTokenProvider(JwtProperties jwtProperties) {
         log.info("Initializing JwtTokenProvider with secret length: {}", jwtProperties.getSecret().length());
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
@@ -49,27 +47,29 @@ public class JwtTokenProvider {
         return builder.signWith(secretKey).compact();
     }
 
-    // Backward compatibility - keep the old method for refresh tokens
-    public String createAccessToken(String email, String role) {
-        return createAccessToken(email, role, null, null);
-    }
-
-    // Backward compatibility - for migration
-    public String createAccessToken(String email, String role, Long tenantId) {
-        return createAccessToken(email, role, null, tenantId);
-    }
-
-    public String createRefreshToken(String email) {
+    public String createRefreshToken(String email, String role, Long userId, Long tenantId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .claim("type", "refresh")
                 .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
+                .expiration(expiryDate);
+
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        if (userId != null) {
+            builder.claim("userId", userId);
+        }
+
+        if (tenantId != null) {
+            builder.claim("tenantId", tenantId);
+        }
+
+        return builder.signWith(secretKey).compact();
     }
 
     public String getEmailFromToken(String token) {

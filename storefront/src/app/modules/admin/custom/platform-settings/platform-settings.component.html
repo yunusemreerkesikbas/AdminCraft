@@ -84,53 +84,6 @@
                                     }
                                 </mat-radio-group>
                             </div>
-
-                            <div>
-                                <h4 class="mb-2 text-base font-medium">{{ 'admin.platform.settings.security.recaptcha.title' | transloco }}</h4>
-                                <p class="mb-4 text-sm text-secondary">{{ 'admin.platform.settings.security.recaptcha.description' | transloco }}</p>
-
-                                <div class="mb-4 flex items-center justify-between rounded-lg border p-4">
-                                    <div>
-                                        <div class="font-medium">{{ 'admin.platform.settings.security.recaptcha.enabled' | transloco }}</div>
-                                        <div class="text-sm text-secondary">{{ 'admin.platform.settings.security.recaptcha.enabledHint' | transloco }}</div>
-                                    </div>
-                                    <mat-slide-toggle formControlName="recaptchaEnabled" color="primary"></mat-slide-toggle>
-                                </div>
-
-                                @if (form.get('recaptchaEnabled')?.value) {
-                                    <div class="space-y-4 rounded-lg border bg-gray-50 p-4 dark:bg-gray-900/50">
-                                        <spa-input
-                                            [label]="'admin.platform.settings.security.recaptcha.siteKey' | transloco"
-                                            [hint]="'admin.platform.settings.security.recaptcha.siteKeyHint' | transloco"
-                                            [required]="true"
-                                            formControlName="recaptchaSiteKey"
-                                            [showErrors]="true"
-                                        ></spa-input>
-
-                                        <spa-input
-                                            [label]="'admin.platform.settings.security.recaptcha.secretKey' | transloco"
-                                            [hint]="'admin.platform.settings.security.recaptcha.secretKeyHint' | transloco"
-                                            [placeholder]="'admin.platform.settings.security.recaptcha.secretKeyPlaceholder' | transloco"
-                                            formControlName="recaptchaSecretKey"
-                                            type="password"
-                                            [showErrors]="true"
-                                        ></spa-input>
-
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium">
-                                                {{ 'admin.platform.settings.security.recaptcha.threshold' | transloco }}
-                                                ({{ form.get('recaptchaThreshold')?.value }})
-                                            </label>
-                                            <mat-slider min="0" max="1" step="0.1" discrete class="w-full">
-                                                <input matSliderThumb formControlName="recaptchaThreshold" />
-                                            </mat-slider>
-                                            <p class="mt-1 text-xs text-secondary">
-                                                {{ 'admin.platform.settings.security.recaptcha.thresholdHint' | transloco }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
                         </div>
                     </div>
 

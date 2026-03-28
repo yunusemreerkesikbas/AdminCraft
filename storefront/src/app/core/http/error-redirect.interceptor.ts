@@ -37,12 +37,18 @@ export const errorRedirectInterceptor = (
                 '/auth/reset-password',
                 '/auth/verify-otp',
                 '/auth/resend-otp',
+                '/config/auth',
             ];
             const isAuthEndpoint = authPaths.some((path) =>
                 req.url.includes(path)
             );
+            const isConfigAdminEndpoint = req.url.includes('/config/admin');
 
             if (isAuthEndpoint) {
+                return throwError(() => error);
+            }
+
+            if (isConfigAdminEndpoint && (status === 401 || status === 403)) {
                 return throwError(() => error);
             }
 

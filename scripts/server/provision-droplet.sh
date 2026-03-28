@@ -219,7 +219,16 @@ systemctl enable --now fail2ban
 log "Fail2ban enabled: 5 failed attempts -> 1 hour ban"
 
 # -----------------------------------------------------------------------------
-# 7. Directory structure
+# 7. DigitalOcean Droplet Agent
+# -----------------------------------------------------------------------------
+section "Installing DigitalOcean Droplet Agent"
+
+curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
+systemctl enable --now do-agent 2>/dev/null || true
+log "DigitalOcean droplet agent installed (enables web console access)"
+
+# -----------------------------------------------------------------------------
+# 8. Directory structure
 # -----------------------------------------------------------------------------
 section "Creating application directories"
 
@@ -236,7 +245,7 @@ log "  ${APP_DIR}        <- Compose files will be copied here"
 log "  ${BACKUP_DIR}     <- Temporary DB dumps"
 
 # -----------------------------------------------------------------------------
-# 8. Docker network
+# 9. Docker network
 # -----------------------------------------------------------------------------
 section "Creating Docker network"
 
@@ -248,7 +257,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 9. Backup script
+# 10. Backup script
 # -----------------------------------------------------------------------------
 section "Setting up backup system"
 
@@ -308,7 +317,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 10. Log rotation
+# 11. Log rotation
 # -----------------------------------------------------------------------------
 section "Configuring log rotation"
 
@@ -326,7 +335,7 @@ EOF
 log "Log rotation: 14 days, daily compression"
 
 # -----------------------------------------------------------------------------
-# 11. rclone install (for DO Spaces)
+# 12. rclone install (for DO Spaces)
 # -----------------------------------------------------------------------------
 section "Installing rclone (DO Spaces backup)"
 

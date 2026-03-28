@@ -13,7 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ApiResponse } from '@core/crud';
 import { TenantContextService } from 'app/core/tenant/tenant-context.service';
 import { SpaInputComponent } from 'app/shared/components/custom-ui/spa-input/spa-input.component';
@@ -48,6 +48,7 @@ export class ConfigAuthComponent {
     readonly #fb = inject(FormBuilder);
     readonly #service = inject(ConfigConsoleService);
     readonly #tenantContext = inject(TenantContextService);
+    readonly #transloco = inject(TranslocoService);
 
     stage = input<'login' | 'otp'>('login');
     challenge = input<ConfigAuthChallengeResponse | null>(null);
@@ -78,22 +79,27 @@ export class ConfigAuthComponent {
         this.errorSig.set(null);
         this.loadingSig.set(true);
 
-        const subdomain = this.#tenantContext.extractSubdomainFromHost();
+        const subdomain =
+            this.#tenantContext.getCurrentSubdomain() ??
+            this.#tenantContext.extractSubdomainFromHost();
+        if (subdomain) {
+            this.#tenantContext.setSubdomain(subdomain);
+        }
         const { email, password } = this.loginForm.getRawValue();
 
         this.#service.login(email!, password!, subdomain).subscribe({
             next: (response: ApiResponse<ConfigAuthChallengeResponse>) => {
                 this.loadingSig.set(false);
                 if (response.result !== 'SUCCESS' || !response.data) {
-                    this.errorSig.set(response.message || 'Login failed');
+                    this.errorSig.set(response.message ?? null);
                     return;
                 }
-                this.messageSig.set(response.message || 'OTP sent');
+                this.messageSig.set(response.message ?? null);
                 this.challengeReceived.emit(response.data);
             },
             error: (error) => {
                 this.loadingSig.set(false);
-                this.errorSig.set(error?.error?.message || 'Login failed');
+                this.errorSig.set(error?.error?.message ?? null);
             },
         });
     }
@@ -106,7 +112,7 @@ export class ConfigAuthComponent {
 
         const ch = this.challenge();
         if (!ch) {
-            this.errorSig.set('OTP challenge is missing');
+            this.errorSig.set(this.#transloco.translate('admin.common.errors.unexpected'));
             return;
         }
 
@@ -119,11 +125,12 @@ export class ConfigAuthComponent {
                 next: (response: ApiResponse<ConfigAuthResponse>) => {
                     this.loadingSig.set(false);
                     if (response.result !== 'SUCCESS' || !response.data) {
-                        this.errorSig.set(response.message || 'OTP verification failed');
+                        this.errorSig.set(response.message ?? null);
                         return;
                     }
                     const tokenState: ConfigTokenState = {
                         accessToken: response.data.accessToken,
+                        refreshToken: response.data.refreshToken,
                         tokenType: response.data.tokenType,
                         expiresIn: response.data.expiresIn,
                         userId: response.data.userId,
@@ -132,13 +139,13 @@ export class ConfigAuthComponent {
                         role: response.data.role,
                         tenantId: response.data.tenantId,
                         subdomain: response.data.subdomain,
-                        issuedAt: response.data.issuedAt ?? Date.now(),
+                        issuedAt: response.data.issuedAt,
                     };
                     this.authenticated.emit(tokenState);
                 },
                 error: (error) => {
                     this.loadingSig.set(false);
-                    this.errorSig.set(error?.error?.message || 'OTP verification failed');
+                    this.errorSig.set(error?.error?.message ?? null);
                 },
             });
     }

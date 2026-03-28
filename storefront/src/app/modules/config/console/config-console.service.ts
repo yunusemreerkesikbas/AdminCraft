@@ -46,6 +46,15 @@ export class ConfigConsoleService {
         );
     }
 
+    refresh(
+        refreshToken: string
+    ): Observable<ApiResponse<ConfigAuthResponse>> {
+        return this.#http.post<ApiResponse<ConfigAuthResponse>>(
+            `${this.#baseUrl}/config/auth/refresh`,
+            { refreshToken }
+        );
+    }
+
     getRecaptcha(
         accessToken: string
     ): Observable<ApiResponse<ConfigRecaptchaState>> {

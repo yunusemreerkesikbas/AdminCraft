@@ -4,7 +4,7 @@ public interface JwtProviderPort {
 
     String createAccessToken(String email, String role, Long userId, Long tenantId);
 
-    String createRefreshToken(String email);
+    String createRefreshToken(String email, String role, Long userId, Long tenantId);
 
     boolean validateToken(String token);
 

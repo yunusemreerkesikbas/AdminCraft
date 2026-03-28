@@ -209,18 +209,12 @@ public class ProvisioningServiceImpl implements ProvisioningService {
 
   private List<String> resolveSyncModules(List<String> moduleCodes) {
     if (moduleCodes == null || moduleCodes.isEmpty()) {
-          return List.of();
+      return List.of();
     }
-    LinkedHashSet<String> resolved = new LinkedHashSet<>();
-    for (String rawCode : moduleCodes) {
-          String code = normalizeAndValidateModuleCode(rawCode);
-          if (CORE_MODULE.equals(code)) {
-        addCoreExecutionModules(resolved);
-          } else {
-        resolved.add(code);
-          }
-    }
-    return List.copyOf(resolved);
+    List<String> normalizedCodes = moduleCodes.stream()
+        .map(this::normalizeAndValidateModuleCode)
+        .toList();
+    return ModuleCode.resolveExecutionCodes(normalizedCodes);
   }
 
   private List<String> normalizeRequestedModules(List<String> moduleCodes) {
@@ -252,12 +246,6 @@ public class ProvisioningServiceImpl implements ProvisioningService {
   private boolean isCoreCoveredModule(String code) {
     return ModuleCode.isCoreCoveredCode(code);
   }
-
-  private void addCoreExecutionModules(LinkedHashSet<String> resolved) {
-    resolved.add(CORE_MODULE);
-    resolved.addAll(ModuleCode.coreExecutionCodes());
-  }
-
   private String normalizeAndValidateModuleCode(String rawCode) {
     String normalized = ModuleCode.normalize(rawCode);
     if (normalized.isBlank()) {

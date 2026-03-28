@@ -2,6 +2,7 @@ package com.backend.application.dto.config;
 
 public record ConfigAuthResult(
         String accessToken,
+        String refreshToken,
         String tokenType,
         long expiresIn,
         long issuedAt,

@@ -38,8 +38,12 @@ Platform tables:
 
 Tenant config store (HAC-style key-value):
 
-- Tenant migration: [`backend/src/main/resources/db/tenant/core/V39__create_config_properties.sql`](../../backend/src/main/resources/db/tenant/core/V39__create_config_properties.sql)
-- Backfill migration: [`backend/src/main/resources/db/tenant/core/V40__backfill_recaptcha_config_properties.sql`](../../backend/src/main/resources/db/tenant/core/V40__backfill_recaptcha_config_properties.sql)
+- Tenant baseline: [`backend/src/main/resources/db/tenant/core/V1.0.0__baseline.sql`](../../backend/src/main/resources/db/tenant/core/V1.0.0__baseline.sql)
+- Tenant reCAPTCHA migration: [`backend/src/main/resources/db/tenant/core/V1.0.1__migrate_recaptcha_config_from_sites.sql`](../../backend/src/main/resources/db/tenant/core/V1.0.1__migrate_recaptcha_config_from_sites.sql)
+
+Platform reCAPTCHA migration:
+
+- [`backend/src/main/resources/db/platform/V1.0.4__migrate_recaptcha_config_from_platform_settings.sql`](../../backend/src/main/resources/db/platform/V1.0.4__migrate_recaptcha_config_from_platform_settings.sql)
 
 Tenant reCAPTCHA keys managed in panel:
 
@@ -48,6 +52,7 @@ Tenant reCAPTCHA keys managed in panel:
 - `security.recaptcha.secret_key` (encrypted)
 
 Note: `security.recaptcha.threshold` may exist historically in tenant data but is not managed by Config Panel in current scope.
+Runtime note: tenant reCAPTCHA now reads only from `config_properties`; `sites` is no longer a source of truth.
 
 Global runtime whitelist (CONFIG_SUPER_ADMIN):
 
@@ -61,6 +66,7 @@ Global runtime whitelist (CONFIG_SUPER_ADMIN):
 
 Note: `security.recaptcha.threshold` remains in platform settings and is not managed from Config Panel.
 Namespace invariant: tenant `security.recaptcha.*` and platform `platform.security.recaptcha.*` are isolated and never cross-read.
+Runtime note: platform reCAPTCHA now reads only from `platform_config_properties`; `platform_settings` is no longer a source of truth.
 
 Not managed by Config Panel:
 
@@ -75,13 +81,39 @@ Not managed by Config Panel:
 - `GRAFANA_CLOUD_LOKI_*`
 - `RECAPTCHA_MASTER_KEY`
 
+No longer managed in other surfaces:
+
+- tenant `sites.recaptcha_*`
+- tenant `sites.recaptcha_threshold`
+- platform `platform_settings.recaptcha_*`
+- platform `platform_settings.recaptcha_threshold`
+
 ## Admin API
 
 Authentication APIs:
 
 - `POST /api/config/auth/login`
 - `POST /api/config/auth/verify-otp`
+- `POST /api/config/auth/refresh`
 - `GET /api/platform/cms/config` (public pre-login flags for platform host, e.g. reCAPTCHA site key)
+
+#### Token refresh (`CONFIG_TENANT_ADMIN` only)
+
+`POST /api/config/auth/refresh`
+
+Request body:
+```json
+{ "refreshToken": "<jwt-refresh-token>" }
+```
+
+Response: full `ConfigAuthResponse` with rotated `accessToken` and `refreshToken`.
+
+Constraints:
+- Only available to `CONFIG_TENANT_ADMIN`. Super admin (`CONFIG_SUPER_ADMIN`) receives HTTP 401 — must re-login after access token expiry.
+- Tenant must be in `ACTIVE` status; suspended/deactivated tenants receive HTTP 401.
+- `expiresIn` is returned in **seconds** (OAuth2 standard). Frontend computes expiry as `issuedAt + expiresIn * 1000`.
+- Each successful refresh rotates both tokens (refresh token rotation).
+- Endpoint is public (no tenant resolution); tenant is resolved from the refresh token's `tenantId` claim.
 
 Tenant management APIs (`CONFIG_TENANT_ADMIN`):
 
@@ -92,6 +124,12 @@ Tenant management APIs (`CONFIG_TENANT_ADMIN`):
 - `GET /api/config/admin/properties/{key}`
 - `PUT /api/config/admin/properties/{key}`
 - `DELETE /api/config/admin/properties/{key}?reason=...`
+
+Tenant properties list behavior:
+
+- `GET /api/config/admin/properties` always returns the managed tenant reCAPTCHA keys
+- if `config_properties` has no tenant override yet, managed keys still appear with config-store defaults (`false` / empty)
+- additional tenant-specific custom keys stored in `config_properties` are appended after the managed keys
 
 Global management APIs (`CONFIG_SUPER_ADMIN`):
 
@@ -112,6 +150,8 @@ Controllers:
 Entry route:
 
 - [`storefront/src/app/app.routes.ts`](../../storefront/src/app/app.routes.ts) (`path: 'config'`, empty layout)
+- Local tenant login example: `/config?subdomain=demo`
+- Local/platform login example: `/config`
 
 Config panel module:
 
@@ -125,6 +165,22 @@ Role-based behavior:
 
 - `CONFIG_TENANT_ADMIN`: tenant properties + reCAPTCHA management
 - `CONFIG_SUPER_ADMIN`: global runtime whitelist management
+
+Session behavior:
+
+- every fresh `/config` login still requires password + email OTP
+- in `dev` and `stage`, the shared OTP bypass code `123456` is accepted for config OTP verification
+- tenant config logins can resolve tenant context from the `subdomain` query param (`/config?subdomain={tenantSubdomain}`)
+- `CONFIG_TENANT_ADMIN` receives access + refresh tokens after OTP verification
+- tenant config sessions can silently refresh in the same browser when the access token expires
+- `CONFIG_SUPER_ADMIN` does not receive config refresh tokens; when the access token expires, login + OTP is required again
+
+Frontend session management:
+
+- Session is stored in `localStorage` under the key `config_console_auth` (see `ConfigSessionService`)
+- `ConfigSessionService.tryRefreshStoredSession()` deduplicates concurrent refresh attempts via `shareReplay(1)`; only one HTTP call is made regardless of how many parallel 401 responses trigger it
+- Auth interceptor (`authInterceptor`) handles 401/403 on `/config/admin` endpoints by attempting a silent refresh before propagating the error
+- `X-Config-Refresh-Retry` header is appended to the retried request; if the retry also returns 401/403, the session is cleared and the error is propagated — preventing infinite loops
 
 ## Security & tenant isolation
 
@@ -149,10 +205,12 @@ Invariants:
 2. Call `GET /api/config/admin/global/properties`.
 3. Update allowed keys via `PUT /api/config/admin/global/properties/{key}` with `reason`.
 4. Runtime behavior applies without redeploy/restart.
+5. If the config access token expires, repeat login + OTP.
 
 ### Tenant admin: rotate reCAPTCHA keys safely
 
-1. Open `/config` and complete login + OTP.
-2. Call `GET /api/config/admin/security/recaptcha` to load current state.
-3. Call `PATCH /api/config/admin/security/recaptcha` with `reason` and updated key values.
-4. Verify with `GET /api/config/admin/security/recaptcha/audit`.
+1. Open `/config?subdomain={tenantSubdomain}` and complete login + OTP.
+2. Call `GET /api/config/admin/properties` to load the managed tenant reCAPTCHA keys even if no explicit override exists yet.
+3. Update `security.recaptcha.enabled`, `security.recaptcha.site_key`, and `security.recaptcha.secret_key` as needed.
+4. Tenant reCAPTCHA runtime now reads only from `config_properties`; `sites` table values are not used by Config Panel or storefront public config.
+5. If the config access token expires during the same browser session, the panel renews the tenant session silently via `POST /api/config/auth/refresh`.

@@ -8,9 +8,10 @@ export interface ConfigAuthChallengeResponse {
 
 export interface ConfigAuthResponse {
     accessToken: string;
+    refreshToken: string | null;
     tokenType: string;
     expiresIn: number;
-    issuedAt?: number;
+    issuedAt: number;
     userId: number;
     email: string;
     fullName: string;
@@ -21,6 +22,7 @@ export interface ConfigAuthResponse {
 
 export interface ConfigTokenState {
     accessToken: string;
+    refreshToken: string | null;
     tokenType: string;
     expiresIn: number;
     userId: number;
