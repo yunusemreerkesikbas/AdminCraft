@@ -1088,10 +1088,12 @@ export const langTR = {
                 description: 'Site ayarlarını ve durumunu yönetin',
                 tabs: {
                     overview: 'Genel Bakış',
+                    settings: 'Ayarlar',
                     general: 'Genel',
                     address: 'Adres',
                     social: 'Sosyal Medya',
                     seo: 'SEO',
+                    advanced: 'Gelişmiş',
                     technical: 'Teknik',
                     security: 'Güvenlik',
                 },

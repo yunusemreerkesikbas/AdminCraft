@@ -97,7 +97,6 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
         this.signInForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
-            rememberMe: [''],
         });
         this.otpForm = this.#formBuilder.group({
             otpCode: [

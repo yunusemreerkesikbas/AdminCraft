@@ -1,6 +1,9 @@
 -- #CRAFTIVE_IMPEX
+-- Liko about page seed.
+-- Run via Admin UI /{lang}/impex after theme/liko/liko_foundation.sql and after media uploads.
+-- Seeds the about page and aligns its semantic media UIDs.
 -- About Content Page — dedicated CMS types for ContentPageTemplate.
--- Run via Admin UI /{lang}/impex after component library repeatable seeds are applied.
+-- Run via Admin UI /{lang}/impex after base catalog imports and `theme/liko/liko_foundation.sql`.
 -- Idempotent: safe to run multiple times.
 -- Reference: Liko about-us (AboutUsHero, AboutUsArea, TeamOne, FunFactOne, BrandFive, AwardOne).
 
@@ -233,7 +236,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO pages (uuid, uid, template_id, status, page_type, is_home, robot_tag, created_by)
-SELECT 'f0000005-0000-0000-0000-000000000005', 'about-us',
+SELECT UUID(), 'about-us',
   (SELECT id FROM page_templates WHERE uid = 'ContentPageTemplate'),
   'PUBLISHED', 'CONTENT', FALSE, 'INDEX_FOLLOW', NULL
 ON DUPLICATE KEY UPDATE
@@ -248,7 +251,7 @@ ON DUPLICATE KEY UPDATE
 -- ============================================================
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0000005-0000-0001-0000-000000000001', 'about-us-tr', p.id, 'TR', 'Hakkımızda', 'Hakkımızda', '/about-us', 'PUBLISHED'
+SELECT UUID(), 'about-us-tr', p.id, 'TR', 'Hakkımızda', 'Hakkımızda', '/about-us', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about-us'
 ON DUPLICATE KEY UPDATE
@@ -258,7 +261,7 @@ ON DUPLICATE KEY UPDATE
   status = VALUES(status);
 
 INSERT INTO page_i18n (uuid, uid, page_id, language, name, title, canonical_url, status)
-SELECT 'f0000005-0000-0001-0000-000000000002', 'about-us-en', p.id, 'EN', 'About Us', 'About Us', '/about-us', 'PUBLISHED'
+SELECT UUID(), 'about-us-en', p.id, 'EN', 'About Us', 'About Us', '/about-us', 'PUBLISHED'
 FROM pages p
 WHERE p.uid = 'about-us'
 ON DUPLICATE KEY UPDATE
@@ -310,3 +313,163 @@ JOIN components c ON c.uid = seed.component_uid
 ON DUPLICATE KEY UPDATE
   sort_order = VALUES(sort_order),
   is_visible = VALUES(is_visible);
+
+-- About page media UID alignment — run after media uploads.
+-- Purpose: assign stable media UIDs used by `theme/liko/about_page.sql`.
+-- Note: about award #1 reuses `homepage-award-1` from `theme/liko/homepage.sql`.
+-- Safety: original_name is not unique in media. Each statement targets only the latest uploaded
+-- matching asset. If the target UID is already owned by a different record, the statement no-ops
+-- instead of failing with a duplicate key error. Resolve such conflicts manually before re-running.
+
+-- ============================================================
+-- 1. HERO
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'hero-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-hero-bg' AND existing.id <> m.id
+SET m.uid = 'about-hero-bg'
+WHERE m.uid != 'about-hero-bg' AND existing.id IS NULL;
+
+-- ============================================================
+-- 2. STORY
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-story-1' AND existing.id <> m.id
+SET m.uid = 'about-story-1'
+WHERE m.uid != 'about-story-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-2.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-story-2' AND existing.id <> m.id
+SET m.uid = 'about-story-2'
+WHERE m.uid != 'about-story-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'about-3.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-story-3' AND existing.id <> m.id
+SET m.uid = 'about-story-3'
+WHERE m.uid != 'about-story-3' AND existing.id IS NULL;
+
+-- ============================================================
+-- 3. TEAM
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-1.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-1' AND existing.id <> m.id
+SET m.uid = 'about-team-1'
+WHERE m.uid != 'about-team-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-2.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-2' AND existing.id <> m.id
+SET m.uid = 'about-team-2'
+WHERE m.uid != 'about-team-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-3.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-3' AND existing.id <> m.id
+SET m.uid = 'about-team-3'
+WHERE m.uid != 'about-team-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-4.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-4' AND existing.id <> m.id
+SET m.uid = 'about-team-4'
+WHERE m.uid != 'about-team-4' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-9.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-5' AND existing.id <> m.id
+SET m.uid = 'about-team-5'
+WHERE m.uid != 'about-team-5' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-6.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-6' AND existing.id <> m.id
+SET m.uid = 'about-team-6'
+WHERE m.uid != 'about-team-6' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-7.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-7' AND existing.id <> m.id
+SET m.uid = 'about-team-7'
+WHERE m.uid != 'about-team-7' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'team-1-8.jpg') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-team-8' AND existing.id <> m.id
+SET m.uid = 'about-team-8'
+WHERE m.uid != 'about-team-8' AND existing.id IS NULL;
+
+-- ============================================================
+-- 4. BRANDS
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-1.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-brand-1' AND existing.id <> m.id
+SET m.uid = 'about-brand-1'
+WHERE m.uid != 'about-brand-1' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-2.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-brand-2' AND existing.id <> m.id
+SET m.uid = 'about-brand-2'
+WHERE m.uid != 'about-brand-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-3.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-brand-3' AND existing.id <> m.id
+SET m.uid = 'about-brand-3'
+WHERE m.uid != 'about-brand-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-4.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-brand-4' AND existing.id <> m.id
+SET m.uid = 'about-brand-4'
+WHERE m.uid != 'about-brand-4' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'brand-5.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-brand-5' AND existing.id <> m.id
+SET m.uid = 'about-brand-5'
+WHERE m.uid != 'about-brand-5' AND existing.id IS NULL;
+
+-- ============================================================
+-- 5. AWARDS
+-- ============================================================
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'award-2.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-award-2' AND existing.id <> m.id
+SET m.uid = 'about-award-2'
+WHERE m.uid != 'about-award-2' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'award-3.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-award-3' AND existing.id <> m.id
+SET m.uid = 'about-award-3'
+WHERE m.uid != 'about-award-3' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'award-4.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-award-4' AND existing.id <> m.id
+SET m.uid = 'about-award-4'
+WHERE m.uid != 'about-award-4' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'award-5.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-award-5' AND existing.id <> m.id
+SET m.uid = 'about-award-5'
+WHERE m.uid != 'about-award-5' AND existing.id IS NULL;
+
+UPDATE media m
+JOIN (SELECT MAX(id) AS id FROM media WHERE original_name = 'award-6.png') picked ON picked.id = m.id
+LEFT JOIN media existing ON existing.uid = 'about-award-6' AND existing.id <> m.id
+SET m.uid = 'about-award-6'
+WHERE m.uid != 'about-award-6' AND existing.id IS NULL;
+

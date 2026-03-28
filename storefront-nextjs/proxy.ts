@@ -18,6 +18,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const expectedHostname = process.env.TENANT_HOSTNAME?.trim().toLowerCase();
+  if (expectedHostname) {
+    const requestHost = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
+    if (requestHost && requestHost !== expectedHostname) {
+      return new NextResponse(null, { status: 404 });
+    }
+  }
+
   const segments = pathname.split("/").filter(Boolean);
   const locale = segments[0];
 

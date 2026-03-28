@@ -55,3 +55,6 @@ export const getTenantHeaders = (): Record<string, string> => {
   const tenantContext = getTenantContext();
   return { [tenantContext.headerName]: tenantContext.headerValue };
 };
+
+export const getTenantHostname = (): string | undefined =>
+  process.env.TENANT_HOSTNAME?.trim() || undefined;

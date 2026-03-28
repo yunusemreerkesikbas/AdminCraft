@@ -126,7 +126,10 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                      | tenant subdomain                 | tenant subdomain              |
 | `TENANT_ID`                    | `28` (local tenant)         | tenant ID                        | tenant ID                     |
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
+| `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
+
+> **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). Required in stage/prod to prevent wildcard DNS rules from serving the wrong tenant's storefront.
 
 Available scripts:
 

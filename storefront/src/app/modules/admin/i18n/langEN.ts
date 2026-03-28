@@ -1090,10 +1090,12 @@ export const langEN = {
                 description: 'Manage site settings and status',
                 tabs: {
                     overview: 'Overview',
+                    settings: 'Settings',
                     general: 'General',
                     address: 'Address',
                     social: 'Social Media',
                     seo: 'SEO',
+                    advanced: 'Advanced',
                     technical: 'Technical',
                     security: 'Security',
                 },

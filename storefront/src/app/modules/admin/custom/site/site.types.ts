@@ -127,12 +127,9 @@ export interface UpdateSecuritySettingsRequest {
 
 export type SiteDashboardTab =
     | 'overview'
-    | 'general'
-    | 'address'
-    | 'social'
+    | 'settings'
     | 'seo'
-    | 'technical'
-    | 'security';
+    | 'advanced';
 
 export interface TabConfig {
     id: SiteDashboardTab;
@@ -147,19 +144,9 @@ export const SITE_DASHBOARD_TABS: TabConfig[] = [
         icon: 'heroicons_outline:chart-pie',
     },
     {
-        id: 'general',
-        label: 'admin.site.dashboard.tabs.general',
+        id: 'settings',
+        label: 'admin.site.dashboard.tabs.settings',
         icon: 'heroicons_outline:cog-6-tooth',
-    },
-    {
-        id: 'address',
-        label: 'admin.site.dashboard.tabs.address',
-        icon: 'heroicons_outline:map-pin',
-    },
-    {
-        id: 'social',
-        label: 'admin.site.dashboard.tabs.social',
-        icon: 'heroicons_outline:share',
     },
     {
         id: 'seo',
@@ -167,13 +154,8 @@ export const SITE_DASHBOARD_TABS: TabConfig[] = [
         icon: 'heroicons_outline:magnifying-glass',
     },
     {
-        id: 'technical',
-        label: 'admin.site.dashboard.tabs.technical',
+        id: 'advanced',
+        label: 'admin.site.dashboard.tabs.advanced',
         icon: 'heroicons_outline:code-bracket',
-    },
-    {
-        id: 'security',
-        label: 'admin.site.dashboard.tabs.security',
-        icon: 'heroicons_outline:shield-check',
     },
 ];

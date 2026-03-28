@@ -70,8 +70,9 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 - Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
 - This repository deploys the demo/reference storefront in stage and prod. Tenant storefronts fork this project and customize the theme layer while keeping the shared core CMS/runtime contract.
 - Homepage body and shared chrome are CMS-driven. `LandingPageTemplate` renders Sections 1–8 via the generic `CmsSlot → CmsComponent → registry` pipeline; each slot dispatches by `component.type` to a dedicated async RSC renderer. Shared `Header` / `Footer` slots use the chrome adapter layer.
+- Fresh tenant databases start with **empty CMS content tables** for theme-owned data. `page_templates`, `template_slots`, `pages`, `page_slots`, `components`, `slot_components`, and theme navigation/chrome content are populated manually via ImpEx after tenant creation.
 - Required tenant seed/import flow for the default landing page (ImpEx, manual via Admin UI `/{lang}/impex`):
-  - ImpEx: `impex/theme_liko_components.sql` → `impex/base_landing_component_types.sql` (type migration, must follow liko_components) → `impex/theme_liko_chrome_components.sql` → `impex/theme_liko_pages_and_slots.sql` → `impex/base_pages_and_slots.sql` → `impex/theme_liko_about_content_page.sql` (optional, ContentPageTemplate About page at `/about-us`) → `impex/theme_liko_navigation.sql`
+  - ImpEx: `impex/base/base_site_settings.sql` → `impex/base/base_media_formats.sql` → `impex/base/base_component_types.sql` → `impex/base/base_entry_field_definitions.sql` → `impex/base/base_product_types.sql` → `impex/theme/liko/liko_foundation.sql` → `[media upload]` → `impex/theme/liko/homepage.sql` → `impex/theme/liko/about_page.sql` (optional) → `impex/theme/liko/service_page.sql` (optional)
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param

@@ -19,7 +19,17 @@ Craftive supports two login modes via the same endpoint:
 
 ## Admin SPA sign-in routing (`storefront/`)
 
-The Angular admin app applies `NoAuthGuard` to unauthenticated routes (including `/sign-in`). When `AuthService.check()` is true (valid JWT in browser storage), opening `/sign-in` redirects to the default post-login destination: `/{lang}/site` for tenant users and `/{lang}/tenants` for `SUPER_ADMIN` (see `getAuthenticatedRedirectUrl` in `storefront/src/app/core/auth/auth.redirect.helper.ts`). Two cases still allow the sign-in page while authenticated: the `subdomain` query param differs from the current session subdomain (switching tenant), or the user is `SUPER_ADMIN` and a `subdomain` query is present (opening a tenant-scoped sign-in URL). Submitting the login form always calls the API so a new session can replace the existing one.
+The Angular admin app applies `NoAuthGuard` to unauthenticated routes (including `/sign-in`). When `AuthService.check()` is true (valid JWT in session storage), opening `/sign-in` redirects to the default post-login destination: `/{lang}/site` for tenant users and `/{lang}/tenants` for `SUPER_ADMIN` (see `getAuthenticatedRedirectUrl` in `storefront/src/app/core/auth/auth.redirect.helper.ts`). Two cases still allow the sign-in page while authenticated: the `subdomain` query param differs from the current session subdomain (switching tenant), or the user is `SUPER_ADMIN` and a `subdomain` query is present (opening a tenant-scoped sign-in URL). Submitting the login form always calls the API so a new session can replace the existing one.
+
+### Platform URL context enforcement (`rootRedirectGuard`)
+
+`rootRedirectGuard` (root path `/`) also validates hostname context before redirecting an authenticated user. If the current hostname resolves to the platform admin host (`s1-app.craftive.io`, `app.craftive.io`, `admin.*`) via `TenantContextService.extractSubdomainFromHost()`, but the active session belongs to a non-`SUPER_ADMIN` user, the guard redirects to `/sign-in` instead of the tenant panel. This prevents a tenant session from leaking into the platform admin URL when multiple tabs are open.
+
+### Session storage isolation (multi-tab safety)
+
+All session-sensitive keys — `accessToken`, `userId`, `tenantId`, `currentTenantSubdomain`, `userFullName` — are stored in **`sessionStorage`** (tab-isolated). Each browser tab maintains its own independent session. Opening a new tab always starts unauthenticated.
+
+`superAdminSelectedTenantId` and `craftive-user-language-preference` remain in `localStorage` (intentional: super admin tenant selection and language preference are safe to share across tabs).
 
 ## API Endpoints
 

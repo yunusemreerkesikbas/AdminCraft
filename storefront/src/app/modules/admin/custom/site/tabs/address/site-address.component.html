@@ -1,10 +1,27 @@
-<div class="max-w-3xl">
-    <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="mb-6 flex justify-end">
+<div class="mx-auto w-full max-w-5xl">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <div
+            class="flex flex-col gap-4 rounded-[18px] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.48)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        >
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-[12px] bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:map-pin"
+                    ></mat-icon>
+                </div>
+                <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.address.title' | transloco }}
+                </h3>
+            </div>
+
             <button
                 mat-flat-button
                 color="primary"
                 type="submit"
+                class="min-h-12 rounded-[12px] px-5"
                 [disabled]="saving"
             >
                 @if (saving) {
@@ -17,92 +34,115 @@
             </button>
         </div>
 
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.address.title' | transloco }}
-            </h3>
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] sm:p-6"
+        >
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+                <div class="grid gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                        <spa-input
+                            [label]="
+                                'admin.site.dashboard.address.line1' | transloco
+                            "
+                            [labelTooltip]="'line1'"
+                            formControlName="line1"
+                            [showErrors]="true"
+                            [placeholder]="
+                                'admin.site.dashboard.placeholders.addressLine1'
+                                    | transloco
+                            "
+                        >
+                        </spa-input>
+                    </div>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="md:col-span-2">
+                    <div class="md:col-span-2">
+                        <spa-input
+                            [label]="
+                                'admin.site.dashboard.address.line2' | transloco
+                            "
+                            [labelTooltip]="'line2'"
+                            formControlName="line2"
+                            [showErrors]="true"
+                            [placeholder]="
+                                'admin.site.dashboard.placeholders.addressLine2'
+                                    | transloco
+                            "
+                        >
+                        </spa-input>
+                    </div>
+
                     <spa-input
-                        [label]="
-                            'admin.site.dashboard.address.line1' | transloco
-                        "
-                        [labelTooltip]="'line1'"
-                        formControlName="line1"
+                        [label]="'admin.site.dashboard.address.city' | transloco"
+                        [labelTooltip]="'city'"
+                        formControlName="city"
                         [showErrors]="true"
                         [placeholder]="
-                            'admin.site.dashboard.placeholders.addressLine1'
+                            'admin.site.dashboard.placeholders.city'
+                                | transloco
+                        "
+                    >
+                    </spa-input>
+
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.state' | transloco
+                        "
+                        [labelTooltip]="'state'"
+                        formControlName="state"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.state'
+                                | transloco
+                        "
+                    >
+                    </spa-input>
+
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.postalCode'
+                                | transloco
+                        "
+                        [labelTooltip]="'postalCode'"
+                        formControlName="postalCode"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.postalCode'
+                                | transloco
+                        "
+                    >
+                    </spa-input>
+
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.address.country' | transloco
+                        "
+                        [labelTooltip]="'country'"
+                        formControlName="country"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.site.dashboard.placeholders.country'
                                 | transloco
                         "
                     >
                     </spa-input>
                 </div>
 
-                <div class="md:col-span-2">
-                    <spa-input
-                        [label]="
-                            'admin.site.dashboard.address.line2' | transloco
-                        "
-                        [labelTooltip]="'line2'"
-                        formControlName="line2"
-                        [showErrors]="true"
-                        [placeholder]="
-                            'admin.site.dashboard.placeholders.addressLine2'
-                                | transloco
-                        "
+                <div
+                    class="rounded-[14px] border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                    <div
+                        class="mb-4 rounded-[14px] border border-dashed border-slate-200 bg-slate-50 p-4"
                     >
-                    </spa-input>
-                </div>
+                        <div
+                            class="flex h-12 w-12 items-center justify-center rounded-[12px] bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                svgIcon="heroicons_outline:globe-alt"
+                            ></mat-icon>
+                        </div>
+                    </div>
 
-                <spa-input
-                    [label]="'admin.site.dashboard.address.city' | transloco"
-                    [labelTooltip]="'city'"
-                    formControlName="city"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.city' | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="'admin.site.dashboard.address.state' | transloco"
-                    [labelTooltip]="'state'"
-                    formControlName="state"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.state' | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.address.postalCode' | transloco
-                    "
-                    [labelTooltip]="'postalCode'"
-                    formControlName="postalCode"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.postalCode'
-                            | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="'admin.site.dashboard.address.country' | transloco"
-                    [labelTooltip]="'country'"
-                    formControlName="country"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.site.dashboard.placeholders.country' | transloco
-                    "
-                >
-                </spa-input>
-
-                <div class="md:col-span-2">
                     <spa-input
                         [label]="
                             'admin.site.dashboard.address.mapEmbedUrl'
@@ -116,6 +156,6 @@
                     </spa-input>
                 </div>
             </div>
-        </div>
+        </section>
     </form>
 </div>

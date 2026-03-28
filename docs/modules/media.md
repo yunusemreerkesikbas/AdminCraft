@@ -132,9 +132,9 @@ Linked usages:
 
 ### Media UID alignment for seeded content
 
-**Why UIDs mismatch:** The upload endpoint (`POST /api/media`) auto-generates UIDs in the form `cmsitem_<random>` — there is no way to specify a custom UID at upload time. The update endpoint (`PUT /api/media/{id}`) only exposes `isPublic` and `tags`; it does not allow changing the UID. Component entry `custom_data` fields seeded by `seed_liko_components.sql` reference **semantic UIDs** (e.g. `homepage-hero-bg`, `homepage-project-1`). These do not match the auto-generated values, causing `GET /api/cms/media?uids=homepage-hero-bg&...` to return empty results and images to not appear on the storefront.
+**Why UIDs mismatch:** The upload endpoint (`POST /api/media`) auto-generates UIDs in the form `cmsitem_<random>` — there is no way to specify a custom UID at upload time. The update endpoint (`PUT /api/media/{id}`) only exposes `isPublic` and `tags`; it does not allow changing the UID. Component entry `custom_data` fields seeded by the theme page scripts reference **semantic UIDs** (e.g. `homepage-hero-bg`, `homepage-project-1`). These do not match the auto-generated values, causing `GET /api/cms/media?uids=homepage-hero-bg&...` to return empty results and images to not appear on the storefront.
 
-**Fix:** Run `backend/src/main/resources/impex/seed_liko_media_uids.sql` after uploading all assets. It updates `media.uid` by matching on `original_name` — the only supported way to assign semantic UIDs to uploaded media. See the [ImpEx execution order](./impex.md) for correct sequencing.
+**Fix:** Run the relevant theme page script after uploading all assets. For the default Liko theme this is `backend/src/main/resources/impex/theme/liko/homepage.sql` for homepage assets, `backend/src/main/resources/impex/theme/liko/about_page.sql` for About assets, and `backend/src/main/resources/impex/theme/liko/service_page.sql` for Service assets. These scripts update `media.uid` by matching on `original_name` — the only supported way to assign semantic UIDs to uploaded media. See the [ImpEx execution order](./impex.md) for correct sequencing.
 
 ### Site logo media fields
 

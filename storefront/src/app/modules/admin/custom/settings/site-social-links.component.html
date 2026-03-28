@@ -1,26 +1,41 @@
-<div [formGroup]="group" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <spa-input
-        [label]="'admin.settings.social.facebook' | transloco"
-        formControlName="facebook"
-    ></spa-input>
-    <spa-input
-        [label]="'admin.settings.social.instagram' | transloco"
-        formControlName="instagram"
-    ></spa-input>
-    <spa-input
-        [label]="'admin.settings.social.x' | transloco"
-        formControlName="x"
-    ></spa-input>
-    <spa-input
-        [label]="'admin.settings.social.linkedin' | transloco"
-        formControlName="linkedin"
-    ></spa-input>
-    <spa-input
-        [label]="'admin.settings.social.youtube' | transloco"
-        formControlName="youtube"
-    ></spa-input>
-    <spa-input
-        [label]="'admin.settings.social.tiktok' | transloco"
-        formControlName="tiktok"
-    ></spa-input>
+<div
+    [formGroup]="group"
+    class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.facebook' | transloco"
+            formControlName="facebook"
+        ></spa-input>
+    </div>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.instagram' | transloco"
+            formControlName="instagram"
+        ></spa-input>
+    </div>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.x' | transloco"
+            formControlName="x"
+        ></spa-input>
+    </div>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.linkedin' | transloco"
+            formControlName="linkedin"
+        ></spa-input>
+    </div>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.youtube' | transloco"
+            formControlName="youtube"
+        ></spa-input>
+    </div>
+    <div class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.settings.social.tiktok' | transloco"
+            formControlName="tiktok"
+        ></spa-input>
+    </div>
 </div>
