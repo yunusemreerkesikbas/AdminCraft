@@ -28,20 +28,6 @@ export const getGoogleAnalyticsId = (): string | undefined =>
 export const getGtmId = (): string | undefined =>
   process.env.NEXT_PUBLIC_GTM_ID?.trim() || undefined;
 
-/**
- * Extracts the tenant subdomain from a hostname using a pattern like `s1-{subdomain}.craftive.io`.
- * Returns null if the hostname does not match the pattern.
- */
-export const extractSubdomainFromPattern = (
-  hostname: string,
-  pattern: string,
-): string | null => {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  const regexStr = escaped.replace("\\{subdomain\\}", "([^.]+)");
-  const match = hostname.match(new RegExp(`^${regexStr}$`));
-  return match ? match[1] : null;
-};
-
 export const getTenantContext = (): TenantContext => {
   const tenantSubdomain = readFirstEnv(["TENANT_SUBDOMAIN", "NEXT_PUBLIC_TENANT_SUBDOMAIN"]);
   const tenantId = readFirstEnv(["TENANT_ID", "NEXT_PUBLIC_TENANT_ID"]);
