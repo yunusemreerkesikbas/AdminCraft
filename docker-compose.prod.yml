@@ -115,8 +115,7 @@ services:
       # Demo/reference storefront shipped from this repo.
       # Tenant-specific storefronts are deployed separately via deploy-tenant-storefront.sh.
       # Matches tenant subdomains; excludes prod API and admin panel hosts.
-      - "traefik.http.routers.storefront.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`api.${DOMAIN}`) && !Host(`app.${DOMAIN}`)"
-      - "traefik.http.routers.storefront.ruleSyntax=v2"
+      - "traefik.http.routers.storefront.rule=HostRegexp(`[a-z0-9-]+\\.${DOMAIN}`) && !Host(`api.${DOMAIN}`) && !Host(`app.${DOMAIN}`)"
       - "traefik.http.routers.storefront.priority=1"
       - "traefik.http.routers.storefront.entrypoints=websecure"
       - "traefik.http.routers.storefront.tls.certresolver=letsencrypt"
