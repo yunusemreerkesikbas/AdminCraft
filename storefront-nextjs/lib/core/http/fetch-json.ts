@@ -5,6 +5,7 @@ import { buildCmsUrl, type QueryValue } from "./query";
 export type FetchJsonOptions = {
   cache?: RequestCache;
   revalidate?: number;
+  extraHeaders?: Record<string, string>;
 };
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -17,7 +18,7 @@ export const fetchCmsJson = async <T>(
   const url = buildCmsUrl(path, params);
   const requestCache = isDevelopment ? "no-store" : options?.cache ?? "force-cache";
   const fetchOptions: RequestInit & { next?: { revalidate?: number } } = {
-    headers: buildJsonHeaders(),
+    headers: { ...(await buildJsonHeaders()), ...options?.extraHeaders },
     cache: requestCache,
   };
 

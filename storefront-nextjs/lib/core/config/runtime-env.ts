@@ -28,6 +28,20 @@ export const getGoogleAnalyticsId = (): string | undefined =>
 export const getGtmId = (): string | undefined =>
   process.env.NEXT_PUBLIC_GTM_ID?.trim() || undefined;
 
+/**
+ * Extracts the tenant subdomain from a hostname using a pattern like `s1-{subdomain}.craftive.io`.
+ * Returns null if the hostname does not match the pattern.
+ */
+export const extractSubdomainFromPattern = (
+  hostname: string,
+  pattern: string,
+): string | null => {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  const regexStr = escaped.replace("\\{subdomain\\}", "([^.]+)");
+  const match = hostname.match(new RegExp(`^${regexStr}$`));
+  return match ? match[1] : null;
+};
+
 export const getTenantContext = (): TenantContext => {
   const tenantSubdomain = readFirstEnv(["TENANT_SUBDOMAIN", "NEXT_PUBLIC_TENANT_SUBDOMAIN"]);
   const tenantId = readFirstEnv(["TENANT_ID", "NEXT_PUBLIC_TENANT_ID"]);
@@ -47,7 +61,7 @@ export const getTenantContext = (): TenantContext => {
   }
 
   throw new Error(
-    "Tenant context is required. Set TENANT_SUBDOMAIN or TENANT_ID before starting the storefront.",
+    "Tenant context is required. Set TENANT_SUBDOMAIN, TENANT_ID, or TENANT_HOSTNAME_PATTERN before starting the storefront.",
   );
 };
 
@@ -56,5 +70,28 @@ export const getTenantHeaders = (): Record<string, string> => {
   return { [tenantContext.headerName]: tenantContext.headerValue };
 };
 
-export const getTenantHostname = (): string | undefined =>
-  process.env.TENANT_HOSTNAME?.trim() || undefined;
+/**
+ * Async version that reads the tenant subdomain injected by proxy.ts via the
+ * `x-tenant-subdomain` request header (next/headers). Falls back to the static
+ * TENANT_SUBDOMAIN / TENANT_ID env vars for single-tenant deployments.
+ */
+export const getTenantHeadersAsync = async (): Promise<Record<string, string>> => {
+  try {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const subdomain = h.get("x-tenant-subdomain");
+    if (subdomain) {
+      return { "X-Tenant-Subdomain": subdomain };
+    }
+  } catch {
+    // Not in a server component context (e.g. proxy/middleware) — fall back to env
+  }
+  try {
+    return getTenantHeaders();
+  } catch {
+    // No tenant context resolvable — TENANT_HOSTNAME_PATTERN deployment at build time
+    // or outside a request context. Return empty and let the backend reject gracefully.
+    console.warn("[tenant] No tenant context available. Set TENANT_SUBDOMAIN for build-time fetches.");
+    return {};
+  }
+};
