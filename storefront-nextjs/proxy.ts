@@ -3,23 +3,24 @@ import type { NextRequest } from "next/server";
 import { fetchCmsJson } from "./lib/core/http/fetch-json";
 import { resolveCmsEndpoint } from "./lib/core/http/endpoints";
 import { isValidLocaleFormat } from "./lib/core/i18n/locale";
-import { extractSubdomainFromPattern } from "./lib/core/config/runtime-env";
 
 /**
  * Resolves the tenant subdomain for the incoming request.
  *
- * Priority:
- * 1. TENANT_HOSTNAME_PATTERN env var — dynamic multi-tenant: one deployment, many tenants.
- *    Pattern uses `{subdomain}` as a placeholder, e.g. `s1-{subdomain}.craftive.io`.
- *    Returns null when the hostname does not match (→ 404).
- * 2. TENANT_SUBDOMAIN env var — single-tenant deployment (backward compat).
+ * Reads TENANT_SUBDOMAIN env var (set per deployment).
+ * If TENANT_HOSTNAME is also set, validates that the incoming hostname matches — returns
+ * null (→ 404) when it doesn't, preventing cross-tenant responses.
  */
 function resolveTenantSubdomain(hostname: string): string | null {
-  const pattern = process.env.TENANT_HOSTNAME_PATTERN?.trim();
-  if (pattern) {
-    return extractSubdomainFromPattern(hostname.toLowerCase(), pattern.toLowerCase());
+  const subdomain = process.env.TENANT_SUBDOMAIN?.trim();
+  if (!subdomain) return null;
+
+  const expectedHostname = process.env.TENANT_HOSTNAME?.trim().toLowerCase();
+  if (expectedHostname && hostname.toLowerCase() !== expectedHostname) {
+    return null;
   }
-  return process.env.TENANT_SUBDOMAIN?.trim() ?? null;
+
+  return subdomain;
 }
 
 export async function proxy(request: NextRequest) {
