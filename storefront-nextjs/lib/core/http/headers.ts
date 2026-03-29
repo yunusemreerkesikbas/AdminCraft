@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
-import { getTenantHeaders } from "../config/runtime-env";
+import { getTenantHeaders, getTenantHeadersAsync } from "../config/runtime-env";
 
-export const buildJsonHeaders = (): HeadersInit => ({
+export const buildJsonHeaders = async (): Promise<HeadersInit> => ({
   Accept: "application/json",
-  ...getTenantHeaders(),
+  ...(await getTenantHeadersAsync()),
 });
 
 export const buildForwardHeaders = (
@@ -19,8 +19,14 @@ export const buildForwardHeaders = (
     }
   }
 
-  for (const [name, value] of Object.entries(getTenantHeaders())) {
-    headers.set(name, value);
+  // Prefer the subdomain injected by proxy.ts; fall back to static env var.
+  const subdomain = request.headers.get("x-tenant-subdomain");
+  if (subdomain) {
+    headers.set("X-Tenant-Subdomain", subdomain);
+  } else {
+    for (const [name, value] of Object.entries(getTenantHeaders())) {
+      headers.set(name, value);
+    }
   }
 
   return headers;

@@ -1,4 +1,4 @@
-import { getTenantHeaders } from "../config/runtime-env";
+import { getTenantHeadersAsync } from "../config/runtime-env";
 import { buildCmsUrl, type QueryValue } from "./query";
 
 export type FetchTextOptions = {
@@ -18,7 +18,7 @@ export const fetchCmsText = async (
   const fetchOptions: RequestInit & { next?: { revalidate?: number } } = {
     headers: {
       Accept: options?.accept ?? "text/plain",
-      ...getTenantHeaders(),
+      ...(await getTenantHeadersAsync()),
     },
     cache: requestCache,
   };
