@@ -39,9 +39,7 @@ services:
       - craftive-network
     labels:
       - "traefik.enable=true"
-      # Matches stage tenant domains in s1-<tenant>.domain format; excludes stage API and admin panel hosts.
-      - "traefik.http.routers.storefront.rule=HostRegexp(`s1-[a-z0-9-]+\\.${DOMAIN}`) && !Host(`s1-api.${DOMAIN}`) && !Host(`s1-app.${DOMAIN}`)"
-      - "traefik.http.routers.storefront.priority=1"
+      - "traefik.http.routers.storefront.rule=Host(`s1-${STOREFRONT_TENANT_SUBDOMAIN:-demo}.${DOMAIN}`)"
       - "traefik.http.routers.storefront.entrypoints=websecure"
       - "traefik.http.routers.storefront.tls.certresolver=letsencrypt"
       - "traefik.http.services.storefront.loadbalancer.server.port=3000"
