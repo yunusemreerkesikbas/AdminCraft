@@ -146,9 +146,7 @@ public class SiteSettingsController {
     return new SiteSettingsAppDto.SiteSettingsAppI18nDto(
         dto.siteName(),
         dto.tagline(),
-        mapSeoToApp(dto.seo()),
-        dto.footerText(),
-        dto.headerTopbarText());
+        mapSeoToApp(dto.seo()));
   }
 
   private SiteSettingsAppDto.SiteSettingsAppI18nDto.SeoDto mapSeoToApp(SiteSettingsI18nDto.SeoDto seoDto) {
@@ -215,9 +213,7 @@ public class SiteSettingsController {
             return new SiteSettingsI18nDto(
                 v.siteName(),
                 v.tagline(),
-                mapSeoToPresentation(v.seo()),
-                v.footerText(),
-                v.headerTopbarText());
+                mapSeoToPresentation(v.seo()));
           }));
     }
 

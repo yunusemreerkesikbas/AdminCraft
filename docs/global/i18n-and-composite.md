@@ -17,6 +17,16 @@ For workflows that must be atomic (base + translations in one transaction), use 
 - Service method is `@Transactional`
 - Validation failures rollback the entire operation
 
+### Response message contract
+
+For admin composite/action endpoints, success and error responses should return a localized `ApiResponse.message` resolved by backend `MessageSource` using `Accept-Language`.
+
+- Backend should return resolved user-facing text, not raw i18n keys
+- Frontend should show backend `response.message` directly for backend-driven notifications
+- Frontend fallback i18n keys should be reserved for client-only situations such as network failures, empty states, or local validation flows
+
+This pattern is used by component-library composite/action flows (`component`, `component type`, `entry`, `entry field`).
+
 ### Example: Media composite upload
 
 Backend endpoint is implemented at:
@@ -39,5 +49,7 @@ For public delivery endpoints (CMS), language is resolved by:
 
 - explicit `lang` query param when the endpoint supports it (e.g. components/pages in `CmsDeliveryController`)
 - otherwise `Accept-Language` (ISO codes like `tr`, `en`), then a default language
+
+For authenticated admin endpoints, localized `ApiResponse.message` text is typically resolved from the `Accept-Language` header.
 
 See: [`backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java`](../../backend/src/main/java/com/backend/presentation/controller/CmsDeliveryController.java)

@@ -73,6 +73,9 @@ Endpoints:
 
 Composite note:
 - Composite create/update **do not accept `status`**. Status defaults to `DRAFT` and is managed via publish flows (i18n publish endpoints).
+- Composite success/error responses return localized `ApiResponse.message` text resolved from backend message bundles via `Accept-Language`.
+- Admin UI is expected to show backend `response.message` directly for composite success/error notifications.
+- Responsive media create/update in the admin UI sends only `desktopMediaId` / `mobileMediaId`; the client does **not** generate a `code`. Backend creates a code on create and preserves the existing code on update.
 
 Entry field definition controller:
 
@@ -95,6 +98,7 @@ Component entries controller:
 
 Composite entry note:
 - Entry composite create/update **do not accept `status`**. Status defaults to `DRAFT` and is managed via publish flows.
+- Entry composite and entry field success/error responses also return localized backend `ApiResponse.message` text.
 - `GET /api/components/entries/{id}?include=translations` can hydrate legacy `translations[*].customFields.mediaUid` values into `translations[*].customFields.media`, so the admin UI can preview/edit legacy entry media without a follow-up media metadata request.
 
 Navigation-aware binding behavior is driven by the `isNavigationAware()` flag in:
@@ -133,17 +137,24 @@ Key files:
 
 - `models/component-library.types.ts` (defines `ComponentTypeDto` with `navigationAware: boolean`)
 - `models/component-form.types.ts` (defines `ComponentTypeFormData` with `navigationAware`)
+- `list/component-list.component.ts`
 - `types/component-types-list.component.ts`
 - `types/component-type-edit-dialog/component-type-edit-dialog.component.ts` (checkbox for `navigationAware`)
 - `component-edit-dialog/component-edit-dialog.component.ts` (`isNavigationAware` getter drives field visibility)
+- `entries/component-entry-list/component-entry-list.component.ts`
 - `services/component-schema-builder.service.ts`
+
+Admin UI behavior notes:
+
+- Backend-driven success/error notifications are shown directly from `ApiResponse.message`; frontend transloco fallback keys are kept only for client-side-only states such as empty state, loading info, or system-type guards.
+- Delete actions in component and component-entry lists use the shared confirmation pattern (`ConfirmationService` → `SpaGenericModalComponent`) instead of `window.confirm`.
 
 ## Security & tenant isolation
 
 - Admin APIs are tenant-scoped via `TenantFilter`:
   - `../../backend/src/main/java/com/backend/infrastructure/tenant/TenantFilter.java`
-- Controller access is role-protected (`TENANT_ADMIN` for component endpoints).
-- Entry field definitions allow `TENANT_ADMIN` or `SUPER_ADMIN`, still tenant-scoped.
+- Read endpoints are generally available to `TENANT_ADMIN` and `VIEWER`; write endpoints are further restricted to `TENANT_ADMIN`.
+- Entry field definitions allow `TENANT_ADMIN`, `SUPER_ADMIN`, and `VIEWER` for reads; writes require `TENANT_ADMIN` or `SUPER_ADMIN`.
 
 ## Implementation guide
 

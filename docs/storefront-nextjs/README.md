@@ -391,10 +391,31 @@ Each route uses `generateMetadata` together with the composite page loaders from
 
 Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 
-- `NEXT_PUBLIC_CMS_API_URL` (base URL for CMS delivery)
-- `TENANT_SUBDOMAIN` / `NEXT_PUBLIC_TENANT_SUBDOMAIN`
-- `TENANT_ID` / `NEXT_PUBLIC_TENANT_ID`
-- `NEXT_OUTPUT=export` enables static export in `next.config.ts`
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_CMS_API_URL` | Yes | Base URL for CMS delivery API (baked into client bundle at build time) |
+| `TENANT_SUBDOMAIN` | Yes* | Tenant subdomain sent as `X-Tenant-Subdomain` header on every CMS request. Set once per deployment. |
+| `TENANT_ID` | Yes* | Alternative to `TENANT_SUBDOMAIN` — identifies tenant by numeric ID (`X-Tenant-ID`). |
+| `TENANT_HOSTNAME` | No | Expected hostname for this deployment. Requests from other hostnames return 404 (see Hostname validation). Leave unset in local dev. |
+| `NEXT_IMAGE_DOMAINS` | No | Comma-separated hostnames allowed for `next/image` optimization. CMS API hostname and localhost are auto-included. |
+| `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
+| `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
+
+\* One of `TENANT_SUBDOMAIN` or `TENANT_ID` is required.
+
+### Deployment model
+
+`storefront-nextjs` is a **single-tenant per deployment** project. Each deployment knows its own tenant statically via env vars — there is no runtime hostname-to-tenant resolution.
+
+| Deployment | `TENANT_SUBDOMAIN` | `TENANT_HOSTNAME` |
+|---|---|---|
+| Platform demo (stage) | `demo` | `s1-demo.craftive.io` |
+| Platform demo (prod) | `demo` | `demo.craftive.io` |
+| Tenant fork (stage) | `acme` | `s1-acme.craftive.io` |
+| Tenant fork (whitelabel) | `acme` | `acme.com` |
+
+For tenant forks, only `components/theme/` changes. Env vars and deployment config are set independently per fork instance.
 
 ## Caching and revalidation
 

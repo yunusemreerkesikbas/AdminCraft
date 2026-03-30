@@ -1,24 +1,36 @@
 package com.backend.application.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.application.dto.response.SiteOverviewAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.ActionsAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.ActivityAppDto;
+import com.backend.application.dto.response.SiteOverviewAppDto.ActivityTrendDayAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.EntityStatsAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.MediaStatsAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.SiteStatsAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.SiteStatusAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.UserAppDto;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteActivity;
 import com.backend.domain.enums.ComponentStatus;
@@ -134,31 +146,24 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         log.debug("Getting recent activity with limit: {}", limit);
 
         try {
-            List<SiteActivity> activities = siteActivityRepository.findRecentActivities(limit);
-
-            // Collect user IDs
-            java.util.Set<Long> userIds = activities.stream()
-                    .map(SiteActivity::getUserId)
-                    .filter(java.util.Objects::nonNull)
-                    .collect(Collectors.toSet());
-
-            // Fetch users
-            java.util.Map<Long, com.backend.domain.entity.User> userMap = java.util.Collections.emptyMap();
-            if (!userIds.isEmpty()) {
-                userMap = userRepository.findByIdIn(new java.util.ArrayList<>(userIds)).stream()
-                        .collect(Collectors.toMap(com.backend.domain.entity.User::getId,
-                                java.util.function.Function.identity()));
-            }
-
-            final java.util.Map<Long, com.backend.domain.entity.User> finalUserMap = userMap;
-
-            return activities.stream()
-                    .map(activity -> toActivityDto(activity,
-                            finalUserMap.get(activity.getUserId())))
-                    .collect(Collectors.toList());
+            return mapActivities(siteActivityRepository.findRecentActivities(limit));
         } catch (Exception e) {
             log.warn("Failed to get recent activities", e);
             return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public Page<ActivityAppDto> getRecentActivityPage(Pageable pageable) {
+        log.debug("Getting recent activity page: {}", pageable);
+
+        try {
+            Page<SiteActivity> activityPage = siteActivityRepository.findRecentActivities(pageable);
+            List<ActivityAppDto> content = mapActivities(activityPage.getContent());
+            return new PageImpl<>(content, pageable, activityPage.getTotalElements());
+        } catch (Exception e) {
+            log.warn("Failed to get recent activity page", e);
+            return Page.empty(pageable);
         }
     }
 
@@ -267,6 +272,26 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
                 activity.getCreatedAt());
     }
 
+    private List<ActivityAppDto> mapActivities(List<SiteActivity> activities) {
+        java.util.Set<Long> userIds = activities.stream()
+                .map(SiteActivity::getUserId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        java.util.Map<Long, com.backend.domain.entity.User> userMap = java.util.Collections.emptyMap();
+        if (!userIds.isEmpty()) {
+            userMap = userRepository.findByIdIn(new java.util.ArrayList<>(userIds)).stream()
+                    .collect(Collectors.toMap(com.backend.domain.entity.User::getId,
+                            java.util.function.Function.identity()));
+        }
+
+        final java.util.Map<Long, com.backend.domain.entity.User> finalUserMap = userMap;
+
+        return activities.stream()
+                .map(activity -> toActivityDto(activity, finalUserMap.get(activity.getUserId())))
+                .collect(Collectors.toList());
+    }
+
     private String getReadableDescription(SiteActivity activity) {
         try {
             Locale locale = LocaleContextHolder.getLocale();
@@ -284,5 +309,68 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
             log.warn("Failed to resolve activity description: {}", e.getMessage());
             return activity.getEntityType() + " \"" + activity.getEntityName() + "\" " + activity.getAction();
         }
+    }
+
+    @Override
+    public Page<ActivityTrendDayAppDto> getActivityTrend(Pageable pageable, int days) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(Math.max(days - 1L, 0L));
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        List<SiteActivity> activities;
+        try {
+            activities = siteActivityRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+        } catch (Exception e) {
+            log.warn("Failed to fetch activity trend data", e);
+            activities = Collections.emptyList();
+        }
+
+        // Group by date
+        Map<LocalDate, long[]> dayMap = new HashMap<>();
+        for (SiteActivity a : activities) {
+            LocalDate date = a.getCreatedAt().toLocalDate();
+            long[] counts = dayMap.computeIfAbsent(date, k -> new long[3]); // [created, updated, published]
+            if (a.getAction() == ActivityAction.CREATED || a.getAction() == ActivityAction.UPLOADED) {
+                counts[0]++;
+            } else if (a.getAction() == ActivityAction.PUBLISHED) {
+                counts[2]++;
+            } else {
+                counts[1]++;
+            }
+        }
+
+        // Build one entry per day (fill missing days with zeros)
+        List<ActivityTrendDayAppDto> result = new ArrayList<>();
+        for (int i = days - 1; i >= 0; i--) {
+            LocalDate date = endDate.minusDays(i);
+            long[] counts = dayMap.getOrDefault(date, new long[3]);
+            long created = counts[0];
+            long updated = counts[1];
+            long published = counts[2];
+            result.add(new ActivityTrendDayAppDto(
+                    date.format(dateFormatter),
+                    created + updated + published,
+                    created,
+                    updated,
+                    published));
+        }
+
+        List<ActivityTrendDayAppDto> sortedResult = new ArrayList<>(result);
+        Sort.Order dateOrder = pageable.getSort().getOrderFor("date");
+        if (dateOrder != null && dateOrder.isDescending()) {
+            sortedResult.sort(Comparator.comparing(ActivityTrendDayAppDto::date).reversed());
+        } else {
+            sortedResult.sort(Comparator.comparing(ActivityTrendDayAppDto::date));
+        }
+
+        int fromIndex = Math.min((int) pageable.getOffset(), sortedResult.size());
+        int toIndex = Math.min(fromIndex + pageable.getPageSize(), sortedResult.size());
+
+        return new PageImpl<>(
+                sortedResult.subList(fromIndex, toIndex),
+                pageable,
+                sortedResult.size());
     }
 }

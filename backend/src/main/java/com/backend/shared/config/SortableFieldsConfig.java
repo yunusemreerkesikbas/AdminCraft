@@ -137,6 +137,24 @@ public final class SortableFieldsConfig {
                         SortOptionDto.of("email,asc", "admin.sort.emailAsc"),
                         SortOptionDto.of("email,desc", "admin.sort.emailDesc"));
 
+        public static final Set<String> SITE_ACTIVITY_ALLOWED_FIELDS = Set.of(
+                        "createdAt");
+
+        public static final String SITE_ACTIVITY_DEFAULT_SORT = "createdAt,desc";
+
+        public static final List<SortOptionDto> SITE_ACTIVITY_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("createdAt,desc", "admin.sort.newest"),
+                        SortOptionDto.of("createdAt,asc", "admin.sort.oldest"));
+
+        public static final Set<String> SITE_ACTIVITY_TREND_ALLOWED_FIELDS = Set.of(
+                        "date");
+
+        public static final String SITE_ACTIVITY_TREND_DEFAULT_SORT = "date,desc";
+
+        public static final List<SortOptionDto> SITE_ACTIVITY_TREND_SORT_OPTIONS = List.of(
+                        SortOptionDto.defaultOption("date,desc", "admin.sort.newest"),
+                        SortOptionDto.of("date,asc", "admin.sort.oldest"));
+
         // ========== Tenant Entity ==========
         public static final Set<String> TENANT_ALLOWED_FIELDS = Set.of(
                         "createdAt", "companyName", "subdomain", "status");

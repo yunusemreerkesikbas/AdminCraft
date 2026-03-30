@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,13 +39,18 @@ import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.UpdateSecuritySettingsRequest;
 import com.backend.presentation.dto.response.SecuritySettingsResponse;
+import com.backend.presentation.dto.response.PageableResponse;
 import com.backend.presentation.dto.response.SiteOverviewResponse;
 import com.backend.presentation.dto.response.SiteResponse;
+import com.backend.presentation.dto.response.SortConfig;
 import com.backend.presentation.dto.response.SiteTechnicalResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityHelper;
+import com.backend.shared.common.SortParseUtil;
+import com.backend.shared.config.SortableFieldsConfig;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +62,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 public class SiteController {
+    private static final int ACTIVITY_TREND_WINDOW_DAYS = 30;
+
 
     private final SiteService siteService;
     private final SiteOverviewService siteOverviewService;
@@ -423,6 +434,93 @@ public class SiteController {
                 .toLowerCase();
     }
 
+    @GetMapping("/activity/trend")
+    public ResponseEntity<ApiResponse<PageableResponse<SiteOverviewResponse.ActivityTrendDayResponse>>> getActivityTrend(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "7") @Min(1) @Max(ACTIVITY_TREND_WINDOW_DAYS) int size,
+            @RequestParam(required = false) String sort,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            String effectiveSort = SortParseUtil.getEffectiveSortCode(
+                    sort,
+                    SortableFieldsConfig.SITE_ACTIVITY_TREND_DEFAULT_SORT);
+            Sort sortObj = SortParseUtil.parse(
+                    effectiveSort,
+                    SortableFieldsConfig.SITE_ACTIVITY_TREND_ALLOWED_FIELDS,
+                    SortableFieldsConfig.SITE_ACTIVITY_TREND_DEFAULT_SORT);
+            Pageable pageable = PageRequest.of(page, size, sortObj);
+
+            Page<SiteOverviewAppDto.ActivityTrendDayAppDto> trendPage = siteOverviewService.getActivityTrend(
+                    pageable,
+                    ACTIVITY_TREND_WINDOW_DAYS);
+            List<SiteOverviewResponse.ActivityTrendDayResponse> days = trendPage.getContent().stream()
+                    .map(d -> new SiteOverviewResponse.ActivityTrendDayResponse(
+                            d.date(), d.total(), d.created(), d.updated(), d.published()))
+                    .collect(Collectors.toList());
+            SortConfig sortConfig = SortConfig.of(
+                    effectiveSort,
+                    SortableFieldsConfig.SITE_ACTIVITY_TREND_SORT_OPTIONS);
+            PageableResponse<SiteOverviewResponse.ActivityTrendDayResponse> response = PageableResponse.fromMapped(
+                    trendPage,
+                    days,
+                    sortConfig);
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (IllegalArgumentException ex) {
+            String message = messageSource.getMessage(
+                    "site.activity.trend.sort.invalid",
+                    new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        } catch (Exception ex) {
+            log.error("Error getting activity trend", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to get activity trend"));
+        }
+    }
+
+    @GetMapping("/activity")
+    public ResponseEntity<ApiResponse<PageableResponse<SiteOverviewResponse.ActivityDto>>> getRecentActivity(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) String sort,
+            @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+        try {
+            String effectiveSort = SortParseUtil.getEffectiveSortCode(
+                    sort,
+                    SortableFieldsConfig.SITE_ACTIVITY_DEFAULT_SORT);
+            Sort sortObj = SortParseUtil.parse(
+                    effectiveSort,
+                    SortableFieldsConfig.SITE_ACTIVITY_ALLOWED_FIELDS,
+                    SortableFieldsConfig.SITE_ACTIVITY_DEFAULT_SORT);
+            Pageable pageable = PageRequest.of(page, size, sortObj);
+
+            Page<SiteOverviewAppDto.ActivityAppDto> activityPage = siteOverviewService.getRecentActivityPage(pageable);
+            List<SiteOverviewResponse.ActivityDto> content = activityPage.getContent().stream()
+                    .map(this::toActivityResponse)
+                    .collect(Collectors.toList());
+            SortConfig sortConfig = SortConfig.of(
+                    effectiveSort,
+                    SortableFieldsConfig.SITE_ACTIVITY_SORT_OPTIONS);
+            PageableResponse<SiteOverviewResponse.ActivityDto> response = PageableResponse.fromMapped(
+                    activityPage,
+                    content,
+                    sortConfig);
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (IllegalArgumentException ex) {
+            String message = messageSource.getMessage(
+                    "site.activity.sort.invalid",
+                    new Object[] { ex.getMessage() },
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(message));
+        } catch (Exception ex) {
+            log.error("Error getting recent activity page", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to get activity feed"));
+        }
+    }
+
     // Mappers
 
     private SiteOverviewResponse toSiteOverviewResponse(SiteOverviewAppDto dto) {
@@ -477,15 +575,9 @@ public class SiteController {
         // Map Recent Activity
         List<SiteOverviewResponse.ActivityDto> recentActivity = null;
         if (dto.recentActivity() != null) {
-            recentActivity = dto.recentActivity().stream().map(a -> {
-                SiteOverviewResponse.UserDto user = null;
-                if (a.user() != null) {
-                    user = new SiteOverviewResponse.UserDto(a.user().id(), a.user().email(), a.user().displayName());
-                }
-                return new SiteOverviewResponse.ActivityDto(
-                        a.id(), a.action(), a.entityType(), a.entityId(), a.entityName(), a.description(), user,
-                        a.createdAt());
-            }).collect(Collectors.toList());
+            recentActivity = dto.recentActivity().stream()
+                    .map(this::toActivityResponse)
+                    .collect(Collectors.toList());
         }
 
         // Map Actions
@@ -506,6 +598,22 @@ public class SiteController {
                 .recentActivity(recentActivity)
                 .actions(actions)
                 .build();
+    }
+
+    private SiteOverviewResponse.ActivityDto toActivityResponse(SiteOverviewAppDto.ActivityAppDto dto) {
+        SiteOverviewResponse.UserDto user = null;
+        if (dto.user() != null) {
+            user = new SiteOverviewResponse.UserDto(dto.user().id(), dto.user().email(), dto.user().displayName());
+        }
+        return new SiteOverviewResponse.ActivityDto(
+                dto.id(),
+                dto.action(),
+                dto.entityType(),
+                dto.entityId(),
+                dto.entityName(),
+                dto.description(),
+                user,
+                dto.createdAt());
     }
 
     private SiteTechnicalResponse toSiteTechnicalResponse(SiteTechnicalAppDto dto) {

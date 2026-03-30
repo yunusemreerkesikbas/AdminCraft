@@ -64,4 +64,17 @@ public record SiteOverviewAppDto(
       boolean canDisableMaintenance,
       String previewUrl) {
   }
+
+  public record ActivityTrendAppDto(
+      String period,
+      List<ActivityTrendDayAppDto> days) {
+  }
+
+  public record ActivityTrendDayAppDto(
+      String date,
+      long total,
+      long created,
+      long updated,
+      long published) {
+  }
 }

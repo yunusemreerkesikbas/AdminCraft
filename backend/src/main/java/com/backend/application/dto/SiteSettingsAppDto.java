@@ -76,9 +76,7 @@ public class SiteSettingsAppDto {
   public record SiteSettingsAppI18nDto(
       String siteName,
       String tagline,
-      SeoDto seo,
-      String footerText,
-      String headerTopbarText) {
+      SeoDto seo) {
 
     public record SeoDto(
         String title,

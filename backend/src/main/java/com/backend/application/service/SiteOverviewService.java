@@ -1,5 +1,8 @@
 package com.backend.application.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.application.dto.response.SiteOverviewAppDto;
 
 /**
@@ -31,10 +34,14 @@ public interface SiteOverviewService {
      */
     java.util.List<SiteOverviewAppDto.ActivityAppDto> getRecentActivity(int limit);
 
+    Page<SiteOverviewAppDto.ActivityAppDto> getRecentActivityPage(Pageable pageable);
+
     /**
      * Get available actions for the site.
      *
      * @return ActionsAppDto with available action flags and URLs
      */
     SiteOverviewAppDto.ActionsAppDto getAvailableActions();
+
+    Page<SiteOverviewAppDto.ActivityTrendDayAppDto> getActivityTrend(Pageable pageable, int days);
 }

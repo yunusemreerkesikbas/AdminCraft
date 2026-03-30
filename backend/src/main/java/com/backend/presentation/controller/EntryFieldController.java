@@ -34,14 +34,21 @@ public class EntryFieldController {
                         @PathVariable Long typeId,
                         @Valid @RequestBody CreateEntryFieldRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        EntryFieldDefinitionResponse response = EntryFieldDefinitionResponse.from(
+                                        entryFieldService.addField(typeId, request));
 
-                EntryFieldDefinitionResponse response = EntryFieldDefinitionResponse.from(
-                        entryFieldService.addField(typeId, request));
-
-                String successMessage = messageSource.getMessage("entry.field.create.success",
-                                null, Locale.forLanguageTag(lang));
-                return ResponseEntity.status(HttpStatus.CREATED)
-                                .body(ApiResponse.success(successMessage, response));
+                        String successMessage = messageSource.getMessage("entry.field.create.success",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(ApiResponse.success(successMessage, response));
+                } catch (Exception ex) {
+                        log.error("Error adding entry field for componentTypeId={}", typeId, ex);
+                        String message = messageSource.getMessage("entry.field.create.error",
+                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                }
         }
 
         @GetMapping("/{typeId}/entry-fields")
@@ -49,15 +56,22 @@ public class EntryFieldController {
         public ResponseEntity<ApiResponse<List<EntryFieldDefinitionResponse>>> getFields(
                         @PathVariable Long typeId,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
+                try {
+                        GetEntryFieldsByTypeQuery query = new GetEntryFieldsByTypeQuery(typeId);
+                        List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query)
+                                        .stream()
+                                        .map(EntryFieldDefinitionResponse::from)
+                                        .toList();
 
-                GetEntryFieldsByTypeQuery query = new GetEntryFieldsByTypeQuery(typeId);
-                List<EntryFieldDefinitionResponse> responses = entryFieldService.getFieldsByType(query)
-                        .stream()
-                        .map(EntryFieldDefinitionResponse::from)
-                        .toList();
-
-                String successMessage = messageSource.getMessage("entry.field.list.success",
-                                null, Locale.forLanguageTag(lang));
-                return ResponseEntity.ok(ApiResponse.success(successMessage, responses));
+                        String successMessage = messageSource.getMessage("entry.field.list.success",
+                                        null, Locale.forLanguageTag(lang));
+                        return ResponseEntity.ok(ApiResponse.success(successMessage, responses));
+                } catch (Exception ex) {
+                        log.error("Error listing entry fields for componentTypeId={}", typeId, ex);
+                        String message = messageSource.getMessage("entry.field.list.error",
+                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(ApiResponse.error(message));
+                }
         }
 }

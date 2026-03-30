@@ -22,6 +22,7 @@ import com.backend.domain.entity.SiteSetting;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.RobotsMetaTag;
 import com.backend.domain.enums.SettingType;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteSettingRepository;
 
@@ -38,6 +39,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
   private final TenantLanguageService tenantLanguageService;
   private final SiteRepository siteRepository;
   private final MediaService mediaService;
+  private final SiteActivityPublisher activityPublisher;
 
   @Override
   @Transactional(readOnly = true)
@@ -72,6 +74,8 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     if (!settingsToUpdate.isEmpty()) {
       repository.saveAll(settingsToUpdate);
       log.info("Updated {} site settings for tenant {}", settingsToUpdate.size(), tenantId);
+      activityPublisher.publishSiteSettingsEvent(tenantId, "site-settings", ActivityAction.UPDATED,
+          updatedBy, null, null);
     }
     return getAdminSettings(tenantId);
   }
@@ -167,9 +171,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     return new SiteSettingsAppI18nDto(
         i18nSettingsMap.get("i18n.siteName"),
         i18nSettingsMap.get("i18n.tagline"),
-        seo,
-        i18nSettingsMap.get("i18n.footerText"),
-        i18nSettingsMap.get("i18n.headerTopbarText"));
+        seo);
   }
 
   private List<SiteSetting> processGlobalSettings(Long tenantId, SiteSettingsAppGlobalDto global, Long updatedBy) {
@@ -273,15 +275,6 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
       if (seo.twitterCard() != null)
         settings.add(upsertSetting(tenantId, "i18n.seo.twitterCard", seo.twitterCard(), language, SettingType.I18N_TEXT,
             updatedBy));
-    }
-
-    if (i18n.footerText() != null) {
-      settings.add(
-          upsertSetting(tenantId, "i18n.footerText", i18n.footerText(), language, SettingType.I18N_TEXT, updatedBy));
-    }
-    if (i18n.headerTopbarText() != null) {
-      settings.add(upsertSetting(tenantId, "i18n.headerTopbarText", i18n.headerTopbarText(), language,
-          SettingType.I18N_TEXT, updatedBy));
     }
 
     return settings;

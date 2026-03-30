@@ -5,6 +5,8 @@ import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.ActivityEntityType;
 import com.backend.domain.repository.SiteActivityRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,11 @@ public class SiteActivityRepositoryImpl implements SiteActivityRepository {
     @Override
     public List<SiteActivity> findRecentActivities(int limit) {
         return siteActivityJpaRepository.findRecentActivities(PageRequest.of(0, limit));
+    }
+
+    @Override
+    public Page<SiteActivity> findRecentActivities(Pageable pageable) {
+        return siteActivityJpaRepository.findAll(pageable);
     }
 
     @Override
