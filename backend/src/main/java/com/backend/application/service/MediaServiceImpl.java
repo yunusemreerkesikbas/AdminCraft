@@ -28,8 +28,10 @@ import com.backend.domain.exception.EntityNotFoundException;
 import com.backend.domain.repository.ComponentEntryRepository;
 import com.backend.domain.repository.ComponentMediaLinkRepository;
 import com.backend.domain.repository.MediaRepository;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
 import com.backend.presentation.dto.request.MediaI18nRequest;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,8 @@ public class MediaServiceImpl implements MediaService {
     private final TransactionTemplate transactionTemplate;
     private final ResponsiveMediaService responsiveMediaService;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
+    private final SiteActivityPublisher activityPublisher;
+    private final SecurityHelper securityHelper;
     private final ComponentService componentService;
     private final ComponentEntryRepository componentEntryRepository;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
@@ -129,6 +133,8 @@ public class MediaServiceImpl implements MediaService {
                 return saved;
             });
 
+            activityPublisher.publishMediaEvent(savedMedia.getId(), savedMedia.getOriginalName(),
+                    ActivityAction.UPLOADED, uploadedBy, null, null);
             return savedMedia;
         } catch (Exception e) {
             log.error("Failed to save media metadata, rolling back file storage: {}", stored.filePath());
@@ -205,6 +211,9 @@ public class MediaServiceImpl implements MediaService {
         // Delete DB record first (inside transaction)
         mediaRepository.deleteById(id);
         log.info("Media deleted from database: {}", id);
+
+        activityPublisher.publishMediaEvent(id, media.getOriginalName(), ActivityAction.DELETED,
+                securityHelper.getCurrentUserIdOrNull(), null, null);
 
         // Delete file after DB commit (best effort)
         try {
@@ -488,4 +497,5 @@ public class MediaServiceImpl implements MediaService {
                 })
                 .orElse(null);
     }
+
 }

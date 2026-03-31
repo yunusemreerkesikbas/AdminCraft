@@ -76,9 +76,9 @@ public class ComponentEntryController {
                                         .body(ApiResponse.success(successMessage,
                                                         ComponentEntryResponse.from(created)));
                 } catch (Exception ex) {
-                        log.error("Error creating component entry: {}", ex.getMessage());
+                        log.error("Error creating component entry for componentId={}", componentId, ex);
                         String msg = messageSource.getMessage("component.entry.create.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -99,9 +99,9 @@ public class ComponentEntryController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, responses));
                 } catch (Exception ex) {
-                        log.error("Error listing entries: {}", ex.getMessage());
+                        log.error("Error listing component entries for componentId={}", componentId, ex);
                         String msg = messageSource.getMessage("component.entry.list.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -126,9 +126,9 @@ public class ComponentEntryController {
                         return ResponseEntity
                                         .ok(ApiResponse.success(successMessage, ComponentEntryResponse.from(entry)));
                 } catch (Exception ex) {
-                        log.error("Error getting entry: {}", ex.getMessage());
+                        log.error("Error getting component entry id={}", id, ex);
                         String msg = messageSource.getMessage("component.entry.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -159,9 +159,9 @@ public class ComponentEntryController {
                         return ResponseEntity
                                         .ok(ApiResponse.success(successMessage, ComponentEntryResponse.from(updated)));
                 } catch (Exception ex) {
-                        log.error("Error updating entry: {}", ex.getMessage());
+                        log.error("Error updating component entry id={}", id, ex);
                         String msg = messageSource.getMessage("component.entry.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -179,9 +179,9 @@ public class ComponentEntryController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, null));
                 } catch (Exception ex) {
-                        log.error("Error deleting entry: {}", ex.getMessage());
+                        log.error("Error deleting component entry id={}", id, ex);
                         String msg = messageSource.getMessage("component.entry.delete.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -199,9 +199,9 @@ public class ComponentEntryController {
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(successMessage, created));
                 } catch (Exception ex) {
-                        log.error("Error creating component entry composite: {}", ex.getMessage());
+                        log.error("Error creating component entry composite", ex);
                         String msg = messageSource.getMessage("component.entry.create.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -219,9 +219,9 @@ public class ComponentEntryController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, updated));
                 } catch (Exception ex) {
-                        log.error("Error updating component entry composite: {}", ex.getMessage());
+                        log.error("Error updating component entry composite id={}", id, ex);
                         String msg = messageSource.getMessage("component.entry.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -253,9 +253,9 @@ public class ComponentEntryController {
                         return ResponseEntity.ok(ApiResponse.success(successMessage,
                                         ComponentEntryI18nResponse.from(entryI18n, request.customFields())));
                 } catch (Exception ex) {
-                        log.error("Error upserting entry i18n: {}", ex.getMessage());
+                        log.error("Error upserting entry i18n for entryId={} language={}", id, language, ex);
                         String msg = messageSource.getMessage("component.entry.i18n.upsert.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -275,9 +275,9 @@ public class ComponentEntryController {
                         return ResponseEntity.ok(ApiResponse.success(successMessage,
                                         ComponentEntryI18nResponse.from(entryI18n, Map.of())));
                 } catch (Exception ex) {
-                        log.error("Error getting entry i18n: {}", ex.getMessage());
+                        log.error("Error getting entry i18n for entryId={} language={}", id, language, ex);
                         String msg = messageSource.getMessage("component.entry.i18n.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -297,9 +297,9 @@ public class ComponentEntryController {
                         return ResponseEntity.ok(ApiResponse.success(successMessage,
                                         ComponentEntryI18nResponse.from(entryI18n, Map.of())));
                 } catch (Exception ex) {
-                        log.error("Error publishing entry: {}", ex.getMessage());
+                        log.error("Error publishing entry i18n for entryId={} language={}", id, language, ex);
                         String msg = messageSource.getMessage("component.entry.publish.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }

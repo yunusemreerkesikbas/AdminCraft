@@ -67,6 +67,19 @@ public record SiteOverviewResponse(
         String previewUrl
     ) {}
 
+    public record ActivityTrendResponse(
+        String period,
+        List<ActivityTrendDayResponse> days
+    ) {}
+
+    public record ActivityTrendDayResponse(
+        String date,
+        long total,
+        long created,
+        long updated,
+        long published
+    ) {}
+
     /**
      * Builder for creating SiteOverviewResponse.
      */

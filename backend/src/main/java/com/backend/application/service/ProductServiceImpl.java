@@ -37,9 +37,11 @@ import com.backend.domain.repository.ProductMediaRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.ProductTypeRepository;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.infrastructure.tenant.TenantContext;
 import com.backend.presentation.dto.request.ResponsiveMediaRequest;
 import com.backend.shared.common.HtmlSanitizer;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductFieldService productFieldService;
     private final ProductFieldValueRepository productFieldValueRepository;
+    private final SiteActivityPublisher activityPublisher;
+    private final SecurityHelper securityHelper;
 
     @Override
     @Transactional
@@ -118,6 +122,11 @@ public class ProductServiceImpl implements ProductService {
         }
 
         log.info("Created product id: {}, sku: {}", saved.getId(), saved.getSku());
+        String productName = translations.values().stream()
+                .map(dto -> dto.name()).filter(n -> n != null && !n.isBlank())
+                .findFirst().orElse(saved.getSku());
+        activityPublisher.publishProductEvent(saved.getId(), productName, ActivityAction.CREATED,
+                createdBy, null, null);
         return findByIdComposite(saved.getId()).orElse(saved);
     }
 
@@ -177,6 +186,11 @@ public class ProductServiceImpl implements ProductService {
         }
 
         log.info("Updated product id: {}, sku: {}", saved.getId(), saved.getSku());
+        String productName = translations != null ? translations.values().stream()
+                .map(dto -> dto.name()).filter(n -> n != null && !n.isBlank())
+                .findFirst().orElse(saved.getSku()) : saved.getSku();
+        activityPublisher.publishProductEvent(saved.getId(), productName, ActivityAction.UPDATED,
+                updatedBy, null, null);
 
         // Reload product with productType eagerly fetched
         Product result = productRepository.findByIdComposite(saved.getId())
@@ -220,6 +234,8 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.delete(product);
         log.info("Deleted product id: {}, sku: {}", id, product.getSku());
+        activityPublisher.publishProductEvent(id, product.getSku(), ActivityAction.DELETED,
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     @Override
@@ -321,7 +337,11 @@ public class ProductServiceImpl implements ProductService {
 
         product.setStatus(status);
         product.setUpdatedBy(updatedBy);
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        ActivityAction action = (status == ProductStatus.PUBLISHED) ? ActivityAction.PUBLISHED
+                : ActivityAction.UPDATED;
+        activityPublisher.publishProductEvent(id, saved.getSku(), action, updatedBy, null, null);
+        return saved;
     }
 
     @Override
@@ -539,4 +559,5 @@ public class ProductServiceImpl implements ProductService {
         productMediaRepository.deleteByProductId(product.getId());
         saveGalleryMedia(product, gallery);
     }
+
 }

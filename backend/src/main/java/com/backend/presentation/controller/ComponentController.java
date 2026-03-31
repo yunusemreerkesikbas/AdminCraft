@@ -87,9 +87,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error creating component: {}", ex.getMessage());
+                        log.error("Error creating component", ex);
                         String msg = messageSource.getMessage("component.create.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -146,9 +146,9 @@ public class ComponentController {
 
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
-                        log.error("Error getting component {}: {}", id, ex.getMessage());
+                        log.error("Error getting component {}", id, ex);
                         String msg = messageSource.getMessage("component.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                         .body(ApiResponse.error(msg));
                 }
@@ -177,14 +177,14 @@ public class ComponentController {
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (IllegalArgumentException ex) {
                         String message = messageSource.getMessage("component.sort.invalid",
-                                        new Object[] { ex.getMessage() },
+                                        null,
                                         Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(message));
                 } catch (Exception ex) {
-                        log.error("Error listing components: {}", ex.getMessage());
+                        log.error("Error listing components", ex);
                         String msg = messageSource.getMessage("component.list.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(msg));
                 }
@@ -205,9 +205,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error updating component {}: {}", id, ex.getMessage());
+                        log.error("Error updating component {}", id, ex);
                         String msg = messageSource.getMessage("component.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -225,9 +225,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, null));
                 } catch (Exception ex) {
-                        log.error("Error deleting component {}: {}", id, ex.getMessage());
+                        log.error("Error deleting component {}", id, ex);
                         String msg = messageSource.getMessage("component.delete.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -245,10 +245,9 @@ public class ComponentController {
 
                         return ResponseEntity.ok(ApiResponse.success(response));
                 } catch (Exception ex) {
-                        log.error("Error getting component i18n for component {} language {}: {}", id, language,
-                                        ex.getMessage());
+                        log.error("Error getting component i18n for component {} language {}", id, language, ex);
                         String msg = messageSource.getMessage("component.i18n.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                         .body(ApiResponse.error(msg));
                 }
@@ -277,10 +276,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error upserting component i18n for component {} language {}: {}", id, language,
-                                        ex.getMessage());
+                        log.error("Error upserting component i18n for component {} language {}", id, language, ex);
                         String msg = messageSource.getMessage("component.i18n.upsert.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -301,10 +299,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error publishing component i18n for component {} language {}: {}", id, language,
-                                        ex.getMessage());
+                        log.error("Error publishing component i18n for component {} language {}", id, language, ex);
                         String msg = messageSource.getMessage("component.i18n.publish.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -325,9 +322,9 @@ public class ComponentController {
                         return ResponseEntity.status(HttpStatus.CREATED)
                                         .body(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error creating component composite: {}", ex.getMessage());
+                        log.error("Error creating component composite", ex);
                         String msg = messageSource.getMessage("component.composite.create.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -346,9 +343,9 @@ public class ComponentController {
                                         null, Locale.forLanguageTag(lang));
                         return ResponseEntity.ok(ApiResponse.success(successMessage, response));
                 } catch (Exception ex) {
-                        log.error("Error updating component composite {}: {}", id, ex.getMessage());
+                        log.error("Error updating component composite {}", id, ex);
                         String msg = messageSource.getMessage("component.composite.update.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                         .body(ApiResponse.error(msg));
                 }
@@ -368,9 +365,9 @@ public class ComponentController {
                                                                 .body(ApiResponse.error(msg));
                                         });
                 } catch (Exception ex) {
-                        log.error("Error getting component composite {}: {}", id, ex.getMessage());
+                        log.error("Error getting component composite {}", id, ex);
                         String msg = messageSource.getMessage("component.composite.get.error",
-                                        new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                                        null, Locale.forLanguageTag(lang));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(msg));
                 }

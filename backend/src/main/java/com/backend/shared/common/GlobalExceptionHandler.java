@@ -2,7 +2,6 @@ package com.backend.shared.common;
 
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.MDC;
@@ -286,14 +285,15 @@ public class GlobalExceptionHandler {
         log.warn("Validation exception: {}", ex.getMessage());
         Map<String, String> validationErrors = new HashMap<>();
         String firstErrorMessage = null;
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
+        for (var error : ex.getBindingResult().getAllErrors()) {
+            String fieldName = error instanceof FieldError fe ? fe.getField() : error.getObjectName();
             String errorMessage = getMessage(error.getDefaultMessage());
             validationErrors.put(fieldName, errorMessage);
-        });
+        }
         if (!validationErrors.isEmpty()) {
             firstErrorMessage = validationErrors.values().iterator().next();
         }
+
         ApiResponse<?> response = new ApiResponse<>("ERROR",
                 firstErrorMessage != null ? firstErrorMessage : "Validation failed", validationErrors);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);

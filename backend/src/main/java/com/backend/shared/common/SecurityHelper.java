@@ -50,6 +50,20 @@ public class SecurityHelper {
     }
 
     /**
+     * Gets the current authenticated user's ID, returning null when not authenticated
+     * or when the user ID is absent from the security context instead of throwing.
+     *
+     * @return Current user's ID, or null if unavailable
+     */
+    public Long getCurrentUserIdOrNull() {
+        try {
+            return getCurrentUserId();
+        } catch (AccessDeniedException e) {
+            return null;
+        }
+    }
+
+    /**
      * Gets the current authenticated user's email from security context.
      * 
      * @return Current user's email
