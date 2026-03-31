@@ -394,15 +394,15 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | Variable | Required | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_CMS_API_URL` | Yes | Base URL for CMS delivery API (baked into client bundle at build time) |
-| `TENANT_SUBDOMAIN` | Yes* | Tenant subdomain sent as `X-Tenant-Subdomain` header on every CMS request. Set once per deployment. |
-| `TENANT_ID` | Yes* | Alternative to `TENANT_SUBDOMAIN` — identifies tenant by numeric ID (`X-Tenant-ID`). |
+| `TENANT_SUBDOMAIN` | **Yes** | Required for proxy routing (`proxy.ts` reads only this var). Also sent as `X-Tenant-Subdomain` on every CMS request. Omitting this causes all routes to return 404. |
+| `TENANT_ID` | No | Sends `X-Tenant-ID` header for CMS identification only. Does **not** replace `TENANT_SUBDOMAIN` for proxy routing. Set both if you prefer ID-based CMS auth alongside subdomain routing. |
 | `TENANT_HOSTNAME` | No | Expected hostname for this deployment. Requests from other hostnames return 404 (see Hostname validation). Leave unset in local dev. |
 | `NEXT_IMAGE_DOMAINS` | No | Comma-separated hostnames allowed for `next/image` optimization. CMS API hostname and localhost are auto-included. |
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
 
-\* One of `TENANT_SUBDOMAIN` or `TENANT_ID` is required.
+`TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
 
 ### Deployment model
 

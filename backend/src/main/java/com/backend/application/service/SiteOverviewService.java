@@ -34,6 +34,12 @@ public interface SiteOverviewService {
      */
     java.util.List<SiteOverviewAppDto.ActivityAppDto> getRecentActivity(int limit);
 
+    /**
+     * Get a paginated page of recent activity.
+     *
+     * @param pageable pagination and sort parameters
+     * @return Page of ActivityAppDto ordered by creation date
+     */
     Page<SiteOverviewAppDto.ActivityAppDto> getRecentActivityPage(Pageable pageable);
 
     /**
@@ -43,5 +49,12 @@ public interface SiteOverviewService {
      */
     SiteOverviewAppDto.ActionsAppDto getAvailableActions();
 
+    /**
+     * Get aggregated daily activity trend data.
+     *
+     * @param pageable pagination and sort parameters (sort by "date")
+     * @param days     number of past days to include (e.g. 7 or 30)
+     * @return Page of ActivityTrendDayAppDto, one entry per day
+     */
     Page<SiteOverviewAppDto.ActivityTrendDayAppDto> getActivityTrend(Pageable pageable, int days);
 }

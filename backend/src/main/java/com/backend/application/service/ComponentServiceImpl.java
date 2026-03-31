@@ -204,7 +204,7 @@ public class ComponentServiceImpl implements ComponentService {
         componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
         componentRepository.delete(component);
         activityPublisher.publishComponentEvent(id, componentName, ActivityAction.DELETED,
-                safeGetCurrentUserId(), null, null);
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     @Override
@@ -248,7 +248,7 @@ public class ComponentServiceImpl implements ComponentService {
                 i18nList.size(), savedComponent.getId(), savedComponent.getUid());
 
         activityPublisher.publishComponentEvent(savedComponent.getId(), savedComponent.getName(),
-                ActivityAction.CREATED, safeGetCurrentUserId(), null, null);
+                ActivityAction.CREATED, securityHelper.getCurrentUserIdOrNull(), null, null);
         return ComponentCompositeResponse.from(savedComponent, type.getName(), i18nList);
     }
 
@@ -329,7 +329,7 @@ public class ComponentServiceImpl implements ComponentService {
         log.info("Updated component with {} translations: id={}", i18nList.size(), id);
 
         activityPublisher.publishComponentEvent(savedComponent.getId(), savedComponent.getName(),
-                ActivityAction.UPDATED, safeGetCurrentUserId(), null, null);
+                ActivityAction.UPDATED, securityHelper.getCurrentUserIdOrNull(), null, null);
         return ComponentCompositeResponse.from(savedComponent, typeName, i18nList);
     }
 
@@ -460,11 +460,4 @@ public class ComponentServiceImpl implements ComponentService {
         return name.trim();
     }
 
-    private Long safeGetCurrentUserId() {
-        try {
-            return securityHelper.getCurrentUserId();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

@@ -5,9 +5,8 @@ import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.ActivityEntityType;
 import com.backend.domain.repository.SiteActivityRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -40,8 +39,9 @@ public class SiteActivityRepositoryImpl implements SiteActivityRepository {
     }
 
     @Override
-    public Page<SiteActivity> findRecentActivities(Pageable pageable) {
-        return siteActivityJpaRepository.findAll(pageable);
+    public List<SiteActivity> findRecentActivities(int pageNumber, int pageSize) {
+        return siteActivityJpaRepository.findRecentActivities(
+                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "createdAt")));
     }
 
     @Override

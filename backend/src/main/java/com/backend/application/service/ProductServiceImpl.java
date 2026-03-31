@@ -235,7 +235,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.delete(product);
         log.info("Deleted product id: {}, sku: {}", id, product.getSku());
         activityPublisher.publishProductEvent(id, product.getSku(), ActivityAction.DELETED,
-                safeGetCurrentUserId(), null, null);
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     @Override
@@ -560,11 +560,4 @@ public class ProductServiceImpl implements ProductService {
         saveGalleryMedia(product, gallery);
     }
 
-    private Long safeGetCurrentUserId() {
-        try {
-            return securityHelper.getCurrentUserId();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

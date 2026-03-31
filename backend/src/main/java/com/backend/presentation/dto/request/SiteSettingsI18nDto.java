@@ -7,7 +7,7 @@ public record SiteSettingsI18nDto(
 
         @Size(max = 160, message = "validation.length") String tagline,
 
-        SeoDto seo) {
+        @jakarta.validation.Valid SeoDto seo) {
 
     public SiteSettingsI18nDto {
         siteName = sanitize(siteName);

@@ -4,12 +4,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
@@ -158,9 +161,11 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         log.debug("Getting recent activity page: {}", pageable);
 
         try {
-            Page<SiteActivity> activityPage = siteActivityRepository.findRecentActivities(pageable);
-            List<ActivityAppDto> content = mapActivities(activityPage.getContent());
-            return new PageImpl<>(content, pageable, activityPage.getTotalElements());
+            List<SiteActivity> activities = siteActivityRepository.findRecentActivities(
+                    pageable.getPageNumber(), pageable.getPageSize());
+            long total = siteActivityRepository.count();
+            List<ActivityAppDto> content = mapActivities(activities);
+            return new PageImpl<>(content, pageable, total);
         } catch (Exception e) {
             log.warn("Failed to get recent activity page", e);
             return Page.empty(pageable);
@@ -273,19 +278,18 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     }
 
     private List<ActivityAppDto> mapActivities(List<SiteActivity> activities) {
-        java.util.Set<Long> userIds = activities.stream()
+        Set<Long> userIds = activities.stream()
                 .map(SiteActivity::getUserId)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        java.util.Map<Long, com.backend.domain.entity.User> userMap = java.util.Collections.emptyMap();
+        Map<Long, com.backend.domain.entity.User> userMap = Collections.emptyMap();
         if (!userIds.isEmpty()) {
-            userMap = userRepository.findByIdIn(new java.util.ArrayList<>(userIds)).stream()
-                    .collect(Collectors.toMap(com.backend.domain.entity.User::getId,
-                            java.util.function.Function.identity()));
+            userMap = userRepository.findByIdIn(new ArrayList<>(userIds)).stream()
+                    .collect(Collectors.toMap(com.backend.domain.entity.User::getId, Function.identity()));
         }
 
-        final java.util.Map<Long, com.backend.domain.entity.User> finalUserMap = userMap;
+        final Map<Long, com.backend.domain.entity.User> finalUserMap = userMap;
 
         return activities.stream()
                 .map(activity -> toActivityDto(activity, finalUserMap.get(activity.getUserId())))
@@ -337,6 +341,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
             } else if (a.getAction() == ActivityAction.PUBLISHED) {
                 counts[2]++;
             } else {
+                // UPDATED, DELETED, and any other actions are grouped into the "updated" bucket
                 counts[1]++;
             }
         }

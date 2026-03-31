@@ -213,7 +213,7 @@ public class MediaServiceImpl implements MediaService {
         log.info("Media deleted from database: {}", id);
 
         activityPublisher.publishMediaEvent(id, media.getOriginalName(), ActivityAction.DELETED,
-                safeGetCurrentUserId(), null, null);
+                securityHelper.getCurrentUserIdOrNull(), null, null);
 
         // Delete file after DB commit (best effort)
         try {
@@ -498,11 +498,4 @@ public class MediaServiceImpl implements MediaService {
                 .orElse(null);
     }
 
-    private Long safeGetCurrentUserId() {
-        try {
-            return securityHelper.getCurrentUserId();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

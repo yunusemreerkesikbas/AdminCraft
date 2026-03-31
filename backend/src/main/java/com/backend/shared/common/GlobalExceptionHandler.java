@@ -286,8 +286,7 @@ public class GlobalExceptionHandler {
         Map<String, String> validationErrors = new HashMap<>();
         String firstErrorMessage = null;
         for (var error : ex.getBindingResult().getAllErrors()) {
-            FieldError fieldError = (FieldError) error;
-            String fieldName = fieldError.getField();
+            String fieldName = error instanceof FieldError fe ? fe.getField() : error.getObjectName();
             String errorMessage = getMessage(error.getDefaultMessage());
             validationErrors.put(fieldName, errorMessage);
         }

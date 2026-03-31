@@ -4,9 +4,6 @@ import com.backend.domain.entity.SiteActivity;
 import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.ActivityEntityType;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,7 +26,7 @@ public interface SiteActivityRepository {
      */
     List<SiteActivity> findRecentActivities(int limit);
 
-    Page<SiteActivity> findRecentActivities(Pageable pageable);
+    List<SiteActivity> findRecentActivities(int pageNumber, int pageSize);
 
     /**
      * Find activities by entity type.

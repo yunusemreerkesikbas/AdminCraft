@@ -428,6 +428,31 @@ public class ValidatorConfig {
 
 ---
 
+## Nested DTO Validation (`@Valid` Cascade)
+
+When a request DTO contains a nested object with its own `@Size` / `@Pattern` constraints, Bean Validation does **not** recurse into it automatically. You must add `@Valid` on the nested field or record component.
+
+**Example — `SiteSettingsI18nDto`:**
+```java
+public record SiteSettingsI18nDto(
+    @Size(max = 100) String siteName,
+    @Size(max = 160) String tagline,
+    @Valid SeoDto seo          // ← required; without @Valid the @Size rules inside SeoDto are silently ignored
+) {
+    public record SeoDto(
+        @Size(max = 200) String title,
+        @Size(max = 500) String description,
+        ...
+    ) {}
+}
+```
+
+This applies to any record or class DTO that embeds another validated type. Always add `@Valid` to the nested field — omitting it is a silent validation gap.
+
+`GlobalExceptionHandler` handles both `FieldError` (field-level) and `ObjectError` (class-level validators such as `@PasswordMatch`) in the `MethodArgumentNotValidException` handler; both produce entries in the `data` map returned to the client.
+
+---
+
 ## Best Practices
 
 1. **Synchronize patterns** - Keep backend `ValidationConstants` and frontend `validation.constants.ts` in sync

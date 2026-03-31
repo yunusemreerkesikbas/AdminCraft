@@ -147,7 +147,7 @@ public class PageServiceImpl implements PageService {
         pageI18nService.deletePageI18n(id);
         pageRepository.deleteById(id);
         activityPublisher.publishPageEvent(id, pageName, ActivityAction.DELETED,
-                safeGetCurrentUserId(), null, null);
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     // ==================== Composite Operations (Sprint 34 Pattern)
@@ -313,11 +313,4 @@ public class PageServiceImpl implements PageService {
         return uid;
     }
 
-    private Long safeGetCurrentUserId() {
-        try {
-            return securityHelper.getCurrentUserId();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

@@ -475,7 +475,8 @@ public class SiteController {
         } catch (Exception ex) {
             log.error("Error getting activity trend", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to get activity trend"));
+                    .body(ApiResponse.error(messageSource.getMessage(
+                            "site.activity.trend.error", null, Locale.forLanguageTag(languageCode))));
         }
     }
 

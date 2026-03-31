@@ -6,7 +6,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -45,25 +44,18 @@ public class PlatformDemoRequestController {
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) @Size(max = 200) String search
     ) {
-        try {
-            String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
-                    SortableFieldsConfig.DEMO_REQUEST_DEFAULT_SORT);
-            Sort sortObj = SortParseUtil.parse(
-                    effectiveSort,
-                    SortableFieldsConfig.DEMO_REQUEST_ALLOWED_FIELDS,
-                    SortableFieldsConfig.DEMO_REQUEST_DEFAULT_SORT
-            );
-            var pageable = PageRequest.of(page, size, sortObj);
-            var dataPage = platformDemoRequestService.getPage(pageable, search);
-            SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.DEMO_REQUEST_SORT_OPTIONS);
-            PageableResponse<PlatformDemoRequestAdminDto> body =
-                    PageableResponse.from(dataPage, sortConfig);
-            return ResponseEntity.ok(ApiResponse.success(message("platform.demo.requests.fetched"), body));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
-        }
+        String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
+                SortableFieldsConfig.DEMO_REQUEST_DEFAULT_SORT);
+        Sort sortObj = SortParseUtil.parse(
+                effectiveSort,
+                SortableFieldsConfig.DEMO_REQUEST_ALLOWED_FIELDS,
+                SortableFieldsConfig.DEMO_REQUEST_DEFAULT_SORT
+        );
+        var pageable = PageRequest.of(page, size, sortObj);
+        var dataPage = platformDemoRequestService.getPage(pageable, search);
+        SortConfig sortConfig = SortConfig.of(effectiveSort, SortableFieldsConfig.DEMO_REQUEST_SORT_OPTIONS);
+        PageableResponse<PlatformDemoRequestAdminDto> body = PageableResponse.from(dataPage, sortConfig);
+        return ResponseEntity.ok(ApiResponse.success(message("platform.demo.requests.fetched"), body));
     }
 
     private String message(String key) {
