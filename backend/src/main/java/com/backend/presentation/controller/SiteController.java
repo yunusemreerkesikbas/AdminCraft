@@ -30,9 +30,13 @@ import com.backend.application.dto.UpdateSecuritySettingsCommand;
 import com.backend.application.dto.request.CreateSiteRequest;
 import com.backend.application.dto.request.SiteTechnicalPatchRequest;
 import com.backend.application.dto.request.UpdateSiteRequest;
+import com.backend.application.dto.response.SiteAnalyticsSummaryAppDto;
+import com.backend.application.dto.response.SiteInsightsSummaryAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.service.SecuritySettingsService;
+import com.backend.application.service.SiteAnalyticsService;
+import com.backend.application.service.SiteInsightsService;
 import com.backend.application.service.SiteOverviewService;
 import com.backend.application.service.SiteService;
 import com.backend.application.service.SiteTechnicalService;
@@ -40,6 +44,8 @@ import com.backend.domain.enums.Language;
 import com.backend.presentation.dto.request.UpdateSecuritySettingsRequest;
 import com.backend.presentation.dto.response.SecuritySettingsResponse;
 import com.backend.presentation.dto.response.PageableResponse;
+import com.backend.presentation.dto.response.SiteAnalyticsSummaryResponse;
+import com.backend.presentation.dto.response.SiteInsightsSummaryResponse;
 import com.backend.presentation.dto.response.SiteOverviewResponse;
 import com.backend.presentation.dto.response.SiteResponse;
 import com.backend.presentation.dto.response.SortConfig;
@@ -67,6 +73,8 @@ public class SiteController {
 
     private final SiteService siteService;
     private final SiteOverviewService siteOverviewService;
+    private final SiteAnalyticsService siteAnalyticsService;
+    private final SiteInsightsService siteInsightsService;
     private final SiteTechnicalService siteTechnicalService;
     private final SecuritySettingsService securitySettingsService;
     private final MessageSource messageSource;
@@ -328,6 +336,30 @@ public class SiteController {
                 message = message.substring(0, 500);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
+        }
+    }
+
+    @GetMapping("/analytics/summary")
+    public ResponseEntity<ApiResponse<SiteAnalyticsSummaryResponse>> getAnalyticsSummary() {
+        try {
+            SiteAnalyticsSummaryAppDto appDto = siteAnalyticsService.getSummary();
+            return ResponseEntity.ok(ApiResponse.success(toSiteAnalyticsSummaryResponse(appDto)));
+        } catch (Exception ex) {
+            log.error("Error getting site analytics summary", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to get site analytics summary"));
+        }
+    }
+
+    @GetMapping("/insights/summary")
+    public ResponseEntity<ApiResponse<SiteInsightsSummaryResponse>> getInsightsSummary() {
+        try {
+            SiteInsightsSummaryAppDto appDto = siteInsightsService.getSummary();
+            return ResponseEntity.ok(ApiResponse.success(toSiteInsightsSummaryResponse(appDto)));
+        } catch (Exception ex) {
+            log.error("Error getting site insights summary", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to get site insights summary"));
         }
     }
 
@@ -640,5 +672,105 @@ public class SiteController {
                 .searchEngine(searchEngine)
                 .cookieConsent(cookieConsent)
                 .build();
+    }
+
+    private SiteAnalyticsSummaryResponse toSiteAnalyticsSummaryResponse(
+            SiteAnalyticsSummaryAppDto dto
+    ) {
+        if (dto == null) {
+            return null;
+        }
+
+        return new SiteAnalyticsSummaryResponse(
+                dto.status(),
+                dto.propertyId(),
+                dto.range(),
+                dto.cards().stream()
+                        .map(card -> new SiteAnalyticsSummaryResponse.MetricCardResponse(
+                                card.metric(),
+                                card.value(),
+                                card.previousValue(),
+                                card.deltaPercentage(),
+                                card.deltaDirection()))
+                        .toList(),
+                dto.trend().stream()
+                        .map(point -> new SiteAnalyticsSummaryResponse.TrendPointResponse(
+                                point.date(),
+                                point.value()))
+                        .toList(),
+                dto.lastSyncedAt());
+    }
+
+    private SiteInsightsSummaryResponse toSiteInsightsSummaryResponse(
+            SiteInsightsSummaryAppDto dto
+    ) {
+        if (dto == null) {
+            return null;
+        }
+
+        SiteInsightsSummaryResponse.InspectionResponse inspection = dto.seo().inspection() == null
+                ? null
+                : new SiteInsightsSummaryResponse.InspectionResponse(
+                        dto.seo().inspection().verdict(),
+                        dto.seo().inspection().coverageState(),
+                        dto.seo().inspection().robotsTxtState(),
+                        dto.seo().inspection().indexingState(),
+                        dto.seo().inspection().pageFetchState(),
+                        dto.seo().inspection().lastCrawlTime(),
+                        dto.seo().inspection().googleCanonical(),
+                        dto.seo().inspection().userCanonical(),
+                        dto.seo().inspection().sitemaps());
+
+        return new SiteInsightsSummaryResponse(
+                dto.resolvedUrl(),
+                dto.resolvedOrigin(),
+                dto.lastSyncedAt(),
+                new SiteInsightsSummaryResponse.SeoResponse(
+                        dto.seo().status(),
+                        dto.seo().propertyUrl(),
+                        dto.seo().range(),
+                        dto.seo().cards().stream()
+                                .map(card -> new SiteInsightsSummaryResponse.MetricCardResponse(
+                                        card.metric(),
+                                        card.value(),
+                                        card.previousValue(),
+                                        card.deltaPercentage(),
+                                        card.deltaDirection()))
+                                .toList(),
+                        dto.seo().trend().stream()
+                                .map(point -> new SiteInsightsSummaryResponse.SeoTrendPointResponse(
+                                        point.date(),
+                                        point.clicks(),
+                                        point.impressions()))
+                                .toList(),
+                        inspection,
+                        dto.seo().lastSyncedAt()),
+                new SiteInsightsSummaryResponse.PerformanceResponse(
+                        dto.performance().status(),
+                        dto.performance().targetScope(),
+                        dto.performance().target(),
+                        dto.performance().formFactor(),
+                        dto.performance().score() == null
+                                ? null
+                                : new SiteInsightsSummaryResponse.ScoreResponse(
+                                        dto.performance().score().value(),
+                                        dto.performance().score().label()),
+                        dto.performance().metrics().stream()
+                                .map(metric -> new SiteInsightsSummaryResponse.PerformanceMetricResponse(
+                                        metric.metric(),
+                                        metric.value(),
+                                        metric.displayValue(),
+                                        metric.assessment()))
+                                .toList(),
+                        dto.performance().trend().stream()
+                                .map(point -> new SiteInsightsSummaryResponse.PerformanceTrendPointResponse(
+                                        point.startDate(),
+                                        point.endDate(),
+                                        point.lcp(),
+                                        point.inp(),
+                                        point.cls(),
+                                        point.ttfb()))
+                                .toList(),
+                        dto.performance().lastSyncedAt()));
     }
 }

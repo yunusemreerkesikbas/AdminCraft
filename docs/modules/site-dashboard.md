@@ -8,6 +8,9 @@
 Site Dashboard is a unified admin interface that consolidates **Site Management** and **Site Settings** into a single, tabbed dashboard. It provides:
 
 - **Overview**: Site status, statistics, recent activity, and quick actions (with confirmation dialogs)
+- **Analytics Snapshot**: Tenant-scoped GA4 KPI cards and a 7-day active-user trend, rendered in Overview when configured
+- **SEO Snapshot**: Search Console clicks, impressions, CTR, average position, and URL inspection signals
+- **Performance Snapshot**: CrUX desktop p75 metrics with radial health score and trend
 - **General**: Site name, tagline, contact info (per language, dynamic language support)
 - **Address**: Business address and map embed
 - **Social**: Social media links
@@ -52,12 +55,14 @@ New endpoints under `/api/sites`:
 | Method  | Path               | Description                                           |
 | ------- | ------------------ | ----------------------------------------------------- |
 | `GET`   | `/sites/overview`  | Dashboard overview (status, stats, activity, actions) |
+| `GET`   | `/sites/analytics/summary` | GA4 analytics snapshot for the active tenant |
+| `GET`   | `/sites/insights/summary` | SEO and performance snapshot for the active tenant |
 | `GET`   | `/sites/technical` | Technical settings                                    |
 | `PATCH` | `/sites/technical` | Update technical settings                             |
 | `GET`   | `/sites/security`  | Security settings (2FA policy)                        |
 | `PATCH` | `/sites/security`  | Update security settings                              |
 
-> **Not:** Public robots.txt endpoint'i `SiteController`'da değil, `CmsDeliveryController`'dadır: `GET /api/cms/robots.txt` (no auth, no app-level rate limit). Bkz. [cms-delivery.md](./cms-delivery.md#robotstxt).
+> **Note:** The public robots.txt endpoint is not in `SiteController`. It is served by `CmsDeliveryController` as `GET /api/cms/robots.txt` (no auth, no app-level rate limit). See [cms-delivery.md](./cms-delivery.md#robotstxt).
 
 ### Response DTOs
 
@@ -70,7 +75,7 @@ New endpoints under `/api/sites`:
     "state": "published|draft|maintenance",
     "publishedAt": "2024-01-18T09:00:00",
     "lastUpdatedAt": "2024-01-20T14:45:00",
-    "lastUpdatedBy": { "id": 5, "email": "admin@acme.com", "fullName": "Ahmet Yılmaz" }
+    "lastUpdatedBy": { "id": 5, "email": "admin@acme.com", "fullName": "Admin User" }
   },
   "stats": {
     "pages": { "total": 24, "published": 20, "draft": 4, "weeklyChange": 3 },
@@ -85,8 +90,8 @@ New endpoints under `/api/sites`:
       "entityType": "PAGE",
       "entityId": 42,
       "entityName": "About Us",
-      "description": "Sayfa \"About Us\" oluşturuldu",
-      "user": { "id": 5, "email": "admin@acme.com", "fullName": "Ahmet Yılmaz" },
+      "description": "Page \"About Us\" was created",
+      "user": { "id": 5, "email": "admin@acme.com", "fullName": "Admin User" },
       "createdAt": "2024-01-20T14:45:00"
     }
   ],
@@ -127,6 +132,38 @@ Product stats note:
   }
 }
 ```
+
+#### SiteAnalyticsSummaryResponse
+
+For the full GA4 integration model, see [`../3rd-party/google-analytics-ga4.md`](../3rd-party/google-analytics-ga4.md).
+
+```json
+{
+  "status": "READY|NOT_CONFIGURED|DISABLED|ACCESS_ERROR|NO_DATA",
+  "propertyId": "123456789",
+  "range": "LAST_7_DAYS",
+  "cards": [
+    {
+      "metric": "activeUsers",
+      "value": 42,
+      "previousValue": 30,
+      "deltaPercentage": 40.0,
+      "deltaDirection": "up"
+    }
+  ],
+  "trend": [
+    { "date": "2026-03-25", "value": 4 },
+    { "date": "2026-03-26", "value": 7 }
+  ],
+  "lastSyncedAt": "2026-04-01T13:15:30"
+}
+```
+
+Notes:
+
+- Uses a shared backend service account against GA4 Data API.
+- Tenant selection comes from config store key `analytics.ga4.property_id`; request payload cannot override property scope.
+- Overview shows `activeUsers`, `screenPageViews`, `newUsers`, and `engagementRate` with previous-period delta.
 
 #### SecuritySettingsResponse
 
@@ -239,9 +276,32 @@ Defined in `storefront/src/app/modules/admin/api-endpoints.ts`:
 
 ```typescript
 siteOverview: 'sites/overview',
+siteAnalyticsSummary: 'sites/analytics/summary',
+siteInsightsSummary: 'sites/insights/summary',
 siteTechnical: 'sites/technical',
 siteSecuritySettings: 'sites/security',
 ```
+
+### Analytics setup
+
+- Tenant runtime keys live in `/config`:
+  - `analytics.ga4.enabled`
+  - `analytics.ga4.property_id`
+- Global master switch is `platform.analytics.ga4.enabled`
+- Service account credentials stay in deploy-time secrets / environment, not in Site Dashboard or `/config`
+- Detailed provider behavior and setup rules are documented in [`../3rd-party/google-analytics-ga4.md`](../3rd-party/google-analytics-ga4.md)
+
+### SEO and performance setup
+
+- Tenant properties:
+  - `seo.insights.enabled`
+  - `seo.search_console.property_url`
+- Global runtime toggle:
+  - `platform.seo.insights.enabled`
+- Search Console uses the shared backend Google service account
+- CrUX uses backend environment variable `APP_SEO_CRUX_API_KEY`
+- Overview removes `content mix` and `health breakdown` in favor of `SEO snapshot` and `Performance snapshot`
+- Detailed provider behavior and runtime setup rules are documented in [`../3rd-party/google-search-console-crux-seo-insights.md`](../3rd-party/google-search-console-crux-seo-insights.md)
 
 ## Security & Tenant Isolation
 
@@ -349,7 +409,7 @@ Legacy routes (`/sites`, `/settings`) remain functional for backward compatibili
 
 | Feature               | Implementation                                                 | Benefit                     |
 | --------------------- | -------------------------------------------------------------- | --------------------------- |
-| Save Button Placement | Sağ üstte (General, Address, Social, SEO, Technical, Security) | Tutarlı UX, hızlı erişim    |
+| Save Button Placement | Top right (General, Address, Social, SEO, Technical, Security) | Consistent UX, fast access |
 | Custom UI Components  | 44 form fields migrated                                        | ✅ -35% template code       |
 | Auto Validation       | `VALIDATION_MESSAGES` integration                              | ✅ No manual error handling |
 | User Feedback         | NotificationService (5 components)                             | ✅ Success/error toasts     |

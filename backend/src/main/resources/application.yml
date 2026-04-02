@@ -12,6 +12,24 @@ app:
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:http://%s.localhost:4200}
     admin-url: ${APP_FRONTEND_ADMIN_URL:http://localhost:4200}
+  analytics:
+    ga4:
+      service-account-json: ${APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON:}
+      service-account-json-base64: ${APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64:}
+      token-uri: ${APP_ANALYTICS_GA4_TOKEN_URI:https://oauth2.googleapis.com/token}
+      api-base-url: ${APP_ANALYTICS_GA4_API_BASE_URL:https://analyticsdata.googleapis.com/v1beta}
+      scope: ${APP_ANALYTICS_GA4_SCOPE:https://www.googleapis.com/auth/analytics.readonly}
+      cache-ttl-seconds: ${APP_ANALYTICS_GA4_CACHE_TTL_SECONDS:300}
+  seo:
+    search-console:
+      api-base-url: ${APP_SEO_SEARCH_CONSOLE_API_BASE_URL:https://searchconsole.googleapis.com/v1}
+      scope: ${APP_SEO_SEARCH_CONSOLE_SCOPE:https://www.googleapis.com/auth/webmasters.readonly}
+      language-code: ${APP_SEO_SEARCH_CONSOLE_LANGUAGE_CODE:en-US}
+      cache-ttl-seconds: ${APP_SEO_SEARCH_CONSOLE_CACHE_TTL_SECONDS:300}
+    crux:
+      api-base-url: ${APP_SEO_CRUX_API_BASE_URL:https://chromeuxreport.googleapis.com/v1/records:queryHistoryRecord}
+      api-key: ${APP_SEO_CRUX_API_KEY:}
+      cache-ttl-seconds: ${APP_SEO_CRUX_CACHE_TTL_SECONDS:300}
   cors:
     allowed-origins:
       - http://localhost:4200

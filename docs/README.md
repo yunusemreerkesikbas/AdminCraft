@@ -22,6 +22,11 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Testing patterns: [`global/testing.md`](global/testing.md)
   - DevOps & deployment: [`global/devops.md`](global/devops.md)
 
+## Third-party integrations
+
+- Google Analytics 4 (GA4): [`3rd-party/google-analytics-ga4.md`](3rd-party/google-analytics-ga4.md)
+- Google Search Console + Chrome UX Report (CrUX): [`3rd-party/google-search-console-crux-seo-insights.md`](3rd-party/google-search-console-crux-seo-insights.md)
+
 ## Modules (admin APIs)
 
 Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/ModuleCode.java`](../backend/src/main/java/com/backend/domain/enums/ModuleCode.java).
