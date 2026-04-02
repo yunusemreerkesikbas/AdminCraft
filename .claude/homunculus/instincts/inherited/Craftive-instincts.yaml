@@ -1,0 +1,660 @@
+# Instincts generated from https://github.com/yunusemreerkesikbas/Craftive
+# Generated: 2026-04-02T23:03:53.513Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: Craftive-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Commit Length
+
+## Action
+
+Write moderate-length commit messages (~63 characters)
+
+## Evidence
+
+- Average commit message length: 63 chars
+- Based on 200 commits
+
+---
+id: Craftive-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: Craftive-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: Craftive-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Export Style
+
+## Action
+
+Prefer mixed exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: mixed
+
+---
+id: Craftive-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Test Framework
+
+## Action
+
+Use jest as the test framework
+
+## Evidence
+
+- Test framework detected: jest
+- File pattern: *.spec.ts
+
+---
+id: Craftive-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Test Naming
+
+## Action
+
+Name test files using the pattern: *.spec.ts
+
+## Evidence
+
+- File pattern: *.spec.ts
+- Consistent across test files
+
+---
+id: Craftive-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: Craftive-workflow-database-migration
+trigger: "when modifying the database schema or adding tables"
+confidence: 0.75
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Database Migration
+
+## Action
+
+Follow the database-migration workflow:
+1. Create migration file
+2. Update schema definitions
+3. Generate/update types
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~5x per month
+- Files: **/types.ts, **/schema.*, migrations/*
+
+---
+id: Craftive-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~14x per month
+- Files: backend/src/main/resources/db/tenant/component_library/*, backend/src/main/resources/impex/*, storefront/src/app/core/i18n/*
+
+---
+id: Craftive-workflow-refactoring
+trigger: "when refactoring code"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Refactoring
+
+## Action
+
+Follow the refactoring workflow:
+1. Ensure tests pass before refactor
+2. Refactor code structure
+3. Verify tests still pass
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~7x per month
+- Files: src/**/*
+
+---
+id: Craftive-workflow-add-or-refactor-backend-feature-with-api-and-tests
+trigger: "when doing add or refactor backend feature with api and tests"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Add Or Refactor Backend Feature With Api And Tests
+
+## Action
+
+Follow the add-or-refactor-backend-feature-with-api-and-tests workflow:
+1. Create or update DTOs in application/dto or application/dto/request/response
+2. Implement or update service and service implementation classes
+3. Add or update controller(s) in presentation/controller
+4. Modify or add domain/repository interfaces and implementations
+5. Update configuration or properties if needed
+6. Add or update tests in backend/src/test/java
+7. Update relevant documentation in docs/
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: backend/src/main/java/com/backend/application/dto/**/*.java, backend/src/main/java/com/backend/application/service/**/*.java, backend/src/main/java/com/backend/presentation/controller/**/*.java
+
+---
+id: Craftive-workflow-database-schema-change-with-migration
+trigger: "when doing database schema change with migration"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Database Schema Change With Migration
+
+## Action
+
+Follow the database-schema-change-with-migration workflow:
+1. Create or update SQL migration file in db/platform or db/tenant subfolders
+2. Update related Java entity/model classes if needed
+3. Update configuration files if necessary
+4. Update or add tests if schema changes affect logic
+5. Update documentation to reflect schema changes
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/src/main/resources/db/**/*.sql, backend/src/main/java/com/backend/domain/entity/**/*.java, backend/src/main/resources/application*.yml
+
+---
+id: Craftive-workflow-feature-development-full-stack-with-admin-ui
+trigger: "when doing feature development full stack with admin ui"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Feature Development Full Stack With Admin Ui
+
+## Action
+
+Follow the feature-development-full-stack-with-admin-ui workflow:
+1. Create/update backend DTOs, services, controllers, and migrations
+2. Implement or update Angular components in storefront/src/app/modules/admin/custom/
+3. Update or add i18n translation files (langEN.ts, langTR.ts)
+4. Update navigation constants if new admin section is added
+5. Update documentation in docs/
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/src/main/java/com/backend/application/dto/**/*.java, backend/src/main/java/com/backend/application/service/**/*.java, backend/src/main/java/com/backend/presentation/controller/**/*.java
+
+---
+id: Craftive-workflow-environment-and-deployment-configuration-update
+trigger: "when doing environment and deployment configuration update"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Environment And Deployment Configuration Update
+
+## Action
+
+Follow the environment-and-deployment-configuration-update workflow:
+1. Edit docker-compose.*.yml files to update services, env vars, or network settings
+2. Update .env.example and environment files for new/changed variables
+3. Modify deployment scripts as needed
+4. Update documentation to reflect new configuration or deployment steps
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: docker-compose*.yml, storefront-nextjs/.env*, storefront/src/environments/environment*.ts
+
+---
+id: Craftive-workflow-feature-removal-or-cleanup
+trigger: "when doing feature removal or cleanup"
+confidence: 0.55
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Feature Removal Or Cleanup
+
+## Action
+
+Follow the feature-removal-or-cleanup workflow:
+1. Delete obsolete SQL seed or migration files
+2. Remove related backend/Java code and configuration
+3. Remove related frontend code/components
+4. Update documentation to remove references to deleted features
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~1x per month
+- Files: backend/src/main/resources/impex/**/*.sql, backend/src/main/java/com/backend/**/*.java, storefront-nextjs/**/*.ts*
+
+---
+id: craftive-coding-file-naming
+trigger: "When creating a new file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding File Naming
+
+## Action
+
+Name the file using camelCase convention
+
+## Evidence
+
+- Pattern: namingConventions.files = camelCase
+
+---
+id: craftive-coding-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding Function Naming
+
+## Action
+
+Name the function using camelCase convention
+
+## Evidence
+
+- Pattern: namingConventions.functions = camelCase
+
+---
+id: craftive-coding-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding Class Naming
+
+## Action
+
+Name the class using PascalCase convention
+
+## Evidence
+
+- Pattern: namingConventions.classes = PascalCase
+
+---
+id: craftive-coding-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE convention
+
+## Evidence
+
+- Pattern: namingConventions.constants = SCREAMING_SNAKE_CASE
+
+---
+id: craftive-coding-import-alias
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding Import Alias
+
+## Action
+
+Use import aliases for module imports
+
+## Evidence
+
+- Pattern: importStyle = alias
+
+---
+id: craftive-coding-export-mixed
+trigger: "When exporting modules or components"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Coding Export Mixed
+
+## Action
+
+Use both named and default exports as appropriate
+
+## Evidence
+
+- Pattern: exportStyle = mixed
+
+---
+id: craftive-testing-jest-spec-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Testing Jest Spec Pattern
+
+## Action
+
+Name the test file with the pattern *.spec.ts
+
+## Evidence
+
+- Pattern: filePattern = *.spec.ts
+
+---
+id: craftive-testing-jest-framework
+trigger: "When writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Testing Jest Framework
+
+## Action
+
+Use Jest as the testing framework
+
+## Evidence
+
+- Pattern: framework = jest
+
+---
+id: craftive-testing-unit-integration
+trigger: "When designing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Testing Unit Integration
+
+## Action
+
+Include both unit and integration tests as appropriate
+
+## Evidence
+
+- Pattern: testTypes = [unit, integration]
+
+---
+id: craftive-git-commit-prefix
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Git Commit Prefix
+
+## Action
+
+Prefix the commit message with a type such as feat, fix, refactor, chore, or feature/TICKET
+
+## Evidence
+
+- Seen in commit: feat: add analytics and insights integrations
+- Seen in commit: fix(storefront): remove middleware.ts, fix proxy config export for Next.js 16
+- Pattern: commits.prefixes
+
+---
+id: craftive-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Git Commit Length
+
+## Action
+
+Keep the commit message concise, around 60-70 characters
+
+## Evidence
+
+- Pattern: averageLength = 63
+- Seen in commit: refactor(security): replace safeGetCurrentUserId with getCurrentUserIdOrNull
+
+---
+id: craftive-workflow-backend-feature
+trigger: "When adding or refactoring a backend feature or API endpoint"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Backend Feature
+
+## Action
+
+Follow the sequence: update DTOs, services, controllers, domain/repository, configuration, tests, and documentation
+
+## Evidence
+
+- Workflow: add-or-refactor-backend-feature-with-api-and-tests
+- Commit sequences and files in workflow example
+
+---
+id: craftive-workflow-db-migration
+trigger: "When adding or modifying a database schema"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Db Migration
+
+## Action
+
+Create or update migration SQL file, update Java entity/model, configuration, tests, and documentation
+
+## Evidence
+
+- Workflow: database-schema-change-with-migration
+- Commit sequences and files in workflow example
+
+---
+id: craftive-workflow-fullstack-admin-feature
+trigger: "When building a new feature for the admin UI that requires backend support"
+confidence: 0.92
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Fullstack Admin Feature
+
+## Action
+
+Update backend (DTOs, services, controllers, migrations), admin UI components, i18n files, navigation constants, and documentation
+
+## Evidence
+
+- Workflow: feature-development-full-stack-with-admin-ui
+- Commit sequences and files in workflow example
+
+---
+id: craftive-workflow-env-deploy-update
+trigger: "When changing environment variables, deployment logic, or infrastructure configuration"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Env Deploy Update
+
+## Action
+
+Edit docker-compose files, update .env/environment files, modify deployment scripts, and update documentation
+
+## Evidence
+
+- Workflow: environment-and-deployment-configuration-update
+- Commit sequences and files in workflow example
+
+---
+id: craftive-workflow-feature-removal
+trigger: "When removing deprecated or unused features/files"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Feature Removal
+
+## Action
+
+Delete obsolete SQL, backend, and frontend code, and update documentation to remove references
+
+## Evidence
+
+- Workflow: feature-removal-or-cleanup
+- Commit sequences and files in workflow example
+
