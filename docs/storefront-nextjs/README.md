@@ -401,6 +401,7 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
+| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token for this deployment. Rendered as `<meta name="google-site-verification" ...>` from `app/layout.tsx`. Use the `content` value only. |
 
 `TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
 
@@ -416,6 +417,13 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | Tenant fork (whitelabel) | `acme` | `acme.com` |
 
 For tenant forks, only `components/theme/` changes. Env vars and deployment config are set independently per fork instance.
+
+Search Console verification follows the same deployment model:
+
+- each storefront deployment can expose one `GOOGLE_SITE_VERIFICATION` token
+- stage and prod may use different tokens
+- if the variable is unset, no verification meta tag is rendered
+- use the Search Console `HTML tag` method and copy only the `content` attribute value
 
 ## Caching and revalidation
 

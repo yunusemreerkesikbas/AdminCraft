@@ -2,4 +2,4 @@ ALTER TABLE navigation_entries
     DROP FOREIGN KEY fk_entry_node;
 
 ALTER TABLE navigation_entries
-    ADD CONSTRAINT fk_entry_node FOREIGN KEY (node_id) REFERENCES navigation_nodes(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_navigation_entries_navigation_nodes FOREIGN KEY (node_id) REFERENCES navigation_nodes(id) ON DELETE CASCADE;

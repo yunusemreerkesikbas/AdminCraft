@@ -51,17 +51,13 @@ public class GoogleServiceAccountAccessTokenProvider {
             return cachedToken.accessToken();
         }
 
-        synchronized (this) {
-            cachedToken = tokenCache.get(scope);
-            now = Instant.now();
-            if (cachedToken != null && cachedToken.expiresAt().isAfter(now.plusSeconds(30))) {
-                return cachedToken.accessToken();
+        return tokenCache.compute(scope, (k, existing) -> {
+            Instant current = Instant.now();
+            if (existing != null && existing.expiresAt().isAfter(current.plusSeconds(30))) {
+                return existing;
             }
-
-            CachedToken refreshedToken = requestAccessToken(scope);
-            tokenCache.put(scope, refreshedToken);
-            return refreshedToken.accessToken();
-        }
+            return requestAccessToken(scope);
+        }).accessToken();
     }
 
     private CachedToken requestAccessToken(String scope) {

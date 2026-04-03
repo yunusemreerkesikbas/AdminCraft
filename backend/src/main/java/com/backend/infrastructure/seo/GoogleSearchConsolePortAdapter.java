@@ -46,8 +46,11 @@ public class GoogleSearchConsolePortAdapter implements SiteSeoInsightsPort {
         String cacheKey = propertyUrl + ":" + range.name();
         CachedSearchPerformance cached = performanceCache.get(cacheKey);
         Instant now = Instant.now();
-        if (cached != null && cached.expiresAt().isAfter(now)) {
-            return cached.summary();
+        if (cached != null) {
+            if (cached.expiresAt().isAfter(now)) {
+                return cached.summary();
+            }
+            performanceCache.remove(cacheKey, cached);
         }
 
         SearchPerformanceSummary summary = loadSearchPerformance(propertyUrl);
@@ -64,8 +67,11 @@ public class GoogleSearchConsolePortAdapter implements SiteSeoInsightsPort {
         String cacheKey = propertyUrl + ":" + inspectionUrl;
         CachedInspection cached = inspectionCache.get(cacheKey);
         Instant now = Instant.now();
-        if (cached != null && cached.expiresAt().isAfter(now)) {
-            return cached.summary();
+        if (cached != null) {
+            if (cached.expiresAt().isAfter(now)) {
+                return cached.summary();
+            }
+            inspectionCache.remove(cacheKey, cached);
         }
 
         UrlInspectionSummary summary = loadInspection(propertyUrl, inspectionUrl);

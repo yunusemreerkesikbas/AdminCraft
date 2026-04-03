@@ -3,7 +3,6 @@ package com.backend.application.service;
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.backend.application.dto.response.SiteInsightsSummaryAppDto;
+import com.backend.application.service.analytics.SiteDataStatus;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.Tenant;
@@ -33,12 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional(readOnly = true)
 public class SiteInsightsServiceImpl implements SiteInsightsService {
-
-    static final String STATUS_READY = "READY";
-    static final String STATUS_NOT_CONFIGURED = "NOT_CONFIGURED";
-    static final String STATUS_DISABLED = "DISABLED";
-    static final String STATUS_ACCESS_ERROR = "ACCESS_ERROR";
-    static final String STATUS_NO_DATA = "NO_DATA";
 
     static final String SEO_RANGE_LAST_28_DAYS = "LAST_28_DAYS";
     static final String KEY_SEO_INSIGHTS_ENABLED = "seo.insights.enabled";
@@ -63,11 +57,11 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
     @Override
     public SiteInsightsSummaryAppDto getSummary() {
         if (!Boolean.TRUE.equals(globalRuntimeConfigService.getSeoInsightsEnabled())) {
-            return emptySummary(STATUS_DISABLED, null, null);
+            return emptySummary(SiteDataStatus.DISABLED, null, null);
         }
 
         if (!isTenantInsightsEnabled()) {
-            return emptySummary(STATUS_DISABLED, null, null);
+            return emptySummary(SiteDataStatus.DISABLED, null, null);
         }
 
         String resolvedUrl = resolvePublicUrl();
@@ -100,10 +94,10 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
     private SiteInsightsSummaryAppDto.SeoAppDto buildSeoSummary(String resolvedUrl) {
         String propertyUrl = resolveSearchConsolePropertyUrl();
         if (!StringUtils.hasText(propertyUrl)) {
-            return emptySeo(STATUS_NOT_CONFIGURED, null, null, null);
+            return emptySeo(SiteDataStatus.NOT_CONFIGURED, null, null, null);
         }
         if (!isValidSearchConsolePropertyUrl(propertyUrl)) {
-            return emptySeo(STATUS_ACCESS_ERROR, propertyUrl, null, null);
+            return emptySeo(SiteDataStatus.ACCESS_ERROR, propertyUrl, null, null);
         }
 
         SiteSeoInsightsPort.SearchPerformanceSummary searchPerformance = null;
@@ -130,7 +124,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
         }
 
         if (searchFailed && (inspection == null || inspectionFailed)) {
-            return emptySeo(STATUS_ACCESS_ERROR, propertyUrl, null, null);
+            return emptySeo(SiteDataStatus.ACCESS_ERROR, propertyUrl, null, null);
         }
 
         SiteSeoInsightsPort.SearchPerformanceSummary searchSummary = searchPerformance;
@@ -174,7 +168,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
 
         boolean hasSearchData = !cards.isEmpty() || !trend.isEmpty();
         boolean hasInspectionData = inspectionDto != null;
-        String status = hasSearchData || hasInspectionData ? STATUS_READY : STATUS_NO_DATA;
+        String status = hasSearchData || hasInspectionData ? SiteDataStatus.READY : SiteDataStatus.NO_DATA;
 
         return new SiteInsightsSummaryAppDto.SeoAppDto(
                 status,
@@ -193,7 +187,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
             String resolvedOrigin
     ) {
         if (!StringUtils.hasText(resolvedUrl) || !StringUtils.hasText(resolvedOrigin)) {
-            return emptyPerformance(STATUS_NOT_CONFIGURED, null, null, null, null);
+            return emptyPerformance(SiteDataStatus.NOT_CONFIGURED, null, null, null, null);
         }
 
         Optional<SitePerformanceInsightsPort.PerformanceHistory> urlHistory;
@@ -206,7 +200,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
                     6);
         } catch (Exception ex) {
             log.warn("Failed to fetch CrUX URL history for {}", resolvedUrl, ex);
-            return emptyPerformance(STATUS_ACCESS_ERROR, null, null, null, null);
+            return emptyPerformance(SiteDataStatus.ACCESS_ERROR, null, null, null, null);
         }
 
         SitePerformanceInsightsPort.PerformanceHistory history = urlHistory.orElseGet(() -> {
@@ -225,7 +219,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
         });
 
         if (history == null) {
-            return emptyPerformance(STATUS_NO_DATA, null, null, null, null);
+            return emptyPerformance(SiteDataStatus.NO_DATA, null, null, null, null);
         }
 
         Double lcp = latestMetric(history, "largest_contentful_paint");
@@ -253,7 +247,7 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
         List<SiteInsightsSummaryAppDto.PerformanceTrendPointAppDto> trend = buildPerformanceTrend(history);
 
         return new SiteInsightsSummaryAppDto.PerformanceAppDto(
-                STATUS_READY,
+                SiteDataStatus.READY,
                 history.targetScope().name(),
                 history.target(),
                 history.formFactor(),
@@ -590,6 +584,6 @@ public class SiteInsightsServiceImpl implements SiteInsightsService {
         if (instant == null) {
             return null;
         }
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
     }
 }

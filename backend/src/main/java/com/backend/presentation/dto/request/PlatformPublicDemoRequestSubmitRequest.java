@@ -1,5 +1,6 @@
 package com.backend.presentation.dto.request;
 
+import com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand;
 import com.backend.shared.constants.ValidationConstants;
 
 import jakarta.validation.constraints.Email;
@@ -35,9 +36,9 @@ public record PlatformPublicDemoRequestSubmitRequest(
     String recaptchaToken
 ) {
 
-    public com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand toCommand(String clientIp, String userAgent) {
+    public PlatformDemoRequestSubmitCommand toCommand(String clientIp, String userAgent) {
         String normalizedPhone = phone != null && !phone.isBlank() ? phone.trim() : null;
-        return new com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand(
+        return new PlatformDemoRequestSubmitCommand(
             fullName,
             email,
             normalizedPhone,

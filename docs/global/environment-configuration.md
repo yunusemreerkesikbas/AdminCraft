@@ -157,8 +157,11 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
 | `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
+| `GOOGLE_SITE_VERIFICATION`     | _(not set)_                 | Search Console HTML tag token    | Search Console HTML tag token |
 
 > **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). Required in stage/prod to prevent wildcard DNS rules from serving the wrong tenant's storefront.
+>
+> **`GOOGLE_SITE_VERIFICATION`**: Optional deployment-scoped Search Console token. When set, `storefront-nextjs/app/layout.tsx` renders `<meta name="google-site-verification" content="...">`. Use the Search Console `HTML tag` method and store only the `content` value, not the full `<meta>` element.
 
 Available scripts:
 

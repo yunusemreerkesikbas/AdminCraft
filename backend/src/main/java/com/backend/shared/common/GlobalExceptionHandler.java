@@ -338,7 +338,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleRequestNotPermitted(RequestNotPermitted ex) {
         String correlationId = MDC.get("correlationId");
         log.warn("[{}] Rate limiter rejected request: {}", correlationId, ex.getMessage());
-        String message = getMessage("cms.rate.limit.exceeded");
+        String message = getMessage("rate.limit.exceeded");
         return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
     }
 

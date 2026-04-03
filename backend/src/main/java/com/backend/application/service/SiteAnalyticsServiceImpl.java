@@ -1,7 +1,6 @@
 package com.backend.application.service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.backend.application.dto.response.SiteAnalyticsSummaryAppDto;
+import com.backend.application.service.analytics.SiteDataStatus;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.port.SiteAnalyticsPort;
@@ -25,12 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional(readOnly = true)
 public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
-
-    static final String STATUS_READY = "READY";
-    static final String STATUS_NOT_CONFIGURED = "NOT_CONFIGURED";
-    static final String STATUS_DISABLED = "DISABLED";
-    static final String STATUS_ACCESS_ERROR = "ACCESS_ERROR";
-    static final String STATUS_NO_DATA = "NO_DATA";
 
     static final String RANGE_LAST_7_DAYS = "LAST_7_DAYS";
     static final String KEY_GA4_ENABLED = "analytics.ga4.enabled";
@@ -52,14 +46,14 @@ public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
     public SiteAnalyticsSummaryAppDto getSummary() {
         if (!Boolean.TRUE.equals(globalRuntimeConfigService.getGa4AnalyticsEnabled())) {
             return emptySummary(
-                    STATUS_DISABLED,
+                    SiteDataStatus.DISABLED,
                     null,
                     null);
         }
 
         if (!isTenantAnalyticsEnabled()) {
             return emptySummary(
-                    STATUS_DISABLED,
+                    SiteDataStatus.DISABLED,
                     null,
                     null);
         }
@@ -67,14 +61,14 @@ public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
         String propertyId = resolvePropertyId();
         if (!StringUtils.hasText(propertyId)) {
             return emptySummary(
-                    STATUS_NOT_CONFIGURED,
+                    SiteDataStatus.NOT_CONFIGURED,
                     null,
                     null);
         }
 
         if (!PROPERTY_ID_PATTERN.matcher(propertyId).matches()) {
             return emptySummary(
-                    STATUS_ACCESS_ERROR,
+                    SiteDataStatus.ACCESS_ERROR,
                     propertyId,
                     null);
         }
@@ -87,13 +81,13 @@ public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
             if (!hasAnyMetricValue(summary.currentMetrics())
                     && !summary.activeUsersTrend().stream().anyMatch(point -> point.value() > 0)) {
                 return emptySummary(
-                        STATUS_NO_DATA,
+                        SiteDataStatus.NO_DATA,
                         propertyId,
                         toLocalDateTime(summary.fetchedAt()));
             }
 
             return new SiteAnalyticsSummaryAppDto(
-                    STATUS_READY,
+                    SiteDataStatus.READY,
                     propertyId,
                     RANGE_LAST_7_DAYS,
                     KPI_ORDER.stream()
@@ -119,42 +113,55 @@ public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
         } catch (Exception ex) {
             log.warn("Failed to fetch site analytics summary for property {}", propertyId, ex);
             return emptySummary(
-                    STATUS_ACCESS_ERROR,
+                    SiteDataStatus.ACCESS_ERROR,
                     propertyId,
                     null);
         }
     }
 
     private boolean isTenantAnalyticsEnabled() {
-        String tenantId = tenantContextPort.getTenantId();
+        Long tenantId = parseTenantId();
         String tenantDbName = tenantContextPort.getTenantDbName();
-        if (!StringUtils.hasText(tenantId) || !StringUtils.hasText(tenantDbName)) {
+        if (tenantId == null || !StringUtils.hasText(tenantDbName)) {
             log.warn("Tenant context is not available while resolving GA4 analytics enabled flag");
             return false;
         }
 
         return configPropertyService.getBoolean(
-                Long.parseLong(tenantId),
+                tenantId,
                 tenantDbName,
                 KEY_GA4_ENABLED,
                 false);
     }
 
     private String resolvePropertyId() {
-        String tenantId = tenantContextPort.getTenantId();
+        Long tenantId = parseTenantId();
         String tenantDbName = tenantContextPort.getTenantDbName();
-        if (!StringUtils.hasText(tenantId) || !StringUtils.hasText(tenantDbName)) {
+        if (tenantId == null || !StringUtils.hasText(tenantDbName)) {
             log.warn("Tenant context is not available while resolving GA4 property ID");
             return null;
         }
 
         return configPropertyService.findRaw(
-                        Long.parseLong(tenantId),
+                        tenantId,
                         tenantDbName,
                         KEY_GA4_PROPERTY_ID)
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .orElse(null);
+    }
+
+    private Long parseTenantId() {
+        String tenantId = tenantContextPort.getTenantId();
+        if (!StringUtils.hasText(tenantId)) {
+            return null;
+        }
+        try {
+            return Long.parseLong(tenantId);
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid tenant context id {}", tenantId, ex);
+            return null;
+        }
     }
 
     private SiteAnalyticsSummaryAppDto emptySummary(
@@ -206,6 +213,6 @@ public class SiteAnalyticsServiceImpl implements SiteAnalyticsService {
         if (instant == null) {
             return null;
         }
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
     }
 }

@@ -139,14 +139,15 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     @Transactional
     public void deleteProperty(ConfigPrincipal principal, String key, String reason) {
         Tenant tenant = resolveTargetTenant(principal);
+        String normalizedKey = normalizeKey(key);
 
-        String beforeValue = configPropertyService.findRaw(tenant.getId(), tenant.getDatabaseName(), key).orElse(null);
+        String beforeValue = configPropertyService.findRaw(tenant.getId(), tenant.getDatabaseName(), normalizedKey).orElse(null);
 
-        configPropertyService.delete(tenant.getId(), tenant.getDatabaseName(), key);
+        configPropertyService.delete(tenant.getId(), tenant.getDatabaseName(), normalizedKey);
 
         writeAudit(principal, tenant.getId(), AUDIT_ACTION_DELETE, reason,
-                snapshotJson(key, beforeValue),
-                snapshotJson(key, null));
+                snapshotJson(normalizedKey, beforeValue),
+                snapshotJson(normalizedKey, null));
     }
 
     private Tenant resolveTargetTenant(ConfigPrincipal principal) {

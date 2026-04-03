@@ -62,7 +62,7 @@ public class CruxHistoryPortAdapter implements SitePerformanceInsightsPort {
         CachedHistory cached = cache.get(cacheKey);
         Instant now = Instant.now();
         if (cached != null && cached.expiresAt().isAfter(now)) {
-            return Optional.of(cached.history());
+            return cached.result();
         }
 
         Optional<PerformanceHistory> history = loadHistory(
@@ -71,11 +71,9 @@ public class CruxHistoryPortAdapter implements SitePerformanceInsightsPort {
                 formFactor,
                 metrics,
                 collectionPeriodCount);
-        history.ifPresent(value -> cache.put(
-                cacheKey,
-                new CachedHistory(
-                        value,
-                        now.plusSeconds(Math.max(properties.getCacheTtlSeconds(), 30)))));
+        cache.put(cacheKey, new CachedHistory(
+                history,
+                now.plusSeconds(Math.max(properties.getCacheTtlSeconds(), 30))));
         return history;
     }
 
@@ -182,7 +180,7 @@ public class CruxHistoryPortAdapter implements SitePerformanceInsightsPort {
     }
 
     private record CachedHistory(
-            PerformanceHistory history,
+            Optional<PerformanceHistory> result,
             Instant expiresAt
     ) {
     }

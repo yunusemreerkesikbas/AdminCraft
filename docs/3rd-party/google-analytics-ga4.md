@@ -206,3 +206,11 @@ This creates a two-part integration:
 - `NOT_CONFIGURED`: add `analytics.ga4.property_id`
 - `ACCESS_ERROR`: verify Property ID format and Google property access for the shared service account
 - `NO_DATA`: traffic is not yet available in GA4 standard reporting for the selected range
+
+## TODO
+
+Future phase:
+
+- evaluate tenant-scoped GTM container usage for `storefront-nextjs`
+- define a shared Craftive `dataLayer` / event contract for tenant storefronts
+- review marketing funnel events such as CTA clicks, form start, form submit, and demo request

@@ -237,6 +237,12 @@ This creates a two-provider backend-only integration:
 - Search Console: backend -> Search Console API via shared Google service account + tenant property URL
 - CrUX: backend -> CrUX History API via API key + resolved tenant public URL/origin
 
+Storefront ownership verification:
+
+- Search Console property ownership for `storefront-nextjs` can be managed per deployment with `GOOGLE_SITE_VERIFICATION`
+- the storefront renders `<meta name="google-site-verification" ...>` from `app/layout.tsx` when that env var is set
+- use the Search Console `HTML tag` method and store only the token value in env
+
 ## Implementation guide
 
 ### Connect Search Console and CrUX for a tenant
