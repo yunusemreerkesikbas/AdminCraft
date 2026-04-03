@@ -349,6 +349,8 @@ This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thres
 | `CF_API_TOKEN` | Traefik DNS-01 (injected via `.env.*`) |
 | `ENV_PROD` | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket |
 | `ENV_STAGE` | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
+| `STOREFRONT_GOOGLE_SITE_VERIFICATION_STAGE` | Stage storefront image build arg for Search Console HTML tag token |
+| `STOREFRONT_GOOGLE_SITE_VERIFICATION_PROD` | Prod storefront image build arg for Search Console HTML tag token |
 
 Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
 

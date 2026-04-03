@@ -401,7 +401,7 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
-| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token for this deployment. Rendered as `<meta name="google-site-verification" ...>` from `app/layout.tsx`. Use the `content` value only. |
+| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Local development may define it in `.env.local` / `.env.development`; stage and prod inject it at image build time via CI secrets. |
 
 `TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
 
@@ -424,6 +424,10 @@ Search Console verification follows the same deployment model:
 - stage and prod may use different tokens
 - if the variable is unset, no verification meta tag is rendered
 - use the Search Console `HTML tag` method and copy only the `content` attribute value
+- do not commit stage/prod tokens into `storefront-nextjs/.env.staging` or `storefront-nextjs/.env.production`
+- stage and prod storefront images receive the token from GitHub Actions secrets:
+  - `STOREFRONT_GOOGLE_SITE_VERIFICATION_STAGE`
+  - `STOREFRONT_GOOGLE_SITE_VERIFICATION_PROD`
 
 ## Caching and revalidation
 

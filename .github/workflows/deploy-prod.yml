@@ -74,6 +74,7 @@ jobs:
           build-args: |
             BUILD_ENV=prod
             NEXT_OUTPUT=standalone
+            GOOGLE_SITE_VERIFICATION=${{ secrets.STOREFRONT_GOOGLE_SITE_VERIFICATION_PROD }}
 
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
