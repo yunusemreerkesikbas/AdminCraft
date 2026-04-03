@@ -4,7 +4,7 @@
 
 Craftive runs two isolated environments on DigitalOcean (Frankfurt, FRA1).
 Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose project.
-Prod uses Cloudflare proxy (orange cloud) for CDN/DDoS protection; Stage uses DNS-only (grey cloud) due to multi-level subdomain SSL limitations (see Gotchas).
+Both prod and stage use Cloudflare proxy (orange cloud). Stage uses the single-level `s1-*` subdomain convention so Cloudflare Universal SSL covers all stage services (see Gotchas).
 
 **Platform services** (managed by Craftive): Backend API + Admin Panel.
 **Tenant storefront** (`storefront-nextjs/`): Deployable boilerplate. Each tenant storefront can be deployed independently from its own repository onto the same environment droplet with isolated routing.

@@ -194,18 +194,16 @@ class SiteOverviewServiceImplTest {
         second.setId(14L);
         second.setUserId(1L);
 
-        org.springframework.data.domain.Page<SiteActivity> page = new org.springframework.data.domain.PageImpl<>(
-                List.of(first, second),
-                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")),
-                15);
         com.backend.domain.entity.User user = new com.backend.domain.entity.User();
         user.setId(1L);
         user.setEmail("admin@democompany.com");
         user.setFullName("Admin");
 
-        when(siteActivityRepository.findRecentActivities(org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
-                .thenReturn(page);
-        when(userRepository.findByIdIn(org.mockito.ArgumentMatchers.anyList()))
+        when(siteActivityRepository.findRecentActivities(0, 10))
+                .thenReturn(List.of(first, second));
+        when(siteActivityRepository.count())
+                .thenReturn(15L);
+        when(userRepository.findByIdIn(org.mockito.ArgumentMatchers.<Long>anyList()))
                 .thenReturn(List.of(user));
 
         Page<com.backend.application.dto.response.SiteOverviewAppDto.ActivityAppDto> result = siteOverviewService

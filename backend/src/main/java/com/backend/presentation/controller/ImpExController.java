@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.backend.application.dto.impex.ImpExRequest;
 import com.backend.application.dto.impex.ImpExResult;
+import com.backend.presentation.dto.request.impex.ImpExRequest;
 import com.backend.application.service.impex.ImpExService;
 import com.backend.domain.exception.ImpExInvalidScriptException;
 import com.backend.shared.common.ApiResponse;

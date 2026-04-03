@@ -15,4 +15,8 @@ public interface GlobalRuntimeConfigService {
     String getRecaptchaSiteKey();
 
     String getRecaptchaSecretKeyEncrypted();
+
+    Boolean getGa4AnalyticsEnabled();
+
+    Boolean getSeoInsightsEnabled();
 }

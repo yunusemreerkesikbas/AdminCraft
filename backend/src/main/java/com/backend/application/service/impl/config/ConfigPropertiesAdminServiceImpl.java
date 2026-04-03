@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.slf4j.MDC;
 import org.springframework.security.access.AccessDeniedException;
@@ -39,10 +40,20 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     private static final String KEY_RECAPTCHA_ENABLED = "security.recaptcha.enabled";
     private static final String KEY_RECAPTCHA_SITE_KEY = "security.recaptcha.site_key";
     private static final String KEY_RECAPTCHA_SECRET_KEY = "security.recaptcha.secret_key";
+    private static final String KEY_GA4_ENABLED = "analytics.ga4.enabled";
+    private static final String KEY_GA4_PROPERTY_ID = "analytics.ga4.property_id";
+    private static final String KEY_SEO_INSIGHTS_ENABLED = "seo.insights.enabled";
+    private static final String KEY_SEARCH_CONSOLE_PROPERTY_URL = "seo.search_console.property_url";
+    private static final Pattern GA4_PROPERTY_ID_PATTERN = Pattern.compile("^\\d+$");
+    private static final Pattern SEARCH_CONSOLE_PROPERTY_PATTERN = Pattern.compile("^(sc-domain:.+|https?://.+)$");
     private static final List<String> MANAGED_KEYS = List.of(
             KEY_RECAPTCHA_ENABLED,
             KEY_RECAPTCHA_SITE_KEY,
-            KEY_RECAPTCHA_SECRET_KEY);
+            KEY_RECAPTCHA_SECRET_KEY,
+            KEY_GA4_ENABLED,
+            KEY_GA4_PROPERTY_ID,
+            KEY_SEO_INSIGHTS_ENABLED,
+            KEY_SEARCH_CONSOLE_PROPERTY_URL);
     private static final Set<String> MANAGED_KEYS_SET = Set.copyOf(MANAGED_KEYS);
 
     private final TenantRepository tenantRepository;
@@ -100,14 +111,26 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     @Transactional
     public ConfigPropertyResult upsertProperty(ConfigPrincipal principal, String key, String value, boolean secret, String reason) {
         Tenant tenant = resolveTargetTenant(principal);
+        String normalizedKey = normalizeKey(key);
+        String normalizedValue = normalizeValue(value);
+        validateManagedProperty(normalizedKey, normalizedValue, secret);
 
-        String beforeValue = configPropertyService.findRaw(tenant.getId(), tenant.getDatabaseName(), key).orElse(null);
+        String beforeValue = configPropertyService.findRaw(
+                tenant.getId(),
+                tenant.getDatabaseName(),
+                normalizedKey).orElse(null);
 
-        ConfigProperty saved = configPropertyService.upsert(tenant.getId(), tenant.getDatabaseName(), key, value, secret, principal.userId());
+        ConfigProperty saved = configPropertyService.upsert(
+                tenant.getId(),
+                tenant.getDatabaseName(),
+                normalizedKey,
+                normalizedValue,
+                secret,
+                principal.userId());
 
         writeAudit(principal, tenant.getId(), AUDIT_ACTION_UPSERT, reason,
-                snapshotJson(key, beforeValue),
-                snapshotJson(key, value));
+                snapshotJson(normalizedKey, beforeValue),
+                snapshotJson(normalizedKey, normalizedValue));
 
         return toResult(saved);
     }
@@ -116,14 +139,15 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
     @Transactional
     public void deleteProperty(ConfigPrincipal principal, String key, String reason) {
         Tenant tenant = resolveTargetTenant(principal);
+        String normalizedKey = normalizeKey(key);
 
-        String beforeValue = configPropertyService.findRaw(tenant.getId(), tenant.getDatabaseName(), key).orElse(null);
+        String beforeValue = configPropertyService.findRaw(tenant.getId(), tenant.getDatabaseName(), normalizedKey).orElse(null);
 
-        configPropertyService.delete(tenant.getId(), tenant.getDatabaseName(), key);
+        configPropertyService.delete(tenant.getId(), tenant.getDatabaseName(), normalizedKey);
 
         writeAudit(principal, tenant.getId(), AUDIT_ACTION_DELETE, reason,
-                snapshotJson(key, beforeValue),
-                snapshotJson(key, null));
+                snapshotJson(normalizedKey, beforeValue),
+                snapshotJson(normalizedKey, null));
     }
 
     private Tenant resolveTargetTenant(ConfigPrincipal principal) {
@@ -195,8 +219,74 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
                     true,
                     null,
                     null);
+            case KEY_GA4_ENABLED -> new ConfigPropertyResult(
+                    key,
+                    "false",
+                    false,
+                    null,
+                    null);
+            case KEY_GA4_PROPERTY_ID -> new ConfigPropertyResult(
+                    key,
+                    null,
+                    false,
+                    null,
+                    null);
+            case KEY_SEO_INSIGHTS_ENABLED -> new ConfigPropertyResult(
+                    key,
+                    "false",
+                    false,
+                    null,
+                    null);
+            case KEY_SEARCH_CONSOLE_PROPERTY_URL -> new ConfigPropertyResult(
+                    key,
+                    null,
+                    false,
+                    null,
+                    null);
             default -> throw new IllegalArgumentException("Unsupported managed property key: " + key);
         };
+    }
+
+    private void validateManagedProperty(String key, String value, boolean secret) {
+        if (!MANAGED_KEYS_SET.contains(key)) {
+            return;
+        }
+
+        if (KEY_GA4_ENABLED.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("GA4 enabled flag cannot be stored as secret");
+            }
+            if (value == null || (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value))) {
+                throw new IllegalArgumentException("GA4 enabled flag must be true or false");
+            }
+        }
+
+        if (KEY_GA4_PROPERTY_ID.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("GA4 property ID cannot be stored as secret");
+            }
+            if (value != null && !GA4_PROPERTY_ID_PATTERN.matcher(value).matches()) {
+                throw new IllegalArgumentException("GA4 property ID must be numeric");
+            }
+        }
+
+        if (KEY_SEO_INSIGHTS_ENABLED.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("SEO insights enabled flag cannot be stored as secret");
+            }
+            if (value == null || (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value))) {
+                throw new IllegalArgumentException("SEO insights enabled flag must be true or false");
+            }
+        }
+
+        if (KEY_SEARCH_CONSOLE_PROPERTY_URL.equals(key)) {
+            if (secret) {
+                throw new IllegalArgumentException("Search Console property URL cannot be stored as secret");
+            }
+            if (value != null && !SEARCH_CONSOLE_PROPERTY_PATTERN.matcher(value).matches()) {
+                throw new IllegalArgumentException("Search Console property URL must start with sc-domain: or http(s)://");
+            }
+        }
     }
 
     private String normalizeKey(String key) {
@@ -204,5 +294,13 @@ public class ConfigPropertiesAdminServiceImpl implements ConfigPropertiesAdminSe
             throw new IllegalArgumentException("Property key is required");
         }
         return key.trim().toLowerCase();
+    }
+
+    private String normalizeValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

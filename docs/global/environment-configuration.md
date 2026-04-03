@@ -59,6 +59,8 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
   - `app.email.from-address`
   - `app.email.from-name`
   - `app.frontend.base-url`
+  - `platform.analytics.ga4.enabled`
+  - `platform.seo.insights.enabled`
   - `platform.security.recaptcha.enabled`
   - `platform.security.recaptcha.site_key`
   - `platform.security.recaptcha.secret_key` (encrypted)
@@ -66,6 +68,33 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 - Resolution precedence for these keys:
   1. `platform_config_properties` override
   2. Spring `application*.yml` / environment variable value
+
+#### Shared GA4 service account credential
+
+GA4 dashboard reporting uses a shared backend service identity. This credential is not tenant-scoped and must not be stored in `/config`.
+
+See also: [`../3rd-party/google-analytics-ga4.md`](../3rd-party/google-analytics-ga4.md)
+See also: [`../3rd-party/google-search-console-crux-seo-insights.md`](../3rd-party/google-search-console-crux-seo-insights.md)
+
+- tenant `/config` keys:
+  - `analytics.ga4.enabled`
+  - `analytics.ga4.property_id`
+  - `seo.insights.enabled`
+  - `seo.search_console.property_url`
+- global `/config` key:
+  - `platform.analytics.ga4.enabled`
+  - `platform.seo.insights.enabled`
+- backend environment secret:
+  - `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON`
+  - or `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64`
+  - `APP_SEO_CRUX_API_KEY`
+
+Behavior by environment:
+
+- local: set the env var in the same shell or IDE run configuration that starts Spring Boot
+- stage/prod: inject the env var from deployment secrets or container environment
+- all environments: the same service account can be reused for multiple tenants; each tenant GA4 property must explicitly grant that service account `Viewer` access
+- all environments: the same Google service account can also be reused for Search Console; each tenant Search Console property must explicitly grant that service account access
 
 ### Frontend — Angular
 
@@ -128,8 +157,11 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
 | `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
+| `GOOGLE_SITE_VERIFICATION`     | _(not set)_                 | Search Console HTML tag token    | Search Console HTML tag token |
 
 > **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). Required in stage/prod to prevent wildcard DNS rules from serving the wrong tenant's storefront.
+>
+> **`GOOGLE_SITE_VERIFICATION`**: Optional deployment-scoped Search Console token. When set, `storefront-nextjs/app/layout.tsx` renders `<meta name="google-site-verification" content="...">`. Use the Search Console `HTML tag` method and store only the `content` value, not the full `<meta>` element.
 
 Available scripts:
 
@@ -246,6 +278,9 @@ npm run build:static
 | `EMAIL_FROM_NAME`       | Default sender name            | Yes                |
 | `SPACES_ACCESS_KEY`     | DO Spaces access key (S3)      | Yes (stage/prod)   |
 | `SPACES_SECRET_KEY`     | DO Spaces secret key (S3)      | Yes (stage/prod)   |
+| `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON` | GA4 service account JSON content | Yes, if GA4 dashboard reporting is enabled |
+| `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | Base64 alternative for GA4 service account JSON | Optional alternative |
+| `APP_SEO_CRUX_API_KEY` | CrUX History API key | Yes, if SEO insights performance snapshot is enabled |
 
 ### Stage/Prod Observability and Edge
 
@@ -274,9 +309,26 @@ $env:EMAIL_FROM_ADDRESS = "noreply@craftive.io"
 $env:EMAIL_FROM_NAME = "Craftive"
 $env:LOG_ENV = "stage"
 $env:LOG_HOST = "do-fra1-stage-01"
+$env:APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON = Get-Content -Raw "C:\\secrets\\ga4-service-account.json"
 
 mvn spring-boot:run -Dspring-boot.run.profiles=stage
 ```
+
+### Local persistence for GA4 credential
+
+Temporary shell usage:
+
+```powershell
+$env:APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON = Get-Content -Raw "C:\path\to\ga4-service-account.json"
+```
+
+For persistent local development, prefer one of these:
+
+- add the variable to your IDE Run Configuration for the backend
+- add the variable to your PowerShell profile if you intentionally want it available in every new shell
+- use a local secret loader script that sets the env var before starting Spring Boot
+
+Do not commit the JSON file or inline credential into tracked config files.
 
 ## Gotchas
 

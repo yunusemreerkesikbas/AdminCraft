@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+
 import com.backend.domain.exception.BusinessRuleViolationException;
 import com.backend.domain.exception.ContentCannotBePublishedException;
 import com.backend.domain.exception.DuplicateEntityException;
@@ -330,6 +332,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 ApiResponse.error(message),
                 HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<ApiResponse<?>> handleRequestNotPermitted(RequestNotPermitted ex) {
+        String correlationId = MDC.get("correlationId");
+        log.warn("[{}] Rate limiter rejected request: {}", correlationId, ex.getMessage());
+        String message = getMessage("rate.limit.exceeded");
+        return new ResponseEntity<>(ApiResponse.error(message), HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(RuntimeException.class)
