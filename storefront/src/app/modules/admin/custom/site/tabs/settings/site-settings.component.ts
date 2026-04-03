@@ -283,6 +283,8 @@ export class SpaSiteSettingsComponent implements OnDestroy {
                     siteName: langSettings.siteName || '',
                     tagline: langSettings.tagline || '',
                 });
+            } else {
+                languagesGroup.get(langKey)?.reset({ siteName: '', tagline: '' });
             }
         });
     }

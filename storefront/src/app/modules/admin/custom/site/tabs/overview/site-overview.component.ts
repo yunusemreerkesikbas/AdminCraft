@@ -1805,10 +1805,10 @@ export class SpaSiteOverviewComponent implements OnChanges {
         return {
             visible: Boolean(this.trend),
             hasData: days.some((day) => day.total > 0),
-            windowLabel: this.trend?.totalElements
+            windowLabel: days.length
                 ? this.#translate(
                       'admin.site.dashboard.overview.meta.trendWindow',
-                      { count: this.trend.totalElements }
+                      { count: days.length }
                   )
                 : '',
             sliceLabel: this.#buildTrendSliceLabel(days),
@@ -2392,8 +2392,9 @@ export class SpaSiteOverviewComponent implements OnChanges {
         value: string,
         options?: Intl.DateTimeFormatOptions
     ): string {
+        const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value;
         return new Intl.DateTimeFormat(this.#localeTag(), options).format(
-            new Date(value)
+            new Date(normalized)
         );
     }
 

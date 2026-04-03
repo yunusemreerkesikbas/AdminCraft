@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { take } from 'rxjs';
 import {
     FormsModule,
     NgForm,
@@ -96,7 +97,7 @@ export class AuthSignUpComponent implements OnInit {
         this.showAlert = false;
 
         // Sign up
-        this._authService.signUp(this.signUpForm.value).subscribe(
+        this._authService.signUp(this.signUpForm.value).pipe(take(1)).subscribe(
             (response) => {
                 // Navigate to the confirmation required page
                 this._router.navigateByUrl('/confirmation-required');

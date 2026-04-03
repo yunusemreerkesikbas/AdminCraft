@@ -475,7 +475,7 @@
                                                     : 'spa-site-overview__inspection-pill--neutral'
                                         "
                                     >
-                                        {{ item.tone === 'primary' ? ('admin.common.status.active' | transloco) : item.tone === 'critical' ? ('admin.common.error' | transloco) : ('admin.common.warning' | transloco) }}
+                                        {{ item.tone === 'primary' ? ('admin.common.status.active' | transloco) : item.tone === 'critical' ? ('admin.common.error' | transloco) : item.tone === 'warning' ? ('admin.common.warning' | transloco) : ('admin.common.neutral' | transloco) }}
                                     </span>
                                 </div>
                             }

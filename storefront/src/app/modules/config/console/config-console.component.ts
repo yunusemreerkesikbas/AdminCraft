@@ -100,7 +100,12 @@ export class ConfigConsoleComponent implements OnInit {
             return;
         }
 
-        if (this.#session.isAccessTokenExpired(storedSession) && !storedSession.refreshToken) {
+        if (!this.#session.isAccessTokenExpired(storedSession)) {
+            this.#session.setStoredSession(storedSession);
+            return;
+        }
+
+        if (!storedSession.refreshToken) {
             this.#session.clearStoredSession();
         }
     }
