@@ -1,0 +1,392 @@
+# Instincts generated from https://github.com/yunusemreerkesikbas/Craftive
+# Generated: 2026-04-03T21:13:13.291Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: Craftive-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Commit Length
+
+## Action
+
+Write moderate-length commit messages (~84 characters)
+
+## Evidence
+
+- Average commit message length: 84 chars
+- Based on 2 commits
+
+---
+id: Craftive-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: Craftive-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: Craftive-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: Craftive-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: Craftive-workflow-add-or-update-analytics-insights-integration
+trigger: "when doing add or update analytics insights integration"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Add Or Update Analytics Insights Integration
+
+## Action
+
+Follow the add-or-update-analytics-insights-integration workflow:
+1. Create or update DTOs for analytics/insights data transfer.
+2. Implement or modify service and service implementation classes for analytics/insights.
+3. Add or update domain ports and infrastructure adapters for external integrations.
+4. Update configuration files and properties related to analytics/insights.
+5. Modify controllers to expose new or updated endpoints.
+6. Update or add tests for service implementations and controllers.
+7. Update documentation to reflect new integrations or changes.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/src/main/java/com/backend/application/dto/response/SiteAnalyticsSummaryAppDto.java, backend/src/main/java/com/backend/application/dto/response/SiteInsightsSummaryAppDto.java, backend/src/main/java/com/backend/application/service/SiteAnalyticsService.java
+
+---
+id: Craftive-workflow-refactor-and-standardize-service-dtos-and-validation
+trigger: "when doing refactor and standardize service dtos and validation"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/yunusemreerkesikbas/Craftive
+---
+
+# Craftive Workflow Refactor And Standardize Service Dtos And Validation
+
+## Action
+
+Follow the refactor-and-standardize-service-dtos-and-validation workflow:
+1. Deprecate or update DTOs, removing or adjusting validation annotations.
+2. Introduce new classes (e.g., status enums or constants) to standardize logic.
+3. Refactor service implementations to use new standardized structures.
+4. Update related controllers and helper classes for new logic.
+5. Update or add tests for affected services.
+6. Update documentation to reflect refactored logic and structures.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/src/main/java/com/backend/application/dto/impex/ImpExRequest.java, backend/src/main/java/com/backend/application/service/SiteAnalyticsServiceImpl.java, backend/src/main/java/com/backend/application/service/SiteInsightsServiceImpl.java
+
+---
+id: craftive-instinct-file-naming-pascalcase
+trigger: "When creating a new Java file (class, DTO, controller, etc.)"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct File Naming Pascalcase
+
+## Action
+
+Name the file using PascalCase (e.g., SiteAnalyticsSummaryAppDto.java)
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/application/dto/response/SiteAnalyticsSummaryAppDto.java
+- backend/src/main/java/com/backend/presentation/controller/SiteController.java
+
+---
+id: craftive-instinct-class-naming-pascalcase
+trigger: "When defining a new Java class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Class Naming Pascalcase
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/application/service/SiteAnalyticsServiceImpl.java
+
+---
+id: craftive-instinct-function-naming-camelcase
+trigger: "When defining a new function or method in Java"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Function Naming Camelcase
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/application/service/SiteAnalyticsServiceImpl.java
+
+---
+id: craftive-instinct-constant-naming-screaming-snake-case
+trigger: "When defining a constant in Java"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Constant Naming Screaming Snake Case
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/application/service/analytics/SiteDataStatus.java
+
+---
+id: craftive-instinct-import-style-relative
+trigger: "When importing modules in Java"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Import Style Relative
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/application/service/SiteAnalyticsServiceImpl.java
+
+---
+id: craftive-instinct-export-style-named
+trigger: "When exporting classes or interfaces in Java"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Export Style Named
+
+## Action
+
+Use named exports (public class/interface ...)
+
+## Evidence
+
+- Pattern in files: backend/src/main/java/com/backend/domain/port/SiteAnalyticsPort.java
+
+---
+id: craftive-instinct-test-file-pattern
+trigger: "When creating a new test file"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Test File Pattern
+
+## Action
+
+Name the file using the pattern *.test.ts
+
+## Evidence
+
+- Pattern in files: backend/src/test/java/com/backend/application/service/SiteAnalyticsServiceImplTest.java
+
+---
+id: craftive-instinct-test-type-unit
+trigger: "When writing tests for services or controllers"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Test Type Unit
+
+## Action
+
+Write unit tests
+
+## Evidence
+
+- Pattern in files: backend/src/test/java/com/backend/application/service/SiteAnalyticsServiceImplTest.java
+
+---
+id: craftive-instinct-git-commit-prefix-feat
+trigger: "When committing a new feature or significant change"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Git Commit Prefix Feat
+
+## Action
+
+Prefix the commit message with 'feat:'
+
+## Evidence
+
+- Seen in commit: feat: add analytics and insights integrations
+
+---
+id: craftive-instinct-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Git Commit Length
+
+## Action
+
+Write a descriptive commit message with an average length of ~84 characters
+
+## Evidence
+
+- Average commit length: 84
+
+---
+id: craftive-instinct-add-analytics-insights-integration
+trigger: "When someone wants to add or improve analytics or insights features (such as Google Analytics, Search Console, Crux) in the backend"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Add Analytics Insights Integration
+
+## Action
+
+Follow the workflow: update/create DTOs, services, ports, adapters, controllers, tests, and documentation for analytics/insights integration
+
+## Evidence
+
+- Workflow: add-or-update-analytics-insights-integration
+- Pattern in files: backend/src/main/java/com/backend/application/dto/response/SiteAnalyticsSummaryAppDto.java, docs/3rd-party/google-analytics-ga4.md
+
+---
+id: craftive-instinct-refactor-standardize-service-dto-validation
+trigger: "When someone wants to improve code quality, validation, and consistency in service and DTO layers"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: yunusemreerkesikbas/Craftive
+---
+
+# Craftive Instinct Refactor Standardize Service Dto Validation
+
+## Action
+
+Follow the workflow: deprecate/update DTOs, introduce standard classes, refactor services, update controllers/helpers, add tests, update docs
+
+## Evidence
+
+- Workflow: refactor-and-standardize-service-dtos-and-validation
+- Pattern in files: backend/src/main/java/com/backend/application/dto/impex/ImpExRequest.java, docs/global/environment-configuration.md
+
