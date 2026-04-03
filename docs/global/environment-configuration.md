@@ -106,7 +106,7 @@ Behavior by environment:
 
 1. **Next.js env loading order**: `.env.local` > `.env.{NODE_ENV}` > `.env`
 2. **Staging**: Not a native `NODE_ENV` value — use `dotenv-cli` (`dotenv -e .env.staging -- next ...`)
-3. **`.env.local` always wins**: Use this for local overrides (tenant ID, API URL, etc.) — never commit it
+3. **`.env.local` is local/dev only**: Plain `npm run start` / `npm run dev` keep the default Next.js `.env.local` override behavior. Explicit `*:stage` / `*:prod` scripts preload their target env file first, so `.env.local` does not override them.
 4. **SSR vs Static export**: Default mode is SSR (`next start`). Set `NEXT_OUTPUT=export` for static HTML export (no server required, but server-only features like `cache()` and `revalidate` are disabled)
 
 ### Frontend — Marketing landing (`landing/`)
@@ -157,25 +157,31 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
 | `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
-| `GOOGLE_SITE_VERIFICATION`     | optional local env          | CI build secret injects token    | CI build secret injects token |
+| `GOOGLE_SITE_VERIFICATION`     | optional local env          | tracked in `storefront-nextjs/.env.staging` for the demo storefront | tracked in `storefront-nextjs/.env.production` for the demo storefront |
 
-> **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). Required in stage/prod to prevent wildcard DNS rules from serving the wrong tenant's storefront.
+> **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). The local `start:stage`, `start:prod`, `serve:stage`, and `serve:prod` scripts clear this variable intentionally so localhost can run against stage/prod APIs. Required in real stage/prod deployments to prevent wildcard DNS rules from serving the wrong tenant's storefront.
 >
-> **`GOOGLE_SITE_VERIFICATION`**: Optional Search Console token. In local development it may live in `.env.local` / `.env.development`. In stage and prod it must be injected at storefront image build time from CI secrets so stage/prod tokens cannot leak through tracked env files. Use only the `content` value, not the full `<meta>` element.
+> **`GOOGLE_SITE_VERIFICATION`**: Optional Search Console token. In local development it may live in `.env.local` / `.env.development`. In this platform repository, the demo storefront keeps stage and prod tokens in the tracked `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production` files because the token is public and rendered into the HTML source anyway. Tenant storefront repositories should manage their own value in their own repo/build config. Use only the `content` value, not the full `<meta>` element.
 
 Available scripts:
 
 | Script                 | Description                                    |
 | ---------------------- | ---------------------------------------------- |
-| `npm run dev`          | Dev server with `.env.development`             |
-| `npm run dev:stage`    | Dev server with `.env.staging`                 |
-| `npm run build`        | SSR production build                           |
+| `npm run start`        | Local dev server with `.env.development` + `.env.local` |
+| `npm run start:dev`    | Same as `start`                                |
+| `npm run start:stage`  | Local dev server with `.env.staging`           |
+| `npm run start:prod`   | Local dev server with `.env.production`        |
+| `npm run dev`          | Backward-compatible alias for local dev server |
+| `npm run dev:stage`    | Backward-compatible alias for stage dev server |
+| `npm run dev:prod`     | Backward-compatible alias for prod dev server  |
+| `npm run build`        | Deterministic SSR production build with `.env.production` |
 | `npm run build:dev`    | SSR build with `.env.development`              |
 | `npm run build:stage`  | SSR build with `.env.staging`                  |
-| `npm run build:prod`   | SSR production build (same as `build`)         |
+| `npm run build:prod`   | SSR build with `.env.production`               |
 | `npm run build:static` | Static export (CSR) with `.env.production`     |
-| `npm run start`        | SSR production server                          |
-| `npm run start:stage`  | SSR server with `.env.staging`                 |
+| `npm run serve`        | SSR production server with `.env.production`   |
+| `npm run serve:stage`  | SSR server with `.env.staging`                 |
+| `npm run serve:prod`   | SSR server with `.env.production`              |
 | `npm run start:static` | Serve `out/` folder (for static export builds) |
 
 ### Language Configuration
@@ -227,7 +233,7 @@ npm run start:dev
 
 # Next.js headless storefront (uses .env.development + .env.local)
 cd storefront-nextjs
-npm run dev
+npm run start
 ```
 
 ### Running with Specific Profile
@@ -240,7 +246,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
 npm run start:stage
 
 # Next.js with stage config
-npm run dev:stage
+npm run start:stage
 ```
 
 ### Build for Production
@@ -255,6 +261,9 @@ npm run build:prod
 
 # Next.js SSR build
 npm run build
+
+# Next.js SSR server (after build)
+npm run serve
 
 # Next.js static (CSR) build
 npm run build:static

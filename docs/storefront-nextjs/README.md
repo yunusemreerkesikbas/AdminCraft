@@ -401,9 +401,18 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
-| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Local development may define it in `.env.local` / `.env.development`; stage and prod inject it at image build time via CI secrets. |
+| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Local development may define it in `.env.local` / `.env.development`. In this repository, the demo/reference storefront keeps the stage and prod values in tracked `.env.staging` and `.env.production` files. Tenant storefront repositories manage their own value in their own repo/build config. |
 
 `TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
+
+### Local multi-environment startup
+
+- `npm run start` uses `.env.development` and keeps `.env.local` overrides active for local backend work.
+- `npm run start:stage` starts the local dev server against `.env.staging` so you can test the stage API locally.
+- `npm run start:prod` starts the local dev server against `.env.production` so you can test the prod API locally.
+- `npm run serve` / `npm run serve:stage` / `npm run serve:prod` are for running a previously built SSR server with the matching env profile.
+- Explicit `*:stage` and `*:prod` scripts preload their target env file before Next.js boots, so `.env.local` does not override them.
+- Local stage/prod scripts clear `TENANT_HOSTNAME` before boot so localhost requests are not rejected by hostname isolation.
 
 ### Deployment model
 
@@ -424,10 +433,8 @@ Search Console verification follows the same deployment model:
 - stage and prod may use different tokens
 - if the variable is unset, no verification meta tag is rendered
 - use the Search Console `HTML tag` method and copy only the `content` attribute value
-- do not commit stage/prod tokens into `storefront-nextjs/.env.staging` or `storefront-nextjs/.env.production`
-- stage and prod storefront images receive the token from GitHub Actions secrets:
-  - `STOREFRONT_GOOGLE_SITE_VERIFICATION_STAGE`
-  - `STOREFRONT_GOOGLE_SITE_VERIFICATION_PROD`
+- this repository commits the demo/reference storefront tokens in `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production`
+- tenant storefront repositories must define their own verification token in their own repo/build config; the platform demo values are not reused for tenant storefronts
 
 ## Caching and revalidation
 

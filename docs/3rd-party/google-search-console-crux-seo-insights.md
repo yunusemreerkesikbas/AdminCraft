@@ -242,6 +242,8 @@ Storefront ownership verification:
 - Search Console property ownership for `storefront-nextjs` can be managed per deployment with `GOOGLE_SITE_VERIFICATION`
 - the storefront renders `<meta name="google-site-verification" ...>` from `app/layout.tsx` when that env var is set
 - use the Search Console `HTML tag` method and store only the token value in env
+- in the platform repository this applies only to the demo/reference storefront deploys and the token lives in `storefront-nextjs/.env.staging` / `.env.production`
+- tenant storefront repositories must manage their own verification token independently; tenant tokens do not belong in platform `ENV_STAGE` / `ENV_PROD`
 
 ## Implementation guide
 

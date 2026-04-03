@@ -253,7 +253,8 @@ Notes:
 2. Recommended trigger strategy:
    - Stage deploy: automatic on `stage` branch push
    - Prod deploy: manual `workflow_dispatch` with reviewer approval
-3. Tenant repo deploy jobs should call droplet-side scripts:
+3. If Search Console ownership verification is needed, define the verification token in the tenant repository's own CI/build secrets. Do not add tenant-specific verification tokens to the platform repository secrets or `ENV_STAGE` / `ENV_PROD`.
+4. Tenant repo deploy jobs should call droplet-side scripts:
    - Deploy/update: `deploy-tenant-storefront.sh`
    - Remove/rollback target removal: `remove-tenant-storefront.sh`
 
@@ -349,8 +350,6 @@ This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thres
 | `CF_API_TOKEN` | Traefik DNS-01 (injected via `.env.*`) |
 | `ENV_PROD` | `.env.prod` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for prod bucket |
 | `ENV_STAGE` | `.env.stage` content, base64-encoded — must include `SPACES_ACCESS_KEY` / `SPACES_SECRET_KEY` for stage bucket |
-| `STOREFRONT_GOOGLE_SITE_VERIFICATION_STAGE` | Stage storefront image build arg for Search Console HTML tag token |
-| `STOREFRONT_GOOGLE_SITE_VERIFICATION_PROD` | Prod storefront image build arg for Search Console HTML tag token |
 
 Use separate DO Spaces key pairs for stage and prod (stage key compromise cannot affect prod bucket).
 
@@ -446,6 +445,8 @@ jobs:
 ```
 
 Adjust `TENANT`, organization, and optional custom domains per repository.
+
+If the tenant storefront also needs Search Console HTML tag verification, define `GOOGLE_SITE_VERIFICATION` in that tenant repository's own tracked storefront env or equivalent build config. This is tenant-repo concern, not platform repo concern.
 
 ### First-time server setup
 
