@@ -7,7 +7,6 @@ export interface PlatformDemoRequestRow {
     message: string;
     messagePreview: string;
     locale: string;
-    source: string;
     clientIp: string | null;
     userAgent: string | null;
     createdAt: string;

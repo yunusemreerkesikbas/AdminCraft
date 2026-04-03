@@ -522,7 +522,6 @@ export class ProductEditDialogComponent
         const responsiveMediaRequest = {
             desktopMediaId: desktopMediaId,
             mobileMediaId: mobileMediaId,
-            code: `responsive_product_${Date.now()}`,
         };
 
         if (currentSetId) {

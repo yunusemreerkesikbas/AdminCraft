@@ -99,6 +99,10 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- SITE DASHBOARD -----
     siteOverview: 'sites/overview',
+    siteAnalyticsSummary: 'sites/analytics/summary',
+    siteInsightsSummary: 'sites/insights/summary',
+    siteActivity: 'sites/activity',
+    siteActivityTrend: 'sites/activity/trend',
     siteTechnical: 'sites/technical',
     siteRobotsTxt: 'sites/robots.txt',
 

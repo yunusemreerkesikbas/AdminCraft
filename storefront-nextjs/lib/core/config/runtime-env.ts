@@ -28,6 +28,9 @@ export const getGoogleAnalyticsId = (): string | undefined =>
 export const getGtmId = (): string | undefined =>
   process.env.NEXT_PUBLIC_GTM_ID?.trim() || undefined;
 
+export const getGoogleSiteVerification = (): string | undefined =>
+  process.env.GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+
 export const getTenantContext = (): TenantContext => {
   const tenantSubdomain = readFirstEnv(["TENANT_SUBDOMAIN", "NEXT_PUBLIC_TENANT_SUBDOMAIN"]);
   const tenantId = readFirstEnv(["TENANT_ID", "NEXT_PUBLIC_TENANT_ID"]);

@@ -1,15 +1,19 @@
-import { Geist, Geist_Mono, Marcellus } from "next/font/google";
-import { headers } from "next/headers";
-import Script from "next/script";
 import { getSiteConfig } from "@/lib/core/cms/client";
+import {
+  getGoogleAnalyticsId,
+  getGoogleSiteVerification,
+  getGtmId,
+} from "@/lib/core/config/runtime-env";
 import {
   isRtlByConfig,
   isValidLocaleFormat,
   resolveSiteDefaultLocale,
 } from "@/lib/core/i18n/locale";
-import { buildWebSiteSchema } from "@/lib/core/seo/schema";
 import { safeJsonLd } from "@/lib/core/seo/json-ld";
-import { getGoogleAnalyticsId, getGtmId } from "@/lib/core/config/runtime-env";
+import { buildWebSiteSchema } from "@/lib/core/seo/schema";
+import { Geist, Geist_Mono, Marcellus } from "next/font/google";
+import { headers } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,7 +39,8 @@ export default async function RootLayout({
 }>) {
   const requestHeaders = await headers();
   const requestLang = requestHeaders.get("x-lang");
-  const preferredLang = requestLang && isValidLocaleFormat(requestLang) ? requestLang : undefined;
+  const preferredLang =
+    requestLang && isValidLocaleFormat(requestLang) ? requestLang : undefined;
 
   let site = null;
 
@@ -53,7 +58,8 @@ export default async function RootLayout({
         <html lang={preferredLang ?? "en"}>
           <body>
             <div className="sticky top-0 z-[1000] bg-amber-300/95 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-amber-950">
-              CMS unavailable. Check NEXT_PUBLIC_CMS_API_URL and tenant configuration.
+              CMS unavailable. Check NEXT_PUBLIC_CMS_API_URL and tenant
+              configuration.
             </div>
             {children}
           </body>
@@ -74,12 +80,21 @@ export default async function RootLayout({
   const dir = isRtlByConfig(lang, site.enabledLanguages) ? "rtl" : "ltr";
 
   const gaId = getGoogleAnalyticsId();
+  const googleSiteVerification = getGoogleSiteVerification();
   const gtmId = getGtmId();
   const webSiteSchema = buildWebSiteSchema(site, lang);
 
   return (
     <html lang={lang} dir={dir}>
       <head>
+        {/* SEO TODO: Add robots meta tag based on site config */}
+        <meta name="robots" content="noindex,nofollow" />
+        {googleSiteVerification ? (
+          <meta
+            name="google-site-verification"
+            content={googleSiteVerification}
+          />
+        ) : null}
         {webSiteSchema ? (
           <script
             type="application/ld+json"
@@ -110,7 +125,10 @@ export default async function RootLayout({
           </>
         ) : null}
       </head>
-      <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${marcellus.variable} antialiased`}>
+      <body
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} ${marcellus.variable} antialiased`}
+      >
         {gtmId ? (
           <noscript>
             <iframe

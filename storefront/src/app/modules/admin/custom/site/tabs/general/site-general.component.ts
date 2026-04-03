@@ -22,7 +22,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaMediaPickerComponent } from '@admin/custom/media/components/spa-media-picker/spa-media-picker.component';
 import {
     VALIDATION_LIMITS,
@@ -46,7 +45,6 @@ import { SiteSettingsResponseDto } from '../../site.types';
         MatIconModule,
         TranslocoModule,
         SpaInputComponent,
-        SpaTextareaComponent,
         SpaMediaPickerComponent,
     ],
 })
@@ -120,9 +118,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                 payload.languages[langKey] = {
                     siteName: formValue.languages[langKey].siteName,
                     tagline: formValue.languages[langKey].tagline,
-                    footerText: formValue.languages[langKey].footerText,
-                    headerTopbarText:
-                        formValue.languages[langKey].headerTopbarText,
                 };
             }
         });
@@ -168,22 +163,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                 tagline: [
                     '',
                     [Validators.maxLength(VALIDATION_LIMITS.SITE_TAGLINE_MAX)],
-                ],
-                footerText: [
-                    '',
-                    [
-                        Validators.maxLength(
-                            VALIDATION_LIMITS.SITE_FOOTER_TEXT_MAX
-                        ),
-                    ],
-                ],
-                headerTopbarText: [
-                    '',
-                    [
-                        Validators.maxLength(
-                            VALIDATION_LIMITS.SITE_HEADER_TEXT_MAX
-                        ),
-                    ],
                 ],
             });
         });
@@ -242,22 +221,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                                 ),
                             ],
                         ],
-                        footerText: [
-                            '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_FOOTER_TEXT_MAX
-                                ),
-                            ],
-                        ],
-                        headerTopbarText: [
-                            '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_HEADER_TEXT_MAX
-                                ),
-                            ],
-                        ],
                     })
                 );
             }
@@ -267,8 +230,6 @@ export class SpaSiteGeneralComponent implements OnChanges, OnDestroy {
                 languagesGroup.get(langKey)?.patchValue({
                     siteName: langSettings.siteName || '',
                     tagline: langSettings.tagline || '',
-                    footerText: langSettings.footerText || '',
-                    headerTopbarText: langSettings.headerTopbarText || '',
                 });
             }
         });

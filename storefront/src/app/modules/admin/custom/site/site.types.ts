@@ -1,3 +1,5 @@
+import { PageWithSort } from '@core/crud/api.types';
+
 // Re-export existing types for compatibility
 export {
     AddressDto,
@@ -80,6 +82,162 @@ export interface ActionsDto {
     previewUrl: string | null;
 }
 
+// ========== Site Analytics Types ==========
+
+export type SiteAnalyticsStatus =
+    | 'READY'
+    | 'NOT_CONFIGURED'
+    | 'DISABLED'
+    | 'ACCESS_ERROR'
+    | 'NO_DATA';
+
+export interface SiteAnalyticsSummaryResponse {
+    status: SiteAnalyticsStatus;
+    propertyId: string | null;
+    range: 'LAST_7_DAYS';
+    cards: SiteAnalyticsMetricCardDto[];
+    trend: SiteAnalyticsTrendPointDto[];
+    lastSyncedAt: string | null;
+}
+
+export function createSiteAnalyticsSummary(
+    status: SiteAnalyticsStatus
+): SiteAnalyticsSummaryResponse {
+    return {
+        status,
+        propertyId: null,
+        range: 'LAST_7_DAYS',
+        cards: [],
+        trend: [],
+        lastSyncedAt: null,
+    };
+}
+
+export interface SiteAnalyticsMetricCardDto {
+    metric: 'activeUsers' | 'screenPageViews' | 'newUsers' | 'engagementRate';
+    value: number;
+    previousValue: number | null;
+    deltaPercentage: number | null;
+    deltaDirection: 'up' | 'down' | 'flat' | 'unknown';
+}
+
+export interface SiteAnalyticsTrendPointDto {
+    date: string;
+    value: number;
+}
+
+export type SiteInsightsStatus =
+    | 'READY'
+    | 'NOT_CONFIGURED'
+    | 'DISABLED'
+    | 'ACCESS_ERROR'
+    | 'NO_DATA';
+
+export interface SiteInsightsSummaryResponse {
+    resolvedUrl: string | null;
+    resolvedOrigin: string | null;
+    lastSyncedAt: string | null;
+    seo: SiteSeoInsightsResponse;
+    performance: SitePerformanceInsightsResponse;
+}
+
+export interface SiteSeoInsightsResponse {
+    status: SiteInsightsStatus;
+    propertyUrl: string | null;
+    range: 'LAST_28_DAYS';
+    cards: SiteSeoMetricCardDto[];
+    trend: SiteSeoTrendPointDto[];
+    inspection: SiteSeoInspectionDto | null;
+    lastSyncedAt: string | null;
+}
+
+export interface SiteSeoMetricCardDto {
+    metric: 'clicks' | 'impressions' | 'ctr' | 'position';
+    value: number;
+    previousValue: number | null;
+    deltaPercentage: number | null;
+    deltaDirection: 'up' | 'down' | 'flat' | 'unknown';
+}
+
+export interface SiteSeoTrendPointDto {
+    date: string;
+    clicks: number;
+    impressions: number;
+}
+
+export interface SiteSeoInspectionDto {
+    verdict: string | null;
+    coverageState: string | null;
+    robotsTxtState: string | null;
+    indexingState: string | null;
+    pageFetchState: string | null;
+    lastCrawlTime: string | null;
+    googleCanonical: string | null;
+    userCanonical: string | null;
+    sitemaps: string[];
+}
+
+export interface SitePerformanceInsightsResponse {
+    status: SiteInsightsStatus;
+    targetScope: 'URL' | 'ORIGIN' | null;
+    target: string | null;
+    formFactor: 'DESKTOP';
+    score: SitePerformanceScoreDto | null;
+    metrics: SitePerformanceMetricDto[];
+    trend: SitePerformanceTrendPointDto[];
+    lastSyncedAt: string | null;
+}
+
+export interface SitePerformanceScoreDto {
+    value: number;
+    label: 'HEALTHY' | 'ATTENTION' | 'CRITICAL';
+}
+
+export interface SitePerformanceMetricDto {
+    metric: 'lcp' | 'inp' | 'cls' | 'ttfb';
+    value: number | null;
+    displayValue: string | null;
+    assessment: 'GOOD' | 'NEEDS_IMPROVEMENT' | 'POOR' | 'UNKNOWN';
+}
+
+export interface SitePerformanceTrendPointDto {
+    startDate: string | null;
+    endDate: string | null;
+    lcp: number | null;
+    inp: number | null;
+    cls: number | null;
+    ttfb: number | null;
+}
+
+export function createSiteInsightsSummary(
+    status: SiteInsightsStatus
+): SiteInsightsSummaryResponse {
+    return {
+        resolvedUrl: null,
+        resolvedOrigin: null,
+        lastSyncedAt: null,
+        seo: {
+            status,
+            propertyUrl: null,
+            range: 'LAST_28_DAYS',
+            cards: [],
+            trend: [],
+            inspection: null,
+            lastSyncedAt: null,
+        },
+        performance: {
+            status,
+            targetScope: null,
+            target: null,
+            formFactor: 'DESKTOP',
+            score: null,
+            metrics: [],
+            trend: [],
+            lastSyncedAt: null,
+        },
+    };
+}
+
 // ========== Site Technical Types ==========
 
 export interface SiteTechnicalResponse {
@@ -122,6 +280,19 @@ export interface TwoFactorPolicyDto {
 export interface UpdateSecuritySettingsRequest {
     twoFactorPolicy: TwoFactorPolicy;
 }
+
+// ========== Activity Trend Types ==========
+
+export interface SiteActivityTrendDay {
+    date: string;
+    total: number;
+    created: number;
+    updated: number;
+    published: number;
+}
+
+export type SiteActivityFeedResponse = PageWithSort<ActivityDto>;
+export type SiteActivityTrendResponse = PageWithSort<SiteActivityTrendDay>;
 
 // ========== Dashboard Tab Types ==========
 

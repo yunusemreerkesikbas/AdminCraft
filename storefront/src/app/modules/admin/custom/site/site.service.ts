@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiClientService } from '@core/api/api-client.service';
+import { PageRequest } from '@core/crud/api.types';
 import { TenantModule } from '@core/tenant/tenant.types';
 import { ApiResponse } from '@modules/admin/custom/pages/page-builder.types';
 import { Observable, finalize, map, switchMap, take, tap } from 'rxjs';
@@ -7,6 +8,10 @@ import { TenantDetailResponse } from '../tenants/tenants.types';
 import {
     SecuritySettingsResponse,
     Site,
+    SiteAnalyticsSummaryResponse,
+    SiteInsightsSummaryResponse,
+    SiteActivityFeedResponse,
+    SiteActivityTrendResponse,
     SiteOverviewResponse,
     SiteSettingsPatchRequest,
     SiteSettingsResponseDto,
@@ -39,6 +44,54 @@ export class SiteService {
                 }),
                 finalize(() => this.loadingSig.set(false))
             );
+    }
+
+    getAnalyticsSummary(): Observable<SiteAnalyticsSummaryResponse> {
+        return this.#apiClient
+            .get<ApiResponse<SiteAnalyticsSummaryResponse>>(
+                'siteAnalyticsSummary'
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    getInsightsSummary(): Observable<SiteInsightsSummaryResponse> {
+        return this.#apiClient
+            .get<ApiResponse<SiteInsightsSummaryResponse>>(
+                'siteInsightsSummary'
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    getActivityTrend(
+        pageRequest: PageRequest = {}
+    ): Observable<SiteActivityTrendResponse> {
+        return this.#apiClient
+            .get<ApiResponse<SiteActivityTrendResponse>>(
+                'siteActivityTrend',
+                undefined,
+                {
+                    page: pageRequest.page ?? 0,
+                    size: pageRequest.size ?? 7,
+                    sort: pageRequest.sort ?? 'date,desc',
+                }
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    getActivityFeed(
+        pageRequest: PageRequest = {}
+    ): Observable<SiteActivityFeedResponse> {
+        return this.#apiClient
+            .get<ApiResponse<SiteActivityFeedResponse>>(
+                'siteActivity',
+                undefined,
+                {
+                    page: pageRequest.page ?? 0,
+                    size: pageRequest.size ?? 10,
+                    sort: pageRequest.sort ?? 'createdAt,desc',
+                }
+            )
+            .pipe(map((response) => response.data));
     }
 
     getTechnicalSettings(): Observable<SiteTechnicalResponse> {

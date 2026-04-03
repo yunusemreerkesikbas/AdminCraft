@@ -82,7 +82,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
     }
 
     protected override onLoadError(error: any): void {
-        this.#notify.alert('admin.components.entries.loadFailed');
+        this.#notify.alert(error?.error?.message ?? '');
     }
 
     protected onGridAction(event: { action: string; item: ComponentEntry }): void {
@@ -162,7 +162,7 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
                         });
                 },
                 error: (err) => {
-                    this.#notify.alert('admin.messages.loadError');
+                    this.#notify.alert(err?.error?.message ?? '');
                 }
             });
     }
@@ -176,15 +176,15 @@ export class ComponentEntryListComponent extends BaseCrudListComponent<Component
             .subscribe((confirmed) => {
                 if (!confirmed) return;
 
-                this.service.delete(entry.id)
+                this.service.deleteWithResponse(entry.id)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => {
-                            this.#notify.success('admin.components.entries.deleteSuccess');
+                        next: (response) => {
+                            this.#notify.success(response.message ?? '');
                             this.loadItems();
                         },
-                        error: () => {
-                            this.#notify.alert('admin.components.entries.deleteFailed');
+                        error: (error) => {
+                            this.#notify.alert(error?.error?.message ?? '');
                         }
                     });
             });

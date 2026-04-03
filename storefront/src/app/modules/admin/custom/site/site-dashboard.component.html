@@ -3,15 +3,11 @@
         <div
             class="mx-auto flex w-full max-w-screen-xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-7"
         >
-            <div
-                class="overflow-hidden rounded-[18px] border border-slate-200/70 bg-white/80 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.18)] backdrop-blur xl:p-6"
-            >
+            <div class="spa-site-dashboard__hero-card">
                 <div class="min-w-0 space-y-4">
                     @if (tenantSig(); as tenant) {
                         <div class="flex flex-wrap items-center gap-2.5">
-                            <div
-                                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
-                            >
+                            <div class="spa-site-dashboard__tenant-pill">
                                 <span class="truncate"
                                     >{{ tenant.companyName }}
                                     ({{ tenant.subdomain }})</span
@@ -21,9 +17,7 @@
                             @if (
                                 overviewSig()?.status?.state === 'maintenance'
                             ) {
-                                <span
-                                    class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-700"
-                                >
+                                <span class="spa-site-dashboard__status-pill">
                                     {{
                                         'admin.common.status.maintenance'
                                             | transloco
@@ -37,87 +31,90 @@
                         class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
                     >
                         <div class="min-w-0 space-y-2">
-                        <h1
-                            class="max-w-4xl text-2xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-3xl lg:text-[2.35rem]"
-                        >
-                            {{ 'admin.site.dashboard.title' | transloco }},
-                            {{ userSig()?.name }}!
-                        </h1>
-                        <p
-                            class="max-w-2xl text-sm leading-6 text-slate-600"
-                        >
-                            {{
-                                'admin.site.dashboard.description' | transloco
-                            }}
-                        </p>
+                            <h1
+                                class="max-w-4xl text-balance text-2xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-3xl lg:text-[2.35rem]"
+                            >
+                                {{ 'admin.site.dashboard.title' | transloco }},
+                                {{ userSig()?.name }}!
+                            </h1>
+                            <p
+                                class="max-w-2xl text-pretty text-sm leading-6 text-slate-600"
+                            >
+                                {{
+                                    'admin.site.dashboard.description'
+                                        | transloco
+                                }}
+                            </p>
                         </div>
 
                         @if (overviewSig()?.actions) {
-                            <div class="flex flex-wrap gap-2">
-                            @if (overviewSig()?.actions?.canPreview) {
-                                <button
-                                    mat-stroked-button
-                                    class="min-h-10 rounded-[10px] border-slate-200 bg-slate-50 px-4 text-slate-900 transition-colors duration-200 hover:border-blue-200 hover:bg-blue-50"
-                                    (click)="onHeroPreview()"
-                                >
-                                    <span class="flex items-center gap-2">
-                                        <mat-icon
-                                            class="icon-size-4 text-blue-600"
-                                            svgIcon="heroicons_outline:eye"
-                                        ></mat-icon>
-                                        <span class="text-sm font-semibold">
-                                            {{
-                                                'admin.site.dashboard.overview.actions.preview'
-                                                    | transloco
-                                            }}
+                            <div class="spa-site-dashboard__hero-actions">
+                                @if (overviewSig()?.actions?.canPreview) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--primary"
+                                        (click)="onHeroPreview()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:eye"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.preview'
+                                                        | transloco
+                                                }}
+                                            </span>
                                         </span>
-                                    </span>
-                                </button>
-                            }
+                                    </button>
+                                }
 
-                            @if (overviewSig()?.actions?.canEnableMaintenance) {
-                                <button
-                                    mat-stroked-button
-                                    color="warn"
-                                    class="min-h-10 rounded-[10px] border-rose-200 bg-rose-50 px-4 text-rose-700 transition-colors duration-200 hover:bg-rose-100"
-                                    (click)="onHeroEnableMaintenance()"
-                                >
-                                    <span class="flex items-center gap-2">
-                                        <mat-icon
-                                            class="icon-size-4 text-rose-600"
-                                            svgIcon="heroicons_outline:wrench-screwdriver"
-                                        ></mat-icon>
-                                        <span class="text-sm font-semibold">
-                                            {{
-                                                'admin.site.dashboard.overview.actions.enableMaintenance'
-                                                    | transloco
-                                            }}
+                                @if (overviewSig()?.actions?.canEnableMaintenance) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--warning"
+                                        (click)="onHeroEnableMaintenance()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:wrench-screwdriver"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.enableMaintenance'
+                                                        | transloco
+                                                }}
+                                            </span>
                                         </span>
-                                    </span>
-                                </button>
-                            }
+                                    </button>
+                                }
 
-                            @if (overviewSig()?.actions?.canDisableMaintenance) {
-                                <button
-                                    mat-stroked-button
-                                    class="min-h-10 rounded-[10px] border-emerald-200 bg-emerald-50 px-4 text-emerald-700 transition-colors duration-200 hover:bg-emerald-100"
-                                    (click)="onHeroDisableMaintenance()"
-                                >
-                                    <span class="flex items-center gap-2">
-                                        <mat-icon
-                                            class="icon-size-4 text-emerald-600"
-                                            svgIcon="heroicons_outline:check-circle"
-                                        ></mat-icon>
-                                        <span class="text-sm font-semibold">
-                                            {{
-                                                'admin.site.dashboard.overview.actions.disableMaintenance'
-                                                    | transloco
-                                            }}
+                                @if (overviewSig()?.actions?.canDisableMaintenance) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--success"
+                                        (click)="onHeroDisableMaintenance()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:check-circle"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.disableMaintenance'
+                                                        | transloco
+                                                }}
+                                            </span>
                                         </span>
-                                    </span>
-                                </button>
-                            }
-                        </div>
+                                    </button>
+                                }
+                            </div>
                         }
                     </div>
                 </div>
@@ -141,6 +138,7 @@
                         <mat-tab>
                             <ng-template mat-tab-label>
                                 <mat-icon
+                                    aria-hidden="true"
                                     class="icon-size-5"
                                     [svgIcon]="tab.icon"
                                 ></mat-icon>
@@ -156,10 +154,10 @@
                                             class="flex min-h-[24rem] items-center justify-center"
                                         >
                                             <div
-                                                class="flex items-center gap-4 rounded-full border border-slate-200 bg-white/90 px-5 py-3 shadow-sm"
+                                                class="spa-site-dashboard__loading-pill"
                                             >
                                                 <div
-                                                    class="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
+                                                    class="h-8 w-8 animate-spin rounded-full border-2 border-sky-200 border-t-blue-600"
                                                 ></div>
                                                 <span
                                                     class="text-sm font-semibold text-slate-600"
@@ -173,6 +171,44 @@
                                             @case ('overview') {
                                                 <spa-site-overview
                                                     [overview]="overviewSig()"
+                                                    [analytics]="
+                                                        analyticsSig()
+                                                    "
+                                                    [insights]="
+                                                        insightsSig()
+                                                    "
+                                                    [tenant]="tenantSig()"
+                                                    [settings]="settingsSig()"
+                                                    [technical]="technicalSig()"
+                                                    [security]="securitySig()"
+                                                    [modules]="modulesSig()"
+                                                    [activityFeed]="
+                                                        activityFeedSig()
+                                                    "
+                                                    [activityFeedPageIndex]="
+                                                        activityFeedPageIndexSig()
+                                                    "
+                                                    [activityFeedPageSize]="
+                                                        activityFeedPageSizeSig()
+                                                    "
+                                                    [activityFeedPageSizeOptions]="
+                                                        activityFeedPageSizeOptions
+                                                    "
+                                                    [activityFeedTotalElements]="
+                                                        activityFeedTotalElementsSig()
+                                                    "
+                                                    [trendPageIndex]="
+                                                        trendPageIndexSig()
+                                                    "
+                                                    [trend]="trendSig()"
+                                                    (activityFeedPageChange)="
+                                                        onActivityFeedPageChange(
+                                                            $event
+                                                        )
+                                                    "
+                                                    (trendPageChange)="
+                                                        onTrendPageChange($event)
+                                                    "
                                                     (refresh)="refreshOverview()"
                                                 />
                                             }

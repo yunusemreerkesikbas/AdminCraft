@@ -11,9 +11,15 @@ import {
 export class EntryFieldService {
     #api = inject(ApiClientService);
 
-    addField(typeId: number, field: CreateEntryFieldRequest): Observable<EntryFieldDefinitionResponse> {
-        return this.#api.post<ApiResponse<EntryFieldDefinitionResponse>>('componentTypeEntryFields', field, { typeId })
-            .pipe(map(response => response.data));
+    addFieldWithResponse(
+        typeId: number,
+        field: CreateEntryFieldRequest
+    ): Observable<ApiResponse<EntryFieldDefinitionResponse>> {
+        return this.#api.post<ApiResponse<EntryFieldDefinitionResponse>>(
+            'componentTypeEntryFields',
+            field,
+            { typeId }
+        );
     }
 
     getFields(typeId: number): Observable<EntryFieldDefinitionResponse[]> {

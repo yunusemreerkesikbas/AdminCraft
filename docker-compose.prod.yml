@@ -44,6 +44,7 @@ services:
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
       SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
       SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
+      APP_SEO_CRUX_API_KEY: ${APP_SEO_CRUX_API_KEY}
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
@@ -61,6 +62,16 @@ services:
       traefik.http.routers.backend.entrypoints: "websecure"
       traefik.http.routers.backend.tls.certresolver: "letsencrypt"
       traefik.http.services.backend.loadbalancer.server.port: "8080"
+      # Rate limiting for unauthenticated public demo-request endpoint
+      traefik.http.middlewares.demo-request-ratelimit.ratelimit.average: "5"
+      traefik.http.middlewares.demo-request-ratelimit.ratelimit.burst: "10"
+      traefik.http.middlewares.demo-request-ratelimit.ratelimit.period: "10m"
+      traefik.http.middlewares.demo-request-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth: "1"
+      traefik.http.routers.backend-public-demo.rule: "Host(`api.${DOMAIN}`) && PathPrefix(`/api/platform/public/demo-requests`)"
+      traefik.http.routers.backend-public-demo.entrypoints: "websecure"
+      traefik.http.routers.backend-public-demo.tls.certresolver: "letsencrypt"
+      traefik.http.routers.backend-public-demo.service: "backend"
+      traefik.http.routers.backend-public-demo.middlewares: "demo-request-ratelimit@docker"
 
   frontend:
     image: ghcr.io/${GHCR_ORG}/craftive-frontend:${APP_VERSION:-latest}
