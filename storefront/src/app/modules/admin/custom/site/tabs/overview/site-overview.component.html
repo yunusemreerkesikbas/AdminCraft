@@ -1,574 +1,776 @@
-<div class="flex w-full flex-col gap-8 xl:gap-10">
-    @if (tenant()) {
-        <section
-            class="relative overflow-hidden rounded-[22px] border border-slate-200/80 bg-slate-950 p-6 text-white shadow-[0_40px_100px_-58px_rgba(15,23,42,0.9)] sm:p-8"
-        >
-            <div
-                class="pointer-events-none absolute -left-20 top-0 h-64 w-64 rounded-full bg-primary/30 blur-3xl"
-            ></div>
-            <div
-                class="pointer-events-none absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl"
-            ></div>
+<div class="flex w-full flex-col gap-6 xl:gap-8">
 
-            <div
-                class="relative grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]"
-            >
-                <div class="min-w-0 space-y-5">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="flex h-14 w-14 flex-none items-center justify-center rounded-[16px] bg-white/10 text-xl font-black uppercase text-white ring-1 ring-white/15"
-                        >
-                            {{ tenant()?.companyName?.charAt(0) }}
-                        </div>
-                        <div class="min-w-0">
-                            <h2
-                                class="truncate text-2xl font-black tracking-[-0.03em] text-white sm:text-3xl"
-                            >
-                                {{ tenant()?.companyName }}
-                            </h2>
-                            <div
-                                class="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/70"
-                            >
-                                <span
-                                    class="rounded-full border border-white/10 bg-white/10 px-3 py-1 font-semibold uppercase tracking-[0.2em] text-white/75"
-                                    >{{ tenant()?.subdomain }}</span
-                                >
-                                <span class="text-white/30">&bull;</span>
-                                <span class="font-medium"
-                                    >{{ tenant()?.defaultLanguage }} /
-                                    {{ tenant()?.currency }}</span
-                                >
+    @if (vm.heroVisible) {
+        <section class="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_32px_72px_-56px_rgba(15,23,42,0.22)]">
+            <div class="grid xl:grid-cols-2">
+
+                <!-- Left: Identity + Stats -->
+                <div class="border-b border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(91,115,200,0.07),transparent_40%),linear-gradient(160deg,#ffffff_0%,#f8f9fc_100%)] p-6 xl:border-b-0 xl:border-r">
+                    <div class="flex h-full flex-col gap-6">
+
+                        <!-- Company Identity -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-14 w-14 flex-none items-center justify-center rounded-[16px] bg-slate-950 text-lg font-black uppercase text-white shadow-[0_12px_32px_-16px_rgba(15,23,42,0.5)]">
+                                {{ vm.identity.companyInitial }}
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="grid gap-4 md:grid-cols-3">
-                        @if (overview?.stats?.pages) {
-                            <div
-                                class="rounded-[18px] border border-white/10 bg-white/6 p-4 backdrop-blur"
-                            >
-                                <p
-                                    class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/45"
-                                >
-                                    {{
-                                        'admin.site.dashboard.overview.stats.pages'
-                                            | transloco
-                                    }}
-                                </p>
-                                <p class="mt-3 text-3xl font-black text-white">
-                                    {{ overview.stats.pages.total }}
-                                </p>
-                                <p class="mt-2 text-sm text-white/65">
-                                    {{ overview.stats.pages.published }}
-                                    {{
-                                        'admin.site.dashboard.overview.published'
-                                            | transloco
-                                    }}
-                                </p>
-                            </div>
-                        }
-
-                        @if (overview?.stats?.components) {
-                            <div
-                                class="rounded-[18px] border border-white/10 bg-white/6 p-4 backdrop-blur"
-                            >
-                                <p
-                                    class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/45"
-                                >
-                                    {{
-                                        'admin.site.dashboard.overview.stats.components'
-                                            | transloco
-                                    }}
-                                </p>
-                                <p class="mt-3 text-3xl font-black text-white">
-                                    {{ overview.stats.components.total }}
-                                </p>
-                                <p class="mt-2 text-sm text-white/65">
-                                    @if (
-                                        overview.stats.components.weeklyChange > 0
-                                    ) {
-                                        +{{
-                                            overview.stats.components
-                                                .weeklyChange
-                                        }}
-                                        {{
-                                            'admin.site.dashboard.overview.thisWeek'
-                                                | transloco
-                                        }}
-                                    } @else {
-                                        No recent changes
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex min-h-7 items-center rounded-full bg-primary/[0.08] px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">
+                                        {{ vm.identity.statusLabel }}
+                                    </span>
+                                    @if (vm.identity.defaultLanguage) {
+                                        <span class="inline-flex min-h-7 items-center rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600">
+                                            {{ vm.identity.defaultLanguage }}
+                                        </span>
                                     }
+                                    @if (vm.identity.currency) {
+                                        <span class="inline-flex min-h-7 items-center rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-600">
+                                            {{ vm.identity.currency }}
+                                        </span>
+                                    }
+                                </div>
+                                <h2 class="mt-3 truncate text-[2rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.4rem]">
+                                    {{ vm.identity.companyName }}
+                                </h2>
+                                <p class="mt-1 max-w-xs truncate text-xs font-medium text-slate-500">
+                                    {{ vm.identity.primaryDomainLabel }}
                                 </p>
                             </div>
-                        }
+                        </div>
 
-                        @if (overview?.stats?.media) {
-                            <div
-                                class="rounded-[18px] border border-white/10 bg-white/6 p-4 backdrop-blur"
-                            >
-                                <p
-                                    class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/45"
-                                >
-                                    {{
-                                        'admin.site.dashboard.overview.stats.media'
-                                            | transloco
-                                    }}
-                                </p>
-                                <p class="mt-3 text-3xl font-black text-white">
-                                    {{ overview.stats.media.total }}
-                                </p>
-                                <p class="mt-2 text-sm text-white/65">
-                                    {{
-                                        overview.stats.media.totalSizeMb
-                                            | number: '1.1-1'
-                                    }}
-                                    MB
+                        <!-- Quick Stats Row -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="rounded-[14px] border border-slate-200/80 bg-white/80 p-3">
+                                <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.updated' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">{{ vm.identity.lastUpdatedLabel }}</p>
+                            </div>
+                            <div class="rounded-[14px] border border-slate-200/80 bg-white/80 p-3">
+                                <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.domain' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">
+                                    {{ vm.identity.domainTypeLabel }}
                                 </p>
                             </div>
-                        }
+                            <div class="rounded-[14px] border border-slate-200/80 bg-white/80 p-3">
+                                <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.storage' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">
+                                    {{ vm.identity.storageUsedMb | number: '1.1-1' }} MB
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Languages + Modules -->
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="rounded-[16px] border border-slate-200/80 bg-white/70 p-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.languages' | transloco }}</p>
+                                    <div class="flex h-8 w-8 items-center justify-center rounded-[10px] bg-primary/[0.08] text-primary">
+                                        <mat-icon class="icon-size-4" svgIcon="heroicons_outline:language"></mat-icon>
+                                    </div>
+                                </div>
+                                <p class="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.identity.languages.length }}</p>
+                                <div class="mt-3 flex flex-wrap gap-1.5">
+                                    @for (language of vm.identity.languages; track language.code) {
+                                        <span class="inline-flex items-center rounded-[8px] border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700">
+                                            {{ language.label }}
+                                        </span>
+                                    } @empty {
+                                        <span class="text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.noneConfigured' | transloco }}</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="rounded-[16px] border border-slate-200/80 bg-white/70 p-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.modules' | transloco }}</p>
+                                    <div class="flex h-8 w-8 items-center justify-center rounded-[10px] bg-slate-100 text-slate-700">
+                                        <mat-icon class="icon-size-4" svgIcon="heroicons_outline:squares-2x2"></mat-icon>
+                                    </div>
+                                </div>
+                                <p class="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.modules.enabledCount }}</p>
+                                <div class="mt-3 flex flex-wrap gap-1.5">
+                                    @for (module of vm.modules.items; track module.moduleCode) {
+                                        <span class="inline-flex items-center rounded-[8px] border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700">
+                                            {{ module.moduleName || module.moduleCode }}
+                                        </span>
+                                    } @empty {
+                                        <span class="text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.noneLoaded' | transloco }}</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <div
-                    class="flex flex-col gap-4 rounded-[20px] border border-white/10 bg-white/8 p-5 backdrop-blur"
-                >
-                    <div>
-                        <p
-                            class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/45"
-                        >
-                            Supported Languages
-                        </p>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            @for (
-                                lang of tenant()?.supportedLanguages;
-                                track lang
-                            ) {
-                                <div
-                                    class="inline-flex min-h-10 items-center justify-center rounded-[14px] border border-white/10 bg-white/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white"
-                                >
-                                    {{ lang.code }}
-                                </div>
-                            }
-                        </div>
-                    </div>
+                <!-- Right: Operational Spotlight (dark) -->
+                <div class="spa-site-overview__spotlight">
+                    <div class="flex h-full flex-col gap-4">
 
-                    <div
-                        class="rounded-[16px] border border-white/10 bg-white/5 p-4"
-                    >
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex h-11 w-11 items-center justify-center rounded-[14px] bg-emerald-400/14 text-emerald-300"
-                            >
-                                <mat-icon
-                                    class="icon-size-5"
-                                    svgIcon="heroicons_outline:shield-check"
-                                ></mat-icon>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-white">
-                                    {{
-                                        'admin.common.status.'
-                                            + (overview?.status?.state
-                                                || 'draft') | transloco
-                                    }}
-                                </p>
-                                <p class="truncate text-sm text-white/60">
-                                    {{ tenant()?.companyName }}
+                        <!-- Header -->
+                        <div class="spa-site-overview__spotlight-header">
+                            <div class="spa-site-overview__spotlight-intro">
+                                <p class="spa-site-overview__spotlight-eyebrow">{{ 'admin.site.dashboard.overview.labels.operationalSpotlight' | transloco }}</p>
+                                <h3 class="spa-site-overview__spotlight-title">
+                                    {{ 'admin.site.dashboard.overview.labels.siteHealthAtAGlance' | transloco }}
+                                </h3>
+                                <p class="spa-site-overview__spotlight-summary">
+                                    {{ vm.spotlight.summary }}
                                 </p>
                             </div>
-                        </div>
-                    </div>
-
-                    @if (overview?.stats?.products) {
-                        <div
-                            class="rounded-[16px] border border-white/10 bg-white/5 p-4"
-                        >
-                            <p
-                                class="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/45"
-                            >
-                                {{
-                                    'admin.site.dashboard.overview.stats.products'
-                                        | transloco
-                                }}
-                            </p>
-                            <div class="mt-3 flex items-end justify-between">
-                                <p class="text-3xl font-black text-white">
-                                    {{ overview.stats.products.total }}
-                                </p>
+                            <div class="spa-site-overview__spotlight-score self-start">
+                                <p class="spa-site-overview__spotlight-score-label">{{ 'admin.site.dashboard.overview.labels.opsScore' | transloco }}</p>
+                                <p class="spa-site-overview__spotlight-score-value">{{ vm.spotlight.operationalScore }}%</p>
                                 <span
-                                    class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80"
+                                    class="spa-site-overview__spotlight-score-chip"
+                                    [ngClass]="getSpotlightStatusClasses(vm.spotlight.statusTone)"
                                 >
-                                    {{ overview.stats.products.published }}
-                                    {{
-                                        'admin.site.dashboard.overview.active'
-                                            | transloco
-                                    }}
+                                    {{ vm.spotlight.statusLabel }}
                                 </span>
                             </div>
                         </div>
-                    }
+
+                        <!-- Radial Chart + Context Cards -->
+                        <div class="spa-site-overview__spotlight-main">
+                            <div class="spa-site-overview__spotlight-chart-shell">
+                                <div class="spa-site-overview__spotlight-chart-orbit">
+                                    <div class="spa-site-overview__spotlight-chart-frame">
+                                        <apx-chart
+                                            class="spa-site-overview__spotlight-chart"
+                                            [chart]="vm.spotlight.chartOptions.chart"
+                                            [colors]="vm.spotlight.chartOptions.colors"
+                                            [labels]="vm.spotlight.chartOptions.labels"
+                                            [plotOptions]="vm.spotlight.chartOptions.plotOptions"
+                                            [series]="vm.spotlight.chartOptions.series"
+                                            [stroke]="vm.spotlight.chartOptions.stroke"
+                                            [legend]="vm.spotlight.chartOptions.legend"
+                                            [tooltip]="vm.spotlight.chartOptions.tooltip"
+                                        ></apx-chart>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="spa-site-overview__spotlight-context-grid">
+                                @for (item of vm.spotlight.contextCards; track item.id) {
+                                    <div
+                                        class="spa-site-overview__spotlight-context-card"
+                                        [ngClass]="getSpotlightContextCardClasses(item.tone)"
+                                    >
+                                        <div
+                                            class="spa-site-overview__spotlight-context-icon"
+                                            [ngClass]="item.tone === 'primary' ? 'spa-site-overview__spotlight-context-icon--primary' : item.tone === 'warning' ? 'spa-site-overview__spotlight-context-icon--warning' : item.tone === 'critical' ? 'spa-site-overview__spotlight-context-icon--critical' : 'spa-site-overview__spotlight-context-icon--neutral'"
+                                        >
+                                            <mat-icon aria-hidden="true" class="icon-size-4" [svgIcon]="item.icon"></mat-icon>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="spa-site-overview__spotlight-context-label">{{ item.label }}</p>
+                                            <p class="spa-site-overview__spotlight-context-value">{{ item.value }}</p>
+                                        </div>
+                                        <div class="spa-site-overview__spotlight-context-meta">
+                                            <p class="spa-site-overview__spotlight-context-detail">{{ item.detail }}</p>
+                                            <p
+                                                class="spa-site-overview__spotlight-context-progress"
+                                                [ngClass]="getSpotlightProgressClasses(item.tone)"
+                                            >
+                                                {{ item.progress }}%
+                                            </p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if (vm.spotlight.recommendations.length) {
+                            <div class="border-t border-white/8 pt-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-white/40">
+                                        {{ 'admin.site.dashboard.overview.spotlight.recommendations.label' | transloco }}
+                                    </p>
+                                    <span class="spa-site-overview__spotlight-action-count">
+                                        {{ vm.spotlight.recommendations.length }}
+                                    </span>
+                                </div>
+                                <div class="spa-site-overview__spotlight-actions mt-2.5">
+                                    @for (recommendation of vm.spotlight.recommendations; track recommendation.id) {
+                                        <div
+                                            class="spa-site-overview__spotlight-recommendation"
+                                            [ngClass]="getSpotlightRecommendationClasses(recommendation.tone)"
+                                        >
+                                            <div
+                                                class="spa-site-overview__spotlight-recommendation-icon"
+                                                [ngClass]="getContextIconClasses(recommendation.tone)"
+                                            >
+                                                <mat-icon class="icon-size-4" [svgIcon]="recommendation.icon"></mat-icon>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="spa-site-overview__spotlight-action-title">
+                                                    {{ recommendation.title }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                    </div>
                 </div>
+
             </div>
         </section>
     }
 
-    <section class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        @if (overview?.stats?.pages) {
-            <div
-                class="group relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_30px_70px_-52px_rgba(37,99,235,0.75)] transition-transform duration-200 hover:-translate-y-1"
-            >
-                <div
-                    class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-200"
-                ></div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between gap-4">
+    <section class="spa-site-overview__analytics-shell rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+        <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">
+                    {{ 'admin.site.dashboard.overview.analytics.eyebrow' | transloco }}
+                </p>
+                <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.overview.analytics.title' | transloco }}
+                </h3>
+                <p class="mt-1 text-sm text-slate-500">
+                    {{ 'admin.site.dashboard.overview.analytics.subtitle' | transloco }}
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                    {{ vm.analytics.lastSyncedLabel }}
+                </span>
+                @if (vm.analytics.propertyId) {
+                    <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                        {{ 'admin.site.dashboard.overview.analytics.propertyId' | transloco: { value: vm.analytics.propertyId } }}
+                    </span>
+                }
+            </div>
+        </div>
+
+        @if (vm.analytics.isReady) {
+            <div class="spa-site-overview__analytics-ready mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+                <div class="grid gap-3 sm:grid-cols-2">
+                    @for (card of vm.analytics.cards; track card.id) {
+                        <article class="spa-site-overview__analytics-card">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-200/70">
+                                    <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
+                                </div>
+                                <span
+                                    class="inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                    [ngClass]="getAnalyticsDeltaClasses(card.deltaTone)"
+                                >
+                                    {{ card.deltaLabel }}
+                                </span>
+                            </div>
+
+                            <p class="mt-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                {{ card.label }}
+                            </p>
+                            <p class="mt-1 text-[2.15rem] font-black leading-none tracking-[-0.06em] text-slate-950">
+                                {{ card.value }}
+                            </p>
+                            <p class="mt-2 text-xs text-slate-500">
+                                {{ card.detail }}
+                            </p>
+                        </article>
+                    }
+                </div>
+
+                <div class="spa-site-overview__analytics-trend">
+                    <div class="flex items-start justify-between gap-3">
                         <div>
-                            <p
-                                class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
-                            >
-                                {{
-                                    'admin.site.dashboard.overview.stats.pages'
-                                        | transloco
-                                }}
+                            <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                {{ 'admin.site.dashboard.overview.analytics.trendEyebrow' | transloco }}
                             </p>
-                            <p
-                                class="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950"
-                            >
-                                {{ overview.stats.pages.total }}
-                            </p>
+                            <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">
+                                {{ 'admin.site.dashboard.overview.analytics.trendTitle' | transloco }}
+                            </h4>
                         </div>
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-[14px] bg-blue-50 text-blue-600 ring-1 ring-blue-100"
-                        >
-                            <mat-icon
-                                class="icon-size-6"
-                                svgIcon="heroicons_outline:document-text"
-                            ></mat-icon>
-                        </div>
+                        <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--success">
+                            {{ 'admin.site.dashboard.overview.analytics.connected' | transloco }}
+                        </span>
                     </div>
 
-                    <div class="mt-5 flex flex-wrap items-center gap-2.5">
-                        <span
-                            class="inline-flex min-h-8 items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-                        >
-                            {{ overview.stats.pages.published }}
-                            {{
-                                'admin.site.dashboard.overview.published'
-                                    | transloco
-                            }}
-                        </span>
-                        @if (overview.stats.pages.weeklyChange > 0) {
-                            <span
-                                class="inline-flex min-h-8 items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700"
-                            >
-                                <mat-icon
-                                    class="icon-size-3"
-                                    svgIcon="heroicons_mini:arrow-trending-up"
-                                ></mat-icon>
-                                +{{ overview.stats.pages.weeklyChange }}
-                            </span>
-                        }
-                    </div>
+                    @if (vm.analytics.hasTrend) {
+                        <div class="mt-4">
+                            <apx-chart
+                                class="block"
+                                [chart]="vm.analytics.chartOptions.chart"
+                                [colors]="vm.analytics.chartOptions.colors"
+                                [series]="vm.analytics.chartOptions.series"
+                                [stroke]="vm.analytics.chartOptions.stroke"
+                                [fill]="vm.analytics.chartOptions.fill"
+                                [xaxis]="vm.analytics.chartOptions.xaxis"
+                                [yaxis]="vm.analytics.chartOptions.yaxis"
+                                [dataLabels]="vm.analytics.chartOptions.dataLabels"
+                                [grid]="vm.analytics.chartOptions.grid"
+                                [tooltip]="vm.analytics.chartOptions.tooltip"
+                                [legend]="vm.analytics.chartOptions.legend"
+                            ></apx-chart>
+                        </div>
+                    } @else {
+                        <div class="spa-site-overview__analytics-trend-empty mt-4 flex min-h-[15rem] flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                            <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+                            <p class="text-sm font-semibold">
+                                {{ 'admin.site.dashboard.overview.analytics.states.noData.title' | transloco }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-400">
+                                {{ 'admin.site.dashboard.overview.analytics.states.noData.description' | transloco }}
+                            </p>
+                        </div>
+                    }
                 </div>
             </div>
-        }
-
-        @if (overview?.stats?.components) {
-            <div
-                class="group relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_30px_70px_-52px_rgba(147,51,234,0.7)] transition-transform duration-200 hover:-translate-y-1"
-            >
+        } @else {
+            <div class="spa-site-overview__analytics-state">
                 <div
-                    class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-fuchsia-500 via-violet-400 to-fuchsia-200"
-                ></div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p
-                                class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
-                            >
-                                {{
-                                    'admin.site.dashboard.overview.stats.components'
-                                        | transloco
-                                }}
-                            </p>
-                            <p
-                                class="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950"
-                            >
-                                {{ overview.stats.components.total }}
-                            </p>
-                        </div>
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-[14px] bg-fuchsia-50 text-fuchsia-600 ring-1 ring-fuchsia-100"
-                        >
-                            <mat-icon
-                                class="icon-size-6"
-                                svgIcon="heroicons_outline:cube"
-                            ></mat-icon>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 flex flex-wrap items-center gap-2.5">
-                        @if (overview.stats.components.weeklyChange > 0) {
-                            <span
-                                class="inline-flex min-h-8 items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-                            >
-                                <mat-icon
-                                    class="icon-size-3"
-                                    svgIcon="heroicons_mini:arrow-trending-up"
-                                ></mat-icon>
-                                +{{ overview.stats.components.weeklyChange }}
-                                <span class="text-emerald-700/75">{{
-                                    'admin.site.dashboard.overview.thisWeek'
-                                        | transloco
-                                }}</span>
-                            </span>
-                        } @else {
-                            <span
-                                class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500"
-                            >
-                                No recent changes
-                            </span>
-                        }
-                    </div>
+                    class="flex h-12 w-12 flex-none items-center justify-center rounded-[16px]"
+                    [ngClass]="vm.analytics.stateTone === 'primary' ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-200/70' : vm.analytics.stateTone === 'warning' ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-200/70' : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200/80'"
+                >
+                    <mat-icon class="icon-size-5" [svgIcon]="vm.analytics.stateIcon"></mat-icon>
                 </div>
-            </div>
-        }
 
-        @if (overview?.stats?.media) {
-            <div
-                class="group relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_30px_70px_-52px_rgba(217,119,6,0.68)] transition-transform duration-200 hover:-translate-y-1"
-            >
-                <div
-                    class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-200"
-                ></div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p
-                                class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
-                            >
-                                {{
-                                    'admin.site.dashboard.overview.stats.media'
-                                        | transloco
-                                }}
-                            </p>
-                            <p
-                                class="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950"
-                            >
-                                {{ overview.stats.media.total }}
-                            </p>
-                        </div>
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-[14px] bg-amber-50 text-amber-600 ring-1 ring-amber-100"
-                        >
-                            <mat-icon
-                                class="icon-size-6"
-                                svgIcon="heroicons_outline:photo"
-                            ></mat-icon>
-                        </div>
-                    </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-lg font-black tracking-[-0.03em] text-slate-950">
+                        {{ vm.analytics.stateTitle }}
+                    </p>
+                    <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                        {{ vm.analytics.stateDescription }}
+                    </p>
+                </div>
 
-                    <div class="mt-5 flex flex-wrap items-center gap-2.5">
-                        <span
-                            class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
-                        >
-                            {{
-                                overview.stats.media.totalSizeMb
-                                    | number: '1.1-1'
-                            }}
-                            MB
+                @if (vm.analytics.stateActionLabel) {
+                    <button
+                        type="button"
+                        mat-stroked-button
+                        class="spa-site-overview__analytics-setup-button"
+                        (click)="openAnalyticsSetup()"
+                    >
+                        <span class="flex items-center gap-2">
+                            <mat-icon class="icon-size-4" svgIcon="heroicons_outline:wrench-screwdriver"></mat-icon>
+                            <span>{{ vm.analytics.stateActionLabel }}</span>
                         </span>
-                        @if (overview.stats.media.dailyChange > 0) {
-                            <span
-                                class="inline-flex items-center text-xs font-medium text-green-600"
-                            >
-                                +{{ overview.stats.media.dailyChange }}
-                            </span>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-
-        @if (overview?.stats?.products) {
-            <div
-                class="group relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-[0_30px_70px_-52px_rgba(22,163,74,0.68)] transition-transform duration-200 hover:-translate-y-1"
-            >
-                <div
-                    class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-lime-400 to-emerald-200"
-                ></div>
-                <div class="relative z-10">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p
-                                class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
-                            >
-                                {{
-                                    'admin.site.dashboard.overview.stats.products'
-                                        | transloco
-                                }}
-                            </p>
-                            <p
-                                class="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950"
-                            >
-                                {{ overview.stats.products.total }}
-                            </p>
-                        </div>
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-[14px] bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
-                        >
-                            <mat-icon
-                                class="icon-size-6"
-                                svgIcon="heroicons_outline:shopping-bag"
-                            ></mat-icon>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 flex flex-wrap items-center gap-2.5">
-                        <span
-                            class="inline-flex min-h-8 items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-                        >
-                            {{ overview.stats.products.published }}
-                            {{
-                                'admin.site.dashboard.overview.active'
-                                    | transloco
-                            }}
-                        </span>
-                        @if (overview.stats.products.weeklyChange > 0) {
-                            <span
-                                class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
-                            >
-                                +{{ overview.stats.products.weeklyChange }}
-                            </span>
-                        }
-                    </div>
-                </div>
+                    </button>
+                }
             </div>
         }
     </section>
 
-    <section class="space-y-4">
-        <div class="space-y-4">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-11 w-11 items-center justify-center rounded-[14px] bg-white text-slate-700 ring-1 ring-slate-200 shadow-sm"
+    <!-- KPI Stats Row -->
+    @if (vm.inventory.hasCards) {
+        <section class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            @for (card of vm.inventory.cards; track card.id; let first = $first) {
+                <article
+                    class="relative overflow-hidden rounded-[18px] border p-5 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.14)]"
+                    [ngClass]="getMetricToneClasses(card.tone)"
                 >
-                    <mat-icon
-                        class="icon-size-5"
-                        svgIcon="heroicons_outline:clock"
-                    ></mat-icon>
+                    @if (first) {
+                        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#5B73C8] to-[#93A3D8] rounded-t-[18px]"></div>
+                    }
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px]" [ngClass]="getMetricIconClasses(card.tone)">
+                            <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
+                        </div>
+                        <p class="mt-1 text-right text-[0.6rem] font-medium leading-4 text-slate-500">{{ card.detail }}</p>
+                    </div>
+                    <p class="mt-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ card.label }}</p>
+                    <p class="mt-1 text-[2.4rem] font-black leading-none tracking-[-0.06em] text-slate-950">{{ card.value }}</p>
+                </article>
+            }
+        </section>
+    }
+
+    <section class="grid gap-4 xl:grid-cols-2">
+        <article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+            <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                    <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.eyebrow' | transloco }}</p>
+                    <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.title' | transloco }}</h3>
+                    <p class="mt-1 text-sm text-slate-500">{{ 'admin.site.dashboard.overview.insights.seo.subtitle' | transloco }}</p>
                 </div>
-                <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
-                    {{
-                        'admin.site.dashboard.overview.recentActivity'
-                            | transloco
-                    }}
-                </h3>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                        {{ vm.seo.lastSyncedLabel }}
+                    </span>
+                    @if (vm.seo.propertyUrl) {
+                        <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                            {{ vm.seo.propertyUrl }}
+                        </span>
+                    }
+                </div>
             </div>
 
-            <div
-                class="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-[0_30px_70px_-52px_rgba(15,23,42,0.55)]"
-            >
-                @if (overview?.recentActivity?.length) {
-                    <div class="relative">
-                        <div
-                            class="absolute bottom-0 left-6 top-5 w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent"
-                        ></div>
-
-                        <div class="space-y-5">
-                            @for (
-                                activity of overview.recentActivity;
-                                track $index
-                            ) {
-                                <div
-                                    class="relative flex flex-col gap-4 rounded-[16px] border border-slate-200/70 bg-slate-50/70 p-4 sm:flex-row sm:items-start"
-                                >
-                                    <div
-                                        class="relative z-10 flex h-12 w-12 flex-none items-center justify-center rounded-[14px] bg-white shadow-sm ring-1 ring-slate-200"
+            @if (vm.seo.isReady) {
+                <div class="mt-5 space-y-5">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @for (card of vm.seo.cards; track card.id) {
+                            <article class="spa-site-overview__insight-card">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-200/70">
+                                        <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
+                                    </div>
+                                    <span
+                                        class="inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                        [ngClass]="getAnalyticsDeltaClasses(card.deltaTone)"
                                     >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [ngClass]="
-                                                getActivityClass(
-                                                    activity.action
-                                                )
-                                            "
-                                            [svgIcon]="
-                                                getActivityIcon(
-                                                    activity.entityType
-                                                )
-                                            "
-                                        ></mat-icon>
-                                    </div>
+                                        {{ card.deltaLabel }}
+                                    </span>
+                                </div>
+                                <p class="mt-4 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ card.label }}</p>
+                                <p class="mt-1 text-[2rem] font-black leading-none tracking-[-0.05em] text-slate-950">{{ card.value }}</p>
+                                <p class="mt-2 text-xs text-slate-500">{{ card.detail }}</p>
+                            </article>
+                        }
+                    </div>
 
-                                    <div class="min-w-0 flex-auto space-y-3">
-                                        <div
-                                            class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between"
-                                        >
-                                            <p
-                                                class="min-w-0 text-base font-semibold leading-7 text-slate-900"
-                                            >
-                                                {{ activity.description }}
-                                            </p>
-                                            <span
-                                                class="whitespace-nowrap rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200"
-                                            >
-                                                {{
-                                                    activity.createdAt
-                                                        | date: 'medium'
-                                                }}
-                                            </span>
-                                        </div>
+                    <div class="spa-site-overview__insight-panel">
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.trendEyebrow' | transloco }}</p>
+                        <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.trendTitle' | transloco }}</h4>
 
-                                        <div
-                                            class="flex flex-wrap items-center gap-2 text-sm text-slate-500"
-                                        >
-                                            @if (activity.user) {
-                                                <div
-                                                    class="inline-flex min-h-9 items-center gap-2 rounded-full bg-white px-3 py-1.5 ring-1 ring-slate-200"
-                                                >
-                                                    <mat-icon
-                                                        class="icon-size-3"
-                                                        svgIcon="heroicons_solid:user"
-                                                    ></mat-icon>
-                                                    <span
-                                                        class="text-xs font-semibold text-slate-700"
-                                                    >
-                                                        {{
-                                                            activity.user
-                                                                .displayName
-                                                        }}
-                                                    </span>
-                                                </div>
-                                            }
-                                            <span
-                                                class="inline-flex min-h-9 items-center rounded-full bg-slate-200/70 px-3 py-1.5 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-600"
-                                            >
-                                                {{ activity.entityType }}
-                                            </span>
-                                        </div>
+                        @if (vm.seo.hasTrend) {
+                            <div class="mt-4">
+                                <apx-chart
+                                    class="block"
+                                    [chart]="vm.seo.chartOptions.chart"
+                                    [colors]="vm.seo.chartOptions.colors"
+                                    [series]="vm.seo.chartOptions.series"
+                                    [stroke]="vm.seo.chartOptions.stroke"
+                                    [markers]="vm.seo.chartOptions.markers"
+                                    [xaxis]="vm.seo.chartOptions.xaxis"
+                                    [yaxis]="vm.seo.chartOptions.yaxis"
+                                    [grid]="vm.seo.chartOptions.grid"
+                                    [dataLabels]="vm.seo.chartOptions.dataLabels"
+                                    [legend]="vm.seo.chartOptions.legend"
+                                    [tooltip]="vm.seo.chartOptions.tooltip"
+                                ></apx-chart>
+                            </div>
+                        } @else {
+                            <div class="spa-site-overview__insight-empty mt-4">
+                                <mat-icon class="icon-size-8 text-slate-300" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                                <p class="mt-2 text-sm font-semibold text-slate-600">{{ 'admin.site.dashboard.overview.insights.seo.states.noData.title' | transloco }}</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="spa-site-overview__insight-panel">
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.inspection.eyebrow' | transloco }}</p>
+                        <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.inspection.title' | transloco }}</h4>
+
+                        <div class="mt-4 flex flex-col gap-2.5">
+                            @for (item of vm.seo.inspectionItems; track item.id) {
+                                <div class="spa-site-overview__inspection-row">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ item.label }}</p>
+                                        <p class="mt-1 text-base font-black leading-none tracking-[-0.03em] text-slate-950">{{ item.value }}</p>
+                                        <p class="mt-1.5 truncate text-xs text-slate-500">{{ item.detail }}</p>
                                     </div>
+                                    <span
+                                        class="spa-site-overview__inspection-pill"
+                                        [ngClass]="
+                                            item.tone === 'critical'
+                                                ? 'spa-site-overview__inspection-pill--critical'
+                                                : item.tone === 'warning'
+                                                  ? 'spa-site-overview__inspection-pill--warning'
+                                                  : item.tone === 'primary'
+                                                    ? 'spa-site-overview__inspection-pill--primary'
+                                                    : 'spa-site-overview__inspection-pill--neutral'
+                                        "
+                                    >
+                                        {{ item.tone === 'primary' ? ('admin.common.status.active' | transloco) : item.tone === 'critical' ? ('admin.common.error' | transloco) : ('admin.common.warning' | transloco) }}
+                                    </span>
                                 </div>
                             }
                         </div>
                     </div>
-                } @else {
-                    <div
-                        class="flex min-h-[20rem] flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-slate-50 text-slate-500"
-                    >
-                        <mat-icon
-                            class="mb-4 text-slate-300 icon-size-14"
-                            svgIcon="heroicons_outline:clipboard-document-list"
-                        ></mat-icon>
-                        <p class="text-sm font-semibold">
-                            {{
-                                'admin.site.dashboard.overview.noActivity'
-                                    | transloco
-                            }}
-                        </p>
+                </div>
+            } @else {
+                <div class="spa-site-overview__analytics-state mt-5">
+                    <div class="flex h-12 w-12 flex-none items-center justify-center rounded-[14px]" [ngClass]="getContextIconClasses(vm.seo.state.tone)">
+                        <mat-icon class="icon-size-5" [svgIcon]="vm.seo.state.icon"></mat-icon>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.seo.state.title }}</h4>
+                        <p class="mt-1 text-sm text-slate-500">{{ vm.seo.state.description }}</p>
+                    </div>
+                    @if (vm.seo.state.actionLabel) {
+                        <button
+                            type="button"
+                            mat-stroked-button
+                            class="spa-site-overview__analytics-setup-button"
+                            (click)="openAnalyticsSetup()"
+                        >
+                            <span class="flex items-center gap-2">
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:wrench-screwdriver"></mat-icon>
+                                <span>{{ vm.seo.state.actionLabel }}</span>
+                            </span>
+                        </button>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+            <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                    <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.eyebrow' | transloco }}</p>
+                    <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.performance.title' | transloco }}</h3>
+                    <p class="mt-1 text-sm text-slate-500">{{ 'admin.site.dashboard.overview.insights.performance.subtitle' | transloco }}</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                        {{ vm.performance.lastSyncedLabel }}
+                    </span>
+                    <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                        {{ vm.performance.scopeLabel }}
+                    </span>
+                </div>
+            </div>
+
+            @if (vm.performance.isReady) {
+                <div class="mt-5 space-y-5">
+                    <div class="grid gap-5 lg:grid-cols-[15rem_1fr] lg:items-center">
+                        <div class="spa-site-overview__performance-score">
+                            <apx-chart
+                                class="block"
+                                [chart]="vm.performance.scoreChartOptions.chart"
+                                [series]="vm.performance.scoreChartOptions.series"
+                                [colors]="vm.performance.scoreChartOptions.colors"
+                                [plotOptions]="vm.performance.scoreChartOptions.plotOptions"
+                                [stroke]="vm.performance.scoreChartOptions.stroke"
+                                [labels]="vm.performance.scoreChartOptions.labels"
+                            ></apx-chart>
+                            <p class="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.score.caption' | transloco }}</p>
+                            <p class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.performance.scoreLabel }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ vm.performance.targetLabel }}</p>
+                        </div>
+
+                        <div class="grid gap-2.5">
+                            @for (metric of vm.performance.metrics; track metric.id) {
+                                <div class="spa-site-overview__performance-metric">
+                                    <div class="min-w-0">
+                                        <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ metric.label }}</p>
+                                        <p class="mt-1 text-xl font-black leading-none tracking-[-0.04em] text-slate-950">{{ metric.value }}</p>
+                                    </div>
+                                    <span
+                                        class="spa-site-overview__inspection-pill"
+                                        [ngClass]="
+                                            metric.tone === 'critical'
+                                                ? 'spa-site-overview__inspection-pill--critical'
+                                                : metric.tone === 'warning'
+                                                  ? 'spa-site-overview__inspection-pill--warning'
+                                                  : metric.tone === 'primary'
+                                                    ? 'spa-site-overview__inspection-pill--primary'
+                                                    : 'spa-site-overview__inspection-pill--neutral'
+                                        "
+                                    >
+                                        {{ metric.detail }}
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="spa-site-overview__insight-panel">
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.trendEyebrow' | transloco }}</p>
+                        <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.performance.trendTitle' | transloco }}</h4>
+
+                        @if (vm.performance.hasTrend) {
+                            <div class="mt-4">
+                                <apx-chart
+                                    class="block"
+                                    [chart]="vm.performance.trendOptions.chart"
+                                    [colors]="vm.performance.trendOptions.colors"
+                                    [series]="vm.performance.trendOptions.series"
+                                    [stroke]="vm.performance.trendOptions.stroke"
+                                    [markers]="vm.performance.trendOptions.markers"
+                                    [xaxis]="vm.performance.trendOptions.xaxis"
+                                    [yaxis]="vm.performance.trendOptions.yaxis"
+                                    [grid]="vm.performance.trendOptions.grid"
+                                    [dataLabels]="vm.performance.trendOptions.dataLabels"
+                                    [legend]="vm.performance.trendOptions.legend"
+                                    [tooltip]="vm.performance.trendOptions.tooltip"
+                                ></apx-chart>
+                            </div>
+                        } @else {
+                            <div class="spa-site-overview__insight-empty mt-4">
+                                <mat-icon class="icon-size-8 text-slate-300" svgIcon="heroicons_outline:chart-bar-square"></mat-icon>
+                                <p class="mt-2 text-sm font-semibold text-slate-600">{{ 'admin.site.dashboard.overview.insights.performance.states.noData.title' | transloco }}</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            } @else {
+                <div class="spa-site-overview__analytics-state mt-5">
+                    <div class="flex h-12 w-12 flex-none items-center justify-center rounded-[14px]" [ngClass]="getContextIconClasses(vm.performance.state.tone)">
+                        <mat-icon class="icon-size-5" [svgIcon]="vm.performance.state.icon"></mat-icon>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.performance.state.title }}</h4>
+                        <p class="mt-1 text-sm text-slate-500">{{ vm.performance.state.description }}</p>
+                    </div>
+                </div>
+            }
+        </article>
+    </section>
+
+    <!-- Weekly Trend Chart -->
+    @if (vm.trend.visible) {
+        <section>
+            <article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+                <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activityTrend' | transloco }}</p>
+                        <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.labels.activityTrend' | transloco }}</h3>
+                        <p class="mt-1 text-xs font-medium text-slate-500">{{ vm.trend.sliceLabel }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="spa-site-overview__trend-nav">
+                            <button
+                                type="button"
+                                class="spa-site-overview__trend-nav-button"
+                                [disabled]="!vm.trend.canNavigatePrevious"
+                                (click)="onTrendPrevious()"
+                                [attr.aria-label]="'admin.site.dashboard.overview.meta.previousTrendPeriod' | transloco"
+                            >
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:chevron-left"></mat-icon>
+                            </button>
+                            <button
+                                type="button"
+                                class="spa-site-overview__trend-nav-button"
+                                [disabled]="!vm.trend.canNavigateNext"
+                                (click)="onTrendNext()"
+                                [attr.aria-label]="'admin.site.dashboard.overview.meta.nextTrendPeriod' | transloco"
+                            >
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:chevron-right"></mat-icon>
+                            </button>
+                        </div>
+                        @if (vm.trend.windowLabel) {
+                            <span class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ vm.trend.windowLabel }}</span>
+                        }
+                    </div>
+                </div>
+                <div class="mt-4">
+                    @if (vm.trend.hasData) {
+                        <apx-chart
+                            class="block"
+                            [chart]="vm.trend.chartOptions.chart"
+                            [colors]="vm.trend.chartOptions.colors"
+                            [series]="vm.trend.chartOptions.series"
+                            [xaxis]="vm.trend.chartOptions.xaxis"
+                            [yaxis]="vm.trend.chartOptions.yaxis"
+                            [grid]="vm.trend.chartOptions.grid"
+                            [plotOptions]="vm.trend.chartOptions.plotOptions"
+                            [dataLabels]="vm.trend.chartOptions.dataLabels"
+                            [stroke]="vm.trend.chartOptions.stroke"
+                            [legend]="vm.trend.chartOptions.legend"
+                            [tooltip]="vm.trend.chartOptions.tooltip"
+                        ></apx-chart>
+                    } @else {
+                        <div class="flex min-h-[12rem] flex-col items-center justify-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                            <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+                            <p class="text-sm font-semibold">{{ 'admin.site.dashboard.overview.meta.noActivityInPeriod' | transloco }}</p>
+                            <p class="mt-1 text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.tryAnotherPeriod' | transloco }}</p>
+                        </div>
+                    }
+                </div>
+            </article>
+        </section>
+    }
+
+    <!-- Activity Feed -->
+    <section>
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activityFeed' | transloco }}</p>
+                <h3 class="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.overview.recentActivity' | transloco }}
+                </h3>
+            </div>
+            @if (vm.activityFeed.hasCount) {
+                <span class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {{ vm.activityFeed.countLabel }}
+                </span>
+            }
+        </div>
+
+        <div class="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)]">
+            @if (vm.activityFeed.hasItems) {
+                <div
+                    class="overflow-x-auto"
+                    [ngClass]="{
+                        'spa-site-overview__feed-table-shell': true,
+                        'spa-site-overview__feed-table-shell--scrollable': vm.activityFeed.isScrollable,
+                    }"
+                >
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 bg-slate-50/80">
+                                <th class="px-5 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.type' | transloco }}</th>
+                                <th class="px-4 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activity' | transloco }}</th>
+                                <th class="hidden px-4 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400 md:table-cell">{{ 'admin.site.dashboard.overview.labels.user' | transloco }}</th>
+                                <th class="px-5 py-3 text-right text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.when' | transloco }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @for (activity of vm.activityFeed.items; track activity.id; let even = $even) {
+                                <tr class="transition-colors duration-100 hover:bg-primary/[0.02]" [ngClass]="even ? 'bg-white' : 'bg-slate-50/40'">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] ring-1 ring-inset"
+                                                [ngClass]="getActivityClass(activity.action) === 'text-primary' ? 'bg-blue-50/80 ring-blue-200/50' : 'bg-rose-50 ring-rose-100/80'">
+                                                <mat-icon class="icon-size-3.5"
+                                                    [ngClass]="getActivityClass(activity.action)"
+                                                    [svgIcon]="getActivityIcon(activity.entityType)">
+                                                </mat-icon>
+                                            </div>
+                                            <span class="hidden font-mono text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-slate-500 sm:inline">
+                                                {{ activity.entityType }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="max-w-[260px] px-4 py-3 lg:max-w-sm">
+                                        <p class="truncate text-sm font-medium text-slate-800">{{ activity.description }}</p>
+                                        @if (activity.entityName) {
+                                            <p class="mt-0.5 truncate text-xs text-slate-400">{{ activity.entityName }}</p>
+                                        }
+                                    </td>
+                                    <td class="hidden px-4 py-3 md:table-cell">
+                                        @if (activity.user) {
+                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                <mat-icon class="icon-size-3 flex-none" svgIcon="heroicons_solid:user"></mat-icon>
+                                                <span class="max-w-[100px] truncate">{{ activity.user.displayName }}</span>
+                                            </span>
+                                        } @else {
+                                            <span class="text-xs text-slate-400">—</span>
+                                        }
+                                    </td>
+                                    <td class="whitespace-nowrap px-5 py-3 text-right text-xs font-medium text-slate-500">
+                                        {{ formatActivityTimestamp(activity.createdAt) }}
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (vm.activityFeed.hasPagination) {
+                    <div class="spa-site-overview__feed-paginator">
+                        <spa-admin-paginator
+                            [length]="activityFeedTotalElements"
+                            [pageSize]="activityFeedPageSize"
+                            [pageIndex]="activityFeedPageIndex"
+                            [pageSizeOptions]="activityFeedPageSizeOptions"
+                            [showFirstLastButtons]="activityFeedTotalElements > activityFeedPageSize"
+                            (pageCallback)="onActivityFeedPaginatorChange($event)"
+                        />
                     </div>
                 }
-            </div>
+            } @else {
+                <div class="flex min-h-[10rem] flex-col items-center justify-center text-slate-500">
+                    <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:clipboard-document-list"></mat-icon>
+                    <p class="text-sm font-semibold">{{ 'admin.site.dashboard.overview.noActivity' | transloco }}</p>
+                    <p class="mt-1 text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.performActionsForActivity' | transloco }}</p>
+                </div>
+            }
         </div>
     </section>
+
 </div>

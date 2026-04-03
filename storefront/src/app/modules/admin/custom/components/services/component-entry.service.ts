@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@core/crud/api.types';
 import { CrudEndpoints, CrudHttpService } from '@core/crud/crud-http.service';
 import { Observable } from 'rxjs';
 import {
@@ -12,14 +13,6 @@ import {
     UpdateComponentEntryCompositeRequest,
     UpdateEntryRequest
 } from '../models/component-entry.types';
-
-interface ApiResponse<T> {
-    success: boolean;
-    data: T;
-    message?: string;
-}
-
-
 @Injectable({ providedIn: 'root' })
 export class ComponentEntryService extends CrudHttpService<ComponentEntry, CreateEntryRequest, UpdateEntryRequest> {
     protected endpoints: CrudEndpoints = {
@@ -42,6 +35,12 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
         return this.customDelete<void>('componentEntryDelete', { entryId });
     }
 
+    deleteWithResponse(entryId: number): Observable<ApiResponse<void>> {
+        return this.api.delete<ApiResponse<void>>('componentEntryDelete', {
+            entryId,
+        });
+    }
+
     listByComponentId(componentId: number): Observable<ComponentEntry[]> {
         return this.customGet<ComponentEntry[]>('componentEntriesByComponent', { componentId });
     }
@@ -62,13 +61,23 @@ export class ComponentEntryService extends CrudHttpService<ComponentEntry, Creat
         return this.customPost<EntryI18nDto>('componentEntryPublish', {}, { entryId, language });
     }
 
-    createComposite(data: CreateComponentEntryCompositeRequest): Observable<ComponentEntryCompositeResponse> {
-        return this.customPost<ComponentEntryCompositeResponse>('componentEntryComposite', data);
+    createCompositeWithResponse(
+        data: CreateComponentEntryCompositeRequest
+    ): Observable<ApiResponse<ComponentEntryCompositeResponse>> {
+        return this.api.post<ApiResponse<ComponentEntryCompositeResponse>>(
+            'componentEntryComposite',
+            data
+        );
     }
 
-    updateComposite(id: number, data: UpdateComponentEntryCompositeRequest): Observable<ComponentEntryCompositeResponse> {
-        return this.customPut<ComponentEntryCompositeResponse>('componentEntryCompositeById', data, { id });
+    updateCompositeWithResponse(
+        id: number,
+        data: UpdateComponentEntryCompositeRequest
+    ): Observable<ApiResponse<ComponentEntryCompositeResponse>> {
+        return this.api.put<ApiResponse<ComponentEntryCompositeResponse>>(
+            'componentEntryCompositeById',
+            data,
+            { id }
+        );
     }
 }
-
-

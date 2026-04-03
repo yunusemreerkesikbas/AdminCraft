@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { AnimateInView } from "@/components/AnimateInView";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   ArrowRight,
@@ -95,6 +96,165 @@ function getTheme(key: string): UseCaseTheme {
   return USE_CASE_THEMES[key] ?? USE_CASE_THEMES["corporate-site"];
 }
 
+function withAlpha(color: string, alpha: string) {
+  return `${color}${alpha}`;
+}
+
+function getTintedStyles(
+  theme: UseCaseTheme,
+  {
+    backgroundAlpha = "10",
+    borderAlpha = "24",
+    includeBorder = true,
+  }: {
+    backgroundAlpha?: string;
+    borderAlpha?: string;
+    includeBorder?: boolean;
+  } = {},
+) {
+  return {
+    background: withAlpha(theme.color, backgroundAlpha),
+    ...(includeBorder ? { borderColor: withAlpha(theme.color, borderAlpha) } : {}),
+    color: theme.color,
+  };
+}
+
+function SegmentEyebrow({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <p className={cn("text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400", className)}>
+      {children}
+    </p>
+  );
+}
+
+function SegmentIconTile({
+  theme,
+  className,
+  iconClassName,
+  backgroundAlpha,
+  borderAlpha,
+}: {
+  theme: UseCaseTheme;
+  className: string;
+  iconClassName: string;
+  backgroundAlpha?: string;
+  borderAlpha?: string;
+}) {
+  const Icon = theme.Icon;
+
+  return (
+    <span
+      className={cn("flex shrink-0 items-center justify-center border", className)}
+      style={getTintedStyles(theme, { backgroundAlpha, borderAlpha })}
+      aria-hidden="true"
+    >
+      <Icon className={iconClassName} />
+    </span>
+  );
+}
+
+function SegmentStatCard({
+  stat,
+  theme,
+  compact = false,
+}: {
+  stat: SegmentStat;
+  theme: UseCaseTheme;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)]",
+        compact ? "px-3 py-3" : "border border-neutral-200/80 px-4 py-4",
+      )}
+    >
+      <p
+        className={cn(
+          "font-heading font-bold tracking-tight",
+          compact ? "text-xl" : "text-3xl",
+        )}
+        style={{ color: theme.color }}
+      >
+        {stat.value}
+      </p>
+      <p className={cn("mt-1 font-medium text-neutral-500", compact ? "text-[11px]" : "text-xs")}>{stat.label}</p>
+    </div>
+  );
+}
+
+function SegmentModuleTag({ module, theme }: { module: string; theme: UseCaseTheme }) {
+  return (
+    <span
+      className="rounded-full border px-3 py-1.5 text-xs font-semibold"
+      style={getTintedStyles(theme, { borderAlpha: "22" })}
+    >
+      {module}
+    </span>
+  );
+}
+
+function SegmentInfoRow({
+  label,
+  value,
+  monospace = false,
+}: {
+  label: string;
+  value: string;
+  monospace?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-neutral-200/80 px-3 py-3">
+      <span className="text-sm font-medium text-neutral-600">{label}</span>
+      <span className={cn(monospace ? "font-mono text-xs text-neutral-700" : "text-sm font-semibold text-neutral-900")}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function SegmentUseCaseTab({
+  useCase,
+  isActive,
+  onClick,
+}: {
+  useCase: SegmentUseCase;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const theme = getTheme(useCase.key);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group inline-flex min-w-fit touch-manipulation items-center gap-3 rounded-[22px] border bg-white px-4 py-3 text-left shadow-[0_18px_35px_-32px_rgba(15,23,42,0.2)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 motion-reduce:transform-none motion-reduce:transition-none"
+      style={{
+        borderColor: isActive ? withAlpha(theme.color, "55") : "rgba(229,229,229,0.9)",
+        background: isActive
+          ? `linear-gradient(180deg, ${withAlpha(theme.color, "10")} 0%, rgba(255,255,255,0.96) 100%)`
+          : "#ffffff",
+        boxShadow: isActive
+          ? `0 28px 50px -38px ${theme.surfaceGlow}`
+          : "0 18px 35px -32px rgba(15,23,42,0.2)",
+      }}
+      aria-pressed={isActive}
+    >
+      <SegmentIconTile theme={theme} className="h-10 w-10 rounded-[16px]" iconClassName="h-4.5 w-4.5" />
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-neutral-950">{useCase.tabLabel ?? useCase.type}</span>
+        <span className="block text-xs text-neutral-500">{useCase.domain}</span>
+      </span>
+    </button>
+  );
+}
+
 function SurfacePreview({
   useCase,
   labels,
@@ -103,6 +263,10 @@ function SurfacePreview({
   labels: SegmentsContent["labels"];
 }) {
   const theme = getTheme(useCase.key);
+  const deliveryRows = [
+    { label: labels.tenantDomain, value: useCase.domain, monospace: true },
+    { label: labels.isolation, value: labels.dedicatedDataSurface },
+  ];
 
   return (
     <div
@@ -136,24 +300,17 @@ function SurfacePreview({
           <div className="rounded-2xl border border-neutral-200/80 bg-white px-4 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                  {useCase.eyebrow}
-                </p>
+                <SegmentEyebrow>{useCase.eyebrow}</SegmentEyebrow>
                 <h3 className="mt-2 font-heading text-xl font-bold tracking-tight text-neutral-950">
                   {useCase.type}
                 </h3>
               </div>
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-                style={{
-                  background: `${theme.color}12`,
-                  borderColor: `${theme.color}24`,
-                  color: theme.color,
-                }}
-                aria-hidden="true"
-              >
-                <theme.Icon className="h-4.5 w-4.5" />
-              </span>
+              <SegmentIconTile
+                theme={theme}
+                className="h-10 w-10 rounded-2xl"
+                iconClassName="h-4.5 w-4.5"
+                backgroundAlpha="12"
+              />
             </div>
 
             <div className="mt-4 space-y-2.5">
@@ -164,17 +321,10 @@ function SurfacePreview({
           </div>
 
           <div className="rounded-2xl border border-neutral-200/80 bg-white p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-              {labels.keyMetrics}
-            </p>
+            <SegmentEyebrow>{labels.keyMetrics}</SegmentEyebrow>
             <div className="mt-4 grid gap-3">
               {useCase.stats.slice(0, 2).map((stat) => (
-                <div key={stat.label} className="rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] px-3 py-3">
-                  <p className="font-heading text-xl font-bold tracking-tight" style={{ color: theme.color }}>
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-[11px] font-medium text-neutral-500">{stat.label}</p>
-                </div>
+                <SegmentStatCard key={stat.label} stat={stat} theme={theme} compact />
               ))}
             </div>
           </div>
@@ -182,23 +332,13 @@ function SurfacePreview({
 
         <div className="grid gap-3 sm:grid-cols-[1.1fr_1fr]">
           <div className="rounded-2xl border border-neutral-200/80 bg-white px-4 py-4">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+            <div className="flex items-center gap-2">
               <Layers3 className="h-3.5 w-3.5" style={{ color: theme.color }} />
-              {labels.enabledModules}
+              <SegmentEyebrow>{labels.enabledModules}</SegmentEyebrow>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {useCase.modules.map((module) => (
-                <span
-                  key={module}
-                  className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                  style={{
-                    background: `${theme.color}10`,
-                    borderColor: `${theme.color}22`,
-                    color: theme.color,
-                  }}
-                >
-                  {module}
-                </span>
+                <SegmentModuleTag key={module} module={module} theme={theme} />
               ))}
             </div>
           </div>
@@ -206,31 +346,26 @@ function SurfacePreview({
           <div className="rounded-2xl border border-neutral-200/80 bg-white px-4 py-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-                  {labels.deliveryLayer}
-                </p>
+                <SegmentEyebrow>{labels.deliveryLayer}</SegmentEyebrow>
                 <p className="mt-2 text-sm font-semibold text-neutral-900">{useCase.name}</p>
               </div>
               <span
                 className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                style={{
-                  background: `${theme.color}10`,
-                  color: theme.color,
-                }}
+                style={getTintedStyles(theme, { includeBorder: false })}
               >
                 {labels.platformModel}
               </span>
             </div>
 
             <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between rounded-2xl border border-neutral-200/80 px-3 py-3">
-                <span className="text-sm font-medium text-neutral-600">{labels.tenantDomain}</span>
-                <span className="font-mono text-xs text-neutral-700">{useCase.domain}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-neutral-200/80 px-3 py-3">
-                <span className="text-sm font-medium text-neutral-600">{labels.isolation}</span>
-                <span className="text-sm font-semibold text-neutral-900">{labels.dedicatedDataSurface}</span>
-              </div>
+              {deliveryRows.map((row) => (
+                <SegmentInfoRow
+                  key={row.label}
+                  label={row.label}
+                  value={row.value}
+                  monospace={row.monospace}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -262,21 +397,9 @@ function SlideCard({
         <div className="flex flex-col gap-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border"
-                style={{
-                  background: `${theme.color}10`,
-                  borderColor: `${theme.color}24`,
-                  color: theme.color,
-                }}
-                aria-hidden="true"
-              >
-                <theme.Icon className="h-5 w-5" />
-              </span>
+              <SegmentIconTile theme={theme} className="h-12 w-12 rounded-[18px]" iconClassName="h-5 w-5" />
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-neutral-400">
-                  {useCase.eyebrow}
-                </p>
+                <SegmentEyebrow className="tracking-[0.22em]">{useCase.eyebrow}</SegmentEyebrow>
                 <h3 className="mt-1 font-heading text-3xl font-bold tracking-tight text-neutral-950">
                   {useCase.type}
                 </h3>
@@ -285,10 +408,7 @@ function SlideCard({
 
             <span
               className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold"
-              style={{
-                background: `${theme.color}10`,
-                color: theme.color,
-              }}
+              style={getTintedStyles(theme, { includeBorder: false })}
             >
               {useCase.name}
               <ArrowUpRight className="h-3.5 w-3.5" />
@@ -296,7 +416,7 @@ function SlideCard({
           </div>
 
           <div className="rounded-[24px] border border-neutral-200/80 bg-[linear-gradient(180deg,#fff_0%,#fbfbfd_100%)] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-400">{labels.domain}</p>
+            <SegmentEyebrow>{labels.domain}</SegmentEyebrow>
             <p className="mt-3 font-mono text-sm text-neutral-700">{useCase.domain}</p>
           </div>
 
@@ -304,31 +424,13 @@ function SlideCard({
 
           <div className="grid gap-3 sm:grid-cols-3">
             {useCase.stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-[22px] border border-neutral-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#fafafa_100%)] px-4 py-4"
-              >
-                <p className="font-heading text-3xl font-bold tracking-tight" style={{ color: theme.color }}>
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-xs font-medium text-neutral-500">{stat.label}</p>
-              </div>
+              <SegmentStatCard key={stat.label} stat={stat} theme={theme} />
             ))}
           </div>
 
           <div className="flex flex-wrap gap-2">
             {useCase.modules.map((module) => (
-              <span
-                key={module}
-                className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                style={{
-                  background: `${theme.color}10`,
-                  borderColor: `${theme.color}24`,
-                  color: theme.color,
-                }}
-              >
-                {module}
-              </span>
+              <SegmentModuleTag key={module} module={module} theme={theme} />
             ))}
           </div>
         </div>
@@ -394,44 +496,13 @@ export function Segments({ content }: { content: SegmentsContent }) {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex gap-3 overflow-x-auto pb-1">
                 {content.useCases.map((useCase, index) => {
-                  const isActive = index === activeIndex;
-                  const theme = getTheme(useCase.key);
-
                   return (
-                    <button
+                    <SegmentUseCaseTab
                       key={useCase.key}
-                      type="button"
+                      useCase={useCase}
+                      isActive={index === activeIndex}
                       onClick={() => goTo(index)}
-                      className="group inline-flex min-w-fit items-center gap-3 rounded-[22px] border bg-white px-4 py-3 text-left shadow-[0_18px_35px_-32px_rgba(15,23,42,0.2)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300"
-                      style={{
-                        borderColor: isActive ? `${theme.color}55` : "rgba(229,229,229,0.9)",
-                        background: isActive
-                          ? `linear-gradient(180deg, ${theme.color}10 0%, rgba(255,255,255,0.96) 100%)`
-                          : "#ffffff",
-                        boxShadow: isActive
-                          ? `0 28px 50px -38px ${theme.surfaceGlow}`
-                          : "0 18px 35px -32px rgba(15,23,42,0.2)",
-                      }}
-                      aria-pressed={isActive}
-                    >
-                      <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] border"
-                        style={{
-                          background: `${theme.color}10`,
-                          borderColor: `${theme.color}24`,
-                          color: theme.color,
-                        }}
-                        aria-hidden="true"
-                      >
-                        <theme.Icon className="h-4.5 w-4.5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-neutral-950">
-                          {useCase.tabLabel ?? useCase.type}
-                        </span>
-                        <span className="block text-xs text-neutral-500">{useCase.domain}</span>
-                      </span>
-                    </button>
+                    />
                   );
                 })}
               </div>
@@ -469,7 +540,7 @@ export function Segments({ content }: { content: SegmentsContent }) {
 
             <div className="overflow-hidden rounded-[36px]">
               <div
-                className="flex transition-transform duration-500 ease-out"
+                className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
                 style={{ transform: `translateX(-${activeIndex * 100}%)` }}
               >
                 {content.useCases.map((useCase) => (
@@ -500,7 +571,7 @@ export function Segments({ content }: { content: SegmentsContent }) {
                       key={useCase.key}
                       type="button"
                       onClick={() => goTo(index)}
-                      className="h-2.5 rounded-full transition-[width,background-color] duration-300"
+                      className="h-2.5 touch-manipulation rounded-full transition-[width,background-color] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 motion-reduce:transition-none"
                       style={{
                         width: isActive ? "2.5rem" : "0.625rem",
                         backgroundColor: isActive ? theme.color : "rgba(212,212,212,0.9)",

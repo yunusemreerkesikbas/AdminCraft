@@ -100,7 +100,7 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
     }
 
     protected override onLoadError(error: any): void {
-        this.#notificationService.alert('admin.components.errors.loadTypesFailed');
+        this.#notificationService.alert(error?.error?.message ?? '');
     }
 
     protected onGridAction(event: { action: string; item: ComponentTypeDto }): void {
@@ -142,14 +142,14 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
                     navigationAware: !!result.navigationAware
                 };
 
-                this.service.create(payload)
+                this.service.createWithResponse(payload)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => {
-                            this.#notificationService.success('admin.components.types.success.created');
+                        next: (response) => {
+                            this.#notificationService.success(response.message ?? '');
                             this.loadItems();
                         },
-                        error: () => this.#notificationService.alert('admin.components.types.errors.createFailed')
+                        error: (error) => this.#notificationService.alert(error?.error?.message ?? '')
                     });
             });
     }
@@ -190,14 +190,14 @@ export class ComponentTypesListComponent extends BasePaginatedListComponent<Comp
         ).pipe(take(1)).subscribe(confirmed => {
             if (!confirmed) return;
 
-            this.service.delete(type.id)
+            this.service.deleteWithResponse(type.id)
                 .pipe(take(1))
                 .subscribe({
-                    next: () => {
-                        this.#notificationService.success('admin.components.types.success.deleted');
+                    next: (response) => {
+                        this.#notificationService.success(response.message ?? '');
                         this.loadItems();
                     },
-                    error: () => this.#notificationService.alert('admin.components.types.errors.deleteFailed')
+                    error: (error) => this.#notificationService.alert(error?.error?.message ?? '')
                 });
         });
     }

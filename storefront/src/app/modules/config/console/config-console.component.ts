@@ -100,23 +100,8 @@ export class ConfigConsoleComponent implements OnInit {
             return;
         }
 
-        if (!this.#session.isAccessTokenExpired(storedSession)) {
-            this.tokenSig.set(storedSession);
-            this.stageSig.set('panel');
-            return;
+        if (this.#session.isAccessTokenExpired(storedSession) && !storedSession.refreshToken) {
+            this.#session.clearStoredSession();
         }
-
-        this.#session
-            .tryRefreshStoredSession()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((session) => {
-                if (session) {
-                    this.tokenSig.set(session);
-                    this.stageSig.set('panel');
-                    return;
-                }
-
-                this.#resetToLogin();
-            });
     }
 }

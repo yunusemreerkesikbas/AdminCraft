@@ -86,17 +86,17 @@ export class ComponentTypeEditDialogComponent extends SpaFormDialog<ComponentTyp
         };
 
         this.setSubmitting(true);
-        this.#service.update(this.data!.type.id, payload)
+        this.#service.updateWithResponse(this.data!.type.id, payload)
             .pipe(take(1), takeUntil(this.destroy$))
             .subscribe({
-                next: (result) => {
+                next: (response) => {
                     this.setSubmitting(false);
-                    this.notify.success('admin.components.types.success.updated');
-                    this.close(result);
+                    this.notify.success(response.message ?? '');
+                    this.close(response.data);
                 },
-                error: () => {
+                error: (error) => {
                     this.setSubmitting(false);
-                    this.notify.alert('admin.components.types.errors.updateFailed');
+                    this.notify.alert(error?.error?.message ?? '');
                 }
             });
     }

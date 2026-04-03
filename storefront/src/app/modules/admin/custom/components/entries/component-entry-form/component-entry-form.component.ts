@@ -171,11 +171,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
             return of(undefined);
         }
 
-        const responsiveMedia = this.data.entry?.responsiveMedia;
         const request = {
             desktopMediaId,
             mobileMediaId,
-            code: responsiveMedia ? String(responsiveMedia.id) : undefined,
         };
 
         if (currentSetId) {
@@ -208,10 +206,8 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                     this.#addDynamicFieldsToForms();
                     this.isLoadingSig.set(false);
                 },
-                error: () => {
-                    this.notify.alert(
-                        'admin.components.entries.loadFieldsFailed'
-                    );
+                error: (error) => {
+                    this.notify.alert(error?.error?.message ?? '');
                     this.isLoadingSig.set(false);
                 },
             });
@@ -280,7 +276,9 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                             responsiveMediaId,
                             translations,
                         };
-                        return this.#entryService.createComposite(payload);
+                        return this.#entryService.createCompositeWithResponse(
+                            payload
+                        );
                     } else {
                         const payload: UpdateComponentEntryCompositeRequest = {
                             sortOrder: this.data.sortOrder,
@@ -291,7 +289,7 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                             responsiveMediaId,
                             translations,
                         };
-                        return this.#entryService.updateComposite(
+                        return this.#entryService.updateCompositeWithResponse(
                             this.data.entry!.id,
                             payload
                         );
@@ -300,22 +298,14 @@ export class ComponentEntryFormComponent extends SpaLocalizedFormDialog<
                 take(1)
             )
             .subscribe({
-                next: () => {
+                next: (response) => {
                     this.setSubmitting(false);
-                    const msgKey =
-                        this.data.mode === 'create'
-                            ? 'admin.components.entries.createSuccess'
-                            : 'admin.components.entries.updateSuccess';
-                    this.notify.success(msgKey);
+                    this.notify.success(response.message ?? '');
                     this.close(true);
                 },
                 error: (err) => {
                     this.setSubmitting(false);
-                    const msgKey =
-                        this.data.mode === 'create'
-                            ? 'admin.components.entries.createFailed'
-                            : 'admin.components.entries.updateFailed';
-                    this.notify.alert(err?.error?.message || msgKey);
+                    this.notify.alert(err?.error?.message ?? '');
                 },
             });
     }

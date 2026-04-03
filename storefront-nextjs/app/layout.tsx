@@ -9,7 +9,11 @@ import {
 } from "@/lib/core/i18n/locale";
 import { buildWebSiteSchema } from "@/lib/core/seo/schema";
 import { safeJsonLd } from "@/lib/core/seo/json-ld";
-import { getGoogleAnalyticsId, getGtmId } from "@/lib/core/config/runtime-env";
+import {
+  getGoogleAnalyticsId,
+  getGoogleSiteVerification,
+  getGtmId,
+} from "@/lib/core/config/runtime-env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,12 +78,16 @@ export default async function RootLayout({
   const dir = isRtlByConfig(lang, site.enabledLanguages) ? "rtl" : "ltr";
 
   const gaId = getGoogleAnalyticsId();
+  const googleSiteVerification = getGoogleSiteVerification();
   const gtmId = getGtmId();
   const webSiteSchema = buildWebSiteSchema(site, lang);
 
   return (
     <html lang={lang} dir={dir}>
       <head>
+        {googleSiteVerification ? (
+          <meta name="google-site-verification" content={googleSiteVerification} />
+        ) : null}
         {webSiteSchema ? (
           <script
             type="application/ld+json"

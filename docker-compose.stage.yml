@@ -10,6 +10,7 @@ services:
       SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
     labels:
       traefik.http.routers.backend.rule: "Host(`s1-api.${DOMAIN}`)"
+      traefik.http.routers.backend-public-demo.rule: "Host(`s1-api.${DOMAIN}`) && PathPrefix(`/api/platform/public/demo-requests`)"
 
   frontend:
     labels:

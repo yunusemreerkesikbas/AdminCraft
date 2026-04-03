@@ -20,8 +20,8 @@ import { PlatformDemoRequestRow } from '../../demo-request.types';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpaDemoRequestDetailDialogComponent {
-    readonly dialogRef = inject(MatDialogRef<SpaDemoRequestDetailDialogComponent>);
-    readonly data = inject<PlatformDemoRequestRow>(MAT_DIALOG_DATA);
+    protected readonly dialogRef = inject(MatDialogRef<SpaDemoRequestDetailDialogComponent>);
+    protected readonly data = inject<PlatformDemoRequestRow>(MAT_DIALOG_DATA);
 
     protected close(): void {
         this.dialogRef.close();

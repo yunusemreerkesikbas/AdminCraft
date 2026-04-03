@@ -21,7 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { LanguageContextService } from '@core/services/language-context.service';
-import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { TranslocoModule } from '@jsverse/transloco';
 import {
     GridAction,
     GridColumn,
@@ -29,6 +29,7 @@ import {
 } from '@shared/components/spa-admin-grid';
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
 import { take, takeUntil } from 'rxjs';
@@ -87,7 +88,7 @@ export class ComponentListComponent
     pickerActionsTemplate!: TemplateRef<any>;
 
     #matDialog = inject(MatDialog);
-    #translocoService = inject(TranslocoService);
+    #confirmationService = inject(ConfirmationService);
     #notificationService = inject(NotificationService);
     #languageContextService = inject(LanguageContextService);
     protected override service = inject(ComponentLibraryService);
@@ -167,17 +168,15 @@ export class ComponentListComponent
                     this.componentTypesSig.set(types);
                     this.typesLoadingSig.set(false);
                 },
-                error: () => {
-                    this.#notificationService.alert(
-                        'admin.components.errors.loadTypesFailed'
-                    );
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message ?? '');
                     this.typesLoadingSig.set(false);
                 },
             });
     }
 
     protected override onLoadError(error: any): void {
-        this.#notificationService.alert('admin.components.errors.loadFailed');
+        this.#notificationService.alert(error?.error?.message ?? '');
     }
 
     protected onGridAction(event: {
@@ -245,11 +244,9 @@ export class ComponentListComponent
                     this.store.setLoading(false);
                     this.#openEditDialog(detail);
                 },
-                error: () => {
+                error: (error) => {
                     this.store.setLoading(false);
-                    this.#notificationService.alert(
-                        'admin.components.errors.loadDetailFailed'
-                    );
+                    this.#notificationService.alert(error?.error?.message ?? '');
                 },
             });
     }
@@ -280,30 +277,29 @@ export class ComponentListComponent
     }
 
     protected deleteComponent(componentId: number): void {
-        if (
-            !confirm(
-                this.#translocoService.translate(
-                    'admin.components.confirmDelete'
-                )
-            )
-        ) {
-            return;
-        }
-
-        this.service
-            .deleteComponent(componentId)
+        this.#confirmationService
+            .confirm('admin.common.delete', 'admin.components.confirmDelete')
             .pipe(take(1))
-            .subscribe({
-                next: () => {
-                    this.#notificationService.success(
-                        'admin.components.success.deleted'
-                    );
-                    this.loadItems();
-                },
-                error: () =>
-                    this.#notificationService.alert(
-                        'admin.components.errors.deleteFailed'
-                    ),
+            .subscribe((confirmed) => {
+                if (!confirmed) {
+                    return;
+                }
+
+                this.service
+                    .deleteComponentWithResponse(componentId)
+                    .pipe(take(1))
+                    .subscribe({
+                        next: (response) => {
+                            this.#notificationService.success(
+                                response.message ?? ''
+                            );
+                            this.loadItems();
+                        },
+                        error: (error) =>
+                            this.#notificationService.alert(
+                                error?.error?.message ?? ''
+                            ),
+                    });
             });
     }
 

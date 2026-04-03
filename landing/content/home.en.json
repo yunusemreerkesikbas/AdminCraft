@@ -5,7 +5,27 @@
     "subheadline": "Share your idea and let Craftive build the digital solution for it. Blogs, HR portals, ecommerce or corporate sites — all powered by a single infrastructure.",
     "primaryCta": "Share Your Idea",
     "secondaryCta": "Explore Solutions",
-    "mockupAlt": "Craftive control panel interface"
+    "mockupAlt": "Craftive platform control surface preview",
+    "visual": {
+      "eyebrow": "Reusable Platform Core",
+      "title": "Craftive Control Surface",
+      "status": "Live Foundation",
+      "domainLabel": "Platform Domain",
+      "domainValue": "platform.craftive.io",
+      "modulesLabel": "Active Modules",
+      "modules": ["Core CMS", "Page Builder", "Media Library", "Tenant Management"],
+      "metrics": [
+        { "label": "Active Tenants", "value": "500+" },
+        { "label": "Ready Modules", "value": "12" },
+        { "label": "Uptime SLA", "value": "99.9%" }
+      ],
+      "deliveryLabel": "Delivery Model",
+      "deliveryValue": "Composable Platform",
+      "isolationLabel": "Isolation",
+      "isolationValue": "Database-per-tenant",
+      "floatingCardLabel": "Rollout Status",
+      "floatingCardValue": "Multi-project ready"
+    }
   },
   "stats": [
     { "value": "500+", "label": "Active Tenants" },

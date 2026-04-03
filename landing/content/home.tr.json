@@ -5,7 +5,27 @@
     "subheadline": "Fikrinizi anlatın, Craftive sizin için uygun dijital çözümü üretsin. Blog, HR portalı, e‑ticaret ya da kurumsal site — hepsi tek altyapıda.",
     "primaryCta": "Fikrinizi Paylaşın",
     "secondaryCta": "Çözümleri Keşfet",
-    "mockupAlt": "Craftive kontrol paneli arayüzü"
+    "mockupAlt": "Craftive platform kontrol yüzeyi önizlemesi",
+    "visual": {
+      "eyebrow": "Yeniden Kullanılabilir Platform Çekirdeği",
+      "title": "Craftive Kontrol Yüzeyi",
+      "status": "Canlı Temel",
+      "domainLabel": "Platform Domain",
+      "domainValue": "platform.craftive.io",
+      "modulesLabel": "Aktif Modüller",
+      "modules": ["Core CMS", "Sayfa Oluşturucu", "Medya Kütüphanesi", "Tenant Yönetimi"],
+      "metrics": [
+        { "label": "Aktif Tenant", "value": "500+" },
+        { "label": "Hazır Modül", "value": "12" },
+        { "label": "Uptime SLA", "value": "99.9%" }
+      ],
+      "deliveryLabel": "Teslim Modeli",
+      "deliveryValue": "Modüler Platform",
+      "isolationLabel": "İzolasyon",
+      "isolationValue": "Tenant başına veritabanı",
+      "floatingCardLabel": "Rollout Durumu",
+      "floatingCardValue": "Çok projeli yayına hazır"
+    }
   },
   "stats": [
     { "value": "500+", "label": "Aktif Tenant" },

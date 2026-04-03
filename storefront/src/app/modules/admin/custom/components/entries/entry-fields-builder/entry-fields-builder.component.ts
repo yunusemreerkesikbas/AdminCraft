@@ -50,8 +50,8 @@ export class EntryFieldsBuilderComponent implements OnInit {
                     this.fieldsSig.set(fields);
                     this.isLoadingSig.set(false);
                 },
-                error: () => {
-                    this.#notify.alert('admin.components.entryFields.loadFailed');
+                error: (error) => {
+                    this.#notify.alert(error?.error?.message ?? '');
                     this.isLoadingSig.set(false);
                 }
             });
@@ -68,15 +68,15 @@ export class EntryFieldsBuilderComponent implements OnInit {
             .subscribe((result) => {
                 if (!result) return;
 
-                this.#service.addField(this.componentTypeId(), result)
+                this.#service.addFieldWithResponse(this.componentTypeId(), result)
                     .pipe(take(1))
                     .subscribe({
-                        next: () => {
-                            this.#notify.success('admin.components.entryFields.addSuccess');
+                        next: (response) => {
+                            this.#notify.success(response.message ?? '');
                             this.loadFields();
                         },
-                        error: () => {
-                            this.#notify.alert('admin.components.entryFields.addFailed');
+                        error: (error) => {
+                            this.#notify.alert(error?.error?.message ?? '');
                         }
                     });
             });

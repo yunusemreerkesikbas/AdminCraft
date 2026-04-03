@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { BasePaginatedListComponent } from '@core/crud/base-paginated-list.component';
 import { CrudStore } from '@core/crud/crud-store';
 import { TranslocoModule } from '@jsverse/transloco';
-import { AdminPageHeaderComponent } from 'app/shared/components/admin-page-header/admin-page-header.component';
+import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import {
     GridAction,
     GridActionEvent,

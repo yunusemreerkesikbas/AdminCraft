@@ -1,14 +1,12 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
-    OnChanges,
     OnDestroy,
-    Output,
-    SimpleChanges,
     ViewEncapsulation,
+    effect,
     inject,
+    input,
+    output,
     signal,
 } from '@angular/core';
 import {
@@ -25,7 +23,6 @@ import { SpaMediaPickerComponent } from '@admin/custom/media/components/spa-medi
 import { SiteAddressFormComponent } from '@admin/custom/settings/site-address-form.component';
 import { SiteSocialLinksComponent } from '@admin/custom/settings/site-social-links.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
-import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import {
     VALIDATION_LIMITS,
     VALIDATION_PATTERNS,
@@ -48,23 +45,24 @@ import { SiteSettingsResponseDto } from '../../site.types';
         MatIconModule,
         TranslocoModule,
         SpaInputComponent,
-        SpaTextareaComponent,
         SpaMediaPickerComponent,
         SiteAddressFormComponent,
         SiteSocialLinksComponent,
     ],
 })
-export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
+export class SpaSiteSettingsComponent implements OnDestroy {
     readonly #fb = inject(FormBuilder);
     readonly #siteService = inject(SiteService);
     readonly #notification = inject(NotificationService);
     readonly #languageContext = inject(LanguageContextService);
     readonly #destroy$ = new Subject<void>();
 
-    @Input() settings: SiteSettingsResponseDto | null = null;
-    @Output() settingsUpdated = new EventEmitter<SiteSettingsResponseDto>();
+    settings = input<SiteSettingsResponseDto | null>(null);
+    settingsUpdated = output<SiteSettingsResponseDto>();
 
-    protected form: FormGroup;
+    protected form!: FormGroup;
+    protected addressGroup!: FormGroup;
+    protected socialGroup!: FormGroup;
     protected languages = this.#languageContext.supportedLanguages;
     protected selectedLanguage = signal<string>(
         this.#languageContext.getDefaultLanguage().toLowerCase()
@@ -73,20 +71,11 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
 
     constructor() {
         this.#buildForm();
-    }
-
-    get addressGroup(): FormGroup {
-        return this.form.get(['global', 'address']) as FormGroup;
-    }
-
-    get socialGroup(): FormGroup {
-        return this.form.get(['global', 'social']) as FormGroup;
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes['settings'] && this.settings) {
-            this.#populateForm();
-        }
+        effect(() => {
+            if (this.settings()) {
+                this.#populateForm();
+            }
+        });
     }
 
     ngOnDestroy(): void {
@@ -98,7 +87,7 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
         this.selectedLanguage.set(language);
     }
 
-    save(): void {
+    protected save(): void {
         if (this.savingSig()) return;
 
         if (this.form.invalid) {
@@ -151,9 +140,6 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
                 payload.languages[langKey] = {
                     siteName: formValue.languages[langKey].siteName,
                     tagline: formValue.languages[langKey].tagline,
-                    footerText: formValue.languages[langKey].footerText,
-                    headerTopbarText:
-                        formValue.languages[langKey].headerTopbarText,
                 };
             }
         });
@@ -201,22 +187,6 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
                     '',
                     [Validators.maxLength(VALIDATION_LIMITS.SITE_TAGLINE_MAX)],
                 ],
-                footerText: [
-                    '',
-                    [
-                        Validators.maxLength(
-                            VALIDATION_LIMITS.SITE_FOOTER_TEXT_MAX
-                        ),
-                    ],
-                ],
-                headerTopbarText: [
-                    '',
-                    [
-                        Validators.maxLength(
-                            VALIDATION_LIMITS.SITE_HEADER_TEXT_MAX
-                        ),
-                    ],
-                ],
             });
         });
 
@@ -253,36 +223,37 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
             }),
             languages: this.#fb.group(languagesGroup),
         });
+        this.addressGroup = this.form.get(['global', 'address']) as FormGroup;
+        this.socialGroup = this.form.get(['global', 'social']) as FormGroup;
     }
 
     #populateForm(): void {
-        if (!this.settings) return;
+        const s = this.settings();
+        if (!s) return;
 
         this.form.patchValue({
             global: {
-                contactEmail: this.settings.global?.contactEmail || '',
-                contactPhone: this.settings.global?.contactPhone || '',
-                whatsappPhone: this.settings.global?.whatsappPhone || '',
-                logoMediaUid: this.settings.global?.logoMedia || null,
-                logoDarkMediaUid: this.settings.global?.logoDarkMedia || null,
+                contactEmail: s.global?.contactEmail || '',
+                contactPhone: s.global?.contactPhone || '',
+                whatsappPhone: s.global?.whatsappPhone || '',
+                logoMediaUid: s.global?.logoMedia || null,
+                logoDarkMediaUid: s.global?.logoDarkMedia || null,
                 address: {
-                    line1: this.settings.global?.address?.line1 || '',
-                    line2: this.settings.global?.address?.line2 || '',
-                    city: this.settings.global?.address?.city || '',
-                    state: this.settings.global?.address?.state || '',
-                    postalCode:
-                        this.settings.global?.address?.postalCode || '',
-                    country: this.settings.global?.address?.country || '',
-                    mapEmbedUrl:
-                        this.settings.global?.address?.mapEmbedUrl || '',
+                    line1: s.global?.address?.line1 || '',
+                    line2: s.global?.address?.line2 || '',
+                    city: s.global?.address?.city || '',
+                    state: s.global?.address?.state || '',
+                    postalCode: s.global?.address?.postalCode || '',
+                    country: s.global?.address?.country || '',
+                    mapEmbedUrl: s.global?.address?.mapEmbedUrl || '',
                 },
                 social: {
-                    facebook: this.settings.global?.social?.facebook || '',
-                    instagram: this.settings.global?.social?.instagram || '',
-                    x: this.settings.global?.social?.x || '',
-                    linkedin: this.settings.global?.social?.linkedin || '',
-                    youtube: this.settings.global?.social?.youtube || '',
-                    tiktok: this.settings.global?.social?.tiktok || '',
+                    facebook: s.global?.social?.facebook || '',
+                    instagram: s.global?.social?.instagram || '',
+                    x: s.global?.social?.x || '',
+                    linkedin: s.global?.social?.linkedin || '',
+                    youtube: s.global?.social?.youtube || '',
+                    tiktok: s.global?.social?.tiktok || '',
                 },
             },
         });
@@ -296,47 +267,21 @@ export class SpaSiteSettingsComponent implements OnChanges, OnDestroy {
                     this.#fb.group({
                         siteName: [
                             '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_NAME_MAX
-                                ),
-                            ],
+                            [Validators.maxLength(VALIDATION_LIMITS.SITE_NAME_MAX)],
                         ],
                         tagline: [
                             '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_TAGLINE_MAX
-                                ),
-                            ],
-                        ],
-                        footerText: [
-                            '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_FOOTER_TEXT_MAX
-                                ),
-                            ],
-                        ],
-                        headerTopbarText: [
-                            '',
-                            [
-                                Validators.maxLength(
-                                    VALIDATION_LIMITS.SITE_HEADER_TEXT_MAX
-                                ),
-                            ],
+                            [Validators.maxLength(VALIDATION_LIMITS.SITE_TAGLINE_MAX)],
                         ],
                     })
                 );
             }
 
-            const langSettings = this.settings?.languages?.[langKey];
+            const langSettings = s.languages?.[langKey];
             if (langSettings) {
                 languagesGroup.get(langKey)?.patchValue({
                     siteName: langSettings.siteName || '',
                     tagline: langSettings.tagline || '',
-                    footerText: langSettings.footerText || '',
-                    headerTopbarText: langSettings.headerTopbarText || '',
                 });
             }
         });
