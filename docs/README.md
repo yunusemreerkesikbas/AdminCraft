@@ -81,7 +81,7 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param
-- Multi-environment scripts: `npm run dev`, `npm run dev:stage`, `npm run build`, `npm run build:static`, `npm run start:stage`, etc.
+- Multi-environment scripts: `npm run start`, `npm run start:stage`, `npm run start:prod`, `npm run build`, `npm run build:stage`, `npm run serve`, etc.
 - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ### Marketing landing (`landing/`)
