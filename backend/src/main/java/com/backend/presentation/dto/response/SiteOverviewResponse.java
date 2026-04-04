@@ -12,7 +12,8 @@ public record SiteOverviewResponse(
     SiteStatusDto status,
     SiteStatsDto stats,
     List<ActivityDto> recentActivity,
-    ActionsDto actions
+    ActionsDto actions,
+    SpotlightDto spotlight
 ) {
 
     public record SiteStatusDto(
@@ -67,6 +68,35 @@ public record SiteOverviewResponse(
         String previewUrl
     ) {}
 
+    public record SpotlightDto(
+        int operationalScore,
+        SpotlightStatusDto status,
+        List<SpotlightContextCardDto> contextCards,
+        List<SpotlightRecommendationDto> recommendations
+    ) {}
+
+    public record SpotlightStatusDto(
+        String tone,
+        String code
+    ) {}
+
+    public record SpotlightContextCardDto(
+        String id,
+        String icon,
+        int progress,
+        String tone,
+        String valueCode,
+        String detailCode,
+        LocalDateTime detailDate
+    ) {}
+
+    public record SpotlightRecommendationDto(
+        String id,
+        String icon,
+        String tone,
+        Long count
+    ) {}
+
     public record ActivityTrendResponse(
         String period,
         List<ActivityTrendDayResponse> days
@@ -93,6 +123,7 @@ public record SiteOverviewResponse(
         private SiteStatsDto stats;
         private List<ActivityDto> recentActivity;
         private ActionsDto actions;
+        private SpotlightDto spotlight;
 
         public Builder id(Long id) {
             this.id = id;
@@ -119,8 +150,13 @@ public record SiteOverviewResponse(
             return this;
         }
 
+        public Builder spotlight(SpotlightDto spotlight) {
+            this.spotlight = spotlight;
+            return this;
+        }
+
         public SiteOverviewResponse build() {
-            return new SiteOverviewResponse(id, status, stats, recentActivity, actions);
+            return new SiteOverviewResponse(id, status, stats, recentActivity, actions, spotlight);
         }
     }
 }

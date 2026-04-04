@@ -1,0 +1,138 @@
+<article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+    <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+            <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.eyebrow' | transloco }}</p>
+            <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.title' | transloco }}</h3>
+            <p class="mt-1 text-sm text-slate-500">{{ 'admin.site.dashboard.overview.insights.seo.subtitle' | transloco }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                {{ vm.lastSyncedLabel }}
+            </span>
+            @if (vm.propertyUrl) {
+                <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                    {{ vm.propertyUrl }}
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (vm.isReady) {
+        <div class="mt-5 space-y-5">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                @for (card of vm.cards; track card.id) {
+                    <article class="spa-site-overview__insight-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-200/70">
+                                <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
+                            </div>
+                            <span
+                                class="inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                [ngClass]="getDeltaClasses(card.deltaTone)"
+                            >
+                                {{ card.deltaLabel }}
+                            </span>
+                        </div>
+                        <div class="mt-4 flex items-center gap-1.5">
+                            <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ card.label }}</p>
+                            <button
+                                type="button"
+                                class="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                                [matTooltip]="'admin.site.dashboard.overview.insights.seo.infoAction' | transloco: { metric: card.label }"
+                                [attr.aria-label]="'admin.site.dashboard.overview.insights.seo.infoAction' | transloco: { metric: card.label }"
+                                (click)="openMetricInfo(card.id)"
+                            >
+                                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_mini:information-circle'"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-[2rem] font-black leading-none tracking-[-0.05em] text-slate-950">{{ card.value }}</p>
+                        <p class="mt-2 text-xs text-slate-500">{{ card.detail }}</p>
+                    </article>
+                }
+            </div>
+
+            <div class="spa-site-overview__insight-panel">
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.trendEyebrow' | transloco }}</p>
+                <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.trendTitle' | transloco }}</h4>
+
+                @if (vm.hasTrend) {
+                    <div class="mt-4">
+                        <apx-chart
+                            class="block"
+                            [chart]="vm.chartOptions.chart"
+                            [colors]="vm.chartOptions.colors"
+                            [series]="vm.chartOptions.series"
+                            [stroke]="vm.chartOptions.stroke"
+                            [markers]="vm.chartOptions.markers"
+                            [xaxis]="vm.chartOptions.xaxis"
+                            [yaxis]="vm.chartOptions.yaxis"
+                            [grid]="vm.chartOptions.grid"
+                            [dataLabels]="vm.chartOptions.dataLabels"
+                            [legend]="vm.chartOptions.legend"
+                            [tooltip]="vm.chartOptions.tooltip"
+                        ></apx-chart>
+                    </div>
+                } @else {
+                    <div class="spa-site-overview__insight-empty mt-4">
+                        <mat-icon class="icon-size-8 text-slate-300" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                        <p class="mt-2 text-sm font-semibold text-slate-600">{{ 'admin.site.dashboard.overview.insights.seo.states.noData.title' | transloco }}</p>
+                    </div>
+                }
+            </div>
+
+            <div class="spa-site-overview__insight-panel">
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.seo.inspection.eyebrow' | transloco }}</p>
+                <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.seo.inspection.title' | transloco }}</h4>
+
+                <div class="mt-4 flex flex-col gap-2.5">
+                    @for (item of vm.inspectionItems; track item.id) {
+                        <div class="spa-site-overview__inspection-row">
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ item.label }}</p>
+                                <p class="mt-1 text-base font-black leading-none tracking-[-0.03em] text-slate-950">{{ item.value }}</p>
+                                <p class="mt-1.5 truncate text-xs text-slate-500">{{ item.detail }}</p>
+                            </div>
+                            <span
+                                class="spa-site-overview__inspection-pill"
+                                [ngClass]="
+                                    item.tone === 'critical'
+                                        ? 'spa-site-overview__inspection-pill--critical'
+                                        : item.tone === 'warning'
+                                          ? 'spa-site-overview__inspection-pill--warning'
+                                          : item.tone === 'primary'
+                                            ? 'spa-site-overview__inspection-pill--primary'
+                                            : 'spa-site-overview__inspection-pill--neutral'
+                                "
+                            >
+                                {{ item.tone === 'primary' ? ('admin.common.status.active' | transloco) : item.tone === 'critical' ? ('admin.common.error' | transloco) : item.tone === 'warning' ? ('admin.common.warning' | transloco) : ('admin.common.neutral' | transloco) }}
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    } @else {
+        <div class="spa-site-overview__analytics-state mt-5">
+            <div class="flex h-12 w-12 flex-none items-center justify-center rounded-[14px]" [ngClass]="getContextIconClasses(vm.state.tone)">
+                <mat-icon class="icon-size-5" [svgIcon]="vm.state.icon"></mat-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h4 class="text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.state.title }}</h4>
+                <p class="mt-1 text-sm text-slate-500">{{ vm.state.description }}</p>
+            </div>
+            @if (vm.state.actionLabel) {
+                <button
+                    type="button"
+                    mat-stroked-button
+                    class="spa-site-overview__analytics-setup-button"
+                    (click)="openSetup()"
+                >
+                    <span class="flex items-center gap-2">
+                        <mat-icon class="icon-size-4" svgIcon="heroicons_outline:wrench-screwdriver"></mat-icon>
+                        <span>{{ vm.state.actionLabel }}</span>
+                    </span>
+                </button>
+            }
+        </div>
+    }
+</article>

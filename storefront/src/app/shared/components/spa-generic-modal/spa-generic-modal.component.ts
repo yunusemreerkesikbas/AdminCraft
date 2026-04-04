@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    ViewEncapsulation,
+    inject,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
@@ -21,6 +26,7 @@ import { ModalConfig } from './spa-generic-modal.types';
     ],
     templateUrl: './spa-generic-modal.component.html',
     styleUrls: ['./spa-generic-modal.component.scss'],
+    encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SpaGenericModalComponent<T = any> {

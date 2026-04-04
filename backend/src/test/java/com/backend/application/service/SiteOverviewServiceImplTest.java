@@ -1,13 +1,19 @@
 package com.backend.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,16 +30,22 @@ import com.backend.application.dto.response.SiteOverviewAppDto.ActionsAppDto;
 import com.backend.application.dto.response.SiteOverviewAppDto.ActivityTrendDayAppDto;
 import com.backend.domain.entity.Site;
 import com.backend.domain.entity.SiteActivity;
+import com.backend.domain.entity.SiteTechnicalSettings;
+import com.backend.domain.entity.Tenant;
 import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.ActivityEntityType;
 import com.backend.domain.enums.ModuleCode;
+import com.backend.domain.enums.TwoFactorPolicy;
 import com.backend.domain.port.FrontendConfigPort;
+import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.MediaRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.ProductRepository;
 import com.backend.domain.repository.SiteActivityRepository;
 import com.backend.domain.repository.SiteRepository;
+import com.backend.domain.repository.SiteTechnicalSettingsRepository;
+import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,11 +82,41 @@ class SiteOverviewServiceImplTest {
     @Mock
     private TenantModuleAccessService tenantModuleAccessService;
 
+    @Mock
+    private SiteTechnicalSettingsRepository siteTechnicalSettingsRepository;
+
+    @Mock
+    private TenantRepository tenantRepository;
+
+    @Mock
+    private TenantContextPort tenantContext;
+
     @InjectMocks
     private SiteOverviewServiceImpl siteOverviewService;
 
+    @BeforeEach
+    void setUp() {
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        lenient().when(messageSource.getMessage(anyString(), any(), anyString(), any(Locale.class)))
+                .thenAnswer(invocation -> {
+                    Object[] args = invocation.getArgument(1, Object[].class);
+                    String defaultMessage = invocation.getArgument(2, String.class);
+                    if (defaultMessage != null && !defaultMessage.isBlank()) {
+                        return format(defaultMessage, args);
+                    }
+                    return format(invocation.getArgument(0, String.class), args);
+                });
+        lenient().when(messageSource.getMessage(anyString(), any(), any(Locale.class)))
+                .thenAnswer(invocation -> format(invocation.getArgument(0, String.class), invocation.getArgument(1, Object[].class)));
+    }
+
+    @AfterEach
+    void tearDown() {
+        LocaleContextHolder.resetLocaleContext();
+    }
+
     @Test
-    @DisplayName("getAvailableActions should use custom domain directly for preview URL")
+    @DisplayName("getAvailableActions should use custom domain host root for preview URL")
     void getAvailableActions_ShouldUseCustomDomainDirectly() {
         Site site = new Site();
         site.setCustomDomain("www.acme.com");
@@ -84,7 +127,7 @@ class SiteOverviewServiceImplTest {
 
         ActionsAppDto actions = siteOverviewService.getAvailableActions();
 
-        assertThat(actions.previewUrl()).isEqualTo("https://www.acme.com?preview=true");
+        assertThat(actions.previewUrl()).isEqualTo("https://www.acme.com");
     }
 
     @Test
@@ -98,7 +141,7 @@ class SiteOverviewServiceImplTest {
 
         ActionsAppDto actions = siteOverviewService.getAvailableActions();
 
-        assertThat(actions.previewUrl()).isEqualTo("https://acme.craftive.io?preview=true");
+        assertThat(actions.previewUrl()).isEqualTo("https://acme.craftive.io");
     }
 
     @Test
@@ -111,7 +154,7 @@ class SiteOverviewServiceImplTest {
 
         ActionsAppDto actions = siteOverviewService.getAvailableActions();
 
-        assertThat(actions.previewUrl()).isEqualTo("http://s1-preview.craftive.io?preview=true");
+        assertThat(actions.previewUrl()).isEqualTo("http://s1-preview.craftive.io");
     }
 
     @Test
@@ -215,6 +258,90 @@ class SiteOverviewServiceImplTest {
         assertThat(result.getContent().get(0).user()).isNotNull();
     }
 
+    @Test
+    @DisplayName("getOverview should build healthy spotlight from backend data")
+    void getOverview_ShouldBuildHealthySpotlight() {
+        Site site = site(1L, true, false, LocalDateTime.of(2026, 4, 1, 10, 0));
+        Tenant tenant = tenant(TwoFactorPolicy.REQUIRED);
+
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of(site));
+        when(pageRepository.count()).thenReturn(5L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.PUBLISHED)).thenReturn(5L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.DRAFT)).thenReturn(0L);
+        when(siteTechnicalSettingsRepository.findBySiteId(1L))
+                .thenReturn(java.util.Optional.of(technicalSettings(true, true, true)));
+        when(tenantContext.getTenantId()).thenReturn("7");
+        when(tenantRepository.findById(7L)).thenReturn(java.util.Optional.of(tenant));
+        when(siteActivityRepository.findRecentActivities(any(Integer.class))).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNotNull();
+        assertThat(overview.spotlight().operationalScore()).isEqualTo(100);
+        assertThat(overview.spotlight().status().tone()).isEqualTo("PRIMARY");
+        assertThat(overview.spotlight().status().code()).isEqualTo("healthy");
+        assertThat(overview.spotlight().contextCards())
+                .extracting(card -> card.valueCode())
+                .containsExactly("published", "indexable", "twoFactorRequired");
+        assertThat(overview.spotlight().recommendations())
+                .extracting(recommendation -> recommendation.id())
+                .containsExactly("healthy");
+    }
+
+    @Test
+    @DisplayName("getOverview should prioritize maintenance and indexing recommendations when critical")
+    void getOverview_ShouldBuildCriticalSpotlight() {
+        Site site = site(1L, false, true, LocalDateTime.of(2026, 4, 1, 10, 0));
+        Tenant tenant = tenant(TwoFactorPolicy.DISABLED);
+
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of(site));
+        when(pageRepository.count()).thenReturn(5L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.PUBLISHED)).thenReturn(2L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.DRAFT)).thenReturn(3L);
+        when(siteTechnicalSettingsRepository.findBySiteId(1L))
+                .thenReturn(java.util.Optional.of(technicalSettings(false, false, false)));
+        when(tenantContext.getTenantId()).thenReturn("7");
+        when(tenantRepository.findById(7L)).thenReturn(java.util.Optional.of(tenant));
+        when(siteActivityRepository.findRecentActivities(any(Integer.class))).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNotNull();
+        assertThat(overview.spotlight().status().tone()).isEqualTo("CRITICAL");
+        assertThat(overview.spotlight().status().code()).isEqualTo("critical");
+        assertThat(overview.spotlight().operationalScore()).isEqualTo(28);
+        assertThat(overview.spotlight().recommendations())
+                .extracting(recommendation -> recommendation.id())
+                .containsExactly("maintenance", "indexing");
+    }
+
+    @Test
+    @DisplayName("getOverview should include publish pages and 2FA recommendations when they are the top issues")
+    void getOverview_ShouldBuildWarningSpotlightRecommendations() {
+        Site site = site(1L, true, false, LocalDateTime.of(2026, 4, 1, 10, 0));
+        Tenant tenant = tenant(TwoFactorPolicy.DISABLED);
+
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of(site));
+        when(pageRepository.count()).thenReturn(8L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.PUBLISHED)).thenReturn(5L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.DRAFT)).thenReturn(3L);
+        when(siteTechnicalSettingsRepository.findBySiteId(1L))
+                .thenReturn(java.util.Optional.of(technicalSettings(true, true, true)));
+        when(tenantContext.getTenantId()).thenReturn("7");
+        when(tenantRepository.findById(7L)).thenReturn(java.util.Optional.of(tenant));
+        when(siteActivityRepository.findRecentActivities(any(Integer.class))).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNotNull();
+        assertThat(overview.spotlight().status().tone()).isEqualTo("WARNING");
+        assertThat(overview.spotlight().status().code()).isEqualTo("attention");
+        assertThat(overview.spotlight().recommendations())
+                .extracting(recommendation -> recommendation.id())
+                .containsExactly("publish-pages", "two-factor");
+        assertThat(overview.spotlight().recommendations().get(0).count()).isEqualTo(3L);
+    }
+
     private SiteActivity activity(ActivityAction action, LocalDateTime createdAt) {
         SiteActivity activity = new SiteActivity();
         activity.setAction(action);
@@ -223,5 +350,47 @@ class SiteOverviewServiceImplTest {
         activity.setCreatedAt(createdAt);
         activity.setUpdatedAt(createdAt);
         return activity;
+    }
+
+    private Site site(Long id, boolean published, boolean maintenance, LocalDateTime updatedAt) {
+        Site site = new Site();
+        site.setId(id);
+        site.setDomain("demo.craftive.io");
+        site.setSslEnabled(true);
+        site.setPublished(published);
+        site.setMaintenanceMode(maintenance);
+        site.setUpdatedAt(updatedAt);
+        return site;
+    }
+
+    private Tenant tenant(TwoFactorPolicy policy) {
+        Tenant tenant = new Tenant();
+        tenant.setId(7L);
+        tenant.setTwoFactorPolicy(policy);
+        return tenant;
+    }
+
+    private SiteTechnicalSettings technicalSettings(
+            boolean indexingEnabled,
+            boolean sitemapEnabled,
+            boolean cookieConsentEnabled) {
+        return SiteTechnicalSettings.builder()
+                .siteId(1L)
+                .indexingEnabled(indexingEnabled)
+                .sitemapEnabled(sitemapEnabled)
+                .cookieConsentEnabled(cookieConsentEnabled)
+                .build();
+    }
+
+    private String format(String pattern, Object[] args) {
+        String result = pattern;
+        if (args == null) {
+            return result;
+        }
+
+        for (int i = 0; i < args.length; i++) {
+            result = result.replace("{" + i + "}", String.valueOf(args[i]));
+        }
+        return result;
     }
 }

@@ -1,0 +1,102 @@
+<article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+    <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+            <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.eyebrow' | transloco }}</p>
+            <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.performance.title' | transloco }}</h3>
+            <p class="mt-1 text-sm text-slate-500">{{ 'admin.site.dashboard.overview.insights.performance.subtitle' | transloco }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                {{ vm.lastSyncedLabel }}
+            </span>
+            <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                {{ vm.scopeLabel }}
+            </span>
+        </div>
+    </div>
+
+    @if (vm.isReady) {
+        <div class="mt-5 space-y-5">
+            <div class="grid gap-5 lg:grid-cols-[18rem_1fr] lg:items-start">
+                <div class="spa-site-overview__performance-score">
+                    <apx-chart
+                        class="block"
+                        [chart]="vm.scoreChartOptions.chart"
+                        [series]="vm.scoreChartOptions.series"
+                        [colors]="vm.scoreChartOptions.colors"
+                        [plotOptions]="vm.scoreChartOptions.plotOptions"
+                        [stroke]="vm.scoreChartOptions.stroke"
+                        [labels]="vm.scoreChartOptions.labels"
+                    ></apx-chart>
+                    <p class="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.score.caption' | transloco }}</p>
+                    <p class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.scoreLabel }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ vm.targetLabel }}</p>
+                </div>
+
+                <div class="grid gap-2.5 sm:grid-cols-2">
+                    @for (metric of vm.metrics; track metric.id) {
+                        <div class="spa-site-overview__performance-metric">
+                            <div class="min-w-0">
+                                <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ metric.label }}</p>
+                                <p class="mt-1 text-xl font-black leading-none tracking-[-0.04em] text-slate-950">{{ metric.value }}</p>
+                            </div>
+                            <span
+                                class="spa-site-overview__inspection-pill"
+                                [ngClass]="
+                                    metric.tone === 'critical'
+                                        ? 'spa-site-overview__inspection-pill--critical'
+                                        : metric.tone === 'warning'
+                                          ? 'spa-site-overview__inspection-pill--warning'
+                                          : metric.tone === 'primary'
+                                            ? 'spa-site-overview__inspection-pill--primary'
+                                            : 'spa-site-overview__inspection-pill--neutral'
+                                "
+                            >
+                                {{ metric.detail }}
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="spa-site-overview__insight-panel">
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.insights.performance.trendEyebrow' | transloco }}</p>
+                <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.insights.performance.trendTitle' | transloco }}</h4>
+
+                @if (vm.hasTrend) {
+                    <div class="mt-4">
+                        <apx-chart
+                            class="block"
+                            [chart]="vm.trendOptions.chart"
+                            [colors]="vm.trendOptions.colors"
+                            [series]="vm.trendOptions.series"
+                            [stroke]="vm.trendOptions.stroke"
+                            [markers]="vm.trendOptions.markers"
+                            [xaxis]="vm.trendOptions.xaxis"
+                            [yaxis]="vm.trendOptions.yaxis"
+                            [grid]="vm.trendOptions.grid"
+                            [dataLabels]="vm.trendOptions.dataLabels"
+                            [legend]="vm.trendOptions.legend"
+                            [tooltip]="vm.trendOptions.tooltip"
+                        ></apx-chart>
+                    </div>
+                } @else {
+                    <div class="spa-site-overview__insight-empty mt-4">
+                        <mat-icon class="icon-size-8 text-slate-300" svgIcon="heroicons_outline:chart-bar-square"></mat-icon>
+                        <p class="mt-2 text-sm font-semibold text-slate-600">{{ 'admin.site.dashboard.overview.insights.performance.states.noData.title' | transloco }}</p>
+                    </div>
+                }
+            </div>
+        </div>
+    } @else {
+        <div class="spa-site-overview__analytics-state mt-5">
+            <div class="flex h-12 w-12 flex-none items-center justify-center rounded-[14px]" [ngClass]="getContextIconClasses(vm.state.tone)">
+                <mat-icon class="icon-size-5" [svgIcon]="vm.state.icon"></mat-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h4 class="text-lg font-black tracking-[-0.03em] text-slate-950">{{ vm.state.title }}</h4>
+                <p class="mt-1 text-sm text-slate-500">{{ vm.state.description }}</p>
+            </div>
+        </div>
+    }
+</article>

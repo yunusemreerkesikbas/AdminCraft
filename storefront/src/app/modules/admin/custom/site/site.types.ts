@@ -28,6 +28,7 @@ export interface SiteOverviewResponse {
     stats: SiteStatsDto;
     recentActivity: ActivityDto[];
     actions: ActionsDto;
+    spotlight: SiteOverviewSpotlightDto | null;
 }
 
 export interface SiteStatusDto {
@@ -80,6 +81,73 @@ export interface ActionsDto {
     canEnableMaintenance: boolean;
     canDisableMaintenance: boolean;
     previewUrl: string | null;
+}
+
+export type SiteOverviewSpotlightTone =
+    | 'PRIMARY'
+    | 'WARNING'
+    | 'CRITICAL'
+    | 'NEUTRAL';
+
+export type SiteOverviewSpotlightStatusCode =
+    | 'healthy'
+    | 'attention'
+    | 'critical';
+
+export type SiteOverviewSpotlightContextId = 'status' | 'search' | 'security';
+
+export type SiteOverviewSpotlightContextValueCode =
+    | 'published'
+    | 'draft'
+    | 'maintenance'
+    | 'indexable'
+    | 'hidden'
+    | 'twoFactorRequired'
+    | 'twoFactorDisabled';
+
+export type SiteOverviewSpotlightContextDetailCode =
+    | 'updatedOn'
+    | 'noRecentUpdates'
+    | 'sitemapEnabled'
+    | 'sitemapDisabled'
+    | 'cookieConsentEnabled'
+    | 'cookieConsentDisabled';
+
+export type SiteOverviewSpotlightRecommendationId =
+    | 'maintenance'
+    | 'indexing'
+    | 'sitemap'
+    | 'publish-pages'
+    | 'two-factor'
+    | 'healthy';
+
+export interface SiteOverviewSpotlightDto {
+    operationalScore: number;
+    status: SiteOverviewSpotlightStatusDto | null;
+    contextCards: SiteOverviewSpotlightContextCardDto[];
+    recommendations: SiteOverviewSpotlightRecommendationDto[];
+}
+
+export interface SiteOverviewSpotlightStatusDto {
+    tone: SiteOverviewSpotlightTone;
+    code: SiteOverviewSpotlightStatusCode;
+}
+
+export interface SiteOverviewSpotlightContextCardDto {
+    id: SiteOverviewSpotlightContextId;
+    icon: string;
+    progress: number;
+    tone: SiteOverviewSpotlightTone;
+    valueCode: SiteOverviewSpotlightContextValueCode;
+    detailCode: SiteOverviewSpotlightContextDetailCode;
+    detailDate: string | null;
+}
+
+export interface SiteOverviewSpotlightRecommendationDto {
+    id: SiteOverviewSpotlightRecommendationId;
+    icon: string;
+    tone: SiteOverviewSpotlightTone;
+    count: number | null;
 }
 
 // ========== Site Analytics Types ==========

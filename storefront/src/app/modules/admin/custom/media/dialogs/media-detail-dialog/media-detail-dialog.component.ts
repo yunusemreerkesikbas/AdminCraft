@@ -30,7 +30,10 @@ import { SpaDialogContentComponent } from '@shared/components/spa-dialog/spa-dia
 import { SpaDialogFooterComponent } from '@shared/components/spa-dialog/spa-dialog-footer/spa-dialog-footer.component';
 import { SpaDialogHeaderComponent } from '@shared/components/spa-dialog/spa-dialog-header/spa-dialog-header.component';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
-import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
+import {
+    ModalConfig,
+    SPA_GENERIC_MODAL_DIALOG_OPTIONS,
+} from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { SpaLocalizedFormDialog } from '@shared/components/spa-localized-form-dialog/spa-localized-form-dialog.directive';
 import { VALIDATION_LIMITS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -326,6 +329,7 @@ export class MediaDetailDialogComponent extends SpaLocalizedFormDialog<
 
         return this.#matDialog
             .open(SpaGenericModalComponent, {
+                ...SPA_GENERIC_MODAL_DIALOG_OPTIONS,
                 width: '500px',
                 maxHeight: '50vh',
                 data: dialogConfig,
