@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -35,6 +36,7 @@ import { SiteTechnicalResponse } from '../../site.types';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
     imports: [
+        NgClass,
         ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
