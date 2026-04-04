@@ -157,11 +157,13 @@ See [`landing/.env.local.example`](../../landing/.env.local.example). Contract a
 | `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
 | `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
 | `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
-| `GOOGLE_SITE_VERIFICATION`     | optional local env          | tracked in `storefront-nextjs/.env.staging` for the demo storefront | tracked in `storefront-nextjs/.env.production` for the demo storefront |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | optional local env   | tracked in `storefront-nextjs/.env.staging` for the demo storefront | tracked in `storefront-nextjs/.env.production` for the demo storefront |
 
 > **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). The local `start:stage`, `start:prod`, `serve:stage`, and `serve:prod` scripts clear this variable intentionally so localhost can run against stage/prod APIs. Required in real stage/prod deployments to prevent wildcard DNS rules from serving the wrong tenant's storefront.
 >
-> **`GOOGLE_SITE_VERIFICATION`**: Optional Search Console token. In local development it may live in `.env.local` / `.env.development`. In this platform repository, the demo storefront keeps stage and prod tokens in the tracked `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production` files because the token is public and rendered into the HTML source anyway. Tenant storefront repositories should manage their own value in their own repo/build config. Use only the `content` value, not the full `<meta>` element.
+> **`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`**: Optional Search Console token. In local development it may live in `.env.development`. In this platform repository, the demo storefront keeps stage and prod tokens in the tracked `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production` files because the token is public and rendered into the HTML source anyway. Tenant storefront repositories should manage their own value in their own repo/build config. Use only the `content` value, not the full `<meta>` element.
+>
+> **Why `NEXT_PUBLIC_` prefix is required:** `app/layout.tsx` is a Next.js App Router Server Component that reads this value at **request time** (not build time). In a Docker 2-stage build, `next build` copies `.env.production` into the standalone output; the runner stage only has `NODE_ENV=production`, so Next.js loads `.env.production` at runtime regardless of which env file was used during the build. Without the `NEXT_PUBLIC_` prefix, the stage deployment always gets the production key. With `NEXT_PUBLIC_`, Next.js/SWC **inlines the value as a literal string at build time**, making the output independent of which `.env.*` file the runtime container loads.
 
 Available scripts:
 

@@ -239,11 +239,12 @@ This creates a two-provider backend-only integration:
 
 Storefront ownership verification:
 
-- Search Console property ownership for `storefront-nextjs` can be managed per deployment with `GOOGLE_SITE_VERIFICATION`
+- Search Console property ownership for `storefront-nextjs` can be managed per deployment with `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`
 - the storefront renders `<meta name="google-site-verification" ...>` from `app/layout.tsx` when that env var is set
 - use the Search Console `HTML tag` method and store only the token value in env
 - in the platform repository this applies only to the demo/reference storefront deploys and the token lives in `storefront-nextjs/.env.staging` / `.env.production`
 - tenant storefront repositories must manage their own verification token independently; tenant tokens do not belong in platform `ENV_STAGE` / `ENV_PROD`
+- **`NEXT_PUBLIC_` prefix is required:** `app/layout.tsx` reads the value at request time (Server Component). In a Docker 2-stage build, `next build` copies `.env.production` into the standalone output, so the runner stage always loads `.env.production` at runtime. Without `NEXT_PUBLIC_`, the stage deployment serves the production key. With `NEXT_PUBLIC_`, the value is inlined at build time and is not affected by runtime env file loading.
 
 ## Implementation guide
 

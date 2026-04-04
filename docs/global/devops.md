@@ -446,7 +446,7 @@ jobs:
 
 Adjust `TENANT`, organization, and optional custom domains per repository.
 
-If the tenant storefront also needs Search Console HTML tag verification, define `GOOGLE_SITE_VERIFICATION` in that tenant repository's own tracked storefront env or equivalent build config. This is tenant-repo concern, not platform repo concern.
+If the tenant storefront also needs Search Console HTML tag verification, define `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` in that tenant repository's own tracked storefront env or equivalent build config. This is tenant-repo concern, not platform repo concern.
 
 ### First-time server setup
 
