@@ -401,7 +401,7 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
 | `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
-| `GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Local development may define it in `.env.local` / `.env.development`. In this repository, the demo/reference storefront keeps the stage and prod values in tracked `.env.staging` and `.env.production` files. Tenant storefront repositories manage their own value in their own repo/build config. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Must use `NEXT_PUBLIC_` prefix — see note below. Local development may define it in `.env.development`. In this repository, the demo/reference storefront keeps the stage and prod values in tracked `.env.staging` and `.env.production` files. Tenant storefront repositories manage their own value in their own repo/build config. |
 
 `TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
 
@@ -429,12 +429,14 @@ For tenant forks, only `components/theme/` changes. Env vars and deployment conf
 
 Search Console verification follows the same deployment model:
 
-- each storefront deployment can expose one `GOOGLE_SITE_VERIFICATION` token
+- each storefront deployment can expose one `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` token
 - stage and prod may use different tokens
 - if the variable is unset, no verification meta tag is rendered
 - use the Search Console `HTML tag` method and copy only the `content` attribute value
 - this repository commits the demo/reference storefront tokens in `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production`
 - tenant storefront repositories must define their own verification token in their own repo/build config; the platform demo values are not reused for tenant storefronts
+
+> **Why `NEXT_PUBLIC_` is required:** `app/layout.tsx` is a Server Component and reads env vars at **request time**. In a Docker 2-stage build, `next build` copies `.env.production` into the `.next/standalone` output. At runtime the container only has `NODE_ENV=production` and no other env files, so Next.js loads `.env.production` — regardless of which env file was passed to the build step via `dotenv-cli`. Without `NEXT_PUBLIC_`, a stage build always serves the production key. With `NEXT_PUBLIC_`, Next.js/SWC **inlines the value as a literal string at build time**, making the deployed output independent of runtime env file loading.
 
 ## Caching and revalidation
 

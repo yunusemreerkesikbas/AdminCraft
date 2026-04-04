@@ -28,8 +28,8 @@ Command contract:
 
 Search Console HTML tag verification is deployment-scoped:
 
-- this repository keeps `GOOGLE_SITE_VERIFICATION` in tracked `.env.staging` and `.env.production` files for the demo/reference storefront
-- tenant storefront repositories must define their own `GOOGLE_SITE_VERIFICATION` value in their own repo/build config
+- this repository keeps `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` in tracked `.env.staging` and `.env.production` files for the demo/reference storefront
+- tenant storefront repositories must define their own `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` value in their own repo/build config
 - do not treat platform `.env.stage` / `.env.prod` or platform secrets as tenant-specific verification storage
 
 ## Core structure
