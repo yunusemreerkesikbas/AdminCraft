@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SearchConsoleProperties {
 
     private String apiBaseUrl = "https://searchconsole.googleapis.com/v1";
+    private String searchAnalyticsBaseUrl = "https://searchconsole.googleapis.com/webmasters/v3";
     private String scope = "https://www.googleapis.com/auth/webmasters.readonly";
     private String languageCode = "en-US";
     private long cacheTtlSeconds = 300;
@@ -16,6 +17,14 @@ public class SearchConsoleProperties {
 
     public void setApiBaseUrl(String apiBaseUrl) {
         this.apiBaseUrl = apiBaseUrl;
+    }
+
+    public String getSearchAnalyticsBaseUrl() {
+        return searchAnalyticsBaseUrl;
+    }
+
+    public void setSearchAnalyticsBaseUrl(String searchAnalyticsBaseUrl) {
+        this.searchAnalyticsBaseUrl = searchAnalyticsBaseUrl;
     }
 
     public String getScope() {

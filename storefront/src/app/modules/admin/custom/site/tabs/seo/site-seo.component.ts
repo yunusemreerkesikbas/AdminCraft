@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -31,6 +32,7 @@ import { RobotsMetaTag, SiteSettingsResponseDto } from '../../site.types';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
     imports: [
+        NgClass,
         ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,

@@ -1,3 +1,12 @@
-/* Scoped styles for SEO settings */
+:host {
+  display: block;
+}
 
+.seo-settings :is(.seo-settings__field .mdc-text-field, .seo-settings__field .mat-mdc-text-field-wrapper) {
+  border-radius: 14px;
+}
+
+.seo-settings__field .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 0.25rem;
+}
 

@@ -1,5 +1,6 @@
 package com.backend.infrastructure.seo;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -160,11 +161,11 @@ public class GoogleSearchConsolePortAdapter implements SiteSeoInsightsPort {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         String encodedPropertyUrl = URLEncoder.encode(propertyUrl, StandardCharsets.UTF_8);
-        String url = properties.getApiBaseUrl().replaceAll("/+$", "")
-                + "/sites/" + encodedPropertyUrl + "/searchAnalytics/query";
+        URI uri = URI.create(properties.getSearchAnalyticsBaseUrl().replaceAll("/+$", "")
+                + "/sites/" + encodedPropertyUrl + "/searchAnalytics/query");
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                url,
+                uri,
                 new HttpEntity<>(body.toString(), headers),
                 String.class);
         try {

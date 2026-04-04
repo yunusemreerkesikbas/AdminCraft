@@ -23,6 +23,7 @@ app:
   seo:
     search-console:
       api-base-url: ${APP_SEO_SEARCH_CONSOLE_API_BASE_URL:https://searchconsole.googleapis.com/v1}
+      search-analytics-base-url: ${APP_SEO_SEARCH_CONSOLE_SEARCH_ANALYTICS_BASE_URL:https://searchconsole.googleapis.com/webmasters/v3}
       scope: ${APP_SEO_SEARCH_CONSOLE_SCOPE:https://www.googleapis.com/auth/webmasters.readonly}
       language-code: ${APP_SEO_SEARCH_CONSOLE_LANGUAGE_CODE:en-US}
       cache-ttl-seconds: ${APP_SEO_SEARCH_CONSOLE_CACHE_TTL_SECONDS:300}

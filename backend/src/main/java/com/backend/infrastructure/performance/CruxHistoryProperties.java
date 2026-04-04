@@ -13,6 +13,7 @@ public class CruxHistoryProperties {
     @NotBlank
     private String apiBaseUrl = "https://chromeuxreport.googleapis.com/v1/records:queryHistoryRecord";
     private String apiKey;
+    // TODO: apiBaseUrl should be configurable
     @Min(1)
     private long cacheTtlSeconds = 300;
 
