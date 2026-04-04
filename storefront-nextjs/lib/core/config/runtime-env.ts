@@ -29,7 +29,7 @@ export const getGtmId = (): string | undefined =>
   process.env.NEXT_PUBLIC_GTM_ID?.trim() || undefined;
 
 export const getGoogleSiteVerification = (): string | undefined =>
-  process.env.GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
 
 export const getTenantContext = (): TenantContext => {
   const tenantSubdomain = readFirstEnv(["TENANT_SUBDOMAIN", "NEXT_PUBLIC_TENANT_SUBDOMAIN"]);
