@@ -342,6 +342,59 @@ class SiteOverviewServiceImplTest {
         assertThat(overview.spotlight().recommendations().get(0).count()).isEqualTo(3L);
     }
 
+    @Test
+    @DisplayName("getOverview should return null spotlight when site is missing")
+    void getOverview_ShouldReturnNullSpotlight_WhenSiteIsMissing() {
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNull();
+    }
+
+    @Test
+    @DisplayName("getOverview should default to all-green spotlight when technicalSettings are absent")
+    void getOverview_ShouldDefaultToGreenSpotlight_WhenTechnicalSettingsAbsent() {
+        Site site = site(1L, true, false, LocalDateTime.of(2026, 4, 1, 10, 0));
+        Tenant tenant = tenant(TwoFactorPolicy.REQUIRED);
+
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of(site));
+        when(pageRepository.count()).thenReturn(3L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.PUBLISHED)).thenReturn(3L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.DRAFT)).thenReturn(0L);
+        when(siteTechnicalSettingsRepository.findBySiteId(1L)).thenReturn(java.util.Optional.empty());
+        when(tenantContext.getTenantId()).thenReturn("7");
+        when(tenantRepository.findById(7L)).thenReturn(java.util.Optional.of(tenant));
+        when(siteActivityRepository.findRecentActivities(any(Integer.class))).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNotNull();
+        assertThat(overview.spotlight().contextCards())
+                .extracting(card -> card.valueCode())
+                .contains("indexable");
+    }
+
+    @Test
+    @DisplayName("getOverview should not throw when tenantId is absent from context")
+    void getOverview_ShouldNotThrow_WhenTenantIdIsAbsent() {
+        Site site = site(1L, true, false, LocalDateTime.of(2026, 4, 1, 10, 0));
+
+        when(siteRepository.findAllWithEnabledLanguages()).thenReturn(List.of(site));
+        when(pageRepository.count()).thenReturn(1L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.PUBLISHED)).thenReturn(1L);
+        when(pageRepository.countByStatus(com.backend.domain.enums.PageStatus.DRAFT)).thenReturn(0L);
+        when(siteTechnicalSettingsRepository.findBySiteId(1L))
+                .thenReturn(java.util.Optional.of(technicalSettings(true, true, true)));
+        when(tenantContext.getTenantId()).thenReturn(null);
+        when(siteActivityRepository.findRecentActivities(any(Integer.class))).thenReturn(List.of());
+
+        var overview = siteOverviewService.getOverview();
+
+        assertThat(overview.spotlight()).isNotNull();
+        assertThat(overview.spotlight().status()).isNotNull();
+    }
+
     private SiteActivity activity(ActivityAction action, LocalDateTime createdAt) {
         SiteActivity activity = new SiteActivity();
         activity.setAction(action);

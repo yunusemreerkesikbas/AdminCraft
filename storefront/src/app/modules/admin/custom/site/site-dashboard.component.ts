@@ -17,7 +17,7 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { ConfirmationService } from '@shared/services/confirmation.service';
 import { UrlValidator } from '@shared/utils/url-validator';
 import { UserService } from 'app/core/user/user.service';
-import { Subject, catchError, forkJoin, of, take, takeUntil } from 'rxjs';
+import { Subject, catchError, filter, forkJoin, of, switchMap, take, takeUntil } from 'rxjs';
 import { SiteService } from './site.service';
 import {
     SecuritySettingsResponse,
@@ -211,26 +211,19 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                 'admin.site.dashboard.overview.actions.maintenance',
                 'warning'
             )
-            .pipe(take(1))
-            .subscribe((confirmed) => {
-                if (!confirmed) {
-                    return;
-                }
-
-                this.#siteService
-                    .enableMaintenanceMode(overview.id)
-                    .pipe(take(1))
-                    .subscribe({
-                        next: (response) => {
-                            this.#notificationService.success(response.message);
-                            this.refreshOverview();
-                        },
-                        error: (error) => {
-                            this.#notificationService.alert(
-                                error?.error?.message
-                            );
-                        },
-                    });
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.enableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
             });
     }
 
@@ -247,26 +240,19 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                 'admin.site.dashboard.overview.actions.disableMaintenance',
                 'info'
             )
-            .pipe(take(1))
-            .subscribe((confirmed) => {
-                if (!confirmed) {
-                    return;
-                }
-
-                this.#siteService
-                    .disableMaintenanceMode(overview.id)
-                    .pipe(take(1))
-                    .subscribe({
-                        next: (response) => {
-                            this.#notificationService.success(response.message);
-                            this.refreshOverview();
-                        },
-                        error: (error) => {
-                            this.#notificationService.alert(
-                                error?.error?.message
-                            );
-                        },
-                    });
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.disableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
             });
     }
 

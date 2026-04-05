@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -17,7 +16,6 @@ import { ModalConfig } from './spa-generic-modal.types';
     selector: 'spa-generic-modal',
     standalone: true,
     imports: [
-        CommonModule,
         MatDialogModule,
         MatButtonModule,
         MatIconModule,

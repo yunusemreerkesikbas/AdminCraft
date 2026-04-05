@@ -1,6 +1,10 @@
+"use client";
+
 import type { ComponentType } from "react";
-import { AnimateInView } from "@/components/AnimateInView";
+import { AnimateInView, StaggerContainer, StaggerItem } from "@/components/AnimateInView";
+import { ArchitectureDiagram } from "@/components/visuals/ArchitectureDiagram";
 import { Badge } from "@/components/ui/badge";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Boxes,
   Database,
@@ -93,13 +97,7 @@ type FeaturesContent = {
   cards: FeatureCard[];
 };
 
-function TrioStage({
-  item,
-  index,
-}: {
-  item: TrioItem;
-  index: number;
-}) {
+function TrioStage({ item, index }: { item: TrioItem; index: number }) {
   const Icon = TRIO_ICONS[item.key] ?? Layers;
   const accent = TRIO_ACCENTS[index % TRIO_ACCENTS.length];
   const stepNum = String(index + 1).padStart(2, "0");
@@ -122,7 +120,7 @@ function TrioStage({
       <div className="relative flex h-full flex-col gap-5">
         <div className="flex items-start justify-between gap-4">
           <div
-            className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg}`}
+            className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg} transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
             aria-hidden="true"
           >
             <Icon className={`h-5 w-5 ${accent.icon}`} />
@@ -139,72 +137,62 @@ function TrioStage({
           <h4 className="font-heading text-2xl font-bold tracking-tight text-white">
             {item.name}
           </h4>
-          <p className="text-sm leading-7 text-white/58">
-            {item.description}
-          </p>
+          <p className="text-sm leading-7 text-white/58">{item.description}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function FeatureTile({
-  card,
-  index,
-}: {
-  card: FeatureCard;
-  index: number;
-}) {
+function FeatureTile({ card, index }: { card: FeatureCard; index: number }) {
   const Icon = ICONS[card.icon] ?? Layers;
   const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
   const stepNum = String(index + 1).padStart(2, "0");
-  const delayClass = index < 3 ? `animate-in-view-delay-${index + 1}` : "animate-in-view-delay-4";
+  const shouldReduce = useReducedMotion();
 
   return (
-    <AnimateInView className={`h-full ${delayClass}`}>
-      <article
-        className="group relative h-full overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(12,18,35,0.9)_0%,rgba(7,11,24,0.98)_100%)] p-6 transition-[border-color,box-shadow,background-color] duration-300"
+    <motion.article
+      className="group relative h-full overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(12,18,35,0.9)_0%,rgba(7,11,24,0.98)_100%)] p-6 transition-[border-color,box-shadow,background-color] duration-300"
+      style={{
+        borderColor: accent.border,
+        boxShadow: `0 28px 70px -52px ${accent.glow}`,
+      }}
+      whileHover={shouldReduce ? {} : { y: -4, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity duration-300 group-hover:opacity-[0.22]"
         style={{
-          borderColor: accent.border,
-          boxShadow: `0 28px 70px -52px ${accent.glow}`,
+          background: `radial-gradient(circle at 0% 0%, ${accent.glow} 0%, transparent 44%)`,
         }}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity duration-300 group-hover:opacity-[0.22]"
-          style={{
-            background: `radial-gradient(circle at 0% 0%, ${accent.glow} 0%, transparent 44%)`,
-          }}
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-x-6 bottom-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background: `linear-gradient(90deg, transparent 0%, ${accent.border} 50%, transparent 100%)`,
-          }}
-          aria-hidden="true"
-        />
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-6 bottom-0 h-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: `linear-gradient(90deg, transparent 0%, ${accent.border} 50%, transparent 100%)`,
+        }}
+        aria-hidden="true"
+      />
 
-        <div className="relative flex h-full flex-col gap-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg}`}>
-              <Icon className={`h-5 w-5 ${accent.iconColor}`} />
-            </div>
-            <span className={`font-heading text-5xl font-black leading-none ${accent.number}`}>
-              {stepNum}
-            </span>
+      <div className="relative flex h-full flex-col gap-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className={`flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/10 ${accent.iconBg} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+            <Icon className={`h-5 w-5 ${accent.iconColor}`} />
           </div>
-
-          <div className="space-y-3">
-            <h3 className="font-heading text-xl font-bold tracking-tight text-white">
-              {card.title}
-            </h3>
-            <p className="text-sm leading-7 text-white/58">
-              {card.description}
-            </p>
-          </div>
+          <span className={`font-heading text-5xl font-black leading-none ${accent.number}`}>
+            {stepNum}
+          </span>
         </div>
-      </article>
-    </AnimateInView>
+
+        <div className="space-y-3">
+          <h3 className="font-heading text-xl font-bold tracking-tight text-white">
+            {card.title}
+          </h3>
+          <p className="text-sm leading-7 text-white/58">{card.description}</p>
+        </div>
+      </div>
+    </motion.article>
   );
 }
 
@@ -257,19 +245,19 @@ export function Features({ content }: { content: FeaturesContent }) {
               {content.sectionTag}
             </Badge>
           </AnimateInView>
-          <AnimateInView className="animate-in-view-delay-1 mt-5">
+          <AnimateInView delay={1} className="mt-5">
             <h2 className="font-heading text-3xl font-bold tracking-[-0.04em] text-[var(--color-dark-neutral-1)] sm:text-4xl lg:text-5xl">
               {content.heading}
             </h2>
           </AnimateInView>
-          <AnimateInView className="animate-in-view-delay-2 mt-4">
+          <AnimateInView delay={2} className="mt-4">
             <p className="mx-auto max-w-2xl text-[var(--color-dark-neutral-2)]">
               {content.subheading}
             </p>
           </AnimateInView>
         </div>
 
-        <AnimateInView className="mt-16 animate-scale-in">
+        <AnimateInView variant="scaleIn" delay={3} className="mt-16">
           <div className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,11,24,0.9)_0%,rgba(4,8,19,0.98)_100%)] p-6 shadow-[0_40px_100px_-56px_rgba(2,6,23,0.78)] sm:p-8 lg:p-10">
             <div
               className="pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-[#60a5fa]/12 blur-3xl animate-float-subtle"
@@ -297,33 +285,35 @@ export function Features({ content }: { content: FeaturesContent }) {
                     {content.powerTrio.subheading}
                   </p>
                 </div>
+                {/* Architecture diagram */}
+                <ArchitectureDiagram className="mt-6 hidden lg:block" />
               </div>
 
               <div className="relative">
+                {/* Connection line between cards */}
                 <div
                   className="pointer-events-none absolute left-[12%] right-[12%] top-[3.25rem] hidden h-px bg-[linear-gradient(90deg,rgba(96,165,250,0.12)_0%,rgba(129,140,248,0.55)_46%,rgba(56,189,248,0.18)_100%)] animate-shimmer-slow lg:block"
                   aria-hidden="true"
                 />
-                <div className="grid gap-4 lg:auto-rows-fr lg:grid-cols-3 lg:items-stretch">
+                <StaggerContainer className="grid gap-4 lg:auto-rows-fr lg:grid-cols-3 lg:items-stretch" staggerDelay={0.12}>
                   {content.powerTrio.items.map((item, index) => (
-                    <AnimateInView
-                      key={item.key}
-                      className={`h-full ${index < 3 ? `animate-in-view-delay-${index + 1}` : "animate-in-view-delay-4"} animate-scale-in`}
-                    >
+                    <StaggerItem key={item.key} variant="scaleIn" className="h-full">
                       <TrioStage item={item} index={index} />
-                    </AnimateInView>
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerContainer>
               </div>
             </div>
           </div>
         </AnimateInView>
 
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <StaggerContainer className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" staggerDelay={0.1}>
           {content.cards.map((card, index) => (
-            <FeatureTile key={card.title} card={card} index={index} />
+            <StaggerItem key={card.title} variant="fadeUp" className="h-full">
+              <FeatureTile card={card} index={index} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

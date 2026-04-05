@@ -322,6 +322,19 @@ export class SpaSiteOverviewComponent implements OnChanges {
         }
     }
 
+    protected getSpotlightContextIconClasses(tone: OverviewStateTone): string {
+        switch (tone) {
+            case 'PRIMARY':
+                return 'spa-site-overview__spotlight-context-icon--primary';
+            case 'CRITICAL':
+                return 'spa-site-overview__spotlight-context-icon--critical';
+            case 'WARNING':
+                return 'spa-site-overview__spotlight-context-icon--warning';
+            default:
+                return 'spa-site-overview__spotlight-context-icon--neutral';
+        }
+    }
+
     protected getSpotlightProgressBarFillClasses(tone: OverviewStateTone): string {
         switch (tone) {
             case 'PRIMARY':
@@ -450,6 +463,10 @@ export class SpaSiteOverviewComponent implements OnChanges {
                 return this.#translate(
                     'admin.site.dashboard.overview.labels.security'
                 );
+            default: {
+                const _unreachable: never = id;
+                throw new Error(`Unhandled context card id: ${_unreachable}`);
+            }
         }
     }
 
@@ -526,6 +543,10 @@ export class SpaSiteOverviewComponent implements OnChanges {
                 return 'requireTwoFactor';
             case 'healthy':
                 return 'healthy';
+            default: {
+                const _unreachable: never = id;
+                throw new Error(`Unhandled recommendation id: ${_unreachable}`);
+            }
         }
     }
 
@@ -876,8 +897,8 @@ export class SpaSiteOverviewComponent implements OnChanges {
     }
 
     #localeTag(): string {
-        return this.#transloco.getActiveLang().toLowerCase().startsWith('tr')
-            ? 'tr-TR'
-            : 'en-US';
+        const localeMap: Record<string, string> = { tr: 'tr-TR', en: 'en-US' };
+        const lang = this.#transloco.getActiveLang().toLowerCase().split('-')[0];
+        return localeMap[lang] ?? 'en-US';
     }
 }

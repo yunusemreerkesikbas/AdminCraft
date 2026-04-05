@@ -74,6 +74,15 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
 
     private static final int DEFAULT_ACTIVITY_LIMIT = 10;
 
+    private static final int PROGRESS_DRAFT = 58;
+    private static final int PROGRESS_MAINTENANCE = 24;
+    private static final int PROGRESS_SEARCH_PARTIAL = 68;
+    private static final int PROGRESS_SEARCH_HIDDEN = 18;
+    private static final int PROGRESS_SECURITY_PARTIAL = 66;
+    private static final int PROGRESS_SECURITY_MINIMAL = 42;
+    private static final int SCORE_CRITICAL_THRESHOLD = 45;
+    private static final int SCORE_WARNING_THRESHOLD = 80;
+
     private final SiteRepository siteRepository;
     private final SiteActivityRepository siteActivityRepository;
     private final PageRepository pageRepository;
@@ -261,6 +270,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
             Site site,
             SiteTechnicalSettings technicalSettings,
             Tenant tenant) {
+        // Optimistic defaults: if no technical settings row exists, treat as fully enabled (green) until the site is configured.
         boolean indexingEnabled = technicalSettings == null || Boolean.TRUE.equals(technicalSettings.getIndexingEnabled());
         boolean sitemapEnabled = technicalSettings == null || Boolean.TRUE.equals(technicalSettings.getSitemapEnabled());
         boolean cookieConsentEnabled = technicalSettings != null
@@ -271,7 +281,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         return List.of(
                 new SpotlightContextCardAppDto(
                         "status",
-                        "heroicons_outline:shield-check",
+                        "heroicons_outline:globe-alt",
                         publishingProgress(state),
                         publishingTone(state),
                         resolvePublishingValueCode(state),
@@ -312,9 +322,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         boolean indexingEnabled = technicalSettings == null || Boolean.TRUE.equals(technicalSettings.getIndexingEnabled());
         boolean sitemapEnabled = technicalSettings == null || Boolean.TRUE.equals(technicalSettings.getSitemapEnabled());
         boolean twoFactorRequired = tenant != null && tenant.getTwoFactorPolicy() == TwoFactorPolicy.REQUIRED;
-        long publishedPages = stats.pages() != null ? stats.pages().published() : 0L;
-        long totalPages = stats.pages() != null ? stats.pages().total() : 0L;
-        long draftPages = Math.max(totalPages - publishedPages, 0L);
+        long draftPages = stats.pages() != null ? stats.pages().draft() : 0L;
 
         if (statusCard != null && "CRITICAL".equals(statusCard.tone())) {
             recommendations.add(new SpotlightRecommendationAppDto(
@@ -379,13 +387,13 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         boolean hasCritical = contextCards.stream().anyMatch(card -> "CRITICAL".equals(card.tone()));
         boolean hasWarning = contextCards.stream().anyMatch(card -> "WARNING".equals(card.tone()));
 
-        if (hasCritical || operationalScore < 45) {
+        if (hasCritical || operationalScore < SCORE_CRITICAL_THRESHOLD) {
             return new SpotlightStatusAppDto(
                     "CRITICAL",
                     "critical");
         }
 
-        if (hasWarning || operationalScore < 80) {
+        if (hasWarning || operationalScore < SCORE_WARNING_THRESHOLD) {
             return new SpotlightStatusAppDto(
                     "WARNING",
                     "attention");
@@ -418,8 +426,8 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
     private int publishingProgress(String state) {
         return switch (state) {
             case "published" -> 100;
-            case "draft" -> 58;
-            default -> 24;
+            case "draft" -> PROGRESS_DRAFT;
+            default -> PROGRESS_MAINTENANCE;
         };
     }
 
@@ -433,9 +441,9 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
 
     private int searchProgress(boolean indexingEnabled, boolean sitemapEnabled) {
         if (!indexingEnabled) {
-            return 18;
+            return PROGRESS_SEARCH_HIDDEN;
         }
-        return sitemapEnabled ? 100 : 68;
+        return sitemapEnabled ? 100 : PROGRESS_SEARCH_PARTIAL;
     }
 
     private String searchTone(boolean indexingEnabled, boolean sitemapEnabled) {
@@ -449,7 +457,7 @@ public class SiteOverviewServiceImpl implements SiteOverviewService {
         if (twoFactorRequired) {
             return 100;
         }
-        return cookieConsentEnabled ? 66 : 42;
+        return cookieConsentEnabled ? PROGRESS_SECURITY_PARTIAL : PROGRESS_SECURITY_MINIMAL;
     }
 
     private String securityTone(boolean twoFactorRequired) {

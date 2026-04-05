@@ -27,12 +27,6 @@
       "floatingCardValue": "Çok projeli yayına hazır"
     }
   },
-  "stats": [
-    { "value": "500+", "label": "Aktif Tenant" },
-    { "value": "12", "label": "Hazır Modül" },
-    { "value": "99.9%", "label": "Uptime SLA" },
-    { "value": "< 2dk", "label": "Kurulum Süresi" }
-  ],
   "techStack": {
     "label": "Teknolojilerimiz"
   },
@@ -214,31 +208,6 @@
         "icon": "Rocket",
         "title": "Production'a Alınır",
         "description": "Stage ortamında test edilen proje production'a taşınır. Craftive, deploy sürecini uçtan uca yönetir."
-      }
-    ]
-  },
-  "testimonials": {
-    "sectionTag": "Referanslar",
-    "heading": "Craftive hakkında müşterilerimiz ne diyor?",
-    "subheading": "Craftive ile fikirlerini özelleştirilebilir dijital çözümlere dönüştüren ekipler neler söylüyor?",
-    "items": [
-      {
-        "name": "Ayşe Kaya",
-        "role": "Kurucu Ortak, NovaMed Dijital",
-        "avatar": "/images/avatar-1.png",
-        "quote": "Craftive ile müşterilerimize artık saatler yerine dakikalar içinde canlı ortam teslim edebiliyoruz. Çok-tenant mimarisi müşteri verilerini tam anlamıyla izole tutuyor."
-      },
-      {
-        "name": "Mehmet Yılmaz",
-        "role": "CTO, RetailBridge",
-        "avatar": "/images/avatar-2.png",
-        "quote": "Headless REST API entegrasyonu sayesinde mevcut Next.js frontend'imizi Craftive'e bağladık. Geçiş bir hafta sürdü, performans %40 arttı."
-      },
-      {
-        "name": "Selin Arslan",
-        "role": "Dijital Dönüşüm Müdürü, Optima KOBİ",
-        "avatar": "/images/avatar-3.png",
-        "quote": "Tek deployment ile 12 müşterimizi yönetiyoruz. Bakım maliyetimiz yarıya indi, müşteri memnuniyeti ikiye katlandı."
       }
     ]
   },

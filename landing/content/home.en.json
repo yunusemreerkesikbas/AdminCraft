@@ -27,12 +27,6 @@
       "floatingCardValue": "Multi-project ready"
     }
   },
-  "stats": [
-    { "value": "500+", "label": "Active Tenants" },
-    { "value": "12", "label": "Ready Modules" },
-    { "value": "99.9%", "label": "Uptime SLA" },
-    { "value": "< 2min", "label": "Setup Time" }
-  ],
   "techStack": {
     "label": "Powered by"
   },
@@ -214,31 +208,6 @@
         "icon": "Rocket",
         "title": "Shipped to Production",
         "description": "After testing on staging, the project is promoted to production. Craftive manages the entire deployment process end to end."
-      }
-    ]
-  },
-  "testimonials": {
-    "sectionTag": "Testimonials",
-    "heading": "What customers say about Craftive",
-    "subheading": "Agencies, SMBs, and ecommerce firms share how they use Craftive in their projects.",
-    "items": [
-      {
-        "name": "Sarah Mitchell",
-        "role": "Co-Founder, NovaMed Digital",
-        "avatar": "/images/avatar-1.png",
-        "quote": "With Craftive, we can now deliver live environments to our clients in minutes instead of hours. The multi-tenant architecture keeps client data truly isolated."
-      },
-      {
-        "name": "James Reynolds",
-        "role": "CTO, RetailBridge",
-        "avatar": "/images/avatar-2.png",
-        "quote": "The headless REST API integration let us connect our existing Next.js frontend to Craftive in a week. Performance improved by 40%."
-      },
-      {
-        "name": "Lena Hoffmann",
-        "role": "Digital Transformation Lead, Optima SMB",
-        "avatar": "/images/avatar-3.png",
-        "quote": "We manage 12 clients with a single deployment. Our maintenance cost halved and customer satisfaction doubled."
       }
     ]
   },

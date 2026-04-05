@@ -654,14 +654,7 @@ public class SiteController {
                             .collect(Collectors.toList()));
         }
 
-        return SiteOverviewResponse.builder()
-                .id(dto.id())
-                .status(status)
-                .stats(stats)
-                .recentActivity(recentActivity)
-                .actions(actions)
-                .spotlight(spotlight)
-                .build();
+        return new SiteOverviewResponse(dto.id(), status, stats, recentActivity, actions, spotlight);
     }
 
     private SiteOverviewResponse.ActivityDto toActivityResponse(SiteOverviewAppDto.ActivityAppDto dto) {

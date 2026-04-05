@@ -163,7 +163,7 @@
                                     >
                                         <div
                                             class="spa-site-overview__spotlight-context-icon"
-                                            [ngClass]="item.tone === 'PRIMARY' ? 'spa-site-overview__spotlight-context-icon--primary' : item.tone === 'WARNING' ? 'spa-site-overview__spotlight-context-icon--warning' : item.tone === 'CRITICAL' ? 'spa-site-overview__spotlight-context-icon--critical' : 'spa-site-overview__spotlight-context-icon--neutral'"
+                                            [ngClass]="getSpotlightContextIconClasses(item.tone)"
                                         >
                                             <mat-icon aria-hidden="true" class="icon-size-4" [svgIcon]="item.icon"></mat-icon>
                                         </div>

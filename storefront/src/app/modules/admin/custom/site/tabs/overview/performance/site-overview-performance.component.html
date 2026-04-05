@@ -42,15 +42,7 @@
                             </div>
                             <span
                                 class="spa-site-overview__inspection-pill"
-                                [ngClass]="
-                                    metric.tone === 'critical'
-                                        ? 'spa-site-overview__inspection-pill--critical'
-                                        : metric.tone === 'warning'
-                                          ? 'spa-site-overview__inspection-pill--warning'
-                                          : metric.tone === 'primary'
-                                            ? 'spa-site-overview__inspection-pill--primary'
-                                            : 'spa-site-overview__inspection-pill--neutral'
-                                "
+                                [ngClass]="getInspectionPillClasses(metric.tone)"
                             >
                                 {{ metric.detail }}
                             </span>

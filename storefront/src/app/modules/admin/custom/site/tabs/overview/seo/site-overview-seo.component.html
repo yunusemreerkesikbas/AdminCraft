@@ -94,17 +94,9 @@
                             </div>
                             <span
                                 class="spa-site-overview__inspection-pill"
-                                [ngClass]="
-                                    item.tone === 'critical'
-                                        ? 'spa-site-overview__inspection-pill--critical'
-                                        : item.tone === 'warning'
-                                          ? 'spa-site-overview__inspection-pill--warning'
-                                          : item.tone === 'primary'
-                                            ? 'spa-site-overview__inspection-pill--primary'
-                                            : 'spa-site-overview__inspection-pill--neutral'
-                                "
+                                [ngClass]="getInspectionPillClasses(item.tone)"
                             >
-                                {{ item.tone === 'primary' ? ('admin.common.status.active' | transloco) : item.tone === 'critical' ? ('admin.common.error' | transloco) : item.tone === 'warning' ? ('admin.common.warning' | transloco) : ('admin.common.neutral' | transloco) }}
+                                {{ getStatusLabel(item.tone) }}
                             </span>
                         </div>
                     }

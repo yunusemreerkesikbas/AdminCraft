@@ -75,6 +75,19 @@ export class SpaSiteOverviewPerformanceComponent implements OnChanges {
         this.#rebuildViewModel();
     }
 
+    protected getInspectionPillClasses(tone: OverviewStateTone): string {
+        switch (tone) {
+            case 'critical':
+                return 'spa-site-overview__inspection-pill--critical';
+            case 'warning':
+                return 'spa-site-overview__inspection-pill--warning';
+            case 'primary':
+                return 'spa-site-overview__inspection-pill--primary';
+            default:
+                return 'spa-site-overview__inspection-pill--neutral';
+        }
+    }
+
     protected getContextIconClasses(tone: OverviewStateTone): string {
         switch (tone) {
             case 'primary':
@@ -406,8 +419,8 @@ export class SpaSiteOverviewPerformanceComponent implements OnChanges {
     }
 
     #localeTag(): string {
-        return this.#transloco.getActiveLang().toLowerCase().startsWith('tr')
-            ? 'tr-TR'
-            : 'en-US';
+        const localeMap: Record<string, string> = { tr: 'tr-TR', en: 'en-US' };
+        const lang = this.#transloco.getActiveLang().toLowerCase().split('-')[0];
+        return localeMap[lang] ?? 'en-US';
     }
 }

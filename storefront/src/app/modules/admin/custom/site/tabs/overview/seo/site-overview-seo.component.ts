@@ -107,6 +107,32 @@ export class SpaSiteOverviewSeoComponent implements OnChanges {
         window.open(this.vm.setupUrl, '_blank', 'noopener,noreferrer');
     }
 
+    protected getInspectionPillClasses(tone: OverviewStateTone): string {
+        switch (tone) {
+            case 'critical':
+                return 'spa-site-overview__inspection-pill--critical';
+            case 'warning':
+                return 'spa-site-overview__inspection-pill--warning';
+            case 'primary':
+                return 'spa-site-overview__inspection-pill--primary';
+            default:
+                return 'spa-site-overview__inspection-pill--neutral';
+        }
+    }
+
+    protected getStatusLabel(tone: OverviewStateTone): string {
+        switch (tone) {
+            case 'primary':
+                return this.#translate('admin.common.status.active');
+            case 'critical':
+                return this.#translate('admin.common.error');
+            case 'warning':
+                return this.#translate('admin.common.warning');
+            default:
+                return this.#translate('admin.common.neutral');
+        }
+    }
+
     protected getDeltaClasses(tone: OverviewDeltaTone): string {
         switch (tone) {
             case 'positive':
@@ -607,8 +633,8 @@ export class SpaSiteOverviewSeoComponent implements OnChanges {
     }
 
     #localeTag(): string {
-        return this.#transloco.getActiveLang().toLowerCase().startsWith('tr')
-            ? 'tr-TR'
-            : 'en-US';
+        const localeMap: Record<string, string> = { tr: 'tr-TR', en: 'en-US' };
+        const lang = this.#transloco.getActiveLang().toLowerCase().split('-')[0];
+        return localeMap[lang] ?? 'en-US';
     }
 }
