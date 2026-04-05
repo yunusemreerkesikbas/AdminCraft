@@ -100,7 +100,7 @@ New endpoints under `/api/sites`:
     "canPreview": true,
     "canEnableMaintenance": true,
     "canDisableMaintenance": false,
-    "previewUrl": "https://acme.craftive.io?preview=true"
+    "previewUrl": "https://acme.craftive.io"
   }
 }
 ```
@@ -217,6 +217,7 @@ Retention policy: 30 days (cleanup via scheduled job)
 `storefront/src/app/modules/admin/custom/site/`
 
 Maintenance mode notifications use the backend `ApiResponse.message` field for success/error messaging.
+Preview opens the tenant storefront host root in a new tab. The storefront then resolves the locale redirect from its own `defaultLanguage`.
 
 ### Structure
 

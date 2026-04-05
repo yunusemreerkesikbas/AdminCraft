@@ -44,3 +44,11 @@ export interface ModalAction {
     handler?: () => void;
     value?: any;
 }
+
+export const SPA_GENERIC_MODAL_DIALOG_OPTIONS = {
+    autoFocus: false,
+    panelClass: 'spa-generic-modal-panel',
+    backdropClass: 'spa-generic-modal-backdrop',
+    enterAnimationDuration: '240ms',
+    exitAnimationDuration: '180ms',
+} as const;

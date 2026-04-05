@@ -12,7 +12,8 @@ public record SiteOverviewAppDto(
     SiteStatusAppDto status,
     SiteStatsAppDto stats,
     List<ActivityAppDto> recentActivity,
-    ActionsAppDto actions) {
+    ActionsAppDto actions,
+    SpotlightAppDto spotlight) {
   public record SiteStatusAppDto(
       String state,
       LocalDateTime publishedAt,
@@ -63,6 +64,35 @@ public record SiteOverviewAppDto(
       boolean canEnableMaintenance,
       boolean canDisableMaintenance,
       String previewUrl) {
+  }
+
+  public record SpotlightAppDto(
+      int operationalScore,
+      SpotlightStatusAppDto status,
+      List<SpotlightContextCardAppDto> contextCards,
+      List<SpotlightRecommendationAppDto> recommendations) {
+  }
+
+  public record SpotlightStatusAppDto(
+      String tone,
+      String code) {
+  }
+
+  public record SpotlightContextCardAppDto(
+      String id,
+      String icon,
+      int progress,
+      String tone,
+      String valueCode,
+      String detailCode,
+      LocalDateTime detailDate) {
+  }
+
+  public record SpotlightRecommendationAppDto(
+      String id,
+      String icon,
+      String tone,
+      Long count) {
   }
 
   public record ActivityTrendAppDto(

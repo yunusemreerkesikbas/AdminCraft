@@ -14,6 +14,25 @@
     }
 }
 
+@keyframes spa-spotlight-score-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.55) translateY(8px);
+        filter: blur(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes spa-spotlight-progress-expand {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
 .spa-site-overview {
     &__analytics-shell {
         position: relative;
@@ -193,10 +212,48 @@
 
     &__insight-card {
         padding: 1.125rem;
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            border-color 180ms ease,
+            background-color 180ms ease;
+        animation: spa-site-overview-fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    &__insight-card:hover {
+        border-color: rgba(147, 197, 253, 0.95);
+        box-shadow: 0 22px 48px -34px rgba(37, 99, 235, 0.24);
+        background: rgba(255, 255, 255, 0.96);
+        transform: translateY(-2px);
+    }
+
+    &__insight-card:nth-child(2) {
+        animation-delay: 40ms;
+        animation-fill-mode: both;
+    }
+
+    &__insight-card:nth-child(3) {
+        animation-delay: 80ms;
+        animation-fill-mode: both;
+    }
+
+    &__insight-card:nth-child(4) {
+        animation-delay: 120ms;
+        animation-fill-mode: both;
     }
 
     &__insight-panel {
         padding: 1.125rem;
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            border-color 180ms ease;
+    }
+
+    &__insight-panel:hover {
+        border-color: rgba(191, 219, 254, 0.75);
+        box-shadow: 0 20px 44px -32px rgba(37, 99, 235, 0.18);
+        transform: translateY(-1px);
     }
 
     &__insight-empty {
@@ -215,6 +272,15 @@
         align-items: flex-start;
         gap: 1rem;
         padding: 0.9rem 1rem;
+        cursor: default;
+        transition:
+            background-color 160ms ease,
+            border-color 160ms ease;
+    }
+
+    &__inspection-row:hover {
+        background: rgba(239, 246, 255, 0.65);
+        border-color: rgba(191, 219, 254, 0.75);
     }
 
     &__inspection-pill {
@@ -260,6 +326,16 @@
         background:
             radial-gradient(circle at top, rgba(37, 99, 235, 0.06), transparent 46%),
             linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.96));
+        transition:
+            box-shadow 200ms ease,
+            border-color 200ms ease;
+    }
+
+    &__performance-score:hover {
+        border-color: rgba(147, 197, 253, 0.7);
+        box-shadow:
+            0 20px 44px -32px rgba(37, 99, 235, 0.22),
+            inset 0 0 0 1px rgba(147, 197, 253, 0.2);
     }
 
     &__performance-metric {
@@ -268,6 +344,16 @@
         justify-content: space-between;
         gap: 1rem;
         padding: 0.95rem 1rem;
+        transition:
+            background-color 160ms ease,
+            border-color 160ms ease,
+            transform 160ms ease;
+    }
+
+    &__performance-metric:hover {
+        background: rgba(248, 250, 252, 0.98);
+        border-color: rgba(191, 219, 254, 0.65);
+        transform: translateX(2px);
     }
 
     &__spotlight {
@@ -349,6 +435,7 @@
         letter-spacing: -0.06em;
         color: #fff;
         text-shadow: 0 10px 24px rgba(15, 23, 42, 0.28);
+        animation: spa-spotlight-score-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms both;
     }
 
     &__spotlight-score-chip {
@@ -577,7 +664,25 @@
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.04),
             0 10px 20px -22px rgba(15, 23, 42, 0.72);
+        animation: spa-site-overview-fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        transition:
+            transform 200ms ease,
+            box-shadow 200ms ease,
+            border-color 200ms ease,
+            background 200ms ease;
     }
+
+    &__spotlight-context-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 18px 36px -24px rgba(15, 23, 42, 0.72);
+    }
+
+    &__spotlight-context-card--primary:hover { border-color: rgba(125, 211, 252, 0.28); }
+    &__spotlight-context-card--warning:hover { border-color: rgba(251, 191, 36, 0.28); }
+    &__spotlight-context-card--critical:hover { border-color: rgba(251, 113, 133, 0.32); }
+    &__spotlight-context-card--neutral:hover { border-color: rgba(255, 255, 255, 0.18); }
 
     &__spotlight-context-label {
         font-size: 0.6rem;
@@ -682,6 +787,26 @@
         text-transform: uppercase;
     }
 
+    &__spotlight-progress-bar {
+        margin-top: 0.35rem;
+        height: 3px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    &__spotlight-progress-bar-fill {
+        height: 100%;
+        border-radius: 9999px;
+        transform-origin: left;
+        animation: spa-spotlight-progress-expand 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    &__spotlight-progress-bar-fill--primary { background: rgba(125, 211, 252, 0.8); }
+    &__spotlight-progress-bar-fill--warning { background: rgba(251, 191, 36, 0.75); }
+    &__spotlight-progress-bar-fill--critical { background: rgba(251, 113, 133, 0.75); }
+    &__spotlight-progress-bar-fill--neutral { background: rgba(255, 255, 255, 0.35); }
+
     &__spotlight-actions {
         display: grid;
         gap: 0.5rem;
@@ -719,6 +844,19 @@
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.04),
             0 12px 24px -24px rgba(15, 23, 42, 0.78);
+        cursor: default;
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            border-color 180ms ease;
+    }
+
+    &__spotlight-recommendation:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 16px 32px -24px rgba(15, 23, 42, 0.82);
     }
 
     &__spotlight-recommendation-icon {

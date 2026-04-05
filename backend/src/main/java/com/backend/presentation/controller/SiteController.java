@@ -624,13 +624,37 @@ public class SiteController {
                     dto.actions().previewUrl());
         }
 
-        return SiteOverviewResponse.builder()
-                .id(dto.id())
-                .status(status)
-                .stats(stats)
-                .recentActivity(recentActivity)
-                .actions(actions)
-                .build();
+        SiteOverviewResponse.SpotlightDto spotlight = null;
+        if (dto.spotlight() != null) {
+            SiteOverviewResponse.SpotlightStatusDto spotlightStatus = dto.spotlight().status() == null
+                    ? null
+                    : new SiteOverviewResponse.SpotlightStatusDto(
+                            dto.spotlight().status().tone(),
+                            dto.spotlight().status().code());
+
+            spotlight = new SiteOverviewResponse.SpotlightDto(
+                    dto.spotlight().operationalScore(),
+                    spotlightStatus,
+                    dto.spotlight().contextCards().stream()
+                            .map(card -> new SiteOverviewResponse.SpotlightContextCardDto(
+                                    card.id(),
+                                    card.icon(),
+                                    card.progress(),
+                                    card.tone(),
+                                    card.valueCode(),
+                                    card.detailCode(),
+                                    card.detailDate()))
+                            .collect(Collectors.toList()),
+                    dto.spotlight().recommendations().stream()
+                            .map(recommendation -> new SiteOverviewResponse.SpotlightRecommendationDto(
+                                    recommendation.id(),
+                                    recommendation.icon(),
+                                    recommendation.tone(),
+                                    recommendation.count()))
+                            .collect(Collectors.toList()));
+        }
+
+        return new SiteOverviewResponse(dto.id(), status, stats, recentActivity, actions, spotlight);
     }
 
     private SiteOverviewResponse.ActivityDto toActivityResponse(SiteOverviewAppDto.ActivityAppDto dto) {

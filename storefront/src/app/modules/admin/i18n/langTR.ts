@@ -137,6 +137,9 @@ export const langTR = {
                 tenant_admin: 'Müşteri Yöneticisi',
                 super_admin: 'Süper Yönetici',
             },
+            error: 'Hata',
+            warning: 'Uyarı',
+            neutral: 'Nötr',
             languages: {
                 tr: 'Türkçe',
                 en: 'İngilizce',
@@ -1163,6 +1166,12 @@ export const langTR = {
                         title: 'Google Analytics görünümü',
                         subtitle:
                             'Son 7 gün için tenant bazlı GA4 trafik özeti.',
+                        infoAction: '{{metric}} metrik detayını göster',
+                        infoSections: {
+                            summary: 'Ne gösterir?',
+                            source: 'Veri kaynağı',
+                            interpretation: 'Nasıl yorumlanır?',
+                        },
                         last7Days: 'Son 7 gün',
                         propertyId: 'GA4 mülk {{value}}',
                         connected: 'GA4 bağlı',
@@ -1177,18 +1186,54 @@ export const langTR = {
                             activeUsers: {
                                 label: 'Aktif Kullanıcılar',
                                 detail: 'Seçilen dönemde siteyle etkileşim kuran kullanıcılar',
+                                info: {
+                                    title: 'Aktif kullanıcılar hakkında',
+                                    summary:
+                                        'Seçilen 7 günlük aralıkta sitenizle anlamlı etkileşim kuran benzersiz kullanıcı sayısını gösterir.',
+                                    source:
+                                        'Veri, tenant için tanımlanan GA4 property üzerinden Google Analytics Data API ile alınır ve önceki 7 günle karşılaştırılır.',
+                                    interpretation:
+                                        'Yeni kullanıcı ve etkileşim oranı ile birlikte izleyin. Trafik artarken bu metrik sınırlı kalıyorsa edinim veya geri dönüş kalitesi zayıflıyor olabilir.',
+                                },
                             },
                             screenPageViews: {
                                 label: 'Görüntülenmeler',
                                 detail: 'GA4 tarafından kaydedilen toplam sayfa ve ekran görüntülemeleri',
+                                info: {
+                                    title: 'Görüntülenmeler hakkında',
+                                    summary:
+                                        'Toplam sayfa ve ekran görüntüleme sayısını gösterir. Aynı kullanıcı birden fazla görüntüleme üretebilir.',
+                                    source:
+                                        'Bu kart, tenant GA4 propertysindeki page_view ve screen_view sinyallerinin son 7 günlük toplamını kullanır.',
+                                    interpretation:
+                                        'Aktif kullanıcılarla birlikte artması içerik tüketiminin derinleştiğini gösterir. Tek başına ani artış, tekrar yükleme veya gezinme sorunlarını da işaret edebilir.',
+                                },
                             },
                             newUsers: {
                                 label: 'Yeni Kullanıcılar',
                                 detail: 'Seçilen dönemde ilk kez gelen ziyaretçiler',
+                                info: {
+                                    title: 'Yeni kullanıcılar hakkında',
+                                    summary:
+                                        'Bu dönemde sitenize ilk kez gelen kullanıcıları gösterir.',
+                                    source:
+                                        'Metrik, tenant GA4 property üzerinden raporlanır ve overview kartında önceki 7 günle birlikte sunulur.',
+                                    interpretation:
+                                        'Aktif kullanıcılarla beraber okuyun. Oran çok yüksekse geri dönüş zayıf olabilir, çok düşükse yeni edinim kanalları sınırlı kalıyor olabilir.',
+                                },
                             },
                             engagementRate: {
                                 label: 'Etkileşim Oranı',
                                 detail: 'Anlamlı etkileşim kuran oturumların oranı',
+                                info: {
+                                    title: 'Etkileşim oranı hakkında',
+                                    summary:
+                                        'Anlamlı etkileşim üreten oturumların toplam oturumlara oranını yüzde olarak gösterir.',
+                                    source:
+                                        'Metrik, GA4 engaged session mantığına dayanır ve tenant property için son 7 günlük rapordan üretilir.',
+                                    interpretation:
+                                        'Trafik artarken bu oran düşüyorsa landing deneyimi, içerik uygunluğu veya trafik kalitesi beklentiyi karşılamıyor olabilir.',
+                                },
                             },
                         },
                         states: {
@@ -1222,6 +1267,12 @@ export const langTR = {
                             title: 'SEO snapshot',
                             subtitle:
                                 'Search Console üzerinden son 28 gün görünürlük ve indeksleme sinyalleri.',
+                            infoAction: '{{metric}} metrik detayını göster',
+                            infoSections: {
+                                summary: 'Ne gösterir?',
+                                source: 'Veri kaynağı',
+                                interpretation: 'Nasıl yorumlanır?',
+                            },
                             last28Days: 'Son 28 gün',
                             trendEyebrow: 'Görünürlük trendi',
                             trendTitle: 'Tıklama ve gösterim akışı',
@@ -1229,18 +1280,54 @@ export const langTR = {
                                 clicks: {
                                     label: 'Tıklamalar',
                                     detail: 'Google Search üzerinden gelen toplam tıklama',
+                                    info: {
+                                        title: 'Tıklamalar hakkında',
+                                        summary:
+                                            'Son 28 günde kullanıcıların Google arama sonuçlarından sitenize kaç kez tıkladığını gösterir.',
+                                        source:
+                                            'Veri, tenant için tanımlanan Search Console propertysinden backend üzerinden alınır ve önceki dönemle karşılaştırılır.',
+                                        interpretation:
+                                            'Gösterim ve CTR ile birlikte izleyin. Gösterim artarken tıklama sınırlı kalıyorsa snippet kalitesi veya pozisyon iyileştirmesi gerekebilir.',
+                                    },
                                 },
                                 impressions: {
                                     label: 'Gösterimler',
                                     detail: 'Arama sonuçlarında görünme sayısı',
+                                    info: {
+                                        title: 'Gösterimler hakkında',
+                                        summary:
+                                            'Sitenizin Google arama sonuçlarında kaç kez göründüğünü gösterir.',
+                                        source:
+                                            'Search Console performans raporunun son 28 günlük tenant property verisi kullanılır.',
+                                        interpretation:
+                                            'Bu metrik öncü bir sinyaldir. Gösterimler tıklamalardan önce büyüyebilir; bu genelde daha fazla sorguda görünmeye başladığınız anlamına gelir.',
+                                    },
                                 },
                                 ctr: {
                                     label: 'CTR',
                                     detail: 'Tıklama oranı',
+                                    info: {
+                                        title: 'CTR hakkında',
+                                        summary:
+                                            'Gösterimlerin yüzde kaçının tıklamaya dönüştüğünü gösterir.',
+                                        source:
+                                            'CTR, aynı 28 günlük Search Console dönemindeki tıklama ve gösterim verilerinden türetilir.',
+                                        interpretation:
+                                            'Pozisyon güçlüyken CTR zayıfsa title veya meta description geliştirmesi gerekir. Pozisyon da zayıfsa önce sıralama kazanımına odaklanmak gerekir.',
+                                    },
                                 },
                                 position: {
                                     label: 'Ortalama Pozisyon',
                                     detail: 'Arama sonuçlarındaki ortalama sıralama',
+                                    info: {
+                                        title: 'Ortalama pozisyon hakkında',
+                                        summary:
+                                            'Sitenizin göründüğü sorgulardaki ortalama sıralama konumunu gösterir.',
+                                        source:
+                                            'Metrik, tenant Search Console propertysinden gelen average position değerine dayanır.',
+                                        interpretation:
+                                            'Bu metrikte düşük sayı daha iyidir. Değerleri gösterimlerle birlikte okuyun; sorgu karması değiştikçe ortalama pozisyon da kayabilir.',
+                                    },
                                 },
                             },
                             inspection: {

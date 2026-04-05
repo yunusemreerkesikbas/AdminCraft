@@ -4,7 +4,6 @@ import {
     OnDestroy,
     OnInit,
     computed,
-    ViewChild,
     ViewEncapsulation,
     inject,
     signal,
@@ -15,8 +14,10 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
+import { UrlValidator } from '@shared/utils/url-validator';
 import { UserService } from 'app/core/user/user.service';
-import { Subject, catchError, forkJoin, of, takeUntil } from 'rxjs';
+import { Subject, catchError, filter, forkJoin, of, switchMap, take, takeUntil } from 'rxjs';
 import { SiteService } from './site.service';
 import {
     SecuritySettingsResponse,
@@ -32,7 +33,7 @@ import {
     SiteSettingsResponseDto,
     SiteTechnicalResponse,
 } from './site.types';
-import { SpaSiteOverviewComponent } from './tabs/overview/site-overview.component';
+import { SpaSiteOverviewComponent } from './tabs/overview';
 import { SpaSiteSecurityComponent } from './tabs/security/site-security.component';
 import { SpaSiteSeoComponent } from './tabs/seo/site-seo.component';
 import { SpaSiteSettingsComponent } from './tabs/settings/site-settings.component';
@@ -64,7 +65,8 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     readonly #siteService = inject(SiteService);
     readonly #userService = inject(UserService);
     readonly #destroy$ = new Subject<void>();
-    #notificationService = inject(NotificationService);
+    readonly #confirmation = inject(ConfirmationService);
+    readonly #notificationService = inject(NotificationService);
 
     readonly userSig = this.#userService.user;
     readonly tabs = SITE_DASHBOARD_TABS;
@@ -91,9 +93,6 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     readonly tenantSig = this.#siteService.tenantSig;
     readonly modulesSig = this.#siteService.modulesSig;
     readonly loadingSig = signal<boolean>(true);
-
-    @ViewChild(SpaSiteOverviewComponent)
-    protected overviewComponent?: SpaSiteOverviewComponent;
 
     ngOnInit(): void {
         this.#loadData();
@@ -146,10 +145,12 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
 
     onTechnicalUpdated(technical: SiteTechnicalResponse): void {
         this.technicalSig.set(technical);
+        this.#loadOverview();
     }
 
     onSecurityUpdated(security: SecuritySettingsResponse): void {
         this.securitySig.set(security);
+        this.#loadOverview();
     }
 
     refreshOverview(): void {
@@ -182,15 +183,77 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
     }
 
     onHeroPreview(): void {
-        this.overviewComponent?.onPreview();
+        const previewUrl = this.overviewSig()?.actions?.previewUrl;
+        if (!previewUrl) {
+            return;
+        }
+
+        if (UrlValidator.isValidPreviewUrl(previewUrl)) {
+            window.open(previewUrl, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        this.#notificationService.alert(
+            'admin.site.dashboard.overview.actions.invalidPreviewUrl'
+        );
     }
 
     onHeroEnableMaintenance(): void {
-        this.overviewComponent?.onEnableMaintenance();
+        const overview = this.overviewSig();
+        if (!overview?.actions?.canEnableMaintenance || !overview.id) {
+            return;
+        }
+
+        this.#confirmation
+            .confirm(
+                'admin.site.dashboard.overview.confirmMaintenance.title',
+                'admin.site.dashboard.overview.confirmMaintenance.message',
+                'admin.site.dashboard.overview.actions.maintenance',
+                'warning'
+            )
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.enableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
+            });
     }
 
     onHeroDisableMaintenance(): void {
-        this.overviewComponent?.onDisableMaintenance();
+        const overview = this.overviewSig();
+        if (!overview?.actions?.canDisableMaintenance || !overview.id) {
+            return;
+        }
+
+        this.#confirmation
+            .confirm(
+                'admin.site.dashboard.overview.confirmDisableMaintenance.title',
+                'admin.site.dashboard.overview.confirmDisableMaintenance.message',
+                'admin.site.dashboard.overview.actions.disableMaintenance',
+                'info'
+            )
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.disableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
+            });
     }
 
     #loadData(): void {

@@ -1,0 +1,146 @@
+<section class="spa-site-overview__analytics-shell rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+    <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">
+                {{ 'admin.site.dashboard.overview.analytics.eyebrow' | transloco }}
+            </p>
+            <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">
+                {{ 'admin.site.dashboard.overview.analytics.title' | transloco }}
+            </h3>
+            <p class="mt-1 text-sm text-slate-500">
+                {{ 'admin.site.dashboard.overview.analytics.subtitle' | transloco }}
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--neutral">
+                {{ vm.lastSyncedLabel }}
+            </span>
+            @if (vm.propertyId) {
+                <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--primary">
+                    {{ 'admin.site.dashboard.overview.analytics.propertyId' | transloco: { value: vm.propertyId } }}
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (vm.isReady) {
+        <div class="spa-site-overview__analytics-ready mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+            <div class="grid gap-3 sm:grid-cols-2">
+                @for (card of vm.cards; track card.id) {
+                    <article class="spa-site-overview__analytics-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-200/70">
+                                <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
+                            </div>
+                            <span
+                                class="inline-flex min-h-7 items-center rounded-full px-2.5 py-1 text-[0.68rem] font-semibold"
+                                [ngClass]="getDeltaClasses(card.deltaTone)"
+                            >
+                                {{ card.deltaLabel }}
+                            </span>
+                        </div>
+
+                        <div class="mt-4 flex items-center gap-1.5">
+                            <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">
+                                {{ card.label }}
+                            </p>
+                            <button
+                                type="button"
+                                class="inline-flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                                [matTooltip]="'admin.site.dashboard.overview.analytics.infoAction' | transloco: { metric: card.label }"
+                                [attr.aria-label]="'admin.site.dashboard.overview.analytics.infoAction' | transloco: { metric: card.label }"
+                                (click)="openMetricInfo(card.id)"
+                            >
+                                <mat-icon class="icon-size-4" [svgIcon]="'heroicons_mini:information-circle'"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-[2.15rem] font-black leading-none tracking-[-0.06em] text-slate-950">
+                            {{ card.value }}
+                        </p>
+                        <p class="mt-2 text-xs text-slate-500">
+                            {{ card.detail }}
+                        </p>
+                    </article>
+                }
+            </div>
+
+            <div class="spa-site-overview__analytics-trend">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">
+                            {{ 'admin.site.dashboard.overview.analytics.trendEyebrow' | transloco }}
+                        </p>
+                        <h4 class="mt-1 text-lg font-black tracking-[-0.03em] text-slate-950">
+                            {{ 'admin.site.dashboard.overview.analytics.trendTitle' | transloco }}
+                        </h4>
+                    </div>
+                    <span class="spa-site-overview__analytics-pill spa-site-overview__analytics-pill--success">
+                        {{ 'admin.site.dashboard.overview.analytics.connected' | transloco }}
+                    </span>
+                </div>
+
+                @if (vm.hasTrend) {
+                    <div class="mt-4">
+                        <apx-chart
+                            class="block"
+                            [chart]="vm.chartOptions.chart"
+                            [colors]="vm.chartOptions.colors"
+                            [series]="vm.chartOptions.series"
+                            [stroke]="vm.chartOptions.stroke"
+                            [fill]="vm.chartOptions.fill"
+                            [xaxis]="vm.chartOptions.xaxis"
+                            [yaxis]="vm.chartOptions.yaxis"
+                            [dataLabels]="vm.chartOptions.dataLabels"
+                            [grid]="vm.chartOptions.grid"
+                            [tooltip]="vm.chartOptions.tooltip"
+                            [legend]="vm.chartOptions.legend"
+                        ></apx-chart>
+                    </div>
+                } @else {
+                    <div class="spa-site-overview__analytics-trend-empty mt-4 flex min-h-[15rem] flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                        <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+                        <p class="text-sm font-semibold">
+                            {{ 'admin.site.dashboard.overview.analytics.states.noData.title' | transloco }}
+                        </p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            {{ 'admin.site.dashboard.overview.analytics.states.noData.description' | transloco }}
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    } @else {
+        <div class="spa-site-overview__analytics-state">
+            <div
+                class="flex h-12 w-12 flex-none items-center justify-center rounded-[16px]"
+                [ngClass]="vm.stateTone === 'primary' ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-200/70' : vm.stateTone === 'warning' ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-200/70' : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200/80'"
+            >
+                <mat-icon class="icon-size-5" [svgIcon]="vm.stateIcon"></mat-icon>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p class="text-lg font-black tracking-[-0.03em] text-slate-950">
+                    {{ vm.stateTitle }}
+                </p>
+                <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                    {{ vm.stateDescription }}
+                </p>
+            </div>
+
+            @if (vm.stateActionLabel) {
+                <button
+                    type="button"
+                    mat-stroked-button
+                    class="spa-site-overview__analytics-setup-button"
+                    (click)="openSetup()"
+                >
+                    <span class="flex items-center gap-2">
+                        <mat-icon class="icon-size-4" svgIcon="heroicons_outline:wrench-screwdriver"></mat-icon>
+                        <span>{{ vm.stateActionLabel }}</span>
+                    </span>
+                </button>
+            }
+        </div>
+    }
+</section>

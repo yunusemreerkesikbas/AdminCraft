@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslocoService } from '@jsverse/transloco';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
+import { SPA_GENERIC_MODAL_DIALOG_OPTIONS } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -44,6 +45,7 @@ export class ConfirmationService {
 
         return this._dialog
             .open(SpaGenericModalComponent, {
+                ...SPA_GENERIC_MODAL_DIALOG_OPTIONS,
                 width: '500px',
                 maxHeight: '50vh',
                 data: dialogConfig,

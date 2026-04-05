@@ -142,6 +142,9 @@ export const langEN = {
                 tenant_admin: 'Tenant Admin',
                 super_admin: 'Super Admin',
             },
+            error: 'Error',
+            warning: 'Warning',
+            neutral: 'Neutral',
             languages: {
                 tr: 'Turkish',
                 en: 'English',
@@ -1186,6 +1189,12 @@ export const langEN = {
                         title: 'Google Analytics overview',
                         subtitle:
                             'A tenant-scoped GA4 pulse for the last 7 days.',
+                        infoAction: 'Show metric details for {{metric}}',
+                        infoSections: {
+                            summary: 'What it shows',
+                            source: 'Data source',
+                            interpretation: 'How to read it',
+                        },
                         last7Days: 'Last 7 days',
                         propertyId: 'GA4 property {{value}}',
                         connected: 'GA4 connected',
@@ -1200,18 +1209,54 @@ export const langEN = {
                             activeUsers: {
                                 label: 'Active Users',
                                 detail: 'Users who engaged with the site in the selected period',
+                                info: {
+                                    title: 'About active users',
+                                    summary:
+                                        'Shows the number of unique users who meaningfully engaged with your site during the selected 7-day window.',
+                                    source:
+                                        'The value is fetched from the tenant GA4 property through the Google Analytics Data API and compared with the previous 7 days.',
+                                    interpretation:
+                                        'Read it together with new users and engagement rate. If traffic grows while this metric barely moves, acquisition quality or retention may be weakening.',
+                                },
                             },
                             screenPageViews: {
                                 label: 'Views',
                                 detail: 'Total page and screen views captured by GA4',
+                                info: {
+                                    title: 'About views',
+                                    summary:
+                                        'Shows the total number of page and screen views. The same user can generate multiple views.',
+                                    source:
+                                        'This card uses the last 7-day total of page and screen view signals recorded in the tenant GA4 property.',
+                                    interpretation:
+                                        'Growth alongside active users usually means deeper content consumption. A sharp increase on its own can also point to refresh-heavy behavior or navigation issues.',
+                                },
                             },
                             newUsers: {
                                 label: 'New Users',
                                 detail: 'First-time visitors acquired in the selected period',
+                                info: {
+                                    title: 'About new users',
+                                    summary:
+                                        'Shows users who visited your site for the first time during this period.',
+                                    source:
+                                        'The metric comes from the tenant GA4 property and the overview compares it against the previous 7-day period.',
+                                    interpretation:
+                                        'Review it next to active users. A very high share can mean weak return usage, while a very low share can signal limited acquisition.',
+                                },
                             },
                             engagementRate: {
                                 label: 'Engagement Rate',
                                 detail: 'Share of sessions that stayed meaningfully engaged',
+                                info: {
+                                    title: 'About engagement rate',
+                                    summary:
+                                        'Shows the percentage of sessions that counted as engaged sessions out of all sessions.',
+                                    source:
+                                        'The calculation follows GA4 engaged-session rules and is reported from the tenant GA4 property for the last 7 days.',
+                                    interpretation:
+                                        'If traffic rises while this rate drops, the landing experience, content fit, or traffic quality may not be meeting user intent.',
+                                },
                             },
                         },
                         states: {
@@ -1245,6 +1290,12 @@ export const langEN = {
                             title: 'SEO snapshot',
                             subtitle:
                                 'Search Console visibility and indexing signals for the last 28 days.',
+                            infoAction: 'Show metric details for {{metric}}',
+                            infoSections: {
+                                summary: 'What it shows',
+                                source: 'Data source',
+                                interpretation: 'How to read it',
+                            },
                             last28Days: 'Last 28 days',
                             trendEyebrow: 'Visibility trend',
                             trendTitle: 'Clicks and impressions',
@@ -1252,18 +1303,54 @@ export const langEN = {
                                 clicks: {
                                     label: 'Clicks',
                                     detail: 'Total clicks coming from Google Search',
+                                    info: {
+                                        title: 'About clicks',
+                                        summary:
+                                            'Shows how many times users clicked through to your site from Google Search in the last 28 days.',
+                                        source:
+                                            'The value is fetched from the tenant Search Console property through the backend and compared with the previous period.',
+                                        interpretation:
+                                            'Track it together with impressions and CTR. If impressions rise but clicks do not, your snippets or rankings may need work.',
+                                    },
                                 },
                                 impressions: {
                                     label: 'Impressions',
                                     detail: 'Times the site appeared in search results',
+                                    info: {
+                                        title: 'About impressions',
+                                        summary:
+                                            'Shows how often your site appeared in Google search results.',
+                                        source:
+                                            'The overview uses the tenant Search Console performance report for the last 28 days.',
+                                        interpretation:
+                                            'This is an early signal. Impressions can grow before clicks when your pages begin ranking for more queries.',
+                                    },
                                 },
                                 ctr: {
                                     label: 'CTR',
                                     detail: 'Click-through rate',
+                                    info: {
+                                        title: 'About CTR',
+                                        summary:
+                                            'Shows what percentage of impressions turned into clicks.',
+                                        source:
+                                            'CTR is derived from clicks and impressions within the same 28-day Search Console window.',
+                                        interpretation:
+                                            'If position is strong but CTR is weak, title and meta copy may need improvement. If position is also weak, ranking gains usually matter first.',
+                                    },
                                 },
                                 position: {
                                     label: 'Average Position',
                                     detail: 'Average ranking in search results',
+                                    info: {
+                                        title: 'About average position',
+                                        summary:
+                                            'Shows the average ranking position across the queries where your site appeared.',
+                                        source:
+                                            'The metric comes from the average position value reported by the tenant Search Console property.',
+                                        interpretation:
+                                            'Lower is better. Read it with impressions because changes in query mix can move the average even when individual pages stay stable.',
+                                    },
                                 },
                             },
                             inspection: {

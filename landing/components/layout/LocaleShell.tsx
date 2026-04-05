@@ -4,6 +4,7 @@ import type { DemoRequestModalContent } from "@/content/home";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { DemoProvider, useDemoContext } from "@/components/layout/DemoContext";
+import { ScrollProgress } from "@/components/layout/ScrollProgress";
 
 type NavLabels = {
   home: string;
@@ -44,6 +45,7 @@ function ShellInner({
   const { openContact } = useDemoContext();
   return (
     <>
+      <ScrollProgress />
       <Navbar locale={locale} labels={navLabels} onDemoOpen={openContact} />
       <main className="min-h-screen bg-[var(--color-light-neutral-1)] text-[var(--color-dark-neutral-1)]">
         {children}

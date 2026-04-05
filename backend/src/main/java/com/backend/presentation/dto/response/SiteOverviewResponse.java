@@ -12,7 +12,8 @@ public record SiteOverviewResponse(
     SiteStatusDto status,
     SiteStatsDto stats,
     List<ActivityDto> recentActivity,
-    ActionsDto actions
+    ActionsDto actions,
+    SpotlightDto spotlight
 ) {
 
     public record SiteStatusDto(
@@ -67,6 +68,35 @@ public record SiteOverviewResponse(
         String previewUrl
     ) {}
 
+    public record SpotlightDto(
+        int operationalScore,
+        SpotlightStatusDto status,
+        List<SpotlightContextCardDto> contextCards,
+        List<SpotlightRecommendationDto> recommendations
+    ) {}
+
+    public record SpotlightStatusDto(
+        String tone,
+        String code
+    ) {}
+
+    public record SpotlightContextCardDto(
+        String id,
+        String icon,
+        int progress,
+        String tone,
+        String valueCode,
+        String detailCode,
+        LocalDateTime detailDate
+    ) {}
+
+    public record SpotlightRecommendationDto(
+        String id,
+        String icon,
+        String tone,
+        Long count
+    ) {}
+
     public record ActivityTrendResponse(
         String period,
         List<ActivityTrendDayResponse> days
@@ -79,48 +109,4 @@ public record SiteOverviewResponse(
         long updated,
         long published
     ) {}
-
-    /**
-     * Builder for creating SiteOverviewResponse.
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private Long id;
-        private SiteStatusDto status;
-        private SiteStatsDto stats;
-        private List<ActivityDto> recentActivity;
-        private ActionsDto actions;
-
-        public Builder id(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder status(SiteStatusDto status) {
-            this.status = status;
-            return this;
-        }
-
-        public Builder stats(SiteStatsDto stats) {
-            this.stats = stats;
-            return this;
-        }
-
-        public Builder recentActivity(List<ActivityDto> recentActivity) {
-            this.recentActivity = recentActivity;
-            return this;
-        }
-
-        public Builder actions(ActionsDto actions) {
-            this.actions = actions;
-            return this;
-        }
-
-        public SiteOverviewResponse build() {
-            return new SiteOverviewResponse(id, status, stats, recentActivity, actions);
-        }
-    }
 }

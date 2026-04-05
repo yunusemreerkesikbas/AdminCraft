@@ -22,7 +22,10 @@ import { SpaAdminGridComponent, GridAction, GridColumn } from '@shared/component
 import { SpaAdminPaginatorComponent } from '@shared/components/spa-admin-paginator/spa-admin-paginator.component';
 import { SpaAdminSortDropdownComponent } from '@shared/components/spa-admin-sort-dropdown/spa-admin-sort-dropdown.component';
 import { SpaGenericModalComponent } from '@shared/components/spa-generic-modal';
-import { ModalConfig } from '@shared/components/spa-generic-modal/spa-generic-modal.types';
+import {
+    ModalConfig,
+    SPA_GENERIC_MODAL_DIALOG_OPTIONS,
+} from '@shared/components/spa-generic-modal/spa-generic-modal.types';
 import { SpaStatusBadgeComponent } from '@shared/components/custom-ui/spa-status-badge/spa-status-badge.component';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
@@ -294,6 +297,7 @@ export class TenantsListComponent extends BasePaginatedListComponent<
                     };
 
                     const dialogRef = this.#dialog.open(SpaGenericModalComponent, {
+                        ...SPA_GENERIC_MODAL_DIALOG_OPTIONS,
                         data: modalConfig,
                         disableClose: true,
                         width: '600px',
