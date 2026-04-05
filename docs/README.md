@@ -22,6 +22,11 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Testing patterns: [`global/testing.md`](global/testing.md)
   - DevOps & deployment: [`global/devops.md`](global/devops.md)
 
+## Third-party integrations
+
+- Google Analytics 4 (GA4): [`3rd-party/google-analytics-ga4.md`](3rd-party/google-analytics-ga4.md)
+- Google Search Console + Chrome UX Report (CrUX): [`3rd-party/google-search-console-crux-seo-insights.md`](3rd-party/google-search-console-crux-seo-insights.md)
+
 ## Modules (admin APIs)
 
 Tenant modules are defined in [`backend/src/main/java/com/backend/domain/enums/ModuleCode.java`](../backend/src/main/java/com/backend/domain/enums/ModuleCode.java).
@@ -48,7 +53,7 @@ Legacy internal rows for those core dependencies are removed by platform repair 
 Platform features are not tenant modules, but they are critical for operating the system.
 
 - Tenants, provisioning, module enablement, migration sync: [`modules/platform-provisioning.md`](modules/platform-provisioning.md)
-- Platform Dashboard, Tenant Detail, Platform Settings: [`modules/platform-admin.md`](modules/platform-admin.md)
+- Platform Dashboard, Tenant Detail, Platform Settings, **landing demo requests (SUPER_ADMIN inbox)**: [`modules/platform-admin.md`](modules/platform-admin.md)
 - Platform newsletter + mail campaign flows (+ admin UI routes `/:lang/mail-marketing`, `/:lang/platform-mail`): [`modules/mail-marketing.md`](modules/mail-marketing.md)
 - Config Control Panel (`/config`) for reCAPTCHA recovery + global runtime overrides (email + platform reCAPTCHA keys): [`modules/config-control-panel.md`](modules/config-control-panel.md)
 
@@ -58,6 +63,11 @@ Public APIs are still tenant-scoped (resolved by tenant headers/hostname), but *
 
 - CMS delivery (`/api/cms/**`): [`modules/cms-delivery.md`](modules/cms-delivery.md)
 
+**Platform public (no tenant context)** — used by the marketing `landing/` site and CMS tooling, not tenant databases:
+
+- `GET /api/platform/cms/config` — public reCAPTCHA flags / site key (see [`modules/platform-admin.md`](modules/platform-admin.md))
+- `POST /api/platform/public/demo-requests` — landing contact/demo form ingest (same doc: **Landing demo requests**)
+
 ### Headless storefront (`storefront-nextjs/`)
 
 Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
@@ -65,22 +75,27 @@ Next.js 16 App Router demo/reference storefront consuming the CMS delivery APIs.
 - Storefront guide: [`storefront-nextjs/README.md`](storefront-nextjs/README.md)
 - This repository deploys the demo/reference storefront in stage and prod. Tenant storefronts fork this project and customize the theme layer while keeping the shared core CMS/runtime contract.
 - Homepage body and shared chrome are CMS-driven. `LandingPageTemplate` renders Sections 1–8 via the generic `CmsSlot → CmsComponent → registry` pipeline; each slot dispatches by `component.type` to a dedicated async RSC renderer. Shared `Header` / `Footer` slots use the chrome adapter layer.
+- Fresh tenant databases start with **empty CMS content tables** for theme-owned data. `page_templates`, `template_slots`, `pages`, `page_slots`, `components`, `slot_components`, and theme navigation/chrome content are populated manually via ImpEx after tenant creation.
 - Required tenant seed/import flow for the default landing page (ImpEx, manual via Admin UI `/{lang}/impex`):
-  - ImpEx: `impex/theme_liko_components.sql` → `impex/base_landing_component_types.sql` (type migration, must follow liko_components) → `impex/theme_liko_chrome_components.sql` → `impex/theme_liko_pages_and_slots.sql` → `impex/base_pages_and_slots.sql` → `impex/theme_liko_about_content_page.sql` (optional, ContentPageTemplate About page at `/about-us`) → `impex/theme_liko_navigation.sql`
+  - ImpEx: `impex/base/base_site_settings.sql` → `impex/base/base_media_formats.sql` → `impex/base/base_component_types.sql` → `impex/base/base_entry_field_definitions.sql` → `impex/base/base_product_types.sql` → `impex/theme/liko/liko_foundation.sql` → `[media upload]` → `impex/theme/liko/homepage.sql` → `impex/theme/liko/about_page.sql` (optional) → `impex/theme/liko/service_page.sql` (optional)
 - SSR by default; static export mode available via `NEXT_OUTPUT=export`
 - Locale routing is **tenant-driven**: supported languages and default language come from `GET /api/cms/site`; no hardcoded locale list in the app
 - UI chrome translations via `next-intl`; CMS content translations via `lang` API param
-- Multi-environment scripts: `npm run dev`, `npm run dev:stage`, `npm run build`, `npm run build:static`, `npm run start:stage`, etc.
+- Multi-environment scripts: `npm run start`, `npm run start:stage`, `npm run start:prod`, `npm run build`, `npm run build:stage`, `npm run serve`, etc.
 - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ### Marketing landing (`landing/`)
 
 Static Next.js landing project for `landing.craftive.io`.
 
+- **Demo / contact flow**: [`landing/components/modals/DemoRequestModal.tsx`](../landing/components/modals/DemoRequestModal.tsx) and API helpers [`landing/lib/platform-api.ts`](../landing/lib/platform-api.ts) call `GET /api/platform/cms/config` (reCAPTCHA) then `POST /api/platform/public/demo-requests` with action **`landing_demo_request`** when platform reCAPTCHA is enabled (`platform_settings` / config overrides). Payload: `fullName`, `email`, optional `phone` (same digit rules as platform phone validation), `message`, `locale`, optional `recaptchaToken`. Both requests send **`Accept-Language`** aligned with the page locale (`tr` / `en`) so `ApiResponse.message` and validation text resolve correctly. Success and error copy for submit are taken from the API (`message` plus optional `data.followUpNote` on success); the UI keeps only chrome labels and client-only fallbacks (network, missing env, reCAPTCHA script in the browser).
+- **Build-time env**: `NEXT_PUBLIC_CRAFTIVE_API_URL` = API origin **without** `/api` suffix (e.g. `http://localhost:8080`); see [`landing/.env.local.example`](../landing/.env.local.example). For Cloudflare Pages, set the same variable for the build. Backend CORS must list every **browser Origin** you use: the Cloudflare default (`https://<project>.pages.dev` and preview hosts `https://*.<project>.pages.dev`) is not the same origin as a custom domain (`https://craftive.io`, `https://landing.craftive.io`, etc.). Add each to `app.cors` for the target API profile (see `application-stage.yml` / `application-prod.yml`).
+- **Admin**: SUPER_ADMIN only — `GET /api/platform/demo-requests`, UI `/:lang/demo-requests` (see [`modules/platform-admin.md`](modules/platform-admin.md)).
 - Deploy target: Cloudflare Pages (static export, no SSR runtime dependency)
 - Output: `out/` directory
-- Domain: `landing.craftive.io` as primary custom domain
+- Domain: `landing.craftive.io` documented as the primary marketing hostname; you may attach `craftive.io` / `www.craftive.io` on Cloudflare Pages instead. The default Pages URL (`*.pages.dev`) still appears in the dashboard and for preview deployments—keep CORS in sync with whichever origins actually load the site.
 - Operational guide: [`global/devops.md`](global/devops.md)
+- Environment overview: [`global/environment-configuration.md`](global/environment-configuration.md)
 
 ## Cross-cutting features
 

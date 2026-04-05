@@ -28,6 +28,9 @@ export const getGoogleAnalyticsId = (): string | undefined =>
 export const getGtmId = (): string | undefined =>
   process.env.NEXT_PUBLIC_GTM_ID?.trim() || undefined;
 
+export const getGoogleSiteVerification = (): string | undefined =>
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+
 export const getTenantContext = (): TenantContext => {
   const tenantSubdomain = readFirstEnv(["TENANT_SUBDOMAIN", "NEXT_PUBLIC_TENANT_SUBDOMAIN"]);
   const tenantId = readFirstEnv(["TENANT_ID", "NEXT_PUBLIC_TENANT_ID"]);
@@ -47,11 +50,37 @@ export const getTenantContext = (): TenantContext => {
   }
 
   throw new Error(
-    "Tenant context is required. Set TENANT_SUBDOMAIN or TENANT_ID before starting the storefront.",
+    "Tenant context is required. Set TENANT_SUBDOMAIN, TENANT_ID, or TENANT_HOSTNAME_PATTERN before starting the storefront.",
   );
 };
 
 export const getTenantHeaders = (): Record<string, string> => {
   const tenantContext = getTenantContext();
   return { [tenantContext.headerName]: tenantContext.headerValue };
+};
+
+/**
+ * Async version that reads the tenant subdomain injected by proxy.ts via the
+ * `x-tenant-subdomain` request header (next/headers). Falls back to the static
+ * TENANT_SUBDOMAIN / TENANT_ID env vars for single-tenant deployments.
+ */
+export const getTenantHeadersAsync = async (): Promise<Record<string, string>> => {
+  try {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const subdomain = h.get("x-tenant-subdomain");
+    if (subdomain) {
+      return { "X-Tenant-Subdomain": subdomain };
+    }
+  } catch {
+    // Not in a server component context (e.g. proxy/middleware) — fall back to env
+  }
+  try {
+    return getTenantHeaders();
+  } catch {
+    // No tenant context resolvable — TENANT_HOSTNAME_PATTERN deployment at build time
+    // or outside a request context. Return empty and let the backend reject gracefully.
+    console.warn("[tenant] No tenant context available. Set TENANT_SUBDOMAIN for build-time fetches.");
+    return {};
+  }
 };

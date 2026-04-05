@@ -3,32 +3,40 @@ import {
     Component,
     OnDestroy,
     OnInit,
+    computed,
     ViewEncapsulation,
     inject,
     signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
+import { UrlValidator } from '@shared/utils/url-validator';
 import { UserService } from 'app/core/user/user.service';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { Subject, catchError, filter, forkJoin, of, switchMap, take, takeUntil } from 'rxjs';
 import { SiteService } from './site.service';
 import {
     SecuritySettingsResponse,
     SITE_DASHBOARD_TABS,
+    createSiteAnalyticsSummary,
+    createSiteInsightsSummary,
+    SiteAnalyticsSummaryResponse,
+    SiteInsightsSummaryResponse,
+    SiteActivityFeedResponse,
+    SiteActivityTrendResponse,
     SiteDashboardTab,
     SiteOverviewResponse,
     SiteSettingsResponseDto,
     SiteTechnicalResponse,
 } from './site.types';
-import { SpaSiteAddressComponent } from './tabs/address/site-address.component';
-import { SpaSiteGeneralComponent } from './tabs/general/site-general.component';
-import { SpaSiteOverviewComponent } from './tabs/overview/site-overview.component';
+import { SpaSiteOverviewComponent } from './tabs/overview';
 import { SpaSiteSecurityComponent } from './tabs/security/site-security.component';
 import { SpaSiteSeoComponent } from './tabs/seo/site-seo.component';
-import { SpaSiteSocialComponent } from './tabs/social/site-social.component';
+import { SpaSiteSettingsComponent } from './tabs/settings/site-settings.component';
 import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.component';
 
 @Component({
@@ -44,27 +52,44 @@ import { SpaSiteTechnicalComponent } from './tabs/technical/site-technical.compo
         MatTabsModule,
         TranslocoModule,
         SpaSiteOverviewComponent,
-        SpaSiteGeneralComponent,
-        SpaSiteAddressComponent,
-        SpaSiteSocialComponent,
+        SpaSiteSettingsComponent,
         SpaSiteSeoComponent,
         SpaSiteTechnicalComponent,
         SpaSiteSecurityComponent,
     ],
 })
 export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
+    readonly #defaultActivitySort = 'createdAt,desc';
+    readonly #defaultTrendSort = 'date,desc';
+    readonly #trendPageSize = 7;
     readonly #siteService = inject(SiteService);
     readonly #userService = inject(UserService);
     readonly #destroy$ = new Subject<void>();
-    #notificationService = inject(NotificationService);
+    readonly #confirmation = inject(ConfirmationService);
+    readonly #notificationService = inject(NotificationService);
 
     readonly userSig = this.#userService.user;
     readonly tabs = SITE_DASHBOARD_TABS;
     readonly selectedTabSig = signal<SiteDashboardTab>('overview');
     readonly overviewSig = signal<SiteOverviewResponse | null>(null);
+    readonly analyticsSig = signal<SiteAnalyticsSummaryResponse>(
+        createSiteAnalyticsSummary('ACCESS_ERROR')
+    );
+    readonly insightsSig = signal<SiteInsightsSummaryResponse>(
+        createSiteInsightsSummary('ACCESS_ERROR')
+    );
     readonly settingsSig = signal<SiteSettingsResponseDto | null>(null);
     readonly technicalSig = signal<SiteTechnicalResponse | null>(null);
     readonly securitySig = signal<SecuritySettingsResponse | null>(null);
+    readonly activityFeedSig = signal<SiteActivityFeedResponse | null>(null);
+    readonly trendSig = signal<SiteActivityTrendResponse | null>(null);
+    readonly activityFeedPageIndexSig = signal<number>(0);
+    readonly activityFeedPageSizeSig = signal<number>(10);
+    readonly trendPageIndexSig = signal<number>(0);
+    readonly activityFeedPageSizeOptions = [10, 20, 50];
+    readonly activityFeedTotalElementsSig = computed(
+        () => this.activityFeedSig()?.totalElements ?? 0
+    );
     readonly tenantSig = this.#siteService.tenantSig;
     readonly modulesSig = this.#siteService.modulesSig;
     readonly loadingSig = signal<boolean>(true);
@@ -97,20 +122,16 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     this.#loadOverview();
                 }
                 break;
-            case 'general':
-            case 'address':
-            case 'social':
+            case 'settings':
             case 'seo':
                 if (!this.settingsSig()) {
                     this.#loadSettings();
                 }
                 break;
-            case 'technical':
+            case 'advanced':
                 if (!this.technicalSig()) {
                     this.#loadTechnical();
                 }
-                break;
-            case 'security':
                 if (!this.securitySig()) {
                     this.#loadSecurity();
                 }
@@ -124,14 +145,115 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
 
     onTechnicalUpdated(technical: SiteTechnicalResponse): void {
         this.technicalSig.set(technical);
+        this.#loadOverview();
     }
 
     onSecurityUpdated(security: SecuritySettingsResponse): void {
         this.securitySig.set(security);
+        this.#loadOverview();
     }
 
     refreshOverview(): void {
         this.#loadOverview();
+        this.#loadAnalytics();
+        this.#loadInsights();
+        this.#loadActivityFeed();
+        this.#loadTrend();
+    }
+
+    onActivityFeedPageChange(event: PageEvent): void {
+        this.activityFeedPageIndexSig.set(event.pageIndex);
+        this.activityFeedPageSizeSig.set(event.pageSize);
+        this.#loadActivityFeed();
+    }
+
+    onTrendPageChange(direction: 'previous' | 'next'): void {
+        const currentPageIndex = this.trendPageIndexSig();
+        const totalPages = this.trendSig()?.totalPages ?? 0;
+
+        if (direction === 'previous' && currentPageIndex + 1 < totalPages) {
+            this.trendPageIndexSig.set(currentPageIndex + 1);
+            this.#loadTrend();
+        }
+
+        if (direction === 'next' && currentPageIndex > 0) {
+            this.trendPageIndexSig.set(currentPageIndex - 1);
+            this.#loadTrend();
+        }
+    }
+
+    onHeroPreview(): void {
+        const previewUrl = this.overviewSig()?.actions?.previewUrl;
+        if (!previewUrl) {
+            return;
+        }
+
+        if (UrlValidator.isValidPreviewUrl(previewUrl)) {
+            window.open(previewUrl, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        this.#notificationService.alert(
+            'admin.site.dashboard.overview.actions.invalidPreviewUrl'
+        );
+    }
+
+    onHeroEnableMaintenance(): void {
+        const overview = this.overviewSig();
+        if (!overview?.actions?.canEnableMaintenance || !overview.id) {
+            return;
+        }
+
+        this.#confirmation
+            .confirm(
+                'admin.site.dashboard.overview.confirmMaintenance.title',
+                'admin.site.dashboard.overview.confirmMaintenance.message',
+                'admin.site.dashboard.overview.actions.maintenance',
+                'warning'
+            )
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.enableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
+            });
+    }
+
+    onHeroDisableMaintenance(): void {
+        const overview = this.overviewSig();
+        if (!overview?.actions?.canDisableMaintenance || !overview.id) {
+            return;
+        }
+
+        this.#confirmation
+            .confirm(
+                'admin.site.dashboard.overview.confirmDisableMaintenance.title',
+                'admin.site.dashboard.overview.confirmDisableMaintenance.message',
+                'admin.site.dashboard.overview.actions.disableMaintenance',
+                'info'
+            )
+            .pipe(
+                take(1),
+                filter((confirmed) => confirmed),
+                switchMap(() => this.#siteService.disableMaintenanceMode(overview.id).pipe(take(1)))
+            )
+            .subscribe({
+                next: (response) => {
+                    this.#notificationService.success(response.message);
+                    this.refreshOverview();
+                },
+                error: (error) => {
+                    this.#notificationService.alert(error?.error?.message);
+                },
+            });
     }
 
     #loadData(): void {
@@ -139,17 +261,60 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
 
         forkJoin({
             overview: this.#siteService.getOverview(),
+            analytics: this.#siteService
+                .getAnalyticsSummary()
+                .pipe(
+                    catchError(() =>
+                        of(createSiteAnalyticsSummary('ACCESS_ERROR'))
+                    )
+                ),
+            insights: this.#siteService
+                .getInsightsSummary()
+                .pipe(
+                    catchError(() =>
+                        of(createSiteInsightsSummary('ACCESS_ERROR'))
+                    )
+                ),
             settings: this.#siteService.getSiteSettings(),
             technical: this.#siteService.getTechnicalSettings(),
             security: this.#siteService.getSecuritySettings(),
+            activityFeed: this.#siteService
+                .getActivityFeed(this.#getActivityFeedRequest())
+                .pipe(catchError(() => of(null))),
+            trend: this.#siteService
+                .getActivityTrend(this.#getTrendRequest())
+                .pipe(catchError(() => of(null))),
+            tenant: this.#siteService
+                .getTenantDetail()
+                .pipe(catchError(() => of(null))),
+            modules: this.#siteService
+                .getTenantModules()
+                .pipe(catchError(() => of([]))),
         })
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
-                next: ({ overview, settings, technical, security }) => {
+                next: ({
+                    overview,
+                    analytics,
+                    insights,
+                    settings,
+                    technical,
+                    security,
+                    activityFeed,
+                    trend,
+                    tenant,
+                    modules,
+                }) => {
                     this.overviewSig.set(overview);
+                    this.analyticsSig.set(analytics);
+                    this.insightsSig.set(insights);
                     this.settingsSig.set(settings);
                     this.technicalSig.set(technical);
                     this.securitySig.set(security);
+                    this.activityFeedSig.set(activityFeed);
+                    this.trendSig.set(trend);
+                    this.tenantSig.set(tenant);
+                    this.modulesSig.set(modules);
                     this.loadingSig.set(false);
                 },
                 error: (err) => {
@@ -159,6 +324,94 @@ export class SpaSiteDashboardComponent implements OnInit, OnDestroy {
                     );
                 },
             });
+    }
+
+    #loadAnalytics(): void {
+        this.#siteService
+            .getAnalyticsSummary()
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe({
+                next: (data) => {
+                    this.analyticsSig.set(data);
+                },
+                error: () => {
+                    this.analyticsSig.set(
+                        createSiteAnalyticsSummary('ACCESS_ERROR')
+                    );
+                },
+            });
+    }
+
+    #loadInsights(): void {
+        this.#siteService
+            .getInsightsSummary()
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe({
+                next: (data) => {
+                    this.insightsSig.set(data);
+                },
+                error: () => {
+                    this.insightsSig.set(
+                        createSiteInsightsSummary('ACCESS_ERROR')
+                    );
+                },
+            });
+    }
+
+    #loadActivityFeed(): void {
+        this.#siteService
+            .getActivityFeed(this.#getActivityFeedRequest())
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe({
+                next: (data) => {
+                    this.activityFeedSig.set(data);
+                },
+                error: () => {
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
+                },
+            });
+    }
+
+    #loadTrend(): void {
+        this.#siteService
+            .getActivityTrend(this.#getTrendRequest())
+            .pipe(takeUntil(this.#destroy$))
+            .subscribe({
+                next: (data) => {
+                    this.trendSig.set(data);
+                },
+                error: () => {
+                    this.#notificationService.alert(
+                        'admin.site.dashboard.messages.loadFailed'
+                    );
+                },
+            });
+    }
+
+    #getActivityFeedRequest(): {
+        page: number;
+        size: number;
+        sort: string;
+    } {
+        return {
+            page: this.activityFeedPageIndexSig(),
+            size: this.activityFeedPageSizeSig(),
+            sort: this.#defaultActivitySort,
+        };
+    }
+
+    #getTrendRequest(): {
+        page: number;
+        size: number;
+        sort: string;
+    } {
+        return {
+            page: this.trendPageIndexSig(),
+            size: this.#trendPageSize,
+            sort: this.#defaultTrendSort,
+        };
     }
 
     #loadOverview(): void {

@@ -8,14 +8,16 @@ services:
     environment:
       SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
       SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
+      APP_SEO_CRUX_API_KEY: ${APP_SEO_CRUX_API_KEY}
     labels:
-      traefik.http.routers.backend.rule: "Host(`s1.api.${DOMAIN}`)"
+      traefik.http.routers.backend.rule: "Host(`s1-api.${DOMAIN}`)"
+      traefik.http.routers.backend-public-demo.rule: "Host(`s1-api.${DOMAIN}`) && PathPrefix(`/api/platform/public/demo-requests`)"
 
   frontend:
     labels:
-      traefik.http.routers.frontend.rule: "Host(`s1.app.${DOMAIN}`)"
-      traefik.http.routers.root-redirect.rule: "Host(`s1.${DOMAIN}`) || Host(`www.s1.${DOMAIN}`)"
-      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://s1.app.${DOMAIN}"
+      traefik.http.routers.frontend.rule: "Host(`s1-app.${DOMAIN}`)"
+      traefik.http.routers.root-redirect.rule: "Host(`s1.${DOMAIN}`)"
+      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://s1-app.${DOMAIN}"
 
   storefront:
     image: ghcr.io/${GHCR_ORG}/craftive-storefront:${APP_VERSION:-latest}
@@ -31,19 +33,20 @@ services:
       - backend
     environment:
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      TENANT_SUBDOMAIN: ${STOREFRONT_TENANT_SUBDOMAIN:-demo}
+      TENANT_HOSTNAME: ${STOREFRONT_TENANT_HOSTNAME:-}
+      NEXT_PUBLIC_CMS_API_URL: ${STOREFRONT_CMS_API_URL:-https://s1-api.craftive.io/api}
     networks:
       - craftive-network
     labels:
       - "traefik.enable=true"
-      # Matches stage tenant domains in s1-<tenant>.domain format; excludes stage API and admin panel hosts.
-      - "traefik.http.routers.storefront.rule=HostRegexp(`s1-{subdomain:[a-z0-9-]+}.${DOMAIN}`) && !Host(`s1.api.${DOMAIN}`) && !Host(`s1.app.${DOMAIN}`)"
-      - "traefik.http.routers.storefront.ruleSyntax=v2"
-      - "traefik.http.routers.storefront.priority=1"
+      - "traefik.http.routers.storefront.rule=Host(`s1-${STOREFRONT_TENANT_SUBDOMAIN:-demo}.${DOMAIN}`)"
       - "traefik.http.routers.storefront.entrypoints=websecure"
       - "traefik.http.routers.storefront.tls.certresolver=letsencrypt"
       - "traefik.http.services.storefront.loadbalancer.server.port=3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3

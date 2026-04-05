@@ -45,11 +45,11 @@ export class AuthService {
     }
 
     #setAccessToken(token: string): void {
-        localStorage.setItem('accessToken', token);
+        sessionStorage.setItem('accessToken', token);
     }
 
     #getAccessToken(): string {
-        return localStorage.getItem('accessToken') ?? '';
+        return sessionStorage.getItem('accessToken') ?? '';
     }
 
     getAccessToken(): string {
@@ -161,10 +161,6 @@ export class AuthService {
         deviceFingerprint?: string;
         recaptchaToken?: string;
     }): Observable<boolean | 'requires2FA'> {
-        if (this.#authenticatedSig()) {
-            this.#notificationService.alert('User is already logged in.');
-            return of(false);
-        }
         return this.#apiClient.post<LoginResponse>('login', credentials).pipe(
             switchMap((response) => {
                 if (response.result === 'SUCCESS' && response.data) {
@@ -280,7 +276,7 @@ export class AuthService {
                     this.#authenticatedSig.set(true);
                     const storedName = (() => {
                         try {
-                            return localStorage.getItem('userFullName');
+                            return sessionStorage.getItem('userFullName');
                         } catch {
                             return null;
                         }
@@ -311,7 +307,7 @@ export class AuthService {
     }
 
     signOut(): Observable<any> {
-        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
         this.#clearUserAndTenantInfo();
         this.#authenticatedSig.set(false);
         this.#userService.clear();
@@ -351,28 +347,28 @@ export class AuthService {
     #storeUserAndTenantInfo(data: LoginResponseData): void {
         try {
             if (data.userId) {
-                localStorage.setItem('userId', data.userId.toString());
+                sessionStorage.setItem('userId', data.userId.toString());
             }
             if (data.tenantId) {
-                localStorage.setItem('tenantId', data.tenantId.toString());
+                sessionStorage.setItem('tenantId', data.tenantId.toString());
             }
             if (data.subdomain) {
                 const subdomain = data.subdomain;
-                localStorage.setItem('currentTenantSubdomain', subdomain);
+                sessionStorage.setItem('currentTenantSubdomain', subdomain);
             }
             const displayName = this.#getDisplayName(data.fullName);
             if (displayName) {
-                localStorage.setItem('userFullName', displayName);
+                sessionStorage.setItem('userFullName', displayName);
             }
         } catch (error) {}
     }
 
     #clearUserAndTenantInfo(): void {
         try {
-            localStorage.removeItem('userId');
-            localStorage.removeItem('tenantId');
-            localStorage.removeItem('currentTenantSubdomain');
-            localStorage.removeItem('userFullName');
+            sessionStorage.removeItem('userId');
+            sessionStorage.removeItem('tenantId');
+            sessionStorage.removeItem('currentTenantSubdomain');
+            sessionStorage.removeItem('userFullName');
         } catch (error) {}
     }
 }

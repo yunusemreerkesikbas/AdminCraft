@@ -4,6 +4,25 @@ import { fetchCmsJson } from "./lib/core/http/fetch-json";
 import { resolveCmsEndpoint } from "./lib/core/http/endpoints";
 import { isValidLocaleFormat } from "./lib/core/i18n/locale";
 
+/**
+ * Resolves the tenant subdomain for the incoming request.
+ *
+ * Reads TENANT_SUBDOMAIN env var (set per deployment).
+ * If TENANT_HOSTNAME is also set, validates that the incoming hostname matches — returns
+ * null (→ 404) when it doesn't, preventing cross-tenant responses.
+ */
+function resolveTenantSubdomain(hostname: string): string | null {
+  const subdomain = process.env.TENANT_SUBDOMAIN?.trim();
+  if (!subdomain) return null;
+
+  const expectedHostname = process.env.TENANT_HOSTNAME?.trim().toLowerCase();
+  if (expectedHostname && hostname.toLowerCase() !== expectedHostname) {
+    return null;
+  }
+
+  return subdomain;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -16,6 +35,12 @@ export async function proxy(request: NextRequest) {
     pathname === "/sitemap.xml"
   ) {
     return NextResponse.next();
+  }
+
+  // Resolve tenant subdomain from hostname (dynamic) or env var (static).
+  const subdomain = resolveTenantSubdomain(request.nextUrl.hostname);
+  if (!subdomain) {
+    return new NextResponse(null, { status: 404 });
   }
 
   const segments = pathname.split("/").filter(Boolean);
@@ -36,14 +61,16 @@ export async function proxy(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-lang", locale);
     requestHeaders.set("x-next-intl-locale", locale);
+    requestHeaders.set("x-tenant-subdomain", subdomain);
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   try {
+    // Pass tenant header explicitly — next/headers is not available in proxy context.
     const site = await fetchCmsJson<{ maintenanceMode?: boolean }>(
       resolveCmsEndpoint("cmsSite"),
       undefined,
-      { cache: "no-store" },
+      { cache: "no-store", extraHeaders: { "X-Tenant-Subdomain": subdomain } },
     );
 
     if (site?.maintenanceMode) {
@@ -59,10 +86,11 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-lang", locale);
   requestHeaders.set("x-next-intl-locale", locale);
+  requestHeaders.set("x-tenant-subdomain", subdomain);
 
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
-export const proxyConfig = {
+export const config = {
   matcher: ["/((?!_next/static|_next/image|api/|cms-media/|favicon.ico|robots.txt|sitemap.xml).*)"],
 };

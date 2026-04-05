@@ -4,7 +4,7 @@
 
 Craftive runs two isolated environments on DigitalOcean (Frankfurt, FRA1).
 Each environment has its own Droplet, Traefik reverse proxy, and Docker Compose project.
-Prod uses Cloudflare proxy (orange cloud) for CDN/DDoS protection; Stage uses DNS-only (grey cloud) due to multi-level subdomain SSL limitations (see Gotchas).
+Both prod and stage use Cloudflare proxy (orange cloud). Stage uses the single-level `s1-*` subdomain convention so Cloudflare Universal SSL covers all stage services (see Gotchas).
 
 **Platform services** (managed by Craftive): Backend API + Admin Panel.
 **Tenant storefront** (`storefront-nextjs/`): Deployable boilerplate. Each tenant storefront can be deployed independently from its own repository onto the same environment droplet with isolated routing.
@@ -51,7 +51,7 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 - **Ports 3306, 8080, 3000 are never externally reachable.** UFW allows only 22, 80, 443.
 - **Wildcard SSL (`*.craftive.io`) requires DNS-01.** HTTP-01 cannot issue wildcard certs; Cloudflare is the DNS provider.
 - **Cloudflare SSL mode must be Full (strict) for prod.** Flexible mode breaks backend TLS validation. Stage DNS records use DNS-only (grey cloud) — Traefik serves Let's Encrypt certs directly.
-- **Stage multi-level subdomains must be DNS-only.** Cloudflare Universal SSL covers `*.craftive.io` but NOT `s1.app.craftive.io` or `s1.api.craftive.io` (two levels deep). Proxied mode causes `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Prod subdomains are single-level (`app.craftive.io`) and work with Cloudflare proxy.
+- **Stage subdomains use single-level `s1-*` convention.** Cloudflare Universal SSL covers `*.craftive.io` (single level only). Stage services use `s1-api`, `s1-app`, `s1-cdn` (hyphen, single-level) so Cloudflare proxy (orange cloud) works. Old two-level patterns (`s1.api`, `s1.app`) caused `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` and required DNS-only mode.
 - **Backend requires `spring-boot-starter-actuator`.** Health checks depend on `/api/actuator/health`. Without this dependency, all health checks fail and Traefik marks the backend as unhealthy.
 - **Mail health indicator must be disabled** (`management.health.mail.enabled: false`). DigitalOcean blocks outbound SMTP port 587 by default; the mail health check causes a 132s timeout that keeps the backend permanently unhealthy.
 - **CORS is profile-driven, not hardcoded.** `allowedOrigins` and `allowedOriginPatterns` come from `CorsProperties` bound to `application-{env}.yml`; `SecurityConfig` must not contain hardcoded origin strings.
@@ -71,16 +71,16 @@ Prelaunch secret/config readiness checklist: [`../prelaunch.md`](../prelaunch.md
 |-----|---------|-----|------------|
 | Dev | Backend API | `http://localhost:8080/api` | — |
 | Dev | Admin Panel | `http://localhost:4200` | — |
-| Stage | Backend API | `https://s1.api.craftive.io/api` | DNS only |
-| Stage | Admin Panel | `https://s1.app.craftive.io` | DNS only |
-| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | DNS only |
+| Stage | Backend API | `https://s1-api.craftive.io/api` | Proxied |
+| Stage | Admin Panel | `https://s1-app.craftive.io` | Proxied |
+| Stage | Tenant storefront | `https://s1-{tenant}.craftive.io` | Proxied |
 | Prod | Backend API | `https://api.craftive.io/api` | Proxied |
 | Prod | Admin Panel | `https://app.craftive.io` | Proxied |
 | Prod | Tenant storefront | `https://{tenant}.craftive.io` | Proxied |
 
 `craftive.io` and `www.craftive.io` redirect to `app.craftive.io` via Traefik `redirectregex` middleware.
 
-> **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1.api.craftive.io/api`, not `https://s1.api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
+> **Note:** Frontend `apiBaseUrl` must include the `/api` context-path suffix (e.g. `https://s1-api.craftive.io/api`, not `https://s1-api.craftive.io`). Without it, requests bypass Spring's DispatcherServlet and CORS headers are not applied.
 
 ### GHCR image names and tags
 
@@ -173,6 +173,8 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
    - `release/release-27.02.2026` → `release-27.02.2026`
 4. Build 3 images (backend, frontend, storefront), push to GHCR
 5. SSH to Stage Droplet → GHCR login → decode `ENV_STAGE` secret → pull images → `docker compose up -d --force-recreate` → write tag to `.last-deployed-tag`
+
+> **Compose file sync:** The deploy job checks out the branch and copies `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.stage.yml` to the droplet via `scp-action` before deploying. This ensures Traefik routing rules and service definitions are always in sync with the repository — no manual `deploy-files.sh` needed for compose changes.
 6. Health check via SSH: `docker exec craftive-backend wget -qO- http://localhost:8080/api/actuator/health` → `{"status":"UP"}` (20 attempts, 15s interval, 10min timeout)
 7. On failure: automatic rollback — SSH back, redeploy previous tag from `.last-deployed-tag.prev`
 
@@ -187,7 +189,7 @@ master     →  release/release-DD.MM.YYYY  (release branch cut)
 2. Smoke test on stage:
      deploy-stage.yml → branch: release/release-DD.MM.YYYY
 
-3. Manual verification on https://s1.api.craftive.io
+3. Manual verification on https://s1-api.craftive.io/api/actuator/health
 
 4. Production deploy:
      deploy-prod.yml → branch: release/release-DD.MM.YYYY
@@ -251,7 +253,8 @@ Notes:
 2. Recommended trigger strategy:
    - Stage deploy: automatic on `stage` branch push
    - Prod deploy: manual `workflow_dispatch` with reviewer approval
-3. Tenant repo deploy jobs should call droplet-side scripts:
+3. If Search Console ownership verification is needed, define the verification token in the tenant repository's own CI/build secrets. Do not add tenant-specific verification tokens to the platform repository secrets or `ENV_STAGE` / `ENV_PROD`.
+4. Tenant repo deploy jobs should call droplet-side scripts:
    - Deploy/update: `deploy-tenant-storefront.sh`
    - Remove/rollback target removal: `remove-tenant-storefront.sh`
 
@@ -269,8 +272,8 @@ Notes:
 | Wildcard `*.craftive.io` → Droplet IP | Recommended. All tenant subdomains auto-resolve. Explicit records (e.g. `s1.app`, `api`) override the wildcard. Unknown tenants hit storefront → backend returns 404. |
 | Per-tenant A records | If strict control is needed. Requires manual DNS management per tenant (automatable via Cloudflare API). |
 
-> **Stage DNS records must be DNS-only (grey cloud)** — multi-level subdomains like `s1-{tenant}.craftive.io` are single-level and work with both modes, but `s1.app` and `s1.api` are multi-level and require DNS-only.
-> **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and can use Cloudflare proxy (orange cloud).
+> **Stage DNS records use orange cloud** — all stage service subdomains (`s1-api`, `s1-app`, `s1-cdn`, `s1-{tenant}`) are single-level and work with Cloudflare Universal SSL.
+> **Prod tenant subdomains** (`{tenant}.craftive.io`) are single-level and use Cloudflare proxy (orange cloud). Real tenants in prod use whitelabel custom domains (e.g. `democompany.com`), not craftive subdomains.
 
 TODO: Evaluate Cloudflare API integration for automatic DNS record creation when tenants are provisioned.
 
@@ -309,12 +312,33 @@ app:
 app:
   cors:
     allowed-origins:
-      - https://s1.app.craftive.io
+      - https://s1-app.craftive.io
     allowed-origin-patterns:
       - https://s1-*.craftive.io
 ```
 
 CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — tenant storefronts run on arbitrary domains.
+
+### Rate limiting — public platform endpoints
+
+`POST /api/platform/public/demo-requests` is unauthenticated and has no application-level rate limit. Protect it with a Traefik rate-limit middleware applied per source IP.
+
+Add the middleware definition to `docker-compose.yml` (or the relevant prod/stage override) under the Traefik `labels` of the backend service:
+
+```yaml
+# docker-compose.yml — backend service labels
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.average=3"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.burst=5"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.period=10m"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+# Attach the middleware to the public demo-requests router:
+- "traefik.http.routers.backend-public-demo.rule=Host(`api.craftive.io`) && PathPrefix(`/api/platform/public/demo-requests`)"
+- "traefik.http.routers.backend-public-demo.middlewares=demo-request-ratelimit@docker"
+```
+
+> **Note:** `ipstrategy.depth=1` trusts the first real IP from `X-Forwarded-For` when Cloudflare is the upstream proxy. Adjust `depth` if you add additional proxy hops.
+
+This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thresholds based on observed traffic patterns.
 
 ### GitHub Secrets
 
@@ -422,6 +446,8 @@ jobs:
 
 Adjust `TENANT`, organization, and optional custom domains per repository.
 
+If the tenant storefront also needs Search Console HTML tag verification, define `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` in that tenant repository's own tracked storefront env or equivalent build config. This is tenant-repo concern, not platform repo concern.
+
 ### First-time server setup
 
 ```bash
@@ -477,13 +503,17 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - **`craftive:` is the YAML root key** in `application.yml`. Renaming it would break `@ConfigurationProperties(prefix = "craftive")` bindings without a corresponding Java refactor.
 - **Reserved subdomains cannot be assigned to tenants:** `www`, `api`, `app`, `admin`, `s1`, `s2`, `mail`, `docs`, `status`, `blog`, `demo`, `cdn`. Enforce at the tenant subdomain validation layer.
 - **Stage wildcard DNS (`*.craftive.io`) points to Stage Droplet.** An explicit prod-hosted tenant subdomain (e.g. `demo.craftive.io`) must have its own A record pointing to the Prod Droplet, otherwise traffic hits Stage.
-- **Prod DNS records should use Cloudflare proxy (orange cloud).** The actual Droplet IPs should not be published. Stage DNS records must use DNS-only (grey cloud) due to multi-level subdomain SSL — see first gotcha below.
-- **Multi-level subdomains break Cloudflare Universal SSL.** `*.craftive.io` covers `app.craftive.io` (single-level) but NOT `s1.app.craftive.io` (two levels). Proxied multi-level subdomains cause `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Fix: use DNS-only for stage records; Traefik serves Let's Encrypt certs directly.
+- **Both Prod and Stage DNS records use Cloudflare proxy (orange cloud).** The actual Droplet IPs should not be published. Stage uses single-level `s1-*` convention so Cloudflare Universal SSL covers all stage subdomains.
+- **Multi-level subdomains break Cloudflare Universal SSL.** `*.craftive.io` covers `app.craftive.io` (single-level) but NOT `s1.app.craftive.io` (two levels). Proxied multi-level subdomains cause `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Stage domain refactor resolved this by switching to single-level `s1-*` convention (`s1-api`, `s1-app`, `s1-cdn`) — all stage services now work with Cloudflare orange cloud.
 - **Backend health check uses `wget`, not `curl`.** The distroless backend image does not include `curl`. Docker Compose and deploy workflows use `wget -qO-` for health checks.
 - **Backend `start_period` must be at least 150s.** Spring Boot takes ~120s to start. A shorter `start_period` causes Docker to mark the container as permanently unhealthy before it finishes starting, and Traefik stops routing to it.
 - **Deploy uses `--force-recreate`.** Ensures Traefik picks up new container IDs after image updates. Without this, Traefik may route to stale containers after rollback/redeploy cycles.
 - **GHCR images are private.** Deploy workflows must authenticate to GHCR on the droplet via `docker login` before pulling. The `GITHUB_TOKEN` is passed as `GHCR_TOKEN` env var through SSH.
 - **DigitalOcean blocks outbound SMTP port 587 by default.** Request unblock via DO support ticket for email functionality. Until then, `management.health.mail.enabled` must be `false` to prevent health check timeouts.
-- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1.api.*`, `s1.app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
+- **`docker-compose.stage.yml` is an overlay only.** It adds stage-specific routing (`s1-api.*`, `s1-app.*`, `s1-<tenant>.*`) and the storefront service; always layer it on top of `docker-compose.yml` and `docker-compose.prod.yml`.
 - **Traefik v3 dropped `{name:regexp}` HostRegexp syntax.** The stage storefront router uses `ruleSyntax=v2` label to keep the existing `s1-{subdomain:[a-z0-9-]+}` pattern working. Remove this label only after migrating to v3 syntax.
+- **Cloudflare Origin Rule (Host Header Override) is Enterprise-only.** Cloudflare proxy sends `Host: s1-cdn.craftive.io` to DO Spaces, which cannot resolve the bucket and returns `AccessDenied`. Origin Rules that override the Host header require Enterprise plan. Solution: use a **Cloudflare Worker** as reverse proxy — it rewrites the hostname to the DO Spaces CDN endpoint before forwarding (`craftive-media-stage.fra1.cdn.digitaloceanspaces.com`). CDN DNS records use `AAAA 100::` (dummy IPv6, Proxied) so the Worker intercepts all requests.
+- **DO Spaces CDN must be enabled (without custom domain).** Worker proxies to the DO CDN endpoint (`fra1.cdn.digitaloceanspaces.com`), so origin-level caching is active. Do not add a custom subdomain in DO Spaces CDN settings — custom subdomain requires the domain to be managed on DigitalOcean DNS.
+- **S3 objects must be uploaded with `public-read` ACL.** DO Spaces objects are private by default. Without `ObjectCannedACL.PUBLIC_READ` on `PutObjectRequest`, CDN delivery always returns `AccessDenied` regardless of DNS or proxy configuration.
+- **Cloudflare Cache Rule hostname must match the actual CDN subdomain exactly.** A rule matching `s1.media.craftive.io` does not apply to `s1-cdn.craftive.io`. Verify the Cache Rule expression after any CDN domain rename. When using Workers, the Worker route (`s1-cdn.craftive.io/*`) takes precedence — Cache Rules apply to Worker responses as normal.
 - **Alloy `stage.replace` replaces the capture group, not the full match.** When a regex has a capture group `(...)`, only the captured portion is substituted. Use `(?:...)` for non-capturing groups and place `(...)` only around the value to redact. Example: `"(?:password|secret)\\s*[:=]\\s*(\\S+)"` replaces only the credential value, keeping the keyword intact.

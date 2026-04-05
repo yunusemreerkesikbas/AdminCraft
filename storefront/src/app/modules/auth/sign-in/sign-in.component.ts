@@ -85,13 +85,18 @@ export class AuthSignInComponent implements OnInit, OnDestroy {
     readonly showOtpFormSig = computed(() => this.requires2FASig());
 
     ngOnInit(): void {
-        const subdomain = this.#tenantContext.extractSubdomainFromHost();
-        this.isPlatformHostSig.set(subdomain === 'admin');
+        const routeSubdomain = this.#activatedRoute.snapshot.queryParamMap.get('subdomain');
+        if (routeSubdomain) {
+            this.#tenantContext.setSubdomain(routeSubdomain);
+        }
+        const subdomain = routeSubdomain
+            ?? this.#tenantContext.getCurrentSubdomain()
+            ?? this.#tenantContext.extractSubdomainFromHost();
+        this.isPlatformHostSig.set(subdomain === 'admin' || !subdomain);
 
         this.signInForm = this.#formBuilder.group({
             email: ['', [Validators.required, Validators.email]],
             password: ['', Validators.required],
-            rememberMe: [''],
         });
         this.otpForm = this.#formBuilder.group({
             otpCode: [

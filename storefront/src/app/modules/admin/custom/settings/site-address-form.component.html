@@ -1,37 +1,74 @@
-<div [formGroup]="group" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <spa-input
-        [label]="'admin.settings.address.line1' | transloco"
-        formControlName="line1"
-    ></spa-input>
+<div [formGroup]="group" class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <div class="md:col-span-2 rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.line1' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.line1Placeholder' | transloco
+            "
+            formControlName="line1"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        [label]="'admin.settings.address.line2' | transloco"
-        formControlName="line2"
-    ></spa-input>
+    <div class="md:col-span-2 rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.line2' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.line2Placeholder' | transloco
+            "
+            formControlName="line2"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        [label]="'admin.settings.address.city' | transloco"
-        formControlName="city"
-    ></spa-input>
+    <div class="rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.city' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.cityPlaceholder' | transloco
+            "
+            formControlName="city"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        [label]="'admin.settings.address.state' | transloco"
-        formControlName="state"
-    ></spa-input>
+    <div class="rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.state' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.statePlaceholder' | transloco
+            "
+            formControlName="state"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        [label]="'admin.settings.address.postalCode' | transloco"
-        formControlName="postalCode"
-    ></spa-input>
+    <div class="rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.postalCode' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.postalCodePlaceholder'
+                    | transloco
+            "
+            formControlName="postalCode"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        [label]="'admin.settings.address.country' | transloco"
-        formControlName="country"
-    ></spa-input>
+    <div class="rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.country' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.countryPlaceholder'
+                    | transloco
+            "
+            formControlName="country"
+        ></spa-input>
+    </div>
 
-    <spa-input
-        class="md:col-span-2"
-        [label]="'admin.settings.address.mapEmbedUrl' | transloco"
-        formControlName="mapEmbedUrl"
-    ></spa-input>
+    <div class="md:col-span-2 rounded-[16px] border border-slate-200 bg-slate-50/80 p-4">
+        <spa-input
+            [label]="'admin.site.dashboard.address.mapEmbedUrl' | transloco"
+            [placeholder]="
+                'admin.site.dashboard.address.mapEmbedUrlPlaceholder'
+                    | transloco
+            "
+            formControlName="mapEmbedUrl"
+        ></spa-input>
+    </div>
 </div>

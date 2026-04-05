@@ -12,7 +12,8 @@ public record SiteOverviewResponse(
     SiteStatusDto status,
     SiteStatsDto stats,
     List<ActivityDto> recentActivity,
-    ActionsDto actions
+    ActionsDto actions,
+    SpotlightDto spotlight
 ) {
 
     public record SiteStatusDto(
@@ -67,47 +68,45 @@ public record SiteOverviewResponse(
         String previewUrl
     ) {}
 
-    /**
-     * Builder for creating SiteOverviewResponse.
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
+    public record SpotlightDto(
+        int operationalScore,
+        SpotlightStatusDto status,
+        List<SpotlightContextCardDto> contextCards,
+        List<SpotlightRecommendationDto> recommendations
+    ) {}
 
-    public static class Builder {
-        private Long id;
-        private SiteStatusDto status;
-        private SiteStatsDto stats;
-        private List<ActivityDto> recentActivity;
-        private ActionsDto actions;
+    public record SpotlightStatusDto(
+        String tone,
+        String code
+    ) {}
 
-        public Builder id(Long id) {
-            this.id = id;
-            return this;
-        }
+    public record SpotlightContextCardDto(
+        String id,
+        String icon,
+        int progress,
+        String tone,
+        String valueCode,
+        String detailCode,
+        LocalDateTime detailDate
+    ) {}
 
-        public Builder status(SiteStatusDto status) {
-            this.status = status;
-            return this;
-        }
+    public record SpotlightRecommendationDto(
+        String id,
+        String icon,
+        String tone,
+        Long count
+    ) {}
 
-        public Builder stats(SiteStatsDto stats) {
-            this.stats = stats;
-            return this;
-        }
+    public record ActivityTrendResponse(
+        String period,
+        List<ActivityTrendDayResponse> days
+    ) {}
 
-        public Builder recentActivity(List<ActivityDto> recentActivity) {
-            this.recentActivity = recentActivity;
-            return this;
-        }
-
-        public Builder actions(ActionsDto actions) {
-            this.actions = actions;
-            return this;
-        }
-
-        public SiteOverviewResponse build() {
-            return new SiteOverviewResponse(id, status, stats, recentActivity, actions);
-        }
-    }
+    public record ActivityTrendDayResponse(
+        String date,
+        long total,
+        long created,
+        long updated,
+        long published
+    ) {}
 }

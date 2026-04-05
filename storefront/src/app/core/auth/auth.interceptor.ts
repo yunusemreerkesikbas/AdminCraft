@@ -8,7 +8,7 @@ import { inject } from '@angular/core';
 import { AuthService } from 'app/core/auth/auth.service';
 import { AuthUtils } from 'app/core/auth/auth.utils';
 import { ConfigSessionService } from 'app/modules/config/console/config-session.service';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor = (
     req: HttpRequest<unknown>,
@@ -39,8 +39,30 @@ export const authInterceptor = (
                     authService.signOut();
                 }
                 if (isConfigAdmin && (error.status === 401 || error.status === 403)) {
-                    configSession.clearStoredSession();
-                    configSession.notifyInvalidSession();
+                    if (req.headers.has('X-Config-Refresh-Retry')) {
+                        configSession.clearStoredSession();
+                        return throwError(() => error);
+                    }
+
+                    return configSession.tryRefreshStoredSession().pipe(
+                        switchMap((session) => {
+                            if (!session) {
+                                return throwError(() => error);
+                            }
+
+                            return next(
+                                req.clone({
+                                    headers: req.headers
+                                        .set('Authorization', `Bearer ${session.accessToken}`)
+                                        .set('X-Config-Refresh-Retry', '1'),
+                                })
+                            );
+                        }),
+                        catchError(() => {
+                            configSession.clearStoredSession();
+                            return throwError(() => error);
+                        })
+                    );
                 }
             }
             return throwError(() => error);

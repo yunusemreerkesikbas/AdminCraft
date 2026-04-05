@@ -52,6 +52,16 @@ Use the generic modal for:
 - Confirmation dialogs
 - Alerts with structured sections (info box, copyable fields, alert box)
 
+## Shared confirmation pattern
+
+For destructive actions in admin custom modules, prefer the shared confirmation service instead of `window.confirm`.
+
+- Service: `storefront/src/app/shared/services/confirmation.service.ts`
+- UI shell: `SpaGenericModalComponent`
+- Typical flow: `ConfirmationService.confirm(...)` → on confirm, call backend action → show backend `response.message`
+
+This is the standard pattern for delete actions in component-library list screens and should be preferred for new admin custom work.
+
 ## Shared form components (`custom-ui`)
 
 For form inputs, always use existing shared components under:

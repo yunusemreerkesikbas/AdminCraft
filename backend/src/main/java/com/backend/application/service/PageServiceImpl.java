@@ -17,6 +17,7 @@ import com.backend.application.dto.request.PageI18nRequest;
 import com.backend.application.dto.request.UpdatePageCompositeRequest;
 import com.backend.domain.entity.Page;
 import com.backend.domain.entity.PageI18n;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.PageStatus;
 import com.backend.domain.enums.RobotTag;
@@ -27,6 +28,7 @@ import com.backend.domain.util.UuidUidGenerator;
 import com.backend.application.dto.response.PageDetailResponse;
 import com.backend.application.dto.response.PageListResponse;
 import com.backend.application.dto.response.PageResponse;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +40,8 @@ public class PageServiceImpl implements PageService {
     private final PageI18nRepository pageI18nRepository;
     private final PageI18nService pageI18nService;
     private final PageTemplateService pageTemplateService;
+    private final SiteActivityPublisher activityPublisher;
+    private final SecurityHelper securityHelper;
 
     @Override
     @Transactional
@@ -138,8 +142,12 @@ public class PageServiceImpl implements PageService {
     @Override
     @Transactional
     public void deletePage(Long id) {
+        Page page = pageRepository.findById(id).orElse(null);
+        String pageName = page != null ? page.getUid() : String.valueOf(id);
         pageI18nService.deletePageI18n(id);
         pageRepository.deleteById(id);
+        activityPublisher.publishPageEvent(id, pageName, ActivityAction.DELETED,
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     // ==================== Composite Operations (Sprint 34 Pattern)
@@ -178,6 +186,9 @@ public class PageServiceImpl implements PageService {
         String templateUid = page.getTemplateId() != null
                 ? pageTemplateService.getById(page.getTemplateId()).getUid()
                 : null;
+        String pageName = i18nList.stream().map(PageI18n::getName).filter(n -> n != null && !n.isBlank())
+                .findFirst().orElse(page.getUid());
+        activityPublisher.publishPageEvent(page.getId(), pageName, ActivityAction.CREATED, userId, null, null);
         return PageDetailResponse.from(page, i18nList, templateUid);
     }
 
@@ -224,6 +235,9 @@ public class PageServiceImpl implements PageService {
         String templateUid = page.getTemplateId() != null
                 ? pageTemplateService.getById(page.getTemplateId()).getUid()
                 : null;
+        String pageName = i18nList.stream().map(PageI18n::getName).filter(n -> n != null && !n.isBlank())
+                .findFirst().orElse(page.getUid());
+        activityPublisher.publishPageEvent(id, pageName, ActivityAction.UPDATED, userId, null, null);
         return PageDetailResponse.from(page, i18nList, templateUid);
     }
 
@@ -298,4 +312,5 @@ public class PageServiceImpl implements PageService {
         } while (pageRepository.existsByUid(uid));
         return uid;
     }
+
 }

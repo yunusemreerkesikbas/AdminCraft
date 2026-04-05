@@ -1,7 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    OnDestroy,
+    DestroyRef,
     OnInit,
     inject,
     signal,
@@ -10,15 +10,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSliderModule } from '@angular/material/slider';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaSelectComponent } from '@shared/components/custom-ui/spa-select/spa-select.component';
-import { VALIDATION_LIMITS, VALIDATION_PATTERNS } from '@shared/constants/validation.constants';
 import { NotificationService } from '@shared/notifications/notification.service';
 import { FormUtils } from '@shared/utils/form.utils';
-import { Subject, takeUntil } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PlatformSettingsService } from './platform-settings.service';
 import {
     PatchPlatformSettingsRequest,
@@ -36,18 +33,16 @@ import {
         MatButtonModule,
         MatIconModule,
         MatRadioModule,
-        MatSlideToggleModule,
-        MatSliderModule,
         TranslocoModule,
         SpaInputComponent,
         SpaSelectComponent,
     ],
 })
-export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
+export class SpaPlatformSettingsComponent implements OnInit {
+    readonly #destroyRef = inject(DestroyRef);
     readonly #fb = inject(FormBuilder);
     readonly #service = inject(PlatformSettingsService);
     readonly #notify = inject(NotificationService);
-    readonly #destroy$ = new Subject<void>();
 
     protected readonly loadingSig = signal<boolean>(true);
     protected readonly savingSig = signal<boolean>(false);
@@ -59,22 +54,6 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
         emailFromAddress: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
         emailFromName: ['', [Validators.required, Validators.maxLength(100)]],
         twoFactorPolicy: ['DISABLED', Validators.required],
-        recaptchaEnabled: [false],
-        recaptchaSiteKey: [
-            '',
-            [
-                Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
-                Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
-            ],
-        ],
-        recaptchaSecretKey: [
-            '',
-            [
-                Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
-                Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
-            ],
-        ],
-        recaptchaThreshold: [0.5, [Validators.min(0), Validators.max(1)]],
     });
 
     protected readonly languages = [
@@ -103,7 +82,6 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
     ];
 
     ngOnInit(): void {
-        this.#bindConditionalValidators();
         this.#loadSettings();
     }
 
@@ -111,21 +89,14 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
         if (this.form.invalid || this.form.pristine) return;
 
         const payload = FormUtils.getDirtyValues<PatchPlatformSettingsRequest>(this.form);
-        if (payload.recaptchaSiteKey === '') {
-            payload.recaptchaSiteKey = null;
-        }
-        if (payload.recaptchaSecretKey !== undefined && !payload.recaptchaSecretKey?.trim()) {
-            delete payload.recaptchaSecretKey;
-        }
 
         this.savingSig.set(true);
         this.#service
             .patchSettings(payload)
-            .pipe(takeUntil(this.#destroy$))
+            .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe({
                 next: (data) => {
                     this.#populateForm(data);
-                    this.form.patchValue({ recaptchaSecretKey: '' }, { emitEvent: false });
                     this.savingSig.set(false);
                     this.#notify.success('admin.platform.settings.messages.saveSuccess');
                 },
@@ -136,16 +107,11 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
             });
     }
 
-    ngOnDestroy(): void {
-        this.#destroy$.next();
-        this.#destroy$.complete();
-    }
-
     #loadSettings(): void {
         this.loadingSig.set(true);
         this.#service
             .getSettings()
-            .pipe(takeUntil(this.#destroy$))
+            .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe({
                 next: (data) => {
                     this.#populateForm(data);
@@ -166,39 +132,7 @@ export class SpaPlatformSettingsComponent implements OnInit, OnDestroy {
             emailFromAddress: data.emailFromAddress,
             emailFromName: data.emailFromName,
             twoFactorPolicy: data.twoFactorPolicy ?? 'DISABLED',
-            recaptchaEnabled: data.recaptchaEnabled ?? false,
-            recaptchaSiteKey: data.recaptchaSiteKey ?? '',
-            recaptchaThreshold: data.recaptchaThreshold ?? 0.5,
-            recaptchaSecretKey: '',
         });
         this.form.markAsPristine();
-    }
-
-    #bindConditionalValidators(): void {
-        this.form.get('recaptchaEnabled')?.valueChanges
-            .pipe(takeUntil(this.#destroy$))
-            .subscribe((enabled) => {
-                const siteKeyControl = this.form.get('recaptchaSiteKey');
-                const secretKeyControl = this.form.get('recaptchaSecretKey');
-                
-                if (!siteKeyControl || !secretKeyControl) {
-                    return;
-                }
-
-                const validators = [
-                    Validators.maxLength(VALIDATION_LIMITS.RECAPTCHA_KEY_LENGTH),
-                    Validators.pattern(VALIDATION_PATTERNS.RECAPTCHA_KEY),
-                ];
-
-                if (enabled) {
-                    validators.unshift(Validators.required);
-                }
-
-                siteKeyControl.setValidators(validators);
-                siteKeyControl.updateValueAndValidity({ emitEvent: false });
-                
-                secretKeyControl.setValidators(validators);
-                secretKeyControl.updateValueAndValidity({ emitEvent: false });
-            });
     }
 }

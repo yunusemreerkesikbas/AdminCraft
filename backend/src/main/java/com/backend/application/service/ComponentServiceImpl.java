@@ -37,7 +37,9 @@ import com.backend.domain.repository.ComponentI18nRepository;
 import com.backend.domain.repository.ComponentRepository;
 import com.backend.domain.repository.ComponentTypeRepository;
 import com.backend.domain.repository.NavigationNodeRepository;
+import com.backend.domain.enums.ActivityAction;
 import com.backend.domain.repository.ResponsiveMediaSetRepository;
+import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,8 @@ public class ComponentServiceImpl implements ComponentService {
     private final NavigationNodeRepository navigationNodeRepository;
     private final ResponsiveMediaSetRepository responsiveMediaSetRepository;
     private final ComponentMediaLinkSyncService componentMediaLinkSyncService;
+    private final SiteActivityPublisher activityPublisher;
+    private final SecurityHelper securityHelper;
 
     @Override
     @Transactional
@@ -195,9 +199,12 @@ public class ComponentServiceImpl implements ComponentService {
     public void deleteComponent(Long id) {
         Component component = componentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Component", id));
+        String componentName = component.getName() != null ? component.getName() : component.getUid();
 
         componentMediaLinkSyncService.removeComponentResponsiveLinks(id);
         componentRepository.delete(component);
+        activityPublisher.publishComponentEvent(id, componentName, ActivityAction.DELETED,
+                securityHelper.getCurrentUserIdOrNull(), null, null);
     }
 
     @Override
@@ -240,6 +247,8 @@ public class ComponentServiceImpl implements ComponentService {
         log.info("Created component with {} translations: id={}, uid={}",
                 i18nList.size(), savedComponent.getId(), savedComponent.getUid());
 
+        activityPublisher.publishComponentEvent(savedComponent.getId(), savedComponent.getName(),
+                ActivityAction.CREATED, securityHelper.getCurrentUserIdOrNull(), null, null);
         return ComponentCompositeResponse.from(savedComponent, type.getName(), i18nList);
     }
 
@@ -319,6 +328,8 @@ public class ComponentServiceImpl implements ComponentService {
 
         log.info("Updated component with {} translations: id={}", i18nList.size(), id);
 
+        activityPublisher.publishComponentEvent(savedComponent.getId(), savedComponent.getName(),
+                ActivityAction.UPDATED, securityHelper.getCurrentUserIdOrNull(), null, null);
         return ComponentCompositeResponse.from(savedComponent, typeName, i18nList);
     }
 
@@ -448,4 +459,5 @@ public class ComponentServiceImpl implements ComponentService {
         }
         return name.trim();
     }
+
 }

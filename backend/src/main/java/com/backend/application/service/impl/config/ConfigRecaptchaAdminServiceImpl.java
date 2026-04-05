@@ -17,11 +17,8 @@ import com.backend.application.service.TenantDbExecutor;
 import com.backend.application.service.config.ConfigPropertyService;
 import com.backend.application.service.config.ConfigRecaptchaAdminService;
 import com.backend.domain.entity.ConfigProperty;
-import com.backend.domain.entity.Site;
 import com.backend.domain.entity.Tenant;
-import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
-import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.TenantRepository;
 import com.backend.domain.entity.ConfigChangeAudit;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -43,9 +40,7 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
     private static final String KEY_RECAPTCHA_SECRET_KEY = "security.recaptcha.secret_key";
 
     private final TenantRepository tenantRepository;
-    private final SiteRepository siteRepository;
     private final TenantDbExecutor tenantDbExecutor;
-    private final EncryptionServicePort encryptionService;
     private final ConfigPropertyService configPropertyService;
     private final ConfigChangeAuditRepository auditRepository;
     private final ObjectMapper objectMapper;
@@ -55,12 +50,10 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
     public ConfigRecaptchaResult getRecaptcha(ConfigPrincipal principal) {
         Tenant tenant = resolveTargetTenant(principal);
 
-        return tenantDbExecutor.withTenant(tenant.getId(), tenant.getDatabaseName(), () -> {
-            Site site = siteRepository.findFirstByOrderByIdAsc()
-                    .orElseThrow(() -> new IllegalStateException("Site not found for tenant"));
-            ResolvedRecaptchaState state = resolveRecaptchaState(tenant.getId(), tenant.getDatabaseName(), site);
-            return toResult(state);
-        });
+        return tenantDbExecutor.withTenant(
+                tenant.getId(),
+                tenant.getDatabaseName(),
+                () -> toResult(resolveRecaptchaState(tenant.getId(), tenant.getDatabaseName())));
     }
 
     @Override
@@ -69,10 +62,7 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
         Tenant tenant = resolveTargetTenant(principal);
 
         return tenantDbExecutor.withTenant(tenant.getId(), tenant.getDatabaseName(), () -> {
-            Site site = siteRepository.findFirstByOrderByIdAsc()
-                    .orElseThrow(() -> new IllegalStateException("Site not found for tenant"));
-
-            ResolvedRecaptchaState beforeState = resolveRecaptchaState(tenant.getId(), tenant.getDatabaseName(), site);
+            ResolvedRecaptchaState beforeState = resolveRecaptchaState(tenant.getId(), tenant.getDatabaseName());
             RecaptchaAuditSnapshot before = RecaptchaAuditSnapshot.from(beforeState);
 
             boolean nextEnabled = request.recaptchaEnabled() != null ? request.recaptchaEnabled() : beforeState.enabled();
@@ -95,23 +85,7 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
                         request.recaptchaSecretKey(), true, principal.userId());
             }
 
-            String nextSecretEncryptedForSite = resolveEncryptedSecretForCompatibility(
-                    tenant.getId(),
-                    tenant.getDatabaseName(),
-                    site,
-                    request.recaptchaSecretKey());
-
-            applyRecaptchaToSiteForCompatibility(site, nextEnabled, nextSiteKey, nextSecretEncryptedForSite);
-
-            site.setUpdatedBy(principal.userId());
-
-            Site saved = siteRepository.save(site);
-
-            ResolvedRecaptchaState afterState = new ResolvedRecaptchaState(
-                    nextEnabled,
-                    nextSiteKey,
-                    nextSecretConfigured,
-                    saved.getUpdatedAt());
+            ResolvedRecaptchaState afterState = resolveRecaptchaState(tenant.getId(), tenant.getDatabaseName());
 
             RecaptchaAuditSnapshot after = RecaptchaAuditSnapshot.from(afterState);
             writeAudit(principal, tenant.getId(), AUDIT_ACTION_PATCH, request.reason(), before, after);
@@ -215,29 +189,27 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
         return siteKey.substring(0, 4) + "..." + siteKey.substring(siteKey.length() - 4);
     }
 
-    private ResolvedRecaptchaState resolveRecaptchaState(Long tenantId, String tenantDbName, Site site) {
+    private ResolvedRecaptchaState resolveRecaptchaState(Long tenantId, String tenantDbName) {
         Optional<String> siteKeyRaw = configPropertyService.findRaw(tenantId, tenantDbName, KEY_RECAPTCHA_SITE_KEY);
         Optional<String> secretRaw = configPropertyService.findRaw(tenantId, tenantDbName, KEY_RECAPTCHA_SECRET_KEY);
         boolean enabled = configPropertyService.getBoolean(
                 tenantId,
                 tenantDbName,
                 KEY_RECAPTCHA_ENABLED,
-                Boolean.TRUE.equals(site.getRecaptchaEnabled()));
+                false);
 
-        String siteKey = siteKeyRaw.orElse(site.getRecaptchaSiteKey());
+        String siteKey = siteKeyRaw.orElse(null);
 
         boolean secretConfigured = secretRaw
                 .map(v -> v != null && !v.isBlank())
-                .orElse(site.getRecaptchaSecretKeyEncrypted() != null && !site.getRecaptchaSecretKeyEncrypted().isBlank());
+                .orElse(false);
 
-        LocalDateTime updatedAt = resolveUpdatedAt(tenantId, tenantDbName, site);
+        LocalDateTime updatedAt = resolveUpdatedAt(tenantId, tenantDbName);
 
         return new ResolvedRecaptchaState(enabled, siteKey, secretConfigured, updatedAt);
     }
 
-    private LocalDateTime resolveUpdatedAt(Long tenantId, String tenantDbName, Site site) {
-        LocalDateTime max = site.getUpdatedAt();
-
+    private LocalDateTime resolveUpdatedAt(Long tenantId, String tenantDbName) {
         LocalDateTime enabledAt = configPropertyService.find(tenantId, tenantDbName, KEY_RECAPTCHA_ENABLED)
                 .map(ConfigProperty::getUpdatedAt)
                 .orElse(null);
@@ -248,7 +220,7 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
                 .map(ConfigProperty::getUpdatedAt)
                 .orElse(null);
 
-        max = later(max, enabledAt);
+        LocalDateTime max = later(null, enabledAt);
         max = later(max, siteKeyAt);
         max = later(max, secretAt);
 
@@ -263,26 +235,6 @@ public class ConfigRecaptchaAdminServiceImpl implements ConfigRecaptchaAdminServ
             return a;
         }
         return a.isAfter(b) ? a : b;
-    }
-
-    private String resolveEncryptedSecretForCompatibility(Long tenantId, String tenantDbName, Site site, String secretPlaintextFromRequest) {
-        if (secretPlaintextFromRequest != null && !secretPlaintextFromRequest.isBlank()) {
-            return encryptionService.encrypt(secretPlaintextFromRequest);
-        }
-        if (site.getRecaptchaSecretKeyEncrypted() != null && !site.getRecaptchaSecretKeyEncrypted().isBlank()) {
-            return site.getRecaptchaSecretKeyEncrypted();
-        }
-        return configPropertyService.findRaw(tenantId, tenantDbName, KEY_RECAPTCHA_SECRET_KEY).orElse(null);
-    }
-
-    private void applyRecaptchaToSiteForCompatibility(Site site, boolean enabled, String siteKey,
-            String secretEncrypted) {
-        site.setRecaptchaEnabled(enabled);
-        site.setRecaptchaSiteKey(siteKey);
-        if (secretEncrypted != null && !secretEncrypted.isBlank()) {
-            site.setRecaptchaSecretKeyEncrypted(secretEncrypted);
-        }
-        site.setUpdatedAt(LocalDateTime.now());
     }
 
     private record RecaptchaAuditSnapshot(

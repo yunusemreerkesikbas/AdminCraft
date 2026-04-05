@@ -192,8 +192,6 @@ export const VALIDATION_LIMITS = {
     // Site General Limits (from SiteSettingsI18nDto.java)
     SITE_NAME_MAX: 100,
     SITE_TAGLINE_MAX: 160,
-    SITE_FOOTER_TEXT_MAX: 500,
-    SITE_HEADER_TEXT_MAX: 200,
 
     // User Limits
     USER_FULL_NAME_MAX: 100,

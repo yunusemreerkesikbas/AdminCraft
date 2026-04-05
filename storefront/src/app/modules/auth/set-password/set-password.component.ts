@@ -229,9 +229,11 @@ export class AuthSetPasswordComponent implements OnInit, OnDestroy {
                         });
                         this.showAlertSig.set(true);
 
-                        const lang = this.#translocoService.getActiveLang();
                         setTimeout(() => {
-                            this.#router.navigate([`/${lang}/sign-in`]);
+                            const subdomain = this.#tenantContext.subdomain();
+                            this.#router.navigate(['/sign-in'], {
+                                queryParams: subdomain && subdomain !== 'admin' ? { subdomain } : {},
+                            });
                         }, 3000);
                     } else {
                         this.alertSig.set({

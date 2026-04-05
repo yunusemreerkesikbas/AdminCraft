@@ -50,6 +50,7 @@ app:
     secret: ${JWT_SECRET}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:https://%s.craftive.io}
+    admin-url: ${APP_FRONTEND_ADMIN_URL:https://app.craftive.io}
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:craftive.io}
@@ -60,10 +61,15 @@ app:
     log-content: false
   cors:
     allowed-origins:
+      - http://localhost:4200
+      - http://127.0.0.1:4200
+      - http://admin.localhost:4200
       - https://app.craftive.io
       - https://craftive.io
       - https://www.craftive.io
+      - https://landing.craftive.io
     allowed-origin-patterns:
+      - http://*.localhost:4200
       - https://*.craftive.io
   otp:
     bypass-code:

@@ -1,7 +1,5 @@
 package com.backend.presentation.dto.response;
 
-import java.math.BigDecimal;
-
 import com.backend.application.dto.response.PlatformSettingsData;
 import com.backend.domain.enums.TwoFactorPolicy;
 
@@ -11,10 +9,7 @@ public record PlatformSettingsResponse(
     String defaultCurrency,
     String emailFromAddress,
     String emailFromName,
-    TwoFactorPolicy twoFactorPolicy,
-    Boolean recaptchaEnabled,
-    String recaptchaSiteKey,
-    BigDecimal recaptchaThreshold
+    TwoFactorPolicy twoFactorPolicy
 ) {
     public static PlatformSettingsResponse from(PlatformSettingsData entity) {
         return new PlatformSettingsResponse(
@@ -23,10 +18,7 @@ public record PlatformSettingsResponse(
             entity.defaultCurrency(),
             entity.emailFromAddress(),
             entity.emailFromName(),
-            entity.twoFactorPolicy(),
-            entity.recaptchaEnabled(),
-            entity.recaptchaSiteKey(),
-            entity.recaptchaThreshold()
+            entity.twoFactorPolicy()
         );
     }
 }

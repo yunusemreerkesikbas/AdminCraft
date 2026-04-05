@@ -1,10 +1,30 @@
-<div class="max-w-3xl">
-    <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="mb-6 flex justify-end">
+<div class="mx-auto w-full max-w-5xl">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <!-- Header Card -->
+        <div
+            class="flex flex-col gap-4 rounded-[18px] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.48)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        >
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-[12px] bg-gradient-to-br from-blue-50 to-blue-100/50 text-blue-600 ring-1 ring-blue-200/50"
+                >
+                    <mat-icon
+                        class="icon-size-6"
+                        svgIcon="heroicons_outline:magnifying-glass"
+                    ></mat-icon>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                        {{ 'admin.site.dashboard.tabs.seo' | transloco }}
+                    </h3>
+                </div>
+            </div>
+
             <button
                 mat-flat-button
                 color="primary"
                 type="submit"
+                class="min-h-12 rounded-[12px] px-6 font-semibold shadow-sm transition-all hover:shadow-md"
                 [disabled]="saving"
             >
                 @if (saving) {
@@ -17,13 +37,32 @@
             </button>
         </div>
 
-        <!-- Global SEO Settings -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.seo.global' | transloco }}
-            </h3>
+        <!-- Global SEO Settings Section -->
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] transition-shadow hover:shadow-[0_32px_75px_-54px_rgba(15,23,42,0.65)] sm:p-6"
+        >
+            <div
+                class="mb-6 flex items-center gap-3 border-b border-slate-200 pb-5"
+            >
+                <div
+                    class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-gradient-to-br from-blue-50 to-blue-100/50 text-blue-600 ring-1 ring-blue-200/50"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:globe-alt"
+                    ></mat-icon>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                        {{ 'admin.site.dashboard.seo.global' | transloco }}
+                    </h3>
+                </div>
+            </div>
 
-            <div formGroupName="global" class="space-y-4">
+            <div
+                formGroupName="global"
+                class="grid gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4 lg:grid-cols-2"
+            >
                 <spa-input
                     [label]="
                         'admin.site.dashboard.seo.canonicalBaseUrl' | transloco
@@ -31,10 +70,6 @@
                     [labelTooltip]="'canonicalBaseUrl'"
                     formControlName="canonicalBaseUrl"
                     placeholder="https://www.example.com"
-                    [hint]="
-                        'admin.site.dashboard.seo.canonicalBaseUrlHint'
-                            | transloco
-                    "
                     [showErrors]="true"
                 >
                 </spa-input>
@@ -46,176 +81,194 @@
                     [placeholder]="
                         'admin.site.dashboard.seo.robotsPlaceholder' | transloco
                     "
-                    [hint]="'admin.site.dashboard.seo.robotsHint' | transloco"
                     [showErrors]="true"
                 >
                 </spa-select>
             </div>
-        </div>
+        </section>
 
-        <!-- Language-specific SEO Settings -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.seo.languageSpecific' | transloco }}
-            </h3>
-
-            <!-- Language Tabs -->
-            <div class="mb-4 flex gap-2">
-                @for (lang of languages(); track lang) {
-                    <button
-                        type="button"
-                        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                        [class.bg-primary]="
-                            selectedLanguage() === lang.toLowerCase()
-                        "
-                        [class.text-on-primary]="
-                            selectedLanguage() === lang.toLowerCase()
-                        "
-                        [class.bg-gray-100]="
-                            selectedLanguage() !== lang.toLowerCase()
-                        "
-                        [class.dark:bg-gray-800]="
-                            selectedLanguage() !== lang.toLowerCase()
-                        "
-                        (click)="onLanguageChange(lang.toLowerCase())"
+        <!-- Language-Specific SEO Settings Section -->
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] transition-shadow hover:shadow-[0_32px_75px_-54px_rgba(15,23,42,0.65)] sm:p-6"
+        >
+            <div
+                class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between"
+            >
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-gradient-to-br from-violet-50 to-violet-100/50 text-violet-600 ring-1 ring-violet-200/50"
                     >
-                        {{ lang.toUpperCase() }}
-                    </button>
-                }
+                        <mat-icon
+                            class="icon-size-5"
+                            svgIcon="heroicons_outline:language"
+                        ></mat-icon>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                            {{
+                                'admin.site.dashboard.seo.languageSpecific'
+                                    | transloco
+                            }}
+                        </h3>
+                    </div>
+                </div>
+
+                <!-- Language Switcher -->
+                <div
+                    class="inline-flex flex-wrap gap-2 rounded-[14px] border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-2 shadow-sm"
+                >
+                    @for (lang of languages(); track lang) {
+                        <button
+                            type="button"
+                            class="min-h-11 rounded-[10px] px-4 text-sm font-semibold uppercase tracking-[0.2em] transition-all duration-200"
+                            [ngClass]="
+                                selectedLanguage() === lang.toLowerCase()
+                                    ? 'bg-primary text-white shadow-sm ring-2 ring-primary/20'
+                                    : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                            "
+                            (click)="onLanguageChange(lang.toLowerCase())"
+                        >
+                            {{ lang.toUpperCase() }}
+                        </button>
+                    }
+                </div>
             </div>
 
             <div formGroupName="languages">
                 @for (lang of languages(); track lang) {
                     @if (selectedLanguage() === lang.toLowerCase()) {
-                        <div [formGroupName]="lang.toLowerCase()">
-                            <div formGroupName="seo" class="space-y-4">
-                                <div>
-                                    <spa-input
-                                        [label]="
-                                            'admin.site.dashboard.seo.title'
-                                                | transloco
-                                        "
-                                        [labelTooltip]="'title'"
-                                        formControlName="title"
-                                        [showErrors]="true"
-                                        [placeholder]="
-                                            'admin.site.dashboard.placeholders.seoTitle'
-                                                | transloco
-                                        "
-                                    >
-                                    </spa-input>
-                                    <p
-                                        class="text-secondary mt-1 text-right text-xs"
-                                    >
-                                        {{
-                                            form.get([
-                                                'languages',
-                                                lang.toLowerCase(),
-                                                'seo',
-                                                'title',
-                                            ])?.value?.length || 0
-                                        }}/60
-                                    </p>
-                                </div>
+                        <div
+                            [formGroupName]="lang.toLowerCase()"
+                            class="rounded-[14px] border border-slate-200 bg-slate-50/80 p-4"
+                        >
+                                <div formGroupName="seo" class="space-y-4">
+                                    <div class="grid gap-4 lg:grid-cols-2">
+                                        <div>
+                                            <spa-input
+                                                [label]="
+                                                    'admin.site.dashboard.seo.title'
+                                                        | transloco
+                                                "
+                                                [labelTooltip]="'title'"
+                                                formControlName="title"
+                                                [showErrors]="true"
+                                                [placeholder]="
+                                                    'admin.site.dashboard.placeholders.seoTitle'
+                                                        | transloco
+                                                "
+                                            >
+                                            </spa-input>
+                                            <p
+                                                class="mt-2 text-right text-xs font-semibold text-slate-400"
+                                            >
+                                                {{
+                                                    form.get([
+                                                        'languages',
+                                                        lang.toLowerCase(),
+                                                        'seo',
+                                                        'title',
+                                                    ])?.value?.length || 0
+                                                }}/60
+                                            </p>
+                                        </div>
 
-                                <div>
+                                        <spa-input
+                                            [label]="
+                                                'admin.site.dashboard.seo.keywords'
+                                                    | transloco
+                                            "
+                                            [labelTooltip]="'keywords'"
+                                            formControlName="keywords"
+                                            [placeholder]="'admin.site.dashboard.seo.keywordsPlaceholder' | transloco"
+                                            [showErrors]="true"
+                                        >
+                                        </spa-input>
+                                    </div>
+
+                                    <div>
+                                        <spa-textarea
+                                            [label]="
+                                                'admin.site.dashboard.seo.description'
+                                                    | transloco
+                                            "
+                                            [labelTooltip]="'description'"
+                                            formControlName="description"
+                                            [rows]="3"
+                                            [showErrors]="true"
+                                            [placeholder]="
+                                                'admin.site.dashboard.placeholders.seoDescription'
+                                                    | transloco
+                                            "
+                                        >
+                                        </spa-textarea>
+                                        <p
+                                            class="mt-2 text-right text-xs font-semibold text-slate-400"
+                                        >
+                                            {{
+                                                form.get([
+                                                    'languages',
+                                                    lang.toLowerCase(),
+                                                    'seo',
+                                                    'description',
+                                                ])?.value?.length || 0
+                                            }}/160
+                                        </p>
+                                    </div>
+
+                                    <div class="grid gap-4 lg:grid-cols-2">
+                                        <spa-input
+                                            [label]="
+                                                'admin.site.dashboard.seo.ogTitle'
+                                                    | transloco
+                                            "
+                                            [labelTooltip]="'ogTitle'"
+                                            formControlName="ogTitle"
+                                            [showErrors]="true"
+                                            [placeholder]="
+                                                'admin.site.dashboard.placeholders.ogTitle'
+                                                    | transloco
+                                            "
+                                        >
+                                        </spa-input>
+
+                                        <spa-select
+                                            [label]="
+                                                'admin.site.dashboard.seo.twitterCard'
+                                                    | transloco
+                                            "
+                                            formControlName="twitterCard"
+                                            [options]="[
+                                                { value: 'summary', label: 'Summary' },
+                                                {
+                                                    value: 'summary_large_image',
+                                                    label: 'Summary Large Image',
+                                                },
+                                            ]"
+                                            [showErrors]="true"
+                                        >
+                                        </spa-select>
+                                    </div>
+
                                     <spa-textarea
                                         [label]="
-                                            'admin.site.dashboard.seo.description'
+                                            'admin.site.dashboard.seo.ogDescription'
                                                 | transloco
                                         "
-                                        [labelTooltip]="'description'"
-                                        formControlName="description"
-                                        [rows]="3"
+                                        [labelTooltip]="'ogDescription'"
+                                        formControlName="ogDescription"
+                                        [rows]="2"
                                         [showErrors]="true"
                                         [placeholder]="
-                                            'admin.site.dashboard.placeholders.seoDescription'
+                                            'admin.site.dashboard.placeholders.ogDescription'
                                                 | transloco
                                         "
                                     >
                                     </spa-textarea>
-                                    <p
-                                        class="text-secondary mt-1 text-right text-xs"
-                                    >
-                                        {{
-                                            form.get([
-                                                'languages',
-                                                lang.toLowerCase(),
-                                                'seo',
-                                                'description',
-                                            ])?.value?.length || 0
-                                        }}/160
-                                    </p>
                                 </div>
-
-                                <spa-input
-                                    [label]="
-                                        'admin.site.dashboard.seo.keywords'
-                                            | transloco
-                                    "
-                                    [labelTooltip]="'keywords'"
-                                    formControlName="keywords"
-                                    placeholder="keyword1, keyword2, keyword3"
-                                    [hint]="
-                                        'admin.site.dashboard.seo.keywordsHint'
-                                            | transloco
-                                    "
-                                    [showErrors]="true"
-                                >
-                                </spa-input>
-
-                                <spa-input
-                                    [label]="
-                                        'admin.site.dashboard.seo.ogTitle'
-                                            | transloco
-                                    "
-                                    [labelTooltip]="'ogTitle'"
-                                    formControlName="ogTitle"
-                                    [showErrors]="true"
-                                    [placeholder]="
-                                        'admin.site.dashboard.placeholders.ogTitle'
-                                            | transloco
-                                    "
-                                >
-                                </spa-input>
-
-                                <spa-textarea
-                                    [label]="
-                                        'admin.site.dashboard.seo.ogDescription'
-                                            | transloco
-                                    "
-                                    [labelTooltip]="'ogDescription'"
-                                    formControlName="ogDescription"
-                                    [rows]="2"
-                                    [showErrors]="true"
-                                    [placeholder]="
-                                        'admin.site.dashboard.placeholders.ogDescription'
-                                            | transloco
-                                    "
-                                >
-                                </spa-textarea>
-
-                                <spa-select
-                                    [label]="
-                                        'admin.site.dashboard.seo.twitterCard'
-                                            | transloco
-                                    "
-                                    formControlName="twitterCard"
-                                    [options]="[
-                                        { value: 'summary', label: 'Summary' },
-                                        {
-                                            value: 'summary_large_image',
-                                            label: 'Summary Large Image',
-                                        },
-                                    ]"
-                                    [showErrors]="true"
-                                >
-                                </spa-select>
-                            </div>
                         </div>
                     }
                 }
             </div>
-        </div>
+        </section>
     </form>
 </div>

@@ -64,6 +64,10 @@ Maintenance mode is enforced at the edge in [`proxy.ts`](../../storefront-nextjs
 - `/_next/*`, `/api/*`, `/cms-media/*`, `/robots.txt`, `/sitemap.xml`, and `/{lang}/maintenance` are excluded.
 - Fail-open: if the CMS call fails, no redirect is applied.
 
+### Hostname validation
+
+`proxy.ts` also enforces hostname isolation when `TENANT_HOSTNAME` env var is set. Requests whose `host` header does not match `TENANT_HOSTNAME` receive HTTP 404 immediately — before any CMS call. This prevents wildcard DNS rules (e.g. `*.craftive.io → same server`) from serving one tenant's storefront for another tenant's subdomain. Leave `TENANT_HOSTNAME` unset in local dev.
+
 The maintenance page itself is rendered in the catch-all route:
 `app/[lang]/[[...slug]]/page.tsx`.
 
@@ -170,19 +174,19 @@ Each renderer calls a `buildXxxModel` function from `components/theme/builders.t
 
 #### Import / seed order
 
-The landing page depends on both template-slot migration and tenant-scoped content imports.
+The landing page depends on tenant-scoped content imports. Theme-owned page templates, slots and components are not preloaded on tenant creation.
 
-1. Restart backend so `backend/src/main/resources/db/tenant/pagebuilder/R__seed_page_templates.sql` is applied by Flyway.
-2. Import `backend/src/main/resources/impex/seed_liko_components.sql` from the Admin UI ImpEx screen (example landing page components, initially typed as generic `SimpleBannerComponent` / `FeatureCardComponent`).
-3. Import `backend/src/main/resources/impex/seed_landing_component_types.sql` from the Admin UI ImpEx screen (creates `HeroBannerComponent`, `AboutBannerComponent`, `VideoSectionComponent`, `AwardBannerComponent`, `ServiceCardComponent`, `ProjectCardComponent`, `InstagramSectionComponent`, `MarqueeTextComponent` and **migrates the 8 homepage components** to their type-specific renderers). Must run after step 2.
-4. Import `backend/src/main/resources/impex/seed_liko_chrome_components.sql` from the Admin UI ImpEx screen (shared header/footer layout components + Home-2 layout copy).
-5. Import `backend/src/main/resources/impex/seed_liko_pages_and_slots.sql` from the Admin UI ImpEx screen (homepage, shared header/footer slots, slot-component bindings).
-6. Import `backend/src/main/resources/impex/seed_pages_and_slots.sql` if the tenant also needs the default content/category/product/search pages.
-7. Import `backend/src/main/resources/impex/seed_about_content_page.sql` (optional) if the tenant should have a sample About page at `/{lang}/about-us` using ContentPageTemplate (TopContent, BodyContent, SideContent slots). Only requires `R__seed_page_templates`; does not depend on Liko landing or shared layout seeds.
-8. Import `backend/src/main/resources/impex/seed_navigation.sql` to create `LandingMainNavNode` and `LandingFooterNavNode`, then bind them to the shared layout navigation components.
-9. Upload image/video assets in Media Library for the tenant.
-10. Import `backend/src/main/resources/impex/seed_liko_media_uids.sql` to assign semantic UIDs (`homepage-hero-bg`, `homepage-project-1`, etc.) to the uploaded files. This aligns media with the `mediaUid` references embedded in component entry `custom_data`. See [Media UID alignment](#media-uid-alignment) below.
-11. For assets not covered by the seed (video poster, service icons), either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
+1. Import `backend/src/main/resources/impex/base/base_site_settings.sql`.
+2. Import `backend/src/main/resources/impex/base/base_media_formats.sql`.
+3. Import `backend/src/main/resources/impex/base/base_component_types.sql`.
+4. Import `backend/src/main/resources/impex/base/base_entry_field_definitions.sql`.
+5. Import `backend/src/main/resources/impex/base/base_product_types.sql`.
+6. Import `backend/src/main/resources/impex/theme/liko/liko_foundation.sql` (theme-owned page templates, template slots, shared header/footer chrome and navigation data).
+7. Upload image/video assets in Media Library for the tenant.
+8. Import `backend/src/main/resources/impex/theme/liko/homepage.sql` (homepage components, homepage slot wiring, homepage component type migration and homepage media UID alignment).
+9. Import `backend/src/main/resources/impex/theme/liko/about_page.sql` (optional) if the tenant should have a sample About page at `/{lang}/about-us`.
+10. Import `backend/src/main/resources/impex/theme/liko/service_page.sql` (optional) if the tenant should have a sample Service page at `/{lang}/service`.
+11. For assets not covered by the seed, either bind them via the admin `Bind` dialog or use responsive media assignments directly on the component/entry.
 
 If these imports are missing or partial, homepage can render incomplete sections because the storefront resolves strictly from CMS payload.
 
@@ -387,10 +391,52 @@ Each route uses `generateMetadata` together with the composite page loaders from
 
 Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 
-- `NEXT_PUBLIC_CMS_API_URL` (base URL for CMS delivery)
-- `TENANT_SUBDOMAIN` / `NEXT_PUBLIC_TENANT_SUBDOMAIN`
-- `TENANT_ID` / `NEXT_PUBLIC_TENANT_ID`
-- `NEXT_OUTPUT=export` enables static export in `next.config.ts`
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_CMS_API_URL` | Yes | Base URL for CMS delivery API (baked into client bundle at build time) |
+| `TENANT_SUBDOMAIN` | **Yes** | Required for proxy routing (`proxy.ts` reads only this var). Also sent as `X-Tenant-Subdomain` on every CMS request. Omitting this causes all routes to return 404. |
+| `TENANT_ID` | No | Sends `X-Tenant-ID` header for CMS identification only. Does **not** replace `TENANT_SUBDOMAIN` for proxy routing. Set both if you prefer ID-based CMS auth alongside subdomain routing. |
+| `TENANT_HOSTNAME` | No | Expected hostname for this deployment. Requests from other hostnames return 404 (see Hostname validation). Leave unset in local dev. |
+| `NEXT_IMAGE_DOMAINS` | No | Comma-separated hostnames allowed for `next/image` optimization. CMS API hostname and localhost are auto-included. |
+| `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
+| `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Must use `NEXT_PUBLIC_` prefix — see note below. Local development may define it in `.env.development`. In this repository, the demo/reference storefront keeps the stage and prod values in tracked `.env.staging` and `.env.production` files. Tenant storefront repositories manage their own value in their own repo/build config. |
+
+`TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.
+
+### Local multi-environment startup
+
+- `npm run start` uses `.env.development` and keeps `.env.local` overrides active for local backend work.
+- `npm run start:stage` starts the local dev server against `.env.staging` so you can test the stage API locally.
+- `npm run start:prod` starts the local dev server against `.env.production` so you can test the prod API locally.
+- `npm run serve` / `npm run serve:stage` / `npm run serve:prod` are for running a previously built SSR server with the matching env profile.
+- Explicit `*:stage` and `*:prod` scripts preload their target env file before Next.js boots, so `.env.local` does not override them.
+- Local stage/prod scripts clear `TENANT_HOSTNAME` before boot so localhost requests are not rejected by hostname isolation.
+
+### Deployment model
+
+`storefront-nextjs` is a **single-tenant per deployment** project. Each deployment knows its own tenant statically via env vars — there is no runtime hostname-to-tenant resolution.
+
+| Deployment | `TENANT_SUBDOMAIN` | `TENANT_HOSTNAME` |
+|---|---|---|
+| Platform demo (stage) | `demo` | `s1-demo.craftive.io` |
+| Platform demo (prod) | `demo` | `demo.craftive.io` |
+| Tenant fork (stage) | `acme` | `s1-acme.craftive.io` |
+| Tenant fork (whitelabel) | `acme` | `acme.com` |
+
+For tenant forks, only `components/theme/` changes. Env vars and deployment config are set independently per fork instance.
+
+Search Console verification follows the same deployment model:
+
+- each storefront deployment can expose one `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` token
+- stage and prod may use different tokens
+- if the variable is unset, no verification meta tag is rendered
+- use the Search Console `HTML tag` method and copy only the `content` attribute value
+- this repository commits the demo/reference storefront tokens in `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production`
+- tenant storefront repositories must define their own verification token in their own repo/build config; the platform demo values are not reused for tenant storefronts
+
+> **Why `NEXT_PUBLIC_` is required:** `app/layout.tsx` is a Server Component and reads env vars at **request time**. In a Docker 2-stage build, `next build` copies `.env.production` into the `.next/standalone` output. At runtime the container only has `NODE_ENV=production` and no other env files, so Next.js loads `.env.production` — regardless of which env file was passed to the build step via `dotenv-cli`. Without `NEXT_PUBLIC_`, a stage build always serves the production key. With `NEXT_PUBLIC_`, Next.js/SWC **inlines the value as a literal string at build time**, making the deployed output independent of runtime env file loading.
 
 ## Caching and revalidation
 
@@ -530,7 +576,7 @@ When `component.searchBox === true`, a `SearchOverlay` button is rendered alongs
 
 Component entries store media references as `mediaUid` strings in `component_entry_i18n.custom_data` (e.g. `{"mediaUid": "homepage-hero-bg"}`). The storefront batch-fetches these via `GET /api/cms/media?uids=homepage-hero-bg&...`. When media is uploaded through the admin Media Library, the system assigns auto-generated UIDs (`cmsitem_26597598`). These do not match the semantic UIDs the component seed expects, so images do not appear on the storefront.
 
-**Solution:** `seed_liko_media_uids.sql` updates media record UIDs to match the semantic names the component entries reference, identified by `original_name`:
+**Solution:** `theme/liko/homepage.sql` updates media record UIDs to match the semantic names the homepage component entries reference, identified by `original_name`:
 
 | Semantic UID | `original_name` | Section |
 |---|---|---|

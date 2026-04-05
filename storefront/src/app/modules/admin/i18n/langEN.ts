@@ -142,6 +142,9 @@ export const langEN = {
                 tenant_admin: 'Tenant Admin',
                 super_admin: 'Super Admin',
             },
+            error: 'Error',
+            warning: 'Warning',
+            neutral: 'Neutral',
             languages: {
                 tr: 'Turkish',
                 en: 'English',
@@ -1034,28 +1037,45 @@ export const langEN = {
                 seo: { title: 'SEO', desc: 'Language-specific SEO defaults' },
             },
             address: {
-                title: 'Address',
+                title: 'Address Information',
                 line1: 'Address Line 1',
+                line1Placeholder: 'Street address',
                 line2: 'Address Line 2',
+                line2Placeholder: 'Apartment, suite, unit (optional)',
                 city: 'City',
+                cityPlaceholder: 'Enter city',
                 state: 'State/Province',
+                statePlaceholder: 'Enter state or province',
                 postalCode: 'Postal Code',
+                postalCodePlaceholder: '10001',
                 country: 'Country',
+                countryPlaceholder: 'Select country',
                 mapEmbedUrl: 'Map Embed URL',
+                mapEmbedUrlPlaceholder: 'Google Maps embed URL',
+                mapEmbedUrlHint: 'iframe embed URL from Google Maps',
             },
             social: {
-                title: 'Social Links',
+                title: 'Social Media Links',
+                description: 'Enter your social media profile links',
                 facebook: 'Facebook',
+                facebookPlaceholder: 'https://facebook.com/yourcompany',
                 instagram: 'Instagram',
+                instagramPlaceholder: 'https://instagram.com/yourcompany',
                 x: 'X (Twitter)',
+                xPlaceholder: 'https://x.com/yourcompany',
                 linkedin: 'LinkedIn',
+                linkedinPlaceholder: 'https://linkedin.com/company/yourcompany',
                 youtube: 'YouTube',
+                youtubePlaceholder: 'https://youtube.com/@yourcompany',
                 tiktok: 'TikTok',
+                tiktokPlaceholder: 'https://tiktok.com/@yourcompany',
             },
             seo: {
                 title: 'SEO Title',
                 description: 'SEO Description',
                 keywords: 'Keywords',
+                headingTR: 'Search Snippet (TR)',
+                headingEN: 'Search Snippet (EN)',
             },
             tabs: {
                 general: 'General',
@@ -1077,8 +1097,6 @@ export const langEN = {
                 social: 'Social Links',
                 siteName: 'Site Name',
                 tagline: 'Tagline',
-                footerText: 'Footer Text',
-                headerTopbarText: 'Header Topbar Text',
                 seoTitle: 'SEO Title',
                 seoDescription: 'SEO Description',
                 keywords: 'Keywords',
@@ -1090,10 +1108,12 @@ export const langEN = {
                 description: 'Manage site settings and status',
                 tabs: {
                     overview: 'Overview',
+                    settings: 'Settings',
                     general: 'General',
                     address: 'Address',
                     social: 'Social Media',
                     seo: 'SEO',
+                    advanced: 'Advanced',
                     technical: 'Technical',
                     security: 'Security',
                 },
@@ -1164,6 +1184,397 @@ export const langEN = {
                         disableMaintenance: 'Disable Maintenance Mode',
                         invalidPreviewUrl: 'Invalid preview URL',
                     },
+                    analytics: {
+                        eyebrow: 'Traffic Snapshot',
+                        title: 'Google Analytics overview',
+                        subtitle:
+                            'A tenant-scoped GA4 pulse for the last 7 days.',
+                        infoAction: 'Show metric details for {{metric}}',
+                        infoSections: {
+                            summary: 'What it shows',
+                            source: 'Data source',
+                            interpretation: 'How to read it',
+                        },
+                        last7Days: 'Last 7 days',
+                        propertyId: 'GA4 property {{value}}',
+                        connected: 'GA4 connected',
+                        lastSynced: 'Last synced {{date}}',
+                        trendEyebrow: 'Audience trend',
+                        trendTitle: 'Active users over the last 7 days',
+                        delta: {
+                            unavailable: 'No comparison yet',
+                            vsPrevious: '{{value}} vs previous 7 days',
+                        },
+                        metrics: {
+                            activeUsers: {
+                                label: 'Active Users',
+                                detail: 'Users who engaged with the site in the selected period',
+                                info: {
+                                    title: 'About active users',
+                                    summary:
+                                        'Shows the number of unique users who meaningfully engaged with your site during the selected 7-day window.',
+                                    source:
+                                        'The value is fetched from the tenant GA4 property through the Google Analytics Data API and compared with the previous 7 days.',
+                                    interpretation:
+                                        'Read it together with new users and engagement rate. If traffic grows while this metric barely moves, acquisition quality or retention may be weakening.',
+                                },
+                            },
+                            screenPageViews: {
+                                label: 'Views',
+                                detail: 'Total page and screen views captured by GA4',
+                                info: {
+                                    title: 'About views',
+                                    summary:
+                                        'Shows the total number of page and screen views. The same user can generate multiple views.',
+                                    source:
+                                        'This card uses the last 7-day total of page and screen view signals recorded in the tenant GA4 property.',
+                                    interpretation:
+                                        'Growth alongside active users usually means deeper content consumption. A sharp increase on its own can also point to refresh-heavy behavior or navigation issues.',
+                                },
+                            },
+                            newUsers: {
+                                label: 'New Users',
+                                detail: 'First-time visitors acquired in the selected period',
+                                info: {
+                                    title: 'About new users',
+                                    summary:
+                                        'Shows users who visited your site for the first time during this period.',
+                                    source:
+                                        'The metric comes from the tenant GA4 property and the overview compares it against the previous 7-day period.',
+                                    interpretation:
+                                        'Review it next to active users. A very high share can mean weak return usage, while a very low share can signal limited acquisition.',
+                                },
+                            },
+                            engagementRate: {
+                                label: 'Engagement Rate',
+                                detail: 'Share of sessions that stayed meaningfully engaged',
+                                info: {
+                                    title: 'About engagement rate',
+                                    summary:
+                                        'Shows the percentage of sessions that counted as engaged sessions out of all sessions.',
+                                    source:
+                                        'The calculation follows GA4 engaged-session rules and is reported from the tenant GA4 property for the last 7 days.',
+                                    interpretation:
+                                        'If traffic rises while this rate drops, the landing experience, content fit, or traffic quality may not be meeting user intent.',
+                                },
+                            },
+                        },
+                        states: {
+                            notConfigured: {
+                                title: 'Connect a GA4 property',
+                                description:
+                                    'Add the tenant-specific GA4 numeric property ID in the Config Control Panel to start showing live traffic metrics here.',
+                                action: 'Open configuration panel',
+                            },
+                            disabled: {
+                                title: 'Analytics snapshot is disabled',
+                                description:
+                                    'The global runtime flag for GA4 snapshots is currently turned off.',
+                            },
+                            noData: {
+                                title: 'No analytics data yet',
+                                description:
+                                    'Tracking may be newly enabled or this property has not recorded activity in the selected period.',
+                            },
+                            accessError: {
+                                title: 'GA4 data could not be loaded',
+                                description:
+                                    'Check the configured property ID and verify that the shared service account can read this GA4 property.',
+                            },
+                        },
+                    },
+                    insights: {
+                        lastSynced: 'Last synced {{date}}',
+                        seo: {
+                            eyebrow: 'Search Visibility',
+                            title: 'SEO snapshot',
+                            subtitle:
+                                'Search Console visibility and indexing signals for the last 28 days.',
+                            infoAction: 'Show metric details for {{metric}}',
+                            infoSections: {
+                                summary: 'What it shows',
+                                source: 'Data source',
+                                interpretation: 'How to read it',
+                            },
+                            last28Days: 'Last 28 days',
+                            trendEyebrow: 'Visibility trend',
+                            trendTitle: 'Clicks and impressions',
+                            metrics: {
+                                clicks: {
+                                    label: 'Clicks',
+                                    detail: 'Total clicks coming from Google Search',
+                                    info: {
+                                        title: 'About clicks',
+                                        summary:
+                                            'Shows how many times users clicked through to your site from Google Search in the last 28 days.',
+                                        source:
+                                            'The value is fetched from the tenant Search Console property through the backend and compared with the previous period.',
+                                        interpretation:
+                                            'Track it together with impressions and CTR. If impressions rise but clicks do not, your snippets or rankings may need work.',
+                                    },
+                                },
+                                impressions: {
+                                    label: 'Impressions',
+                                    detail: 'Times the site appeared in search results',
+                                    info: {
+                                        title: 'About impressions',
+                                        summary:
+                                            'Shows how often your site appeared in Google search results.',
+                                        source:
+                                            'The overview uses the tenant Search Console performance report for the last 28 days.',
+                                        interpretation:
+                                            'This is an early signal. Impressions can grow before clicks when your pages begin ranking for more queries.',
+                                    },
+                                },
+                                ctr: {
+                                    label: 'CTR',
+                                    detail: 'Click-through rate',
+                                    info: {
+                                        title: 'About CTR',
+                                        summary:
+                                            'Shows what percentage of impressions turned into clicks.',
+                                        source:
+                                            'CTR is derived from clicks and impressions within the same 28-day Search Console window.',
+                                        interpretation:
+                                            'If position is strong but CTR is weak, title and meta copy may need improvement. If position is also weak, ranking gains usually matter first.',
+                                    },
+                                },
+                                position: {
+                                    label: 'Average Position',
+                                    detail: 'Average ranking in search results',
+                                    info: {
+                                        title: 'About average position',
+                                        summary:
+                                            'Shows the average ranking position across the queries where your site appeared.',
+                                        source:
+                                            'The metric comes from the average position value reported by the tenant Search Console property.',
+                                        interpretation:
+                                            'Lower is better. Read it with impressions because changes in query mix can move the average even when individual pages stay stable.',
+                                    },
+                                },
+                            },
+                            inspection: {
+                                eyebrow: 'Indexing status',
+                                title: 'URL inspection',
+                                verdict: 'Verdict',
+                                indexing: 'Indexing',
+                                robots: 'Robots',
+                                canonical: 'Canonical',
+                                sitemaps: 'Sitemaps',
+                                lastCrawl: 'Last crawl {{date}}',
+                                mismatch: 'Mismatch',
+                                aligned: 'Aligned',
+                                none: 'No sitemap detected',
+                            },
+                            states: {
+                                notConfigured: {
+                                    title: 'Add a Search Console property',
+                                    description:
+                                        'Set the tenant Search Console property URL in the Config Control Panel to enable the SEO snapshot.',
+                                    action: 'Open configuration panel',
+                                },
+                                disabled: {
+                                    title: 'SEO insights are disabled',
+                                    description:
+                                        'The platform or tenant SEO insights flag is currently turned off.',
+                                },
+                                noData: {
+                                    title: 'No SEO data yet',
+                                    description:
+                                        'The property may be newly connected or Search Console may not have enough data for the selected period yet.',
+                                },
+                                accessError: {
+                                    title: 'SEO data could not be loaded',
+                                    description:
+                                        'Check the property access and verify that the shared Google service account can read it.',
+                                },
+                            },
+                        },
+                        performance: {
+                            eyebrow: 'Experience Quality',
+                            title: 'Performance snapshot',
+                            subtitle:
+                                'Desktop Core Web Vitals summary based on CrUX real-user data.',
+                            desktopOnly: 'Desktop p75',
+                            trendEyebrow: 'Experience trend',
+                            trendTitle: 'Recent performance curve',
+                            scope: {
+                                url: 'URL scope',
+                                origin: 'Origin fallback',
+                            },
+                            score: {
+                                label: 'Experience score',
+                                caption: 'Overall health',
+                                healthy: 'Healthy',
+                                attention: 'Needs attention',
+                                critical: 'Critical',
+                            },
+                            metrics: {
+                                lcp: { label: 'LCP' },
+                                inp: { label: 'INP' },
+                                cls: { label: 'CLS' },
+                                ttfb: { label: 'TTFB' },
+                            },
+                            assessment: {
+                                good: 'Good',
+                                needs_improvement: 'Needs improvement',
+                                poor: 'Poor',
+                                unknown: 'Unknown',
+                            },
+                            states: {
+                                notConfigured: {
+                                    title: 'Public site URL could not be resolved',
+                                    description:
+                                        'The performance snapshot needs a tenant public domain or custom domain.',
+                                },
+                                disabled: {
+                                    title: 'Performance snapshot is disabled',
+                                    description:
+                                        'The platform or tenant SEO insights flag is currently turned off.',
+                                },
+                                noData: {
+                                    title: 'No CrUX data yet',
+                                    description:
+                                        'The URL may not have enough real-user traffic data yet.',
+                                },
+                                accessError: {
+                                    title: 'Performance data could not be loaded',
+                                    description:
+                                        'Check the CrUX API key and backend access configuration.',
+                                },
+                            },
+                        },
+                    },
+                    labels: {
+                        siteOverview: 'Site Overview',
+                        updated: 'Updated',
+                        domain: 'Domain',
+                        storage: 'Storage',
+                        languages: 'Languages',
+                        modules: 'Modules',
+                        operationalSpotlight: 'Operational Spotlight',
+                        siteHealthAtAGlance: 'Site health at a glance',
+                        opsScore: 'Ops Score',
+                        contentMix: 'Content Mix',
+                        distribution: 'Distribution',
+                        healthBreakdown: 'Health Breakdown',
+                        liveSignals: 'Live signals',
+                        activityTrend: 'Activity Trend',
+                        activityFeed: 'Activity Feed',
+                        type: 'Type',
+                        activity: 'Activity',
+                        user: 'User',
+                        when: 'When',
+                        publishing: 'Publishing',
+                        searchVisibility: 'Search Visibility',
+                        security: 'Security',
+                        pagesLive: 'Pages Live',
+                        productsLive: 'Products Live',
+                        searchIndex: 'Search Index',
+                        sitemap: 'Sitemap',
+                    },
+                    meta: {
+                        noRecentChanges: 'No recent changes',
+                        noRecentUpdates: 'No recent updates',
+                        publishedCount: '{{count}} published',
+                        activeCount: '{{count}} active',
+                        liveCount: '{{published}}/{{total}} published',
+                        liveActiveCount: '{{published}}/{{total}} active',
+                        storedMb: '{{value}} MB stored',
+                        updatedOn: 'Updated {{date}}',
+                        notConfigured: 'Not configured',
+                        noneConfigured: 'None configured',
+                        noneLoaded: 'None loaded',
+                        custom: 'Custom',
+                        platform: 'Platform',
+                        customDomainConnected: 'Custom domain connected',
+                        usingPlatformDomain: 'Using platform domain',
+                        indexable: 'Indexable',
+                        hidden: 'Hidden',
+                        twoFactorRequired: '2FA required',
+                        twoFactorDisabled: '2FA disabled',
+                        cookieConsentEnabled: 'Cookie consent enabled',
+                        cookieConsentDisabled: 'Cookie consent disabled',
+                        searchCrawlEnabled: 'Search engines can crawl the site',
+                        searchCrawlBlocked: 'Search engines are blocked',
+                        sitemapEnabled: 'Sitemap enabled',
+                        sitemapDisabled: 'Sitemap disabled',
+                        sitemapAvailable: 'Sitemap is available',
+                        sitemapUnavailable: 'Sitemap is disabled',
+                        totalCount: '{{count}} total',
+                        metricsCount: '{{count}} metrics',
+                        trendWindow: '{{count}}d window',
+                        trendSlice: '{{start}} - {{end}}',
+                        noActivitySlice: 'No activity slice',
+                        noContentMetrics: 'No content metrics yet',
+                        noActivityInPeriod: 'No activity in this period',
+                        tryAnotherPeriod:
+                            'Try another 7 day slice or perform actions to generate activity',
+                        performActionsForActivity:
+                            'Perform actions on pages, components or media to see activity',
+                        eventsCount: '{{count}} events',
+                        previousTrendPeriod: 'Show previous 7 day period',
+                        nextTrendPeriod: 'Show next 7 day period',
+                        unknown: 'Unknown',
+                    },
+                    spotlight: {
+                        status: {
+                            healthy: 'Healthy',
+                            attention: 'Needs attention',
+                            critical: 'Critical',
+                        },
+                        summary: {
+                            healthy:
+                                'Publishing, discovery and security signals look stable.',
+                            attention:
+                                'A few operational signals still need review before the site is fully ready.',
+                            critical:
+                                'Critical visibility or publishing blockers need action before launch.',
+                        },
+                        recommendations: {
+                            label: 'Priority actions',
+                            reviewMaintenance: {
+                                title: 'Review maintenance mode',
+                                detail:
+                                    'Maintenance mode is active. Re-open the site when publishing checks are complete.',
+                            },
+                            enableIndexing: {
+                                title: 'Enable search indexing',
+                                detail:
+                                    'Search engines are currently blocked. Turn indexing back on to restore discoverability.',
+                            },
+                            enableSitemap: {
+                                title: 'Enable sitemap generation',
+                                detail:
+                                    'Turn sitemap generation back on so crawlers can discover new content faster.',
+                            },
+                            publishPages: {
+                                title: 'Publish remaining pages',
+                                detail:
+                                    '{{count}} pages are still in draft and are lowering launch readiness.',
+                            },
+                            requireTwoFactor: {
+                                title: 'Require 2FA for tenant users',
+                                detail:
+                                    'Strengthen admin access before launch by enabling mandatory two-factor authentication.',
+                            },
+                            connectDomain: {
+                                title: 'Finalize domain setup',
+                                detail:
+                                    'Connect and verify the preferred public domain when the brand site is ready.',
+                            },
+                            healthy: {
+                                title: 'Operational signals look strong',
+                                detail:
+                                    'The main launch signals are in a healthy state. Continue monitoring recent changes.',
+                            },
+                        },
+                    },
+                    series: {
+                        created: 'Created',
+                        updated: 'Updated',
+                        published: 'Published',
+                    },
                     thisWeek: 'this week',
                     today: 'today',
                 },
@@ -1177,47 +1588,72 @@ export const langEN = {
                     siteInfo: 'Site Information',
                     siteName: 'Site Name',
                     tagline: 'Tagline',
-                    footerText: 'Footer Text',
-                    headerTopbarText: 'Header Topbar Text',
                 },
                 address: {
                     title: 'Address Information',
                     line1: 'Address Line 1',
+                    line1Placeholder: 'Street address',
                     line2: 'Address Line 2',
+                    line2Placeholder: 'Apartment, suite, unit (optional)',
                     city: 'City',
+                    cityPlaceholder: 'Enter city',
                     state: 'State/Province',
+                    statePlaceholder: 'Enter state or province',
                     postalCode: 'Postal Code',
+                    postalCodePlaceholder: '10001',
                     country: 'Country',
+                    countryPlaceholder: 'Select country',
                     mapEmbedUrl: 'Map Embed URL',
+                    mapEmbedUrlPlaceholder: 'Google Maps embed URL',
+                    mapEmbedUrlHint: 'iframe embed URL from Google Maps',
                 },
                 social: {
                     title: 'Social Media',
-                    description: 'Enter your social media account URLs',
+                    description:
+                        'Add only the social profiles you actively maintain to keep the brand presence credible.',
                     facebook: 'Facebook',
+                    facebookPlaceholder: 'https://facebook.com/yourcompany',
                     instagram: 'Instagram',
+                    instagramPlaceholder: 'https://instagram.com/yourcompany',
                     x: 'X (Twitter)',
+                    xPlaceholder: 'https://x.com/yourcompany',
                     linkedin: 'LinkedIn',
+                    linkedinPlaceholder:
+                        'https://linkedin.com/company/yourcompany',
                     youtube: 'YouTube',
+                    youtubePlaceholder: 'https://youtube.com/@yourcompany',
                     tiktok: 'TikTok',
+                    tiktokPlaceholder: 'https://tiktok.com/@yourcompany',
                 },
                 seo: {
                     global: 'Global SEO Settings',
                     languageSpecific: 'Language-Specific SEO Settings',
+                    editorTitle: 'Shape What Searchers See',
+                    titleCounterLabel: 'Title Length',
+                    descriptionCounterLabel: 'Description Length',
                     canonicalBaseUrl: 'Canonical Base URL',
                     canonicalBaseUrlHint:
                         "Your site's canonical URL (e.g., https://www.example.com)",
-                    robots: 'Robots',
+                    robots: 'Robots Meta Tag',
                     robotsPlaceholder: 'Select Robots Meta Tag',
                     robotsHint: 'Default: index, follow',
                     title: 'SEO Title',
+                    titlePlaceholder: 'Homepage title…',
                     description: 'SEO Description',
+                    descriptionPlaceholder:
+                        'Summarize the page value in one persuasive sentence…',
                     keywords: 'Keywords',
-                    keywordsHint: 'Separate with commas',
+                    keywordsPlaceholder:
+                        'brand keyword, core topic, service area',
                     ogTitle: 'Open Graph Title',
+                    ogTitleHint: 'Title displayed when shared on social media',
                     ogDescription: 'Open Graph Description',
+                    ogDescriptionHint: 'Description displayed when shared on social media',
                     twitterCard: 'Twitter Card Type',
+                    twitterCardHint: 'Determines how content appears on Twitter',
                 },
                 technical: {
+                    title: 'Technical Settings',
                     infrastructure: 'Infrastructure Information',
                     databaseName: 'Database Name',
                     domain: 'Domain Information',
@@ -1232,7 +1668,8 @@ export const langEN = {
                     sitemapEnabled: 'Sitemap Enabled',
                     sitemapEnabledDesc: 'Generate automatic sitemap.xml',
                     robotsTxt: 'robots.txt',
-                    robotsTxtHint: 'Rules for search engine bots',
+                    robotsTxtHint: 'Define rules for search engine bots',
+                    robotsTxtPlaceholder: 'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
                     verification: 'Verification Codes',
                     verificationDesc:
                         'Search engine webmaster tools verification codes',
@@ -1244,12 +1681,11 @@ export const langEN = {
                     cookieConsentEnabledDesc:
                         'Show cookie consent banner to users',
                     cookieConsentText: 'Cookie Consent Text',
+                    cookieConsentTextPlaceholder: 'This site uses cookies to enhance your experience.',
                 },
                 placeholders: {
                     mediaUid: 'e.g. abc-123-def',
                     tagline: 'A catchy tagline for your site',
-                    footerText: 'Copyright © 2024 Company Name',
-                    headerText: 'Announcement or campaign text',
                     addressLine1: 'Street address, P.O. box',
                     addressLine2: 'Apartment, suite, unit, etc.',
                     city: 'City',
@@ -1320,22 +1756,12 @@ export const langEN = {
             },
             errors: {
                 noTenant: 'Tenant not found',
-                loadTypesFailed: 'Failed to load types',
-                loadFailed: 'Failed to load components',
                 noTypes: 'Please create a component type first',
-                createFailed: 'Failed to create component',
                 loadDetailFailed: 'Failed to load component details',
-                updateFailed: 'Failed to update component',
                 saveTranslationsFailed: 'Failed to save translations',
-                deleteFailed: 'Failed to delete component',
             },
             info: {
                 loadingTypes: 'Loading component types...',
-            },
-            success: {
-                created: 'Component created successfully',
-                updated: 'Component updated successfully',
-                deleted: 'Component deleted successfully',
             },
             categories: {
                 navigation: 'Navigation',
@@ -1380,14 +1806,6 @@ export const langEN = {
                 errors: {
                     cannotEditSystem: 'System types cannot be edited',
                     cannotDeleteSystem: 'System types cannot be deleted',
-                    createFailed: 'Failed to create type',
-                    updateFailed: 'Failed to update type',
-                    deleteFailed: 'Failed to delete type',
-                },
-                success: {
-                    created: 'Type created successfully',
-                    updated: 'Type updated successfully',
-                    deleted: 'Type deleted successfully',
                 },
             },
             entryFields: {
@@ -1481,14 +1899,6 @@ export const langEN = {
                 saveTranslation: 'Save Translation',
                 publish: 'Publish',
                 count: 'items',
-                createSuccess: 'Entry created successfully',
-                updateSuccess: 'Entry updated successfully',
-                deleteSuccess: 'Entry deleted successfully',
-                createFailed: 'Failed to create entry',
-                updateFailed: 'Failed to update entry',
-                deleteFailed: 'Failed to delete entry',
-                loadFailed: 'Failed to load entries',
-                loadFieldsFailed: 'Failed to load field definitions',
                 saveI18nFailed: 'Failed to save translations',
                 deleteTitle: 'Delete Entry',
                 confirmDelete: 'Are you sure you want to delete entry {{uid}}?',
@@ -1755,6 +2165,7 @@ export const langEN = {
             platformDashboard: 'Platform Dashboard',
             platformSettings: 'Platform Settings',
             platformMail: 'Platform Mail',
+            platformDemoRequests: 'Demo requests',
             tenantManagement: 'Tenant Management',
         },
         tenants: {
@@ -1980,6 +2391,28 @@ export const langEN = {
                     resetMessage: 'Are you sure you want to reset to default values?',
                 },
             },
+            demoRequests: {
+                title: 'Landing demo requests',
+                subtitle: 'Inquiries submitted from the marketing landing site',
+                searchPlaceholder: 'Search by name, email, phone or message',
+                detail: {
+                    title: 'Demo request details',
+                },
+                grid: {
+                    noData: 'No demo requests yet',
+                },
+                fields: {
+                    fullName: 'Name',
+                    email: 'Email',
+                    phone: 'Phone',
+                    message: 'Message',
+                    locale: 'Locale',
+                    source: 'Source',
+                    clientIp: 'IP',
+                    userAgent: 'User agent',
+                    createdAt: 'Submitted',
+                },
+            },
         },
         provisioning: {
             title: 'Module Provisioning',
@@ -2187,18 +2620,12 @@ export const langEN = {
         signIn: {
             title: 'Sign in',
             demoInfo:
-                'You are browsing Fuse Demo. Click on the "Sign in" button to access the Demo and Documentation.',
+                'You are viewing Craftive. Sign in to open the admin workspace.',
             emailLabel: 'Email address',
             passwordLabel: 'Password',
             rememberMe: 'Remember me',
             forgotPassword: 'Forgot password?',
             submit: 'Sign in',
-            right: {
-                title1: 'Welcome to',
-                title2: 'our community',
-                description:
-                    'Craftive helps you build customizable dashboards with rich modules. Join us and start building your application today.',
-            },
             '2fa': {
                 info: 'A verification code has been sent to your email.',
                 otpLabel: 'Verification Code',
@@ -2229,32 +2656,34 @@ export const langEN = {
                 passwordConfirmRequired: 'Password confirmation is required',
             },
             right: {
-                title1: 'Welcome to',
-                title2: 'our community',
+                title1: 'Modular foundation',
+                title2: 'tenant by tenant',
                 description:
-                    'Fuse helps developers to build organized and well coded dashboards full of beautiful and rich modules. Join us and start building your application today.',
-                communityStat: "More than 17k people joined us, it's your turn",
+                    'Craftive delivers modular project solutions: a reusable platform with isolated tenant databases, rich CMS modules, and headless delivery when you need it.',
+                communityStat:
+                    'Content, catalog, and marketing operations on one adaptable base.',
             },
         },
         confirmationRequired: {
             title: 'Confirmation required',
             message:
-                'A confirmation mail with instructions has been sent to your email address. Follow those instructions to confirm your email address and activate your account.',
+                'We sent instructions to your email. Follow the link to verify your address and activate your account.',
         },
         forgotPassword: {
             title: 'Forgot password?',
-            subtitle: 'Fill the form to reset your password',
+            subtitle:
+                'Enter your email. If an account exists, we will send reset instructions.',
             submit: 'Send reset link',
             alerts: {
                 success:
-                    "Password reset sent! You'll receive an email if you are registered on our system.",
+                    "If this email is registered, you will receive reset instructions shortly.",
                 error:
-                    'Email does not found! Are you sure you are already a member?',
+                    'We could not complete this request. Check the email address or contact your administrator.',
             },
         },
         resetPassword: {
             title: 'Reset your password',
-            subtitle: 'Create a new password for your account',
+            subtitle: 'Choose a new password to secure your account',
             verifying: 'Verifying reset token...',
             confirmLabel: 'Password (Confirm)',
             submit: 'Reset your password',
@@ -2284,7 +2713,7 @@ export const langEN = {
                 title1: 'Welcome to',
                 title2: 'Craftive',
                 description:
-                    "You've been invited to join the platform. Set your password to get started and access your dashboard.",
+                    'Complete your invitation by setting a password. You will access your tenant workspace on our modular, isolated platform.',
             },
             errors: {
                 tokenMissing: 'Invalid or missing verification token.',
@@ -2299,7 +2728,7 @@ export const langEN = {
         },
         signUp: {
             title: 'Sign up',
-            submit: 'Create your free account',
+            submit: 'Create account',
             agreements: {
                 prefix: 'I agree with',
                 and: 'and',
@@ -2340,12 +2769,6 @@ export const langEN = {
             otpInfo: 'A verification code has been sent to your email.',
             otpLabel: 'Verification Code',
             verify: 'Verify',
-            right: {
-                title1: 'Config',
-                title2: 'panel',
-                description:
-                    'Access your configuration settings with secure sign-in.',
-            },
         },
     },
     common: {

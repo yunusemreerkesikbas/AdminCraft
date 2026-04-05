@@ -1,156 +1,262 @@
-<div class="flex min-h-full w-full flex-col">
-    <!-- Header -->
-    <div class="bg-card">
-        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
-            <div
-                class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center"
-            >
-                <!-- Title and description -->
-                <div class="flex min-w-0 flex-auto flex-col">
+<div class="spa-site-dashboard flex min-h-full w-full flex-col">
+    <section class="spa-site-dashboard__hero">
+        <div
+            class="mx-auto flex w-full max-w-screen-xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-7"
+        >
+            <div class="spa-site-dashboard__hero-card">
+                <div class="min-w-0 space-y-4">
                     @if (tenantSig(); as tenant) {
-                        <div class="mb-2">
-                            <div
-                                class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
-                            >
-                                {{ tenant.companyName }} ({{
-                                    tenant.subdomain
-                                }})
-                            </div>
-                        </div>
-                    }
-
-                    <div class="flex flex-wrap items-center gap-3">
-                        <h1
-                            class="truncate text-2xl font-bold leading-7 tracking-tight md:text-5xl md:leading-snug"
-                        >
-                            {{ 'admin.site.dashboard.title' | transloco }},
-                            {{ userSig()?.name }}!
-                        </h1>
-                        @if (overviewSig()?.status?.state === 'maintenance') {
-                            <span
-                                class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
-                            >
-                                {{
-                                    'admin.common.status.maintenance' | transloco
-                                }}
-                            </span>
-                        }
-                    </div>
-                    <p class="text-secondary mt-1 leading-6">
-                        {{ 'admin.site.dashboard.description' | transloco }}
-                    </p>
-
-                    @if (modulesSig().length) {
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            @for (mod of modulesSig(); track mod.moduleCode) {
-                                <div
-                                    class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <div class="spa-site-dashboard__tenant-pill">
+                                <span class="truncate"
+                                    >{{ tenant.companyName }}
+                                    ({{ tenant.subdomain }})</span
                                 >
-                                    {{ mod.moduleName || mod.moduleCode }}
-                                </div>
+                            </div>
+
+                            @if (
+                                overviewSig()?.status?.state === 'maintenance'
+                            ) {
+                                <span class="spa-site-dashboard__status-pill">
+                                    {{
+                                        'admin.common.status.maintenance'
+                                            | transloco
+                                    }}
+                                </span>
                             }
                         </div>
                     }
+
+                    <div
+                        class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+                    >
+                        <div class="min-w-0 space-y-2">
+                            <h1
+                                class="max-w-4xl text-balance text-2xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-3xl lg:text-[2.35rem]"
+                            >
+                                {{ 'admin.site.dashboard.title' | transloco }},
+                                {{ userSig()?.name }}!
+                            </h1>
+                            <p
+                                class="max-w-2xl text-pretty text-sm leading-6 text-slate-600"
+                            >
+                                {{
+                                    'admin.site.dashboard.description'
+                                        | transloco
+                                }}
+                            </p>
+                        </div>
+
+                        @if (overviewSig()?.actions) {
+                            <div class="spa-site-dashboard__hero-actions">
+                                @if (overviewSig()?.actions?.canPreview) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--primary"
+                                        (click)="onHeroPreview()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:eye"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.preview'
+                                                        | transloco
+                                                }}
+                                            </span>
+                                        </span>
+                                    </button>
+                                }
+
+                                @if (overviewSig()?.actions?.canEnableMaintenance) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--warning"
+                                        (click)="onHeroEnableMaintenance()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:wrench-screwdriver"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.enableMaintenance'
+                                                        | transloco
+                                                }}
+                                            </span>
+                                        </span>
+                                    </button>
+                                }
+
+                                @if (overviewSig()?.actions?.canDisableMaintenance) {
+                                    <button
+                                        mat-stroked-button
+                                        class="spa-site-dashboard__action-button spa-site-dashboard__action-button--success"
+                                        (click)="onHeroDisableMaintenance()"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <mat-icon
+                                                aria-hidden="true"
+                                                class="icon-size-4"
+                                                svgIcon="heroicons_outline:check-circle"
+                                            ></mat-icon>
+                                            <span class="text-sm font-semibold">
+                                                {{
+                                                    'admin.site.dashboard.overview.actions.disableMaintenance'
+                                                        | transloco
+                                                }}
+                                            </span>
+                                        </span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Main -->
-    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
-        <div class="mx-auto w-full max-w-screen-xl">
-            <!-- Tabs -->
-            <mat-tab-group
-                class="sm:px-2"
-                mat-stretch-tabs="false"
-                [animationDuration]="'0'"
-                [selectedIndex]="getTabIndex(selectedTabSig())"
-                (selectedIndexChange)="onTabSelectionChange($event)"
-            >
-                @for (tab of tabs; track tab.id) {
-                    <mat-tab>
-                        <ng-template mat-tab-label>
-                            <mat-icon
-                                class="mr-2 icon-size-5"
-                                [svgIcon]="tab.icon"
-                            ></mat-icon>
-                            <span>{{ tab.label | transloco }}</span>
-                        </ng-template>
-                        <ng-template matTabContent>
-                            <div class="flex-1 p-6 sm:p-8">
-                                @if (
-                                    loadingSig() && selectedTabSig() === tab.id
-                                ) {
-                                    <div
-                                        class="flex h-64 items-center justify-center"
-                                    >
+    <section class="flex-1">
+        <div
+            class="mx-auto flex w-full max-w-screen-xl flex-1 flex-col px-4 pb-8 sm:px-6 lg:px-8 lg:pb-10"
+        >
+            <div class="spa-site-dashboard__tabs">
+                <mat-tab-group
+                    class="spa-site-dashboard__tab-group"
+                    mat-stretch-tabs="false"
+                    [animationDuration]="'0'"
+                    [selectedIndex]="getTabIndex(selectedTabSig())"
+                    (selectedIndexChange)="onTabSelectionChange($event)"
+                >
+                    @for (tab of tabs; track tab.id) {
+                        <mat-tab>
+                            <ng-template mat-tab-label>
+                                <mat-icon
+                                    aria-hidden="true"
+                                    class="icon-size-5"
+                                    [svgIcon]="tab.icon"
+                                ></mat-icon>
+                                <span>{{ tab.label | transloco }}</span>
+                            </ng-template>
+                            <ng-template matTabContent>
+                                <div class="spa-site-dashboard__tab-panel">
+                                    @if (
+                                        loadingSig()
+                                        && selectedTabSig() === tab.id
+                                    ) {
                                         <div
-                                            class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"
-                                        ></div>
-                                    </div>
-                                } @else {
-                                    @switch (tab.id) {
-                                        @case ('overview') {
-                                            <spa-site-overview
-                                                [overview]="overviewSig()"
-                                                (refresh)="refreshOverview()"
-                                            />
-                                        }
-                                        @case ('general') {
-                                            <spa-site-general
-                                                [settings]="settingsSig()"
-                                                (settingsUpdated)="
-                                                    onSettingsUpdated($event)
-                                                "
-                                            />
-                                        }
-                                        @case ('address') {
-                                            <spa-site-address
-                                                [settings]="settingsSig()"
-                                                (settingsUpdated)="
-                                                    onSettingsUpdated($event)
-                                                "
-                                            />
-                                        }
-                                        @case ('social') {
-                                            <spa-site-social
-                                                [settings]="settingsSig()"
-                                                (settingsUpdated)="
-                                                    onSettingsUpdated($event)
-                                                "
-                                            />
-                                        }
-                                        @case ('seo') {
-                                            <spa-site-seo
-                                                [settings]="settingsSig()"
-                                                (settingsUpdated)="
-                                                    onSettingsUpdated($event)
-                                                "
-                                            />
-                                        }
-                                        @case ('technical') {
-                                            <spa-site-technical
-                                                [technical]="technicalSig()"
-                                                (technicalUpdated)="
-                                                    onTechnicalUpdated($event)
-                                                "
-                                            />
-                                        }
-                                        @case ('security') {
-                                            <spa-site-security
-                                                [security]="securitySig()"
-                                                (securityUpdated)="
-                                                    onSecurityUpdated($event)
-                                                "
-                                            />
+                                            class="flex min-h-[24rem] items-center justify-center"
+                                        >
+                                            <div
+                                                class="spa-site-dashboard__loading-pill"
+                                            >
+                                                <div
+                                                    class="h-8 w-8 animate-spin rounded-full border-2 border-sky-200 border-t-blue-600"
+                                                ></div>
+                                                <span
+                                                    class="text-sm font-semibold text-slate-600"
+                                                >
+                                                    {{ tab.label | transloco }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    } @else {
+                                        @switch (tab.id) {
+                                            @case ('overview') {
+                                                <spa-site-overview
+                                                    [overview]="overviewSig()"
+                                                    [analytics]="
+                                                        analyticsSig()
+                                                    "
+                                                    [insights]="
+                                                        insightsSig()
+                                                    "
+                                                    [tenant]="tenantSig()"
+                                                    [modules]="modulesSig()"
+                                                    [activityFeed]="
+                                                        activityFeedSig()
+                                                    "
+                                                    [activityFeedPageIndex]="
+                                                        activityFeedPageIndexSig()
+                                                    "
+                                                    [activityFeedPageSize]="
+                                                        activityFeedPageSizeSig()
+                                                    "
+                                                    [activityFeedPageSizeOptions]="
+                                                        activityFeedPageSizeOptions
+                                                    "
+                                                    [activityFeedTotalElements]="
+                                                        activityFeedTotalElementsSig()
+                                                    "
+                                                    [trendPageIndex]="
+                                                        trendPageIndexSig()
+                                                    "
+                                                    [trend]="trendSig()"
+                                                    (activityFeedPageChange)="
+                                                        onActivityFeedPageChange(
+                                                            $event
+                                                        )
+                                                    "
+                                                    (trendPageChange)="
+                                                        onTrendPageChange($event)
+                                                    "
+                                                    (refresh)="refreshOverview()"
+                                                />
+                                            }
+                                            @case ('settings') {
+                                                <spa-site-settings
+                                                    [settings]="settingsSig()"
+                                                    (settingsUpdated)="
+                                                        onSettingsUpdated(
+                                                            $event
+                                                        )
+                                                    "
+                                                />
+                                            }
+                                            @case ('seo') {
+                                                <spa-site-seo
+                                                    [settings]="settingsSig()"
+                                                    (settingsUpdated)="
+                                                        onSettingsUpdated(
+                                                            $event
+                                                        )
+                                                    "
+                                                />
+                                            }
+                                            @case ('advanced') {
+                                                <div class="space-y-6">
+                                                    <spa-site-technical
+                                                        [technical]="technicalSig()"
+                                                        (technicalUpdated)="
+                                                            onTechnicalUpdated(
+                                                                $event
+                                                            )
+                                                        "
+                                                    />
+                                                    <spa-site-security
+                                                        [security]="securitySig()"
+                                                        (securityUpdated)="
+                                                            onSecurityUpdated(
+                                                                $event
+                                                            )
+                                                        "
+                                                    />
+                                                </div>
+                                            }
                                         }
                                     }
-                                }
-                            </div>
-                        </ng-template>
-                    </mat-tab>
-                }
-            </mat-tab-group>
+                                </div>
+                            </ng-template>
+                        </mat-tab>
+                    }
+                </mat-tab-group>
+            </div>
         </div>
-    </div>
+    </section>
 </div>

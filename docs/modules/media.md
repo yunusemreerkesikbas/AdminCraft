@@ -132,9 +132,9 @@ Linked usages:
 
 ### Media UID alignment for seeded content
 
-**Why UIDs mismatch:** The upload endpoint (`POST /api/media`) auto-generates UIDs in the form `cmsitem_<random>` — there is no way to specify a custom UID at upload time. The update endpoint (`PUT /api/media/{id}`) only exposes `isPublic` and `tags`; it does not allow changing the UID. Component entry `custom_data` fields seeded by `seed_liko_components.sql` reference **semantic UIDs** (e.g. `homepage-hero-bg`, `homepage-project-1`). These do not match the auto-generated values, causing `GET /api/cms/media?uids=homepage-hero-bg&...` to return empty results and images to not appear on the storefront.
+**Why UIDs mismatch:** The upload endpoint (`POST /api/media`) auto-generates UIDs in the form `cmsitem_<random>` — there is no way to specify a custom UID at upload time. The update endpoint (`PUT /api/media/{id}`) only exposes `isPublic` and `tags`; it does not allow changing the UID. Component entry `custom_data` fields seeded by the theme page scripts reference **semantic UIDs** (e.g. `homepage-hero-bg`, `homepage-project-1`). These do not match the auto-generated values, causing `GET /api/cms/media?uids=homepage-hero-bg&...` to return empty results and images to not appear on the storefront.
 
-**Fix:** Run `backend/src/main/resources/impex/seed_liko_media_uids.sql` after uploading all assets. It updates `media.uid` by matching on `original_name` — the only supported way to assign semantic UIDs to uploaded media. See the [ImpEx execution order](./impex.md) for correct sequencing.
+**Fix:** Run the relevant theme page script after uploading all assets. For the default Liko theme this is `backend/src/main/resources/impex/theme/liko/homepage.sql` for homepage assets, `backend/src/main/resources/impex/theme/liko/about_page.sql` for About assets, and `backend/src/main/resources/impex/theme/liko/service_page.sql` for Service assets. These scripts update `media.uid` by matching on `original_name` — the only supported way to assign semantic UIDs to uploaded media. See the [ImpEx execution order](./impex.md) for correct sequencing.
 
 ### Site logo media fields
 
@@ -156,14 +156,20 @@ Craftive supports pluggable storage backends via `StorageAdapter`. The active pr
 ### CDN architecture (stage/prod)
 
 ```
-Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
+Upload  →  Backend  →  DO Spaces FRA1 (origin, CDN enabled)
                               ↓
-                       Cloudflare CDN (orange-cloud proxy)
+                    Cloudflare Worker (reverse proxy)
+                    - s1-cdn.craftive.io/* → craftive-media-stage.fra1.cdn.digitaloceanspaces.com
+                    - media.craftive.io/*  → craftive-media-prod.fra1.cdn.digitaloceanspaces.com
+                    + Cloudflare edge cache (Cache-Control: public, max-age=31536000, immutable)
+                    + WAF + DDoS protection
                               ↓
-               media.craftive.io  /  s1.media.craftive.io
+               media.craftive.io  /  s1-cdn.craftive.io
 ```
 
-- DO Spaces CDN is **disabled** — Cloudflare CDN covers this at 330 PoP.
+- DO Spaces CDN is **enabled** (without custom domain) — Worker proxies to the DO CDN endpoint so origin-level caching is also active.
+- **Cloudflare Origin Rule (Host Header Override) is Enterprise-only** and cannot be used on free/pro plans. Cloudflare Worker is the alternative: it rewrites the hostname before forwarding the request to DO Spaces CDN, bypassing the Host header restriction.
+- DNS records for CDN domains use `AAAA 100::` (dummy IPv6) with Proxy ON — the Worker intercepts all requests before they reach the origin, so no real IP is needed.
 - UUID-based file names are immutable → `Cache-Control: public, max-age=31536000, immutable` → near-100% Cloudflare cache hit rate.
 - Object key isolation: `{tenantSubdomain}/media/{uuid}.{ext}` (cross-tenant collision impossible).
 
@@ -171,7 +177,7 @@ Upload  →  Backend  →  DigitalOcean Spaces (FRA1, origin)
 
 | Env | Bucket | CDN domain |
 |---|---|---|
-| Stage | `craftive-media-stage` | `s1.media.craftive.io` |
+| Stage | `craftive-media-stage` | `s1-cdn.craftive.io` |
 | Prod | `craftive-media-prod` | `media.craftive.io` |
 
 ### Local development with MinIO
@@ -214,20 +220,44 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
    - `craftive-stage` → Limited Access → `craftive-media-stage` only (Read & Write)
    - `craftive-prod`  → Limited Access → `craftive-media-prod` only (Read & Write)
 
-**Cloudflare DNS (craftive.io zone):**
-4. `CNAME media    → craftive-media-prod.fra1.digitaloceanspaces.com`  — Proxy ON (orange cloud)
-5. `CNAME s1.media → craftive-media-stage.fra1.digitaloceanspaces.com` — Proxy ON (orange cloud)
+**DigitalOcean Spaces CDN:**
+4. Enable CDN on each bucket (Settings → CDN → Enable CDN, **no custom subdomain**):
+   - `craftive-media-stage` CDN endpoint: `craftive-media-stage.fra1.cdn.digitaloceanspaces.com`
+   - `craftive-media-prod`  CDN endpoint: `craftive-media-prod.fra1.cdn.digitaloceanspaces.com`
 
-**Cloudflare Cache Rule:**
-6. Caching → Cache Rules → Create:
-   - Match: `Hostname equals media.craftive.io OR s1.media.craftive.io`
-   - Cache eligibility: Eligible for cache
-   - Edge TTL: Use cache-control header if present (backend sends `max-age=31536000, immutable`)
-   - Browser TTL: Respect origin TTL
+**Cloudflare DNS (craftive.io zone):**
+5. `AAAA s1-cdn → 100::` — Proxy ON (orange cloud)
+6. `AAAA media  → 100::` — Proxy ON (orange cloud)
+
+> `100::` is a dummy IPv6 address. Cloudflare Worker intercepts all requests before they reach the origin, so no real IP is needed. Do NOT use CNAME pointing to Spaces endpoint — that caused Host header issues.
+
+**Cloudflare Workers:**
+7. Workers & Pages → Create Worker → `craftive-media-stage`:
+```javascript
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    url.hostname = 'craftive-media-stage.fra1.cdn.digitaloceanspaces.com';
+    const response = await fetch(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+    });
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    return new Response(response.body, { status: response.status, headers: newHeaders });
+  }
+}
+```
+   Worker → Settings → Triggers → Routes → Add Route: `s1-cdn.craftive.io/*` (zone: `craftive.io`)
+
+8. Create Worker → `craftive-media-prod` (same code, hostname → `craftive-media-prod.fra1.cdn.digitaloceanspaces.com`):
+   Worker route: `media.craftive.io/*` (zone: `craftive.io`)
+
+> Worker free tier: 100k req/day. Sufficient for stage. For prod with high traffic, upgrade to Workers Paid ($5/month for 10M req).
 
 **GitHub Secrets:**
-7. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
-8. Add to `.env.prod`  → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+9. Add to `.env.stage` → re-encode → update `ENV_STAGE` secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
+10. Add to `.env.prod` → re-encode → update `ENV_PROD`  secret: `SPACES_ACCESS_KEY`, `SPACES_SECRET_KEY`
 
 ### Verification checklist (post-deploy)
 

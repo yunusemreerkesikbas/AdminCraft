@@ -104,8 +104,6 @@ export interface SiteSettingsI18nDto {
     siteName?: string | null;
     tagline?: string | null;
     seo?: SeoDefaultsDto | null;
-    footerText?: string | null;
-    headerTopbarText?: string | null;
     addressLocalized?: AddressLocalizedDto | null;
 }
 

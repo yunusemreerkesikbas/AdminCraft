@@ -34,7 +34,7 @@ public class ConsoleEmailSender implements EmailSender {
         if (emailProperties.isLogContent()) {
             log.info("Content:\n{}", htmlContent);
         } else if (emailProperties.isLogSimplified()) {
-            log.info("{}", htmlContent);  // Already formatted by EmailServiceImpl
+            log.info("{}", htmlContent); // Already formatted by EmailServiceImpl
         } else {
             log.info("Content: [HIDDEN - set app.email.log-content=true to show]");
         }

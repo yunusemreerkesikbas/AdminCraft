@@ -1,7 +1,6 @@
 package com.backend.infrastructure.persistence.platform.entity;
 
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
 
 import com.backend.domain.enums.TwoFactorPolicy;
 import jakarta.persistence.*;
@@ -36,18 +35,6 @@ public class PlatformSettings {
     @Enumerated(EnumType.STRING)
     @Column(name = "two_factor_policy", nullable = false, length = 20)
     private TwoFactorPolicy twoFactorPolicy = TwoFactorPolicy.DISABLED;
-
-    @Column(name = "recaptcha_enabled", nullable = false)
-    private Boolean recaptchaEnabled = false;
-
-    @Column(name = "recaptcha_site_key", length = 255)
-    private String recaptchaSiteKey;
-
-    @Column(name = "recaptcha_secret_key_encrypted", columnDefinition = "TEXT")
-    private String recaptchaSecretKeyEncrypted;
-
-    @Column(name = "recaptcha_threshold", precision = 3, scale = 2, nullable = false)
-    private BigDecimal recaptchaThreshold = new BigDecimal("0.5");
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

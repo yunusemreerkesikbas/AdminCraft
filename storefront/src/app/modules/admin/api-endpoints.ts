@@ -99,6 +99,10 @@ export const SPA_ENDPOINTS_CONFIG = {
 
     // ----- SITE DASHBOARD -----
     siteOverview: 'sites/overview',
+    siteAnalyticsSummary: 'sites/analytics/summary',
+    siteInsightsSummary: 'sites/insights/summary',
+    siteActivity: 'sites/activity',
+    siteActivityTrend: 'sites/activity/trend',
     siteTechnical: 'sites/technical',
     siteRobotsTxt: 'sites/robots.txt',
 
@@ -163,6 +167,8 @@ export const SPA_ENDPOINTS_CONFIG = {
     // ----- PLATFORM -----
     platformDashboard: 'platform/dashboard',
     platformSettings: 'platform/settings',
+    platformDemoRequests: 'platform/demo-requests',
+    platformDemoRequestById: 'platform/demo-requests/${id}',
     platformMailTemplateTypes: 'platform/mail/templates/types',
     platformMailTemplateTypeDetail: 'platform/mail/templates/types/${templateType}',
     platformMailTemplateTypeTranslation: 'platform/mail/templates/types/${templateType}/translations/${language}',

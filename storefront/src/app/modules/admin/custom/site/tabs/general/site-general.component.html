@@ -1,10 +1,34 @@
-<div class="max-w-3xl">
-    <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="mb-6 flex justify-end">
+<div class="mx-auto w-full max-w-5xl">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+        <div
+            class="flex flex-col gap-4 rounded-[18px] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.48)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        >
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-[12px] bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                >
+                    <mat-icon
+                        class="icon-size-5"
+                        svgIcon="heroicons_outline:cog-6-tooth"
+                    ></mat-icon>
+                </div>
+                <div class="min-w-0">
+                    <p
+                        class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400"
+                    >
+                        {{ 'admin.site.dashboard.general.siteInfo' | transloco }}
+                    </p>
+                    <p class="text-sm font-semibold text-slate-900">
+                        {{ 'admin.site.dashboard.general.contact' | transloco }}
+                    </p>
+                </div>
+            </div>
+
             <button
                 mat-flat-button
                 color="primary"
                 type="submit"
+                class="min-h-12 rounded-[12px] px-5"
                 [disabled]="savingSig()"
             >
                 @if (savingSig()) {
@@ -17,106 +41,153 @@
             </button>
         </div>
 
-        <!-- Global Settings -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.general.contact' | transloco }}
-            </h3>
-
+        <section
+            class="rounded-[18px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] sm:p-6"
+        >
             <div
-                formGroupName="global"
-                class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between"
             >
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.general.contactEmail' | transloco
-                    "
-                    [labelTooltip]="'contactEmail'"
-                    formControlName="contactEmail"
-                    type="email"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.common.placeholders.email' | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.general.contactPhone' | transloco
-                    "
-                    [labelTooltip]="'contactPhone'"
-                    formControlName="contactPhone"
-                    type="tel"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.common.placeholders.phone' | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-input
-                    [label]="
-                        'admin.site.dashboard.general.whatsappPhone' | transloco
-                    "
-                    [labelTooltip]="'whatsappPhone'"
-                    formControlName="whatsappPhone"
-                    type="tel"
-                    [showErrors]="true"
-                    [placeholder]="
-                        'admin.common.placeholders.phone' | transloco
-                    "
-                >
-                </spa-input>
-
-                <spa-media-picker
-                    formControlName="logoMediaUid"
-                    [label]="
-                        'admin.site.dashboard.general.logoMediaUid' | transloco
-                    "
-                >
-                </spa-media-picker>
-
-                <spa-media-picker
-                    formControlName="logoDarkMediaUid"
-                    [label]="
-                        'admin.site.dashboard.general.logoDarkMediaUid'
-                            | transloco
-                    "
-                >
-                </spa-media-picker>
-            </div>
-        </div>
-
-        <!-- Language-specific Settings -->
-        <div class="bg-card mb-6 rounded-2xl p-6 shadow">
-            <h3 class="mb-4 text-lg font-medium tracking-tight">
-                {{ 'admin.site.dashboard.general.siteInfo' | transloco }}
-            </h3>
-
-            <!-- Language Tabs -->
-            <div class="mb-4 flex gap-2">
-                @for (lang of languages(); track lang) {
-                    <button
-                        type="button"
-                        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                        [class.bg-primary]="
-                            selectedLanguage() === lang.toLowerCase()
-                        "
-                        [class.text-on-primary]="
-                            selectedLanguage() === lang.toLowerCase()
-                        "
-                        [class.bg-gray-100]="
-                            selectedLanguage() !== lang.toLowerCase()
-                        "
-                        [class.dark:bg-gray-800]="
-                            selectedLanguage() !== lang.toLowerCase()
-                        "
-                        (click)="onLanguageChange(lang.toLowerCase())"
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex h-11 w-11 items-center justify-center rounded-[12px] bg-blue-50 text-blue-600 ring-1 ring-blue-100"
                     >
-                        {{ lang.toUpperCase() }}
-                    </button>
-                }
+                        <mat-icon
+                            class="icon-size-5"
+                            svgIcon="heroicons_outline:envelope"
+                        ></mat-icon>
+                    </div>
+                    <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                        {{ 'admin.site.dashboard.general.contact' | transloco }}
+                    </h3>
+                </div>
+            </div>
+
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_19rem]">
+                <div
+                    formGroupName="global"
+                    class="grid gap-4 rounded-[14px] border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2"
+                >
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.general.contactEmail'
+                                | transloco
+                        "
+                        [labelTooltip]="'contactEmail'"
+                        formControlName="contactEmail"
+                        type="email"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.common.placeholders.email' | transloco
+                        "
+                    >
+                    </spa-input>
+
+                    <spa-input
+                        [label]="
+                            'admin.site.dashboard.general.contactPhone'
+                                | transloco
+                        "
+                        [labelTooltip]="'contactPhone'"
+                        formControlName="contactPhone"
+                        type="tel"
+                        [showErrors]="true"
+                        [placeholder]="
+                            'admin.common.placeholders.phone' | transloco
+                        "
+                    >
+                    </spa-input>
+
+                    <div class="md:col-span-2">
+                        <spa-input
+                            [label]="
+                                'admin.site.dashboard.general.whatsappPhone'
+                                    | transloco
+                            "
+                            [labelTooltip]="'whatsappPhone'"
+                            formControlName="whatsappPhone"
+                            type="tel"
+                            [showErrors]="true"
+                            [placeholder]="
+                                'admin.common.placeholders.phone' | transloco
+                            "
+                        >
+                        </spa-input>
+                    </div>
+                </div>
+
+                <div
+                    formGroupName="global"
+                    class="space-y-4 rounded-[14px] border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                    <spa-media-picker
+                        formControlName="logoMediaUid"
+                        [label]="
+                            'admin.site.dashboard.general.logoMediaUid'
+                                | transloco
+                        "
+                    >
+                    </spa-media-picker>
+
+                    <spa-media-picker
+                        formControlName="logoDarkMediaUid"
+                        [label]="
+                            'admin.site.dashboard.general.logoDarkMediaUid'
+                                | transloco
+                        "
+                    >
+                    </spa-media-picker>
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_28px_65px_-54px_rgba(15,23,42,0.55)] sm:p-6"
+        >
+            <div
+                class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-center lg:justify-between"
+            >
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 ring-1 ring-violet-100"
+                    >
+                        <mat-icon
+                            class="icon-size-5"
+                            svgIcon="heroicons_outline:language"
+                        ></mat-icon>
+                    </div>
+                    <h3 class="text-lg font-bold tracking-[-0.03em] text-slate-950">
+                        {{ 'admin.site.dashboard.general.siteInfo' | transloco }}
+                    </h3>
+                </div>
+
+                <div
+                    class="inline-flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2"
+                >
+                    @for (lang of languages(); track lang) {
+                        <button
+                            type="button"
+                            class="min-h-11 rounded-2xl px-4 text-sm font-semibold uppercase tracking-[0.2em] transition-colors duration-200"
+                            [class.bg-slate-950]="
+                                selectedLanguage() === lang.toLowerCase()
+                            "
+                            [class.text-white]="
+                                selectedLanguage() === lang.toLowerCase()
+                            "
+                            [class.shadow-sm]="
+                                selectedLanguage() === lang.toLowerCase()
+                            "
+                            [class.text-slate-500]="
+                                selectedLanguage() !== lang.toLowerCase()
+                            "
+                            [class.hover:bg-white]="
+                                selectedLanguage() !== lang.toLowerCase()
+                            "
+                            (click)="onLanguageChange(lang.toLowerCase())"
+                        >
+                            {{ lang.toUpperCase() }}
+                        </button>
+                    }
+                </div>
             </div>
 
             <div formGroupName="languages">
@@ -124,7 +195,7 @@
                     @if (selectedLanguage() === lang.toLowerCase()) {
                         <div
                             [formGroupName]="lang.toLowerCase()"
-                            class="space-y-4"
+                            class="grid gap-4 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2"
                         >
                             <spa-input
                                 [label]="
@@ -154,41 +225,10 @@
                                 "
                             >
                             </spa-input>
-
-                            <spa-textarea
-                                [label]="
-                                    'admin.site.dashboard.general.footerText'
-                                        | transloco
-                                "
-                                [labelTooltip]="'footerText'"
-                                formControlName="footerText"
-                                [rows]="3"
-                                [showErrors]="true"
-                                [placeholder]="
-                                    'admin.site.dashboard.placeholders.footerText'
-                                        | transloco
-                                "
-                            >
-                            </spa-textarea>
-
-                            <spa-input
-                                [label]="
-                                    'admin.site.dashboard.general.headerTopbarText'
-                                        | transloco
-                                "
-                                [labelTooltip]="'headerTopbarText'"
-                                formControlName="headerTopbarText"
-                                [showErrors]="true"
-                                [placeholder]="
-                                    'admin.site.dashboard.placeholders.headerText'
-                                        | transloco
-                                "
-                            >
-                            </spa-input>
                         </div>
                     }
                 }
             </div>
-        </div>
+        </section>
     </form>
 </div>

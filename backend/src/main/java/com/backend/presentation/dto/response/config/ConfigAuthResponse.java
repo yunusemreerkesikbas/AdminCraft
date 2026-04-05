@@ -4,6 +4,7 @@ import com.backend.application.dto.config.ConfigAuthResult;
 
 public record ConfigAuthResponse(
         String accessToken,
+        String refreshToken,
         String tokenType,
         long expiresIn,
         long issuedAt,
@@ -17,6 +18,7 @@ public record ConfigAuthResponse(
     public static ConfigAuthResponse from(ConfigAuthResult result) {
         return new ConfigAuthResponse(
                 result.accessToken(),
+                result.refreshToken(),
                 result.tokenType(),
                 result.expiresIn(),
                 result.issuedAt(),

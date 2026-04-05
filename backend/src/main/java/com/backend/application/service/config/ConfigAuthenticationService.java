@@ -10,4 +10,6 @@ public interface ConfigAuthenticationService {
 
     ConfigAuthResult verifyOtp(String pendingToken, String otpCode, Long tenantId, String subdomain,
             String ipAddress);
+
+    ConfigAuthResult refreshToken(String refreshToken, String ipAddress);
 }

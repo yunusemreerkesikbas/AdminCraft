@@ -15,6 +15,12 @@ import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/
 })
 export class SiteSeoSettingsComponent {
   @Input({ required: true }) group!: FormGroup;
+
+  get titleLength(): number {
+    return `${this.group.get('title')?.value ?? ''}`.trim().length;
+  }
+
+  get descriptionLength(): number {
+    return `${this.group.get('description')?.value ?? ''}`.trim().length;
+  }
 }
-
-

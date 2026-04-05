@@ -40,15 +40,18 @@ craftive:
       endpoint: https://fra1.digitaloceanspaces.com
       bucket: craftive-media-stage
       region: fra1
-      cdn-base-url: https://s1.media.craftive.io
+      cdn-base-url: https://s1-cdn.craftive.io
       access-key: ${SPACES_ACCESS_KEY}
       secret-key: ${SPACES_SECRET_KEY}
 
 app:
   jwt:
     secret: ${JWT_SECRET}
+  otp:
+    bypass-code: ${OTP_BYPASS_CODE:123456}
   frontend:
     base-url: ${APP_FRONTEND_BASE_URL:https://s1-%s.craftive.io}
+    admin-url: ${APP_FRONTEND_ADMIN_URL:https://s1-app.craftive.io}
   tenant:
     auto-sync-on-startup: true
   platform-domain: ${PLATFORM_DOMAIN:s1.craftive.io}
@@ -56,9 +59,18 @@ app:
     log-content: false
   cors:
     allowed-origins:
-      - https://s1.app.craftive.io
+      - http://localhost:4200
+      - http://127.0.0.1:4200
+      - http://admin.localhost:4200
+      - https://s1-app.craftive.io
+      - https://landing.craftive.io
+      - https://craftive.io
+      - https://www.craftive.io
+      - https://craftive-landing.pages.dev
     allowed-origin-patterns:
+      - http://*.localhost:4200
       - https://s1-*.craftive.io
+      - https://*.craftive-landing.pages.dev
   encryption:
     secret-key: ${RECAPTCHA_MASTER_KEY}
 

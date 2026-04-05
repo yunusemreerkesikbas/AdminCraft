@@ -1,0 +1,40 @@
+:host {
+    display: block;
+}
+
+.spa-demo-request-detail {
+    .spa-demo-request-detail__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .spa-demo-request-detail__label {
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgb(100 116 139);
+    }
+
+    .spa-demo-request-detail__value {
+        margin: 0;
+        font-size: 0.9375rem;
+        line-height: 1.5rem;
+        color: rgb(15 23 42);
+        word-break: break-word;
+    }
+
+    .spa-demo-request-detail__message {
+        border: 1px solid rgb(226 232 240);
+        border-radius: 0.75rem;
+        background: rgb(248 250 252);
+        padding: 0.9rem 1rem;
+        font-size: 0.9375rem;
+        line-height: 1.5rem;
+        color: rgb(15 23 42);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+}

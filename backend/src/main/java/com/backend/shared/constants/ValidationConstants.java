@@ -89,6 +89,11 @@ public final class ValidationConstants {
     public static final String PHONE_GLOBAL_PATTERN = "^\\+?[0-9]{7,15}$";
 
     /**
+     * Optional phone: empty or same rules as {@link #PHONE_GLOBAL_PATTERN}.
+     */
+    public static final String PHONE_GLOBAL_OPTIONAL_PATTERN = "^(|\\+?[0-9]{7,15})$";
+
+    /**
      * Subdomain Pattern
      * - Start/end with alphanumeric
      * - Middle can contain hyphens

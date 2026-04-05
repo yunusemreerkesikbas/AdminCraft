@@ -124,6 +124,8 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      TENANT_SUBDOMAIN: ${TENANT_SLUG}
+      TENANT_HOSTNAME: ${PRIMARY_DOMAIN}
     networks:
       - craftive-network
     labels:

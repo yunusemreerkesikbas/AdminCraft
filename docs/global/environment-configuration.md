@@ -24,11 +24,11 @@ Multi-environment setup for Craftive with dev, stage, and prod configurations.
 
 ### Frontend — Headless Storefront (Next.js)
 
-| File                                    | Purpose                                        |
-| --------------------------------------- | ---------------------------------------------- |
-| `../../storefront-nextjs/.env.development` | Development config (loaded by `next dev`)   |
-| `../../storefront-nextjs/.env.staging`     | Staging config (loaded via `dotenv-cli`)    |
-| `../../storefront-nextjs/.env.production`  | Production config (loaded by `next build`)  |
+| File                                       | Purpose                                        |
+| ------------------------------------------ | ---------------------------------------------- |
+| `../../storefront-nextjs/.env.development` | Development config (loaded by `next dev`)      |
+| `../../storefront-nextjs/.env.staging`     | Staging config (loaded via `dotenv-cli`)       |
+| `../../storefront-nextjs/.env.production`  | Production config (loaded by `next build`)     |
 | `../../storefront-nextjs/.env.local`       | Local overrides — highest priority, gitignored |
 
 ## Rules and Invariants
@@ -39,6 +39,7 @@ Multi-environment setup for Craftive with dev, stage, and prod configurations.
 2. **Default profile**: `dev` (set via `SPRING_PROFILES_ACTIVE` env var)
 3. **Credentials**: Dev uses defaults, Stage/Prod require environment variables
 4. **No defaults for sensitive values in Stage/Prod**: `JWT_SECRET`, `DB_USERNAME`, `DB_PASSWORD` must be set
+5. **Reverse proxy / client IP**: Base `application.yml` sets `server.forward-headers-strategy: framework` so `Forwarded` / `X-Forwarded-*` are honored and `HttpServletRequest.getRemoteAddr()` reflects the client when Traefik, Cloudflare, or similar sets those headers. Ensure the proxy overwrites or sanitizes `X-Forwarded-For` to prevent spoofing on direct-to-app access.
 
 #### Tenant runtime configuration (Config Control Panel)
 
@@ -58,6 +59,8 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
   - `app.email.from-address`
   - `app.email.from-name`
   - `app.frontend.base-url`
+  - `platform.analytics.ga4.enabled`
+  - `platform.seo.insights.enabled`
   - `platform.security.recaptcha.enabled`
   - `platform.security.recaptcha.site_key`
   - `platform.security.recaptcha.secret_key` (encrypted)
@@ -65,6 +68,33 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 - Resolution precedence for these keys:
   1. `platform_config_properties` override
   2. Spring `application*.yml` / environment variable value
+
+#### Shared GA4 service account credential
+
+GA4 dashboard reporting uses a shared backend service identity. This credential is not tenant-scoped and must not be stored in `/config`.
+
+See also: [`../3rd-party/google-analytics-ga4.md`](../3rd-party/google-analytics-ga4.md)
+See also: [`../3rd-party/google-search-console-crux-seo-insights.md`](../3rd-party/google-search-console-crux-seo-insights.md)
+
+- tenant `/config` keys:
+  - `analytics.ga4.enabled`
+  - `analytics.ga4.property_id`
+  - `seo.insights.enabled`
+  - `seo.search_console.property_url`
+- global `/config` key:
+  - `platform.analytics.ga4.enabled`
+  - `platform.seo.insights.enabled`
+- backend environment secret:
+  - `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON`
+  - or `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64`
+  - `APP_SEO_CRUX_API_KEY`
+
+Behavior by environment:
+
+- local: set the env var in the same shell or IDE run configuration that starts Spring Boot
+- stage/prod: inject the env var from deployment secrets or container environment
+- all environments: the same service account can be reused for multiple tenants; each tenant GA4 property must explicitly grant that service account `Viewer` access
+- all environments: the same Google service account can also be reused for Search Console; each tenant Search Console property must explicitly grant that service account access
 
 ### Frontend — Angular
 
@@ -76,8 +106,18 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 
 1. **Next.js env loading order**: `.env.local` > `.env.{NODE_ENV}` > `.env`
 2. **Staging**: Not a native `NODE_ENV` value — use `dotenv-cli` (`dotenv -e .env.staging -- next ...`)
-3. **`.env.local` always wins**: Use this for local overrides (tenant ID, API URL, etc.) — never commit it
+3. **`.env.local` is local/dev only**: Plain `npm run start` / `npm run dev` keep the default Next.js `.env.local` override behavior. Explicit `*:stage` / `*:prod` scripts preload their target env file first, so `.env.local` does not override them.
 4. **SSR vs Static export**: Default mode is SSR (`next start`). Set `NEXT_OUTPUT=export` for static HTML export (no server required, but server-only features like `cache()` and `revalidate` are disabled)
+
+### Frontend — Marketing landing (`landing/`)
+
+Static export (e.g. Cloudflare Pages). Public demo/contact form calls the Craftive API from the browser.
+
+| Variable                       | Purpose                                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CRAFTIVE_API_URL` | Backend **origin only** — no `/api` suffix (e.g. `http://localhost:8080`, `https://api.example.com`). Client code appends `/api/...`. Baked in at **build** time. |
+
+See [`landing/.env.local.example`](../../landing/.env.local.example). Contract and CORS: [`modules/platform-admin.md`](../modules/platform-admin.md) (Landing demo requests), index: [`README.md`](../README.md).
 
 ## Environment Comparison
 
@@ -91,46 +131,60 @@ Some settings are **global runtime overrides** managed by `CONFIG_SUPER_ADMIN` i
 | SQL Logging    | `true`   | `false`         | `false`         |
 | Swagger UI     | enabled  | enabled         | disabled        |
 | Log Level      | `DEBUG`  | `INFO`          | `INFO`          |
-| Auto-sync      | `false`  | `true`          | `true`          |
+| Auto-sync      | `true`   | `true`          | `true`          |
 
 ### Frontend — Angular
 
-| Setting              | Dev            | Stage                           | Prod                         |
-| -------------------- | -------------- | ------------------------------- | ---------------------------- |
-| `production`         | `false`        | `false`                         | `true`                       |
-| `apiBaseUrl`         | `/api` (proxy) | `https://s1.api.craftive.io` | `https://api.craftive.io` |
-| `apiTimeout`         | `30000`        | `30000`                         | `30000`                      |
-| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                  | `['tr', 'en']`               |
-| `defaultLanguage`    | `en`           | `en`                            | `en`                         |
-| `maxRetryAttempts`   | `0`            | `0`                             | `3`                          |
-| Source Maps          | yes            | yes                             | no                           |
-| Optimization         | no             | yes                             | yes                          |
+| Setting              | Dev            | Stage                            | Prod                          |
+| -------------------- | -------------- | -------------------------------- | ----------------------------- |
+| `production`         | `false`        | `false`                          | `true`                        |
+| `apiBaseUrl`         | `/api` (proxy) | `https://s1-api.craftive.io/api` | `https://api.craftive.io/api` |
+| `apiTimeout`         | `30000`        | `30000`                          | `30000`                       |
+| `supportedLanguages` | `['tr', 'en']` | `['tr', 'en']`                   | `['tr', 'en']`                |
+| `defaultLanguage`    | `en`           | `en`                             | `en`                          |
+| `maxRetryAttempts`   | `0`            | `0`                              | `3`                           |
+| Source Maps          | yes            | yes                              | no                            |
+| Optimization         | no             | yes                              | yes                           |
 
 ### Frontend — Next.js Storefront
 
-| Variable                       | Dev                             | Stage                                  | Prod                             |
-| ------------------------------ | ------------------------------- | -------------------------------------- | -------------------------------- |
-| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api`     | `https://s1.api.craftive.io/api`       | `https://api.craftive.io/api`    |
-| `TENANT_SUBDOMAIN`             | `demo`                          | tenant subdomain                       | tenant subdomain                 |
-| `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                          | tenant subdomain                       | tenant subdomain                 |
-| `TENANT_ID`                    | `28` (local tenant)             | tenant ID                              | tenant ID                        |
-| `NEXT_PUBLIC_TENANT_ID`        | `28`                            | tenant ID                              | tenant ID                        |
-| `NEXT_IMAGE_DOMAINS`           | _(not set)_                     | `s1.media.craftive.io`                 | `media.craftive.io`              |
+| Variable                       | Dev                         | Stage                            | Prod                          |
+| ------------------------------ | --------------------------- | -------------------------------- | ----------------------------- |
+| `NEXT_PUBLIC_CMS_API_URL`      | `http://127.0.0.1:8080/api` | `https://s1-api.craftive.io/api` | `https://api.craftive.io/api` |
+| `TENANT_SUBDOMAIN`             | `demo`                      | tenant subdomain                 | tenant subdomain              |
+| `NEXT_PUBLIC_TENANT_SUBDOMAIN` | `demo`                      | tenant subdomain                 | tenant subdomain              |
+| `TENANT_ID`                    | `28` (local tenant)         | tenant ID                        | tenant ID                     |
+| `NEXT_PUBLIC_TENANT_ID`        | `28`                        | tenant ID                        | tenant ID                     |
+| `TENANT_HOSTNAME`              | _(not set)_                 | `s1-demo.craftive.io`            | `demo.craftive.io`            |
+| `NEXT_IMAGE_DOMAINS`           | _(not set)_                 | `s1-cdn.craftive.io`             | `media.craftive.io`           |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | optional local env   | tracked in `storefront-nextjs/.env.staging` for the demo storefront | tracked in `storefront-nextjs/.env.production` for the demo storefront |
+
+> **`TENANT_HOSTNAME`**: When set, `proxy.ts` validates every incoming request's `host` header against this value. Requests from other hostnames receive HTTP 404. Leave unset in local dev (all traffic from `localhost` is accepted). The local `start:stage`, `start:prod`, `serve:stage`, and `serve:prod` scripts clear this variable intentionally so localhost can run against stage/prod APIs. Required in real stage/prod deployments to prevent wildcard DNS rules from serving the wrong tenant's storefront.
+>
+> **`NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`**: Optional Search Console token. In local development it may live in `.env.development`. In this platform repository, the demo storefront keeps stage and prod tokens in the tracked `storefront-nextjs/.env.staging` and `storefront-nextjs/.env.production` files because the token is public and rendered into the HTML source anyway. Tenant storefront repositories should manage their own value in their own repo/build config. Use only the `content` value, not the full `<meta>` element.
+>
+> **Why `NEXT_PUBLIC_` prefix is required:** `app/layout.tsx` is a Next.js App Router Server Component that reads this value at **request time** (not build time). In a Docker 2-stage build, `next build` copies `.env.production` into the standalone output; the runner stage only has `NODE_ENV=production`, so Next.js loads `.env.production` at runtime regardless of which env file was used during the build. Without the `NEXT_PUBLIC_` prefix, the stage deployment always gets the production key. With `NEXT_PUBLIC_`, Next.js/SWC **inlines the value as a literal string at build time**, making the output independent of which `.env.*` file the runtime container loads.
 
 Available scripts:
 
-| Script                   | Description                                    |
-| ------------------------ | ---------------------------------------------- |
-| `npm run dev`            | Dev server with `.env.development`             |
-| `npm run dev:stage`      | Dev server with `.env.staging`                 |
-| `npm run build`          | SSR production build                           |
-| `npm run build:dev`      | SSR build with `.env.development`              |
-| `npm run build:stage`    | SSR build with `.env.staging`                  |
-| `npm run build:prod`     | SSR production build (same as `build`)         |
-| `npm run build:static`   | Static export (CSR) with `.env.production`     |
-| `npm run start`          | SSR production server                          |
-| `npm run start:stage`    | SSR server with `.env.staging`                 |
-| `npm run start:static`   | Serve `out/` folder (for static export builds) |
+| Script                 | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `npm run start`        | Local dev server with `.env.development` + `.env.local` |
+| `npm run start:dev`    | Same as `start`                                |
+| `npm run start:stage`  | Local dev server with `.env.staging`           |
+| `npm run start:prod`   | Local dev server with `.env.production`        |
+| `npm run dev`          | Backward-compatible alias for local dev server |
+| `npm run dev:stage`    | Backward-compatible alias for stage dev server |
+| `npm run dev:prod`     | Backward-compatible alias for prod dev server  |
+| `npm run build`        | Deterministic SSR production build with `.env.production` |
+| `npm run build:dev`    | SSR build with `.env.development`              |
+| `npm run build:stage`  | SSR build with `.env.staging`                  |
+| `npm run build:prod`   | SSR build with `.env.production`               |
+| `npm run build:static` | Static export (CSR) with `.env.production`     |
+| `npm run serve`        | SSR production server with `.env.production`   |
+| `npm run serve:stage`  | SSR server with `.env.staging`                 |
+| `npm run serve:prod`   | SSR server with `.env.production`              |
+| `npm run start:static` | Serve `out/` folder (for static export builds) |
 
 ### Language Configuration
 
@@ -159,6 +213,7 @@ The `supportedLanguages` and `defaultLanguage` values control the Admin UI langu
    ```
 
 3. **Create translation file** - `storefront/src/app/modules/admin/i18n/langDE.ts`:
+
    ```typescript
    export const langDE = {
      // translations...
@@ -180,7 +235,7 @@ npm run start:dev
 
 # Next.js headless storefront (uses .env.development + .env.local)
 cd storefront-nextjs
-npm run dev
+npm run start
 ```
 
 ### Running with Specific Profile
@@ -193,7 +248,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=stage
 npm run start:stage
 
 # Next.js with stage config
-npm run dev:stage
+npm run start:stage
 ```
 
 ### Build for Production
@@ -208,6 +263,9 @@ npm run build:prod
 
 # Next.js SSR build
 npm run build
+
+# Next.js SSR server (after build)
+npm run serve
 
 # Next.js static (CSR) build
 npm run build:static
@@ -231,19 +289,22 @@ npm run build:static
 | `EMAIL_FROM_NAME`       | Default sender name            | Yes                |
 | `SPACES_ACCESS_KEY`     | DO Spaces access key (S3)      | Yes (stage/prod)   |
 | `SPACES_SECRET_KEY`     | DO Spaces secret key (S3)      | Yes (stage/prod)   |
+| `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON` | GA4 service account JSON content | Yes, if GA4 dashboard reporting is enabled |
+| `APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON_BASE64` | Base64 alternative for GA4 service account JSON | Optional alternative |
+| `APP_SEO_CRUX_API_KEY` | CrUX History API key | Yes, if SEO insights performance snapshot is enabled |
 
 ### Stage/Prod Observability and Edge
 
-| Variable                   | Description                             | Required |
-| -------------------------- | --------------------------------------- | -------- |
+| Variable                   | Description                            | Required |
+| -------------------------- | -------------------------------------- | -------- |
 | `LOG_ENV`                  | Log environment label (`stage`/`prod`) | Yes      |
-| `LOG_HOST`                 | Host label for Loki                     | Yes      |
-| `GRAFANA_CLOUD_LOKI_URL`   | Loki ingest URL                         | Yes      |
-| `GRAFANA_CLOUD_LOKI_USER`  | Loki username / tenant                  | Yes      |
-| `GRAFANA_CLOUD_LOKI_TOKEN` | Loki API token                          | Yes      |
-| `DOMAIN`                   | Base platform domain                    | Yes      |
-| `ACME_EMAIL`               | Let's Encrypt email                     | Yes      |
-| `CF_API_TOKEN`             | Cloudflare DNS challenge token          | Yes      |
+| `LOG_HOST`                 | Host label for Loki                    | Yes      |
+| `GRAFANA_CLOUD_LOKI_URL`   | Loki ingest URL                        | Yes      |
+| `GRAFANA_CLOUD_LOKI_USER`  | Loki username / tenant                 | Yes      |
+| `GRAFANA_CLOUD_LOKI_TOKEN` | Loki API token                         | Yes      |
+| `DOMAIN`                   | Base platform domain                   | Yes      |
+| `ACME_EMAIL`               | Let's Encrypt email                    | Yes      |
+| `CF_API_TOKEN`             | Cloudflare DNS challenge token         | Yes      |
 
 ### Example Stage Deployment
 
@@ -259,9 +320,26 @@ $env:EMAIL_FROM_ADDRESS = "noreply@craftive.io"
 $env:EMAIL_FROM_NAME = "Craftive"
 $env:LOG_ENV = "stage"
 $env:LOG_HOST = "do-fra1-stage-01"
+$env:APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON = Get-Content -Raw "C:\\secrets\\ga4-service-account.json"
 
 mvn spring-boot:run -Dspring-boot.run.profiles=stage
 ```
+
+### Local persistence for GA4 credential
+
+Temporary shell usage:
+
+```powershell
+$env:APP_ANALYTICS_GA4_SERVICE_ACCOUNT_JSON = Get-Content -Raw "C:\path\to\ga4-service-account.json"
+```
+
+For persistent local development, prefer one of these:
+
+- add the variable to your IDE Run Configuration for the backend
+- add the variable to your PowerShell profile if you intentionally want it available in every new shell
+- use a local secret loader script that sets the env var before starting Spring Boot
+
+Do not commit the JSON file or inline credential into tracked config files.
 
 ## Gotchas
 
@@ -310,9 +388,9 @@ Craftive/
 
 ### Environment Overview
 
-| Environment    | Services                             | Use Case                                     |
-| -------------- | ------------------------------------ | -------------------------------------------- |
-| **Dev**        | MySQL + phpMyAdmin                   | Local development (Backend/Frontend via IDE) |
+| Environment    | Services                                                             | Use Case                                     |
+| -------------- | -------------------------------------------------------------------- | -------------------------------------------- |
+| **Dev**        | MySQL + phpMyAdmin                                                   | Local development (Backend/Frontend via IDE) |
 | **Prod/Stage** | MySQL + Backend + Admin Frontend + Demo Storefront + Traefik + Alloy | VPS deployment with SSL and centralized logs |
 
 ### Local Development

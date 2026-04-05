@@ -95,8 +95,6 @@ export class SiteSettingsFormComponent implements OnInit {
                 tr: this.#fb.group({
                     siteName: [''],
                     tagline: [''],
-                    footerText: [''],
-                    headerTopbarText: [''],
                     seo: this.#fb.group({
                         title: [''],
                         description: [''],
@@ -110,8 +108,6 @@ export class SiteSettingsFormComponent implements OnInit {
                 en: this.#fb.group({
                     siteName: [''],
                     tagline: [''],
-                    footerText: [''],
-                    headerTopbarText: [''],
                     seo: this.#fb.group({
                         title: [''],
                         description: [''],

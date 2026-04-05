@@ -1,444 +1,435 @@
-<div class="flex w-full flex-col gap-8">
-    <!-- Hero Section: Tenant Identity & Status -->
-    @if (tenant()) {
-        <div
-            class="bg-card relative overflow-hidden rounded-3xl p-8 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800"
-        >
-            <!-- Background Decoration -->
-            <div
-                class="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/5 blur-3xl"
-            ></div>
+<div class="flex w-full flex-col gap-6 xl:gap-8">
 
-            <div
-                class="relative flex flex-col justify-between gap-8 md:flex-row md:items-start"
-            >
-                <!-- Left: Identity -->
-                <div class="flex-1 space-y-2">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary"
-                        >
-                            <span class="text-xl font-bold">{{
-                                tenant()?.companyName?.charAt(0)
-                            }}</span>
-                        </div>
-                        <div>
-                            <h2
-                                class="text-default text-2xl font-bold leading-tight tracking-tight"
-                            >
-                                {{ tenant()?.companyName }}
-                            </h2>
-                            <div
-                                class="text-secondary flex items-center gap-2 text-sm"
-                            >
-                                <span
-                                    class="rounded bg-gray-100 px-1.5 py-0.5 font-medium dark:bg-gray-800"
-                                    >{{ tenant()?.subdomain }}</span
-                                >
-                                <span>&bull;</span>
-                                <span
-                                    >{{ tenant()?.defaultLanguage }} /
-                                    {{ tenant()?.currency }}</span
-                                >
+    @if (vm.heroVisible) {
+        <section class="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_32px_72px_-56px_rgba(15,23,42,0.22)]">
+            <div class="grid xl:grid-cols-2">
+
+                <!-- Left: Identity + Stats -->
+                <div class="border-b border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(91,115,200,0.07),transparent_40%),linear-gradient(160deg,#ffffff_0%,#f8f9fc_100%)] p-6 xl:border-b-0 xl:border-r">
+                    <div class="flex h-full flex-col gap-6">
+
+                        <!-- Company Identity -->
+                        <div class="flex items-start gap-4">
+                            <div class="relative flex h-14 w-14 flex-none items-center justify-center rounded-[18px] bg-gradient-to-br from-slate-800 to-slate-950 text-lg font-black uppercase text-white shadow-[0_16px_40px_-16px_rgba(15,23,42,0.55),inset_0_1px_0_rgba(255,255,255,0.1)]">
+                                <span class="relative z-10 tracking-[-0.02em]">{{ vm.identity.companyInitial }}</span>
+                                <span class="absolute inset-0 rounded-[18px] ring-1 ring-inset ring-white/[0.08]"></span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex min-h-7 items-center rounded-full bg-primary/[0.08] px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">
+                                        {{ vm.identity.statusLabel }}
+                                    </span>
+                                    @if (vm.identity.defaultLanguage) {
+                                        <span class="inline-flex min-h-7 items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-500">
+                                            <span class="font-bold uppercase tracking-[0.18em] text-slate-400">LANG</span>
+                                            <span class="h-2.5 w-px bg-slate-300"></span>
+                                            <span class="font-black text-slate-700">{{ vm.identity.defaultLanguage }}</span>
+                                        </span>
+                                    }
+                                    @if (vm.identity.currency) {
+                                        <span class="inline-flex min-h-7 items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[0.65rem] font-semibold text-slate-500">
+                                            <span class="font-bold uppercase tracking-[0.18em] text-slate-400">CURR</span>
+                                            <span class="h-2.5 w-px bg-slate-300"></span>
+                                            <span class="font-black text-slate-700">{{ vm.identity.currency }}</span>
+                                        </span>
+                                    }
+                                </div>
+                                <h2 class="mt-3 truncate text-[2rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.4rem]">
+                                    {{ vm.identity.companyName }}
+                                </h2>
+                                <p class="mt-1 max-w-xs truncate text-xs font-medium text-slate-500">
+                                    {{ vm.identity.primaryDomainLabel }}
+                                </p>
                             </div>
                         </div>
+
+                        <!-- Quick Stats Strip -->
+                        <div class="flex divide-x divide-slate-200/80 overflow-hidden rounded-[14px] border border-slate-200/80 bg-white/70">
+                            <div class="flex-1 px-3.5 py-3">
+                                <p class="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.updated' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">{{ vm.identity.lastUpdatedLabel }}</p>
+                            </div>
+                            <div class="flex-1 px-3.5 py-3">
+                                <p class="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.domain' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">{{ vm.identity.domainTypeLabel }}</p>
+                            </div>
+                            <div class="flex-1 px-3.5 py-3">
+                                <p class="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.storage' | transloco }}</p>
+                                <p class="mt-1.5 text-sm font-black tracking-[-0.02em] text-slate-950 leading-tight">{{ vm.identity.storageUsedMb | number: '1.1-1' }} MB</p>
+                            </div>
+                        </div>
+
+                        <!-- Languages + Modules: Unified Panel -->
+                        <div class="overflow-hidden rounded-[16px] border border-slate-200/80 bg-white/70">
+                            <!-- Languages row -->
+                            <div class="flex items-center gap-3 px-4 py-3.5">
+                                <div class="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] bg-primary/[0.08] text-primary">
+                                    <mat-icon class="icon-size-3.5" svgIcon="heroicons_outline:language"></mat-icon>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.languages' | transloco }}</p>
+                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                        @for (language of vm.identity.languages; track language.code) {
+                                            <span class="inline-flex items-center rounded-[7px] border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700">
+                                                {{ language.label }}
+                                            </span>
+                                        } @empty {
+                                            <span class="text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.noneConfigured' | transloco }}</span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="text-base font-black tracking-[-0.03em] text-slate-950">{{ vm.identity.languages.length }}</span>
+                            </div>
+                            <!-- Divider -->
+                            <div class="mx-4 h-px bg-slate-100"></div>
+                            <!-- Modules row -->
+                            <div class="flex items-center gap-3 px-4 py-3.5">
+                                <div class="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] bg-slate-100 text-slate-600">
+                                    <mat-icon class="icon-size-3.5" svgIcon="heroicons_outline:squares-2x2"></mat-icon>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.modules' | transloco }}</p>
+                                    <div class="mt-1.5 flex flex-wrap gap-1">
+                                        @for (module of vm.modules.items; track module.moduleCode) {
+                                            <span class="inline-flex items-center rounded-[7px] border border-slate-200 bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700">
+                                                {{ module.moduleName || module.moduleCode }}
+                                            </span>
+                                        } @empty {
+                                            <span class="text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.noneLoaded' | transloco }}</span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="text-base font-black tracking-[-0.03em] text-slate-950">{{ vm.modules.enabledCount }}</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- Right: Status Control -->
-                <!-- Right: Supported Languages -->
-                <div class="flex flex-col items-end gap-2">
-                    <span
-                        class="text-secondary text-xs font-semibold uppercase tracking-wider"
-                        >Supported Languages</span
-                    >
-                    <div class="flex items-center gap-2">
-                        @for (
-                            lang of tenant()?.supportedLanguages;
-                            track lang
-                        ) {
-                            <div
-                                class="flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-bold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                            >
-                                {{ lang.code }}
+                <!-- Right: Operational Spotlight (dark) -->
+                @if (vm.spotlight.visible) {
+                    <div class="spa-site-overview__spotlight">
+                        <div class="flex h-full flex-col gap-4">
+
+                        <!-- Header -->
+                        <div class="spa-site-overview__spotlight-header">
+                            <div class="spa-site-overview__spotlight-intro">
+                                <p class="spa-site-overview__spotlight-eyebrow">{{ 'admin.site.dashboard.overview.labels.operationalSpotlight' | transloco }}</p>
+                                <h3 class="spa-site-overview__spotlight-title">
+                                    {{ 'admin.site.dashboard.overview.labels.siteHealthAtAGlance' | transloco }}
+                                </h3>
+                                <p class="spa-site-overview__spotlight-summary">
+                                    {{ vm.spotlight.summary }}
+                                </p>
+                            </div>
+                            <div class="spa-site-overview__spotlight-score self-start">
+                                <p class="spa-site-overview__spotlight-score-label">{{ 'admin.site.dashboard.overview.labels.opsScore' | transloco }}</p>
+                                <p class="spa-site-overview__spotlight-score-value">{{ vm.spotlight.operationalScore }}%</p>
+                                <span
+                                    class="spa-site-overview__spotlight-score-chip"
+                                    [ngClass]="getSpotlightStatusClasses(vm.spotlight.statusTone)"
+                                >
+                                    {{ vm.spotlight.statusLabel }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Radial Chart + Context Cards -->
+                        <div class="spa-site-overview__spotlight-main">
+                            <div class="spa-site-overview__spotlight-chart-shell">
+                                <div class="spa-site-overview__spotlight-chart-orbit">
+                                    <div class="spa-site-overview__spotlight-chart-frame">
+                                        <apx-chart
+                                            class="spa-site-overview__spotlight-chart"
+                                            [chart]="vm.spotlight.chartOptions.chart"
+                                            [colors]="vm.spotlight.chartOptions.colors"
+                                            [labels]="vm.spotlight.chartOptions.labels"
+                                            [plotOptions]="vm.spotlight.chartOptions.plotOptions"
+                                            [series]="vm.spotlight.chartOptions.series"
+                                            [stroke]="vm.spotlight.chartOptions.stroke"
+                                            [legend]="vm.spotlight.chartOptions.legend"
+                                            [tooltip]="vm.spotlight.chartOptions.tooltip"
+                                        ></apx-chart>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="spa-site-overview__spotlight-context-grid">
+                                @for (item of vm.spotlight.contextCards; track item.id; let i = $index) {
+                                    <div
+                                        class="spa-site-overview__spotlight-context-card"
+                                        [ngClass]="getSpotlightContextCardClasses(item.tone)"
+                                        [style.animation-delay]="(i * 60) + 'ms'"
+                                    >
+                                        <div
+                                            class="spa-site-overview__spotlight-context-icon"
+                                            [ngClass]="getSpotlightContextIconClasses(item.tone)"
+                                        >
+                                            <mat-icon aria-hidden="true" class="icon-size-4" [svgIcon]="item.icon"></mat-icon>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="spa-site-overview__spotlight-context-label">{{ item.label }}</p>
+                                            <p class="spa-site-overview__spotlight-context-value">{{ item.value }}</p>
+                                        </div>
+                                        <div class="spa-site-overview__spotlight-context-meta">
+                                            <p class="spa-site-overview__spotlight-context-detail">{{ item.detail }}</p>
+                                            <p
+                                                class="spa-site-overview__spotlight-context-progress"
+                                                [ngClass]="getSpotlightProgressClasses(item.tone)"
+                                            >
+                                                {{ item.progress }}%
+                                            </p>
+                                            <div class="spa-site-overview__spotlight-progress-bar">
+                                                <div
+                                                    class="spa-site-overview__spotlight-progress-bar-fill"
+                                                    [ngClass]="getSpotlightProgressBarFillClasses(item.tone)"
+                                                    [style.width.%]="item.progress"
+                                                    [style.animation-delay]="(i * 60 + 200) + 'ms'"
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if (vm.spotlight.recommendations.length) {
+                            <div class="border-t border-white/8 pt-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-white/40">
+                                        {{ 'admin.site.dashboard.overview.spotlight.recommendations.label' | transloco }}
+                                    </p>
+                                    <span class="spa-site-overview__spotlight-action-count">
+                                        {{ vm.spotlight.recommendations.length }}
+                                    </span>
+                                </div>
+                                <div class="spa-site-overview__spotlight-actions mt-2.5">
+                                    @for (recommendation of vm.spotlight.recommendations; track recommendation.id) {
+                                        <div
+                                            class="spa-site-overview__spotlight-recommendation"
+                                            [ngClass]="getSpotlightRecommendationClasses(recommendation.tone)"
+                                        >
+                                            <div
+                                                class="spa-site-overview__spotlight-recommendation-icon"
+                                                [ngClass]="getContextIconClasses(recommendation.tone)"
+                                            >
+                                                <mat-icon class="icon-size-4" [svgIcon]="recommendation.icon"></mat-icon>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="spa-site-overview__spotlight-action-title">
+                                                    {{ recommendation.title }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
+
+                        </div>
                     </div>
-                </div>
+                }
+
             </div>
-        </div>
+        </section>
     }
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Pages -->
-        @if (overview?.stats?.pages) {
-            <div
-                class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800"
-            >
-                <div class="relative z-10">
-                    <p class="text-secondary text-sm font-medium">
-                        {{
-                            'admin.site.dashboard.overview.stats.pages'
-                                | transloco
-                        }}
-                    </p>
-                    <p
-                        class="mt-2 text-4xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400"
-                    >
-                        {{ overview.stats.pages.total }}
-                    </p>
+    <spa-site-overview-analytics
+        [analytics]="analytics"
+        [tenantSubdomain]="tenant?.subdomain ?? null"
+    />
 
-                    <div class="mt-4 flex items-center gap-3 text-sm">
-                        <div
-                            class="flex items-center gap-1 rounded bg-green-50 px-1.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        >
-                            <span>{{ overview.stats.pages.published }}</span>
-                            <span>{{
-                                'admin.site.dashboard.overview.published'
-                                    | transloco
-                            }}</span>
+    <!-- KPI Stats Row -->
+    @if (vm.inventory.hasCards) {
+        <section class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            @for (card of vm.inventory.cards; track card.id; let first = $first) {
+                <article
+                    class="relative overflow-hidden rounded-[18px] border p-5 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.14)]"
+                    [ngClass]="getMetricToneClasses(card.tone)"
+                >
+                    @if (first) {
+                        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#5B73C8] to-[#93A3D8] rounded-t-[18px]"></div>
+                    }
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex h-10 w-10 flex-none items-center justify-center rounded-[12px]" [ngClass]="getMetricIconClasses(card.tone)">
+                            <mat-icon class="icon-size-4" [svgIcon]="card.icon"></mat-icon>
                         </div>
-                        @if (overview.stats.pages.weeklyChange > 0) {
-                            <span
-                                class="inline-flex items-center text-xs font-medium text-green-600"
-                            >
-                                <mat-icon
-                                    class="mr-0.5 icon-size-3"
-                                    svgIcon="heroicons_mini:arrow-trending-up"
-                                ></mat-icon>
-                                +{{ overview.stats.pages.weeklyChange }}
-                            </span>
-                        }
+                        <p class="mt-1 text-right text-[0.6rem] font-medium leading-4 text-slate-500">{{ card.detail }}</p>
                     </div>
-                </div>
-                <!-- Watermark Icon -->
-                <mat-icon
-                    class="absolute -bottom-4 -right-4 transform text-blue-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
-                    svgIcon="heroicons_outline:document-text"
-                ></mat-icon>
-            </div>
-        }
+                    <p class="mt-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ card.label }}</p>
+                    <p class="mt-1 text-[2.4rem] font-black leading-none tracking-[-0.06em] text-slate-950">{{ card.value }}</p>
+                </article>
+            }
+        </section>
+    }
 
-        <!-- Components -->
-        @if (overview?.stats?.components) {
-            <div
-                class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800"
-            >
-                <div class="relative z-10">
-                    <p class="text-secondary text-sm font-medium">
-                        {{
-                            'admin.site.dashboard.overview.stats.components'
-                                | transloco
-                        }}
-                    </p>
-                    <p
-                        class="mt-2 text-4xl font-extrabold tracking-tight text-purple-600 dark:text-purple-400"
-                    >
-                        {{ overview.stats.components.total }}
-                    </p>
+    <section class="grid gap-4">
+        <spa-site-overview-seo
+            [insights]="insights"
+            [tenantSubdomain]="tenant?.subdomain ?? null"
+        />
+        <spa-site-overview-performance [insights]="insights" />
+    </section>
 
-                    <div class="mt-4 flex items-center gap-3 text-sm">
-                        @if (overview.stats.components.weeklyChange > 0) {
-                            <span
-                                class="inline-flex items-center text-xs font-medium text-green-600"
-                            >
-                                <mat-icon
-                                    class="mr-0.5 icon-size-3"
-                                    svgIcon="heroicons_mini:arrow-trending-up"
-                                ></mat-icon>
-                                +{{ overview.stats.components.weeklyChange }}
-                                <span class="text-secondary ml-1">{{
-                                    'admin.site.dashboard.overview.thisWeek'
-                                        | transloco
-                                }}</span>
-                            </span>
-                        } @else {
-                            <span class="text-secondary text-xs"
-                                >No recent changes</span
-                            >
-                        }
+    <!-- Weekly Trend Chart -->
+    @if (vm.trend.visible) {
+        <section>
+            <article class="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)] sm:p-6">
+                <div class="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activityTrend' | transloco }}</p>
+                        <h3 class="mt-1.5 text-xl font-black tracking-[-0.03em] text-slate-950">{{ 'admin.site.dashboard.overview.labels.activityTrend' | transloco }}</h3>
+                        <p class="mt-1 text-xs font-medium text-slate-500">{{ vm.trend.sliceLabel }}</p>
                     </div>
-                </div>
-                <mat-icon
-                    class="absolute -bottom-4 -right-4 transform text-purple-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
-                    svgIcon="heroicons_outline:cube"
-                ></mat-icon>
-            </div>
-        }
-
-        <!-- Media -->
-        @if (overview?.stats?.media) {
-            <div
-                class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800"
-            >
-                <div class="relative z-10">
-                    <p class="text-secondary text-sm font-medium">
-                        {{
-                            'admin.site.dashboard.overview.stats.media'
-                                | transloco
-                        }}
-                    </p>
-                    <p
-                        class="mt-2 text-4xl font-extrabold tracking-tight text-amber-600 dark:text-amber-400"
-                    >
-                        {{ overview.stats.media.total }}
-                    </p>
-
-                    <div class="mt-4 flex items-center gap-3 text-sm">
-                        <span
-                            class="text-secondary rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold dark:bg-gray-800"
-                        >
-                            {{
-                                overview.stats.media.totalSizeMb
-                                    | number: '1.1-1'
-                            }}
-                            MB
-                        </span>
-                        @if (overview.stats.media.dailyChange > 0) {
-                            <span
-                                class="inline-flex items-center text-xs font-medium text-green-600"
+                    <div class="flex items-center gap-2">
+                        <div class="spa-site-overview__trend-nav">
+                            <button
+                                type="button"
+                                class="spa-site-overview__trend-nav-button"
+                                [disabled]="!vm.trend.canNavigatePrevious"
+                                (click)="onTrendPrevious()"
+                                [attr.aria-label]="'admin.site.dashboard.overview.meta.previousTrendPeriod' | transloco"
                             >
-                                +{{ overview.stats.media.dailyChange }}
-                            </span>
-                        }
-                    </div>
-                </div>
-                <mat-icon
-                    class="absolute -bottom-4 -right-4 transform text-amber-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
-                    svgIcon="heroicons_outline:photo"
-                ></mat-icon>
-            </div>
-        }
-
-        <!-- Products -->
-        @if (overview?.stats?.products) {
-            <div
-                class="group bg-card relative overflow-hidden rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 transition-all hover:shadow-md dark:ring-gray-800"
-            >
-                <div class="relative z-10">
-                    <p class="text-secondary text-sm font-medium">
-                        {{
-                            'admin.site.dashboard.overview.stats.products'
-                                | transloco
-                        }}
-                    </p>
-                    <p
-                        class="mt-2 text-4xl font-extrabold tracking-tight text-green-600 dark:text-green-400"
-                    >
-                        {{ overview.stats.products.total }}
-                    </p>
-
-                    <div class="mt-4 flex items-center gap-3 text-sm">
-                        <div
-                            class="flex items-center gap-1 rounded bg-green-50 px-1.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        >
-                            <span>{{ overview.stats.products.published }}</span>
-                            <span>{{
-                                'admin.site.dashboard.overview.active'
-                                    | transloco
-                            }}</span>
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:chevron-left"></mat-icon>
+                            </button>
+                            <button
+                                type="button"
+                                class="spa-site-overview__trend-nav-button"
+                                [disabled]="!vm.trend.canNavigateNext"
+                                (click)="onTrendNext()"
+                                [attr.aria-label]="'admin.site.dashboard.overview.meta.nextTrendPeriod' | transloco"
+                            >
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:chevron-right"></mat-icon>
+                            </button>
                         </div>
-                        @if (overview.stats.products.weeklyChange > 0) {
-                            <span
-                                class="inline-flex items-center text-xs font-medium text-green-600"
-                            >
-                                +{{ overview.stats.products.weeklyChange }}
-                            </span>
+                        @if (vm.trend.windowLabel) {
+                            <span class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ vm.trend.windowLabel }}</span>
                         }
                     </div>
                 </div>
-                <mat-icon
-                    class="absolute -bottom-4 -right-4 transform text-green-500/10 transition-transform duration-500 icon-size-24 group-hover:scale-110"
-                    svgIcon="heroicons_outline:shopping-bag"
-                ></mat-icon>
-            </div>
-        }
-    </div>
-
-    <!-- lower Section: 2 Columns -> Quick Actions & Activity -->
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <!-- Left Column: Quick Actions (1/3 width) -->
-        <div class="space-y-6">
-            <h3 class="text-default text-lg font-semibold tracking-tight">
-                {{ 'admin.site.dashboard.overview.quickActions' | transloco }}
-            </h3>
-
-            @if (overview?.actions) {
-                <div class="flex flex-col gap-3">
-                    <!-- Preview (Minimal) -->
-                    @if (overview.actions.canPreview) {
-                        <button
-                            mat-stroked-button
-                            class="text-default w-full justify-start rounded-xl border-gray-300 py-6 text-base font-medium transition-all hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
-                            (click)="onPreview()"
-                        >
-                            <mat-icon
-                                class="mr-3 text-blue-500"
-                                svgIcon="heroicons_outline:eye"
-                            ></mat-icon>
-                            {{
-                                'admin.site.dashboard.overview.actions.preview'
-                                    | transloco
-                            }}
-                        </button>
-                    }
-
-                    <!-- Maintenance Control (Minimal) -->
-                    @if (overview.actions.canEnableMaintenance) {
-                        <button
-                            mat-stroked-button
-                            color="warn"
-                            class="w-full justify-start rounded-xl py-6 text-base font-medium transition-all hover:bg-red-50 dark:hover:bg-red-900/10"
-                            (click)="onEnableMaintenance()"
-                        >
-                            <mat-icon
-                                class="mr-3 text-warn"
-                                svgIcon="heroicons_outline:wrench-screwdriver"
-                            ></mat-icon>
-                            {{
-                                'admin.site.dashboard.overview.actions.enableMaintenance'
-                                    | transloco
-                            }}
-                        </button>
-                    }
-
-                    @if (overview.actions.canDisableMaintenance) {
-                        <button
-                            mat-stroked-button
-                            class="w-full justify-start rounded-xl border-green-200 bg-green-50 py-6 text-base font-medium text-green-700 transition-all hover:border-green-300 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/10 dark:text-green-400"
-                            (click)="onDisableMaintenance()"
-                        >
-                            <mat-icon
-                                class="mr-3 text-green-600"
-                                svgIcon="heroicons_outline:check-circle"
-                            ></mat-icon>
-                            {{
-                                'admin.site.dashboard.overview.actions.disableMaintenance'
-                                    | transloco
-                            }}
-                        </button>
+                <div class="mt-4">
+                    @if (vm.trend.hasData) {
+                        <apx-chart
+                            class="block"
+                            [chart]="vm.trend.chartOptions.chart"
+                            [colors]="vm.trend.chartOptions.colors"
+                            [series]="vm.trend.chartOptions.series"
+                            [xaxis]="vm.trend.chartOptions.xaxis"
+                            [yaxis]="vm.trend.chartOptions.yaxis"
+                            [grid]="vm.trend.chartOptions.grid"
+                            [plotOptions]="vm.trend.chartOptions.plotOptions"
+                            [dataLabels]="vm.trend.chartOptions.dataLabels"
+                            [stroke]="vm.trend.chartOptions.stroke"
+                            [legend]="vm.trend.chartOptions.legend"
+                            [tooltip]="vm.trend.chartOptions.tooltip"
+                        ></apx-chart>
+                    } @else {
+                        <div class="flex min-h-[12rem] flex-col items-center justify-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                            <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+                            <p class="text-sm font-semibold">{{ 'admin.site.dashboard.overview.meta.noActivityInPeriod' | transloco }}</p>
+                            <p class="mt-1 text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.tryAnotherPeriod' | transloco }}</p>
+                        </div>
                     }
                 </div>
+            </article>
+        </section>
+    }
+
+    <!-- Activity Feed -->
+    <section>
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+                <p class="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activityFeed' | transloco }}</p>
+                <h3 class="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">
+                    {{ 'admin.site.dashboard.overview.recentActivity' | transloco }}
+                </h3>
+            </div>
+            @if (vm.activityFeed.hasCount) {
+                <span class="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {{ vm.activityFeed.countLabel }}
+                </span>
             }
         </div>
 
-        <!-- Right Column: Recent Activity (2/3 width) -->
-        <div class="space-y-6 lg:col-span-2">
-            <div class="flex items-center justify-between">
-                <h3 class="text-default text-lg font-semibold tracking-tight">
-                    {{
-                        'admin.site.dashboard.overview.recentActivity'
-                            | transloco
-                    }}
-                </h3>
-            </div>
-
-            <div
-                class="bg-card rounded-2xl p-6 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800"
-            >
-                @if (overview?.recentActivity?.length) {
-                    <div class="relative">
-                        <!-- Vertical Timeline Line -->
-                        <div
-                            class="absolute bottom-0 left-6 top-4 w-px bg-gray-200 dark:bg-gray-700"
-                        ></div>
-
-                        <div class="space-y-8">
-                            @for (
-                                activity of overview.recentActivity;
-                                track $index
-                            ) {
-                                <div class="relative flex gap-6">
-                                    <!-- Icon Node -->
-                                    <div
-                                        class="bg-card relative z-10 flex h-12 w-12 flex-none items-center justify-center rounded-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700"
-                                    >
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [ngClass]="
-                                                getActivityClass(
-                                                    activity.action
-                                                )
-                                            "
-                                            [svgIcon]="
-                                                getActivityIcon(
-                                                    activity.entityType
-                                                )
-                                            "
-                                        ></mat-icon>
-                                    </div>
-
-                                    <!-- Content -->
-                                    <div class="flex-auto py-1">
-                                        <div
-                                            class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
-                                        >
-                                            <p
-                                                class="text-default text-base font-medium"
-                                            >
-                                                {{ activity.description }}
-                                            </p>
-                                            <span
-                                                class="text-secondary whitespace-nowrap text-xs"
-                                                >{{
-                                                    activity.createdAt
-                                                        | date: 'medium'
-                                                }}</span
-                                            >
+        <div class="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_24px_56px_-44px_rgba(15,23,42,0.20)]">
+            @if (vm.activityFeed.hasItems) {
+                <div
+                    class="overflow-x-auto"
+                    [ngClass]="{
+                        'spa-site-overview__feed-table-shell': true,
+                        'spa-site-overview__feed-table-shell--scrollable': vm.activityFeed.isScrollable,
+                    }"
+                >
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-100 bg-slate-50/80">
+                                <th class="px-5 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.type' | transloco }}</th>
+                                <th class="px-4 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.activity' | transloco }}</th>
+                                <th class="hidden px-4 py-3 text-left text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400 md:table-cell">{{ 'admin.site.dashboard.overview.labels.user' | transloco }}</th>
+                                <th class="px-5 py-3 text-right text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-400">{{ 'admin.site.dashboard.overview.labels.when' | transloco }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @for (activity of vm.activityFeed.items; track activity.id; let even = $even) {
+                                <tr class="transition-colors duration-100 hover:bg-primary/[0.02]" [ngClass]="even ? 'bg-white' : 'bg-slate-50/40'">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] ring-1 ring-inset"
+                                                [ngClass]="getActivityClass(activity.action) === 'text-primary' ? 'bg-blue-50/80 ring-blue-200/50' : 'bg-rose-50 ring-rose-100/80'">
+                                                <mat-icon class="icon-size-3.5"
+                                                    [ngClass]="getActivityClass(activity.action)"
+                                                    [svgIcon]="getActivityIcon(activity.entityType)">
+                                                </mat-icon>
+                                            </div>
+                                            <span class="hidden font-mono text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-slate-500 sm:inline">
+                                                {{ activity.entityType }}
+                                            </span>
                                         </div>
-
-                                        <div
-                                            class="text-secondary mt-2 flex items-center gap-2 text-sm"
-                                        >
-                                            @if (activity.user) {
-                                                <div
-                                                    class="flex items-center gap-2 rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800"
-                                                >
-                                                    <mat-icon
-                                                        class="icon-size-3"
-                                                        svgIcon="heroicons_solid:user"
-                                                    ></mat-icon>
-                                                    <span
-                                                        class="text-xs font-medium"
-                                                        >{{
-                                                            activity.user
-                                                                .displayName
-                                                        }}</span
-                                                    >
-                                                </div>
-                                            }
-                                            <span
-                                                class="px-1 text-xs text-gray-400"
-                                                >&bull;</span
-                                            >
-                                            <span
-                                                class="font-mono text-xs text-gray-500"
-                                                >{{ activity.entityType }}</span
-                                            >
-                                        </div>
-                                    </div>
-                                </div>
+                                    </td>
+                                    <td class="max-w-[260px] px-4 py-3 lg:max-w-sm">
+                                        <p class="truncate text-sm font-medium text-slate-800">{{ activity.description }}</p>
+                                        @if (activity.entityName) {
+                                            <p class="mt-0.5 truncate text-xs text-slate-400">{{ activity.entityName }}</p>
+                                        }
+                                    </td>
+                                    <td class="hidden px-4 py-3 md:table-cell">
+                                        @if (activity.user) {
+                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                <mat-icon class="icon-size-3 flex-none" svgIcon="heroicons_solid:user"></mat-icon>
+                                                <span class="max-w-[100px] truncate">{{ activity.user.displayName }}</span>
+                                            </span>
+                                        } @else {
+                                            <span class="text-xs text-slate-400">—</span>
+                                        }
+                                    </td>
+                                    <td class="whitespace-nowrap px-5 py-3 text-right text-xs font-medium text-slate-500">
+                                        {{ formatActivityTimestamp(activity.createdAt) }}
+                                    </td>
+                                </tr>
                             }
-                        </div>
-                    </div>
-                } @else {
-                    <div
-                        class="text-secondary flex flex-col items-center justify-center py-12"
-                    >
-                        <mat-icon
-                            class="mb-4 opacity-50 icon-size-12"
-                            svgIcon="heroicons_outline:clipboard-document-list"
-                        ></mat-icon>
-                        <p>
-                            {{
-                                'admin.site.dashboard.overview.noActivity'
-                                    | transloco
-                            }}
-                        </p>
+                        </tbody>
+                    </table>
+                </div>
+                @if (vm.activityFeed.hasPagination) {
+                    <div class="spa-site-overview__feed-paginator">
+                        <spa-admin-paginator
+                            [length]="activityFeedTotalElements"
+                            [pageSize]="activityFeedPageSize"
+                            [pageIndex]="activityFeedPageIndex"
+                            [pageSizeOptions]="activityFeedPageSizeOptions"
+                            [showFirstLastButtons]="activityFeedTotalElements > activityFeedPageSize"
+                            (pageCallback)="onActivityFeedPaginatorChange($event)"
+                        />
                     </div>
                 }
-            </div>
+            } @else {
+                <div class="flex min-h-[10rem] flex-col items-center justify-center text-slate-500">
+                    <mat-icon class="mb-3 text-slate-300 icon-size-10" svgIcon="heroicons_outline:clipboard-document-list"></mat-icon>
+                    <p class="text-sm font-semibold">{{ 'admin.site.dashboard.overview.noActivity' | transloco }}</p>
+                    <p class="mt-1 text-xs text-slate-400">{{ 'admin.site.dashboard.overview.meta.performActionsForActivity' | transloco }}</p>
+                </div>
+            }
         </div>
-    </div>
+    </section>
+
 </div>

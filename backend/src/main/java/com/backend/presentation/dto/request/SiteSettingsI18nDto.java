@@ -7,18 +7,11 @@ public record SiteSettingsI18nDto(
 
         @Size(max = 160, message = "validation.length") String tagline,
 
-        SeoDto seo,
-
-        @Size(max = 500, message = "validation.length") String footerText,
-
-        @Size(max = 200, message = "validation.length") String headerTopbarText
-) {
+        @jakarta.validation.Valid SeoDto seo) {
 
     public SiteSettingsI18nDto {
         siteName = sanitize(siteName);
         tagline = sanitize(tagline);
-        footerText = sanitize(footerText);
-        headerTopbarText = sanitize(headerTopbarText);
     }
 
     private static String sanitize(String value) {

@@ -26,6 +26,8 @@ public interface SiteActivityRepository {
      */
     List<SiteActivity> findRecentActivities(int limit);
 
+    List<SiteActivity> findRecentActivities(int pageNumber, int pageSize);
+
     /**
      * Find activities by entity type.
      */

@@ -104,14 +104,14 @@ public class ComponentTypeController {
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (IllegalArgumentException ex) {
             String message = messageSource.getMessage("component.type.sort.invalid",
-                    new Object[] { ex.getMessage() },
+                    null,
                     Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
         } catch (Exception ex) {
-            log.error("Error listing component types: {}", ex.getMessage());
+            log.error("Error listing component types", ex);
             String msg = messageSource.getMessage("component.type.list.error",
-                    new Object[] { ex.getMessage() }, Locale.forLanguageTag(lang));
+                    null, Locale.forLanguageTag(lang));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(msg));
         }

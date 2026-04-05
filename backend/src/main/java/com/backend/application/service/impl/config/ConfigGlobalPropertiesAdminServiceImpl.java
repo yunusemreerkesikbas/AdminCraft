@@ -22,7 +22,6 @@ import com.backend.application.service.config.GlobalRuntimeConfigService;
 import com.backend.domain.entity.ConfigChangeAudit;
 import com.backend.domain.entity.PlatformConfigProperty;
 import com.backend.domain.port.EncryptionServicePort;
-import com.backend.domain.port.PlatformSettingsPort;
 import com.backend.domain.repository.ConfigChangeAuditRepository;
 import com.backend.domain.repository.PlatformConfigPropertyRepository;
 import com.backend.shared.constants.ValidationConstants;
@@ -47,6 +46,8 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String KEY_EMAIL_FROM_ADDRESS = "app.email.from-address";
     private static final String KEY_EMAIL_FROM_NAME = "app.email.from-name";
     private static final String KEY_FRONTEND_BASE_URL = "app.frontend.base-url";
+    private static final String KEY_GA4_ENABLED = "platform.analytics.ga4.enabled";
+    private static final String KEY_SEO_INSIGHTS_ENABLED = "platform.seo.insights.enabled";
     private static final String KEY_RECAPTCHA_ENABLED = "platform.security.recaptcha.enabled";
     private static final String KEY_RECAPTCHA_SITE_KEY = "platform.security.recaptcha.site_key";
     private static final String KEY_RECAPTCHA_SECRET_KEY = "platform.security.recaptcha.secret_key";
@@ -56,6 +57,8 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
             KEY_FRONTEND_BASE_URL,
+            KEY_GA4_ENABLED,
+            KEY_SEO_INSIGHTS_ENABLED,
             KEY_RECAPTCHA_ENABLED,
             KEY_RECAPTCHA_SITE_KEY,
             KEY_RECAPTCHA_SECRET_KEY);
@@ -65,6 +68,8 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
             KEY_FRONTEND_BASE_URL,
+            KEY_GA4_ENABLED,
+            KEY_SEO_INSIGHTS_ENABLED,
             KEY_RECAPTCHA_ENABLED,
             KEY_RECAPTCHA_SITE_KEY,
             KEY_RECAPTCHA_SECRET_KEY);
@@ -75,6 +80,8 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String DEFAULT_EMAIL_FROM_ADDRESS = "noreply@craftive.io";
     private static final String DEFAULT_EMAIL_FROM_NAME = "Craftive";
     private static final String DEFAULT_FRONTEND_BASE_URL = "http://%s.localhost:4200";
+    private static final String DEFAULT_GA4_ENABLED = "false";
+    private static final String DEFAULT_SEO_INSIGHTS_ENABLED = "false";
     private static final String DEFAULT_RECAPTCHA_ENABLED = "false";
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -85,22 +92,14 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private final ObjectMapper objectMapper;
     private final Environment environment;
     private final EncryptionServicePort encryptionService;
-    private final PlatformSettingsPort platformSettingsPort;
 
     @Override
     @Transactional(readOnly = true)
     public List<ConfigPropertyResult> listProperties(ConfigPrincipal principal) {
         assertSuperAdmin(principal);
-        Map<String, PlatformConfigProperty> overridesByKey = propertyRepository.findAll().stream()
-                .filter(prop -> ALLOWED_KEYS.contains(prop.getConfigKey()))
-                .collect(java.util.stream.Collectors.toMap(
-                        PlatformConfigProperty::getConfigKey,
-                        prop -> prop,
-                        (left, right) -> left,
-                        LinkedHashMap::new));
 
         return ORDERED_KEYS.stream()
-                .map(key -> toResult(key, overridesByKey.get(key)))
+                .map(key -> toResult(key, propertyRepository.findByConfigKey(key).orElse(null)))
                 .toList();
     }
 
@@ -125,7 +124,9 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
         String valueToStore = shouldEncryptValue(normalizedKey) ? encryptionService.encrypt(normalizedValue) : normalizedValue;
 
         java.util.Optional<PlatformConfigProperty> existing = propertyRepository.findByConfigKey(normalizedKey);
-        String beforeValue = existing.map(PlatformConfigProperty::getConfigValue).orElse(null);
+        String beforeValue = existing
+                .map(PlatformConfigProperty::getConfigValue)
+                .orElse(null);
 
         PlatformConfigProperty saved = existing
                 .map(prop -> {
@@ -215,7 +216,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public Boolean getRecaptchaEnabled() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_ENABLED);
         if (!StringUtils.hasText(configured)) {
-            configured = resolveFallbackValue(KEY_RECAPTCHA_ENABLED);
+            configured = DEFAULT_RECAPTCHA_ENABLED;
         }
         if (!StringUtils.hasText(configured)) {
             return false;
@@ -228,7 +229,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public String getRecaptchaSiteKey() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_SITE_KEY);
         if (!StringUtils.hasText(configured)) {
-            return resolveFallbackValue(KEY_RECAPTCHA_SITE_KEY);
+            return null;
         }
         return configured.trim();
     }
@@ -238,9 +239,29 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     public String getRecaptchaSecretKeyEncrypted() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_SECRET_KEY);
         if (!StringUtils.hasText(configured)) {
-            return resolveFallbackValue(KEY_RECAPTCHA_SECRET_KEY);
+            return null;
         }
         return configured;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean getGa4AnalyticsEnabled() {
+        String configured = resolveConfiguredValue(KEY_GA4_ENABLED);
+        if (!StringUtils.hasText(configured)) {
+            configured = DEFAULT_GA4_ENABLED;
+        }
+        return Boolean.parseBoolean(configured.trim().toLowerCase());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean getSeoInsightsEnabled() {
+        String configured = resolveConfiguredValue(KEY_SEO_INSIGHTS_ENABLED);
+        if (!StringUtils.hasText(configured)) {
+            configured = DEFAULT_SEO_INSIGHTS_ENABLED;
+        }
+        return Boolean.parseBoolean(configured.trim().toLowerCase());
     }
 
     private ConfigPropertyResult toResult(String key, PlatformConfigProperty override) {
@@ -298,6 +319,20 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                 }
                 validateFrontendBaseUrl(normalized);
                 return normalized;
+            }
+            case KEY_GA4_ENABLED -> {
+                String bool = normalized.toLowerCase();
+                if (!"true".equals(bool) && !"false".equals(bool)) {
+                    throw new IllegalArgumentException("Invalid GA4 enabled value. Allowed values: true, false");
+                }
+                return bool;
+            }
+            case KEY_SEO_INSIGHTS_ENABLED -> {
+                String bool = normalized.toLowerCase();
+                if (!"true".equals(bool) && !"false".equals(bool)) {
+                    throw new IllegalArgumentException("Invalid SEO insights enabled value. Allowed values: true, false");
+                }
+                return bool;
             }
             case KEY_RECAPTCHA_ENABLED -> {
                 String bool = normalized.toLowerCase();
@@ -363,27 +398,18 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
                     yield DEFAULT_FRONTEND_BASE_URL;
                 }
             }
-            case KEY_RECAPTCHA_ENABLED -> resolvePlatformRecaptchaEnabledFallback();
-            case KEY_RECAPTCHA_SITE_KEY -> resolvePlatformRecaptchaSiteKeyFallback();
-            case KEY_RECAPTCHA_SECRET_KEY -> resolvePlatformRecaptchaSecretFallback();
+            case KEY_GA4_ENABLED -> {
+                String val = environment.getProperty(KEY_GA4_ENABLED, DEFAULT_GA4_ENABLED);
+                yield StringUtils.hasText(val) ? val.trim().toLowerCase() : DEFAULT_GA4_ENABLED;
+            }
+            case KEY_SEO_INSIGHTS_ENABLED -> {
+                String val = environment.getProperty(KEY_SEO_INSIGHTS_ENABLED, DEFAULT_SEO_INSIGHTS_ENABLED);
+                yield StringUtils.hasText(val) ? val.trim().toLowerCase() : DEFAULT_SEO_INSIGHTS_ENABLED;
+            }
+            case KEY_RECAPTCHA_ENABLED -> DEFAULT_RECAPTCHA_ENABLED;
+            case KEY_RECAPTCHA_SITE_KEY, KEY_RECAPTCHA_SECRET_KEY -> null;
             default -> environment.getProperty(key);
         };
-    }
-
-    private String resolvePlatformRecaptchaEnabledFallback() {
-        var settings = platformSettingsPort.getSingleton();
-        if (settings.getRecaptchaEnabled() != null) {
-            return String.valueOf(settings.getRecaptchaEnabled());
-        }
-        return DEFAULT_RECAPTCHA_ENABLED;
-    }
-
-    private String resolvePlatformRecaptchaSiteKeyFallback() {
-        return platformSettingsPort.getSingleton().getRecaptchaSiteKey();
-    }
-
-    private String resolvePlatformRecaptchaSecretFallback() {
-        return platformSettingsPort.getSingleton().getRecaptchaSecretKeyEncrypted();
     }
 
     private boolean isSecretKey(String key) {

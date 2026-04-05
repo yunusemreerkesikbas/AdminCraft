@@ -89,6 +89,19 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Sync compose files to Prod droplet
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.PROD_DROPLET_IP }}
+          username: deploy
+          key: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,docker-compose.prod.yml"
+          target: /opt/craftive/prod
+
       - name: Save current version
         uses: appleboy/ssh-action@v1
         with:

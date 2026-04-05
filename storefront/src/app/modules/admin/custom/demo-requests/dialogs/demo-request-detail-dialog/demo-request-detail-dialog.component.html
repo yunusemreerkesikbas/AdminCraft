@@ -1,0 +1,77 @@
+<spa-dialog
+    [title]="'admin.platform.demoRequests.detail.title' | transloco"
+    [subtitle]="data.fullName"
+    [size]="'lg'"
+    [showSubmit]="false"
+    [cancelLabel]="'admin.common.close'"
+    (closed)="close()"
+    (cancelled)="close()"
+>
+    <div class="spa-demo-request-detail grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="spa-demo-request-detail__field">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.fullName' | transloco }}
+            </p>
+            <p class="spa-demo-request-detail__value">{{ data.fullName }}</p>
+        </div>
+
+        <div class="spa-demo-request-detail__field">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.email' | transloco }}
+            </p>
+            <p class="spa-demo-request-detail__value">{{ data.email }}</p>
+        </div>
+
+        <div class="spa-demo-request-detail__field">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.phone' | transloco }}
+            </p>
+            <p class="spa-demo-request-detail__value">
+                {{ data.phone || '-' }}
+            </p>
+        </div>
+
+        <div class="spa-demo-request-detail__field">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.locale' | transloco }}
+            </p>
+            <p class="spa-demo-request-detail__value">{{ data.locale }}</p>
+        </div>
+
+        <div class="spa-demo-request-detail__field sm:col-span-2">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.createdAt' | transloco }}
+            </p>
+            <p class="spa-demo-request-detail__value">
+                {{ data.createdAt | date: 'medium' }}
+            </p>
+        </div>
+
+        @if (data.clientIp) {
+            <div class="spa-demo-request-detail__field">
+                <p class="spa-demo-request-detail__label">
+                    {{ 'admin.platform.demoRequests.fields.clientIp' | transloco }}
+                </p>
+                <p class="spa-demo-request-detail__value">{{ data.clientIp }}</p>
+            </div>
+        }
+
+        @if (data.userAgent) {
+            <div class="spa-demo-request-detail__field sm:col-span-2">
+                <p class="spa-demo-request-detail__label">
+                    {{ 'admin.platform.demoRequests.fields.userAgent' | transloco }}
+                </p>
+                <p class="spa-demo-request-detail__value">{{ data.userAgent }}</p>
+            </div>
+        }
+
+        <div class="spa-demo-request-detail__field sm:col-span-2">
+            <p class="spa-demo-request-detail__label">
+                {{ 'admin.platform.demoRequests.fields.message' | transloco }}
+            </p>
+            <div class="spa-demo-request-detail__message">
+                {{ data.message }}
+            </div>
+        </div>
+    </div>
+</spa-dialog>

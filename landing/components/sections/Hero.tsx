@@ -1,9 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useDemoContext } from "@/components/layout/DemoContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useDemoContext } from "@/components/layout/DemoContext";
+import { FloatingOrbs } from "@/components/visuals/FloatingOrbs";
+import { HeroVisual } from "@/components/visuals/HeroVisual";
+import { motion, useReducedMotion } from "framer-motion";
+import Link from "next/link";
 
 type HeroContent = {
   badge: string;
@@ -12,157 +15,118 @@ type HeroContent = {
   primaryCta: string;
   secondaryCta: string;
   mockupAlt: string;
+  visual?: unknown;
 };
 
 type HeroProps = { content: HeroContent; locale: string };
 
-function DashboardMockup({ alt }: { alt: string }) {
-  return (
-    <div aria-label={alt} role="img" className="animate-float relative w-full overflow-hidden rounded-2xl border border-[var(--color-shade)] bg-white shadow-[0_24px_80px_-12px_rgba(0,0,0,0.18)]">
-      {/* Browser chrome */}
-      <div className="flex items-center gap-2 border-b border-[var(--color-shade)] bg-[var(--color-light-neutral-2)] px-4 py-3">
-        <div className="flex gap-1.5">
-          <div className="h-3 w-3 rounded-full bg-red-400" />
-          <div className="h-3 w-3 rounded-full bg-yellow-400" />
-          <div className="h-3 w-3 rounded-full bg-green-400" />
-        </div>
-        <div className="mx-auto flex h-6 w-56 items-center rounded-md bg-white border border-[var(--color-shade)] px-3">
-          <div className="h-1.5 w-32 rounded-full bg-[var(--color-shade)]" />
-        </div>
-      </div>
-
-      {/* App layout */}
-      <div className="flex" style={{ minHeight: "340px" }}>
-        {/* Sidebar */}
-        <div className="flex w-[52px] flex-col gap-3 border-r border-[var(--color-shade)] bg-[var(--color-light-neutral-2)] px-3 py-4 sm:w-44 sm:px-4">
-          <div className="mb-2 hidden h-6 w-24 rounded-md bg-[var(--color-dark-neutral-1)] sm:block" />
-          {[
-            { w: "w-full", active: true },
-            { w: "w-4/5", active: false },
-            { w: "w-full", active: false },
-            { w: "w-3/4", active: false },
-            { w: "w-full", active: false },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${item.active ? "bg-[var(--color-dark-neutral-1)]" : ""}`}
-            >
-              <div className={`h-3 w-3 shrink-0 rounded-sm ${item.active ? "bg-white opacity-70" : "bg-[var(--color-shade)]"}`} />
-              <div className={`hidden h-2 rounded-full sm:block ${item.active ? "bg-white opacity-50" : "bg-[var(--color-shade)]"} ${item.w}`} />
-            </div>
-          ))}
-        </div>
-
-        {/* Main content */}
-        <div className="flex flex-1 flex-col gap-4 p-4 sm:p-5">
-          {/* Top bar */}
-          <div className="flex items-center justify-between">
-            <div className="h-5 w-32 rounded-md bg-[var(--color-shade)]" />
-            <div className="flex gap-2">
-              <div className="h-7 w-7 rounded-lg bg-[var(--color-light-neutral-2)] border border-[var(--color-shade)]" />
-              <div className="h-7 w-16 rounded-lg bg-[var(--color-theme-3)] opacity-80" />
-            </div>
-          </div>
-
-          {/* Stat cards */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { val: "500+", label: "Tenants", color: "bg-[var(--color-theme-7)]", accent: "bg-[var(--color-theme-3)]" },
-              { val: "99.9%", label: "Uptime", color: "bg-[var(--color-theme-6)]", accent: "bg-[var(--color-theme-4)]" },
-              { val: "12", label: "Modules", color: "bg-[var(--color-light-neutral-2)]", accent: "bg-[var(--color-dark-neutral-1)]" },
-            ].map((s) => (
-              <div key={s.label} className={`rounded-xl border border-[var(--color-shade)] ${s.color} p-3`}>
-                <div className={`mb-1.5 h-1.5 w-6 rounded-full ${s.accent} opacity-70`} />
-                <div className="h-5 w-10 rounded font-bold text-[var(--color-dark-neutral-1)] text-xs flex items-center">
-                  <div className={`h-4 w-8 rounded ${s.accent} opacity-80`} />
-                </div>
-                <div className="mt-1 h-1.5 w-12 rounded bg-[var(--color-shade)]" />
-              </div>
-            ))}
-          </div>
-
-          {/* Table area */}
-          <div className="flex-1 overflow-hidden rounded-xl border border-[var(--color-shade)] bg-white">
-            <div className="border-b border-[var(--color-shade)] bg-[var(--color-light-neutral-2)] px-4 py-2.5 flex items-center justify-between">
-              <div className="h-2.5 w-24 rounded-full bg-[var(--color-shade)]" />
-              <div className="flex gap-2">
-                <div className="h-5 w-14 rounded-md bg-white border border-[var(--color-shade)]" />
-                <div className="h-5 w-14 rounded-md bg-[var(--color-theme-3)] opacity-70" />
-              </div>
-            </div>
-            <div className="divide-y divide-[var(--color-shade)]">
-              {[
-                { w1: "w-20", w2: "w-24", badge: "bg-green-100", dot: "bg-green-500" },
-                { w1: "w-28", w2: "w-16", badge: "bg-[var(--color-theme-6)]", dot: "bg-[var(--color-theme-4)]" },
-                { w1: "w-16", w2: "w-20", badge: "bg-[var(--color-theme-7)]", dot: "bg-[var(--color-theme-3)]" },
-                { w1: "w-24", w2: "w-18", badge: "bg-green-100", dot: "bg-green-500" },
-              ].map((row, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 py-2.5">
-                  <div className={`h-2 rounded-full bg-[var(--color-shade)] ${row.w1}`} />
-                  <div className={`h-2 rounded-full bg-[var(--color-shade)] ${row.w2} flex-1`} />
-                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${row.badge}`}>
-                    <div className={`h-1.5 w-1.5 rounded-full ${row.dot}`} />
-                    <div className="h-1.5 w-8 rounded-full bg-current opacity-30" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+const wordVariants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
 
 export function Hero({ content, locale }: HeroProps) {
   const { openContact } = useDemoContext();
+  const shouldReduce = useReducedMotion();
   const base = `/${locale}`;
+
+  const words = content.headline.split(" ");
 
   return (
     <section className="relative overflow-hidden bg-[var(--color-light-neutral-1)]">
-      {/* Gradient bg */}
+      {/* Animated gradient mesh background */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 animate-gradient-shift"
         style={{
           background:
-            "radial-gradient(ellipse 90% 60% at 50% -10%, var(--color-theme-6) 0%, transparent 55%)",
+            "radial-gradient(ellipse 60% 50% at 50% 20%, rgba(37,99,235,0.08) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 80% 60%, rgba(129,140,248,0.06) 0%, transparent 50%), radial-gradient(ellipse 50% 30% at 20% 80%, rgba(56,189,248,0.05) 0%, transparent 50%)",
+          backgroundSize: "200% 200%",
         }}
         aria-hidden
       />
-      {/* Subtle dot pattern */}
+
+      {/* Dot pattern */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: "radial-gradient(circle, #000 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
+          backgroundSize: "26px 26px",
         }}
         aria-hidden
       />
 
-      <div className="relative mx-auto flex w-full max-w-[1440px] flex-col items-center gap-14 px-4 pb-12 pt-[130px] sm:px-10 lg:px-20">
-        {/* Text block */}
-        <div className="flex w-full max-w-[680px] flex-col items-center gap-7 text-center animate-fade-in-up">
-          <Badge
-            variant="secondary"
-            className="rounded-full border border-[var(--color-shade)] bg-white/80 px-4 py-1.5 text-xs font-semibold text-[var(--color-dark-neutral-2)] shadow-sm backdrop-blur-sm"
-          >
-            {content.badge}
-          </Badge>
+      <FloatingOrbs />
 
-          <div className="flex flex-col gap-5">
-            <h1 className="heading-1 text-balance text-[var(--color-dark-neutral-1)]">
-              {content.headline}
+      {/* Bottom fade */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(247,248,250,0.88) 100%)",
+        }}
+        aria-hidden
+      />
+
+      <div className="relative mx-auto flex w-full max-w-[1440px] flex-col items-center gap-12 px-4 pb-10 pt-[112px] sm:px-10 sm:pb-16 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-20 lg:pb-20 lg:pt-[138px]">
+        {/* Text content */}
+        <div className="relative z-10 flex w-full max-w-[620px] min-w-0 flex-col items-center gap-6 text-center lg:items-start lg:text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Badge
+              variant="secondary"
+              className="rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-[0.72rem] font-semibold tracking-[-0.01em] text-neutral-600 shadow-[0_1px_0_rgba(255,255,255,0.7),0_8px_20px_-18px_rgba(15,23,42,0.35)]"
+            >
+              {content.badge}
+            </Badge>
+          </motion.div>
+
+          <div className="flex flex-col items-center gap-4 lg:items-start">
+            <h1 className="heading-1 max-w-[12ch] text-balance text-[var(--color-dark-neutral-1)] lg:text-[4.65rem] lg:leading-[0.98]">
+              {shouldReduce ? (
+                content.headline
+              ) : (
+                <motion.span
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ staggerChildren: 0.08, delayChildren: 0.15 }}
+                  className="inline"
+                >
+                  {words.map((word, i) => (
+                    <motion.span
+                      key={i}
+                      variants={wordVariants}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                      className="inline-block mr-[0.25em]"
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                </motion.span>
+              )}
             </h1>
-            <p className="text-base leading-relaxed text-[var(--color-dark-neutral-2)] sm:text-[1.05rem]">
+            <motion.p
+              className="max-w-[52ch] text-[1rem] leading-[1.75] text-neutral-600 sm:text-[1.05rem]"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
               {content.subheadline}
-            </p>
+            </motion.p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3 animate-fade-in-up animate-fade-in-up-delay-1">
+          <motion.div
+            className="flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          >
             <Button
               onClick={openContact}
               size="lg"
-              className="rounded-xl bg-[var(--color-theme-3)] px-7 text-white shadow-[0_4px_20px_rgba(37,99,235,0.4)] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              className="min-h-11 rounded-[14px] bg-neutral-950 px-7 text-white shadow-[0_18px_30px_-18px_rgba(15,23,42,0.72)] transition-[background-color,box-shadow,transform] duration-200 hover:scale-[1.01] hover:bg-neutral-800 hover:shadow-[0_24px_40px_-22px_rgba(15,23,42,0.72)] active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none"
             >
               {content.primaryCta}
             </Button>
@@ -170,16 +134,16 @@ export function Hero({ content, locale }: HeroProps) {
               asChild
               variant="outline"
               size="lg"
-              className="rounded-xl border-[var(--color-shade)] bg-white/80 hover:bg-[var(--color-light-neutral-2)]"
+              className="min-h-11 rounded-[14px] border-neutral-200 bg-white px-6 text-neutral-700 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.3)] transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-950 motion-reduce:transition-none"
             >
               <Link href={`${base}#features`}>{content.secondaryCta}</Link>
             </Button>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Dashboard mockup */}
-        <div className="w-full max-w-5xl animate-fade-in-up animate-fade-in-up-delay-2">
-          <DashboardMockup alt={content.mockupAlt} />
+        {/* Hero visual mockup */}
+        <div className="relative z-10 hidden lg:block">
+          <HeroVisual alt={content.mockupAlt} />
         </div>
       </div>
     </section>

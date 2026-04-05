@@ -137,6 +137,9 @@ export const langTR = {
                 tenant_admin: 'Müşteri Yöneticisi',
                 super_admin: 'Süper Yönetici',
             },
+            error: 'Hata',
+            warning: 'Uyarı',
+            neutral: 'Nötr',
             languages: {
                 tr: 'Türkçe',
                 en: 'İngilizce',
@@ -1032,28 +1035,45 @@ export const langTR = {
                 seo: { title: 'SEO', desc: 'Dil bazlı SEO varsayılanları' },
             },
             address: {
-                title: 'Adres',
+                title: 'Adres Bilgileri',
                 line1: 'Adres Satırı 1',
+                line1Placeholder: 'Mahalle, Cadde, Sokak',
                 line2: 'Adres Satırı 2',
+                line2Placeholder: 'Apartman, Daire No (opsiyonel)',
                 city: 'Şehir',
+                cityPlaceholder: 'Şehir giriniz',
                 state: 'İl/İlçe',
+                statePlaceholder: 'İl/İlçe giriniz',
                 postalCode: 'Posta Kodu',
+                postalCodePlaceholder: '34000',
                 country: 'Ülke',
+                countryPlaceholder: 'Ülke seçiniz',
                 mapEmbedUrl: 'Harita Embed URL',
+                mapEmbedUrlPlaceholder: 'Google Maps embed URL',
+                mapEmbedUrlHint: 'Google Maps\'ten alınan iframe embed URL\'si',
             },
             social: {
-                title: 'Sosyal Bağlantılar',
+                title: 'Sosyal Medya Bağlantıları',
+                description: 'Sosyal medya profillerinizin linklerini giriniz',
                 facebook: 'Facebook',
+                facebookPlaceholder: 'https://facebook.com/sirketiniz',
                 instagram: 'Instagram',
+                instagramPlaceholder: 'https://instagram.com/sirketiniz',
                 x: 'X (Twitter)',
+                xPlaceholder: 'https://x.com/sirketiniz',
                 linkedin: 'LinkedIn',
+                linkedinPlaceholder: 'https://linkedin.com/company/sirketiniz',
                 youtube: 'YouTube',
+                youtubePlaceholder: 'https://youtube.com/@sirketiniz',
                 tiktok: 'TikTok',
+                tiktokPlaceholder: 'https://tiktok.com/@sirketiniz',
             },
             seo: {
                 title: 'SEO Başlığı',
                 description: 'SEO Açıklaması',
                 keywords: 'Anahtar Kelimeler',
+                headingTR: 'Arama Önizlemesi (TR)',
+                headingEN: 'Arama Önizlemesi (EN)',
             },
             tabs: {
                 general: 'Genel',
@@ -1075,8 +1095,6 @@ export const langTR = {
                 social: 'Sosyal Bağlantılar',
                 siteName: 'Site Adı',
                 tagline: 'Slogan',
-                footerText: 'Alt Bilgi',
-                headerTopbarText: 'Üst Çubuk Metni',
                 seoTitle: 'SEO Başlığı',
                 seoDescription: 'SEO Açıklaması',
                 keywords: 'Anahtar Kelimeler',
@@ -1088,10 +1106,12 @@ export const langTR = {
                 description: 'Site ayarlarını ve durumunu yönetin',
                 tabs: {
                     overview: 'Genel Bakış',
+                    settings: 'Ayarlar',
                     general: 'Genel',
                     address: 'Adres',
                     social: 'Sosyal Medya',
                     seo: 'SEO',
+                    advanced: 'Gelişmiş',
                     technical: 'Teknik',
                     security: 'Güvenlik',
                 },
@@ -1136,8 +1156,404 @@ export const langTR = {
                     actions: {
                         preview: 'Önizle',
                         publish: 'Yayınla',
+                        maintenance: 'Bakım Moduna Al',
                         enableMaintenance: 'Bakım Modunu Aç',
                         disableMaintenance: 'Bakım Modunu Kapat',
+                        invalidPreviewUrl: "Geçersiz önizleme URL'si",
+                    },
+                    analytics: {
+                        eyebrow: 'Trafik Özeti',
+                        title: 'Google Analytics görünümü',
+                        subtitle:
+                            'Son 7 gün için tenant bazlı GA4 trafik özeti.',
+                        infoAction: '{{metric}} metrik detayını göster',
+                        infoSections: {
+                            summary: 'Ne gösterir?',
+                            source: 'Veri kaynağı',
+                            interpretation: 'Nasıl yorumlanır?',
+                        },
+                        last7Days: 'Son 7 gün',
+                        propertyId: 'GA4 mülk {{value}}',
+                        connected: 'GA4 bağlı',
+                        lastSynced: 'Son senkronizasyon {{date}}',
+                        trendEyebrow: 'Kullanıcı trendi',
+                        trendTitle: 'Son 7 gündeki aktif kullanıcılar',
+                        delta: {
+                            unavailable: 'Henüz karşılaştırma yok',
+                            vsPrevious: 'Önceki 7 güne göre {{value}}',
+                        },
+                        metrics: {
+                            activeUsers: {
+                                label: 'Aktif Kullanıcılar',
+                                detail: 'Seçilen dönemde siteyle etkileşim kuran kullanıcılar',
+                                info: {
+                                    title: 'Aktif kullanıcılar hakkında',
+                                    summary:
+                                        'Seçilen 7 günlük aralıkta sitenizle anlamlı etkileşim kuran benzersiz kullanıcı sayısını gösterir.',
+                                    source:
+                                        'Veri, tenant için tanımlanan GA4 property üzerinden Google Analytics Data API ile alınır ve önceki 7 günle karşılaştırılır.',
+                                    interpretation:
+                                        'Yeni kullanıcı ve etkileşim oranı ile birlikte izleyin. Trafik artarken bu metrik sınırlı kalıyorsa edinim veya geri dönüş kalitesi zayıflıyor olabilir.',
+                                },
+                            },
+                            screenPageViews: {
+                                label: 'Görüntülenmeler',
+                                detail: 'GA4 tarafından kaydedilen toplam sayfa ve ekran görüntülemeleri',
+                                info: {
+                                    title: 'Görüntülenmeler hakkında',
+                                    summary:
+                                        'Toplam sayfa ve ekran görüntüleme sayısını gösterir. Aynı kullanıcı birden fazla görüntüleme üretebilir.',
+                                    source:
+                                        'Bu kart, tenant GA4 propertysindeki page_view ve screen_view sinyallerinin son 7 günlük toplamını kullanır.',
+                                    interpretation:
+                                        'Aktif kullanıcılarla birlikte artması içerik tüketiminin derinleştiğini gösterir. Tek başına ani artış, tekrar yükleme veya gezinme sorunlarını da işaret edebilir.',
+                                },
+                            },
+                            newUsers: {
+                                label: 'Yeni Kullanıcılar',
+                                detail: 'Seçilen dönemde ilk kez gelen ziyaretçiler',
+                                info: {
+                                    title: 'Yeni kullanıcılar hakkında',
+                                    summary:
+                                        'Bu dönemde sitenize ilk kez gelen kullanıcıları gösterir.',
+                                    source:
+                                        'Metrik, tenant GA4 property üzerinden raporlanır ve overview kartında önceki 7 günle birlikte sunulur.',
+                                    interpretation:
+                                        'Aktif kullanıcılarla beraber okuyun. Oran çok yüksekse geri dönüş zayıf olabilir, çok düşükse yeni edinim kanalları sınırlı kalıyor olabilir.',
+                                },
+                            },
+                            engagementRate: {
+                                label: 'Etkileşim Oranı',
+                                detail: 'Anlamlı etkileşim kuran oturumların oranı',
+                                info: {
+                                    title: 'Etkileşim oranı hakkında',
+                                    summary:
+                                        'Anlamlı etkileşim üreten oturumların toplam oturumlara oranını yüzde olarak gösterir.',
+                                    source:
+                                        'Metrik, GA4 engaged session mantığına dayanır ve tenant property için son 7 günlük rapordan üretilir.',
+                                    interpretation:
+                                        'Trafik artarken bu oran düşüyorsa landing deneyimi, içerik uygunluğu veya trafik kalitesi beklentiyi karşılamıyor olabilir.',
+                                },
+                            },
+                        },
+                        states: {
+                            notConfigured: {
+                                title: 'GA4 property bağlantısını kurun',
+                                description:
+                                    'Bu alanda canlı trafik verileri göstermek için Config Control Panel üzerinden tenant bazlı GA4 numeric property ID tanımlayın.',
+                                action: 'Yapılandırma panelini aç',
+                            },
+                            disabled: {
+                                title: 'Analytics özeti devre dışı',
+                                description:
+                                    'GA4 özetini açan global runtime flag şu anda kapalı.',
+                            },
+                            noData: {
+                                title: 'Henüz analytics verisi yok',
+                                description:
+                                    'Tracking yeni açılmış olabilir veya seçilen dönemde bu property üzerinde trafik kaydı oluşmamış olabilir.',
+                            },
+                            accessError: {
+                                title: 'GA4 verisi yüklenemedi',
+                                description:
+                                    'Tanımlanan property ID bilgisini ve ortak service account erişimini kontrol edin.',
+                            },
+                        },
+                    },
+                    insights: {
+                        lastSynced: 'Son senkronizasyon {{date}}',
+                        seo: {
+                            eyebrow: 'Arama Görünürlüğü',
+                            title: 'SEO snapshot',
+                            subtitle:
+                                'Search Console üzerinden son 28 gün görünürlük ve indeksleme sinyalleri.',
+                            infoAction: '{{metric}} metrik detayını göster',
+                            infoSections: {
+                                summary: 'Ne gösterir?',
+                                source: 'Veri kaynağı',
+                                interpretation: 'Nasıl yorumlanır?',
+                            },
+                            last28Days: 'Son 28 gün',
+                            trendEyebrow: 'Görünürlük trendi',
+                            trendTitle: 'Tıklama ve gösterim akışı',
+                            metrics: {
+                                clicks: {
+                                    label: 'Tıklamalar',
+                                    detail: 'Google Search üzerinden gelen toplam tıklama',
+                                    info: {
+                                        title: 'Tıklamalar hakkında',
+                                        summary:
+                                            'Son 28 günde kullanıcıların Google arama sonuçlarından sitenize kaç kez tıkladığını gösterir.',
+                                        source:
+                                            'Veri, tenant için tanımlanan Search Console propertysinden backend üzerinden alınır ve önceki dönemle karşılaştırılır.',
+                                        interpretation:
+                                            'Gösterim ve CTR ile birlikte izleyin. Gösterim artarken tıklama sınırlı kalıyorsa snippet kalitesi veya pozisyon iyileştirmesi gerekebilir.',
+                                    },
+                                },
+                                impressions: {
+                                    label: 'Gösterimler',
+                                    detail: 'Arama sonuçlarında görünme sayısı',
+                                    info: {
+                                        title: 'Gösterimler hakkında',
+                                        summary:
+                                            'Sitenizin Google arama sonuçlarında kaç kez göründüğünü gösterir.',
+                                        source:
+                                            'Search Console performans raporunun son 28 günlük tenant property verisi kullanılır.',
+                                        interpretation:
+                                            'Bu metrik öncü bir sinyaldir. Gösterimler tıklamalardan önce büyüyebilir; bu genelde daha fazla sorguda görünmeye başladığınız anlamına gelir.',
+                                    },
+                                },
+                                ctr: {
+                                    label: 'CTR',
+                                    detail: 'Tıklama oranı',
+                                    info: {
+                                        title: 'CTR hakkında',
+                                        summary:
+                                            'Gösterimlerin yüzde kaçının tıklamaya dönüştüğünü gösterir.',
+                                        source:
+                                            'CTR, aynı 28 günlük Search Console dönemindeki tıklama ve gösterim verilerinden türetilir.',
+                                        interpretation:
+                                            'Pozisyon güçlüyken CTR zayıfsa title veya meta description geliştirmesi gerekir. Pozisyon da zayıfsa önce sıralama kazanımına odaklanmak gerekir.',
+                                    },
+                                },
+                                position: {
+                                    label: 'Ortalama Pozisyon',
+                                    detail: 'Arama sonuçlarındaki ortalama sıralama',
+                                    info: {
+                                        title: 'Ortalama pozisyon hakkında',
+                                        summary:
+                                            'Sitenizin göründüğü sorgulardaki ortalama sıralama konumunu gösterir.',
+                                        source:
+                                            'Metrik, tenant Search Console propertysinden gelen average position değerine dayanır.',
+                                        interpretation:
+                                            'Bu metrikte düşük sayı daha iyidir. Değerleri gösterimlerle birlikte okuyun; sorgu karması değiştikçe ortalama pozisyon da kayabilir.',
+                                    },
+                                },
+                            },
+                            inspection: {
+                                eyebrow: 'İndeksleme durumu',
+                                title: 'URL inspection',
+                                verdict: 'Verdict',
+                                indexing: 'İndeksleme',
+                                robots: 'Robots',
+                                canonical: 'Canonical',
+                                sitemaps: 'Sitemap',
+                                lastCrawl: 'Son tarama {{date}}',
+                                mismatch: 'Uyumsuz',
+                                aligned: 'Uyumlu',
+                                none: 'Sitemap bulunamadı',
+                            },
+                            states: {
+                                notConfigured: {
+                                    title: 'Search Console property ekleyin',
+                                    description:
+                                        'SEO snapshot için tenant bazlı Search Console property URL bilgisini Config Control Panel üzerinden girin.',
+                                    action: 'Yapılandırma panelini aç',
+                                },
+                                disabled: {
+                                    title: 'SEO insights devre dışı',
+                                    description:
+                                        'Platform veya tenant seviyesindeki SEO insights flag şu anda kapalı.',
+                                },
+                                noData: {
+                                    title: 'Henüz SEO verisi yok',
+                                    description:
+                                        'Property yeni bağlanmış olabilir veya seçilen dönemde Search Console verisi oluşmamış olabilir.',
+                                },
+                                accessError: {
+                                    title: 'SEO verisi yüklenemedi',
+                                    description:
+                                        'Property erişimini ve ortak Google service account yetkilerini kontrol edin.',
+                                },
+                            },
+                        },
+                        performance: {
+                            eyebrow: 'Deneyim Kalitesi',
+                            title: 'Performance snapshot',
+                            subtitle:
+                                'CrUX gerçek kullanıcı verilerinden desktop Core Web Vitals özeti.',
+                            desktopOnly: 'Desktop p75',
+                            trendEyebrow: 'Deneyim trendi',
+                            trendTitle: 'Son dönem performans eğrisi',
+                            scope: {
+                                url: 'URL bazlı',
+                                origin: 'Origin fallback',
+                            },
+                            score: {
+                                label: 'Experience score',
+                                caption: 'Genel sağlık',
+                                healthy: 'Sağlıklı',
+                                attention: 'Dikkat gerekiyor',
+                                critical: 'Kritik',
+                            },
+                            metrics: {
+                                lcp: { label: 'LCP' },
+                                inp: { label: 'INP' },
+                                cls: { label: 'CLS' },
+                                ttfb: { label: 'TTFB' },
+                            },
+                            assessment: {
+                                good: 'İyi',
+                                needs_improvement: 'İyileştirilmeli',
+                                poor: 'Zayıf',
+                                unknown: 'Bilinmiyor',
+                            },
+                            states: {
+                                notConfigured: {
+                                    title: 'Public site URL çözümlenemedi',
+                                    description:
+                                        'Performance snapshot için tenant public domain veya custom domain bilgisi gerekli.',
+                                },
+                                disabled: {
+                                    title: 'Performance snapshot devre dışı',
+                                    description:
+                                        'Platform veya tenant seviyesindeki SEO insights flag şu anda kapalı.',
+                                },
+                                noData: {
+                                    title: 'Henüz CrUX verisi yok',
+                                    description:
+                                        'URL için yeterli gerçek kullanıcı verisi oluşmamış olabilir.',
+                                },
+                                accessError: {
+                                    title: 'Performance verisi yüklenemedi',
+                                    description:
+                                        'CrUX API key ayarını ve backend erişimini kontrol edin.',
+                                },
+                            },
+                        },
+                    },
+                    labels: {
+                        siteOverview: 'Site Özeti',
+                        updated: 'Güncelleme',
+                        domain: 'Alan Adı',
+                        storage: 'Depolama',
+                        languages: 'Diller',
+                        modules: 'Modüller',
+                        operationalSpotlight: 'Operasyon Özeti',
+                        siteHealthAtAGlance: 'Site sağlığına hızlı bakış',
+                        opsScore: 'Operasyon Skoru',
+                        contentMix: 'İçerik Dağılımı',
+                        distribution: 'Dağılım',
+                        healthBreakdown: 'Sağlık Kırılımı',
+                        liveSignals: 'Canlı sinyaller',
+                        activityTrend: 'Aktivite Trendi',
+                        activityFeed: 'Aktivite Akışı',
+                        type: 'Tür',
+                        activity: 'Aktivite',
+                        user: 'Kullanıcı',
+                        when: 'Zaman',
+                        publishing: 'Yayın Durumu',
+                        searchVisibility: 'Arama Görünürlüğü',
+                        security: 'Güvenlik',
+                        pagesLive: 'Canlı Sayfalar',
+                        productsLive: 'Canlı Ürünler',
+                        searchIndex: 'Arama İndeksi',
+                        sitemap: 'Site Haritası',
+                    },
+                    meta: {
+                        noRecentChanges: 'Son dönemde değişiklik yok',
+                        noRecentUpdates: 'Yakın zamanda güncelleme yok',
+                        publishedCount: '{{count}} yayınlandı',
+                        activeCount: '{{count}} aktif',
+                        liveCount: '{{total}} içinden {{published}} yayınlandı',
+                        liveActiveCount: '{{total}} içinden {{published}} aktif',
+                        storedMb: '{{value}} MB depolandı',
+                        updatedOn: '{{date}} tarihinde güncellendi',
+                        notConfigured: 'Yapılandırılmadı',
+                        noneConfigured: 'Yapılandırılmamış',
+                        noneLoaded: 'Yüklenmiş modül yok',
+                        custom: 'Özel',
+                        platform: 'Platform',
+                        customDomainConnected: 'Özel alan adı bağlı',
+                        usingPlatformDomain: 'Platform alan adı kullanılıyor',
+                        indexable: 'İndekslenebilir',
+                        hidden: 'Gizli',
+                        twoFactorRequired: '2FA zorunlu',
+                        twoFactorDisabled: '2FA kapalı',
+                        cookieConsentEnabled: 'Çerez onayı açık',
+                        cookieConsentDisabled: 'Çerez onayı kapalı',
+                        searchCrawlEnabled:
+                            'Arama motorları siteyi tarayabilir',
+                        searchCrawlBlocked:
+                            'Arama motorları siteyi tarayamıyor',
+                        sitemapEnabled: 'Site haritası açık',
+                        sitemapDisabled: 'Site haritası kapalı',
+                        sitemapAvailable: 'Site haritası kullanılabilir',
+                        sitemapUnavailable: 'Site haritası devre dışı',
+                        totalCount: 'Toplam {{count}}',
+                        metricsCount: '{{count}} metrik',
+                        trendWindow: '{{count}} günlük pencere',
+                        trendSlice: '{{start}} - {{end}}',
+                        noActivitySlice: 'Aktivite dilimi yok',
+                        noContentMetrics: 'Henüz içerik metriği yok',
+                        noActivityInPeriod: 'Bu dönemde aktivite yok',
+                        tryAnotherPeriod:
+                            'Başka bir 7 günlük dilim deneyin veya aktivite üretmek için işlem yapın',
+                        performActionsForActivity:
+                            'Aktiviteyi görmek için sayfa, bileşen veya medya üzerinde işlem yapın',
+                        eventsCount: '{{count}} etkinlik',
+                        previousTrendPeriod:
+                            'Önceki 7 günlük dönemi göster',
+                        nextTrendPeriod: 'Sonraki 7 günlük dönemi göster',
+                        unknown: 'Bilinmiyor',
+                    },
+                    spotlight: {
+                        status: {
+                            healthy: 'Sağlıklı',
+                            attention: 'Dikkat gerekiyor',
+                            critical: 'Kritik',
+                        },
+                        summary: {
+                            healthy:
+                                'Yayın, keşfedilebilirlik ve güvenlik sinyalleri dengeli görünüyor.',
+                            attention:
+                                'Site tamamen hazır olmadan önce gözden geçirilmesi gereken birkaç operasyon sinyali var.',
+                            critical:
+                                'Yayına çıkmadan önce çözülmesi gereken kritik görünürlük veya yayın engelleri var.',
+                        },
+                        recommendations: {
+                            label: 'Öncelikli aksiyonlar',
+                            reviewMaintenance: {
+                                title: 'Bakım modunu gözden geçir',
+                                detail:
+                                    'Bakım modu aktif. Yayın kontrolleri tamamlandığında siteyi yeniden açın.',
+                            },
+                            enableIndexing: {
+                                title: 'Arama indekslemesini aç',
+                                detail:
+                                    'Arama motorları şu an engelleniyor. Keşfedilebilirliği geri kazanmak için indekslemeyi açın.',
+                            },
+                            enableSitemap: {
+                                title: 'Sitemap üretimini aç',
+                                detail:
+                                    'Yeni içeriklerin daha hızlı keşfedilmesi için sitemap üretimini yeniden etkinleştirin.',
+                            },
+                            publishPages: {
+                                title: 'Kalan sayfaları yayınla',
+                                detail:
+                                    '{{count}} sayfa hâlâ taslak durumda ve yayına hazırlık seviyesini düşürüyor.',
+                            },
+                            requireTwoFactor: {
+                                title: 'Tenant kullanıcıları için 2FA zorunlu olsun',
+                                detail:
+                                    'Yayına çıkmadan önce zorunlu iki faktörlü doğrulamayı etkinleştirerek yönetici erişimini güçlendirin.',
+                            },
+                            connectDomain: {
+                                title: 'Alan adı kurulumunu tamamla',
+                                detail:
+                                    'Marka sitesi hazır olduğunda tercih edilen public alan adını bağlayıp doğrulayın.',
+                            },
+                            healthy: {
+                                title: 'Operasyon sinyalleri güçlü görünüyor',
+                                detail:
+                                    'Ana yayın sinyalleri sağlıklı durumda. Son değişiklikleri izlemeye devam edin.',
+                            },
+                        },
+                    },
+                    series: {
+                        created: 'Oluşturulan',
+                        updated: 'Güncellenen',
+                        published: 'Yayınlanan',
                     },
                     thisWeek: 'bu hafta',
                     today: 'bugün',
@@ -1152,47 +1568,73 @@ export const langTR = {
                     siteInfo: 'Site Bilgileri',
                     siteName: 'Site Adı',
                     tagline: 'Slogan',
-                    footerText: 'Alt Bilgi Metni',
-                    headerTopbarText: 'Üst Çubuk Metni',
                 },
                 address: {
                     title: 'Adres Bilgileri',
                     line1: 'Adres Satırı 1',
+                    line1Placeholder: 'Mahalle, Cadde, Sokak',
                     line2: 'Adres Satırı 2',
+                    line2Placeholder: 'Apartman, Daire No (opsiyonel)',
                     city: 'Şehir',
+                    cityPlaceholder: 'Şehir giriniz',
                     state: 'İl/Bölge',
+                    statePlaceholder: 'İl/Bölge giriniz',
                     postalCode: 'Posta Kodu',
+                    postalCodePlaceholder: '34000',
                     country: 'Ülke',
+                    countryPlaceholder: 'Ülke seçiniz',
                     mapEmbedUrl: 'Harita Embed URL',
+                    mapEmbedUrlPlaceholder: 'Google Maps embed URL',
+                    mapEmbedUrlHint:
+                        "Google Maps'ten alınan iframe embed URL'si",
                 },
                 social: {
                     title: 'Sosyal Medya',
-                    description: "Sosyal medya hesaplarınızın URL'lerini girin",
+                    description:
+                        "Sadece aktif yönettiğiniz sosyal profilleri ekleyin; böylece marka görünümü daha güvenilir kalır.",
                     facebook: 'Facebook',
+                    facebookPlaceholder: 'https://facebook.com/sirketiniz',
                     instagram: 'Instagram',
+                    instagramPlaceholder: 'https://instagram.com/sirketiniz',
                     x: 'X (Twitter)',
+                    xPlaceholder: 'https://x.com/sirketiniz',
                     linkedin: 'LinkedIn',
+                    linkedinPlaceholder:
+                        'https://linkedin.com/company/sirketiniz',
                     youtube: 'YouTube',
+                    youtubePlaceholder: 'https://youtube.com/@sirketiniz',
                     tiktok: 'TikTok',
+                    tiktokPlaceholder: 'https://tiktok.com/@sirketiniz',
                 },
                 seo: {
                     global: 'Genel SEO Ayarları',
                     languageSpecific: 'Dil Bazlı SEO Ayarları',
+                    editorTitle: 'Arama Sonuçlarında Görüneni Şekillendirin',
+                    titleCounterLabel: 'Başlık Uzunluğu',
+                    descriptionCounterLabel: 'Açıklama Uzunluğu',
                     canonicalBaseUrl: 'Kanonik Temel URL',
                     canonicalBaseUrlHint:
                         "Sitenizin kanonik URL'si (örn: https://www.example.com)",
-                    robots: 'Robots',
+                    robots: 'Robots Meta Etiketi',
                     robotsPlaceholder: 'Robots Meta Etiketi Seçin',
                     robotsHint: 'Varsayılan: index, follow',
                     title: 'SEO Başlık',
+                    titlePlaceholder: 'Ana sayfa başlığı…',
                     description: 'SEO Açıklama',
+                    descriptionPlaceholder:
+                        'Sayfanın değerini tek cümlede ikna edici şekilde özetleyin…',
                     keywords: 'Anahtar Kelimeler',
-                    keywordsHint: 'Virgülle ayırın',
+                    keywordsPlaceholder:
+                        'marka kelimesi, ana konu, hizmet bölgesi',
                     ogTitle: 'Open Graph Başlık',
+                    ogTitleHint: 'Sosyal medyada paylaşıldığında görünecek başlık',
                     ogDescription: 'Open Graph Açıklama',
+                    ogDescriptionHint: 'Sosyal medyada paylaşıldığında görünecek açıklama',
                     twitterCard: 'Twitter Card Tipi',
+                    twitterCardHint: 'Twitter\'da nasıl görüneceğini belirler',
                 },
                 technical: {
+                    title: 'Teknik Ayarlar',
                     infrastructure: 'Altyapı Bilgileri',
                     databaseName: 'Veritabanı Adı',
                     domain: 'Domain Bilgileri',
@@ -1207,7 +1649,8 @@ export const langTR = {
                     sitemapEnabled: 'Sitemap Aktif',
                     sitemapEnabledDesc: 'Otomatik sitemap.xml oluştur',
                     robotsTxt: 'robots.txt',
-                    robotsTxtHint: 'Arama motoru botları için kurallar',
+                    robotsTxtHint: 'Arama motoru botları için kurallar belirleyin',
+                    robotsTxtPlaceholder: 'User-agent: *\nAllow: /\n\nSitemap: /sitemap.xml',
                     verification: 'Doğrulama Kodları',
                     verificationDesc:
                         'Arama motoru webmaster araçları doğrulama kodları',
@@ -1219,12 +1662,11 @@ export const langTR = {
                     cookieConsentEnabledDesc:
                         'Kullanıcılara çerez onay bandı göster',
                     cookieConsentText: 'Çerez Onay Metni',
+                    cookieConsentTextPlaceholder: 'Bu site, deneyiminizi geliştirmek için çerezler kullanmaktadır.',
                 },
                 placeholders: {
                     mediaUid: 'örn. abc-123-def',
                     tagline: 'Siteniz için etkileyici bir slogan',
-                    footerText: 'Telif hakkı © 2024 Şirket Adı',
-                    headerText: 'Duyuru veya kampanya metni',
                     addressLine1: 'Mahalle, Cadde, Sokak',
                     addressLine2: 'Apartman, Daire No',
                     city: 'Şehir',
@@ -1294,22 +1736,12 @@ export const langTR = {
             },
             errors: {
                 noTenant: 'Tenant bulunamadı',
-                loadTypesFailed: 'Türler yüklenemedi',
-                loadFailed: 'Bileşenler yüklenemedi',
-                noTypes: 'Önce bileşen türü oluşturun',
-                createFailed: 'Bileşen oluşturulamadı',
-                loadDetailFailed: 'Bileşen detayları yüklenemedi',
-                updateFailed: 'Bileşen güncellenemedi',
+                noTypes: 'Önce bir component type oluşturun',
+                loadDetailFailed: 'Component detayları yüklenemedi',
                 saveTranslationsFailed: 'Çeviriler kaydedilemedi',
-                deleteFailed: 'Bileşen silinemedi',
             },
             info: {
-                loadingTypes: 'Bileşen türleri yükleniyor...',
-            },
-            success: {
-                created: 'Bileşen başarıyla oluşturuldu',
-                updated: 'Bileşen başarıyla güncellendi',
-                deleted: 'Bileşen başarıyla silindi',
+                loadingTypes: 'Component type listesi yükleniyor...',
             },
             categories: {
                 navigation: 'Navigation',
@@ -1325,25 +1757,25 @@ export const langTR = {
                 other: 'Other',
             },
             types: {
-                title: 'Bileşen Türleri',
-                entryFieldsTitle: 'Öğe Alanları',
-                count: '{{count}} tür',
-                create: 'Yeni Tür Oluştur',
-                edit: 'Tür Düzenle',
-                noTypes: 'Henüz tür bulunmuyor',
-                noSearchResults: 'Arama kriterlerine uygun tür bulunamadı',
-                createFirst: 'İlk Türü Oluştur',
-                manageFields: 'Genişletilmiş Alanları Yönet',
-                confirmDeleteTitle: 'Bileşen türünü sil',
+                title: 'Component Types',
+                entryFieldsTitle: 'Entry Fields',
+                count: '{{count}} component type',
+                create: 'Yeni Component Type',
+                edit: 'Component Type Düzenle',
+                noTypes: 'Henüz component type yok',
+                noSearchResults: 'Arama kriterlerine uyan component type bulunamadı',
+                createFirst: 'İlk Component Type\'ı Oluştur',
+                manageFields: 'Entry Fields Yönetimi',
+                confirmDeleteTitle: 'Component Type Sil',
                 confirmDelete:
-                    '{{name}} türünü silmek istediğinize emin misiniz?',
+                    '{{name}} component type kaydını silmek istediğinize emin misiniz?',
                 tabs: {
                     general: 'Genel',
-                    entryFields: 'Öğe Alanları',
+                    entryFields: 'Entry Fields',
                 },
                 fields: {
-                    navigationAware: 'Navigasyon Bileşeni',
-                    navigationAwareHint: 'Etkinleştirildiğinde, bu bileşen tipi navigasyon düğümü bağlamayı destekler',
+                    navigationAware: 'Navigation Component',
+                    navigationAwareHint: 'Etkinleştirildiğinde bu component type, navigation node binding desteği sunar',
                 },
                 capabilities: {
                     supportsNavigationNode: 'Navigasyon düğümünü destekler',
@@ -1353,29 +1785,21 @@ export const langTR = {
                     supportsSearchBox: 'Arama kutusunu destekler',
                 },
                 errors: {
-                    cannotEditSystem: 'Sistem türleri düzenlenemez',
-                    cannotDeleteSystem: 'Sistem türleri silinemez',
-                    createFailed: 'Tür oluşturulamadı',
-                    updateFailed: 'Tür güncellenemedi',
-                    deleteFailed: 'Tür silinemedi',
-                },
-                success: {
-                    created: 'Tür başarıyla oluşturuldu',
-                    updated: 'Tür başarıyla güncellendi',
-                    deleted: 'Tür başarıyla silindi',
+                    cannotEditSystem: 'System component type düzenlenemez',
+                    cannotDeleteSystem: 'System component type silinemez',
                 },
             },
             entryFields: {
-                title: 'Öğe Alanları',
+                title: 'Entry Fields',
                 basicInfo: 'Temel Bilgiler',
-                subtitle: 'Bu alanlar bileşen oluşturulurken doldurulacaktır',
+                subtitle: 'Bu field\'lar component oluşturulurken doldurulur',
                 noFieldsDesc:
-                    'Bu bileşen türü için henüz herhangi bir öğe alanı tanımlanmamış. "Alan Ekle" butonunu kullanarak yeni alanlar ekleyebilirsiniz.',
-                addField: 'Alan Ekle',
-                addFirst: 'İlk Alanı Ekle',
-                noFields: 'Henüz öğe alanı tanımlanmadı',
-                fieldKey: 'Alan Anahtarı',
-                fieldType: 'Alan Tipi',
+                    'Bu component type için henüz entry field tanımlanmamış. "Field Ekle" butonuyla yeni field ekleyebilirsiniz.',
+                addField: 'Field Ekle',
+                addFirst: 'İlk Field\'ı Ekle',
+                noFields: 'Henüz entry field tanımlanmadı',
+                fieldKey: 'Field Key',
+                fieldType: 'Field Type',
                 translationKey: 'Çeviri Anahtarı',
                 required: 'Zorunlu',
                 maxLength: 'Max. Uzunluk',
@@ -1383,18 +1807,18 @@ export const langTR = {
                 maxValue: 'Max. Değer',
                 import: 'İçe Aktar',
                 export: 'Dışa Aktar',
-                importFields: 'Alanları İçe Aktar',
+                importFields: 'Field\'ları İçe Aktar',
                 jsonInput: 'JSON İçeriği',
                 parseJson: "JSON'u Ayrıştır",
-                previewFields: 'Alan Önizlemesi',
-                validationErrors: 'Doğrulama Hataları',
+                previewFields: 'Field Önizlemesi',
+                validationErrors: 'Validation Hataları',
                 importResult: 'İçe Aktarma Sonucu',
                 successCount: 'Başarılı',
                 failedCount: 'Başarısız',
-                invalidFieldKey: 'Alan anahtarı camelCase olmalıdır',
-                readOnlyNote: 'Alanlar oluşturulduktan sonra değiştirilemez',
+                invalidFieldKey: 'Field key camelCase formatında olmalıdır',
+                readOnlyNote: 'Field\'lar oluşturulduktan sonra değiştirilemez',
                 translationInfo:
-                    'Alan etiketleri için dinamik çeviri anahtarları kullanılır',
+                    'Field label\'ları için dinamik translation key kullanılır',
                 types: {
                     text: 'Metin',
                     textarea: 'Uzun Metin',
@@ -1438,42 +1862,34 @@ export const langTR = {
                 },
             },
             entries: {
-                title: 'Bileşen Öğeleri',
+                title: 'Component Entries',
                 basicInfo: 'Temel Bilgiler',
-                create: 'Yeni Öğe Oluştur',
-                edit: 'Öğe Düzenle',
-                noEntries: 'Henüz öğe bulunmuyor',
-                noEntriesDesc: 'Bu bileşen için henüz bir öğe oluşturulmadı.',
-                noItems: 'Henüz öğe bulunmuyor',
-                addEntry: 'Öğe Ekle',
-                addItem: 'Öğe Ekle',
-                addFirst: 'İlk Öğeyi Ekle',
+                create: 'Yeni Entry Oluştur',
+                edit: 'Entry Düzenle',
+                noEntries: 'Henüz entry yok',
+                noEntriesDesc: 'Bu component için henüz entry oluşturulmadı.',
+                noItems: 'Henüz entry yok',
+                addEntry: 'Entry Ekle',
+                addItem: 'Entry Ekle',
+                addFirst: 'İlk Entry\'yi Ekle',
                 sortOrder: 'Sıra',
                 visible: 'Görünür',
-                customFields: 'Özel Alanlar',
-                noCustomFields: 'Bu türe ait özel alan bulunmuyor',
+                customFields: 'Custom Fields',
+                noCustomFields: 'Bu type için custom field bulunmuyor',
                 saveTranslation: 'Çeviriyi Kaydet',
                 publish: 'Yayınla',
-                count: 'öğe',
-                createSuccess: 'Öğe başarıyla oluşturuldu',
-                updateSuccess: 'Öğe başarıyla güncellendi',
-                deleteSuccess: 'Öğe başarıyla silindi',
-                createFailed: 'Öğe oluşturulamadı',
-                updateFailed: 'Öğe güncellenemedi',
-                deleteFailed: 'Öğe silinemedi',
-                loadFailed: 'Öğeler yüklenemedi',
-                loadFieldsFailed: 'Alan tanımları yüklenemedi',
+                count: 'entry',
                 saveI18nFailed: 'Çeviriler kaydedilemedi',
-                deleteTitle: 'Öğeyi Sil',
+                deleteTitle: 'Entry Sil',
                 confirmDelete:
-                    '{{uid}} kodlu öğeyi silmek istediğinize emin misiniz?',
+                    '{{uid}} kodlu entry kaydını silmek istediğinize emin misiniz?',
                 messages: {
                     i18nSaved: '{{lang}} çevirisi kaydedildi',
                     published: '{{lang}} yayınlandı',
                 },
                 tabs: {
                     general: 'Genel',
-                    items: 'Öğeler',
+                    items: 'Entries',
                 },
                 fields: {
                     title: 'Title',
@@ -1728,6 +2144,7 @@ export const langTR = {
             platformDashboard: 'Platform Paneli',
             platformSettings: 'Platform Ayarları',
             platformMail: 'Platform Mail',
+            platformDemoRequests: 'Demo talepleri',
             tenantManagement: 'Tenant Yönetimi',
         },
         tenants: {
@@ -1954,6 +2371,28 @@ export const langTR = {
                     resetMessage: 'Varsayılan değerlere sıfırlamak istediğinizden emin misiniz?',
                 },
             },
+            demoRequests: {
+                title: 'Landing demo talepleri',
+                subtitle: 'Pazarlama landing sitesinden gelen iletişim talepleri',
+                searchPlaceholder: 'Ad, e-posta, telefon veya mesaja göre ara',
+                detail: {
+                    title: 'Demo talep detayı',
+                },
+                grid: {
+                    noData: 'Henüz demo talebi yok',
+                },
+                fields: {
+                    fullName: 'Ad Soyad',
+                    email: 'E-posta',
+                    phone: 'Telefon',
+                    message: 'Mesaj',
+                    locale: 'Dil',
+                    source: 'Kaynak',
+                    clientIp: 'IP',
+                    userAgent: 'Tarayıcı',
+                    createdAt: 'Gönderim',
+                },
+            },
         },
         provisioning: {
             title: 'Modül Hazırlama',
@@ -2161,18 +2600,12 @@ export const langTR = {
         signIn: {
             title: 'Giriş yap',
             demoInfo:
-                'Fuse Demo\'yu görüntülüyorsunuz. Demo ve Dokümantasyona erişmek için "Giriş yap" düğmesine tıklayın.',
+                'Craftive yönetim arayüzünü görüntülüyorsunuz. Panele girmek için «Giriş yap» düğmesini kullanın.',
             emailLabel: 'E-posta adresi',
             passwordLabel: 'Şifre',
             rememberMe: 'Beni hatırla',
             forgotPassword: 'Şifreni mi unuttun?',
             submit: 'Giriş yap',
-            right: {
-                title1: 'Aramıza',
-                title2: 'hoş geldiniz',
-                description:
-                    'Craftive, zengin modüllerle kişiselleştirilebilir paneller oluşturmanıza yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
-            },
             '2fa': {
                 info: 'E-postanıza bir doğrulama kodu gönderildi.',
                 otpLabel: 'Doğrulama Kodu',
@@ -2203,32 +2636,34 @@ export const langTR = {
                 passwordConfirmRequired: 'Şifre doğrulama zorunludur',
             },
             right: {
-                title1: 'Aramıza',
-                title2: 'hoş geldiniz',
+                title1: 'Modüler altyapı',
+                title2: 'tenant bazında izole',
                 description:
-                    'Fuse, geliştiricilerin zengin modüllerle dolu düzenli paneller oluşturmasına yardımcı olur. Bize katılın ve uygulamanızı bugün oluşturmaya başlayın.',
-                communityStat: "17 binden fazla kişi bize katıldı, sıra sizde",
+                    'Craftive; tenant bazında izole veritabanları, zengin CMS modülleri ve gerektiğinde headless sunum ile modüler proje çözümleri sunan yeniden kullanılabilir bir platformdur.',
+                communityStat:
+                    'İçerik, katalog ve pazarlama operasyonları tek uyumlu temel üzerinde.',
             },
         },
         confirmationRequired: {
             title: 'Onay gerekli',
             message:
-                'Talimatları içeren bir onay e-postası adresinize gönderildi. E-posta adresinizi onaylamak ve hesabınızı etkinleştirmek için bu talimatları takip edin.',
+                'E-postanıza talimatlar gönderdik. Bağlantıyı kullanarak adresinizi doğrulayın ve hesabınızı etkinleştirin.',
         },
         forgotPassword: {
             title: 'Şifreni mi unuttun?',
-            subtitle: 'Şifreni sıfırlamak için formu doldur',
+            subtitle:
+                'E-posta adresinizi girin. Kayıtlı bir hesap varsa sıfırlama talimatları gönderilir.',
             submit: 'Sıfırlama bağlantısı gönder',
             alerts: {
                 success:
-                    'Şifre sıfırlama gönderildi! Sistemimizde kayıtlıysanız e-posta alacaksınız.',
+                    'Bu e-posta kayıtlıysa kısa süre içinde sıfırlama talimatları alırsınız.',
                 error:
-                    'E-posta bulunamadı! Zaten üye olduğundan emin misin?',
+                    'İstek tamamlanamadı. E-posta adresini kontrol edin veya yöneticinize danışın.',
             },
         },
         resetPassword: {
             title: 'Şifreni sıfırla',
-            subtitle: 'Hesabın için yeni bir şifre oluştur',
+            subtitle: 'Hesabınızı güvence altına almak için yeni bir şifre seçin',
             verifying: 'Sıfırlama anahtarı doğrulanıyor...',
             confirmLabel: 'Şifreyi doğrula',
             submit: 'Şifreni sıfırla',
@@ -2259,7 +2694,7 @@ export const langTR = {
                 title1: 'Craftive',
                 title2: 'ekibine hoş geldin',
                 description:
-                    'Platforma katılman için davet edildin. Başlamak ve panele erişmek için şifreni belirle.',
+                    'Daveti tamamlamak için bir şifre belirleyin. Modüler ve izole platform üzerindeki tenant çalışma alanınıza erişeceksiniz.',
             },
             errors: {
                 tokenMissing: 'Geçersiz veya eksik doğrulama anahtarı.',
@@ -2274,7 +2709,7 @@ export const langTR = {
         },
         signUp: {
             title: 'Kayıt ol',
-            submit: 'Ücretsiz hesabını oluştur',
+            submit: 'Hesap oluştur',
             agreements: {
                 prefix: 'Şunları kabul ediyorum:',
                 and: 've',
@@ -2350,12 +2785,6 @@ export const langTR = {
             otpInfo: 'E-postanıza bir doğrulama kodu gönderildi.',
             otpLabel: 'Doğrulama Kodu',
             verify: 'Doğrula',
-            right: {
-                title1: 'Yapılandırma',
-                title2: 'paneli',
-                description:
-                    'Güvenli giriş ile yapılandırma ayarlarınıza erişin.',
-            },
         },
     },
     common: {

@@ -1,6 +1,7 @@
 # Documentation Patterns (How to Add/Update Docs)
 
 This repository’s documentation lives under `docs/` and is organized by **global guides** and **module docs**.
+Third-party integration docs may also live under `docs/3rd-party/` when the main owner is an external provider and the page is not a good fit for either `global/` or `modules/`.
 
 ## Principles
 
@@ -16,11 +17,14 @@ This repository’s documentation lives under `docs/` and is organized by **glob
   - Cross-cutting concepts used by multiple modules (architecture, security, i18n, list patterns, dialogs, validation, auth).
 - `docs/modules/*.md`
   - A specific tenant module or platform feature (media, pagebuilder, component library, provisioning, delivery, navigation, etc.).
+- `docs/3rd-party/*.md`
+  - An external provider integration that has a single external owner (for example Google Analytics) and needs implementation-backed operational documentation.
 
 Rule of thumb:
 
 - If it affects **many modules**, it is `global/`.
 - If it has a **single main owner**, it is a `modules/` page.
+- If it is centered on an **external provider contract**, it can be `3rd-party/`.
 
 ## Required structure (module docs)
 
@@ -49,19 +53,26 @@ Use this section order:
 - Inside `docs/README.md`:
   - Link to global docs as `global/<file>.md`
   - Link to module docs as `modules/<file>.md`
+  - Link to third-party docs as `3rd-party/<file>.md`
 - Inside `docs/global/*`:
   - Link to other global docs as `<file>.md`
   - Link to module docs as `../modules/<file>.md`
+  - Link to third-party docs as `../3rd-party/<file>.md`
 - Inside `docs/modules/*`:
   - Link to global docs as `../global/<file>.md`
   - Link to other module docs as `<file>.md`
+  - Link to third-party docs as `../3rd-party/<file>.md`
+- Inside `docs/3rd-party/*`:
+  - Link to global docs as `../global/<file>.md`
+  - Link to module docs as `../modules/<file>.md`
+  - Link to other third-party docs as `<file>.md`
 - When linking to code from `docs/global/*` or `docs/modules/*`:
   - Use `../../backend/...` and `../../storefront/...` (because both folders are two levels up from `docs/global` and `docs/modules`)
 - Never use `docs/...` in links inside files under `docs/` (it breaks when rendered from that folder).
 
 ## How to add a new doc (checklist)
 
-1. Create the new markdown file under the correct folder (`docs/global` or `docs/modules`).
+1. Create the new markdown file under the correct folder (`docs/global`, `docs/modules`, or `docs/3rd-party`).
 2. Use the required structure above and keep headings consistent.
 3. Add **source-of-truth links** to controllers/services/DTOs/migrations.
 4. Verify endpoints against controllers:
