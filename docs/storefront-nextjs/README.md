@@ -339,6 +339,31 @@ Message namespaces:
 
 `components/theme/layout/SiteHeader.tsx` renders links for all of the tenant's `enabledLanguages`. It replaces the `[lang]` segment in the current pathname to build the target URL. Hidden when `enabledLanguages.length <= 1`.
 
+## Cookie consent
+
+`components/cookie-consent/CookieConsentManager.tsx` — client component rendered inside `NextIntlClientProvider` in `app/[lang]/layout.tsx`.
+
+Enabled/disabled and banner text come from `SiteDeliveryResponse.cookieConsent` (`GET /api/cms/site`). Button labels ("Accept" / "Decline") come from `messages/{lang}.json` under the `CookieConsent` namespace.
+
+### Behavior
+
+- Banner appears only when `cookieConsent.enabled = true` and the user has not yet made a decision (no `craftive_cookie_consent` key in localStorage).
+- Accept → `localStorage: "true"`, `gtag('consent', 'update', { granted })`.
+- Decline → `localStorage: "false"`, banner does not reappear on next visit.
+- Previously accepted users: on mount, `gtag('consent', 'update', { granted })` is called immediately to restore consent before GTM `wait_for_update` expires.
+
+### Consent Mode v2
+
+When `(NEXT_PUBLIC_GA_ID || NEXT_PUBLIC_GTM_ID) && cookieConsent.enabled`:
+
+- `app/layout.tsx` injects an inline `<script>` **before** GTM that sets `gtag('consent', 'default', { all: 'denied', wait_for_update: 500 })`.
+- GA4 script always loads — denied state blocks cookie setting and user identification, not the script itself.
+- GTM loads and waits 500ms for a consent update before firing tags.
+
+When `cookieConsent.enabled = false`: consent default is skipped, GA4/GTM run without restrictions.
+
+For full implementation details see [`../3rd-party/google-analytics-ga4.md`](../3rd-party/google-analytics-ga4.md#cookie-consent--consent-mode-v2).
+
 ## SEO metadata
 
 `buildPageMetadata` (`lib/core/seo/metadata.ts`) derives title/description/canonical/robots/OG/hreflang from:
@@ -399,8 +424,8 @@ Read from `.env.local.example` and `lib/core/config/runtime-env.ts`:
 | `TENANT_HOSTNAME` | No | Expected hostname for this deployment. Requests from other hostnames return 404 (see Hostname validation). Leave unset in local dev. |
 | `NEXT_IMAGE_DOMAINS` | No | Comma-separated hostnames allowed for `next/image` optimization. CMS API hostname and localhost are auto-included. |
 | `NEXT_OUTPUT=export` | No | Enables static export mode in `next.config.ts`. |
-| `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID. |
-| `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics 4 measurement ID. Loads with Consent Mode v2 when `cookieConsent.enabled = true`. |
+| `NEXT_PUBLIC_GTM_ID` | No | Google Tag Manager container ID. Loads with Consent Mode v2 default `denied` when `cookieConsent.enabled = true`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | No | Search Console HTML tag token. Must use `NEXT_PUBLIC_` prefix — see note below. Local development may define it in `.env.development`. In this repository, the demo/reference storefront keeps the stage and prod values in tracked `.env.staging` and `.env.production` files. Tenant storefront repositories manage their own value in their own repo/build config. |
 
 `TENANT_SUBDOMAIN` is always required for the proxy. `TENANT_ID` is optional and affects only the CMS `X-Tenant-ID` header.

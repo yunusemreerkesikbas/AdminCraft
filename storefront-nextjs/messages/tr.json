@@ -27,6 +27,10 @@
     "description": "Sayfa yüklenirken bir hata oluştu.",
     "retry": "Tekrar dene"
   },
+  "CookieConsent": {
+    "accept": "Kabul Et",
+    "reject": "Reddet"
+  },
   "ThemeChrome": {
     "closeLabel": "Kapat",
     "ctaText": "Bizimle iletişime geçin",

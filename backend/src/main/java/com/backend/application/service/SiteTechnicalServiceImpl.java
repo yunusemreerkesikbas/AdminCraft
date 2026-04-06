@@ -1,7 +1,10 @@
 package com.backend.application.service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +14,13 @@ import com.backend.application.dto.response.SiteTechnicalAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.CookieConsentAppDto;
 import com.backend.application.dto.response.SiteTechnicalAppDto.SearchEngineAppDto;
 import com.backend.domain.entity.Site;
+import com.backend.domain.entity.SiteSetting;
 import com.backend.domain.entity.SiteTechnicalSettings;
 import com.backend.domain.enums.Language;
+import com.backend.domain.enums.SettingType;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.SiteRepository;
+import com.backend.domain.repository.SiteSettingRepository;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +38,10 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
 
     private final SiteRepository siteRepository;
     private final SiteTechnicalSettingsRepository technicalSettingsRepository;
+    private final SiteSettingRepository siteSettingRepository;
     private final TenantContextPort tenantContext;
+
+    private static final String COOKIE_CONSENT_TEXT_KEY = "i18n.cookie.consent.text";
 
     @Override
     public SiteTechnicalAppDto getTechnicalSettings() {
@@ -64,11 +73,20 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
         if (request.cookieConsentEnabled() != null) {
             settings.setCookieConsentEnabled(request.cookieConsentEnabled());
         }
-        if (request.cookieConsentText() != null) {
-            settings.setCookieConsentText(request.cookieConsentText().isBlank() ? null : request.cookieConsentText());
-        }
 
         SiteTechnicalSettings savedSettings = technicalSettingsRepository.save(settings);
+
+        if (request.cookieConsentTexts() != null) {
+            Long tenantId = Long.parseLong(tenantContext.getTenantId());
+            for (Map.Entry<String, String> entry : request.cookieConsentTexts().entrySet()) {
+                try {
+                    Language lang = Language.valueOf(entry.getKey().toUpperCase());
+                    upsertCookieConsentText(tenantId, lang, entry.getValue());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Skipping unknown language code in cookieConsentTexts: {}", entry.getKey());
+                }
+            }
+        }
         log.info("Technical settings updated for site: {}", site.getId());
 
         return buildResponse(site, savedSettings);
@@ -141,18 +159,50 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     }
 
     private SiteTechnicalAppDto buildResponse(Site site, SiteTechnicalSettings settings) {
-        // Search engine info
         SearchEngineAppDto searchEngineDto = new SearchEngineAppDto(
                 settings.getRobotsTxt(),
                 settings.getSitemapEnabled(),
                 settings.getIndexingEnabled());
 
+        Long tenantId = Long.parseLong(tenantContext.getTenantId());
+        Map<String, String> texts = siteSettingRepository
+                .findByTenantIdAndSettingKeyIn(tenantId, List.of(COOKIE_CONSENT_TEXT_KEY))
+                .stream()
+                .filter(s -> s.getLanguage() != null)
+                .collect(Collectors.toMap(
+                        s -> s.getLanguage().name().toLowerCase(),
+                        SiteSetting::getSettingValue));
+
         CookieConsentAppDto cookieConsentDto = new CookieConsentAppDto(
                 settings.getCookieConsentEnabled(),
-                settings.getCookieConsentText());
+                texts.isEmpty() ? null : texts);
 
         return new SiteTechnicalAppDto(
                 searchEngineDto,
                 cookieConsentDto);
+    }
+
+    private void upsertCookieConsentText(Long tenantId, Language lang, String value) {
+        String normalized = (value == null || value.isBlank()) ? null : value.trim();
+        siteSettingRepository.findByTenantIdAndSettingKeyAndLanguage(tenantId, COOKIE_CONSENT_TEXT_KEY, lang)
+                .ifPresentOrElse(
+                        s -> {
+                            s.updateValue(normalized, null);
+                            siteSettingRepository.save(s);
+                        },
+                        () -> {
+                            if (normalized != null) {
+                                SiteSetting s = new SiteSetting();
+                                s.setSettingKey(COOKIE_CONSENT_TEXT_KEY);
+                                s.setSettingValue(normalized);
+                                s.setLanguage(lang);
+                                s.setSettingType(SettingType.I18N_TEXT);
+                                s.setCategory("general");
+                                s.setIsPublic(false);
+                                s.setSortOrder(0);
+                                s.setUpdatedAt(LocalDateTime.now());
+                                siteSettingRepository.save(s);
+                            }
+                        });
     }
 }

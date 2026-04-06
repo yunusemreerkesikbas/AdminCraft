@@ -27,6 +27,10 @@
     "description": "An error occurred while loading the page.",
     "retry": "Try again"
   },
+  "CookieConsent": {
+    "accept": "Accept",
+    "reject": "Decline"
+  },
   "ThemeChrome": {
     "closeLabel": "Close",
     "ctaText": "Get in touch with us",

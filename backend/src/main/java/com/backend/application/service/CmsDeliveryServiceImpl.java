@@ -108,17 +108,19 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
     Map<String, String> localizedSettings = toSettingsMap(siteSettingRepository.findByTenantIdAndLanguage(tenantId, resolvedLang));
 
     return siteRepository.findFirstByOrderByIdAsc().map(site -> {
+      SiteTechnicalSettings technicalSettings = siteTechnicalSettingsRepository.findBySiteId(site.getId()).orElse(null);
       String logoUrl = mediaService.resolvePublicUrl(site.getLogoMediaUid());
       String logoDarkUrl = mediaService.resolvePublicUrl(site.getLogoDarkMediaUid());
       SiteDeliveryResponse.SeoInfo seo = buildSeoInfo(localizedSettings);
       String canonicalBaseUrl = readValue(globalSettings, CANONICAL_BASE_URL_KEY);
-      SiteDeliveryResponse.SearchEngineInfo searchEngine = buildSearchEngineInfo(site, globalSettings);
+      SiteDeliveryResponse.SearchEngineInfo searchEngine = buildSearchEngineInfo(technicalSettings, globalSettings);
       SiteDeliveryResponse.ContactInfo contact = buildContactInfo(globalSettings);
       SiteDeliveryResponse.AddressInfo address = buildAddressInfo(globalSettings);
       SiteDeliveryResponse.SocialLinksInfo social = buildSocialLinksInfo(globalSettings);
       SiteDeliveryResponse.I18nInfo i18n = buildI18nInfo(localizedSettings);
+      SiteDeliveryResponse.CookieConsentInfo cookieConsent = buildCookieConsentInfo(technicalSettings, localizedSettings);
       return SiteDeliveryResponse.from(site, logoUrl, logoDarkUrl, seo, canonicalBaseUrl,
-          searchEngine, contact, address, social, i18n);
+          searchEngine, contact, address, social, i18n, cookieConsent);
     });
   }
 
@@ -188,15 +190,21 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
     return new SiteDeliveryResponse.SeoInfo(title, description, keywords, ogTitle, ogDescription, twitterCard, titleSeparator);
   }
 
-  private SiteDeliveryResponse.SearchEngineInfo buildSearchEngineInfo(Site site, Map<String, String> globalSettings) {
-    SiteTechnicalSettings settings = siteTechnicalSettingsRepository.findBySiteId(site.getId()).orElse(null);
-
+  private SiteDeliveryResponse.SearchEngineInfo buildSearchEngineInfo(SiteTechnicalSettings settings, Map<String, String> globalSettings) {
     String defaultRobots = readValue(globalSettings, DEFAULT_ROBOTS_KEY);
 
     return new SiteDeliveryResponse.SearchEngineInfo(
         settings != null ? settings.getSitemapEnabled() : Boolean.TRUE,
         settings != null ? settings.getIndexingEnabled() : Boolean.TRUE,
         defaultRobots);
+  }
+
+  private SiteDeliveryResponse.CookieConsentInfo buildCookieConsentInfo(SiteTechnicalSettings settings, Map<String, String> localizedSettings) {
+    if (settings == null || !Boolean.TRUE.equals(settings.getCookieConsentEnabled())) {
+      return null;
+    }
+    String text = readValue(localizedSettings, "i18n.cookie.consent.text");
+    return new SiteDeliveryResponse.CookieConsentInfo(true, text);
   }
 
   private SiteDeliveryResponse.ContactInfo buildContactInfo(Map<String, String> g) {

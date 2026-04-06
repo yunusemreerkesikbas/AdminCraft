@@ -193,6 +193,11 @@ export interface SiteI18nDelivery {
   tagline?: string;
 }
 
+export interface CookieConsentDelivery {
+  enabled: boolean;
+  text?: string | null;
+}
+
 export interface SiteDeliveryResponse {
   siteName: string;
   ogImageUrl: string;
@@ -210,6 +215,7 @@ export interface SiteDeliveryResponse {
   address?: SiteAddressDelivery;
   social?: SiteSocialLinksDelivery;
   i18n?: SiteI18nDelivery;
+  cookieConsent?: CookieConsentDelivery;
 }
 
 export interface SitemapPageEntry {
