@@ -39,7 +39,6 @@ export function CookieConsentManager({
 }: Props) {
   const translate = useTranslations("CookieConsent");
 
-  // undefined = hydrating | null = karar yok | true = kabul | false = red
   const [consented, setConsented] = useState<boolean | null | undefined>(
     undefined,
   );
@@ -124,12 +123,14 @@ export function CookieConsentManager({
             </div>
             <div className="flex shrink-0 gap-2">
               <button
+                type="button"
                 onClick={reject}
                 className="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
                 {translate("reject")}
               </button>
               <button
+                type="button"
                 onClick={accept}
                 className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
               >

@@ -18,10 +18,12 @@ import com.backend.domain.entity.SiteSetting;
 import com.backend.domain.entity.SiteTechnicalSettings;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.SettingType;
+import com.backend.domain.constants.SiteSettingKeys;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteSettingRepository;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
+import com.backend.shared.constants.ValidationConstants;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +43,7 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
     private final SiteSettingRepository siteSettingRepository;
     private final TenantContextPort tenantContext;
 
-    private static final String COOKIE_CONSENT_TEXT_KEY = "i18n.cookie.consent.text";
+    private static final String COOKIE_CONSENT_TEXT_KEY = SiteSettingKeys.COOKIE_CONSENT_TEXT;
 
     @Override
     public SiteTechnicalAppDto getTechnicalSettings() {
@@ -184,6 +186,10 @@ public class SiteTechnicalServiceImpl implements SiteTechnicalService {
 
     private void upsertCookieConsentText(Long tenantId, Language lang, String value) {
         String normalized = (value == null || value.isBlank()) ? null : value.trim();
+        if (normalized != null && normalized.length() > ValidationConstants.COOKIE_CONSENT_TEXT_MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                "Cookie consent text exceeds max length for lang: " + lang.name());
+        }
         siteSettingRepository.findByTenantIdAndSettingKeyAndLanguage(tenantId, COOKIE_CONSENT_TEXT_KEY, lang)
                 .ifPresentOrElse(
                         s -> {

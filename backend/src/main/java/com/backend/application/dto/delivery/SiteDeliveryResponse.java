@@ -97,5 +97,5 @@ public record SiteDeliveryResponse(
 
     public record I18nInfo(String siteName, String tagline) {}
 
-    public record CookieConsentInfo(Boolean enabled, String text) {}
+    public record CookieConsentInfo(boolean enabled, String text) {}
 }

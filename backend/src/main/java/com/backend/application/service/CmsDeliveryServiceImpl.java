@@ -26,6 +26,7 @@ import com.backend.domain.repository.PageI18nRepository;
 import com.backend.domain.repository.PageRepository;
 import com.backend.domain.repository.SiteRepository;
 import com.backend.domain.repository.SiteSettingRepository;
+import com.backend.domain.constants.SiteSettingKeys;
 import com.backend.domain.repository.SiteTechnicalSettingsRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -203,7 +204,7 @@ public class CmsDeliveryServiceImpl implements CmsDeliveryService {
     if (settings == null || !Boolean.TRUE.equals(settings.getCookieConsentEnabled())) {
       return null;
     }
-    String text = readValue(localizedSettings, "i18n.cookie.consent.text");
+    String text = readValue(localizedSettings, SiteSettingKeys.COOKIE_CONSENT_TEXT);
     return new SiteDeliveryResponse.CookieConsentInfo(true, text);
   }
 
