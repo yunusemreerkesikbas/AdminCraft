@@ -24,7 +24,8 @@ public record SiteDeliveryResponse(
     ContactInfo contact,
     AddressInfo address,
     SocialLinksInfo social,
-    I18nInfo i18n) {
+    I18nInfo i18n,
+    CookieConsentInfo cookieConsent) {
 
     public static SiteDeliveryResponse from(
             Site site,
@@ -36,7 +37,8 @@ public record SiteDeliveryResponse(
             ContactInfo contact,
             AddressInfo address,
             SocialLinksInfo social,
-            I18nInfo i18n) {
+            I18nInfo i18n,
+            CookieConsentInfo cookieConsent) {
         List<LanguageInfo> enabledLanguages = site.getEnabledLanguages().stream()
                 .map(LanguageInfo::from)
                 .collect(Collectors.toList());
@@ -56,7 +58,8 @@ public record SiteDeliveryResponse(
                 contact,
                 address,
                 social,
-                i18n);
+                i18n,
+                cookieConsent);
     }
 
     public record SeoInfo(
@@ -93,4 +96,6 @@ public record SiteDeliveryResponse(
             String linkedin, String youtube, String tiktok) {}
 
     public record I18nInfo(String siteName, String tagline) {}
+
+    public record CookieConsentInfo(boolean enabled, String text) {}
 }

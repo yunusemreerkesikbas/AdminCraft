@@ -175,6 +175,7 @@ Storefront collection:
 
 - tenant storefront sends traffic/events with `NEXT_PUBLIC_GA_ID`
 - each tenant storefront can use its own GA4 measurement ID
+- GA4 script always loads but is gated by **Google Consent Mode v2** when `cookieConsent.enabled = true`
 
 This creates a two-part integration:
 
@@ -207,10 +208,66 @@ This creates a two-part integration:
 - `ACCESS_ERROR`: verify Property ID format and Google property access for the shared service account
 - `NO_DATA`: traffic is not yet available in GA4 standard reporting for the selected range
 
+## Cookie Consent & Consent Mode v2
+
+Cookie consent management lives in the storefront, not in GA4 configuration. The implementation follows Google's Consent Mode v2 specification.
+
+### Component
+
+`storefront-nextjs/components/cookie-consent/CookieConsentManager.tsx` — client component rendered inside `NextIntlClientProvider` in `app/[lang]/layout.tsx`.
+
+Props: `gaId`, `cookieConsentEnabled`, `cookieConsentText`
+
+### Consent state machine
+
+| localStorage value | State | Meaning |
+| --- | --- | --- |
+| absent | `null` | No decision yet — banner shown |
+| `"true"` | `true` | Accepted — GA4 collects data |
+| `"false"` | `false` | Rejected — GA4 restricted |
+
+`undefined` is the initial hydration state — component renders nothing until `useEffect` reads localStorage.
+
+### Consent Mode v2 flow
+
+1. `app/layout.tsx` injects an inline `<script>` in `<head>` **before** GTM/GA4 when `(gtmId || gaId) && cookieConsent.enabled`:
+   ```js
+   gtag('consent', 'default', {
+     analytics_storage: 'denied',
+     ad_storage: 'denied',
+     ad_user_data: 'denied',
+     ad_personalization: 'denied',
+     wait_for_update: 500
+   });
+   ```
+
+2. GA4 script always loads (`shouldLoadGA = !!gaId`) — denied state blocks cookie setting and user tracking, not the script itself.
+
+3. On mount: if user previously accepted, `gtag('consent', 'update', { ...granted })` is called immediately (restores consent within `wait_for_update` window for GTM).
+
+4. On accept: `gtag('consent', 'update', { ...granted })` — GA4 begins tracking.
+
+5. On reject: `gtag('consent', 'update', { ...denied })` — explicit denied state, banner does not reappear.
+
+### When `cookieConsent.enabled = false`
+
+Consent default script is skipped. GA4 loads without restrictions — no banner, no consent gating.
+
+### localStorage key
+
+`craftive_cookie_consent` — stored in tenant storefront browser storage. No expiry is set; it persists until cleared.
+
+### Admin configuration
+
+Tenant admins configure cookie consent from Site Dashboard → Technical tab:
+- Toggle: `cookieConsentEnabled` (stored in `site_technical_settings`)
+- Text: per-language banner text (stored in `site_settings` with key `i18n.cookie.consent.text`)
+
+The CMS delivery API (`GET /api/cms/site?lang=...`) returns the resolved single-language text in `cookieConsent.text`.
+
 ## TODO
 
 Future phase:
 
-- evaluate tenant-scoped GTM container usage for `storefront-nextjs`
 - define a shared Craftive `dataLayer` / event contract for tenant storefronts
 - review marketing funnel events such as CTA clicks, form start, form submit, and demo request

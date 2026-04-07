@@ -79,9 +79,10 @@ export default async function RootLayout({
   const lang = preferredLang ?? resolveSiteDefaultLocale(site);
   const dir = isRtlByConfig(lang, site.enabledLanguages) ? "rtl" : "ltr";
 
-  const gaId = getGoogleAnalyticsId();
   const googleSiteVerification = getGoogleSiteVerification();
   const gtmId = getGtmId();
+  const gaId = getGoogleAnalyticsId();
+  const cookieConsentEnabled = site?.cookieConsent?.enabled ?? false;
   const webSiteSchema = buildWebSiteSchema(site, lang);
 
   return (
@@ -101,29 +102,35 @@ export default async function RootLayout({
             dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteSchema) }}
           />
         ) : null}
-        {gtmId ? (
-          <Script id="google-tag-manager" strategy="afterInteractive">{`
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${gtmId}');
-          `}</Script>
+        {(gtmId || gaId) && cookieConsentEnabled ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('consent', 'default', {
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied',
+                  wait_for_update: 500
+                });
+              `,
+            }}
+          />
         ) : null}
-        {gaId ? (
+        {gtmId ? (
           <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">{`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${gaId}');
+            <Script id="google-tag-manager" strategy="afterInteractive">{`
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','${gtmId}');
             `}</Script>
           </>
         ) : null}
+
       </head>
       <body
         suppressHydrationWarning

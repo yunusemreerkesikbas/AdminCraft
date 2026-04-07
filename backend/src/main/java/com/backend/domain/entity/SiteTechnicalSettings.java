@@ -53,9 +53,6 @@ public class SiteTechnicalSettings {
     @Builder.Default
     private Boolean cookieConsentEnabled = false;
 
-    @Column(name = "cookie_consent_text", columnDefinition = "TEXT")
-    private String cookieConsentText;
-
     // Timestamps
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -10,6 +10,7 @@ import {
     SimpleChanges,
     ViewEncapsulation,
     inject,
+    signal,
 } from '@angular/core';
 import {
     FormBuilder,
@@ -19,6 +20,7 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { LanguageContextService } from '@core/services/language-context.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { SpaToggleComponent } from '@shared/components/custom-ui/spa-toggle/spa-toggle.component';
@@ -49,6 +51,7 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
     readonly #fb = inject(FormBuilder);
     readonly #siteService = inject(SiteService);
     readonly #notificationService = inject(NotificationService);
+    readonly #languageContext = inject(LanguageContextService);
     readonly #destroy$ = new Subject<void>();
 
     @Input() technical: SiteTechnicalResponse | null = null;
@@ -56,6 +59,14 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
 
     form: FormGroup;
     saving = false;
+    protected languages = this.#languageContext.supportedLanguages;
+    protected selectedLanguage = signal<string>(
+        this.#languageContext.getDefaultLanguage().toLowerCase()
+    );
+
+    onLanguageChange(lang: string): void {
+        this.selectedLanguage.set(lang);
+    }
 
     constructor() {
         this.#buildForm();
@@ -83,12 +94,21 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
         this.saving = true;
         const formValue = this.form.value;
 
+        const cookieConsentTexts: Record<string, string> = {};
+        this.languages().forEach((lang) => {
+            const langKey = lang.toLowerCase();
+            const text = formValue.cookieConsentTexts?.[langKey];
+            if (text !== undefined) {
+                cookieConsentTexts[langKey] = text;
+            }
+        });
+
         const payload = {
             robotsTxt: formValue.robotsTxt,
             sitemapEnabled: formValue.sitemapEnabled,
             indexingEnabled: formValue.indexingEnabled,
             cookieConsentEnabled: formValue.cookieConsentEnabled,
-            cookieConsentText: formValue.cookieConsentText,
+            cookieConsentTexts,
         };
 
         this.#siteService
@@ -121,6 +141,14 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
     }
 
     #buildForm(): void {
+        const cookieConsentTextsGroup: Record<string, any> = {};
+        this.languages().forEach((lang) => {
+            cookieConsentTextsGroup[lang.toLowerCase()] = [
+                '',
+                [Validators.maxLength(VALIDATION_LIMITS.COOKIE_CONSENT_TEXT_MAX)],
+            ];
+        });
+
         this.form = this.#fb.group({
             robotsTxt: [
                 '',
@@ -129,19 +157,19 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
             sitemapEnabled: [true],
             indexingEnabled: [true],
             cookieConsentEnabled: [false],
-            cookieConsentText: [
-                '',
-                [
-                    Validators.maxLength(
-                        VALIDATION_LIMITS.COOKIE_CONSENT_TEXT_MAX
-                    ),
-                ],
-            ],
+            cookieConsentTexts: this.#fb.group(cookieConsentTextsGroup),
         });
     }
 
     #populateForm(): void {
         if (!this.technical) return;
+
+        const textsValue: Record<string, string> = {};
+        this.languages().forEach((lang) => {
+            const langKey = lang.toLowerCase();
+            textsValue[langKey] =
+                this.technical!.cookieConsent?.texts?.[langKey] || '';
+        });
 
         this.form.patchValue({
             robotsTxt: this.technical.searchEngine?.robotsTxt || '',
@@ -150,7 +178,7 @@ export class SpaSiteTechnicalComponent implements OnChanges, OnDestroy {
                 this.technical.searchEngine?.indexingEnabled ?? true,
             cookieConsentEnabled:
                 this.technical.cookieConsent?.enabled ?? false,
-            cookieConsentText: this.technical.cookieConsent?.text || '',
+            cookieConsentTexts: textsValue,
         });
     }
 }
