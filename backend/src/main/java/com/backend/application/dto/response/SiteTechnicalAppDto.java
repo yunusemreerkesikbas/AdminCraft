@@ -1,5 +1,7 @@
 package com.backend.application.dto.response;
 
+import java.util.Map;
+
 /**
  * Application layer DTO for Site Technical Settings.
  * Replaces the dependency on presentation layer SiteTechnicalResponse.
@@ -16,6 +18,6 @@ public record SiteTechnicalAppDto(
 
   public record CookieConsentAppDto(
       Boolean enabled,
-      String text) {
+      Map<String, String> texts) {
   }
 }

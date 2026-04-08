@@ -1,6 +1,7 @@
 package com.backend.presentation.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Map;
 
 /**
  * Response DTO for Site Technical Settings.
@@ -22,7 +23,7 @@ public record SiteTechnicalResponse(
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CookieConsentDto(
             Boolean enabled,
-            String text) {
+            Map<String, String> texts) {
     }
 
     /**

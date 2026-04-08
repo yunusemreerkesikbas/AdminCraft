@@ -689,7 +689,7 @@ public class SiteController {
         if (dto.cookieConsent() != null) {
             cookieConsent = new SiteTechnicalResponse.CookieConsentDto(
                     dto.cookieConsent().enabled(),
-                    dto.cookieConsent().text());
+                    dto.cookieConsent().texts());
         }
 
         return SiteTechnicalResponse.builder()

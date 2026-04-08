@@ -27,6 +27,7 @@ import com.backend.domain.entity.ProvisioningJob;
 import com.backend.domain.entity.Tenant;
 import com.backend.domain.entity.TenantModule;
 import com.backend.domain.enums.TenantStatus;
+import com.backend.application.service.PlatformMailMarketingService;
 import com.backend.domain.repository.ProvisioningJobRepository;
 import com.backend.domain.repository.TenantModuleRepository;
 import com.backend.domain.repository.TenantRepository;
@@ -53,6 +54,9 @@ class AsyncProvisioningExecutorTest {
         private TenantModuleRegistrar tenantModuleRegistrar;
 
         @Mock
+        private PlatformMailMarketingService platformMailMarketingService;
+
+        @Mock
         private ProvisioningJob jobMock;
 
         private AsyncProvisioningExecutor executor;
@@ -67,6 +71,7 @@ class AsyncProvisioningExecutorTest {
                                 tenantModuleRepository,
                                 tenantMigrationService,
                                 tenantModuleRegistrar,
+                                platformMailMarketingService,
                                 environment);
 
                 ReflectionTestUtils.setField(executor, "dbHost", "localhost");

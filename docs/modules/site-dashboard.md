@@ -36,6 +36,7 @@ Migrations in `backend/src/main/resources/db/tenant/core/`:
 - `V20__create_site_activity.sql` - Activity tracking for dashboard overview
 - `V21__create_site_technical_settings.sql` - Technical settings (robots.txt, verification, cookie consent)
 - `V36__drop_site_technical_scripts_columns.sql` - Removed custom script columns
+- `V1.0.3__drop_cookie_consent_text.sql` - Dropped `cookie_consent_text` column (text moved to `site_settings` as `i18n.cookie.consent.text`)
 
 ### Entities
 
@@ -127,8 +128,11 @@ Product stats note:
     "indexingEnabled": true
   },
   "cookieConsent": {
-    "enabled": false,
-    "text": null
+    "enabled": true,
+    "texts": {
+      "tr": "Bu web sitesi çerezler kullanmaktadır.",
+      "en": "This website uses cookies."
+    }
   }
 }
 ```
@@ -314,9 +318,8 @@ siteSecuritySettings: 'sites/security',
 #### Backend Validation
 
 - **Validation Limits** (enforced in `SiteTechnicalPatchRequest` via `ValidationConstants`):
-  - `robotsTxt`: Max 10,000 chars (also listed above)
   - `robotsTxt`: Max 10,000 chars
-  - `cookieConsentText`: Max 2,000 chars
+- **Cookie consent text** is stored per-language in `site_settings` table (key: `i18n.cookie.consent.text`, not in `site_technical_settings`). Patch field: `cookieConsentTexts: Map<String, String>` (language code → text).
 
 #### Frontend Security (Phase 1)
 

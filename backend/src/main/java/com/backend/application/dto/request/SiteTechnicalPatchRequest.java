@@ -3,6 +3,7 @@ package com.backend.application.dto.request;
 import com.backend.shared.constants.ValidationConstants;
 
 import jakarta.validation.constraints.Size;
+import java.util.Map;
 
 /**
  * Request DTO for patching Site Technical Settings.
@@ -15,13 +16,13 @@ public record SiteTechnicalPatchRequest(
 
         Boolean cookieConsentEnabled,
 
-        @Size(max = ValidationConstants.COOKIE_CONSENT_TEXT_MAX_LENGTH) String cookieConsentText) {
+        Map<String, String> cookieConsentTexts) {
 
     public boolean hasAnyUpdate() {
         return robotsTxt != null ||
                 sitemapEnabled != null ||
                 indexingEnabled != null ||
                 cookieConsentEnabled != null ||
-                cookieConsentText != null;
+                cookieConsentTexts != null;
     }
 }

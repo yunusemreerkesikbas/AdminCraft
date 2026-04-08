@@ -321,7 +321,7 @@ export interface SearchEngineDto {
 
 export interface CookieConsentDto {
     enabled: boolean;
-    text: string | null;
+    texts?: Record<string, string> | null;
 }
 
 export interface SiteTechnicalPatchRequest {
@@ -329,7 +329,7 @@ export interface SiteTechnicalPatchRequest {
     sitemapEnabled?: boolean;
     indexingEnabled?: boolean;
     cookieConsentEnabled?: boolean;
-    cookieConsentText?: string | null;
+    cookieConsentTexts?: Record<string, string> | null;
 }
 
 // ========== Site Security Types ==========
