@@ -1,7 +1,10 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.entity.MailCampaign;
@@ -28,5 +31,13 @@ public class MailCampaignRepositoryImpl implements MailCampaignRepository {
     @Override
     public Optional<MailCampaign> findTopByTemplateKeyOrderByCreatedAtDesc(String templateKey) {
         return jpaRepository.findTopByTemplate_TemplateKeyIgnoreCaseOrderByCreatedAtDesc(templateKey);
+    }
+
+    @Override
+    public List<MailCampaign> findRecentByTemplateKey(String templateKey, int limit) {
+        return jpaRepository.findByTemplate_TemplateKeyIgnoreCaseOrderByCreatedAtDesc(
+                templateKey,
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"))
+        );
     }
 }

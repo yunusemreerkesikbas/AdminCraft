@@ -52,10 +52,13 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     private static final String KEY_RECAPTCHA_SITE_KEY = "platform.security.recaptcha.site_key";
     private static final String KEY_RECAPTCHA_SECRET_KEY = "platform.security.recaptcha.secret_key";
 
+    private static final String KEY_EMAIL_POSTMARK_SERVER_TOKEN = "app.email.postmark.server-token";
+
     private static final Set<String> ALLOWED_KEYS = Set.of(
             KEY_EMAIL_PROVIDER,
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
+            KEY_EMAIL_POSTMARK_SERVER_TOKEN,
             KEY_FRONTEND_BASE_URL,
             KEY_GA4_ENABLED,
             KEY_SEO_INSIGHTS_ENABLED,
@@ -67,6 +70,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_EMAIL_PROVIDER,
             KEY_EMAIL_FROM_ADDRESS,
             KEY_EMAIL_FROM_NAME,
+            KEY_EMAIL_POSTMARK_SERVER_TOKEN,
             KEY_FRONTEND_BASE_URL,
             KEY_GA4_ENABLED,
             KEY_SEO_INSIGHTS_ENABLED,
@@ -74,7 +78,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             KEY_RECAPTCHA_SITE_KEY,
             KEY_RECAPTCHA_SECRET_KEY);
 
-    private static final Set<String> ALLOWED_PROVIDER_VALUES = Set.of("console", "smtp");
+    private static final Set<String> ALLOWED_PROVIDER_VALUES = Set.of("console", "postmark");
 
     private static final String DEFAULT_EMAIL_PROVIDER = "console";
     private static final String DEFAULT_EMAIL_FROM_ADDRESS = "noreply@craftive.io";
@@ -236,6 +240,21 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
 
     @Override
     @Transactional(readOnly = true)
+    public String getPostmarkServerTokenDecrypted() {
+        String configured = resolveConfiguredValue(KEY_EMAIL_POSTMARK_SERVER_TOKEN);
+        if (!StringUtils.hasText(configured)) {
+            return null;
+        }
+        try {
+            return encryptionService.decrypt(configured);
+        } catch (Exception e) {
+            log.warn("Failed to decrypt Postmark server token");
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public String getRecaptchaSecretKeyEncrypted() {
         String configured = resolveConfiguredValue(KEY_RECAPTCHA_SECRET_KEY);
         if (!StringUtils.hasText(configured)) {
@@ -297,9 +316,15 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             case KEY_EMAIL_PROVIDER -> {
                 String provider = normalized.toLowerCase();
                 if (!ALLOWED_PROVIDER_VALUES.contains(provider)) {
-                    throw new IllegalArgumentException("Invalid email provider. Allowed values: console, smtp");
+                    throw new IllegalArgumentException("Invalid email provider. Allowed values: console, postmark");
                 }
                 return provider;
+            }
+            case KEY_EMAIL_POSTMARK_SERVER_TOKEN -> {
+                if (normalized.length() > 500) {
+                    throw new IllegalArgumentException("Postmark server token is too long");
+                }
+                return normalized;
             }
             case KEY_EMAIL_FROM_ADDRESS -> {
                 if (normalized.length() > 255 || !EMAIL_PATTERN.matcher(normalized).matches()) {
@@ -408,17 +433,18 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
             }
             case KEY_RECAPTCHA_ENABLED -> DEFAULT_RECAPTCHA_ENABLED;
             case KEY_RECAPTCHA_SITE_KEY, KEY_RECAPTCHA_SECRET_KEY -> null;
+            case KEY_EMAIL_POSTMARK_SERVER_TOKEN -> null;
             default -> environment.getProperty(key);
         };
     }
 
     private boolean isSecretKey(String key) {
-        return KEY_RECAPTCHA_SECRET_KEY.equals(key);
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key) || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key);
     }
 
     private void validateSecretFlag(String key, boolean secret) {
         if (isSecretKey(key) && !secret) {
-            throw new IllegalArgumentException("Secret flag must be true for reCAPTCHA secret key");
+            throw new IllegalArgumentException("Secret flag must be true for key: " + key);
         }
         if (!isSecretKey(key) && secret) {
             throw new IllegalArgumentException("Secret flag is not supported for this key");
@@ -426,7 +452,7 @@ public class ConfigGlobalPropertiesAdminServiceImpl implements ConfigGlobalPrope
     }
 
     private boolean shouldEncryptValue(String key) {
-        return KEY_RECAPTCHA_SECRET_KEY.equals(key);
+        return KEY_RECAPTCHA_SECRET_KEY.equals(key) || KEY_EMAIL_POSTMARK_SERVER_TOKEN.equals(key);
     }
 
     private void assertSuperAdmin(ConfigPrincipal principal) {

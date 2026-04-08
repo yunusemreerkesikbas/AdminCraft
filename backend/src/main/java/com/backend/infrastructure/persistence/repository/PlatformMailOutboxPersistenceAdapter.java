@@ -1,8 +1,11 @@
 package com.backend.infrastructure.persistence.repository;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.entity.PlatformMailOutbox;
+import com.backend.domain.enums.MailOutboxStatus;
 import com.backend.domain.repository.PlatformMailOutboxRepository;
 import com.backend.infrastructure.persistence.platform.mapper.PlatformMailMapper;
 
@@ -33,6 +36,12 @@ public class PlatformMailOutboxPersistenceAdapter implements PlatformMailOutboxR
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
         return target;
+    }
+
+    @Override
+    public List<PlatformMailOutbox> findByCampaignIdAndStatusIn(Long campaignId, List<MailOutboxStatus> statuses) {
+        return jpaRepository.findByCampaign_IdAndStatusIn(campaignId, statuses)
+                .stream().map(this::toDomain).toList();
     }
 
     private com.backend.infrastructure.persistence.platform.entity.PlatformMailOutbox toEntity(PlatformMailOutbox source) {

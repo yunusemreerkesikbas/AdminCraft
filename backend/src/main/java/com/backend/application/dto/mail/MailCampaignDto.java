@@ -1,5 +1,7 @@
 package com.backend.application.dto.mail;
 
+import java.time.LocalDateTime;
+
 import com.backend.domain.enums.MailCampaignStatus;
 
 public record MailCampaignDto(
@@ -7,6 +9,7 @@ public record MailCampaignDto(
     MailCampaignStatus status,
     Integer totalCount,
     Integer sentCount,
-    Integer failedCount
+    Integer failedCount,
+    LocalDateTime createdAt
 ) {
 }

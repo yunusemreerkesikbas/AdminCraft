@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.email.EmailResult;
 import com.backend.application.dto.mail.MailCampaignDto;
+import com.backend.application.dto.mail.MailOutboxEntryDto;
 import com.backend.application.dto.mail.MailProviderConfigDto;
 import com.backend.application.dto.mail.MailSubscriberAdminDto;
 import com.backend.application.dto.mail.MailSubscriberDto;
@@ -65,7 +66,10 @@ public class TenantMailMarketingService {
   private static final List<String> SUPPORTED_LANGUAGES = List.of(LANGUAGE_TR, LANGUAGE_EN);
   private static final String NEWSLETTER_DEFAULT = "NEWSLETTER_DEFAULT";
   private static final String VERSION_UPGRADE = "VERSION_UPGRADE";
-  private static final List<String> FIXED_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
+  private static final String TENANT_USER_WELCOME = "TENANT_USER_WELCOME";
+  private static final List<String> FIXED_TEMPLATE_TYPES = List.of(
+      NEWSLETTER_DEFAULT, VERSION_UPGRADE, TENANT_USER_WELCOME);
+  private static final List<String> SUBSCRIBABLE_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
 
   private final MailTemplateRepository templateRepository;
   private final NewsletterSubscriberRepository subscriberRepository;
@@ -289,7 +293,7 @@ public class TenantMailMarketingService {
     assertMailMarketingEnabled();
     MailProviderConfig cfg = providerConfigRepository.findTopByOrderByIdAsc().orElseGet(() -> {
       MailProviderConfig m = new MailProviderConfig();
-      m.setProvider("POSTMARK");
+      m.setProvider("CONSOLE");
       m.setFromEmail(mailConfig.getFromAddress());
       m.setFromName(mailConfig.getFromName());
       return m;
@@ -315,10 +319,36 @@ public class TenantMailMarketingService {
         saved.getServerTokenEncrypted() != null && !saved.getServerTokenEncrypted().isBlank());
   }
 
+  public void sendTenantTransactional(String templateType, String language, String toEmail, Map<String, String> vars) {
+    assertMailMarketingEnabled();
+    String normalizedType = normalizeTemplateType(templateType);
+    String normalizedLang = normalizePreferredLanguage(language);
+
+    MailTemplate template = templateRepository
+        .findByTemplateKeyIgnoreCaseAndLanguageIgnoreCase(normalizedType, normalizedLang)
+        .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
+        .or(() -> templateRepository
+            .findByTemplateKeyIgnoreCaseAndLanguageIgnoreCase(normalizedType, LANGUAGE_EN)
+            .filter(t -> Boolean.TRUE.equals(t.getIsActive())))
+        .orElse(null);
+
+    if (template == null) {
+      return;
+    }
+
+    String subject = templateVariableRenderer.render(template.getSubject(), vars);
+    String content = templateVariableRenderer.render(template.getContent(), vars);
+    log.info("[MAIL] {} → {} | vars={}", normalizedType, toEmail, vars.keySet());
+    sendTenantEmail(toEmail, subject, content);
+  }
+
   @Transactional
   public void subscribe(String email, String source, String templateTypeRaw) {
     assertMailMarketingEnabled();
     String templateType = normalizeTemplateType(templateTypeRaw);
+    if (!SUBSCRIBABLE_TEMPLATE_TYPES.contains(templateType)) {
+      throw new IllegalArgumentException("mail.marketing.template.type.invalid");
+    }
     String preferredLanguage = resolvePreferredLanguageForTenant();
 
     NewsletterSubscriber subscriber = subscriberRepository.findByEmailIgnoreCase(email)
@@ -361,8 +391,9 @@ public class TenantMailMarketingService {
   }
 
   // Not @Transactional — HTTP calls happen outside any transaction
-  public MailCampaignDto sendCampaign(Long templateId) {
+  public MailCampaignDto sendCampaign(String templateTypeRaw) {
     assertMailMarketingEnabled();
+    String templateType = normalizeTemplateType(templateTypeRaw);
 
     TransactionTemplate tx = new TransactionTemplate(tenantTransactionManager);
 
@@ -371,18 +402,18 @@ public class TenantMailMarketingService {
     record CampaignSetup(Long campaignId, List<Long> outboxIds) {
     }
     CampaignSetup setup = tx.execute(status -> {
-      MailTemplate selectedTemplate = templateRepository.findById(templateId)
-          .orElseThrow(() -> new IllegalArgumentException("mail.marketing.template.not.found"));
-      if (!Boolean.TRUE.equals(selectedTemplate.getIsActive())) {
-        throw new IllegalStateException("mail.marketing.template.not.active");
-      }
+      List<MailTemplate> templateTranslations = templateRepository
+          .findByTemplateKeyIgnoreCaseOrderByLanguageAsc(templateType);
+
+      MailTemplate selectedTemplate = templateTranslations.stream()
+          .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
+          .findFirst()
+          .orElseThrow(() -> new IllegalStateException("mail.marketing.template.not.active"));
 
       List<NewsletterSubscriberSubscription> subscriptions = subscriberSubscriptionRepository
           .findByTemplateKeyIgnoreCaseAndPermissionTrueAndSubscriberStatus(
-              selectedTemplate.getTemplateKey(),
+              templateType,
               MailSubscriberStatus.ACTIVE);
-      List<MailTemplate> templateTranslations = templateRepository
-          .findByTemplateKeyIgnoreCaseOrderByLanguageAsc(selectedTemplate.getTemplateKey());
 
       MailCampaign campaign = new MailCampaign();
       campaign.setTemplate(selectedTemplate);
@@ -475,6 +506,58 @@ public class TenantMailMarketingService {
     MailCampaign campaign = campaignRepository.findById(campaignId)
         .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
     return toCampaignDto(campaign);
+  }
+
+  @Transactional(readOnly = true)
+  public List<MailCampaignDto> getCampaignList(String templateTypeRaw, int size) {
+    assertMailMarketingEnabled();
+    String templateType = normalizeTemplateType(templateTypeRaw);
+    return campaignRepository.findRecentByTemplateKey(templateType, size)
+        .stream()
+        .map(this::toCampaignDto)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<MailOutboxEntryDto> getOutboxEntries(Long campaignId) {
+    assertMailMarketingEnabled();
+    campaignRepository.findById(campaignId)
+        .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
+    return outboxRepository.findByCampaignIdAndStatusIn(
+            campaignId, List.of(MailOutboxStatus.FAILED, MailOutboxStatus.PROCESSING))
+        .stream()
+        .map(o -> new MailOutboxEntryDto(o.getId(), o.getToEmail(), o.getStatus(), o.getErrorMessage(), o.getProviderMessageId()))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public String exportSubscribersCsv(String templateTypeRaw) {
+    assertMailMarketingEnabled();
+    String templateType = normalizeOptionalTemplateType(templateTypeRaw);
+    List<NewsletterSubscriberSubscription> subscriptions = templateType != null
+        ? subscriberSubscriptionRepository.findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(templateType)
+        : List.of();
+
+    StringBuilder csv = new StringBuilder("email,status,templateType,preferredLanguage,permission,createdAt\n");
+    for (NewsletterSubscriberSubscription sub : subscriptions) {
+      NewsletterSubscriber s = sub.getSubscriber();
+      csv.append(csvEscape(s.getEmail())).append(',')
+         .append(s.getStatus()).append(',')
+         .append(csvEscape(sub.getTemplateKey())).append(',')
+         .append(csvEscape(normalizePreferredLanguage(sub.getPreferredLanguage()))).append(',')
+         .append(Boolean.TRUE.equals(sub.getPermission())).append(',')
+         .append(s.getCreatedAt() != null ? s.getCreatedAt().toString() : "")
+         .append('\n');
+    }
+    return csv.toString();
+  }
+
+  private String csvEscape(String value) {
+    if (value == null) return "";
+    if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+      return "\"" + value.replace("\"", "\"\"") + "\"";
+    }
+    return value;
   }
 
   private void assertMailMarketingEnabled() {
@@ -719,6 +802,9 @@ public class TenantMailMarketingService {
     if (VERSION_UPGRADE.equals(templateType)) {
       return LANGUAGE_TR.equals(language) ? "Versiyon Güncellemesi" : "Version Upgrade";
     }
+    if (TENANT_USER_WELCOME.equals(templateType)) {
+      return LANGUAGE_TR.equals(language) ? "Hesabınız Oluşturuldu" : "Your Account Has Been Created";
+    }
     return LANGUAGE_TR.equals(language) ? "Bülten Bilgilendirmesi" : "Newsletter Update";
   }
 
@@ -727,6 +813,11 @@ public class TenantMailMarketingService {
       return LANGUAGE_TR.equals(language)
           ? "Merhaba {{name}},\n\nYeni versiyon yayınlandı: {{content}}\n\nİptal: {{unsubscribeUrl}}"
           : "Hello {{name}},\n\nA new version is available: {{content}}\n\nUnsubscribe: {{unsubscribeUrl}}";
+    }
+    if (TENANT_USER_WELCOME.equals(templateType)) {
+      return LANGUAGE_TR.equals(language)
+          ? "Merhaba {{name}},\n\nHesabınız oluşturuldu. Hesabınızı aktifleştirmek için aşağıdaki bağlantıya tıklayın:\n\n{{verificationLink}}\n\nBağlantı {{expiryHours}} saat geçerlidir."
+          : "Hello {{name}},\n\nYour account has been created. Click the link below to activate your account:\n\n{{verificationLink}}\n\nThis link is valid for {{expiryHours}} hours.";
     }
     return LANGUAGE_TR.equals(language)
         ? "Merhaba {{name}},\n\n{{content}}\n\nİptal: {{unsubscribeUrl}}"
@@ -748,16 +839,13 @@ public class TenantMailMarketingService {
   }
 
   private EmailResult sendTenantEmail(String to, String subject, String content) {
-    if ("console".equalsIgnoreCase(mailConfig.getProvider())) {
+    MailProviderConfig cfg = providerConfigRepository.findTopByOrderByIdAsc().orElse(null);
+    if (cfg == null
+        || "CONSOLE".equalsIgnoreCase(cfg.getProvider())
+        || !Boolean.TRUE.equals(cfg.getIsActive())
+        || cfg.getServerTokenEncrypted() == null
+        || cfg.getServerTokenEncrypted().isBlank()) {
       return mailSender.send(to, subject, content);
-    }
-    MailProviderConfig cfg = providerConfigRepository.findTopByOrderByIdAsc()
-        .orElseThrow(() -> new IllegalStateException("mail.marketing.provider.not.configured"));
-    if (!Boolean.TRUE.equals(cfg.getIsActive())) {
-      throw new IllegalStateException("mail.marketing.provider.not.active");
-    }
-    if (cfg.getServerTokenEncrypted() == null || cfg.getServerTokenEncrypted().isBlank()) {
-      throw new IllegalStateException("mail.marketing.provider.token.missing");
     }
     String token = encryptionService.decrypt(cfg.getServerTokenEncrypted());
     return tenantMailSender.send(token, cfg.getFromEmail(), cfg.getFromName(), to, subject, content);
@@ -798,7 +886,8 @@ public class TenantMailMarketingService {
         campaign.getStatus(),
         campaign.getTotalCount(),
         campaign.getSentCount(),
-        campaign.getFailedCount());
+        campaign.getFailedCount(),
+        campaign.getCreatedAt());
   }
 
   private MailSubscriberAdminDto toSubscriberAdminDto(

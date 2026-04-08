@@ -2,17 +2,24 @@
 
 ## Purpose
 
-Mail Marketing provides newsletter collection and campaign delivery flows in two scopes:
+Mail Marketing provides newsletter collection, campaign delivery, and transactional email flows in two scopes:
 
-- **Tenant scope** (`mail_marketing` module): tenant-specific subscribers, tenant template content, tenant provider config
-- **Platform scope** (control-plane): platform-level subscribers and SUPER_ADMIN campaign operations
+- **Tenant scope** (`mail_marketing` module): tenant-specific subscribers, template content, Postmark provider config, and transactional user welcome emails.
+- **Platform scope** (control-plane): platform-level subscribers and SUPER_ADMIN campaign and transactional operations.
 
-Template management is **template-type based** in first phase:
+### Template types
 
-- `NEWSLETTER_DEFAULT`
-- `VERSION_UPGRADE`
+| Type | Scope | Kind | Subscribable |
+|------|-------|------|-------------|
+| `NEWSLETTER_DEFAULT` | Both | Campaign | Yes |
+| `VERSION_UPGRADE` | Both | Campaign | Yes |
+| `TENANT_USER_WELCOME` | Tenant only | Transactional | No |
 
-Each template type has fixed language rows (`TR`, `EN`) and campaigns target only subscribers related to that template type.
+Campaign types deliver to active newsletter subscribers. `TENANT_USER_WELCOME` is a transactional type sent to a single recipient — not through campaign infrastructure.
+
+Each template type has fixed language rows (`TR`, `EN`) editable by SUPER_ADMIN (platform) or TENANT_ADMIN (tenant) via the admin panel. Default content is auto-seeded on first access.
+
+> **Note:** Demo request confirmation (`DEMO_REQUEST_CONFIRMATION`) is **not** a DB-managed template type. It is rendered directly from Thymeleaf files (`email/demo-request-confirmation-{lang}.html`) and is not editable via the admin panel.
 
 Subscription relation is the source of truth for audience metadata:
 
@@ -20,26 +27,23 @@ Subscription relation is the source of truth for audience metadata:
 - `preferredLanguage` is stored per `subscriber + templateType`
 - `permission` is stored per `subscriber + templateType` (campaign send allow/deny)
 
+---
+
 ## Database
 
-Migrations:
+### Platform migrations
 
 - Platform baseline: [`../../backend/src/main/resources/db/platform/V46__create_platform_mail_marketing.sql`](../../backend/src/main/resources/db/platform/V46__create_platform_mail_marketing.sql)
 - Platform subscriptions + template-type backfill: [`../../backend/src/main/resources/db/platform/V47__add_platform_newsletter_subscriptions.sql`](../../backend/src/main/resources/db/platform/V47__add_platform_newsletter_subscriptions.sql)
 - Platform subscription source/language model: [`../../backend/src/main/resources/db/platform/V48__add_platform_subscription_source_and_language.sql`](../../backend/src/main/resources/db/platform/V48__add_platform_subscription_source_and_language.sql)
 - Platform subscription permission model: [`../../backend/src/main/resources/db/platform/V49__add_platform_subscription_permission.sql`](../../backend/src/main/resources/db/platform/V49__add_platform_subscription_permission.sql)
-- Tenant baseline: [`../../backend/src/main/resources/db/tenant/mail_marketing/V1__baseline.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V1__baseline.sql)
-- Tenant subscriptions + template-type backfill: [`../../backend/src/main/resources/db/tenant/mail_marketing/V2__add_newsletter_subscriptions.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V2__add_newsletter_subscriptions.sql)
-- Tenant subscription source/language model: [`../../backend/src/main/resources/db/tenant/mail_marketing/V3__add_subscription_source_and_language.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V3__add_subscription_source_and_language.sql)
-- Tenant language correction backfill: [`../../backend/src/main/resources/db/tenant/mail_marketing/V4__fix_subscription_language_from_tenant_default.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V4__fix_subscription_language_from_tenant_default.sql)
-- Tenant subscription permission model: [`../../backend/src/main/resources/db/tenant/mail_marketing/V5__add_subscription_permission.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V5__add_subscription_permission.sql)
 
-Reference ImpEx scripts:
+### Tenant migrations (`mail_marketing` module)
 
-- Tenant sample data: [`../../backend/src/main/resources/impex/seed_mail_marketing_tenant.sql`](../../backend/src/main/resources/impex/seed_mail_marketing_tenant.sql)
-- Platform sample data: [`../../backend/src/main/resources/impex/seed_mail_marketing_platform.sql`](../../backend/src/main/resources/impex/seed_mail_marketing_platform.sql)
+- Baseline: [`../../backend/src/main/resources/db/tenant/mail_marketing/V1.0.0__baseline.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V1.0.0__baseline.sql)
+- Add `TENANT_USER_WELCOME` template rows: [`../../backend/src/main/resources/db/tenant/mail_marketing/V1.1.0__add_tenant_user_welcome_template.sql`](../../backend/src/main/resources/db/tenant/mail_marketing/V1.1.0__add_tenant_user_welcome_template.sql)
 
-Platform tables (`platform_management`):
+### Platform tables (`platform_management`)
 
 - `platform_email_templates`
 - `platform_newsletter_subscribers`
@@ -47,7 +51,7 @@ Platform tables (`platform_management`):
 - `platform_mail_campaigns`
 - `platform_mail_outbox`
 
-Tenant tables (tenant DB, module `mail_marketing`):
+### Tenant tables (tenant DB, module `mail_marketing`)
 
 - `email_templates`
 - `newsletter_subscribers`
@@ -56,16 +60,10 @@ Tenant tables (tenant DB, module `mail_marketing`):
 - `mail_campaigns`
 - `mail_outbox`
 
-Source-of-truth services/entities:
+### Source-of-truth services
 
 - Tenant service: [`../../backend/src/main/java/com/backend/application/service/TenantMailMarketingService.java`](../../backend/src/main/java/com/backend/application/service/TenantMailMarketingService.java)
 - Platform service: [`../../backend/src/main/java/com/backend/application/service/PlatformMailMarketingService.java`](../../backend/src/main/java/com/backend/application/service/PlatformMailMarketingService.java)
-- Tenant subscriber relation entity: [`../../backend/src/main/java/com/backend/domain/entity/NewsletterSubscriberSubscription.java`](../../backend/src/main/java/com/backend/domain/entity/NewsletterSubscriberSubscription.java)
-- Platform subscriber relation entity: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/entity/PlatformNewsletterSubscriberSubscription.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/entity/PlatformNewsletterSubscriberSubscription.java)
-- Platform entity↔domain mapper: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformMailMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformMailMapper.java)
-- Shared platform mappers:
-  - [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformAdminUserMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformAdminUserMapper.java)
-  - [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformVerificationTokenMapper.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/mapper/PlatformVerificationTokenMapper.java)
 
 ### Platform entity conventions
 
@@ -77,28 +75,26 @@ All 5 platform mail marketing entities (`PlatformEmailTemplate`, `PlatformMailCa
 - `createdAt`, `updatedAt` (auto-managed by `@PrePersist`/`@PreUpdate`)
 - `createdBy`, `updatedBy` (Long — platform admin user ID, nullable)
 
-`PlatformMailCampaign` additionally stores the email of the sender as `createdByEmail` (String, `created_by_email` column) — distinct from the inherited `createdBy` (Long user ID). The tenant-scoped `MailCampaign` stores the user ID as `createdByUserId` (Long, `created_by` column).
-
-`PlatformNewsletterSubscriber` and `PlatformNewsletterSubscriberSubscription` have a bidirectional `@OneToMany`/`@ManyToOne` relationship. Both entities use `@ToString(exclude=...)` to prevent `StackOverflowError` in Lombok-generated `toString()`.
-
-`preferredLanguage` defaults to `Language.EN.name()` (`"EN"`), consistent with the platform subscribe flow.
+`PlatformMailCampaign` additionally stores the email of the sender as `createdByEmail` (String). The tenant-scoped `MailCampaign` stores the user ID as `createdByUserId` (Long).
 
 ### Query performance notes
 
-Subscriber relation list methods load `subscriber` via `@EntityGraph(attributePaths = "subscriber")` to avoid N+1 when mapping `subscription.getSubscriber()` in service layer:
+Subscriber relation list methods load `subscriber` via `@EntityGraph(attributePaths = "subscriber")` to avoid N+1:
 
 - Platform relation repository: [`../../backend/src/main/java/com/backend/infrastructure/persistence/platform/repository/PlatformNewsletterSubscriberSubscriptionRepository.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/platform/repository/PlatformNewsletterSubscriberSubscriptionRepository.java)
 - Tenant relation repository: [`../../backend/src/main/java/com/backend/infrastructure/persistence/repository/NewsletterSubscriberSubscriptionJpaRepository.java`](../../backend/src/main/java/com/backend/infrastructure/persistence/repository/NewsletterSubscriberSubscriptionJpaRepository.java)
 
-`PlatformMailMapper` intentionally uses shallow subscriber mapping in subscription conversions and avoids eager mapping of `subscriber.subscriptions` by default.
+---
 
 ## Admin API
 
-Tenant admin controller: [`../../backend/src/main/java/com/backend/presentation/controller/TenantMailMarketingController.java`](../../backend/src/main/java/com/backend/presentation/controller/TenantMailMarketingController.java)
+### Tenant admin
+
+Controller: [`../../backend/src/main/java/com/backend/presentation/controller/TenantMailMarketingController.java`](../../backend/src/main/java/com/backend/presentation/controller/TenantMailMarketingController.java)
 
 Base path: `/api/mail`
 
-- `GET /api/mail/templates/types`
+- `GET /api/mail/templates/types` — returns all fixed types including `NEWSLETTER_DEFAULT`, `VERSION_UPGRADE`, `TENANT_USER_WELCOME`
 - `GET /api/mail/templates/types/{templateType}`
 - `PUT /api/mail/templates/types/{templateType}/translations/{language}`
 - `GET /api/mail/subscribers?templateType=...`
@@ -109,14 +105,19 @@ Base path: `/api/mail`
 - `DELETE /api/mail/subscribers/admin/{id}` (soft delete: status + permission revocation)
 - `GET /api/mail/provider-config`
 - `PUT /api/mail/provider-config`
-- `POST /api/mail/campaigns/send`
+- `POST /api/mail/campaigns/send` — body: `{ templateType: string }`
 - `GET /api/mail/campaigns/{id}`
+- `GET /api/mail/campaigns?templateType=...&size=5` — recent campaign list
+- `GET /api/mail/campaigns/{id}/outbox` — failed/processing outbox entries for a campaign
+- `GET /api/mail/subscribers/admin/export?templateType=...` — CSV download (all subscribers)
 
-Platform admin controller: [`../../backend/src/main/java/com/backend/presentation/controller/PlatformMailMarketingController.java`](../../backend/src/main/java/com/backend/presentation/controller/PlatformMailMarketingController.java)
+### Platform admin
+
+Controller: [`../../backend/src/main/java/com/backend/presentation/controller/PlatformMailMarketingController.java`](../../backend/src/main/java/com/backend/presentation/controller/PlatformMailMarketingController.java)
 
 Base path: `/api/platform/mail`
 
-- `GET /api/platform/mail/templates/types`
+- `GET /api/platform/mail/templates/types` — returns `NEWSLETTER_DEFAULT`, `VERSION_UPGRADE`
 - `GET /api/platform/mail/templates/types/{templateType}`
 - `PUT /api/platform/mail/templates/types/{templateType}/translations/{language}`
 - `GET /api/platform/mail/subscribers?templateType=...`
@@ -125,60 +126,152 @@ Base path: `/api/platform/mail`
 - `GET /api/platform/mail/subscribers/admin/{id}`
 - `PUT /api/platform/mail/subscribers/admin/{id}`
 - `DELETE /api/platform/mail/subscribers/admin/{id}` (soft delete: status + permission revocation)
-- `POST /api/platform/mail/campaigns/send`
+- `POST /api/platform/mail/campaigns/send` — body: `{ templateType: string }`
 - `GET /api/platform/mail/campaigns/{id}`
+- `GET /api/platform/mail/campaigns?templateType=...&size=5` — recent campaign list
+- `GET /api/platform/mail/campaigns/{id}/outbox` — failed/processing outbox entries for a campaign
+- `GET /api/platform/mail/subscribers/admin/export?templateType=...` — CSV download (all subscribers)
 
-Campaign send behavior:
+### Campaign send behavior
 
-- `templateId` points to a concrete translation row (`TR` or `EN`) under a template type.
-- Recipient query is filtered by:
-  - subscriber `status = ACTIVE`
-  - subscriber-template relation `template_key = selected template type`
-  - subscriber-template relation `permission = TRUE`
-- Delivery language is resolved from relation `preferredLanguage`:
-  - try preferred language translation (`TR`/`EN`)
-  - fallback to `EN`
-  - fallback to selected template row
+- `templateType` identifies the template group (e.g. `NEWSLETTER_DEFAULT`).
+- Backend loads all active translation rows for the template type.
+- Recipients filtered by: `status = ACTIVE`, matching `template_key`, `permission = TRUE`.
+- Delivery language resolved per subscriber from `preferredLanguage` on the subscription relation → EN fallback → first active translation.
+- Admin no longer selects a language — the backend resolves the correct language for each subscriber automatically.
+- `TENANT_USER_WELCOME` is a transactional type — it is **not** subscribable and **not** sent via campaign infrastructure.
+
+---
 
 ## Public delivery APIs
 
-Tenant public newsletter controller: [`../../backend/src/main/java/com/backend/presentation/controller/TenantPublicNewsletterController.java`](../../backend/src/main/java/com/backend/presentation/controller/TenantPublicNewsletterController.java)
+### Platform public newsletter
 
-Base path: `/api/public/newsletter`
-
-- `POST /api/public/newsletter/subscribe` (requires `email`, optional `source`, required `templateType`)
-- `GET /api/public/newsletter/confirm?token=...`
-- `POST /api/public/newsletter/unsubscribe`
-
-Platform public newsletter controller: [`../../backend/src/main/java/com/backend/presentation/controller/PlatformPublicNewsletterController.java`](../../backend/src/main/java/com/backend/presentation/controller/PlatformPublicNewsletterController.java)
+Controller: [`../../backend/src/main/java/com/backend/presentation/controller/PlatformPublicNewsletterController.java`](../../backend/src/main/java/com/backend/presentation/controller/PlatformPublicNewsletterController.java)
 
 Base path: `/api/platform/public/newsletter`
 
-- `POST /api/platform/public/newsletter/subscribe` (requires `email`, optional `source`, required `templateType`)
-- `GET /api/platform/public/newsletter/confirm?token=...`
-- `POST /api/platform/public/newsletter/unsubscribe`
+- `POST /api/platform/public/newsletter/subscribe`
+  - Body: `{ email, source?, templateType, locale? }`
+  - `templateType` must be a subscribable type (`NEWSLETTER_DEFAULT`, `VERSION_UPGRADE`).
+  - `locale` drives `preferredLanguage` (`TR`/`EN`) on the subscription relation and the language of the confirmation email.
+  - Sends HTML confirmation email (`newsletter-confirm-tr.html` / `newsletter-confirm-en.html`).
+- `GET /api/platform/public/newsletter/confirm?token=...` — activates subscriber (status → `ACTIVE`)
+- `POST /api/platform/public/newsletter/unsubscribe` — soft unsubscribe via token
+
+### Tenant public newsletter
+
+Controller: [`../../backend/src/main/java/com/backend/presentation/controller/TenantPublicNewsletterController.java`](../../backend/src/main/java/com/backend/presentation/controller/TenantPublicNewsletterController.java)
+
+Base path: `/api/public/newsletter`
+
+- `POST /api/public/newsletter/subscribe` — body: `{ email, source?, templateType }`
+- `GET /api/public/newsletter/confirm?token=...`
+- `POST /api/public/newsletter/unsubscribe`
+
+---
+
+## Transactional email flows
+
+### Demo request confirmation (platform)
+
+Triggered automatically when a landing page demo request is submitted.
+
+- Entry point: [`../../backend/src/main/java/com/backend/application/service/impl/PlatformDemoRequestServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/PlatformDemoRequestServiceImpl.java) — `submit()` calls `PlatformMailMarketingService.sendDemoRequestConfirmation()` after DB save.
+- Rendered from Thymeleaf: `email/demo-request-confirmation-tr.html` / `email/demo-request-confirmation-en.html`.
+- Template variable: `${name}` (full name of the requester).
+- Language resolved from `command.locale()`.
+- Mail failure does **not** rollback the demo request (exception is caught inside the method).
+
+### TENANT_USER_WELCOME (tenant)
+
+Triggered when a new tenant user account is created (activation email).
+
+- Entry point: [`../../backend/src/main/java/com/backend/application/service/impl/EmailServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/EmailServiceImpl.java) — `sendEmailVerificationEmail()`.
+- If `tenantContext.isSet()`: looks up active `TENANT_USER_WELCOME` template in `email_templates`.
+  - Found and active → renders via `TemplateVariableRenderer`, sends via `emailSender`.
+  - Not found or inactive → falls back to system Thymeleaf template (`email-verify-tr.html` / `email-verify-en.html`).
+- Template content: TENANT_ADMIN edits via `/:lang/mail-marketing → TENANT_USER_WELCOME`.
+- Template variables: `{{name}}`, `{{verificationLink}}`, `{{expiryHours}}`
+
+### VERSION_UPGRADE auto-subscribe on provisioning
+
+When tenant provisioning completes successfully, the tenant's `adminEmail` is automatically added as an `ACTIVE` platform subscriber of `VERSION_UPGRADE`.
+
+- Entry point: [`../../backend/src/main/java/com/backend/application/service/AsyncProvisioningExecutor.java`](../../backend/src/main/java/com/backend/application/service/AsyncProvisioningExecutor.java) — `autoSubscribeTenantAdminToVersionUpdates()` called after `updateTenantStatus(ACTIVE)`.
+- Calls `PlatformMailMarketingService.autoSubscribeTenantAdmin(email, preferredLanguage)`.
+- `preferredLanguage` resolved from `tenant.defaultLanguage`.
+- Subscription source set to `"TENANT_ONBOARDING"`.
+- Failure is caught and logged; it does not fail the provisioning job.
+- SUPER_ADMIN can then send VERSION_UPGRADE campaigns to reach all provisioned tenant admins.
+
+---
+
+## Email HTML templates
+
+System-level Thymeleaf HTML templates (code-only, not admin-configurable):
+
+| File | Purpose | Variables |
+|------|---------|-----------|
+| `email-verify-tr.html` / `en.html` | Fallback activation email (no custom template) | `verificationLink`, `expiryHours` |
+| `login-otp-tr.html` / `en.html` | OTP code | `otpCode`, `expiryMinutes` |
+| `password-reset-tr.html` / `en.html` | Password reset link | `resetLink`, `expiryHours` |
+| `newsletter-confirm-tr.html` / `en.html` | Newsletter subscription confirmation | `confirmLink` |
+
+All templates also receive `fromName` automatically from `MailConfigPort` (resolved via `GlobalRuntimeConfigService` → `app.email.from-name`).
+
+Template location: `backend/src/main/resources/templates/email/`
+
+Renderer: [`../../backend/src/main/java/com/backend/infrastructure/email/EmailTemplateRenderer.java`](../../backend/src/main/java/com/backend/infrastructure/email/EmailTemplateRenderer.java) implements [`../../backend/src/main/java/com/backend/domain/port/EmailTemplateRendererPort.java`](../../backend/src/main/java/com/backend/domain/port/EmailTemplateRendererPort.java).
+
+`EmailTemplateRendererPort` exposes two render methods:
+- `render(EmailContext)` — for system emails (uses `EmailType` to resolve template name)
+- `render(String templateName, Map<String, Object> variables, Language language)` — for direct template rendering (used by newsletter confirm flow)
+
+DB-stored templates (`platform_email_templates`, `email_templates`) are rendered via [`../../backend/src/main/java/com/backend/application/service/mail/TemplateVariableRenderer.java`](../../backend/src/main/java/com/backend/application/service/mail/TemplateVariableRenderer.java) using `{{key}}` syntax.
+
+---
 
 ## Frontend integration
 
+### Admin storefront
+
 API endpoint keys:
 
-- Tenant: `mailTemplateTypes`, `mailTemplateTypeDetail`, `mailTemplateTypeTranslation`, `mailSubscribers`, `mailProviderConfig`, `mailCampaignSend`, `mailCampaignById`
-- Platform: `platformMailTemplateTypes`, `platformMailTemplateTypeDetail`, `platformMailTemplateTypeTranslation`, `platformMailSubscribers`, `platformMailCampaignSend`, `platformMailCampaignById`
+- Tenant: `mailTemplateTypes`, `mailTemplateTypeDetail`, `mailTemplateTypeTranslation`, `mailSubscribers`, `mailProviderConfig`, `mailCampaignSend`, `mailCampaignById`, `mailCampaignList`, `mailCampaignOutbox`, `mailSubscribersExport`
+- Platform: `platformMailTemplateTypes`, `platformMailTemplateTypeDetail`, `platformMailTemplateTypeTranslation`, `platformMailSubscribers`, `platformMailCampaignSend`, `platformMailCampaignById`, `platformMailCampaignList`, `platformMailCampaignOutbox`, `platformMailSubscribersExport`
 - File: [`../../storefront/src/app/modules/admin/api-endpoints.ts`](../../storefront/src/app/modules/admin/api-endpoints.ts)
 
 Admin routes:
 
-- Tenant route: `/:lang/mail-marketing`
-  - List route: [`../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component.ts)
-  - Detail route: [`../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component.ts)
-- Platform route: `/:lang/platform-mail`
-  - List route: [`../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-template-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-template-list.component.ts)
-  - Detail route: [`../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-marketing.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-marketing.component.ts)
+- Tenant: `/:lang/mail-marketing`
+  - List: [`../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-template-list.component.ts)
+  - Detail: [`../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.component.ts)
+- Platform: `/:lang/platform-mail`
+  - List: [`../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-template-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-template-list.component.ts)
+  - Detail: [`../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-marketing.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail-marketing.component.ts)
 
-List/detail route modules:
+Detail page sidebar contains three cards:
 
-- Tenant: [`../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.routes.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/tenant-mail-marketing.routes.ts)
-- Platform: [`../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail.routes.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/platform-mail.routes.ts)
+1. **Send Campaign** — single button; no language selection (backend resolves per subscriber).
+2. **Last Campaign** — status badge, progress bar, sent/failed stats, refresh button.
+3. **Campaign History** — last 5 campaigns as clickable rows. Each row shows status, date, and sent/failed counts. Clicking opens the Outbox Dialog.
+
+**Outbox Dialog** ([`mail-campaign-outbox-dialog.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/mail-campaign-outbox-dialog.component.ts)): opens on campaign row click, calls `GET /campaigns/{id}/outbox`, lists FAILED entries with email and error message. Accepts `getCampaignOutbox` as a function via `MAT_DIALOG_DATA` — keeping the dialog scope-agnostic (platform/tenant).
+
+**Subscriber list** ([`mail-subscriber-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component.ts)): header actions include an "Export CSV" button that calls `GET /subscribers/admin/export`, downloads the response blob as a `.csv` file using a temporary `<a>` element.
+
+### Landing page (newsletter signup)
+
+Newsletter subscription section added between FAQ and CTA banner.
+
+- Component: [`../../landing/components/sections/NewsletterSection.tsx`](../../landing/components/sections/NewsletterSection.tsx)
+- API function: `subscribePlatformNewsletter(email, locale, recaptchaToken?)` in [`../../landing/lib/platform-api.ts`](../../landing/lib/platform-api.ts)
+  - `POST /api/platform/public/newsletter/subscribe` with `templateType: "NEWSLETTER_DEFAULT"`, `source: "LANDING_NEWSLETTER"`
+- Content: `newsletter` key in [`../../landing/content/home.en.json`](../../landing/content/home.en.json) and [`../../landing/content/home.tr.json`](../../landing/content/home.tr.json)
+- Error class: `NewsletterSubscribeError` (exported from `platform-api.ts`)
+
+---
 
 ## Security & tenant isolation
 
@@ -187,57 +280,105 @@ List/detail route modules:
 - Tenant UI route uses `tenantAdminGuard + moduleGuard(requiredModule=mail_marketing)`.
 - Platform UI route uses `superAdminGuard`.
 - Tenant public newsletter APIs are tenant-scoped by `TenantFilter`.
-- Platform public newsletter APIs are explicitly excluded from tenant scoping in security/tenant filter configuration.
+- Platform public newsletter APIs are explicitly excluded from tenant scoping.
+- `TENANT_USER_WELCOME` cannot be subscribed to via the public API (`SUBSCRIBABLE_TEMPLATE_TYPES` constant excludes it). Subscription attempts return `400 mail.marketing.template.type.invalid`.
 
-Provider behavior:
+### Provider behavior
 
-- `app.email.provider=console`: mail is bypassed to console sender (dev/stage workflow).
-- Non-console: tenant campaign sends require active tenant provider config (`mail_provider_config`) and encrypted tenant Postmark token.
-- No provider fallback from tenant to platform sender (fail-closed).
+**Platform mail** (OTP, password reset, email verify, newsletter confirm, demo request confirmation) routing is controlled by `app.email.provider` in global config (`/api/config/admin/global/properties`):
 
-Language assignment policy:
+| Value | Behavior |
+|-------|----------|
+| `console` | Logs `[MAIL:CONSOLE] to=... subject=...` — no real delivery (default) |
+| `postmark` | Sends via `TenantPostmarkEmailSender` using `app.email.postmark.server-token` (secret/encrypted) |
 
-- Tenant subscribe:
-  - if tenant `defaultLanguage == TR` => relation `preferredLanguage = TR`
-  - else => relation `preferredLanguage = EN`
-- Platform subscribe:
-  - relation `preferredLanguage = EN`
-- Snapshot rule:
-  - changing tenant default language does not rewrite existing subscription language
-  - only new/updated subscription events use the current default rule
+If `provider=postmark` but token is not set, falls back to console with a WARN log.
+
+**Tenant mail** (campaigns, newsletter confirm, `TENANT_USER_WELCOME`) routing is controlled exclusively by tenant's own `mail_provider_config` table — independent of platform global config:
+
+| `provider` field | `is_active` | Behavior |
+|-----------------|-------------|----------|
+| `CONSOLE` | any | Console fallback |
+| `POSTMARK` | `false` | Console fallback |
+| `POSTMARK` | `true` + token set | Sends via Postmark with tenant's server token |
+
+New tenants default to `CONSOLE`. Tenant admin sets `provider=POSTMARK` + token via `PUT /api/mail/provider-config`.
+
+**Console summary logging** — every mail flow logs relevant data at the service layer regardless of provider:
+
+```
+[MAIL] otp → user@example.com | code=123456
+[MAIL] password-reset → user@example.com | link=https://...
+[MAIL] email-verify → user@example.com | link=https://...
+[MAIL] newsletter-confirm → user@example.com | confirmLink=https://...
+[MAIL] demo-request-confirm → user@example.com
+[MAIL] TENANT_USER_WELCOME → user@example.com | vars=[name, verificationLink, expiryHours]
+[MAIL:CONSOLE] to=u***@example.com | subject="..."  ← ConsoleEmailSender output
+```
+
+### Language assignment
+
+- Tenant subscribe: `preferredLanguage = tenant.defaultLanguage` (TR or EN fallback)
+- Platform subscribe: `preferredLanguage` resolved from `locale` request field; defaults to `EN`
+- Changing tenant default language does not rewrite existing subscription language
+
+---
 
 ## Implementation guide
 
-### 1) Template-type management from admin grid
+### 1) Edit a template type from admin panel
 
 1. Open `/:lang/mail-marketing` (tenant) or `/:lang/platform-mail` (platform).
-2. List page shows fixed template types (`NEWSLETTER_DEFAULT`, `VERSION_UPGRADE`) with language coverage and subscriber count.
-3. Open a row to detail and edit `TR` / `EN` content independently.
-4. Save translation via `/templates/types/{templateType}/translations/{language}`.
+2. List page shows all fixed template types with language coverage and subscriber count.
+3. Open a row to detail and edit `TR` / `EN` subject and content independently.
+4. Save via `PUT /templates/types/{templateType}/translations/{language}`.
 
-### 2) Subscriber collection with template relation
+For the `TENANT_USER_WELCOME` transactional type: the saved content is used on the next send. Changes take effect immediately — no campaign needed.
 
-1. Public client calls `POST .../newsletter/subscribe` with `templateType`.
-2. Backend upserts subscriber and ensures `subscriber <-> template_key` relation row.
-3. Subscriber confirms token, status becomes `ACTIVE`.
-4. Subscriber appears in template detail lists when querying the same template type.
+### 2) Landing newsletter subscription flow
 
-### 2.1) Subscriber admin CRUD (tenant + platform)
+1. Visitor enters email in `NewsletterSection` on the landing page.
+2. `subscribePlatformNewsletter()` calls `POST /api/platform/public/newsletter/subscribe` with `templateType=NEWSLETTER_DEFAULT`, `source=LANDING_NEWSLETTER`, and `locale`.
+3. Backend upserts subscriber as `PENDING_CONFIRMATION`, sets `preferredLanguage` from locale.
+4. HTML confirmation email (`newsletter-confirm-{lang}.html`) is sent via platform mail sender.
+5. Visitor clicks confirm link → `GET /api/platform/public/newsletter/confirm?token=...` → status becomes `ACTIVE`.
+6. Subscriber is now included in future `NEWSLETTER_DEFAULT` campaign recipients.
 
-1. Open `/:lang/mail-marketing/subscribers` (tenant) or `/:lang/platform-mail/subscribers` (platform).
-2. List page supports server-side pagination/sort/search.
-   - Sort options include: `createdAt`, `email`, `status`, `confirmedAt`, `unsubscribedAt`.
-3. Create/edit supports multiple template bindings in one dialog:
-   - `templateType`
-   - `preferredLanguage`
-   - `source`
-   - `permission`
-4. Email is immutable in edit mode.
-5. Delete is soft-delete (`UNSUBSCRIBED` + all binding permissions set to `false`).
+### 3) Demo request → automatic confirmation mail
 
-### 3) Campaign send by language and template type
+1. Landing form submits to `POST /api/platform/public/demo-requests`.
+2. `PlatformDemoRequestServiceImpl.submit()` saves the request to DB.
+3. `PlatformMailMarketingService.sendDemoRequestConfirmation(email, fullName, locale)` is called immediately after save.
+4. Renders `email/demo-request-confirmation-{lang}.html` via Thymeleaf with `${name}` variable.
+5. Sends via platform mail sender. If render or send fails — request save is unaffected (exception caught inside the method).
 
-1. Admin selects template type detail and triggers send on `TR` or `EN` row.
-2. Backend creates campaign/outbox entries and resolves recipients by relation table + `ACTIVE` status.
-3. `{{name}}`, `{{email}}`, `{{unsubscribeUrl}}` placeholders are rendered.
-4. Campaign counters are read from `GET /campaigns/{id}` for status refresh.
+### 4) Tenant user welcome with custom template
+
+1. Admin creates a new user → system triggers `EmailServiceImpl.sendEmailVerificationEmail()`.
+2. Service checks `tenantContext.isSet()`. If in tenant context:
+   - Looks up `TENANT_USER_WELCOME` in `email_templates` for the resolved language.
+   - If active template found → renders `{{name}}`, `{{verificationLink}}`, `{{expiryHours}}` and sends.
+   - If not found → falls back to system `email-verify-{lang}.html` Thymeleaf template.
+3. Tenant admin customizes the template from `/:lang/mail-marketing → TENANT_USER_WELCOME`.
+
+### 5) VERSION_UPGRADE campaign to all tenant admins
+
+1. On tenant provisioning success, `AsyncProvisioningExecutor` calls `autoSubscribeTenantAdmin(tenant.adminEmail, preferredLanguage)`.
+2. Admin email is added as `ACTIVE` platform subscriber of `VERSION_UPGRADE` (source: `TENANT_ONBOARDING`).
+3. SUPER_ADMIN opens `/:lang/platform-mail → VERSION_UPGRADE`, edits release notes (TR/EN), clicks Send Campaign.
+4. Backend reads `templateType=VERSION_UPGRADE`, finds all active translations, resolves the correct language per subscriber.
+5. All provisioned tenant admin emails receive the version announcement in their preferred language.
+
+### 6) Campaign history and outbox drill-down
+
+1. Admin opens a template detail page — the Campaign History card automatically loads the last 5 campaigns via `GET /campaigns?templateType=X&size=5`.
+2. Each campaign row shows status badge, date, and sent/failed counts.
+3. Admin clicks a row → Outbox Dialog opens, fetches `GET /campaigns/{id}/outbox`.
+4. Dialog lists all FAILED outbox entries (email + error message). If no failures, shows a success empty state.
+
+### 7) Subscriber CSV export
+
+1. Admin opens the subscriber list for any scope (tenant or platform).
+2. Clicks "Export CSV" in the page header.
+3. Frontend calls `GET /subscribers/admin/export` (optionally with `?templateType=...`).
+4. Backend streams a `text/csv` response; frontend downloads it as `subscribers.csv` via a temporary `<a>` element.
