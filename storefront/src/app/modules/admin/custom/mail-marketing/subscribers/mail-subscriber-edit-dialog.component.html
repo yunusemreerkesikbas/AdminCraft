@@ -1,6 +1,7 @@
 <spa-dialog
     [title]="dialogTitleKeySig() | transloco"
     [subtitle]="data.scope === 'platform' ? ('admin.mailMarketing.subscribers.platformTitle' | transloco) : ('admin.mailMarketing.subscribers.tenantTitle' | transloco)"
+    [size]="'lg'"
     [submitDisabled]="form.invalid"
     [isSubmitting]="isSubmittingSig()"
     submitLabel="admin.dialog.actions.save"
@@ -9,48 +10,65 @@
     (cancelled)="cancel()"
     (submitted)="save()"
 >
-    <div class="grid grid-cols-1 gap-6" [formGroup]="form">
-        <div class="rounded-lg border bg-slate-50 p-4 dark:bg-slate-900/40">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <form class="subscriber-dialog-form" [formGroup]="form">
+        <section class="subscriber-panel subscriber-panel--summary">
+            <div class="subscriber-grid">
                 <spa-input
                     formControlName="email"
                     [label]="'admin.mailMarketing.fields.email' | transloco"
                     [readonly]="data.mode === 'edit'"
                 ></spa-input>
 
-                <div class="flex items-center">
-                    <spa-select
-                        formControlName="status"
-                        [label]="'admin.mailMarketing.fields.status' | transloco"
-                        [options]="statusOptions"
-                    >
-                    </spa-select>
-                </div>
+                <spa-select
+                    formControlName="status"
+                    [label]="'admin.mailMarketing.fields.status' | transloco"
+                    [options]="statusOptions"
+                >
+                </spa-select>
             </div>
-        </div>
+        </section>
 
-        <div class="rounded-lg border p-4">
-            <div class="mb-4 flex items-center justify-between gap-2">
-                <h3 class="text-base font-semibold">
-                    {{ 'admin.mailMarketing.subscribers.fields.bindings' | transloco }}
-                </h3>
+        <section class="subscriber-panel">
+            <div class="subscriber-panel__header">
+                <div class="flex min-w-0 flex-col">
+                    <h3 class="subscriber-panel__title">
+                        {{ 'admin.mailMarketing.subscribers.fields.bindings' | transloco }}
+                    </h3>
+                </div>
                 <button
-                    mat-stroked-button
+                    mat-button
+                    class="subscriber-panel__add-button"
                     type="button"
                     (click)="addSubscription()"
                     [disabled]="!canAddSubscription()"
                 >
-                    <mat-icon>add</mat-icon>
+                    <mat-icon [svgIcon]="'heroicons_outline:plus'" class="icon-size-5"></mat-icon>
                     {{ 'admin.mailMarketing.subscribers.actions.addBinding' | transloco }}
                 </button>
             </div>
 
-            <div class="space-y-4" formArrayName="subscriptions">
+            <div class="subscription-list" formArrayName="subscriptions">
                 @for (group of subscriptionsArray.controls; track $index) {
-                    <div class="rounded-lg border p-4" [formGroupName]="$index">
-                        <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <article class="subscription-card" [formGroupName]="$index">
+                        <div class="subscription-card__header">
+                            <span class="subscription-card__binding-title">Binding</span>
+
+                            <button
+                                mat-icon-button
+                                class="subscription-card__delete"
+                                color="warn"
+                                type="button"
+                                (click)="removeSubscription($index)"
+                                [disabled]="subscriptionsArray.length <= 1"
+                                [attr.aria-label]="'Delete binding ' + ($index + 1)"
+                            >
+                                <mat-icon [svgIcon]="'heroicons_outline:trash'" class="icon-size-5" aria-hidden="true"></mat-icon>
+                            </button>
+                        </div>
+
+                        <div class="subscription-card__grid">
                             <spa-select
-                                class="md:col-span-1"
+                                class="subscription-card__field subscription-card__field--template"
                                 formControlName="templateType"
                                 [label]="'admin.mailMarketing.fields.templateType' | transloco"
                                 [options]="templateOptionsFor($index)"
@@ -58,7 +76,7 @@
                             </spa-select>
 
                             <spa-select
-                                class="md:col-span-1"
+                                class="subscription-card__field subscription-card__field--language"
                                 formControlName="preferredLanguage"
                                 [label]="'admin.mailMarketing.fields.preferredLanguage' | transloco"
                                 [options]="languageOptions"
@@ -66,29 +84,23 @@
                             </spa-select>
 
                             <spa-input
-                                class="md:col-span-1"
+                                class="subscription-card__field subscription-card__field--source"
                                 formControlName="source"
                                 [label]="'admin.mailMarketing.fields.source' | transloco"
                             ></spa-input>
-
-                            <div class="flex items-center justify-between gap-3 md:col-span-1">
-                                <mat-slide-toggle formControlName="permission" color="primary">
-                                    {{ 'admin.mailMarketing.subscribers.fields.permission' | transloco }}
-                                </mat-slide-toggle>
-                                <button
-                                    mat-icon-button
-                                    color="warn"
-                                    type="button"
-                                    (click)="removeSubscription($index)"
-                                    [disabled]="subscriptionsArray.length <= 1"
-                                >
-                                    <mat-icon>delete</mat-icon>
-                                </button>
-                            </div>
                         </div>
-                    </div>
+
+                        <div class="subscription-card__footer">
+                            <spa-checkbox
+                                class="subscription-card__permission"
+                                formControlName="permission"
+                                [label]="'admin.mailMarketing.subscribers.fields.permission' | transloco"
+                            >
+                            </spa-checkbox>
+                        </div>
+                    </article>
                 }
             </div>
-        </div>
-    </div>
+        </section>
+    </form>
 </spa-dialog>

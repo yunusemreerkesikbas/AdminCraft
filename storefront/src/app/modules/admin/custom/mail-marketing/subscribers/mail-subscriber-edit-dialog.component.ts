@@ -5,6 +5,7 @@ import {
     computed,
     inject,
     signal,
+    ViewEncapsulation,
 } from '@angular/core';
 import {
     FormArray,
@@ -13,11 +14,11 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { TranslocoModule } from '@jsverse/transloco';
+import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import {
     SpaSelectComponent,
@@ -28,8 +29,8 @@ import { NotificationService } from '@shared/notifications/notification.service'
 import { take } from 'rxjs';
 import {
     MailSubscriberAdminVm,
-    MailSubscriberSubscriptionVm,
     MailSubscriberStatus,
+    MailSubscriberSubscriptionVm,
     UpsertMailSubscriberPayload,
 } from '../mail-marketing.types';
 import { PlatformMailSubscriberAdminService } from '../platform-mail-subscriber-admin.service';
@@ -52,19 +53,23 @@ export interface MailSubscriberEditDialogData {
         ReactiveFormsModule,
         MatButtonModule,
         MatIconModule,
-        MatSlideToggleModule,
         TranslocoModule,
+        SpaCheckboxComponent,
         SpaInputComponent,
         SpaSelectComponent,
         SpaDialogComponent,
     ],
     templateUrl: './mail-subscriber-edit-dialog.component.html',
+    styleUrls: ['./mail-subscriber-edit-dialog.component.scss'],
+    encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MailSubscriberEditDialogComponent {
-    readonly #dialogRef = inject(MatDialogRef<MailSubscriberEditDialogComponent>);
+    readonly #dialogRef = inject(
+        MatDialogRef<MailSubscriberEditDialogComponent>
+    );
     readonly #fb = inject(FormBuilder);
-    readonly #notify = inject(NotificationService);
+    readonly #notificationService = inject(NotificationService);
     readonly #tenantService = inject(TenantMailSubscriberAdminService);
     readonly #platformService = inject(PlatformMailSubscriberAdminService);
     readonly data = inject<MailSubscriberEditDialogData>(MAT_DIALOG_DATA);
@@ -79,20 +84,22 @@ export class MailSubscriberEditDialogComponent {
         { value: 'TR', label: 'TR' },
         { value: 'EN', label: 'EN' },
     ];
-    protected readonly statusOptions: SpaSelectOption<MailSubscriberStatus>[] = [
-        {
-            value: 'PENDING_CONFIRMATION',
-            labelKey: 'admin.mailMarketing.subscriberStatus.PENDING_CONFIRMATION',
-        },
-        {
-            value: 'ACTIVE',
-            labelKey: 'admin.mailMarketing.subscriberStatus.ACTIVE',
-        },
-        {
-            value: 'UNSUBSCRIBED',
-            labelKey: 'admin.mailMarketing.subscriberStatus.UNSUBSCRIBED',
-        },
-    ];
+    protected readonly statusOptions: SpaSelectOption<MailSubscriberStatus>[] =
+        [
+            {
+                value: 'PENDING_CONFIRMATION',
+                labelKey:
+                    'admin.mailMarketing.subscriberStatus.PENDING_CONFIRMATION',
+            },
+            {
+                value: 'ACTIVE',
+                labelKey: 'admin.mailMarketing.subscriberStatus.ACTIVE',
+            },
+            {
+                value: 'UNSUBSCRIBED',
+                labelKey: 'admin.mailMarketing.subscriberStatus.UNSUBSCRIBED',
+            },
+        ];
     protected readonly templateTypeOptions: SpaSelectOption<string>[] =
         this.data.templateTypes.map((templateType) => ({
             value: templateType,
@@ -111,10 +118,7 @@ export class MailSubscriberEditDialogComponent {
                 subscriber?.email ?? '',
                 [Validators.required, Validators.email],
             ],
-            status: [
-                subscriber?.status ?? 'ACTIVE',
-                [Validators.required],
-            ],
+            status: [subscriber?.status ?? 'ACTIVE', [Validators.required]],
             subscriptions: this.#fb.array([]),
         });
         if (this.data.mode === 'edit') {
@@ -146,7 +150,9 @@ export class MailSubscriberEditDialogComponent {
     }
 
     protected templateOptionsFor(index: number): SpaSelectOption<string>[] {
-        const current = this.subscriptionsArray.at(index)?.get('templateType')?.value;
+        const current = this.subscriptionsArray
+            .at(index)
+            ?.get('templateType')?.value;
         const used = new Set(
             this.subscriptionsArray.controls
                 .map((group) => group.get('templateType')?.value)
@@ -173,7 +179,7 @@ export class MailSubscriberEditDialogComponent {
         }
         const payload = this.#buildPayload();
         if (this.#hasDuplicateTemplates(payload.subscriptions)) {
-            this.#notify.warning(
+            this.#notificationService.warning(
                 'admin.mailMarketing.subscribers.messages.duplicateTemplate'
             );
             return;
@@ -183,12 +189,15 @@ export class MailSubscriberEditDialogComponent {
         const request$ =
             this.data.mode === 'create'
                 ? this.#activeService().create(payload)
-                : this.#activeService().update(this.data.subscriber!.id, payload);
+                : this.#activeService().update(
+                      this.data.subscriber!.id,
+                      payload
+                  );
 
         request$.pipe(take(1)).subscribe({
             next: () => {
                 this.isSubmittingSig.set(false);
-                this.#notify.success(
+                this.#notificationService.success(
                     this.data.mode === 'create'
                         ? 'admin.mailMarketing.subscribers.messages.created'
                         : 'admin.mailMarketing.subscribers.messages.updated'
@@ -200,7 +209,7 @@ export class MailSubscriberEditDialogComponent {
                 const errorMessage =
                     error?.error?.message ||
                     'admin.mailMarketing.subscribers.messages.saveFailed';
-                this.#notify.alert(errorMessage);
+                this.#notificationService.alert(errorMessage);
             },
         });
     }
@@ -217,11 +226,15 @@ export class MailSubscriberEditDialogComponent {
         const emailControl = this.form.get('email');
         const email =
             this.data.subscriber?.email ??
-            String(emailControl?.value ?? '').trim().toLowerCase();
+            String(emailControl?.value ?? '')
+                .trim()
+                .toLowerCase();
         const status = this.form.get('status')?.value as MailSubscriberStatus;
 
         const subscriptions = this.subscriptionsArray.controls.map((group) => ({
-            templateType: String(group.get('templateType')?.value ?? '').toUpperCase(),
+            templateType: String(
+                group.get('templateType')?.value ?? ''
+            ).toUpperCase(),
             preferredLanguage: String(
                 group.get('preferredLanguage')?.value ?? 'EN'
             ).toUpperCase(),
@@ -236,7 +249,9 @@ export class MailSubscriberEditDialogComponent {
         };
     }
 
-    #hasDuplicateTemplates(subscriptions: MailSubscriberSubscriptionVm[]): boolean {
+    #hasDuplicateTemplates(
+        subscriptions: MailSubscriberSubscriptionVm[]
+    ): boolean {
         const templateSet = new Set<string>();
         for (const subscription of subscriptions) {
             if (templateSet.has(subscription.templateType)) {
@@ -247,7 +262,9 @@ export class MailSubscriberEditDialogComponent {
         return false;
     }
 
-    #createSubscriptionGroup(subscription: MailSubscriberSubscriptionVm): FormGroup {
+    #createSubscriptionGroup(
+        subscription: MailSubscriberSubscriptionVm
+    ): FormGroup {
         return this.#fb.group({
             templateType: [subscription.templateType, [Validators.required]],
             preferredLanguage: [

@@ -182,6 +182,16 @@ export class MailSubscriberListComponent
         this.#openDialog('create');
     }
 
+    protected onExportCsv(): void {
+        const export$ = this.scopeSig() === 'platform'
+            ? this.#platformService.exportCsv()
+            : this.#tenantService.exportCsv();
+
+        export$.pipe(take(1)).subscribe({
+            error: () => this.#notify.alert('admin.mailMarketing.messages.exportFailed'),
+        });
+    }
+
     protected statusClass(status: MailSubscriberStatus): string {
         if (status === 'ACTIVE') {
             return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200';
@@ -266,8 +276,9 @@ export class MailSubscriberListComponent
         subscriber?: MailSubscriberAdminVm
     ): void {
         const dialogRef = this.#dialog.open(MailSubscriberEditDialogComponent, {
-            width: '920px',
-            maxHeight: '90vh',
+            width: '760px',
+            maxWidth: 'calc(100vw - 2rem)',
+            maxHeight: '82vh',
             panelClass: 'spa-compact-dialog',
             disableClose: true,
             data: {

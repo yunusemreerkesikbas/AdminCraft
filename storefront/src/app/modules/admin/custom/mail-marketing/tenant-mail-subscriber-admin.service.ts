@@ -1,17 +1,13 @@
 import { Injectable } from '@angular/core';
-import { CrudEndpoints, CrudHttpService } from '@core/crud';
-import {
-    MailSubscriberAdminVm,
-    UpsertMailSubscriberPayload,
-} from './mail-marketing.types';
+import { EndpointKey } from '@modules/admin/api-endpoints';
+import { CrudEndpoints } from '@core/crud';
+import { BaseMailSubscriberAdminService } from './base-mail-subscriber-admin.service';
 
 @Injectable({ providedIn: 'root' })
-export class TenantMailSubscriberAdminService extends CrudHttpService<
-    MailSubscriberAdminVm,
-    UpsertMailSubscriberPayload,
-    UpsertMailSubscriberPayload
-> {
-    protected endpoints: CrudEndpoints = {
+export class TenantMailSubscriberAdminService extends BaseMailSubscriberAdminService {
+    protected override readonly exportEndpointKey: EndpointKey = 'mailSubscribersExport';
+
+    protected override endpoints: CrudEndpoints = {
         list: 'mailSubscribersAdmin',
         getById: 'mailSubscriberAdminById',
         create: 'mailSubscribersAdmin',

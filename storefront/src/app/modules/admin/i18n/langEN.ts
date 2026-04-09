@@ -2483,9 +2483,13 @@ export const langEN = {
             },
             sections: {
                 templates: 'Templates',
+                templateContent: 'Template Content',
                 provider: 'Provider Configuration',
                 campaign: 'Campaign Send',
-                lastCampaign: 'Latest Campaign Status',
+                sendCampaign: 'Send Campaign',
+                lastCampaign: 'Last Campaign',
+                campaignHistory: 'Campaign History',
+                campaignOutbox: 'Campaign Outbox',
                 subscribers: 'Subscribers',
             },
             fields: {
@@ -2521,6 +2525,8 @@ export const langEN = {
                 serverToken: 'Leave empty to keep current token',
             },
             actions: {
+                save: 'Save',
+                refresh: 'Refresh',
                 saveTemplate: 'Save Template',
                 saveProvider: 'Save Provider',
                 sendCampaign: 'Send Campaign',
@@ -2528,6 +2534,7 @@ export const langEN = {
                 refreshSubscribers: 'Refresh Subscribers',
                 manageSubscribers: 'Manage Subscribers',
                 openDetail: 'Open Detail',
+                exportCsv: 'Export CSV',
             },
             subscribers: {
                 tenantTitle: 'Tenant Subscribers',
@@ -2565,11 +2572,32 @@ export const langEN = {
                 },
             },
             status: {
+                active: 'Active',
+                inactive: 'Inactive',
                 DRAFT: 'Draft',
                 SENDING: 'Sending',
                 COMPLETED: 'Completed',
                 COMPLETED_WITH_ERRORS: 'Completed with Errors',
                 FAILED: 'Failed',
+            },
+            campaignStatus: {
+                DRAFT: 'Draft',
+                SENDING: 'Sending',
+                COMPLETED: 'Completed',
+                COMPLETED_WITH_ERRORS: 'Completed with Errors',
+                FAILED: 'Failed',
+            },
+            campaign: {
+                selectLanguage: 'Select campaign language',
+                total: 'Total',
+                sent: 'Sent',
+                failed: 'Failed',
+                noCampaigns: 'No campaigns sent yet',
+                outbox: {
+                    failedEmails: 'Failed Emails',
+                    noFailures: 'All emails were sent successfully',
+                    loadError: 'Failed to load outbox details',
+                },
             },
             subscriberStatus: {
                 PENDING_CONFIRMATION: 'Pending Confirmation',
@@ -2589,6 +2617,7 @@ export const langEN = {
                 subscribersLoadFailed: 'Failed to load subscribers',
                 noSubscribers: 'No subscribers found yet',
                 templatesLoadFailed: 'Failed to load template types',
+                exportFailed: 'CSV export failed',
                 noTemplates: 'No template type found',
                 noTemplatesHint: 'Template types will appear here after initialization',
                 backend: {

@@ -61,6 +61,17 @@ export interface MailCampaignVm {
     totalCount: number;
     sentCount: number;
     failedCount: number;
+    createdAt?: string | null;
+}
+
+export type MailOutboxStatus = 'PROCESSING' | 'SENT' | 'FAILED';
+
+export interface MailOutboxEntryVm {
+    id: number;
+    toEmail: string;
+    status: MailOutboxStatus;
+    errorMessage?: string | null;
+    providerMessageId?: string | null;
 }
 
 export interface MailSubscriberVm {

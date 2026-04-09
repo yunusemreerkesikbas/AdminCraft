@@ -1,211 +1,390 @@
-<div class="flex min-h-full w-full flex-col">
-    <admin-page-header
-        [title]="'admin.mailMarketing.platform.detailTitle' | transloco"
-        [subtitle]="'admin.mailMarketing.platform.detailSubtitle' | transloco"
-    >
-        <div actions>
-            <button mat-stroked-button (click)="onBack()">
-                <mat-icon>arrow_back</mat-icon>
-                {{ 'admin.common.back' | transloco }}
-            </button>
-        </div>
-    </admin-page-header>
-
-    <div class="-mt-px flex-auto border-t pb-8 pt-4 sm:pt-6">
-        <div class="mx-auto w-full max-w-screen-xl px-6 sm:px-8">
-            @if (loadingSig()) {
-                <div class="flex h-64 items-center justify-center">
-                    <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-                </div>
-            } @else {
-                <div class="rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-800">
-                    <div class="mb-4 flex items-center justify-between gap-4">
-                        <h3 class="text-lg font-semibold">
-                            {{ detailSig()?.templateType }}
-                        </h3>
-                        <span class="text-sm text-secondary">
-                            {{ 'admin.mailMarketing.fields.subscriberCount' | transloco }}:
-                            {{ detailSig()?.subscriberCount ?? 0 }}
-                        </span>
-                    </div>
-
-                    <mat-tab-group (selectedIndexChange)="onLanguageTabChange($event)">
-                        <mat-tab label="TR">
-                            <form [formGroup]="trForm" class="mt-4 space-y-4">
-                                <spa-input
-                                    [label]="'admin.mailMarketing.fields.subject' | transloco"
-                                    [placeholder]="'admin.mailMarketing.placeholders.subject' | transloco"
-                                    formControlName="subject"
-                                ></spa-input>
-                                <spa-textarea
-                                    [label]="'admin.mailMarketing.fields.content' | transloco"
-                                    [placeholder]="'admin.mailMarketing.placeholders.content' | transloco"
-                                    [rows]="10"
-                                    formControlName="content"
-                                ></spa-textarea>
-                                <mat-slide-toggle formControlName="active" color="primary">
-                                    {{ 'admin.mailMarketing.fields.active' | transloco }}
-                                </mat-slide-toggle>
-                            </form>
-
-                            <div class="mt-4 flex flex-wrap justify-end gap-3">
-                                <button
-                                    mat-flat-button
-                                    color="primary"
-                                    (click)="onSaveTranslation('TR')"
-                                    [disabled]="savingLanguageSig() === 'TR' || trForm.invalid"
-                                >
-                                    <mat-icon>save</mat-icon>
-                                    {{ 'admin.mailMarketing.actions.saveTemplate' | transloco }}
-                                </button>
-                                <button
-                                    mat-stroked-button
-                                    color="primary"
-                                    (click)="onSendCampaign('TR')"
-                                    [disabled]="sendingCampaignSig()"
-                                >
-                                    <mat-icon>send</mat-icon>
-                                    {{ 'admin.mailMarketing.actions.sendCampaign' | transloco }}
-                                </button>
-                            </div>
-                        </mat-tab>
-
-                        <mat-tab label="EN">
-                            <form [formGroup]="enForm" class="mt-4 space-y-4">
-                                <spa-input
-                                    [label]="'admin.mailMarketing.fields.subject' | transloco"
-                                    [placeholder]="'admin.mailMarketing.placeholders.subject' | transloco"
-                                    formControlName="subject"
-                                ></spa-input>
-                                <spa-textarea
-                                    [label]="'admin.mailMarketing.fields.content' | transloco"
-                                    [placeholder]="'admin.mailMarketing.placeholders.content' | transloco"
-                                    [rows]="10"
-                                    formControlName="content"
-                                ></spa-textarea>
-                                <mat-slide-toggle formControlName="active" color="primary">
-                                    {{ 'admin.mailMarketing.fields.active' | transloco }}
-                                </mat-slide-toggle>
-                            </form>
-
-                            <div class="mt-4 flex flex-wrap justify-end gap-3">
-                                <button
-                                    mat-flat-button
-                                    color="primary"
-                                    (click)="onSaveTranslation('EN')"
-                                    [disabled]="savingLanguageSig() === 'EN' || enForm.invalid"
-                                >
-                                    <mat-icon>save</mat-icon>
-                                    {{ 'admin.mailMarketing.actions.saveTemplate' | transloco }}
-                                </button>
-                                <button
-                                    mat-stroked-button
-                                    color="primary"
-                                    (click)="onSendCampaign('EN')"
-                                    [disabled]="sendingCampaignSig()"
-                                >
-                                    <mat-icon>send</mat-icon>
-                                    {{ 'admin.mailMarketing.actions.sendCampaign' | transloco }}
-                                </button>
-                            </div>
-                        </mat-tab>
-                    </mat-tab-group>
-                </div>
-
-                @if (lastCampaignSig(); as campaign) {
-                    <div class="mt-6 rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-800">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <h3 class="text-lg font-semibold">
-                                {{ 'admin.mailMarketing.sections.lastCampaign' | transloco }}
-                            </h3>
-                            <button mat-stroked-button (click)="onRefreshCampaign()">
-                                <mat-icon>refresh</mat-icon>
-                                {{ 'admin.mailMarketing.actions.refreshCampaign' | transloco }}
-                            </button>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
-                            <div>
-                                <p class="text-xs text-secondary">{{ 'admin.mailMarketing.fields.status' | transloco }}</p>
-                                <span
-                                    class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
-                                    [ngClass]="getCampaignStatusClass(campaign.status)"
-                                >
-                                    {{ ('admin.mailMarketing.status.' + campaign.status) | transloco }}
-                                </span>
-                            </div>
-                            <div>
-                                <p class="text-xs text-secondary">{{ 'admin.mailMarketing.fields.totalCount' | transloco }}</p>
-                                <p class="text-base font-semibold">{{ campaign.totalCount }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-secondary">{{ 'admin.mailMarketing.fields.sentCount' | transloco }}</p>
-                                <p class="text-base font-semibold text-green-600 dark:text-green-300">{{ campaign.sentCount }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-secondary">{{ 'admin.mailMarketing.fields.failedCount' | transloco }}</p>
-                                <p class="text-base font-semibold text-red-600 dark:text-red-300">{{ campaign.failedCount }}</p>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <div class="mt-6 rounded-lg border bg-white p-6 shadow-sm dark:bg-gray-800">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <h3 class="text-lg font-semibold">
-                            {{ 'admin.mailMarketing.sections.subscribers' | transloco }}
-                        </h3>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <button mat-flat-button color="primary" (click)="onManageSubscribers()">
-                                <mat-icon>manage_accounts</mat-icon>
-                                {{ 'admin.mailMarketing.actions.manageSubscribers' | transloco }}
-                            </button>
-                            <button mat-stroked-button (click)="onRefreshSubscribers()">
-                                <mat-icon>refresh</mat-icon>
-                                {{ 'admin.mailMarketing.actions.refreshSubscribers' | transloco }}
-                            </button>
-                        </div>
-                    </div>
-
-                    @if (subscribersSig().length === 0) {
-                        <div class="mt-4 rounded-lg border border-dashed p-6 text-center text-secondary">
-                            {{ 'admin.mailMarketing.messages.noSubscribers' | transloco }}
-                        </div>
-                    } @else {
-                        <div class="mt-4 overflow-x-auto">
-                            <table class="w-full min-w-[720px] text-left text-sm">
-                                <thead class="bg-gray-50 dark:bg-gray-900/40">
-                                    <tr>
-                                        <th class="px-3 py-2 font-medium">{{ 'admin.mailMarketing.fields.email' | transloco }}</th>
-                                        <th class="px-3 py-2 font-medium">{{ 'admin.mailMarketing.fields.status' | transloco }}</th>
-                                        <th class="px-3 py-2 font-medium">{{ 'admin.mailMarketing.fields.source' | transloco }}</th>
-                                        <th class="px-3 py-2 font-medium">{{ 'admin.mailMarketing.fields.preferredLanguage' | transloco }}</th>
-                                        <th class="px-3 py-2 font-medium">{{ 'admin.mailMarketing.fields.createdAt' | transloco }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y">
-                                    @for (subscriber of subscribersSig(); track subscriber.id) {
-                                        <tr>
-                                            <td class="px-3 py-2">{{ subscriber.email }}</td>
-                                            <td class="px-3 py-2">
-                                                <span
-                                                    class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
-                                                    [ngClass]="getSubscriberStatusClass(subscriber.status)"
-                                                >
-                                                    {{ ('admin.mailMarketing.subscriberStatus.' + subscriber.status) | transloco }}
-                                                </span>
-                                            </td>
-                                            <td class="px-3 py-2">{{ subscriber.source || '-' }}</td>
-                                            <td class="px-3 py-2">{{ subscriber.preferredLanguage || '-' }}</td>
-                                            <td class="px-3 py-2">{{ subscriber.createdAt | date: 'short' }}</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                </div>
+<div class="bg-card flex min-w-0 flex-auto flex-col dark:bg-transparent">
+    <!-- Header -->
+    <div class="flex flex-shrink-0 items-center border-b px-6 py-4">
+        <button mat-icon-button (click)="onBack()">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="ml-2 min-w-0 flex-1">
+            <h2 class="truncate text-lg font-semibold leading-tight">
+                {{ templateTypeSig() }}
+            </h2>
+            @if (detailSig(); as detail) {
+                <p class="flex items-center gap-1.5 text-sm text-secondary">
+                    <mat-icon class="icon-size-4">group</mat-icon>
+                    {{ detail.subscriberCount }}
+                    {{
+                        'admin.mailMarketing.fields.subscriberCount'
+                            | transloco
+                    }}
+                </p>
             }
         </div>
+        <button
+            mat-stroked-button
+            class="ml-4 flex-shrink-0"
+            (click)="onManageSubscribers()"
+        >
+            <mat-icon>people</mat-icon>
+            {{ 'admin.mailMarketing.actions.manageSubscribers' | transloco }}
+        </button>
     </div>
+
+    <!-- Body -->
+    @if (loadingSig()) {
+        <div class="flex flex-1 items-center justify-center p-12">
+            <mat-icon class="animate-spin text-secondary">refresh</mat-icon>
+        </div>
+    } @else {
+        <div class="flex flex-auto flex-col overflow-y-auto">
+            <div class="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
+                <!-- Left: Template Editor -->
+                <div class="lg:col-span-2">
+                    <div
+                        class="rounded-xl border bg-card p-6 dark:bg-transparent"
+                    >
+                        <h3
+                            class="mb-4 text-sm font-semibold uppercase tracking-wider text-secondary"
+                        >
+                            {{
+                                'admin.mailMarketing.sections.templateContent'
+                                    | transloco
+                            }}
+                        </h3>
+
+                        <!-- Language pill toggle -->
+                        <div
+                            class="mb-5 inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800"
+                        >
+                            @for (lang of ['TR', 'EN']; track lang) {
+                                <button
+                                    type="button"
+                                    class="rounded-md px-5 py-1.5 text-sm font-medium transition-all"
+                                    [ngClass]="
+                                        selectedLanguageSig() === lang
+                                            ? 'bg-white text-default shadow-sm dark:bg-slate-700 dark:text-white'
+                                            : 'text-secondary hover:text-default'
+                                    "
+                                    (click)="
+                                        onLanguageToggle(
+                                            lang === 'TR' ? 'TR' : 'EN'
+                                        )
+                                    "
+                                >
+                                    {{ lang }}
+                                </button>
+                            }
+                        </div>
+
+                        <!-- TR Form -->
+                        @if (selectedLanguageSig() === 'TR') {
+                            <div [formGroup]="trForm" class="space-y-4">
+                                <spa-input
+                                    formControlName="subject"
+                                    [label]="
+                                        'admin.mailMarketing.fields.subject'
+                                            | transloco
+                                    "
+                                ></spa-input>
+                                <spa-textarea
+                                    formControlName="content"
+                                    [label]="
+                                        'admin.mailMarketing.fields.content'
+                                            | transloco
+                                    "
+                                    [rows]="10"
+                                    [useRichText]="true"
+                                ></spa-textarea>
+                                <div
+                                    class="flex items-center justify-between pt-1"
+                                >
+                                    <mat-slide-toggle
+                                        formControlName="active"
+                                        color="primary"
+                                    >
+                                        {{
+                                            'admin.mailMarketing.fields.active'
+                                                | transloco
+                                        }}
+                                    </mat-slide-toggle>
+                                    <button
+                                        mat-flat-button
+                                        color="primary"
+                                        [disabled]="
+                                            trForm.pristine ||
+                                            trForm.invalid ||
+                                            savingLanguageSig() === 'TR'
+                                        "
+                                        (click)="onSaveTranslation('TR')"
+                                    >
+                                        @if (savingLanguageSig() === 'TR') {
+                                            <mat-icon class="animate-spin"
+                                                >refresh</mat-icon
+                                            >
+                                        } @else {
+                                            <mat-icon>save</mat-icon>
+                                        }
+                                        {{
+                                            'admin.mailMarketing.actions.save'
+                                                | transloco
+                                        }}
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- EN Form -->
+                        @if (selectedLanguageSig() === 'EN') {
+                            <div [formGroup]="enForm" class="space-y-4">
+                                <spa-input
+                                    formControlName="subject"
+                                    [label]="
+                                        'admin.mailMarketing.fields.subject'
+                                            | transloco
+                                    "
+                                ></spa-input>
+                                <spa-textarea
+                                    formControlName="content"
+                                    [label]="
+                                        'admin.mailMarketing.fields.content'
+                                            | transloco
+                                    "
+                                    [rows]="10"
+                                    [useRichText]="true"
+                                ></spa-textarea>
+                                <div
+                                    class="flex items-center justify-between pt-1"
+                                >
+                                    <mat-slide-toggle
+                                        formControlName="active"
+                                        color="primary"
+                                    >
+                                        {{
+                                            'admin.mailMarketing.fields.active'
+                                                | transloco
+                                        }}
+                                    </mat-slide-toggle>
+                                    <button
+                                        mat-flat-button
+                                        color="primary"
+                                        [disabled]="
+                                            enForm.pristine ||
+                                            enForm.invalid ||
+                                            savingLanguageSig() === 'EN'
+                                        "
+                                        (click)="onSaveTranslation('EN')"
+                                    >
+                                        @if (savingLanguageSig() === 'EN') {
+                                            <mat-icon class="animate-spin"
+                                                >refresh</mat-icon
+                                            >
+                                        } @else {
+                                            <mat-icon>save</mat-icon>
+                                        }
+                                        {{
+                                            'admin.mailMarketing.actions.save'
+                                                | transloco
+                                        }}
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Right: Sidebar -->
+                <div class="flex flex-col gap-4 lg:col-span-1">
+                    <!-- Send Campaign Card -->
+                    <div
+                        class="rounded-xl border bg-card p-5 dark:bg-transparent"
+                    >
+                        <h3
+                            class="mb-3 text-sm font-semibold uppercase tracking-wider text-secondary"
+                        >
+                            {{
+                                'admin.mailMarketing.sections.sendCampaign'
+                                    | transloco
+                            }}
+                        </h3>
+                        <button
+                            mat-flat-button
+                            color="primary"
+                            class="w-full"
+                            [disabled]="sendingCampaignSig()"
+                            (click)="onSendCampaign()"
+                        >
+                            @if (sendingCampaignSig()) {
+                                <mat-icon class="animate-spin"
+                                    >refresh</mat-icon
+                                >
+                            } @else {
+                                <mat-icon>send</mat-icon>
+                            }
+                            {{
+                                'admin.mailMarketing.actions.sendCampaign'
+                                    | transloco
+                            }}
+                        </button>
+                    </div>
+
+                    <!-- Last Campaign Card -->
+                    @if (lastCampaignSig(); as campaign) {
+                        <div
+                            class="rounded-xl border bg-card p-5 dark:bg-transparent"
+                        >
+                            <div class="mb-3 flex items-center justify-between">
+                                <h3
+                                    class="text-sm font-semibold uppercase tracking-wider text-secondary"
+                                >
+                                    {{
+                                        'admin.mailMarketing.sections.lastCampaign'
+                                            | transloco
+                                    }}
+                                </h3>
+                                <button
+                                    mat-icon-button
+                                    (click)="onRefreshCampaign()"
+                                >
+                                    <mat-icon class="icon-size-4"
+                                        >refresh</mat-icon
+                                    >
+                                </button>
+                            </div>
+
+                            <span
+                                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                                [ngClass]="
+                                    getCampaignStatusClass(campaign.status)
+                                "
+                            >
+                                {{
+                                    'admin.mailMarketing.campaignStatus.' +
+                                        campaign.status | transloco
+                                }}
+                            </span>
+
+                            <!-- Progress bar -->
+                            <div class="mt-4">
+                                <div
+                                    class="mb-1.5 flex items-center justify-between text-xs text-secondary"
+                                >
+                                    <span
+                                        >{{ campaign.sentCount }} /
+                                        {{ campaign.totalCount }}</span
+                                    >
+                                    <span>{{ sentPercentSig() }}%</span>
+                                </div>
+                                <div
+                                    class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700"
+                                >
+                                    <div
+                                        class="h-2 rounded-full bg-green-500 transition-all duration-500"
+                                        [style.width.%]="sentPercentSig()"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="mt-4 grid grid-cols-2 gap-3">
+                                <div
+                                    class="rounded-lg bg-green-50 p-3 dark:bg-green-900/20"
+                                >
+                                    <p class="text-xs text-secondary">
+                                        {{
+                                            'admin.mailMarketing.campaign.sent'
+                                                | transloco
+                                        }}
+                                    </p>
+                                    <p
+                                        class="text-xl font-bold text-green-600 dark:text-green-400"
+                                    >
+                                        {{ campaign.sentCount }}
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg bg-red-50 p-3 dark:bg-red-900/20"
+                                >
+                                    <p class="text-xs text-secondary">
+                                        {{
+                                            'admin.mailMarketing.campaign.failed'
+                                                | transloco
+                                        }}
+                                    </p>
+                                    <p
+                                        class="text-xl font-bold text-red-600 dark:text-red-400"
+                                    >
+                                        {{ campaign.failedCount }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Campaign History Card -->
+                    <div
+                        class="rounded-xl border bg-card p-5 dark:bg-transparent"
+                    >
+                        <h3
+                            class="mb-3 text-sm font-semibold uppercase tracking-wider text-secondary"
+                        >
+                            {{
+                                'admin.mailMarketing.sections.campaignHistory'
+                                    | transloco
+                            }}
+                        </h3>
+
+                        @if (campaignHistorySig().length === 0) {
+                            <p class="text-sm text-secondary">
+                                {{
+                                    'admin.mailMarketing.campaign.noCampaigns'
+                                        | transloco
+                                }}
+                            </p>
+                        } @else {
+                            <div class="space-y-2">
+                                @for (
+                                    campaign of campaignHistorySig();
+                                    track campaign.id
+                                ) {
+                                    <button
+                                        type="button"
+                                        class="flex w-full items-center gap-2 rounded-lg border p-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                        (click)="onOpenOutboxDialog(campaign)"
+                                    >
+                                        <span
+                                            class="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-semibold"
+                                            [ngClass]="
+                                                getCampaignStatusClass(
+                                                    campaign.status
+                                                )
+                                            "
+                                        >
+                                            {{
+                                                'admin.mailMarketing.campaignStatus.' +
+                                                    campaign.status | transloco
+                                            }}
+                                        </span>
+                                        @if (campaign.createdAt) {
+                                            <span
+                                                class="text-xs text-secondary"
+                                            >
+                                                {{
+                                                    campaign.createdAt
+                                                        | date: 'd MMM yyyy'
+                                                }}
+                                            </span>
+                                        }
+                                        <span class="ml-auto flex gap-2 text-xs">
+                                            <span class="text-green-600 dark:text-green-400">✓{{ campaign.sentCount }}</span>
+                                            <span class="text-red-600 dark:text-red-400">✗{{ campaign.failedCount }}</span>
+                                        </span>
+                                        <mat-icon class="icon-size-4 text-secondary">chevron_right</mat-icon>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
