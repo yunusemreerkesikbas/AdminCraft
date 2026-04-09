@@ -1,7 +1,6 @@
 package com.backend.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -136,7 +135,7 @@ class PlatformPublicNewsletterControllerTest {
                 .content("""
                         {"email":"t@example.com","source":"LANDING_NEWSLETTER","templateType":"NEWSLETTER_DEFAULT","locale":"en","honeypot":"","formStartedAt":1700000000000}
                         """))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.result").value("ERROR"))
                 .andExpect(jsonPath("$.message").value("Subscription confirmation email could not be sent. Please try again."));
     }

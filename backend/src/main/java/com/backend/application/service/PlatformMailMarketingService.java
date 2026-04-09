@@ -67,6 +67,7 @@ public class PlatformMailMarketingService {
     private static final List<String> FIXED_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
     private static final List<String> SUBSCRIBABLE_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
     private static final long MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS = 1000L;
+    private static final long MAX_PUBLIC_SUBSCRIBE_AGE_MS = 3_600_000L;
 
     private final PlatformEmailTemplateRepository templateRepository;
     private final PlatformNewsletterSubscriberRepository subscriberRepository;
@@ -330,7 +331,7 @@ public class PlatformMailMarketingService {
             throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
         }
         long elapsedMs = System.currentTimeMillis() - formStartedAt;
-        if (elapsedMs < MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS) {
+        if (elapsedMs < MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS || elapsedMs > MAX_PUBLIC_SUBSCRIBE_AGE_MS) {
             throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
         }
     }
@@ -347,15 +348,17 @@ public class PlatformMailMarketingService {
                 .orElseGet(PlatformNewsletterSubscriber::new);
 
         subscriber.setEmail(normalizedEmail);
-        subscriber.setStatus(MailSubscriberStatus.ACTIVE);
-        subscriber.setConfirmedAt(java.time.LocalDateTime.now());
+        if (subscriber.getStatus() != MailSubscriberStatus.ACTIVE) {
+            subscriber.setStatus(MailSubscriberStatus.ACTIVE);
+            subscriber.setConfirmedAt(java.time.LocalDateTime.now());
+            subscriber.setUnsubscribedAt(null);
+        }
         subscriber.setConfirmToken(null);
-        subscriber.setUnsubscribedAt(null);
         if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
             subscriber.setUnsubscribeToken(UUID.randomUUID().toString());
         }
         PlatformNewsletterSubscriber saved = subscriberRepository.save(subscriber);
-        upsertTemplateSubscription(saved, VERSION_UPGRADE, "TENANT_ONBOARDING", normalizedLang);
+        upsertTemplateSubscription(saved, VERSION_UPGRADE, "TENANT_ONBOARDING", normalizedLang, Boolean.TRUE);
     }
 
     public void sendDemoRequestConfirmation(String email, String fullName, String locale) {
@@ -482,7 +485,7 @@ public class PlatformMailMarketingService {
         int finalFailed = failed;
         return tx.execute(status -> {
             PlatformMailCampaign campaign = campaignRepository.findById(setup.campaignId())
-                .orElseThrow(() -> new IllegalStateException("Campaign not found after send"));
+                .orElseThrow(() -> new IllegalStateException("mail.marketing.campaign.not.found"));
             campaign.setSentCount(finalSent);
             campaign.setFailedCount(finalFailed);
             campaign.setStatus(finalFailed > 0 ? MailCampaignStatus.COMPLETED_WITH_ERRORS : MailCampaignStatus.COMPLETED);

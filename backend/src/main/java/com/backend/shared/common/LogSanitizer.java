@@ -26,7 +26,7 @@ public final class LogSanitizer {
             return local.charAt(0) + "***" + domain;
         }
 
-        int visibleStart = Math.min(3, local.length());
+        int visibleStart = Math.min(2, local.length());
         int visibleEnd = Math.min(2, local.length() - visibleStart);
         String start = local.substring(0, visibleStart);
         String end = visibleEnd > 0 ? local.substring(local.length() - visibleEnd) : "";

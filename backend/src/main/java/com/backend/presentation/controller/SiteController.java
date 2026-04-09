@@ -138,7 +138,7 @@ public class SiteController {
             }
         } catch (Exception ex) {
             log.error("Error getting site by id {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("site.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.get.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -160,7 +160,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(sites));
         } catch (Exception ex) {
             log.error("Error getting all sites: {}", ex.getMessage());
-            String message = messageSource.getMessage("site.list.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.list.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -214,7 +214,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
             log.error("Error deleting site {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("site.delete.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.delete.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
@@ -358,9 +358,13 @@ public class SiteController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error(message));
             }
+        } catch (IllegalArgumentException ex) {
+            String message = messageSource.getMessage("site.get.error", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.badRequest().body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error getting site by domain {}: {}", domain, ex.getMessage());
-            String message = messageSource.getMessage("site.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.get.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));

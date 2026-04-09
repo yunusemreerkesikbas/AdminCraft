@@ -127,8 +127,7 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
         com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription target =
                 source.getId() == null
                         ? new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription()
-                        : jpaRepository.findById(source.getId())
-                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription::new);
+                        : jpaRepository.getReferenceById(source.getId());
         target.setId(source.getId());
         target.setSubscriber(toSubscriberReference(source.getSubscriber()));
         target.setTemplateKey(source.getTemplateKey());

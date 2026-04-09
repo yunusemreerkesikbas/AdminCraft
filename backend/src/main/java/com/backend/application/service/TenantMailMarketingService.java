@@ -39,7 +39,7 @@ import com.backend.domain.enums.MailCampaignStatus;
 import com.backend.domain.enums.MailOutboxStatus;
 import com.backend.domain.enums.MailSubscriberStatus;
 import com.backend.domain.enums.ModuleCode;
-import com.backend.domain.port.ConsoleMailSenderPort;
+import com.backend.application.port.ConsoleMailSenderPort;
 import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailConfigPort;

@@ -272,9 +272,11 @@ public class TenantMailMarketingController {
     @GetMapping("/campaigns")
     public ResponseEntity<ApiResponse<List<MailCampaignDto>>> getCampaignList(
             @RequestParam String templateType,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "5") @Min(1) @Max(50) int size) {
         try {
             return ResponseEntity.ok(ApiResponse.success(null, service.getCampaignList(templateType, size)));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
         }
@@ -298,19 +300,29 @@ public class TenantMailMarketingController {
     public ResponseEntity<ApiResponse<List<MailOutboxEntryDto>>> getCampaignOutbox(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(ApiResponse.success(null, service.getOutboxEntries(id)));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
         }
     }
 
     @GetMapping("/subscribers/admin/export")
-    public ResponseEntity<byte[]> exportSubscribers(@RequestParam(required = false) String templateType) {
-        String csv = service.exportSubscribersCsv(templateType);
-        String filename = "subscribers" + (templateType != null ? "-" + templateType.toLowerCase() : "") + ".csv";
-        return ResponseEntity.ok()
-            .header("Content-Type", "text/csv; charset=UTF-8")
-            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-            .body(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
+    public ResponseEntity<?> exportSubscribers(@RequestParam(required = false) String templateType) {
+        try {
+            String csv = service.exportSubscribersCsv(templateType);
+            String safeName = templateType != null ? templateType.replaceAll("[^a-zA-Z0-9_\\-]", "").toLowerCase() : "";
+            String filename = "subscribers" + (safeName.isBlank() ? "" : "-" + safeName) + ".csv";
+            return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
+        }
     }
 
     private String message(String key) {

@@ -167,7 +167,7 @@ public class UserController {
                         }
                 } catch (Exception ex) {
                         log.error("Error getting user", ex);
-                        String message = messageSource.getMessage("user.get.error", new Object[] { ex.getMessage() },
+                        String message = messageSource.getMessage("user.get.error", null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));
@@ -205,9 +205,13 @@ public class UserController {
                                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                                 .body(ApiResponse.error(message));
                         }
+                } catch (IllegalArgumentException ex) {
+                        String message = messageSource.getMessage("user.get.error", null,
+                                        Locale.forLanguageTag(languageCode));
+                        return ResponseEntity.badRequest().body(ApiResponse.error(message));
                 } catch (Exception ex) {
                         log.error("Error getting user by email", ex);
-                        String message = messageSource.getMessage("user.get.error", new Object[] { ex.getMessage() },
+                        String message = messageSource.getMessage("user.get.error", null,
                                         Locale.forLanguageTag(languageCode));
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                         .body(ApiResponse.error(message));

@@ -1,8 +1,7 @@
 package com.backend.presentation.controller;
 
-import java.util.Locale;
-
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,6 +69,10 @@ public class NavigationController {
 
   private final MessageSource messageSource;
 
+  private String message(String key) {
+    return messageSource.getMessage(key, null, key, LocaleContextHolder.getLocale());
+  }
+
   // ==================== Node Endpoints ====================
 
   @GetMapping("/nodes")
@@ -85,8 +87,7 @@ public class NavigationController {
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
       @RequestParam(required = false) String sort,
-      @RequestParam(required = false) String search,
-      @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
+      @RequestParam(required = false) String search) {
 
     try {
       String effectiveSort = SortParseUtil.getEffectiveSortCode(sort,
@@ -104,16 +105,11 @@ public class NavigationController {
 
       return ResponseEntity.ok(ApiResponse.success(response));
     } catch (IllegalArgumentException ex) {
-      String message = messageSource.getMessage("navigation.sort.invalid",
-          new Object[] { ex.getMessage() },
-          Locale.forLanguageTag(languageCode));
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(ApiResponse.error(message));
+          .body(ApiResponse.error(message("navigation.sort.invalid")));
     } catch (Exception ex) {
-      String message = messageSource.getMessage("navigation.list.error", new Object[] { ex.getMessage() },
-          Locale.forLanguageTag(languageCode));
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(ApiResponse.error(message));
+          .body(ApiResponse.error(message("navigation.list.error")));
     }
   }
 
@@ -129,7 +125,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id) {
     return navigationService.getNodeById(id)
         .map(node -> ResponseEntity.ok(ApiResponse.success(node)))
-        .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation node not found")));
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(message("navigation.node.not.found"))));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -145,7 +141,7 @@ public class NavigationController {
       @Valid @RequestBody CreateNodeRequest request) {
     NavigationNodeResponse node = navigationService.createRootNode(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Navigation node created successfully", node));
+        .body(ApiResponse.success(message("navigation.node.created"), node));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -162,7 +158,7 @@ public class NavigationController {
       @Valid @RequestBody CreateNodeRequest request) {
     NavigationNodeResponse child = navigationService.addChildNode(id, request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Child node added successfully", child));
+        .body(ApiResponse.success(message("navigation.node.child.added"), child));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -178,7 +174,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody UpdateNodeRequest request) {
     NavigationNodeResponse node = navigationService.updateNode(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Navigation node updated successfully", node));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.node.updated"), node));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -193,7 +189,7 @@ public class NavigationController {
   public ResponseEntity<ApiResponse<Void>> deleteNode(
       @PathVariable @NotNull @Min(1) Long id) {
     navigationService.deleteNode(id);
-    return ResponseEntity.ok(ApiResponse.success("Navigation node deleted successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.node.deleted"), null));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -209,7 +205,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody ReorderRequest<Long> request) {
     navigationService.reorderChildren(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Children reordered successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.reorder.success"), null));
   }
 
   @GetMapping("/nodes/{id}/i18n/{language}")
@@ -240,7 +236,7 @@ public class NavigationController {
       @PathVariable @NotNull Language language,
       @Valid @RequestBody NavigationNodeI18nRequest request) {
     NavigationNodeI18nResponse response = navigationI18nService.upsertNodeI18n(id, language, request);
-    return ResponseEntity.ok(ApiResponse.success("Node i18n updated successfully", response));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.node.i18n.updated"), response));
   }
 
   @GetMapping("/nodes/{id}/composite")
@@ -255,7 +251,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id) {
     return navigationService.getNodeComposite(id)
         .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
-        .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation node not found")));
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(message("navigation.node.not.found"))));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -271,7 +267,7 @@ public class NavigationController {
       @Valid @RequestBody CreateNodeCompositeRequest request) {
     NavigationNodeCompositeResponse response = navigationService.createNodeComposite(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Node created with translations", response));
+        .body(ApiResponse.success(message("navigation.composite.node.created"), response));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -287,7 +283,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody UpdateNodeCompositeRequest request) {
     NavigationNodeCompositeResponse response = navigationService.updateNodeComposite(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Node updated with translations", response));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.composite.node.updated"), response));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -303,7 +299,7 @@ public class NavigationController {
       @Valid @RequestBody CreateEntryRequest request) {
     NavigationEntryResponse entry = navigationService.createEntry(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Navigation entry created successfully", entry));
+        .body(ApiResponse.success(message("navigation.entry.created"), entry));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -319,7 +315,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody UpdateEntryRequest request) {
     NavigationEntryResponse entry = navigationService.updateEntry(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Navigation entry updated successfully", entry));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.entry.updated"), entry));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -334,7 +330,7 @@ public class NavigationController {
   public ResponseEntity<ApiResponse<Void>> deleteEntry(
       @PathVariable @NotNull @Min(1) Long id) {
     navigationService.deleteEntry(id);
-    return ResponseEntity.ok(ApiResponse.success("Navigation entry deleted successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.entry.deleted"), null));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -350,7 +346,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody ReorderRequest<Long> request) {
     navigationService.reorderEntries(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Entries reordered successfully", null));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.reorder.success"), null));
   }
 
   @GetMapping("/entries/{id}/i18n/{language}")
@@ -381,7 +377,7 @@ public class NavigationController {
       @PathVariable @NotNull Language language,
       @Valid @RequestBody NavigationEntryI18nRequest request) {
     NavigationEntryI18nResponse response = navigationI18nService.upsertEntryI18n(id, language, request);
-    return ResponseEntity.ok(ApiResponse.success("Entry i18n updated successfully", response));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.entry.i18n.updated"), response));
   }
 
   @GetMapping("/entries/{id}/composite")
@@ -396,7 +392,7 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id) {
     return navigationService.getEntryComposite(id)
         .map(response -> ResponseEntity.ok(ApiResponse.success(response)))
-        .orElseGet(() -> ResponseEntity.ok(ApiResponse.error("Navigation entry not found")));
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error(message("navigation.entry.not.found"))));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -412,7 +408,7 @@ public class NavigationController {
       @Valid @RequestBody CreateEntryCompositeRequest request) {
     NavigationEntryCompositeResponse response = navigationService.createEntryComposite(request);
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("Entry created with translations", response));
+        .body(ApiResponse.success(message("navigation.composite.entry.created"), response));
   }
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
@@ -428,6 +424,6 @@ public class NavigationController {
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody UpdateEntryCompositeRequest request) {
     NavigationEntryCompositeResponse response = navigationService.updateEntryComposite(id, request);
-    return ResponseEntity.ok(ApiResponse.success("Entry updated with translations", response));
+    return ResponseEntity.ok(ApiResponse.success(message("navigation.composite.entry.updated"), response));
   }
 }

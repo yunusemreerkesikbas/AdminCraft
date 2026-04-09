@@ -56,7 +56,7 @@ public class PlatformMailOutboxPersistenceAdapter implements PlatformMailOutboxR
                 source.getId() == null
                         ? new com.backend.infrastructure.persistence.platform.entity.PlatformMailOutbox()
                         : jpaRepository.findById(source.getId())
-                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformMailOutbox::new);
+                                .orElseThrow(() -> new IllegalArgumentException("mail.marketing.outbox.not.found"));
         target.setId(source.getId());
         target.setCampaign(toCampaignReference(source.getCampaign()));
         target.setToEmail(source.getToEmail());

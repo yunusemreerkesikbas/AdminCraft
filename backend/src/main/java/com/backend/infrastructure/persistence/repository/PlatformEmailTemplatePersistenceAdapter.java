@@ -42,7 +42,7 @@ public class PlatformEmailTemplatePersistenceAdapter implements PlatformEmailTem
                 template.getId() == null
                         ? new com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate()
                         : jpaRepository.findById(template.getId())
-                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate::new);
+                                .orElseThrow(() -> new IllegalArgumentException("mail.marketing.template.not.found"));
         entity.setId(template.getId());
         entity.setTemplateKey(template.getTemplateKey());
         entity.setLanguage(template.getLanguage());

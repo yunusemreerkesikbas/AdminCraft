@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.backend.application.dto.email.EmailResult;
-import com.backend.domain.port.ConsoleMailSenderPort;
+import com.backend.application.port.ConsoleMailSenderPort;
 
 import lombok.extern.slf4j.Slf4j;
 

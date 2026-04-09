@@ -1,4 +1,4 @@
-package com.backend.domain.port;
+package com.backend.application.port;
 
 import com.backend.application.dto.email.EmailResult;
 

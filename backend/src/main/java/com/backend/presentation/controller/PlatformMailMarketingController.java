@@ -232,7 +232,7 @@ public class PlatformMailMarketingController {
     @GetMapping("/campaigns")
     public ResponseEntity<ApiResponse<List<MailCampaignDto>>> getCampaignList(
             @RequestParam String templateType,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "5") @Min(1) @Max(50) int size) {
         try {
             return ResponseEntity.ok(ApiResponse.success(null, service.getCampaignList(templateType, size)));
         } catch (IllegalArgumentException ex) {
@@ -266,7 +266,8 @@ public class PlatformMailMarketingController {
     @GetMapping("/subscribers/admin/export")
     public ResponseEntity<byte[]> exportSubscribers(@RequestParam(required = false) String templateType) {
         String csv = service.exportSubscribersCsv(templateType);
-        String filename = "subscribers" + (templateType != null ? "-" + templateType.toLowerCase() : "") + ".csv";
+        String safeName = templateType != null ? templateType.replaceAll("[^a-zA-Z0-9_\\-]", "").toLowerCase() : "";
+        String filename = "subscribers" + (safeName.isBlank() ? "" : "-" + safeName) + ".csv";
         return ResponseEntity.ok()
             .header("Content-Type", "text/csv; charset=UTF-8")
             .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")

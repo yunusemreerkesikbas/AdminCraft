@@ -1,12 +1,15 @@
 package com.backend.application.dto.platform;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public record PlatformPublicNewsletterSubscribeCommand(
-    String email,
-    String source,
-    String templateType,
-    String locale,
+    @NotBlank @Email String email,
+    @NotBlank String source,
+    @NotBlank String templateType,
+    @NotBlank String locale,
     String honeypot,
-    Long formStartedAt
+    @NotNull Long formStartedAt
 ) {
 }
-

@@ -24,7 +24,7 @@ public class PlatformMailCampaignPersistenceAdapter implements PlatformMailCampa
                 campaign.getId() == null
                         ? new com.backend.infrastructure.persistence.platform.entity.PlatformMailCampaign()
                         : jpaRepository.findById(campaign.getId())
-                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformMailCampaign::new);
+                                .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
         entity.setId(campaign.getId());
         entity.setTemplate(toTemplateReference(campaign.getTemplate()));
         entity.setSubject(campaign.getSubject());

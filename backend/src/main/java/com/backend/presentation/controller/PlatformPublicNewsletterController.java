@@ -46,6 +46,9 @@ public class PlatformPublicNewsletterController {
             String messageKey = service.subscribe(request.toCommand());
             return ResponseEntity.ok(ApiResponse.success(message(messageKey), null));
         } catch (IllegalStateException ex) {
+            if ("mail.marketing.newsletter.confirm.send.failed".equals(ex.getMessage())) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ApiResponse.error(message(ex.getMessage())));
+            }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));

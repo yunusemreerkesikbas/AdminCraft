@@ -67,7 +67,7 @@ public class PlatformNewsletterSubscriberPersistenceAdapter implements PlatformN
                 subscriber.getId() == null
                         ? new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber()
                         : jpaRepository.findById(subscriber.getId())
-                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber::new);
+                                .orElseThrow(() -> new IllegalArgumentException("mail.marketing.subscriber.not.found"));
         entity.setId(subscriber.getId());
         entity.setEmail(subscriber.getEmail());
         entity.setStatus(subscriber.getStatus());
