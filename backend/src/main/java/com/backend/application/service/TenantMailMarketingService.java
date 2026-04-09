@@ -39,10 +39,10 @@ import com.backend.domain.enums.MailCampaignStatus;
 import com.backend.domain.enums.MailOutboxStatus;
 import com.backend.domain.enums.MailSubscriberStatus;
 import com.backend.domain.enums.ModuleCode;
+import com.backend.application.port.ConsoleMailSenderPort;
 import com.backend.domain.port.EncryptionServicePort;
 import com.backend.domain.port.FrontendConfigPort;
 import com.backend.domain.port.MailConfigPort;
-import com.backend.domain.port.MailSenderPort;
 import com.backend.domain.port.TenantContextPort;
 import com.backend.domain.port.TenantMailSenderPort;
 import com.backend.domain.repository.MailCampaignRepository;
@@ -51,6 +51,7 @@ import com.backend.domain.repository.MailProviderConfigRepository;
 import com.backend.domain.repository.MailTemplateRepository;
 import com.backend.domain.repository.NewsletterSubscriberRepository;
 import com.backend.domain.repository.NewsletterSubscriberSubscriptionRepository;
+import com.backend.shared.common.LogSanitizer;
 import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -79,7 +80,7 @@ public class TenantMailMarketingService {
   private final MailOutboxRepository outboxRepository;
   private final TenantModuleAccessService tenantModuleAccessService;
   private final MailConfigPort mailConfig;
-  private final MailSenderPort mailSender;
+  private final ConsoleMailSenderPort consoleMailSender;
   private final TenantMailSenderPort tenantMailSender;
   private final EncryptionServicePort encryptionService;
   private final TemplateVariableRenderer templateVariableRenderer;
@@ -277,7 +278,7 @@ public class TenantMailMarketingService {
     assertMailMarketingEnabled();
     MailProviderConfig cfg = providerConfigRepository.findTopByOrderByIdAsc().orElse(null);
     if (cfg == null) {
-      return new MailProviderConfigDto("POSTMARK", "", "", false, false);
+      return new MailProviderConfigDto("CONSOLE", "", "", false, false);
     }
     return new MailProviderConfigDto(
         cfg.getProvider(),
@@ -293,7 +294,7 @@ public class TenantMailMarketingService {
     assertMailMarketingEnabled();
     MailProviderConfig cfg = providerConfigRepository.findTopByOrderByIdAsc().orElseGet(() -> {
       MailProviderConfig m = new MailProviderConfig();
-      m.setProvider("CONSOLE");
+      m.setProvider("POSTMARK");
       m.setFromEmail(mailConfig.getFromAddress());
       m.setFromName(mailConfig.getFromName());
       return m;
@@ -306,9 +307,16 @@ public class TenantMailMarketingService {
     }
     if (serverToken != null && !serverToken.isBlank()) {
       cfg.setServerTokenEncrypted(encryptionService.encrypt(serverToken));
+      cfg.setProvider("POSTMARK");
     }
     if (active != null) {
       cfg.setIsActive(active);
+    }
+    boolean hasToken = cfg.getServerTokenEncrypted() != null && !cfg.getServerTokenEncrypted().isBlank();
+    if (!hasToken) {
+      cfg.setProvider("CONSOLE");
+    } else if (Boolean.TRUE.equals(active)) {
+      cfg.setProvider("POSTMARK");
     }
     MailProviderConfig saved = providerConfigRepository.save(cfg);
     return new MailProviderConfigDto(
@@ -338,8 +346,14 @@ public class TenantMailMarketingService {
 
     String subject = templateVariableRenderer.render(template.getSubject(), vars);
     String content = templateVariableRenderer.render(template.getContent(), vars);
-    log.info("[MAIL] {} → {} | vars={}", normalizedType, toEmail, vars.keySet());
+    log.info("[MAIL] {} dispatch requested | recipient={} | vars={}",
+        normalizedType, LogSanitizer.maskEmail(toEmail), vars.keySet());
     sendTenantEmail(toEmail, subject, content);
+  }
+
+  public EmailResult sendTenantRawContent(String toEmail, String subject, String content) {
+    assertMailMarketingEnabled();
+    return sendTenantEmail(toEmail, subject, content);
   }
 
   @Transactional
@@ -350,10 +364,11 @@ public class TenantMailMarketingService {
       throw new IllegalArgumentException("mail.marketing.template.type.invalid");
     }
     String preferredLanguage = resolvePreferredLanguageForTenant();
+    String normalizedEmail = normalizeEmail(email);
 
-    NewsletterSubscriber subscriber = subscriberRepository.findByEmailIgnoreCase(email)
+    NewsletterSubscriber subscriber = subscriberRepository.findByEmailIgnoreCase(normalizedEmail)
         .orElseGet(NewsletterSubscriber::new);
-    subscriber.setEmail(email.trim().toLowerCase());
+    subscriber.setEmail(normalizedEmail);
     subscriber.setStatus(MailSubscriberStatus.PENDING_CONFIRMATION);
     subscriber.setConfirmToken(UUID.randomUUID().toString());
     if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
@@ -447,57 +462,38 @@ public class TenantMailMarketingService {
     // own mini-tx
     int sent = 0;
     int failed = 0;
-    try {
-      for (Long outboxId : setup.outboxIds()) {
-        boolean success;
-        try {
-          success = Boolean.TRUE.equals(tx.execute(status -> {
-            MailOutbox outbox = outboxRepository.findById(outboxId).orElse(null);
-            if (outbox == null)
-              return false;
-            EmailResult result = sendTenantEmail(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
-            if (result.isSuccess()) {
-              outbox.setStatus(MailOutboxStatus.SENT);
-              outbox.setProviderMessageId(result.getMessageId());
-            } else {
-              outbox.setStatus(MailOutboxStatus.FAILED);
-              outbox.setErrorMessage(result.getErrorMessage());
-            }
-            outboxRepository.save(outbox);
-            return result.isSuccess();
-          }));
-        } catch (Throwable t) {
-          log.error("Unexpected error sending outbox id={}", outboxId, t);
-          tx.execute(status -> {
-            MailOutbox outbox = outboxRepository.findById(outboxId).orElse(null);
-            if (outbox != null) {
-              outbox.setStatus(MailOutboxStatus.FAILED);
-              String msg = t.getMessage();
-              outbox.setErrorMessage(msg != null && msg.length() > 500 ? msg.substring(0, 500) : msg);
-              outboxRepository.save(outbox);
-            }
-            return null;
-          });
-          success = false;
+    for (Long outboxId : setup.outboxIds()) {
+      boolean success = Boolean.TRUE.equals(tx.execute(status -> {
+        MailOutbox outbox = outboxRepository.findById(outboxId)
+            .orElseThrow(() -> new IllegalStateException("mail.marketing.outbox.not.found"));
+        EmailResult result = sendTenantEmail(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
+        if (result.isSuccess()) {
+          outbox.setStatus(MailOutboxStatus.SENT);
+          outbox.setProviderMessageId(result.getMessageId());
+        } else {
+          outbox.setStatus(MailOutboxStatus.FAILED);
+          outbox.setErrorMessage(LogSanitizer.sanitizeForLog(result.getErrorMessage()));
         }
-        if (success)
-          sent++;
-        else
-          failed++;
+        outboxRepository.save(outbox);
+        return result.isSuccess();
+      }));
+      if (success) {
+        sent++;
+      } else {
+        failed++;
       }
-    } finally {
-      // Phase 3: Always update campaign with final counts (committed immediately)
-      int finalSent = sent;
-      int finalFailed = failed;
-      return tx.execute(status -> {
-        MailCampaign campaign = campaignRepository.findById(setup.campaignId())
-            .orElseThrow(() -> new IllegalStateException("Campaign not found after send"));
-        campaign.setSentCount(finalSent);
-        campaign.setFailedCount(finalFailed);
-        campaign.setStatus(finalFailed > 0 ? MailCampaignStatus.COMPLETED_WITH_ERRORS : MailCampaignStatus.COMPLETED);
-        return toCampaignDto(campaignRepository.save(campaign));
-      });
     }
+
+    int finalSent = sent;
+    int finalFailed = failed;
+    return tx.execute(status -> {
+      MailCampaign campaign = campaignRepository.findById(setup.campaignId())
+          .orElseThrow(() -> new IllegalStateException("Campaign not found after send"));
+      campaign.setSentCount(finalSent);
+      campaign.setFailedCount(finalFailed);
+      campaign.setStatus(finalFailed > 0 ? MailCampaignStatus.COMPLETED_WITH_ERRORS : MailCampaignStatus.COMPLETED);
+      return toCampaignDto(campaignRepository.save(campaign));
+    });
   }
 
   @Transactional(readOnly = true)
@@ -524,7 +520,7 @@ public class TenantMailMarketingService {
     campaignRepository.findById(campaignId)
         .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
     return outboxRepository.findByCampaignIdAndStatusIn(
-            campaignId, List.of(MailOutboxStatus.FAILED, MailOutboxStatus.PROCESSING))
+            campaignId, List.of(MailOutboxStatus.FAILED, MailOutboxStatus.PENDING, MailOutboxStatus.PROCESSING))
         .stream()
         .map(o -> new MailOutboxEntryDto(o.getId(), o.getToEmail(), o.getStatus(), o.getErrorMessage(), o.getProviderMessageId()))
         .toList();
@@ -536,7 +532,7 @@ public class TenantMailMarketingService {
     String templateType = normalizeOptionalTemplateType(templateTypeRaw);
     List<NewsletterSubscriberSubscription> subscriptions = templateType != null
         ? subscriberSubscriptionRepository.findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(templateType)
-        : List.of();
+        : subscriberSubscriptionRepository.findAllByOrderBySubscriberCreatedAtDesc();
 
     StringBuilder csv = new StringBuilder("email,status,templateType,preferredLanguage,permission,createdAt\n");
     for (NewsletterSubscriberSubscription sub : subscriptions) {
@@ -845,7 +841,7 @@ public class TenantMailMarketingService {
         || !Boolean.TRUE.equals(cfg.getIsActive())
         || cfg.getServerTokenEncrypted() == null
         || cfg.getServerTokenEncrypted().isBlank()) {
-      return mailSender.send(to, subject, content);
+      return consoleMailSender.send(to, subject, content);
     }
     String token = encryptionService.decrypt(cfg.getServerTokenEncrypted());
     return tenantMailSender.send(token, cfg.getFromEmail(), cfg.getFromName(), to, subject, content);
@@ -863,11 +859,7 @@ public class TenantMailMarketingService {
   }
 
   private Long resolveCurrentUserId() {
-    try {
-      return securityHelper.getCurrentUserId();
-    } catch (Exception ex) {
-      return null;
-    }
+    return securityHelper.getCurrentUserIdOrNull();
   }
 
   private MailTemplateDto toTemplateDto(MailTemplate template) {

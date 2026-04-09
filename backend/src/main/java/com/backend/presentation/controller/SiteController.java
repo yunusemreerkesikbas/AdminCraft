@@ -55,6 +55,10 @@ import com.backend.shared.common.SecurityHelper;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -67,6 +71,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
+@Tag(name = "Sites", description = "Site management and dashboard endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class SiteController {
     private static final int ACTIVITY_TREND_WINDOW_DAYS = 30;
 
@@ -82,6 +88,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping
+    @Operation(summary = "Create site", description = "Creates a new tenant site")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Site created"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> createSite(
             @Valid @RequestBody CreateSiteRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -102,6 +115,13 @@ public class SiteController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get site by ID", description = "Returns site details by identifier")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Site not found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> getSiteById(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -118,7 +138,7 @@ public class SiteController {
             }
         } catch (Exception ex) {
             log.error("Error getting site by id {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("site.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.get.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -126,6 +146,12 @@ public class SiteController {
     }
 
     @GetMapping
+    @Operation(summary = "List sites", description = "Returns all tenant sites")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Sites listed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<List<SiteResponse>>> getAllSites(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
@@ -134,7 +160,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(sites));
         } catch (Exception ex) {
             log.error("Error getting all sites: {}", ex.getMessage());
-            String message = messageSource.getMessage("site.list.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.list.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -143,6 +169,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PutMapping("/{id}")
+    @Operation(summary = "Update site", description = "Updates site metadata")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site updated"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> updateSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @Valid @RequestBody UpdateSiteRequest request,
@@ -165,6 +198,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete site", description = "Deletes a site by identifier")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site deleted"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Delete failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -174,7 +214,7 @@ public class SiteController {
             return ResponseEntity.ok(ApiResponse.success(message, null));
         } catch (Exception ex) {
             log.error("Error deleting site {}: {}", id, ex.getMessage());
-            String message = messageSource.getMessage("site.delete.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.delete.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(message));
@@ -183,6 +223,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/publish")
+    @Operation(summary = "Publish site", description = "Publishes site content")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site published"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Publish failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> publishSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -203,6 +250,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/unpublish")
+    @Operation(summary = "Unpublish site", description = "Unpublishes site content")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site unpublished"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Unpublish failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> unpublishSite(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -223,6 +277,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PostMapping("/{id}/maintenance")
+    @Operation(summary = "Enable maintenance mode", description = "Enables maintenance mode for site")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Maintenance enabled"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Operation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> enableMaintenanceMode(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestParam(required = false) String message,
@@ -244,6 +305,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @DeleteMapping("/{id}/maintenance")
+    @Operation(summary = "Disable maintenance mode", description = "Disables maintenance mode for site")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Maintenance disabled"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Operation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> disableMaintenanceMode(
             @PathVariable @Valid @NotNull @Min(1) Long id,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -263,6 +331,14 @@ public class SiteController {
     }
 
     @GetMapping("/domain/{domain}")
+    @Operation(summary = "Get site by domain", description = "Returns site by domain value")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Site found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Site not found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid domain"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteResponse>> getSiteByDomain(
             @PathVariable @Valid String domain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -282,9 +358,13 @@ public class SiteController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error(message));
             }
+        } catch (IllegalArgumentException ex) {
+            String message = messageSource.getMessage("site.get.error", null,
+                    Locale.forLanguageTag(languageCode));
+            return ResponseEntity.badRequest().body(ApiResponse.error(message));
         } catch (Exception ex) {
             log.error("Error getting site by domain {}: {}", domain, ex.getMessage());
-            String message = messageSource.getMessage("site.get.error", new Object[] { ex.getMessage() },
+            String message = messageSource.getMessage("site.get.error", null,
                     Locale.forLanguageTag(languageCode));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error(message));
@@ -292,6 +372,13 @@ public class SiteController {
     }
 
     @GetMapping("/check/domain/{domain}")
+    @Operation(summary = "Check domain availability", description = "Checks if a domain is available for site binding")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Availability returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid domain"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<Boolean>> checkDomainAvailability(
             @PathVariable @Valid String domain,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -322,6 +409,12 @@ public class SiteController {
      * Includes status, stats, recent activity, and available actions.
      */
     @GetMapping("/overview")
+    @Operation(summary = "Get site overview", description = "Returns dashboard overview metrics and actions")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Overview returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteOverviewResponse>> getOverview(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
@@ -340,6 +433,12 @@ public class SiteController {
     }
 
     @GetMapping("/analytics/summary")
+    @Operation(summary = "Get analytics summary", description = "Returns site analytics summary")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Summary returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteAnalyticsSummaryResponse>> getAnalyticsSummary() {
         try {
             SiteAnalyticsSummaryAppDto appDto = siteAnalyticsService.getSummary();
@@ -352,6 +451,12 @@ public class SiteController {
     }
 
     @GetMapping("/insights/summary")
+    @Operation(summary = "Get insights summary", description = "Returns combined SEO and performance insights summary")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Summary returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteInsightsSummaryResponse>> getInsightsSummary() {
         try {
             SiteInsightsSummaryAppDto appDto = siteInsightsService.getSummary();
@@ -368,6 +473,12 @@ public class SiteController {
      * Includes domain info, robots.txt, and verification codes.
      */
     @GetMapping("/technical")
+    @Operation(summary = "Get technical settings", description = "Returns site technical and robots settings")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Settings returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteTechnicalResponse>> getTechnicalSettings(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
@@ -391,6 +502,13 @@ public class SiteController {
      */
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PatchMapping("/technical")
+    @Operation(summary = "Patch technical settings", description = "Updates technical settings with patch semantics")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Settings updated"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SiteTechnicalResponse>> patchTechnicalSettings(
             @Valid @RequestBody SiteTechnicalPatchRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -414,6 +532,12 @@ public class SiteController {
     // ========== Security Settings Endpoints ==========
 
     @GetMapping("/security")
+    @Operation(summary = "Get security settings", description = "Returns current security settings")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Settings returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SecuritySettingsResponse>> getSecuritySettings(
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
         try {
@@ -432,6 +556,13 @@ public class SiteController {
 
     @PreAuthorize("hasRole('TENANT_ADMIN')")
     @PatchMapping("/security")
+    @Operation(summary = "Update security settings", description = "Updates tenant security policy configuration")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Settings updated"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<SecuritySettingsResponse>> updateSecuritySettings(
             @Valid @RequestBody UpdateSecuritySettingsRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -467,6 +598,13 @@ public class SiteController {
     }
 
     @GetMapping("/activity/trend")
+    @Operation(summary = "Get activity trend", description = "Returns paginated activity trend for site dashboard")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Trend returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid query parameters"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<PageableResponse<SiteOverviewResponse.ActivityTrendDayResponse>>> getActivityTrend(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "7") @Min(1) @Max(ACTIVITY_TREND_WINDOW_DAYS) int size,
@@ -513,6 +651,13 @@ public class SiteController {
     }
 
     @GetMapping("/activity")
+    @Operation(summary = "Get activity feed", description = "Returns paginated recent site activity")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Activity returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid query parameters"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<ApiResponse<PageableResponse<SiteOverviewResponse.ActivityDto>>> getRecentActivity(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,

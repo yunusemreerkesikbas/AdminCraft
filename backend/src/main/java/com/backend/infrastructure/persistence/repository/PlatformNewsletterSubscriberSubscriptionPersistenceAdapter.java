@@ -2,6 +2,7 @@ package com.backend.infrastructure.persistence.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,7 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
     @Override
     public Optional<PlatformNewsletterSubscriberSubscription> findBySubscriberAndTemplateKeyIgnoreCase(
             PlatformNewsletterSubscriber subscriber, String templateKey) {
-        return jpaRepository.findBySubscriberAndTemplateKeyIgnoreCase(PlatformMailMapper.toEntity(subscriber), templateKey)
+        return jpaRepository.findBySubscriberAndTemplateKeyIgnoreCase(toSubscriberReference(subscriber), templateKey)
                 .map(PlatformMailMapper::toDomain);
     }
 
@@ -33,6 +34,13 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
     public List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(
             String templateKey) {
         return jpaRepository.findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(templateKey).stream()
+                .map(PlatformMailMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PlatformNewsletterSubscriberSubscription> findAllByOrderBySubscriberCreatedAtDesc() {
+        return jpaRepository.findAllByOrderBySubscriberCreatedAtDesc().stream()
                 .map(PlatformMailMapper::toDomain)
                 .collect(Collectors.toList());
     }
@@ -65,7 +73,7 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
     @Override
     public List<PlatformNewsletterSubscriberSubscription> findBySubscriberOrderByTemplateKeyAsc(
             PlatformNewsletterSubscriber subscriber) {
-        return jpaRepository.findBySubscriberOrderByTemplateKeyAsc(PlatformMailMapper.toEntity(subscriber)).stream()
+        return jpaRepository.findBySubscriberOrderByTemplateKeyAsc(toSubscriberReference(subscriber)).stream()
                 .map(PlatformMailMapper::toDomain)
                 .collect(Collectors.toList());
     }
@@ -78,7 +86,7 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
     @Override
     public void deleteAll(Iterable<PlatformNewsletterSubscriberSubscription> subscriptions) {
         List<com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription> entities =
-                toEntityList(subscriptions);
+                toDeleteEntityList(subscriptions);
         jpaRepository.deleteAll(entities);
     }
 
@@ -92,13 +100,52 @@ public class PlatformNewsletterSubscriberSubscriptionPersistenceAdapter
 
     @Override
     public PlatformNewsletterSubscriberSubscription save(PlatformNewsletterSubscriberSubscription subscription) {
-        return PlatformMailMapper.toDomain(jpaRepository.save(PlatformMailMapper.toEntity(subscription)));
+        return PlatformMailMapper.toDomain(jpaRepository.save(toEntityForSave(subscription)));
     }
 
     private List<com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription> toEntityList(
             Iterable<PlatformNewsletterSubscriberSubscription> subscriptions) {
         return java.util.stream.StreamSupport.stream(subscriptions.spliterator(), false)
-                .map(PlatformMailMapper::toEntity)
+                .map(this::toEntityForSave)
                 .collect(Collectors.toList());
+    }
+
+    private List<com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription> toDeleteEntityList(
+            Iterable<PlatformNewsletterSubscriberSubscription> subscriptions) {
+        return java.util.stream.StreamSupport.stream(subscriptions.spliterator(), false)
+                .map(subscription -> {
+                    com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription entity =
+                            new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription();
+                    entity.setId(subscription.getId());
+                    return entity;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription toEntityForSave(
+            PlatformNewsletterSubscriberSubscription source) {
+        com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription target =
+                source.getId() == null
+                        ? new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriberSubscription()
+                        : jpaRepository.getReferenceById(source.getId());
+        target.setId(source.getId());
+        target.setSubscriber(toSubscriberReference(source.getSubscriber()));
+        target.setTemplateKey(source.getTemplateKey());
+        target.setSource(source.getSource());
+        target.setPreferredLanguage(source.getPreferredLanguage());
+        target.setPermission(source.getPermission());
+        return target;
+    }
+
+    private com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber toSubscriberReference(
+            PlatformNewsletterSubscriber subscriber) {
+        Long subscriberId = Objects.requireNonNull(subscriber, "subscriber is required").getId();
+        if (subscriberId == null) {
+            throw new IllegalArgumentException("subscriber id is required");
+        }
+        com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber ref =
+                new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber();
+        ref.setId(subscriberId);
+        return ref;
     }
 }

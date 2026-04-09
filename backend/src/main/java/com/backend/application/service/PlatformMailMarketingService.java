@@ -9,11 +9,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.backend.application.dto.email.EmailResult;
 import com.backend.application.dto.mail.MailCampaignDto;
@@ -24,6 +27,7 @@ import com.backend.application.dto.mail.MailSubscriberSubscriptionDto;
 import com.backend.application.dto.mail.MailTemplateDto;
 import com.backend.application.dto.mail.MailTemplateTypeDetailDto;
 import com.backend.application.dto.mail.MailTemplateTypeSummaryDto;
+import com.backend.application.dto.platform.PlatformPublicNewsletterSubscribeCommand;
 import com.backend.application.service.mail.TemplateVariableRenderer;
 import com.backend.domain.enums.Language;
 import com.backend.domain.enums.MailCampaignStatus;
@@ -41,6 +45,7 @@ import com.backend.domain.repository.PlatformMailCampaignRepository;
 import com.backend.domain.repository.PlatformMailOutboxRepository;
 import com.backend.domain.repository.PlatformNewsletterSubscriberRepository;
 import com.backend.domain.repository.PlatformNewsletterSubscriberSubscriptionRepository;
+import com.backend.shared.common.LogSanitizer;
 import com.backend.shared.common.SecurityHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -56,8 +61,13 @@ public class PlatformMailMarketingService {
     private static final List<String> SUPPORTED_LANGUAGES = List.of(LANGUAGE_TR, LANGUAGE_EN);
     private static final String NEWSLETTER_DEFAULT = "NEWSLETTER_DEFAULT";
     private static final String VERSION_UPGRADE = "VERSION_UPGRADE";
+    private static final String NEWSLETTER_SUBSCRIBE_SENT = "mail.marketing.newsletter.subscribe.sent";
+    private static final String NEWSLETTER_SUBSCRIBE_ALREADY_ACTIVE = "mail.marketing.newsletter.subscribe.already.active";
+    private static final String NEWSLETTER_CONFIRM_SEND_FAILED = "mail.marketing.newsletter.confirm.send.failed";
     private static final List<String> FIXED_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
     private static final List<String> SUBSCRIBABLE_TEMPLATE_TYPES = List.of(NEWSLETTER_DEFAULT, VERSION_UPGRADE);
+    private static final long MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS = 1000L;
+    private static final long MAX_PUBLIC_SUBSCRIBE_AGE_MS = 3_600_000L;
 
     private final PlatformEmailTemplateRepository templateRepository;
     private final PlatformNewsletterSubscriberRepository subscriberRepository;
@@ -68,11 +78,13 @@ public class PlatformMailMarketingService {
     private final EmailTemplateRendererPort templateRenderer;
     private final TemplateVariableRenderer templateVariableRenderer;
     private final SecurityHelper securityHelper;
+    @Qualifier("platformTransactionManager")
+    private final PlatformTransactionManager platformTransactionManager;
 
     @Value("${app.platform-domain:craftive.io}")
     private String platformDomain;
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public List<MailTemplateTypeSummaryDto> getTemplateTypes() {
         ensureAllFixedTemplateTypes();
         return FIXED_TEMPLATE_TYPES.stream()
@@ -80,7 +92,7 @@ public class PlatformMailMarketingService {
             .toList();
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public MailTemplateTypeDetailDto getTemplateTypeDetail(String templateTypeRaw) {
         String templateType = normalizeTemplateType(templateTypeRaw);
         ensureTemplateTypeTranslations(templateType);
@@ -100,7 +112,7 @@ public class PlatformMailMarketingService {
         return new MailTemplateTypeDetailDto(templateType, translations, lastCampaign, subscriberCount);
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public MailTemplateDto upsertTemplateTranslation(
         String templateTypeRaw,
         String languageRaw,
@@ -128,7 +140,7 @@ public class PlatformMailMarketingService {
         return toTemplateDto(templateRepository.save(template));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public List<MailSubscriberDto> getSubscribersByTemplateType(String templateTypeRaw) {
         String templateType = normalizeTemplateType(templateTypeRaw);
         return subscriberSubscriptionRepository
@@ -138,7 +150,7 @@ public class PlatformMailMarketingService {
             .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public Page<MailSubscriberAdminDto> getSubscriberPage(
         Pageable pageable,
         String search,
@@ -177,7 +189,7 @@ public class PlatformMailMarketingService {
         return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public MailSubscriberAdminDto getSubscriber(Long subscriberId) {
         PlatformNewsletterSubscriber subscriber = subscriberRepository.findById(subscriberId)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.subscriber.not.found"));
@@ -186,7 +198,7 @@ public class PlatformMailMarketingService {
         return toSubscriberAdminDto(subscriber, relations);
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public MailSubscriberAdminDto createSubscriber(
         String email,
         MailSubscriberStatus status,
@@ -208,7 +220,7 @@ public class PlatformMailMarketingService {
         return toSubscriberAdminDto(saved, savedRelations);
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public MailSubscriberAdminDto updateSubscriber(
         Long subscriberId,
         String email,
@@ -237,7 +249,7 @@ public class PlatformMailMarketingService {
         return toSubscriberAdminDto(subscriber, savedRelations);
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public void deleteSubscriber(Long subscriberId) {
         PlatformNewsletterSubscriber subscriber = subscriberRepository.findById(subscriberId)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.subscriber.not.found"));
@@ -254,43 +266,77 @@ public class PlatformMailMarketingService {
         }
     }
 
-    @Transactional
-    public void subscribe(String email, String source, String templateTypeRaw, String locale) {
-        String templateType = normalizeTemplateType(templateTypeRaw);
+    @Transactional("platformTransactionManager")
+    public String subscribe(PlatformPublicNewsletterSubscribeCommand command) {
+        validatePublicSubscribeRequest(command);
+        String templateType = normalizeTemplateType(command.templateType());
         if (!SUBSCRIBABLE_TEMPLATE_TYPES.contains(templateType)) {
             throw new IllegalArgumentException("mail.marketing.template.type.invalid");
         }
 
-        PlatformNewsletterSubscriber subscriber = subscriberRepository.findByEmailIgnoreCase(email)
+        String normalizedEmail = normalizeEmail(command.email());
+        PlatformNewsletterSubscriber subscriber = subscriberRepository.findByEmailIgnoreCase(normalizedEmail)
             .orElseGet(PlatformNewsletterSubscriber::new);
+        PlatformNewsletterSubscriberSubscription existingSubscription = subscriber.getId() == null
+            ? null
+            : subscriberSubscriptionRepository.findBySubscriberAndTemplateKeyIgnoreCase(subscriber, templateType).orElse(null);
 
-        String preferredLang = LANGUAGE_TR.equalsIgnoreCase(locale) ? LANGUAGE_TR : LANGUAGE_EN;
+        String preferredLang = LANGUAGE_TR.equalsIgnoreCase(command.locale()) ? LANGUAGE_TR : LANGUAGE_EN;
 
-        subscriber.setEmail(email.trim().toLowerCase());
-        subscriber.setStatus(MailSubscriberStatus.PENDING_CONFIRMATION);
+        subscriber.setEmail(normalizedEmail);
+        boolean alreadySubscribed = subscriber.getStatus() == MailSubscriberStatus.ACTIVE
+            && existingSubscription != null
+            && Boolean.TRUE.equals(existingSubscription.getPermission());
+        if (alreadySubscribed) {
+            upsertTemplateSubscription(subscriber, templateType, command.source(), preferredLang, Boolean.TRUE);
+            return NEWSLETTER_SUBSCRIBE_ALREADY_ACTIVE;
+        }
+
+        boolean keepSubscriberActive = subscriber.getStatus() == MailSubscriberStatus.ACTIVE;
+        if (!keepSubscriberActive) {
+            subscriber.setStatus(MailSubscriberStatus.PENDING_CONFIRMATION);
+            subscriber.setConfirmedAt(null);
+        }
         subscriber.setConfirmToken(UUID.randomUUID().toString());
         if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
             subscriber.setUnsubscribeToken(UUID.randomUUID().toString());
         }
-        subscriber.setConfirmedAt(null);
         subscriber.setUnsubscribedAt(null);
         PlatformNewsletterSubscriber savedSubscriber = subscriberRepository.save(subscriber);
-        upsertTemplateSubscription(savedSubscriber, templateType, source, preferredLang);
+        upsertTemplateSubscription(savedSubscriber, templateType, command.source(), preferredLang, Boolean.FALSE);
 
         String confirmLink = buildPlatformUrl("/newsletter/confirm?token=" + savedSubscriber.getConfirmToken());
         Language emailLang = LANGUAGE_TR.equals(preferredLang) ? Language.TR : Language.EN;
         String templateName = "email/newsletter-confirm-" + emailLang.name().toLowerCase();
         String subject = Language.TR == emailLang ? "Aboneliğinizi Onaylayın" : "Confirm Your Subscription";
-        log.info("[MAIL] newsletter-confirm → {} | confirmLink={}", savedSubscriber.getEmail(), confirmLink);
-        try {
-            String html = templateRenderer.render(templateName, Map.of("confirmLink", confirmLink), emailLang);
-            mailSender.send(savedSubscriber.getEmail(), subject, html);
-        } catch (Exception ex) {
-            mailSender.send(savedSubscriber.getEmail(), subject, confirmLink);
+        log.info("[MAIL] newsletter-confirm dispatch requested | recipient={}",
+            LogSanitizer.maskEmail(savedSubscriber.getEmail()));
+        String html = templateRenderer.render(templateName, Map.of("confirmLink", confirmLink), emailLang);
+        EmailResult result = mailSender.send(savedSubscriber.getEmail(), subject, html);
+        if (!result.isSuccess()) {
+            throw new IllegalStateException(NEWSLETTER_CONFIRM_SEND_FAILED);
+        }
+        return NEWSLETTER_SUBSCRIBE_SENT;
+    }
+
+    private void validatePublicSubscribeRequest(PlatformPublicNewsletterSubscribeCommand command) {
+        if (command == null) {
+            throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
+        }
+        if (command.honeypot() != null && !command.honeypot().isBlank()) {
+            throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
+        }
+        Long formStartedAt = command.formStartedAt();
+        if (formStartedAt == null) {
+            throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
+        }
+        long elapsedMs = System.currentTimeMillis() - formStartedAt;
+        if (elapsedMs < MIN_PUBLIC_SUBSCRIBE_FILL_DURATION_MS || elapsedMs > MAX_PUBLIC_SUBSCRIBE_AGE_MS) {
+            throw new IllegalArgumentException("mail.marketing.newsletter.subscribe.blocked");
         }
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public void autoSubscribeTenantAdmin(String email, String preferredLanguage) {
         if (email == null || email.isBlank()) {
             return;
@@ -302,16 +348,17 @@ public class PlatformMailMarketingService {
                 .orElseGet(PlatformNewsletterSubscriber::new);
 
         subscriber.setEmail(normalizedEmail);
-        if (subscriber.getStatus() == null || subscriber.getStatus() == MailSubscriberStatus.UNSUBSCRIBED) {
+        if (subscriber.getStatus() != MailSubscriberStatus.ACTIVE) {
             subscriber.setStatus(MailSubscriberStatus.ACTIVE);
             subscriber.setConfirmedAt(java.time.LocalDateTime.now());
+            subscriber.setUnsubscribedAt(null);
         }
         subscriber.setConfirmToken(null);
         if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
             subscriber.setUnsubscribeToken(UUID.randomUUID().toString());
         }
         PlatformNewsletterSubscriber saved = subscriberRepository.save(subscriber);
-        upsertTemplateSubscription(saved, VERSION_UPGRADE, "TENANT_ONBOARDING", normalizedLang);
+        upsertTemplateSubscription(saved, VERSION_UPGRADE, "TENANT_ONBOARDING", normalizedLang, Boolean.TRUE);
     }
 
     public void sendDemoRequestConfirmation(String email, String fullName, String locale) {
@@ -319,16 +366,17 @@ public class PlatformMailMarketingService {
         String templateName = "email/demo-request-confirmation-" + lang.name().toLowerCase();
         String subject = Language.TR == lang ? "Talebiniz Alındı" : "We Received Your Request";
         Map<String, Object> vars = Map.of("name", fullName != null ? fullName : email);
-        log.info("[MAIL] demo-request-confirm → {}", email);
-        try {
-            String html = templateRenderer.render(templateName, vars, lang);
-            mailSender.send(email, subject, html);
-        } catch (Exception ex) {
-            log.warn("[MAIL] demo-request-confirm template render failed, skipping: {}", ex.getMessage());
+        log.info("[MAIL] demo-request-confirm dispatch requested | recipient={}", LogSanitizer.maskEmail(email));
+        String html = templateRenderer.render(templateName, vars, lang);
+        EmailResult result = mailSender.send(email, subject, html);
+        if (!result.isSuccess()) {
+            log.warn("[MAIL] demo-request-confirm send failed | recipient={} | reason={}",
+                LogSanitizer.maskEmail(email),
+                LogSanitizer.sanitizeForLog(result.getErrorMessage()));
         }
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public void confirm(String token) {
         PlatformNewsletterSubscriber subscriber = subscriberRepository.findByConfirmToken(token)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.newsletter.confirm.token.invalid"));
@@ -336,9 +384,24 @@ public class PlatformMailMarketingService {
         subscriber.setConfirmedAt(LocalDateTime.now());
         subscriber.setConfirmToken(null);
         subscriberRepository.save(subscriber);
+
+        List<PlatformNewsletterSubscriberSubscription> relations =
+            subscriberSubscriptionRepository.findBySubscriberOrderByTemplateKeyAsc(subscriber);
+        if (!relations.isEmpty()) {
+            boolean changed = false;
+            for (PlatformNewsletterSubscriberSubscription relation : relations) {
+                if (!Boolean.TRUE.equals(relation.getPermission())) {
+                    relation.setPermission(Boolean.TRUE);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                subscriberSubscriptionRepository.saveAll(relations);
+            }
+        }
     }
 
-    @Transactional
+    @Transactional("platformTransactionManager")
     public void unsubscribe(String token) {
         PlatformNewsletterSubscriber subscriber = subscriberRepository.findByUnsubscribeToken(token)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.newsletter.unsubscribe.token.invalid"));
@@ -347,76 +410,97 @@ public class PlatformMailMarketingService {
         subscriberRepository.save(subscriber);
     }
 
-    @Transactional
     public MailCampaignDto sendCampaign(String templateTypeRaw) {
         String templateType = normalizeTemplateType(templateTypeRaw);
+        TransactionTemplate tx = new TransactionTemplate(platformTransactionManager);
 
-        List<PlatformEmailTemplate> templateTranslations =
-            templateRepository.findByTemplateKeyIgnoreCaseOrderByLanguageAsc(templateType);
+        record CampaignSetup(Long campaignId, List<Long> outboxIds) {
+        }
+        CampaignSetup setup = tx.execute(status -> {
+            List<PlatformEmailTemplate> templateTranslations =
+                templateRepository.findByTemplateKeyIgnoreCaseOrderByLanguageAsc(templateType);
 
-        PlatformEmailTemplate primaryTemplate = templateTranslations.stream()
-            .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("mail.marketing.template.not.active"));
+            PlatformEmailTemplate primaryTemplate = templateTranslations.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("mail.marketing.template.not.active"));
 
-        List<PlatformNewsletterSubscriberSubscription> subscriptions = subscriberSubscriptionRepository
-            .findByTemplateKeyIgnoreCaseAndPermissionTrueAndSubscriberStatus(templateType, MailSubscriberStatus.ACTIVE);
+            List<PlatformNewsletterSubscriberSubscription> subscriptions = subscriberSubscriptionRepository
+                .findByTemplateKeyIgnoreCaseAndPermissionTrueAndSubscriberStatus(templateType, MailSubscriberStatus.ACTIVE);
 
-        PlatformMailCampaign campaign = new PlatformMailCampaign();
-        campaign.setTemplate(primaryTemplate);
-        campaign.setSubject(primaryTemplate.getSubject());
-        campaign.setContent(primaryTemplate.getContent());
-        campaign.setStatus(MailCampaignStatus.SENDING);
-        campaign.setTotalCount(subscriptions.size());
-        campaign.setCreatedByEmail(resolveCurrentUserEmail());
-        campaign = campaignRepository.save(campaign);
+            PlatformMailCampaign campaign = new PlatformMailCampaign();
+            campaign.setTemplate(primaryTemplate);
+            campaign.setSubject(primaryTemplate.getSubject());
+            campaign.setContent(primaryTemplate.getContent());
+            campaign.setStatus(MailCampaignStatus.SENDING);
+            campaign.setTotalCount(subscriptions.size());
+            campaign.setCreatedByEmail(resolveCurrentUserEmail());
+            campaign = campaignRepository.save(campaign);
 
-        int sent = 0;
-        int failed = 0;
-        for (PlatformNewsletterSubscriberSubscription subscription : subscriptions) {
-            PlatformNewsletterSubscriber subscriber = subscription.getSubscriber();
-            PlatformEmailTemplate resolvedTemplate = resolveTemplateForLanguage(
+            List<Long> outboxIds = new ArrayList<>();
+            for (PlatformNewsletterSubscriberSubscription subscription : subscriptions) {
+                PlatformNewsletterSubscriber subscriber = subscription.getSubscriber();
+                PlatformEmailTemplate resolvedTemplate = resolveTemplateForLanguage(
                 templateTranslations,
                 normalizePreferredLanguage(subscription.getPreferredLanguage()),
                 primaryTemplate
-            );
-            PlatformMailOutbox outbox = new PlatformMailOutbox();
-            outbox.setCampaign(campaign);
-            outbox.setToEmail(subscriber.getEmail());
-            outbox.setSubject(render(resolvedTemplate.getSubject(), subscriber));
-            outbox.setContent(render(resolvedTemplate.getContent(), subscriber));
-            outbox.setStatus(MailOutboxStatus.PROCESSING);
-            outbox = outboxRepository.save(outbox);
+                );
+                PlatformMailOutbox outbox = new PlatformMailOutbox();
+                outbox.setCampaign(campaign);
+                outbox.setToEmail(subscriber.getEmail());
+                outbox.setSubject(render(resolvedTemplate.getSubject(), subscriber));
+                outbox.setContent(render(resolvedTemplate.getContent(), subscriber));
+                outbox.setStatus(MailOutboxStatus.PENDING);
+                outbox = outboxRepository.save(outbox);
+                outboxIds.add(outbox.getId());
+            }
+            return new CampaignSetup(campaign.getId(), outboxIds);
+        });
 
-            EmailResult result = mailSender.send(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
-            if (result.isSuccess()) {
-                outbox.setStatus(MailOutboxStatus.SENT);
-                outbox.setProviderMessageId(result.getMessageId());
+        int sent = 0;
+        int failed = 0;
+        for (Long outboxId : setup.outboxIds()) {
+            boolean success = Boolean.TRUE.equals(tx.execute(status -> {
+                PlatformMailOutbox outbox = outboxRepository.findById(outboxId)
+                    .orElseThrow(() -> new IllegalStateException("mail.marketing.outbox.not.found"));
+                EmailResult result = mailSender.send(outbox.getToEmail(), outbox.getSubject(), outbox.getContent());
+                if (result.isSuccess()) {
+                    outbox.setStatus(MailOutboxStatus.SENT);
+                    outbox.setProviderMessageId(result.getMessageId());
+                } else {
+                    outbox.setStatus(MailOutboxStatus.FAILED);
+                    outbox.setErrorMessage(LogSanitizer.sanitizeForLog(result.getErrorMessage()));
+                }
+                outboxRepository.save(outbox);
+                return result.isSuccess();
+            }));
+            if (success) {
                 sent++;
             } else {
-                outbox.setStatus(MailOutboxStatus.FAILED);
-                outbox.setErrorMessage(result.getErrorMessage());
                 failed++;
             }
-            outboxRepository.save(outbox);
         }
 
-        campaign.setSentCount(sent);
-        campaign.setFailedCount(failed);
-        campaign.setStatus(failed > 0 ? MailCampaignStatus.COMPLETED_WITH_ERRORS : MailCampaignStatus.COMPLETED);
-        campaign = campaignRepository.save(campaign);
-
-        return toCampaignDto(campaign);
+        int finalSent = sent;
+        int finalFailed = failed;
+        return tx.execute(status -> {
+            PlatformMailCampaign campaign = campaignRepository.findById(setup.campaignId())
+                .orElseThrow(() -> new IllegalStateException("mail.marketing.campaign.not.found"));
+            campaign.setSentCount(finalSent);
+            campaign.setFailedCount(finalFailed);
+            campaign.setStatus(finalFailed > 0 ? MailCampaignStatus.COMPLETED_WITH_ERRORS : MailCampaignStatus.COMPLETED);
+            return toCampaignDto(campaignRepository.save(campaign));
+        });
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public MailCampaignDto getCampaign(Long campaignId) {
         PlatformMailCampaign campaign = campaignRepository.findById(campaignId)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
         return toCampaignDto(campaign);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public List<MailCampaignDto> getCampaignList(String templateTypeRaw, int size) {
         String templateType = normalizeTemplateType(templateTypeRaw);
         return campaignRepository.findRecentByTemplateKey(templateType, size)
@@ -425,23 +509,23 @@ public class PlatformMailMarketingService {
             .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public List<MailOutboxEntryDto> getOutboxEntries(Long campaignId) {
         campaignRepository.findById(campaignId)
             .orElseThrow(() -> new IllegalArgumentException("mail.marketing.campaign.not.found"));
         return outboxRepository.findByCampaignIdAndStatusIn(
-                campaignId, List.of(MailOutboxStatus.FAILED, MailOutboxStatus.PROCESSING))
+                campaignId, List.of(MailOutboxStatus.FAILED, MailOutboxStatus.PENDING, MailOutboxStatus.PROCESSING))
             .stream()
             .map(o -> new MailOutboxEntryDto(o.getId(), o.getToEmail(), o.getStatus(), o.getErrorMessage(), o.getProviderMessageId()))
             .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "platformTransactionManager", readOnly = true)
     public String exportSubscribersCsv(String templateTypeRaw) {
         String templateType = normalizeOptionalTemplateType(templateTypeRaw);
         List<PlatformNewsletterSubscriberSubscription> subscriptions = templateType != null
             ? subscriberSubscriptionRepository.findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(templateType)
-            : List.of();
+            : subscriberSubscriptionRepository.findAllByOrderBySubscriberCreatedAtDesc();
 
         StringBuilder csv = new StringBuilder("email,status,templateType,preferredLanguage,permission,createdAt\n");
         for (PlatformNewsletterSubscriberSubscription sub : subscriptions) {
@@ -478,11 +562,12 @@ public class PlatformMailMarketingService {
         }
     }
 
-    private void upsertTemplateSubscription(
+    private PlatformNewsletterSubscriberSubscription upsertTemplateSubscription(
         PlatformNewsletterSubscriber subscriber,
         String templateType,
         String source,
-        String preferredLanguage
+        String preferredLanguage,
+        Boolean permission
     ) {
         PlatformNewsletterSubscriberSubscription relation = subscriberSubscriptionRepository
             .findBySubscriberAndTemplateKeyIgnoreCase(subscriber, templateType)
@@ -495,8 +580,8 @@ public class PlatformMailMarketingService {
 
         relation.setSource(source);
         relation.setPreferredLanguage(preferredLanguage);
-        relation.setPermission(Boolean.TRUE);
-        subscriberSubscriptionRepository.save(relation);
+        relation.setPermission(permission);
+        return subscriberSubscriptionRepository.save(relation);
     }
 
     private List<PlatformNewsletterSubscriberSubscription> syncTemplateSubscriptions(
@@ -737,11 +822,10 @@ public class PlatformMailMarketingService {
     }
 
     private String resolveCurrentUserEmail() {
-        try {
-            return securityHelper.getCurrentUserEmail();
-        } catch (Exception ex) {
+        if (!securityHelper.isAuthenticated()) {
             return "system";
         }
+        return securityHelper.getCurrentUserEmail();
     }
 
     private MailTemplateDto toTemplateDto(PlatformEmailTemplate template) {

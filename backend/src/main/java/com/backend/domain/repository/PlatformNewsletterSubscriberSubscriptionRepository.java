@@ -16,6 +16,8 @@ public interface PlatformNewsletterSubscriberSubscriptionRepository {
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(
         String templateKey);
 
+    List<PlatformNewsletterSubscriberSubscription> findAllByOrderBySubscriberCreatedAtDesc();
+
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndSubscriberStatus(
         String templateKey, MailSubscriberStatus status);
 

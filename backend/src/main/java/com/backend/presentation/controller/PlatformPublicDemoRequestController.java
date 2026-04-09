@@ -15,6 +15,9 @@ import com.backend.application.service.PlatformDemoRequestService;
 import com.backend.presentation.dto.request.PlatformPublicDemoRequestSubmitRequest;
 import com.backend.shared.common.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +25,18 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/platform/public/demo-requests")
 @RequiredArgsConstructor
+@Tag(name = "Platform Public Demo Requests", description = "Public endpoint for landing demo request submissions")
 public class PlatformPublicDemoRequestController {
 
     private final PlatformDemoRequestService platformDemoRequestService;
     private final MessageSource messageSource;
 
     @PostMapping
+    @Operation(summary = "Submit demo request", description = "Accepts public demo request submission from landing")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Submission accepted"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed")
+    })
     public ResponseEntity<ApiResponse<Map<String, String>>> submit(
             @Valid @RequestBody PlatformPublicDemoRequestSubmitRequest request,
             HttpServletRequest httpRequest) {

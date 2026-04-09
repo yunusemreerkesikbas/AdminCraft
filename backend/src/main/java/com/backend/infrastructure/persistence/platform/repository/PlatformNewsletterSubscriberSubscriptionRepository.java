@@ -27,6 +27,9 @@ public interface PlatformNewsletterSubscriberSubscriptionRepository
     );
 
     @EntityGraph(attributePaths = "subscriber")
+    List<PlatformNewsletterSubscriberSubscription> findAllByOrderBySubscriberCreatedAtDesc();
+
+    @EntityGraph(attributePaths = "subscriber")
     List<PlatformNewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndSubscriberStatus(
         String templateKey,
         MailSubscriberStatus status

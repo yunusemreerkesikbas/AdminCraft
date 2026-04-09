@@ -96,7 +96,7 @@
             </tr>
             <tr>
               <td align="center" style="padding: 22px 18px 0;">
-                <p class="footer">© 2026 Craftive. All rights reserved.</p>
+                <p class="footer">© <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> Craftive. All rights reserved.</p>
                 <p class="footer" style="margin-top: 8px;">
                   <a href="https://craftive.io" class="footer-link">Website</a>
                   <span style="color: #94a3b8;">&nbsp;•&nbsp;</span>

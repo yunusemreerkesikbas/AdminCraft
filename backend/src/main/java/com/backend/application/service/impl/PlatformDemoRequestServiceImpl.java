@@ -4,6 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.backend.application.dto.platform.PlatformDemoRequestAdminDto;
 import com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand;
@@ -44,8 +46,18 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
                 .build();
         repository.save(entity);
 
-        mailMarketingService.sendDemoRequestConfirmation(
-                entity.getEmail(), entity.getFullName(), command.locale());
+        Runnable sendConfirmation = () -> mailMarketingService.sendDemoRequestConfirmation(
+                entity.getEmail(), entity.getFullName(), entity.getLocale());
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendConfirmation.run();
+                }
+            });
+            return;
+        }
+        sendConfirmation.run();
     }
 
     @Override

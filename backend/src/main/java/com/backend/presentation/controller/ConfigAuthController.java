@@ -24,6 +24,9 @@ import com.backend.presentation.dto.response.config.ConfigAuthResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.RequestUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +37,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/config/auth")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Config Authentication", description = "Authentication endpoints for global config control panel")
 public class ConfigAuthController {
 
     private final ConfigAuthenticationService configAuthenticationService;
     private final MessageSource messageSource;
 
     @PostMapping("/login")
+    @Operation(summary = "Config login", description = "Authenticates user for config panel and starts OTP challenge")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP challenge created"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials or account locked"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    })
     public ResponseEntity<ApiResponse<ConfigAuthChallengeResponse>> login(
             @Valid @RequestBody ConfigLoginRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
@@ -73,6 +83,12 @@ public class ConfigAuthController {
     }
 
     @PostMapping("/verify-otp")
+    @Operation(summary = "Config verify OTP", description = "Verifies OTP and issues config panel tokens")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP verified"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid OTP/token"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    })
     public ResponseEntity<ApiResponse<ConfigAuthResponse>> verifyOtp(
             @Valid @RequestBody ConfigVerifyOtpRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
@@ -98,6 +114,12 @@ public class ConfigAuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Config refresh token", description = "Refreshes access token for config panel")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token refreshed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid refresh token"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+    })
     public ResponseEntity<ApiResponse<ConfigAuthResponse>> refreshToken(
             @Valid @RequestBody ConfigRefreshTokenRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,

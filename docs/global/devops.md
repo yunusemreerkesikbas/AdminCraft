@@ -321,24 +321,34 @@ CMS delivery endpoints (`/cms/**`) are `permitAll()` and accept any origin — t
 
 ### Rate limiting — public platform endpoints
 
-`POST /api/platform/public/demo-requests` is unauthenticated and has no application-level rate limit. Protect it with a Traefik rate-limit middleware applied per source IP.
+`POST /api/platform/public/demo-requests` and `POST /api/platform/public/newsletter/subscribe` are unauthenticated and should be protected with Traefik rate-limit middleware applied per source IP.
 
 Add the middleware definition to `docker-compose.yml` (or the relevant prod/stage override) under the Traefik `labels` of the backend service:
 
 ```yaml
-# docker-compose.yml — backend service labels
-- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.average=3"
-- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.burst=5"
+# docker-compose.prod.yml — backend service labels
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.average=5"
+- "traefik.http.middlewares.demo-request-ratelimit.ratelimit.burst=10"
 - "traefik.http.middlewares.demo-request-ratelimit.ratelimit.period=10m"
 - "traefik.http.middlewares.demo-request-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
-# Attach the middleware to the public demo-requests router:
 - "traefik.http.routers.backend-public-demo.rule=Host(`api.craftive.io`) && PathPrefix(`/api/platform/public/demo-requests`)"
 - "traefik.http.routers.backend-public-demo.middlewares=demo-request-ratelimit@docker"
+
+- "traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.average=15"
+- "traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.burst=25"
+- "traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.period=10m"
+- "traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+- "traefik.http.routers.backend-public-newsletter.rule=Host(`api.craftive.io`) && PathPrefix(`/api/platform/public/newsletter/subscribe`)"
+- "traefik.http.routers.backend-public-newsletter.middlewares=newsletter-subscribe-ratelimit@docker"
 ```
 
 > **Note:** `ipstrategy.depth=1` trusts the first real IP from `X-Forwarded-For` when Cloudflare is the upstream proxy. Adjust `depth` if you add additional proxy hops.
 
-This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thresholds based on observed traffic patterns.
+Current thresholds:
+- Demo request: **5 requests / 10 minutes / IP** with burst **10**
+- Newsletter subscribe: **15 requests / 10 minutes / IP** with burst **25**
+
+Stage inherits the same middleware values from `docker-compose.prod.yml` and only overrides the router host (`s1-api.*`). Keep the newsletter and demo routers aligned with the environment host whenever compose routing changes.
 
 ### GitHub Secrets
 

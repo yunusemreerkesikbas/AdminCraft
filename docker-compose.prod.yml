@@ -73,6 +73,16 @@ services:
       traefik.http.routers.backend-public-demo.tls.certresolver: "letsencrypt"
       traefik.http.routers.backend-public-demo.service: "backend"
       traefik.http.routers.backend-public-demo.middlewares: "demo-request-ratelimit@docker"
+      # Rate limiting for unauthenticated public newsletter subscribe endpoint
+      traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.average: "15"
+      traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.burst: "25"
+      traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.period: "10m"
+      traefik.http.middlewares.newsletter-subscribe-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth: "1"
+      traefik.http.routers.backend-public-newsletter.rule: "Host(`api.${DOMAIN}`) && PathPrefix(`/api/platform/public/newsletter/subscribe`)"
+      traefik.http.routers.backend-public-newsletter.entrypoints: "websecure"
+      traefik.http.routers.backend-public-newsletter.tls.certresolver: "letsencrypt"
+      traefik.http.routers.backend-public-newsletter.service: "backend"
+      traefik.http.routers.backend-public-newsletter.middlewares: "newsletter-subscribe-ratelimit@docker"
 
   frontend:
     image: ghcr.io/${GHCR_ORG}/craftive-frontend:${APP_VERSION:-latest}
