@@ -8,12 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.backend.application.dto.platform.PlatformDemoRequestAdminDto;
 import com.backend.application.dto.platform.PlatformDemoRequestSubmitCommand;
 import com.backend.application.service.PlatformDemoRequestService;
+import com.backend.application.service.PlatformMailMarketingService;
 import com.backend.application.service.RecaptchaService;
 import com.backend.domain.entity.PlatformDemoRequest;
 import com.backend.domain.repository.PlatformDemoRequestRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestService {
@@ -23,6 +26,7 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
 
     private final PlatformDemoRequestRepository repository;
     private final RecaptchaService recaptchaService;
+    private final PlatformMailMarketingService mailMarketingService;
 
     @Override
     @Transactional("platformTransactionManager")
@@ -39,6 +43,9 @@ public class PlatformDemoRequestServiceImpl implements PlatformDemoRequestServic
                 .userAgent(truncate(command.userAgent(), 500))
                 .build();
         repository.save(entity);
+
+        mailMarketingService.sendDemoRequestConfirmation(
+                entity.getEmail(), entity.getFullName(), command.locale());
     }
 
     @Override

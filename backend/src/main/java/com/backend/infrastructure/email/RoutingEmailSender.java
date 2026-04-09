@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.backend.application.dto.email.EmailResult;
 import com.backend.application.service.config.GlobalRuntimeConfigService;
+import com.backend.domain.port.TenantMailSenderPort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,32 +17,29 @@ import lombok.extern.slf4j.Slf4j;
 public class RoutingEmailSender implements EmailSender {
 
     private final ConsoleEmailSender consoleEmailSender;
-    private final SmtpEmailSender smtpEmailSender;
     private final GlobalRuntimeConfigService globalRuntimeConfigService;
+    private final TenantMailSenderPort postmarkSender;
 
     @Override
     public EmailResult send(String to, String subject, String htmlContent) {
-        return selectSender().send(to, subject, htmlContent);
+        String provider = globalRuntimeConfigService.getEmailProvider();
+        if ("postmark".equalsIgnoreCase(provider)) {
+            String token = globalRuntimeConfigService.getPostmarkServerTokenDecrypted();
+            if (token == null || token.isBlank()) {
+                log.warn("Postmark provider selected but server token is not configured, falling back to console");
+                return consoleEmailSender.send(to, subject, htmlContent);
+            }
+            return postmarkSender.send(
+                token,
+                globalRuntimeConfigService.getEmailFromAddress(),
+                globalRuntimeConfigService.getEmailFromName(),
+                to, subject, htmlContent);
+        }
+        return consoleEmailSender.send(to, subject, htmlContent);
     }
 
     @Override
     public boolean isAvailable() {
-        return selectSender().isAvailable();
-    }
-
-    private EmailSender selectSender() {
-        String provider = globalRuntimeConfigService.getEmailProvider();
-        if ("smtp".equalsIgnoreCase(provider)) {
-            if (!smtpEmailSender.isAvailable()) {
-                log.warn("SMTP provider selected but is not available, falling back to console sender");
-                return consoleEmailSender;
-            }
-            return smtpEmailSender;
-        }
-        if (!"console".equalsIgnoreCase(provider)) {
-            log.warn("Unknown email provider [{}], falling back to console sender", provider);
-        }
-        return consoleEmailSender;
+        return true;
     }
 }
-

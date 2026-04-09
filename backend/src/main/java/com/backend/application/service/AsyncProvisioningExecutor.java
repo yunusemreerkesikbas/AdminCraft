@@ -37,6 +37,7 @@ public class AsyncProvisioningExecutor {
   private final TenantModuleRepository tenantModuleRepository;
   private final TenantMigrationService tenantMigrationService;
   private final TenantModuleRegistrar tenantModuleRegistrar;
+  private final PlatformMailMarketingService platformMailMarketingService;
   private final Environment environment;
 
   @Value("${spring.datasource.tenant.host}")
@@ -76,6 +77,7 @@ public class AsyncProvisioningExecutor {
       tenantModuleRegistrar.registerModules(tenantId, registeredModules);
 
       updateTenantStatus(tenantId, TenantStatus.ACTIVE);
+      autoSubscribeTenantAdminToVersionUpdates(tenantId);
       updateJobStatus(jobId, "succeeded", 100, null, null, LocalDateTime.now());
 
       log.info("Provisioning completed successfully for tenant {} on thread: {}",
@@ -111,6 +113,22 @@ public class AsyncProvisioningExecutor {
       updateJobStatus(jobId, "failed", 0, errorMessage, null, LocalDateTime.now());
     } finally {
       MDC.clear();
+    }
+  }
+
+  private void autoSubscribeTenantAdminToVersionUpdates(Long tenantId) {
+    try {
+      Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+      if (tenant == null || tenant.getAdminEmail() == null || tenant.getAdminEmail().isBlank()) {
+        return;
+      }
+      String preferredLang = tenant.getDefaultLanguage() != null
+          ? tenant.getDefaultLanguage().name()
+          : "EN";
+      platformMailMarketingService.autoSubscribeTenantAdmin(tenant.getAdminEmail(), preferredLang);
+      log.info("Tenant admin {} subscribed to VERSION_UPGRADE newsletter", tenant.getAdminEmail());
+    } catch (Exception ex) {
+      log.warn("Failed to auto-subscribe tenant {} admin to VERSION_UPGRADE: {}", tenantId, ex.getMessage());
     }
   }
 

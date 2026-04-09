@@ -45,7 +45,7 @@ public class TenantPostmarkEmailSender implements TenantMailSenderPort {
                 "From", String.format("%s <%s>", fromName, fromEmail),
                 "To", toEmail,
                 "Subject", subject,
-                "TextBody", content
+                "HtmlBody", content
             );
 
             String requestBody = objectMapper.writeValueAsString(payload);

@@ -11,6 +11,7 @@ The platform uses **database-per-tenant** isolation (`platform_management` + `ac
   - Prelaunch checklist: [`prelaunch.md`](prelaunch.md)
   - Environment configuration: [`global/environment-configuration.md`](global/environment-configuration.md)
   - Backend conventions: [`global/backend-patterns.md`](global/backend-patterns.md)
+  - Viewer role coverage: [`global/viewer-role-coverage.md`](global/viewer-role-coverage.md)
   - Frontend conventions: [`global/frontend-patterns.md`](global/frontend-patterns.md)
   - Authentication: [`global/authentication.md`](global/authentication.md)
   - i18n + composite operations: [`global/i18n-and-composite.md`](global/i18n-and-composite.md)

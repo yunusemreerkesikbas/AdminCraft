@@ -8,6 +8,8 @@ public interface GlobalRuntimeConfigService {
 
     String getEmailFromName();
 
+    String getPostmarkServerTokenDecrypted();
+
     String getFrontendBaseUrl();
 
     Boolean getRecaptchaEnabled();

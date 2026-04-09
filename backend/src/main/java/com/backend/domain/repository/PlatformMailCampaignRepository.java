@@ -1,5 +1,6 @@
 package com.backend.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.backend.domain.entity.PlatformMailCampaign;
@@ -11,4 +12,6 @@ public interface PlatformMailCampaignRepository {
     Optional<PlatformMailCampaign> findById(Long id);
 
     Optional<PlatformMailCampaign> findTopByTemplateKeyOrderByCreatedAtDesc(String templateKey);
+
+    List<PlatformMailCampaign> findRecentByTemplateKey(String templateKey, int limit);
 }
