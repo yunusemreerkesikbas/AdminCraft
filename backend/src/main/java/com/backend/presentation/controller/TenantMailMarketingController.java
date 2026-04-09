@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.application.dto.mail.MailCampaignDto;
+import com.backend.application.dto.mail.MailOutboxEntryDto;
 import com.backend.application.dto.mail.MailProviderConfigDto;
 import com.backend.application.dto.mail.MailSubscriberAdminDto;
 import com.backend.application.dto.mail.MailSubscriberDto;
@@ -43,12 +44,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/mail")
-@PreAuthorize("hasRole('TENANT_ADMIN')")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
 @RequiredArgsConstructor
 @Validated
 public class TenantMailMarketingController {
@@ -83,6 +83,7 @@ public class TenantMailMarketingController {
     }
 
     @PutMapping("/templates/types/{templateType}/translations/{language}")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<MailTemplateDto>> upsertTemplateTranslation(
         @PathVariable String templateType,
         @PathVariable String language,
@@ -166,6 +167,7 @@ public class TenantMailMarketingController {
     }
 
     @PostMapping("/subscribers/admin")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<MailSubscriberAdminDto>> createSubscriber(
         @Valid @RequestBody UpsertMailSubscriberRequest request
     ) {
@@ -185,6 +187,7 @@ public class TenantMailMarketingController {
     }
 
     @PutMapping("/subscribers/admin/{id}")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<MailSubscriberAdminDto>> updateSubscriber(
         @PathVariable Long id,
         @Valid @RequestBody UpsertMailSubscriberRequest request
@@ -205,6 +208,7 @@ public class TenantMailMarketingController {
     }
 
     @DeleteMapping("/subscribers/admin/{id}")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteSubscriber(@PathVariable Long id) {
         try {
             service.deleteSubscriber(id);
@@ -229,6 +233,7 @@ public class TenantMailMarketingController {
     }
 
     @PutMapping("/provider-config")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<MailProviderConfigDto>> upsertProviderConfig(
         @Valid @RequestBody UpsertProviderConfigRequest request
     ) {
@@ -250,14 +255,26 @@ public class TenantMailMarketingController {
     }
 
     @PostMapping("/campaigns/send")
+    @PreAuthorize("hasRole('TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<MailCampaignDto>> sendCampaign(@Valid @RequestBody SendCampaignRequest request) {
         try {
             return ResponseEntity.ok(ApiResponse.success(
                 message("mail.marketing.campaign.sent"),
-                service.sendCampaign(request.templateId())
+                service.sendCampaign(request.templateType())
             ));
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(message(ex.getMessage())));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
+        }
+    }
+
+    @GetMapping("/campaigns")
+    public ResponseEntity<ApiResponse<List<MailCampaignDto>>> getCampaignList(
+            @RequestParam String templateType,
+            @RequestParam(defaultValue = "5") int size) {
+        try {
+            return ResponseEntity.ok(ApiResponse.success(null, service.getCampaignList(templateType, size)));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
         }
@@ -275,6 +292,25 @@ public class TenantMailMarketingController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
         }
+    }
+
+    @GetMapping("/campaigns/{id}/outbox")
+    public ResponseEntity<ApiResponse<List<MailOutboxEntryDto>>> getCampaignOutbox(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(ApiResponse.success(null, service.getOutboxEntries(id)));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(message(ex.getMessage())));
+        }
+    }
+
+    @GetMapping("/subscribers/admin/export")
+    public ResponseEntity<byte[]> exportSubscribers(@RequestParam(required = false) String templateType) {
+        String csv = service.exportSubscribersCsv(templateType);
+        String filename = "subscribers" + (templateType != null ? "-" + templateType.toLowerCase() : "") + ".csv";
+        return ResponseEntity.ok()
+            .header("Content-Type", "text/csv; charset=UTF-8")
+            .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+            .body(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     private String message(String key) {
@@ -298,7 +334,7 @@ public class TenantMailMarketingController {
     }
 
     public record SendCampaignRequest(
-        @NotNull Long templateId
+        @NotBlank String templateType
     ) {
     }
 

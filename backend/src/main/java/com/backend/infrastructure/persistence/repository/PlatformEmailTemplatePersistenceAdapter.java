@@ -38,6 +38,17 @@ public class PlatformEmailTemplatePersistenceAdapter implements PlatformEmailTem
 
     @Override
     public PlatformEmailTemplate save(PlatformEmailTemplate template) {
-        return PlatformMailMapper.toDomain(jpaRepository.save(PlatformMailMapper.toEntity(template)));
+        com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate entity =
+                template.getId() == null
+                        ? new com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate()
+                        : jpaRepository.findById(template.getId())
+                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate::new);
+        entity.setId(template.getId());
+        entity.setTemplateKey(template.getTemplateKey());
+        entity.setLanguage(template.getLanguage());
+        entity.setSubject(template.getSubject());
+        entity.setContent(template.getContent());
+        entity.setIsActive(template.getIsActive());
+        return PlatformMailMapper.toDomain(jpaRepository.save(entity));
     }
 }

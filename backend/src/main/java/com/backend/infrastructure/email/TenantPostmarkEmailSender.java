@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.backend.application.dto.email.EmailResult;
 import com.backend.domain.port.TenantMailSenderPort;
+import com.backend.shared.common.LogSanitizer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -64,15 +65,12 @@ public class TenantPostmarkEmailSender implements TenantMailSenderPort {
                 Object messageId = responseMap.get("MessageID");
                 return EmailResult.success(messageId != null ? messageId.toString() : "postmark-ok");
             }
-            log.warn("Postmark send failed: status={} body={}", response.statusCode(), response.body());
+            String safeBody = LogSanitizer.sanitizeForLog(response.body());
+            log.warn("Postmark send failed: status={} body={}", response.statusCode(), safeBody);
             return EmailResult.failure("Postmark send failed with HTTP " + response.statusCode());
         } catch (Exception ex) {
             log.error("Postmark send failed due to exception", ex);
-            String message = ex.getMessage();
-            if (message != null && message.length() > 500) {
-                message = message.substring(0, 500);
-            }
-            return EmailResult.failure(message);
+            return EmailResult.failure("Postmark send failed due to internal error");
         }
     }
 }

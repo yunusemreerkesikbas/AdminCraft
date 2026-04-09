@@ -20,6 +20,7 @@ import com.backend.domain.enums.TenantStatus;
 import com.backend.domain.repository.ProvisioningJobRepository;
 import com.backend.domain.repository.TenantModuleRepository;
 import com.backend.domain.repository.TenantRepository;
+import com.backend.shared.common.LogSanitizer;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -126,9 +127,9 @@ public class AsyncProvisioningExecutor {
           ? tenant.getDefaultLanguage().name()
           : "EN";
       platformMailMarketingService.autoSubscribeTenantAdmin(tenant.getAdminEmail(), preferredLang);
-      log.info("Tenant admin {} subscribed to VERSION_UPGRADE newsletter", tenant.getAdminEmail());
+      log.info("Tenant {} admin subscribed to VERSION_UPGRADE newsletter", tenantId);
     } catch (Exception ex) {
-      log.warn("Failed to auto-subscribe tenant {} admin to VERSION_UPGRADE: {}", tenantId, ex.getMessage());
+      log.warn("Failed to auto-subscribe tenant {} admin to VERSION_UPGRADE: {}", tenantId, LogSanitizer.sanitizeException(ex));
     }
   }
 

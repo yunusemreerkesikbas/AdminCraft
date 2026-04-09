@@ -71,11 +71,5 @@ public abstract class BaseEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        if (uuid == null) {
-            uuid = UuidUidGenerator.generateUuid();
-        }
-        if (uid == null || uid.trim().isEmpty()) {
-            uid = UuidUidGenerator.generateUid();
-        }
     }
 }

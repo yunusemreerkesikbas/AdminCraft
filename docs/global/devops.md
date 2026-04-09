@@ -340,6 +340,8 @@ Add the middleware definition to `docker-compose.yml` (or the relevant prod/stag
 
 This gives **3 submissions per 10 minutes per IP** with a burst of 5. Tune thresholds based on observed traffic patterns.
 
+`POST /api/platform/public/newsletter/subscribe` should also be protected at the edge. The current compose labels apply a dedicated Traefik rate-limit middleware to the newsletter subscribe route in both prod and stage. Keep the newsletter router host override aligned with the environment host (`api.*` vs `s1-api.*`) whenever compose routing changes.
+
 ### GitHub Secrets
 
 | Secret | Used by |

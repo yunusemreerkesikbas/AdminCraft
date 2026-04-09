@@ -12,6 +12,7 @@ services:
     labels:
       traefik.http.routers.backend.rule: "Host(`s1-api.${DOMAIN}`)"
       traefik.http.routers.backend-public-demo.rule: "Host(`s1-api.${DOMAIN}`) && PathPrefix(`/api/platform/public/demo-requests`)"
+      traefik.http.routers.backend-public-newsletter.rule: "Host(`s1-api.${DOMAIN}`) && PathPrefix(`/api/platform/public/newsletter/subscribe`)"
 
   frontend:
     labels:

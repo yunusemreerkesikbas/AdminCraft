@@ -32,6 +32,11 @@ public class NewsletterSubscriberSubscriptionRepositoryImpl implements Newslette
     }
 
     @Override
+    public List<NewsletterSubscriberSubscription> findAllByOrderBySubscriberCreatedAtDesc() {
+        return jpaRepository.findAllByOrderBySubscriberCreatedAtDesc();
+    }
+
+    @Override
     public List<NewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndSubscriberStatus(
             String templateKey, MailSubscriberStatus status) {
         return jpaRepository.findByTemplateKeyIgnoreCaseAndSubscriberStatus(templateKey, status);

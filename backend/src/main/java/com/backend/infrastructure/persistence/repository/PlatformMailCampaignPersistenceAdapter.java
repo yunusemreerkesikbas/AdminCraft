@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.backend.domain.entity.PlatformMailCampaign;
@@ -21,7 +20,21 @@ public class PlatformMailCampaignPersistenceAdapter implements PlatformMailCampa
 
     @Override
     public PlatformMailCampaign save(PlatformMailCampaign campaign) {
-        return PlatformMailMapper.toDomain(jpaRepository.save(PlatformMailMapper.toEntity(campaign)));
+        com.backend.infrastructure.persistence.platform.entity.PlatformMailCampaign entity =
+                campaign.getId() == null
+                        ? new com.backend.infrastructure.persistence.platform.entity.PlatformMailCampaign()
+                        : jpaRepository.findById(campaign.getId())
+                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformMailCampaign::new);
+        entity.setId(campaign.getId());
+        entity.setTemplate(toTemplateReference(campaign.getTemplate()));
+        entity.setSubject(campaign.getSubject());
+        entity.setContent(campaign.getContent());
+        entity.setStatus(campaign.getStatus());
+        entity.setTotalCount(campaign.getTotalCount());
+        entity.setSentCount(campaign.getSentCount());
+        entity.setFailedCount(campaign.getFailedCount());
+        entity.setCreatedByEmail(campaign.getCreatedByEmail());
+        return PlatformMailMapper.toDomain(jpaRepository.save(entity));
     }
 
     @Override
@@ -39,7 +52,18 @@ public class PlatformMailCampaignPersistenceAdapter implements PlatformMailCampa
     public List<PlatformMailCampaign> findRecentByTemplateKey(String templateKey, int limit) {
         return jpaRepository.findByTemplate_TemplateKeyIgnoreCaseOrderByCreatedAtDesc(
                 templateKey,
-                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"))
+                PageRequest.of(0, limit)
         ).stream().map(PlatformMailMapper::toDomain).toList();
+    }
+
+    private com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate toTemplateReference(
+            com.backend.domain.entity.PlatformEmailTemplate template) {
+        if (template == null || template.getId() == null) {
+            return null;
+        }
+        com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate ref =
+                new com.backend.infrastructure.persistence.platform.entity.PlatformEmailTemplate();
+        ref.setId(template.getId());
+        return ref;
     }
 }

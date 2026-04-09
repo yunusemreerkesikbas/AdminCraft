@@ -24,11 +24,16 @@ public interface NewsletterSubscriberSubscriptionJpaRepository
     @EntityGraph(attributePaths = "subscriber")
     List<NewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseOrderBySubscriberCreatedAtDesc(String templateKey);
 
+    @EntityGraph(attributePaths = "subscriber")
+    List<NewsletterSubscriberSubscription> findAllByOrderBySubscriberCreatedAtDesc();
+
+    @EntityGraph(attributePaths = "subscriber")
     List<NewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndSubscriberStatus(
         String templateKey,
         MailSubscriberStatus status
     );
 
+    @EntityGraph(attributePaths = "subscriber")
     List<NewsletterSubscriberSubscription> findByTemplateKeyIgnoreCaseAndPermissionTrueAndSubscriberStatus(
         String templateKey,
         MailSubscriberStatus status

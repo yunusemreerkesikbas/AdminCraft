@@ -63,6 +63,19 @@ public class PlatformNewsletterSubscriberPersistenceAdapter implements PlatformN
 
     @Override
     public PlatformNewsletterSubscriber save(PlatformNewsletterSubscriber subscriber) {
-        return PlatformMailMapper.toDomain(jpaRepository.save(PlatformMailMapper.toEntity(subscriber)));
+        com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber entity =
+                subscriber.getId() == null
+                        ? new com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber()
+                        : jpaRepository.findById(subscriber.getId())
+                                .orElseGet(com.backend.infrastructure.persistence.platform.entity.PlatformNewsletterSubscriber::new);
+        entity.setId(subscriber.getId());
+        entity.setEmail(subscriber.getEmail());
+        entity.setStatus(subscriber.getStatus());
+        entity.setSource(subscriber.getSource());
+        entity.setConfirmToken(subscriber.getConfirmToken());
+        entity.setUnsubscribeToken(subscriber.getUnsubscribeToken());
+        entity.setConfirmedAt(subscriber.getConfirmedAt());
+        entity.setUnsubscribedAt(subscriber.getUnsubscribedAt());
+        return PlatformMailMapper.toDomain(jpaRepository.save(entity));
     }
 }

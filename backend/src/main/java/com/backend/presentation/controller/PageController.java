@@ -34,6 +34,10 @@ import com.backend.application.dto.response.PageResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.SecurityUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -46,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Validated
 @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
+@Tag(name = "Pages", description = "Page CRUD and translation endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class PageController {
 
   private final PageService pageService;
@@ -54,6 +60,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping
+  @Operation(summary = "Create page", description = "Creates a new page")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page created"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageResponse>> create(
       @Valid @RequestBody PageCreateRequest request,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -73,6 +86,13 @@ public class PageController {
   }
 
   @GetMapping("/{id}")
+  @Operation(summary = "Get page by ID", description = "Returns page by ID, optionally with translations")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Page not found"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<?>> getById(
       @PathVariable @NotNull @Min(1) Long id,
       @RequestParam(value = "include", required = false) String include,
@@ -94,6 +114,12 @@ public class PageController {
   }
 
   @GetMapping
+  @Operation(summary = "List pages", description = "Returns all pages with translation metadata")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pages returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<List<PageListResponse>>> list(
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
     try {
@@ -110,6 +136,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}")
+  @Operation(summary = "Update page", description = "Updates an existing page")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page updated"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageResponse>> update(
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody PageCreateRequest request,
@@ -131,6 +164,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @DeleteMapping("/{id}")
+  @Operation(summary = "Delete page", description = "Deletes a page by ID")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Page deleted"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Delete failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<Void>> delete(
       @PathVariable @NotNull @Min(1) Long id,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -149,6 +189,13 @@ public class PageController {
   }
 
   @GetMapping("/{pageId}/i18n/{language}")
+  @Operation(summary = "Get page translation", description = "Returns translation details for a page and language")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Translation returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+  })
   public ResponseEntity<ApiResponse<PageI18nResponse>> getPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
@@ -167,6 +214,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{pageId}/i18n/{language}")
+  @Operation(summary = "Upsert page translation", description = "Creates or updates page translation for selected language")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Translation upserted"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageI18nResponse>> upsertPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
@@ -196,6 +250,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/{pageId}/publish/{language}")
+  @Operation(summary = "Publish page translation", description = "Publishes page translation for selected language")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Translation published"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageI18nResponse>> publishPageI18n(
       @PathVariable @NotNull @Min(1) Long pageId,
       @PathVariable @NotNull Language language,
@@ -228,6 +289,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PostMapping("/composite")
+  @Operation(summary = "Create page composite", description = "Creates page with translation payload in a composite request")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Composite created"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageDetailResponse>> createComposite(
       @Valid @RequestBody CreatePageCompositeRequest request,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -248,6 +316,13 @@ public class PageController {
   }
 
   @GetMapping("/{id}/composite")
+  @Operation(summary = "Get page composite", description = "Returns page with all translation details")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Composite returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Page not found"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageDetailResponse>> getComposite(
       @PathVariable @NotNull @Min(1) Long id,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String lang) {
@@ -264,6 +339,13 @@ public class PageController {
 
   @PreAuthorize("hasRole('TENANT_ADMIN')")
   @PutMapping("/{id}/composite")
+  @Operation(summary = "Update page composite", description = "Updates page and translation payload in composite mode")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Composite updated"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+  })
   public ResponseEntity<ApiResponse<PageDetailResponse>> updateComposite(
       @PathVariable @NotNull @Min(1) Long id,
       @Valid @RequestBody UpdatePageCompositeRequest request,

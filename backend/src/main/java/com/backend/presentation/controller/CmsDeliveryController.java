@@ -27,6 +27,9 @@ import com.backend.application.service.SiteTechnicalService;
 import com.backend.domain.enums.Language;
 import com.backend.shared.common.ApiResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/cms")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "CMS Delivery", description = "Public CMS delivery endpoints for storefront rendering")
 public class CmsDeliveryController {
 
   private static final int MAX_BATCH_SIZE = 50;
@@ -45,6 +49,11 @@ public class CmsDeliveryController {
   private final MessageSource messageSource;
 
   @GetMapping("/components/{uid}")
+  @Operation(summary = "Get component by UID", description = "Returns a CMS component delivery payload by UID")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Response returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+  })
   public ResponseEntity<ApiResponse<ComponentDeliveryResponse>> getComponentByUid(
       @PathVariable String uid,
       @RequestParam(required = false) Language lang,
@@ -63,6 +72,11 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/components")
+  @Operation(summary = "Get components batch", description = "Returns CMS components for given UIDs")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Response returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+  })
   public ResponseEntity<ApiResponse<BatchDeliveryResponse>> getComponentsByUids(
       @RequestParam List<String> uids,
       @RequestParam(required = false) Language lang,
@@ -91,6 +105,11 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/pages")
+  @Operation(summary = "Resolve page", description = "Resolves and returns CMS page delivery payload")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Response returned"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request")
+  })
   public ResponseEntity<ApiResponse<PageDeliveryResponse>> resolvePage(
       @RequestParam(required = false) String pageType,
       @RequestParam(required = false) String pageLabelOrId,
@@ -111,6 +130,10 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/site")
+  @Operation(summary = "Get site config", description = "Returns CMS site config for delivery")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Response returned")
+  })
   public ResponseEntity<ApiResponse<SiteDeliveryResponse>> getSiteConfig(
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
@@ -127,6 +150,10 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/navigation/{uid}")
+  @Operation(summary = "Get navigation by UID", description = "Returns navigation delivery payload")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Response returned")
+  })
   public ResponseEntity<ApiResponse<NavigationDeliveryResponse>> getNavigationByUid(
       @PathVariable String uid,
       @RequestParam(required = false) Language lang,
@@ -143,6 +170,10 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/pages/sitemap")
+  @Operation(summary = "Get sitemap pages", description = "Returns sitemap entries for public pages")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Sitemap returned")
+  })
   public ResponseEntity<ApiResponse<List<SitemapPageEntry>>> getSitemapPages(
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
@@ -156,6 +187,10 @@ public class CmsDeliveryController {
   }
 
   @GetMapping("/shell")
+  @Operation(summary = "Get shell", description = "Returns shell delivery response for storefront chrome")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Shell returned")
+  })
   public ResponseEntity<ApiResponse<ShellDeliveryResponse>> getShell(
       @RequestParam(required = false) Language lang,
       @RequestHeader(value = "Accept-Language", defaultValue = "tr") String acceptLanguage) {
@@ -172,6 +207,10 @@ public class CmsDeliveryController {
   }
 
   @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
+  @Operation(summary = "Get robots.txt", description = "Returns robots.txt content for current tenant site")
+  @ApiResponses(value = {
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "robots.txt returned")
+  })
   public ResponseEntity<String> getRobotsTxt() {
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_PLAIN)

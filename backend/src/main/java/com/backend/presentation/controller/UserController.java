@@ -45,6 +45,10 @@ import com.backend.shared.common.RequestUtils;
 import com.backend.shared.common.SortParseUtil;
 import com.backend.shared.config.SortableFieldsConfig;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -61,6 +65,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Validated
 @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'VIEWER')")
+@Tag(name = "Users", description = "Tenant user management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
         private final UserService userService;
@@ -70,6 +76,14 @@ public class UserController {
         private final MessageSource messageSource;
 
         @GetMapping
+        @Operation(summary = "List users", description = "Returns paginated tenant users with optional search and sorting")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users listed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid query parameters"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<PageableResponse<UserResponse>>> list(
                         @RequestParam(defaultValue = "0") @Min(0) int page,
                         @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -129,6 +143,14 @@ public class UserController {
         // ========== Get User By ID ==========
 
         @GetMapping("/{id}")
+        @Operation(summary = "Get user by ID", description = "Returns a tenant user by identifier")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> getUserById(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -155,6 +177,15 @@ public class UserController {
         // ========== Get User By Email ==========
 
         @GetMapping("/email/{email}")
+        @Operation(summary = "Get user by email", description = "Returns a tenant user by email address")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid email"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> getUserByEmail(
                         @PathVariable @Valid @NotBlank @Email String email,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -186,6 +217,12 @@ public class UserController {
         // ========== Get Current User ==========
 
         @GetMapping("/current")
+        @Operation(summary = "Get current user", description = "Returns the authenticated user profile")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Current user returned"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
                 try {
@@ -205,6 +242,14 @@ public class UserController {
 
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping
+        @Operation(summary = "Create user", description = "Creates a new tenant user")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "User created"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> createUser(
                         @Valid @RequestBody CreateUserRequest request,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
@@ -256,6 +301,15 @@ public class UserController {
 
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PutMapping("/{id}")
+        @Operation(summary = "Update user", description = "Updates an existing tenant user")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User updated"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation failed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> updateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @Valid @RequestBody UpdateUserRequest request,
@@ -300,6 +354,14 @@ public class UserController {
 
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @DeleteMapping("/{id}")
+        @Operation(summary = "Delete user", description = "Deletes a tenant user")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deleted"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Delete failed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<Void>> deleteUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -322,6 +384,14 @@ public class UserController {
 
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/activate")
+        @Operation(summary = "Activate user", description = "Activates a tenant user account")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User activated"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Activation failed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> activateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -356,6 +426,14 @@ public class UserController {
          */
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/reset-password")
+        @Operation(summary = "Send reset password email", description = "Sends password reset email to selected user")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reset email sent"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<Void>> resetPassword(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
@@ -407,6 +485,14 @@ public class UserController {
 
         @PreAuthorize("hasRole('TENANT_ADMIN')")
         @PostMapping("/{id}/deactivate")
+        @Operation(summary = "Deactivate user", description = "Deactivates a tenant user account")
+        @ApiResponses(value = {
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deactivated"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Deactivation failed"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+        })
         public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(
                         @PathVariable @Valid @NotNull @Min(1) Long id,
                         @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {

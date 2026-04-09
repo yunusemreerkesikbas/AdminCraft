@@ -108,7 +108,7 @@ Base path: `/api/mail`
 - `POST /api/mail/campaigns/send` — body: `{ templateType: string }`
 - `GET /api/mail/campaigns/{id}`
 - `GET /api/mail/campaigns?templateType=...&size=5` — recent campaign list
-- `GET /api/mail/campaigns/{id}/outbox` — failed/processing outbox entries for a campaign
+- `GET /api/mail/campaigns/{id}/outbox` — outbox entries for a campaign in `FAILED`, `PENDING`, or `PROCESSING` status
 - `GET /api/mail/subscribers/admin/export?templateType=...` — CSV download (all subscribers)
 
 ### Platform admin
@@ -129,7 +129,7 @@ Base path: `/api/platform/mail`
 - `POST /api/platform/mail/campaigns/send` — body: `{ templateType: string }`
 - `GET /api/platform/mail/campaigns/{id}`
 - `GET /api/platform/mail/campaigns?templateType=...&size=5` — recent campaign list
-- `GET /api/platform/mail/campaigns/{id}/outbox` — failed/processing outbox entries for a campaign
+- `GET /api/platform/mail/campaigns/{id}/outbox` — outbox entries for a campaign in `FAILED`, `PENDING`, or `PROCESSING` status
 - `GET /api/platform/mail/subscribers/admin/export?templateType=...` — CSV download (all subscribers)
 
 ### Campaign send behavior
@@ -152,9 +152,11 @@ Controller: [`../../backend/src/main/java/com/backend/presentation/controller/Pl
 Base path: `/api/platform/public/newsletter`
 
 - `POST /api/platform/public/newsletter/subscribe`
-  - Body: `{ email, source?, templateType, locale? }`
+  - Body: `{ email, source?, templateType, locale?, honeypot?, formStartedAt? }`
   - `templateType` must be a subscribable type (`NEWSLETTER_DEFAULT`, `VERSION_UPGRADE`).
   - `locale` drives `preferredLanguage` (`TR`/`EN`) on the subscription relation and the language of the confirmation email.
+  - `honeypot` and `formStartedAt` are lightweight anti-bot inputs used before persistence.
+  - Success and handled business errors are returned as localized backend `ApiResponse.message`; storefront shows this message directly.
   - Sends HTML confirmation email (`newsletter-confirm-tr.html` / `newsletter-confirm-en.html`).
 - `GET /api/platform/public/newsletter/confirm?token=...` — activates subscriber (status → `ACTIVE`)
 - `POST /api/platform/public/newsletter/unsubscribe` — soft unsubscribe via token
@@ -180,17 +182,17 @@ Triggered automatically when a landing page demo request is submitted.
 - Entry point: [`../../backend/src/main/java/com/backend/application/service/impl/PlatformDemoRequestServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/PlatformDemoRequestServiceImpl.java) — `submit()` calls `PlatformMailMarketingService.sendDemoRequestConfirmation()` after DB save.
 - Rendered from Thymeleaf: `email/demo-request-confirmation-tr.html` / `email/demo-request-confirmation-en.html`.
 - Template variable: `${name}` (full name of the requester).
-- Language resolved from `command.locale()`.
-- Mail failure does **not** rollback the demo request (exception is caught inside the method).
+- Language resolved from persisted `entity.getLocale()` (normalized at save time).
+- Confirmation mail send is triggered in `afterCommit`; DB save is not rolled back by mail delivery failure.
 
 ### TENANT_USER_WELCOME (tenant)
 
 Triggered when a new tenant user account is created (activation email).
 
 - Entry point: [`../../backend/src/main/java/com/backend/application/service/impl/EmailServiceImpl.java`](../../backend/src/main/java/com/backend/application/service/impl/EmailServiceImpl.java) — `sendEmailVerificationEmail()`.
-- If `tenantContext.isSet()`: looks up active `TENANT_USER_WELCOME` template in `email_templates`.
-  - Found and active → renders via `TemplateVariableRenderer`, sends via `emailSender`.
-  - Not found or inactive → falls back to system Thymeleaf template (`email-verify-tr.html` / `email-verify-en.html`).
+- If `tenantContext.isSet()` **and** tenant module `MAIL_MARKETING` is enabled: looks up active `TENANT_USER_WELCOME` template in `email_templates`.
+  - Found and active → renders via `TemplateVariableRenderer`, sends via tenant mail routing (`TenantMailMarketingService`).
+  - Not found or inactive → renders system Thymeleaf template (`email-verify-tr.html` / `email-verify-en.html`) and still sends via tenant mail routing.
 - Template content: TENANT_ADMIN edits via `/:lang/mail-marketing → TENANT_USER_WELCOME`.
 - Template variables: `{{name}}`, `{{verificationLink}}`, `{{expiryHours}}`
 
@@ -257,7 +259,7 @@ Detail page sidebar contains three cards:
 2. **Last Campaign** — status badge, progress bar, sent/failed stats, refresh button.
 3. **Campaign History** — last 5 campaigns as clickable rows. Each row shows status, date, and sent/failed counts. Clicking opens the Outbox Dialog.
 
-**Outbox Dialog** ([`mail-campaign-outbox-dialog.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/mail-campaign-outbox-dialog.component.ts)): opens on campaign row click, calls `GET /campaigns/{id}/outbox`, lists FAILED entries with email and error message. Accepts `getCampaignOutbox` as a function via `MAT_DIALOG_DATA` — keeping the dialog scope-agnostic (platform/tenant).
+**Outbox Dialog** ([`mail-campaign-outbox-dialog.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/mail-campaign-outbox-dialog.component.ts)): opens on campaign row click, calls `GET /campaigns/{id}/outbox`, and lists non-final entries (`PENDING`/`PROCESSING`) plus failed entries (`FAILED`) with status and details. Accepts `getCampaignOutbox` as a function via `MAT_DIALOG_DATA` — keeping the dialog scope-agnostic (platform/tenant).
 
 **Subscriber list** ([`mail-subscriber-list.component.ts`](../../storefront/src/app/modules/admin/custom/mail-marketing/subscribers/mail-subscriber-list.component.ts)): header actions include an "Export CSV" button that calls `GET /subscribers/admin/export`, downloads the response blob as a `.csv` file using a temporary `<a>` element.
 
@@ -266,8 +268,11 @@ Detail page sidebar contains three cards:
 Newsletter subscription section added between FAQ and CTA banner.
 
 - Component: [`../../landing/components/sections/NewsletterSection.tsx`](../../landing/components/sections/NewsletterSection.tsx)
-- API function: `subscribePlatformNewsletter(email, locale, recaptchaToken?)` in [`../../landing/lib/platform-api.ts`](../../landing/lib/platform-api.ts)
-  - `POST /api/platform/public/newsletter/subscribe` with `templateType: "NEWSLETTER_DEFAULT"`, `source: "LANDING_NEWSLETTER"`
+- API function: `subscribePlatformNewsletter(email, locale, honeypot, formStartedAt)` in [`../../landing/lib/platform-api.ts`](../../landing/lib/platform-api.ts)
+  - `POST /api/platform/public/newsletter/subscribe` with `templateType: "NEWSLETTER_DEFAULT"`, `source: "LANDING_NEWSLETTER"`, `honeypot`, `formStartedAt`
+  - Backend blocks suspicious submits when the hidden honeypot field is filled or the form arrives unrealistically fast after render.
+  - Edge protection: Traefik rate limit is applied to the public subscribe endpoint.
+  - Submit success/error text comes from backend `ApiResponse.message`; landing content keeps only client-originated fallback copy (for example network failure).
 - Content: `newsletter` key in [`../../landing/content/home.en.json`](../../landing/content/home.en.json) and [`../../landing/content/home.tr.json`](../../landing/content/home.tr.json)
 - Error class: `NewsletterSubscribeError` (exported from `platform-api.ts`)
 
@@ -289,12 +294,12 @@ Newsletter subscription section added between FAQ and CTA banner.
 
 | Value | Behavior |
 |-------|----------|
-| `console` | Logs `[MAIL:CONSOLE] to=... subject=...` — no real delivery (default) |
+| `console` | Logs non-PII delivery metadata (`messageId`, `channel`, `status`) — no real delivery (default) |
 | `postmark` | Sends via `TenantPostmarkEmailSender` using `app.email.postmark.server-token` (secret/encrypted) |
 
 If `provider=postmark` but token is not set, falls back to console with a WARN log.
 
-**Tenant mail** (campaigns, newsletter confirm, `TENANT_USER_WELCOME`) routing is controlled exclusively by tenant's own `mail_provider_config` table — independent of platform global config:
+**Tenant mail** (campaigns, newsletter confirm, `TENANT_USER_WELCOME` when `MAIL_MARKETING` module is enabled) routing is controlled exclusively by tenant's own `mail_provider_config` table — independent of platform global config:
 
 | `provider` field | `is_active` | Behavior |
 |-----------------|-------------|----------|
@@ -306,14 +311,14 @@ New tenants default to `CONSOLE`. Tenant admin sets `provider=POSTMARK` + token 
 
 **Console summary logging** — every mail flow logs relevant data at the service layer regardless of provider:
 
-```
-[MAIL] otp → user@example.com | code=123456
-[MAIL] password-reset → user@example.com | link=https://...
-[MAIL] email-verify → user@example.com | link=https://...
-[MAIL] newsletter-confirm → user@example.com | confirmLink=https://...
-[MAIL] demo-request-confirm → user@example.com
-[MAIL] TENANT_USER_WELCOME → user@example.com | vars=[name, verificationLink, expiryHours]
-[MAIL:CONSOLE] to=u***@example.com | subject="..."  ← ConsoleEmailSender output
+```text
+[MAIL] otp dispatch requested | recipient=use****er@example.com
+[MAIL] password-reset dispatch requested | recipient=use****er@example.com
+[MAIL] email-verify dispatch requested | recipient=use****er@example.com
+[MAIL] newsletter-confirm dispatch requested | recipient=use****er@example.com
+[MAIL] demo-request-confirm dispatch requested | recipient=use****er@example.com
+[MAIL] TENANT_USER_WELCOME dispatch requested | recipient=use****er@example.com | vars=[name, verificationLink, expiryHours]
+[MAIL:CONSOLE] messageId=... channel=console status=accepted
 ```
 
 ### Language assignment
@@ -338,24 +343,27 @@ For the `TENANT_USER_WELCOME` transactional type: the saved content is used on t
 ### 2) Landing newsletter subscription flow
 
 1. Visitor enters email in `NewsletterSection` on the landing page.
-2. `subscribePlatformNewsletter()` calls `POST /api/platform/public/newsletter/subscribe` with `templateType=NEWSLETTER_DEFAULT`, `source=LANDING_NEWSLETTER`, and `locale`.
-3. Backend upserts subscriber as `PENDING_CONFIRMATION`, sets `preferredLanguage` from locale.
-4. HTML confirmation email (`newsletter-confirm-{lang}.html`) is sent via platform mail sender.
-5. Visitor clicks confirm link → `GET /api/platform/public/newsletter/confirm?token=...` → status becomes `ACTIVE`.
-6. Subscriber is now included in future `NEWSLETTER_DEFAULT` campaign recipients.
+2. `subscribePlatformNewsletter()` calls `POST /api/platform/public/newsletter/subscribe` with `templateType=NEWSLETTER_DEFAULT`, `source=LANDING_NEWSLETTER`, `locale`, and lightweight anti-bot fields (`honeypot`, `formStartedAt`).
+3. Backend rejects suspicious requests (filled honeypot or too-fast submit) before touching subscriber persistence.
+4. Traefik also rate-limits the public subscribe endpoint per source IP.
+5. Valid requests create or update the `NEWSLETTER_DEFAULT` relation with `preferredLanguage` from locale and `permission=false`, then send the HTML confirmation email (`newsletter-confirm-{lang}.html`) via platform mail sender.
+6. If the email is already actively subscribed to `NEWSLETTER_DEFAULT`, the endpoint is idempotent: no duplicate relation is created and no new confirmation mail is sent.
+7. Visitor clicks confirm link → `GET /api/platform/public/newsletter/confirm?token=...` → subscriber status becomes `ACTIVE` and pending newsletter relations are activated (`permission=true`).
+8. Storefront displays the localized backend `ApiResponse.message` for handled submit outcomes; frontend copy is reserved for client-only failures.
+9. Subscriber is now included in future `NEWSLETTER_DEFAULT` campaign recipients.
 
 ### 3) Demo request → automatic confirmation mail
 
 1. Landing form submits to `POST /api/platform/public/demo-requests`.
 2. `PlatformDemoRequestServiceImpl.submit()` saves the request to DB.
-3. `PlatformMailMarketingService.sendDemoRequestConfirmation(email, fullName, locale)` is called immediately after save.
+3. `PlatformMailMarketingService.sendDemoRequestConfirmation(email, fullName, locale)` is registered in `afterCommit` and runs only after DB commit.
 4. Renders `email/demo-request-confirmation-{lang}.html` via Thymeleaf with `${name}` variable.
-5. Sends via platform mail sender. If render or send fails — request save is unaffected (exception caught inside the method).
+5. Sends via platform mail sender. Mail delivery does not affect request persistence because send runs post-commit.
 
 ### 4) Tenant user welcome with custom template
 
 1. Admin creates a new user → system triggers `EmailServiceImpl.sendEmailVerificationEmail()`.
-2. Service checks `tenantContext.isSet()`. If in tenant context:
+2. Service checks `tenantContext.isSet()` and module enablement (`MAIL_MARKETING`). If enabled in tenant context:
    - Looks up `TENANT_USER_WELCOME` in `email_templates` for the resolved language.
    - If active template found → renders `{{name}}`, `{{verificationLink}}`, `{{expiryHours}}` and sends.
    - If not found → falls back to system `email-verify-{lang}.html` Thymeleaf template.

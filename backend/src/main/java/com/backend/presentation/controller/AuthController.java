@@ -33,6 +33,9 @@ import com.backend.presentation.dto.response.TokenValidationResponse;
 import com.backend.shared.common.ApiResponse;
 import com.backend.shared.common.RequestUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Authentication", description = "Authentication and credential recovery endpoints")
 public class AuthController {
 
     private final AuthenticationService authenticationService;
@@ -51,6 +55,13 @@ public class AuthController {
     private final RecaptchaService recaptchaService;
 
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticates user credentials and returns access/refresh tokens or 2FA challenge")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login successful"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation or reCAPTCHA failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid credentials or account locked"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<?>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
@@ -114,6 +125,12 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Refresh token", description = "Exchanges a valid refresh token for a new access token pair")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token refreshed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid or expired refresh token"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
             @RequestHeader("Authorization") @Valid @NotBlank String refreshToken,
             @RequestHeader(value = "X-Device-Fingerprint", required = false) String deviceFingerprint,
@@ -149,6 +166,12 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Invalidates current session token and logs user out")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logout successful"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid token"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<Void>> logout(
             @RequestHeader("Authorization") @Valid @NotBlank String token,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -174,6 +197,12 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset", description = "Creates password reset request and sends reset email if account exists")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Reset flow started"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation or reCAPTCHA failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
@@ -210,6 +239,12 @@ public class AuthController {
     }
 
     @GetMapping("/verify-reset-token")
+    @Operation(summary = "Verify reset token", description = "Validates password reset token state")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token validation returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token invalid or expired"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<TokenValidationResponse>> verifyResetToken(
             @RequestParam @NotBlank String token,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -235,6 +270,12 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Sets new password with a valid password-reset token")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password reset successful"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid token, invalid payload or reCAPTCHA failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
@@ -266,6 +307,12 @@ public class AuthController {
     }
 
     @GetMapping("/verify-email-token")
+    @Operation(summary = "Verify email token", description = "Validates email verification token state")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Token validation returned"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Token invalid or expired"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<TokenValidationResponse>> verifyEmailToken(
             @RequestParam @NotBlank String token,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode) {
@@ -291,6 +338,12 @@ public class AuthController {
     }
 
     @PostMapping("/set-initial-password")
+    @Operation(summary = "Set initial password", description = "Sets initial password after email verification")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Initial password set"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid token, invalid payload or reCAPTCHA failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<Void>> setInitialPassword(
             @Valid @RequestBody SetInitialPasswordRequest request,
             @RequestHeader(value = "X-Tenant-ID", required = false) Long tenantId,
@@ -331,6 +384,12 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
+    @Operation(summary = "Verify OTP", description = "Verifies one-time password for two-factor authentication flow")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP verified"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Invalid OTP or pending token"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request,
             @RequestHeader(value = "Accept-Language", defaultValue = "tr") String languageCode,
