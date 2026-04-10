@@ -55,6 +55,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 150s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - craftive-network
     labels:
@@ -103,14 +111,7 @@ services:
       traefik.http.routers.frontend.entrypoints: "websecure"
       traefik.http.routers.frontend.tls.certresolver: "letsencrypt"
       traefik.http.services.frontend.loadbalancer.server.port: "80"
-      # Redirect root domain to app subdomain
-      traefik.http.routers.root-redirect.rule: "Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
-      traefik.http.routers.root-redirect.entrypoints: "websecure"
-      traefik.http.routers.root-redirect.tls.certresolver: "letsencrypt"
-      traefik.http.routers.root-redirect.middlewares: "redirect-to-app"
-      traefik.http.middlewares.redirect-to-app.redirectregex.regex: ".*"
-      traefik.http.middlewares.redirect-to-app.redirectregex.replacement: "https://app.${DOMAIN}"
-      traefik.http.middlewares.redirect-to-app.redirectregex.permanent: "true"
+      # craftive.io and www.craftive.io are served by Cloudflare Pages (landing project) — no Traefik rule needed
 
   storefront:
     image: ghcr.io/${GHCR_ORG}/craftive-storefront:${APP_VERSION:-latest}
