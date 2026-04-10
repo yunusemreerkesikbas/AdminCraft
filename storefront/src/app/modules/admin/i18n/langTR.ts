@@ -2463,9 +2463,13 @@ export const langTR = {
             },
             sections: {
                 templates: 'Şablonlar',
+                templateContent: 'Şablon İçeriği',
                 provider: 'Provider Konfigürasyonu',
                 campaign: 'Kampanya Gönderimi',
-                lastCampaign: 'Son Kampanya Durumu',
+                sendCampaign: 'Kampanya Gönder',
+                lastCampaign: 'Son Kampanya',
+                campaignHistory: 'Kampanya Geçmişi',
+                campaignOutbox: 'Kampanya Gönderim Detayı',
                 subscribers: 'Aboneler',
             },
             fields: {
@@ -2501,6 +2505,8 @@ export const langTR = {
                 serverToken: 'Mevcut tokenı korumak için boş bırakın',
             },
             actions: {
+                save: 'Kaydet',
+                refresh: 'Yenile',
                 saveTemplate: 'Şablonu Kaydet',
                 saveProvider: 'Provider Kaydet',
                 sendCampaign: 'Kampanya Gönder',
@@ -2508,6 +2514,7 @@ export const langTR = {
                 refreshSubscribers: 'Aboneleri Yenile',
                 manageSubscribers: 'Aboneleri Yönet',
                 openDetail: 'Detayı Aç',
+                exportCsv: 'CSV İndir',
             },
             subscribers: {
                 tenantTitle: 'Tenant Aboneleri',
@@ -2517,6 +2524,7 @@ export const langTR = {
                 platformSubtitle:
                     'Platform seviyesindeki abone kayıtlarını ve template aboneliklerini yönetin',
                 fields: {
+                    binding: 'Bağlantı',
                     bindings: 'Template Bağlantıları',
                     permission: 'Gönderim İzni',
                     allowed: 'İzinli',
@@ -2524,6 +2532,7 @@ export const langTR = {
                 },
                 actions: {
                     addBinding: 'Bağlantı Ekle',
+                    deleteBindingAria: 'Bağlantıyı sil {{index}}',
                 },
                 dialog: {
                     createTitle: 'Abone Oluştur',
@@ -2545,11 +2554,37 @@ export const langTR = {
                 },
             },
             status: {
+                active: 'Aktif',
+                inactive: 'Pasif',
                 DRAFT: 'Taslak',
                 SENDING: 'Gönderiliyor',
                 COMPLETED: 'Tamamlandı',
                 COMPLETED_WITH_ERRORS: 'Hatalı Tamamlandı',
                 FAILED: 'Başarısız',
+            },
+            campaignStatus: {
+                DRAFT: 'Taslak',
+                SENDING: 'Gönderiliyor',
+                COMPLETED: 'Tamamlandı',
+                COMPLETED_WITH_ERRORS: 'Hatalı Tamamlandı',
+                FAILED: 'Başarısız',
+            },
+            campaign: {
+                selectLanguage: 'Gönderim dili seçin',
+                total: 'Toplam',
+                sent: 'Gönderilen',
+                failed: 'Başarısız',
+                noCampaigns: 'Henüz kampanya gönderilmedi',
+                outbox: {
+                    failedEmails: 'Başarısız E-postalar',
+                    noFailures: 'Tüm e-postalar başarıyla gönderildi',
+                    loadError: 'Gönderim detayı yüklenemedi',
+                },
+            },
+            templateList: {
+                emptyTitle: 'Template bulunamadı',
+                emptyDescription:
+                    'Henüz kullanılabilir template tipi görünmüyor. Listeyi yenileyip tekrar deneyin.',
             },
             subscriberStatus: {
                 PENDING_CONFIRMATION: 'Onay Bekliyor',
@@ -2569,6 +2604,7 @@ export const langTR = {
                 subscribersLoadFailed: 'Aboneler yüklenemedi',
                 noSubscribers: 'Henüz abone bulunmuyor',
                 templatesLoadFailed: 'Template türleri yüklenemedi',
+                exportFailed: 'CSV dışa aktarma başarısız oldu',
                 noTemplates: 'Henüz template type bulunmuyor',
                 noTemplatesHint: 'Başlatma sonrası template type listesi burada görünür',
                 backend: {

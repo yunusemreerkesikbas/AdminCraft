@@ -4,20 +4,149 @@
         [subtitle]="'admin.mailMarketing.platform.subtitle' | transloco"
     ></admin-page-header>
 
-    <div class="flex flex-auto flex-col overflow-hidden">
-        <div class="flex flex-auto flex-col overflow-y-auto">
-            <spa-admin-grid
-                [items]="itemsSig()"
-                [columns]="columns"
-                [actions]="actions"
-                [isLoading]="loadingSig()"
-                [emptyIcon]="'heroicons_outline:envelope'"
-                [emptyTitle]="'admin.mailMarketing.messages.noTemplates'"
-                [emptyDescription]="'admin.mailMarketing.messages.noTemplatesHint'"
-                (actionClick)="onGridAction($event)"
-                (rowClick)="onRowClick($event)"
-            ></spa-admin-grid>
-        </div>
+    <div class="p-6">
+        @if (loadingSig()) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                @for (i of [1, 2]; track i) {
+                    <div
+                        class="animate-pulse rounded-xl border bg-slate-50 p-5 dark:bg-slate-900/40"
+                    >
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="h-10 w-10 flex-shrink-0 rounded-lg bg-slate-200 dark:bg-slate-700"
+                            ></div>
+                            <div class="flex-1 space-y-2.5">
+                                <div
+                                    class="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-700"
+                                ></div>
+                                <div
+                                    class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-700"
+                                ></div>
+                                <div class="flex gap-1.5 pt-1">
+                                    <div
+                                        class="h-5 w-8 rounded bg-slate-200 dark:bg-slate-700"
+                                    ></div>
+                                    <div
+                                        class="h-5 w-8 rounded bg-slate-200 dark:bg-slate-700"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        } @else {
+            @if (itemsSig().length === 0) {
+                <div
+                    class="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center"
+                >
+                    <mat-icon class="icon-size-10 text-secondary"
+                        >mail_outline</mat-icon
+                    >
+                    <h3 class="text-base font-semibold">
+                        {{
+                            'admin.mailMarketing.templateList.emptyTitle'
+                                | transloco
+                        }}
+                    </h3>
+                    <p class="max-w-xl text-sm text-secondary">
+                        {{
+                            'admin.mailMarketing.templateList.emptyDescription'
+                                | transloco
+                        }}
+                    </p>
+                    <button mat-stroked-button (click)="onRefresh()">
+                        <mat-icon>refresh</mat-icon>
+                        {{ 'admin.mailMarketing.actions.refresh' | transloco }}
+                    </button>
+                </div>
+            } @else {
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @for (item of itemsSig(); track item.templateType) {
+                        <button
+                            class="group cursor-pointer rounded-xl border bg-card text-left transition-shadow hover:shadow-md dark:bg-transparent"
+                            (click)="onCardClick(item)"
+                        >
+                            <div class="flex items-start gap-4 p-5">
+                                <div
+                                    class="flex-shrink-0 rounded-lg bg-primary/10 p-2.5"
+                                >
+                                    <mat-icon
+                                        class="text-primary"
+                                        [fontIcon]="templateIcon(item.templateType)"
+                                    ></mat-icon>
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="font-semibold text-default">
+                                            {{ humanName(item.templateType) }}
+                                        </h3>
+                                        <span
+                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                                            [ngClass]="
+                                                item.active
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                                    : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'
+                                            "
+                                        >
+                                            {{
+                                                item.active
+                                                    ? ('admin.mailMarketing.status.active'
+                                                      | transloco)
+                                                    : ('admin.mailMarketing.status.inactive'
+                                                      | transloco)
+                                            }}
+                                        </span>
+                                    </div>
+                                    <p class="mt-0.5 text-xs text-secondary">
+                                        {{ item.templateType }}
+                                    </p>
+
+                                    <div class="mt-3 flex flex-wrap gap-1.5">
+                                        @for (lang of item.languages; track lang) {
+                                            <span
+                                                class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                            >
+                                                {{ lang }}
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div
+                                        class="mt-3 flex flex-wrap items-center gap-4 text-sm text-secondary"
+                                    >
+                                        <span class="flex items-center gap-1.5">
+                                            <mat-icon class="icon-size-4"
+                                                >group</mat-icon
+                                            >
+                                            {{ item.subscriberCount }}
+                                        </span>
+                                        @if (item.lastCampaignAt) {
+                                            <span
+                                                class="flex items-center gap-1.5"
+                                            >
+                                                <mat-icon class="icon-size-4"
+                                                    >schedule</mat-icon
+                                                >
+                                                {{
+                                                    item.lastCampaignAt
+                                                        | date: 'shortDate'
+                                                }}
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <mat-icon
+                                    class="flex-shrink-0 text-secondary opacity-0 transition-opacity group-hover:opacity-100"
+                                    >chevron_right</mat-icon
+                                >
+                            </div>
+                        </button>
+                    }
+                </div>
+            }
+        }
     </div>
 </div>
-

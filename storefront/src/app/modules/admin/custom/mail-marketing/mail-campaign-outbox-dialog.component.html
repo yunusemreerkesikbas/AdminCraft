@@ -1,0 +1,71 @@
+<h2 mat-dialog-title class="text-base font-semibold">
+    {{ 'admin.mailMarketing.sections.campaignOutbox' | transloco }}
+    @if (data.campaign.createdAt) {
+        <span class="ml-1.5 text-sm font-normal text-secondary">
+            — {{ data.campaign.createdAt | date: 'd MMM yyyy' }}
+        </span>
+    }
+</h2>
+
+<mat-dialog-content class="!pt-2">
+    <!-- Stats summary -->
+    <div class="mb-4 grid grid-cols-3 gap-3 text-center text-sm">
+        <div class="rounded-lg bg-slate-100 p-2 dark:bg-slate-800">
+            <p class="text-xs text-secondary">{{ 'admin.mailMarketing.campaign.total' | transloco }}</p>
+            <p class="font-bold">{{ data.campaign.totalCount }}</p>
+        </div>
+        <div class="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
+            <p class="text-xs text-secondary">{{ 'admin.mailMarketing.campaign.sent' | transloco }}</p>
+            <p class="font-bold text-green-600 dark:text-green-400">{{ data.campaign.sentCount }}</p>
+        </div>
+        <div class="rounded-lg bg-red-50 p-2 dark:bg-red-900/20">
+            <p class="text-xs text-secondary">{{ 'admin.mailMarketing.campaign.failed' | transloco }}</p>
+            <p class="font-bold text-red-600 dark:text-red-400">{{ data.campaign.failedCount }}</p>
+        </div>
+    </div>
+
+    <div class="border-t pt-4">
+        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-secondary">
+            {{ 'admin.mailMarketing.campaign.outbox.failedEmails' | transloco }}
+        </h3>
+
+        @if (loadingSig()) {
+            <div class="space-y-2">
+                @for (i of [1, 2]; track i) {
+                    <div class="h-12 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"></div>
+                }
+            </div>
+        } @else if (errorSig()) {
+            <div class="flex flex-col items-center gap-2 py-6 text-secondary">
+                <mat-icon class="icon-size-8 text-red-500">error_outline</mat-icon>
+                <p class="text-sm">{{ 'admin.mailMarketing.campaign.outbox.loadError' | transloco }}</p>
+            </div>
+        } @else if (entriesSig().length === 0) {
+            <div class="flex flex-col items-center gap-2 py-6 text-secondary">
+                <mat-icon class="icon-size-8 text-green-500">check_circle</mat-icon>
+                <p class="text-sm">{{ 'admin.mailMarketing.campaign.outbox.noFailures' | transloco }}</p>
+            </div>
+        } @else {
+            <div class="max-h-64 overflow-y-auto space-y-2">
+                @for (entry of entriesSig(); track entry.id) {
+                    <div class="rounded-lg border border-red-100 bg-red-50 p-3 dark:border-red-900/30 dark:bg-red-900/10">
+                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
+                            {{ entry.toEmail }}
+                        </p>
+                        @if (entry.errorMessage) {
+                            <p class="mt-0.5 text-xs text-red-600 dark:text-red-400">
+                                → {{ entry.errorMessage }}
+                            </p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()">
+        {{ 'admin.common.close' | transloco }}
+    </button>
+</mat-dialog-actions>

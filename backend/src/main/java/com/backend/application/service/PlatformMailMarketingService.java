@@ -840,12 +840,19 @@ public class PlatformMailMarketingService {
     }
 
     private MailCampaignDto toCampaignDto(PlatformMailCampaign campaign) {
+        Integer totalCount = campaign.getTotalCount();
+        Integer sentCount = campaign.getSentCount();
+        int sentPercent = (totalCount == null || totalCount == 0 || sentCount == null)
+            ? 0
+            : Math.round((sentCount * 100f) / totalCount);
+
         return new MailCampaignDto(
             campaign.getId(),
             campaign.getStatus(),
-            campaign.getTotalCount(),
-            campaign.getSentCount(),
+            totalCount,
+            sentCount,
             campaign.getFailedCount(),
+            sentPercent,
             campaign.getCreatedAt()
         );
     }

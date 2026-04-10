@@ -4,7 +4,7 @@
     <admin-page-header
         [title]="pageTitleKeySig()"
         [subtitle]="pageSubtitleKeySig()"
-        [showCreateButton]="true"
+        [showCreateButton]="canCreateSubscriberSig()"
         [createButtonText]="'admin.common.create'"
         [isLoading]="store.isLoading()"
         (createClick)="createSubscriber()"
@@ -21,6 +21,10 @@
                 >
                 </spa-admin-sort-dropdown>
             }
+            <button mat-stroked-button (click)="onExportCsv()">
+                <mat-icon>download</mat-icon>
+                {{ 'admin.mailMarketing.actions.exportCsv' | transloco }}
+            </button>
         </ng-container>
     </admin-page-header>
 
@@ -36,7 +40,13 @@
                 [emptyDescription]="'admin.mailMarketing.subscribers.messages.noDataHint'"
                 (actionClick)="onGridAction($event)"
             >
-                <button emptyAction mat-flat-button color="primary" (click)="createSubscriber()">
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    [disabled]="!canCreateSubscriberSig()"
+                    (click)="createSubscriber()"
+                >
                     <mat-icon>add</mat-icon>
                     {{ 'admin.common.create' | transloco }}
                 </button>
@@ -66,31 +76,54 @@
 </ng-template>
 
 <ng-template #subscriptionsTemplate let-subscriber>
-    <div class="flex flex-col gap-1 py-1">
+    <div class="flex flex-col gap-1.5 py-0.5">
         @for (subscription of subscriber.subscriptions; track subscription.templateType) {
-            <div
-                class="inline-flex max-w-full items-center gap-2 rounded-md bg-slate-100 px-2.5 py-1 text-xs dark:bg-slate-800"
-            >
-                <span class="font-semibold">{{ subscription.templateType }}</span>
-                <span class="text-secondary">|</span>
-                <span>{{ subscription.preferredLanguage || 'EN' }}</span>
-                <span class="text-secondary">|</span>
+            <div class="flex items-center gap-1.5 text-xs">
+                <span class="font-semibold text-slate-800 dark:text-slate-200">
+                    {{ subscription.templateType }}
+                </span>
                 <span
+                    class="rounded bg-slate-200 px-1.5 py-0.5 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                >
+                    {{ normalizeLanguage(subscription.preferredLanguage) }}
+                </span>
+                <span
+                    class="rounded px-1.5 py-0.5 font-medium"
                     [ngClass]="
                         subscription.permission
-                            ? 'text-green-700 dark:text-green-300'
-                            : 'text-red-700 dark:text-red-300'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                    "
+                    [attr.aria-label]="
+                        (
+                            subscription.permission
+                                ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                : 'admin.mailMarketing.subscribers.fields.blocked'
+                        ) | transloco
+                    "
+                    [attr.title]="
+                        (
+                            subscription.permission
+                                ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                : 'admin.mailMarketing.subscribers.fields.blocked'
+                        ) | transloco
                     "
                 >
-                    {{
-                        subscription.permission
-                            ? ('admin.mailMarketing.subscribers.fields.allowed' | transloco)
-                            : ('admin.mailMarketing.subscribers.fields.blocked' | transloco)
-                    }}
+                    {{ subscription.permission ? '✓' : '✗' }}
+                    <span class="sr-only">
+                        {{
+                            (
+                                subscription.permission
+                                    ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                    : 'admin.mailMarketing.subscribers.fields.blocked'
+                            ) | transloco
+                        }}
+                    </span>
                 </span>
                 @if (subscription.source) {
-                    <span class="text-secondary">|</span>
-                    <span class="truncate">{{ subscription.source }}</span>
+                    <span class="truncate text-secondary">
+                        {{ subscription.source }}
+                    </span>
                 }
             </div>
         }

@@ -39,6 +39,7 @@ import { TenantMailSubscriberAdminService } from '../tenant-mail-subscriber-admi
 import { MailSubscriberEditDialogComponent } from './mail-subscriber-edit-dialog.component';
 
 type MailScope = 'tenant' | 'platform';
+type SupportedLanguage = 'TR' | 'EN';
 
 @Component({
     selector: 'spa-mail-subscriber-list',
@@ -90,6 +91,11 @@ export class MailSubscriberListComponent
     protected templateTypesSig = signal<string[]>([]);
     protected loadingTemplateTypesSig = signal(false);
     protected searchInputControl = new FormControl('');
+    protected readonly canCreateSubscriberSig = computed(
+        () =>
+            this.templateTypesSig().length > 0 &&
+            !this.loadingTemplateTypesSig()
+    );
     protected paginatedItemsSig = computed(() => this.store.items());
     protected readonly pageTitleKeySig = computed(() =>
         this.scopeSig() === 'platform'
@@ -164,9 +170,7 @@ export class MailSubscriberListComponent
         this.#loadTemplateTypes();
     }
 
-    protected override onLoadError(): void {
-        this.#notify.alert('admin.mailMarketing.messages.subscribersLoadFailed');
-    }
+    protected override onLoadError(): void {}
 
     protected onGridAction(event: { action: string; item: MailSubscriberAdminVm }): void {
         if (event.action === 'edit') {
@@ -179,7 +183,21 @@ export class MailSubscriberListComponent
     }
 
     protected createSubscriber(): void {
+        if (!this.canCreateSubscriberSig()) {
+            return;
+        }
         this.#openDialog('create');
+    }
+
+    protected onExportCsv(): void {
+        const export$ = this.scopeSig() === 'platform'
+            ? this.#platformService.exportCsv()
+            : this.#tenantService.exportCsv();
+
+        export$.pipe(take(1)).subscribe({
+            error: (error: any) =>
+                this.#notify.alert(error?.error?.message ?? ''),
+        });
     }
 
     protected statusClass(status: MailSubscriberStatus): string {
@@ -190,6 +208,14 @@ export class MailSubscriberListComponent
             return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
         }
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200';
+    }
+
+    protected normalizeLanguage(language: string | null | undefined): SupportedLanguage {
+        return String(language ?? '')
+            .trim()
+            .toUpperCase() === 'TR'
+            ? 'TR'
+            : 'EN';
     }
 
     #resolveScope(): MailScope {
@@ -209,9 +235,9 @@ export class MailSubscriberListComponent
                 this.templateTypesSig.set(types.map((item) => item.templateType));
                 this.loadingTemplateTypesSig.set(false);
             },
-            error: () => {
+            error: (error: any) => {
                 this.loadingTemplateTypesSig.set(false);
-                this.#notify.alert('admin.mailMarketing.messages.templatesLoadFailed');
+                this.#notify.alert(error?.error?.message ?? '');
             },
         });
     }
@@ -226,9 +252,9 @@ export class MailSubscriberListComponent
                     this.store.setLoading(false);
                     this.#openDialog('edit', subscriber);
                 },
-                error: () => {
+                error: (error: any) => {
                     this.store.setLoading(false);
-                    this.#notify.alert('admin.mailMarketing.subscribers.messages.loadDetailFailed');
+                    this.#notify.alert(error?.error?.message ?? '');
                 },
             });
     }
@@ -249,15 +275,10 @@ export class MailSubscriberListComponent
             .pipe(take(1))
             .subscribe({
                 next: () => {
-                    this.#notify.success(
-                        'admin.mailMarketing.subscribers.messages.deleted'
-                    );
                     this.loadItems();
                 },
-                error: () =>
-                    this.#notify.alert(
-                        'admin.mailMarketing.subscribers.messages.deleteFailed'
-                    ),
+                error: (error: any) =>
+                    this.#notify.alert(error?.error?.message ?? ''),
             });
     }
 
@@ -266,8 +287,9 @@ export class MailSubscriberListComponent
         subscriber?: MailSubscriberAdminVm
     ): void {
         const dialogRef = this.#dialog.open(MailSubscriberEditDialogComponent, {
-            width: '920px',
-            maxHeight: '90vh',
+            width: '760px',
+            maxWidth: 'calc(100vw - 2rem)',
+            maxHeight: '82vh',
             panelClass: 'spa-compact-dialog',
             disableClose: true,
             data: {
@@ -287,4 +309,5 @@ export class MailSubscriberListComponent
                 }
             });
     }
+
 }

@@ -10,6 +10,7 @@ public record MailCampaignDto(
     Integer totalCount,
     Integer sentCount,
     Integer failedCount,
+    Integer sentPercent,
     LocalDateTime createdAt
 ) {
 }

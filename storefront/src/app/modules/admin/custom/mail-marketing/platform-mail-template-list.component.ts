@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -6,17 +6,13 @@ import {
     inject,
     signal,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
-import {
-    GridAction,
-    GridActionEvent,
-    GridColumn,
-    SpaAdminGridComponent,
-} from '@shared/components/spa-admin-grid';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { take } from 'rxjs';
 import { MailTemplateTypeSummaryVm } from './mail-marketing.types';
 import { PlatformMailMarketingService } from './platform-mail-marketing.service';
 
@@ -26,11 +22,12 @@ import { PlatformMailMarketingService } from './platform-mail-marketing.service'
     templateUrl: './platform-mail-template-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
+        DatePipe,
+        NgClass,
+        MatButtonModule,
         MatIconModule,
         TranslocoModule,
         AdminPageHeaderComponent,
-        SpaAdminGridComponent,
     ],
 })
 export class SpaPlatformMailTemplateListComponent implements OnInit {
@@ -44,75 +41,48 @@ export class SpaPlatformMailTemplateListComponent implements OnInit {
     protected readonly loadingSig = signal<boolean>(true);
     protected readonly itemsSig = signal<MailTemplateTypeSummaryVm[]>([]);
 
-    protected readonly columns: GridColumn<MailTemplateTypeSummaryVm>[] = [
-        {
-            key: 'templateType',
-            label: 'admin.mailMarketing.fields.templateType',
-            type: 'text',
-            width: '1fr',
-        },
-        {
-            key: 'languages',
-            label: 'admin.mailMarketing.fields.languages',
-            type: 'badge',
-            getValue: (item) => item.languages.join(', '),
-            width: '170px',
-        },
-        {
-            key: 'subscriberCount',
-            label: 'admin.mailMarketing.fields.subscriberCount',
-            type: 'text',
-            width: '130px',
-        },
-        {
-            key: 'lastCampaignAt',
-            label: 'admin.mailMarketing.fields.lastCampaignAt',
-            type: 'date',
-            width: '180px',
-        },
-    ];
-
-    protected readonly actions: GridAction<MailTemplateTypeSummaryVm>[] = [
-        {
-            icon: 'heroicons_outline:arrow-top-right-on-square',
-            label: 'admin.mailMarketing.actions.openDetail',
-            action: 'detail',
-        },
-    ];
-
     ngOnInit(): void {
         this.#loadTemplateTypes();
     }
 
-    protected onGridAction(
-        event: GridActionEvent<MailTemplateTypeSummaryVm>
-    ): void {
-        if (event.action !== 'detail') {
-            return;
-        }
-        this.#openDetail(event.item);
-    }
-
-    protected onRowClick(item: MailTemplateTypeSummaryVm): void {
-        this.#openDetail(item);
-    }
-
-    #openDetail(item: MailTemplateTypeSummaryVm): void {
+    protected onCardClick(item: MailTemplateTypeSummaryVm): void {
         this.#router.navigate([item.templateType], {
             relativeTo: this.#activatedRoute,
         });
     }
 
+    protected onRefresh(): void {
+        this.#loadTemplateTypes();
+    }
+
+    protected humanName(templateType: string): string {
+        const map: Record<string, string> = {
+            NEWSLETTER_DEFAULT: 'Newsletter',
+            VERSION_UPGRADE: 'Version Upgrade',
+            TENANT_USER_WELCOME: 'User Welcome',
+        };
+        return map[templateType] ?? templateType;
+    }
+
+    protected templateIcon(templateType: string): string {
+        const map: Record<string, string> = {
+            NEWSLETTER_DEFAULT: 'mail',
+            VERSION_UPGRADE: 'system_update',
+            TENANT_USER_WELCOME: 'person_add',
+        };
+        return map[templateType] ?? 'mail';
+    }
+
     #loadTemplateTypes(): void {
         this.loadingSig.set(true);
-        this.#platformMailMarketingService.getTemplateTypes().subscribe({
+        this.#platformMailMarketingService.getTemplateTypes().pipe(take(1)).subscribe({
             next: (items) => {
                 this.itemsSig.set(items);
                 this.loadingSig.set(false);
             },
-            error: (error) => {
+            error: (error: any) => {
                 this.loadingSig.set(false);
-                this.#notificationService.alert(error.error.message);
+                this.#notificationService.alert(error?.error?.message ?? '');
             },
         });
     }
