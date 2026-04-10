@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, mapTo, tap } from 'rxjs';
 import { environment } from '@environments/environment';
 import { EndpointKey, resolveEndpoint } from '@modules/admin/api-endpoints';
 import { CrudHttpService } from '@core/crud';
@@ -33,14 +33,18 @@ export abstract class BaseMailSubscriberAdminService extends CrudHttpService<
                 responseType: 'blob',
             })
             .pipe(
-                map((blob) => {
+                tap((blob) => {
                     const objectUrl = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = objectUrl;
                     a.download = filename;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
                     a.click();
-                    URL.revokeObjectURL(objectUrl);
-                })
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+                }),
+                mapTo(void 0)
             );
     }
 }

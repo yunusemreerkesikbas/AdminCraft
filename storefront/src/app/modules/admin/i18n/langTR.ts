@@ -2524,6 +2524,7 @@ export const langTR = {
                 platformSubtitle:
                     'Platform seviyesindeki abone kayıtlarını ve template aboneliklerini yönetin',
                 fields: {
+                    binding: 'Bağlantı',
                     bindings: 'Template Bağlantıları',
                     permission: 'Gönderim İzni',
                     allowed: 'İzinli',
@@ -2531,6 +2532,7 @@ export const langTR = {
                 },
                 actions: {
                     addBinding: 'Bağlantı Ekle',
+                    deleteBindingAria: 'Bağlantıyı sil {{index}}',
                 },
                 dialog: {
                     createTitle: 'Abone Oluştur',
@@ -2578,6 +2580,11 @@ export const langTR = {
                     noFailures: 'Tüm e-postalar başarıyla gönderildi',
                     loadError: 'Gönderim detayı yüklenemedi',
                 },
+            },
+            templateList: {
+                emptyTitle: 'Template bulunamadı',
+                emptyDescription:
+                    'Henüz kullanılabilir template tipi görünmüyor. Listeyi yenileyip tekrar deneyin.',
             },
             subscriberStatus: {
                 PENDING_CONFIRMATION: 'Onay Bekliyor',

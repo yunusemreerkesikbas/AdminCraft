@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoModule } from '@jsverse/transloco';
-import { Observable } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { MailCampaignVm, MailOutboxEntryVm } from './mail-marketing.types';
 
 export interface MailCampaignOutboxDialogData {
@@ -24,9 +24,7 @@ export interface MailCampaignOutboxDialogData {
     templateUrl: './mail-campaign-outbox-dialog.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         DatePipe,
-        NgClass,
         MatButtonModule,
         MatDialogModule,
         MatIconModule,
@@ -44,6 +42,7 @@ export class MailCampaignOutboxDialogComponent implements OnInit {
     ngOnInit(): void {
         this.data
             .getCampaignOutbox(this.data.campaign.id)
+            .pipe(take(1))
             .subscribe({
                 next: (entries) => {
                     this.entriesSig.set(entries);

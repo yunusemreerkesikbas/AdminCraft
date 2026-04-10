@@ -4,7 +4,7 @@
     <admin-page-header
         [title]="pageTitleKeySig()"
         [subtitle]="pageSubtitleKeySig()"
-        [showCreateButton]="true"
+        [showCreateButton]="canCreateSubscriberSig()"
         [createButtonText]="'admin.common.create'"
         [isLoading]="store.isLoading()"
         (createClick)="createSubscriber()"
@@ -40,7 +40,13 @@
                 [emptyDescription]="'admin.mailMarketing.subscribers.messages.noDataHint'"
                 (actionClick)="onGridAction($event)"
             >
-                <button emptyAction mat-flat-button color="primary" (click)="createSubscriber()">
+                <button
+                    emptyAction
+                    mat-flat-button
+                    color="primary"
+                    [disabled]="!canCreateSubscriberSig()"
+                    (click)="createSubscriber()"
+                >
                     <mat-icon>add</mat-icon>
                     {{ 'admin.common.create' | transloco }}
                 </button>
@@ -79,7 +85,7 @@
                 <span
                     class="rounded bg-slate-200 px-1.5 py-0.5 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                 >
-                    {{ subscription.preferredLanguage || 'EN' }}
+                    {{ normalizeLanguage(subscription.preferredLanguage) }}
                 </span>
                 <span
                     class="rounded px-1.5 py-0.5 font-medium"
@@ -88,8 +94,31 @@
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                             : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                     "
+                    [attr.aria-label]="
+                        (
+                            subscription.permission
+                                ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                : 'admin.mailMarketing.subscribers.fields.blocked'
+                        ) | transloco
+                    "
+                    [attr.title]="
+                        (
+                            subscription.permission
+                                ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                : 'admin.mailMarketing.subscribers.fields.blocked'
+                        ) | transloco
+                    "
                 >
                     {{ subscription.permission ? '✓' : '✗' }}
+                    <span class="sr-only">
+                        {{
+                            (
+                                subscription.permission
+                                    ? 'admin.mailMarketing.subscribers.fields.allowed'
+                                    : 'admin.mailMarketing.subscribers.fields.blocked'
+                            ) | transloco
+                        }}
+                    </span>
                 </span>
                 @if (subscription.source) {
                     <span class="truncate text-secondary">

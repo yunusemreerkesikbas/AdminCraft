@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -6,11 +6,13 @@ import {
     inject,
     signal,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
 import { NotificationService } from '@shared/notifications/notification.service';
+import { take } from 'rxjs';
 import { MailTemplateTypeSummaryVm } from './mail-marketing.types';
 import { TenantMailMarketingService } from './tenant-mail-marketing.service';
 
@@ -20,7 +22,9 @@ import { TenantMailMarketingService } from './tenant-mail-marketing.service';
     templateUrl: './tenant-mail-template-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
+        DatePipe,
+        NgClass,
+        MatButtonModule,
         MatIconModule,
         TranslocoModule,
         AdminPageHeaderComponent,
@@ -45,6 +49,10 @@ export class SpaTenantMailTemplateListComponent implements OnInit {
         });
     }
 
+    protected onRefresh(): void {
+        this.#loadTemplateTypes();
+    }
+
     protected humanName(templateType: string): string {
         const map: Record<string, string> = {
             NEWSLETTER_DEFAULT: 'Newsletter',
@@ -65,14 +73,14 @@ export class SpaTenantMailTemplateListComponent implements OnInit {
 
     #loadTemplateTypes(): void {
         this.loadingSig.set(true);
-        this.#tenantMailMarketingService.getTemplateTypes().subscribe({
+        this.#tenantMailMarketingService.getTemplateTypes().pipe(take(1)).subscribe({
             next: (items) => {
                 this.itemsSig.set(items);
                 this.loadingSig.set(false);
             },
-            error: (error) => {
+            error: (error: any) => {
                 this.loadingSig.set(false);
-                this.#notificationService.alert(error.error.message);
+                this.#notificationService.alert(error?.error?.message ?? '');
             },
         });
     }

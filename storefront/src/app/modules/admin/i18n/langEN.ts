@@ -2544,6 +2544,7 @@ export const langEN = {
                 platformSubtitle:
                     'Manage platform-level subscriber records and template subscriptions',
                 fields: {
+                    binding: 'Binding',
                     bindings: 'Template Bindings',
                     permission: 'Allowed to Receive',
                     allowed: 'Allowed',
@@ -2551,6 +2552,7 @@ export const langEN = {
                 },
                 actions: {
                     addBinding: 'Add Binding',
+                    deleteBindingAria: 'Delete binding {{index}}',
                 },
                 dialog: {
                     createTitle: 'Create Subscriber',
@@ -2598,6 +2600,11 @@ export const langEN = {
                     noFailures: 'All emails were sent successfully',
                     loadError: 'Failed to load outbox details',
                 },
+            },
+            templateList: {
+                emptyTitle: 'No templates found',
+                emptyDescription:
+                    'No template types are currently available. Refresh and try again.',
             },
             subscriberStatus: {
                 PENDING_CONFIRMATION: 'Pending Confirmation',

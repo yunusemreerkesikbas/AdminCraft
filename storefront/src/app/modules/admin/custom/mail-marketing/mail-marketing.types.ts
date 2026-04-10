@@ -61,6 +61,7 @@ export interface MailCampaignVm {
     totalCount: number;
     sentCount: number;
     failedCount: number;
+    sentPercent?: number | null;
     createdAt?: string | null;
 }
 

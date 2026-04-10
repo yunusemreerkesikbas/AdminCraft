@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe, NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -14,8 +14,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
-import { AdminPageHeaderComponent } from '@shared/components/admin-page-header/admin-page-header.component';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import { SpaTextareaComponent } from '@shared/components/custom-ui/spa-textarea/spa-textarea.component';
 import { NotificationService } from '@shared/notifications/notification.service';
@@ -37,7 +36,6 @@ type SupportedLanguage = 'TR' | 'EN';
     templateUrl: './platform-mail-marketing.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         DatePipe,
         NgClass,
         ReactiveFormsModule,
@@ -45,7 +43,6 @@ type SupportedLanguage = 'TR' | 'EN';
         MatIconModule,
         MatSlideToggleModule,
         TranslocoModule,
-        AdminPageHeaderComponent,
         SpaInputComponent,
         SpaTextareaComponent,
     ],
@@ -54,6 +51,7 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
     readonly #fb = inject(FormBuilder);
     readonly #platformMailMarketingService = inject(PlatformMailMarketingService);
     readonly #notificationService = inject(NotificationService);
+    readonly #translocoService = inject(TranslocoService);
     readonly #activatedRoute = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #dialog = inject(MatDialog);
@@ -71,12 +69,6 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
         () => this.detailSig()?.lastCampaign ?? null
     );
 
-    protected readonly sentPercentSig = computed<number>(() => {
-        const campaign = this.lastCampaignSig();
-        if (!campaign || campaign.totalCount === 0) return 0;
-        return Math.round((campaign.sentCount / campaign.totalCount) * 100);
-    });
-
     protected readonly trForm = this.#fb.group({
         subject: this.#fb.control('', [Validators.required]),
         content: this.#fb.control('', [Validators.required]),
@@ -90,6 +82,10 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
     });
 
     ngOnInit(): void {
+        this.selectedLanguageSig.set(
+            this.#normalizeLanguage(this.#translocoService.getActiveLang())
+        );
+
         this.#activatedRoute.paramMap
             .pipe(takeUntil(this.#destroy$))
             .subscribe((params) => {
@@ -139,9 +135,9 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
                     }
                     this.#loadDetailOnly(this.templateTypeSig());
                 },
-                error: (error) => {
+                error: (error: any) => {
                     this.savingLanguageSig.set(null);
-                    this.#notificationService.alert(error.error.message);
+                    this.#notificationService.alert(error?.error?.message ?? '');
                 },
             });
     }
@@ -162,9 +158,9 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
                         this.#notificationService.success(response.message);
                     }
                 },
-                error: (error) => {
+                error: (error: any) => {
                     this.sendingCampaignSig.set(false);
-                    this.#notificationService.alert(error.error.message);
+                    this.#notificationService.alert(error?.error?.message ?? '');
                 },
             });
     }
@@ -181,8 +177,8 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
                         detail ? { ...detail, lastCampaign: latestCampaign } : detail
                     );
                 },
-                error: (error) =>
-                    this.#notificationService.alert(error.error.message),
+                error: (error: any) =>
+                    this.#notificationService.alert(error?.error?.message ?? ''),
             });
     }
 
@@ -236,9 +232,9 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
                     this.loadingSig.set(false);
                     this.#loadCampaignHistory(templateType);
                 },
-                error: (error) => {
+                error: (error: any) => {
                     this.loadingSig.set(false);
-                    this.#notificationService.alert(error.error.message);
+                    this.#notificationService.alert(error?.error?.message ?? '');
                 },
             });
     }
@@ -252,8 +248,8 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
                     this.detailSig.set(detail);
                     this.#patchTranslationForms(detail);
                 },
-                error: (error) =>
-                    this.#notificationService.alert(error.error.message),
+                error: (error: any) =>
+                    this.#notificationService.alert(error?.error?.message ?? ''),
             });
     }
 
@@ -263,17 +259,27 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.#destroy$))
             .subscribe({
                 next: (campaigns) => this.campaignHistorySig.set(campaigns),
-                error: () => {},
+                error: (error: any) => {
+                    this.campaignHistorySig.set([]);
+                    this.#notificationService.alert(error?.error?.message ?? '');
+                },
             });
     }
 
     #patchTranslationForms(detail: MailTemplateTypeDetailVm): void {
         const trTemplate = detail.templates.find(
-            (template) => template.language?.toUpperCase() === 'TR'
+            (template) => this.#normalizeLanguage(template.language) === 'TR'
         );
-        const enTemplate = detail.templates.find(
-            (template) => template.language?.toUpperCase() === 'EN'
-        );
+        const enTemplate =
+            detail.templates.find(
+                (template) =>
+                    String(template.language ?? '')
+                        .trim()
+                        .toUpperCase() === 'EN'
+            ) ??
+            detail.templates.find(
+                (template) => this.#normalizeLanguage(template.language) === 'EN'
+            );
 
         this.trForm.patchValue({
             subject: trTemplate?.subject ?? '',
@@ -288,5 +294,13 @@ export class SpaPlatformMailMarketingComponent implements OnInit, OnDestroy {
             active: enTemplate?.active ?? true,
         });
         this.enForm.markAsPristine();
+    }
+
+    #normalizeLanguage(language: unknown): SupportedLanguage {
+        return String(language ?? '')
+            .trim()
+            .toUpperCase() === 'TR'
+            ? 'TR'
+            : 'EN';
     }
 }

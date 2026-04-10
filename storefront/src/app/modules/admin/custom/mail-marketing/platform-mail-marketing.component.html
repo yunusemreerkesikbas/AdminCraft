@@ -271,14 +271,14 @@
                                         >{{ campaign.sentCount }} /
                                         {{ campaign.totalCount }}</span
                                     >
-                                    <span>{{ sentPercentSig() }}%</span>
+                                    <span>{{ campaign.sentPercent ?? 0 }}%</span>
                                 </div>
                                 <div
                                     class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700"
                                 >
                                     <div
                                         class="h-2 rounded-full bg-green-500 transition-all duration-500"
-                                        [style.width.%]="sentPercentSig()"
+                                        [style.width.%]="campaign.sentPercent ?? 0"
                                     ></div>
                                 </div>
                             </div>
@@ -374,8 +374,34 @@
                                             </span>
                                         }
                                         <span class="ml-auto flex gap-2 text-xs">
-                                            <span class="text-green-600 dark:text-green-400">✓{{ campaign.sentCount }}</span>
-                                            <span class="text-red-600 dark:text-red-400">✗{{ campaign.failedCount }}</span>
+                                            <span
+                                                class="text-green-600 dark:text-green-400"
+                                                [attr.aria-label]="
+                                                    ('admin.mailMarketing.campaign.sent' | transloco) + ': ' + campaign.sentCount
+                                                "
+                                                [attr.title]="
+                                                    ('admin.mailMarketing.campaign.sent' | transloco) + ': ' + campaign.sentCount
+                                                "
+                                            >
+                                                ✓{{ campaign.sentCount }}
+                                                <span class="sr-only">
+                                                    {{ 'admin.mailMarketing.campaign.sent' | transloco }}: {{ campaign.sentCount }}
+                                                </span>
+                                            </span>
+                                            <span
+                                                class="text-red-600 dark:text-red-400"
+                                                [attr.aria-label]="
+                                                    ('admin.mailMarketing.campaign.failed' | transloco) + ': ' + campaign.failedCount
+                                                "
+                                                [attr.title]="
+                                                    ('admin.mailMarketing.campaign.failed' | transloco) + ': ' + campaign.failedCount
+                                                "
+                                            >
+                                                ✗{{ campaign.failedCount }}
+                                                <span class="sr-only">
+                                                    {{ 'admin.mailMarketing.campaign.failed' | transloco }}: {{ campaign.failedCount }}
+                                                </span>
+                                            </span>
                                         </span>
                                         <mat-icon class="icon-size-4 text-secondary">chevron_right</mat-icon>
                                     </button>

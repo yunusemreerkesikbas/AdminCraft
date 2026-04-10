@@ -17,7 +17,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { SpaCheckboxComponent } from '@shared/components/custom-ui/spa-checkbox/spa-checkbox.component';
 import { SpaInputComponent } from '@shared/components/custom-ui/spa-input/spa-input.component';
 import {
@@ -37,6 +37,7 @@ import { PlatformMailSubscriberAdminService } from '../platform-mail-subscriber-
 import { TenantMailSubscriberAdminService } from '../tenant-mail-subscriber-admin.service';
 
 type MailScope = 'tenant' | 'platform';
+type SupportedLanguage = 'TR' | 'EN';
 
 export interface MailSubscriberEditDialogData {
     mode: 'create' | 'edit';
@@ -70,6 +71,7 @@ export class MailSubscriberEditDialogComponent {
     );
     readonly #fb = inject(FormBuilder);
     readonly #notificationService = inject(NotificationService);
+    readonly #translocoService = inject(TranslocoService);
     readonly #tenantService = inject(TenantMailSubscriberAdminService);
     readonly #platformService = inject(PlatformMailSubscriberAdminService);
     readonly data = inject<MailSubscriberEditDialogData>(MAT_DIALOG_DATA);
@@ -177,39 +179,32 @@ export class MailSubscriberEditDialogComponent {
             this.form.markAllAsTouched();
             return;
         }
+        this.form.setErrors(null);
         const payload = this.#buildPayload();
         if (this.#hasDuplicateTemplates(payload.subscriptions)) {
-            this.#notificationService.warning(
-                'admin.mailMarketing.subscribers.messages.duplicateTemplate'
-            );
+            this.form.setErrors({ duplicateTemplate: true });
             return;
         }
 
         this.isSubmittingSig.set(true);
-        const request$ =
-            this.data.mode === 'create'
-                ? this.#activeService().create(payload)
-                : this.#activeService().update(
-                      this.data.subscriber!.id,
-                      payload
-                  );
+        if (this.data.mode === 'edit' && !this.data.subscriber) {
+            this.isSubmittingSig.set(false);
+            this.form.setErrors({ invalidContext: true });
+            return;
+        }
+
+        const request$ = this.data.mode === 'create'
+            ? this.#activeService().create(payload)
+            : this.#activeService().update(this.data.subscriber.id, payload);
 
         request$.pipe(take(1)).subscribe({
             next: () => {
                 this.isSubmittingSig.set(false);
-                this.#notificationService.success(
-                    this.data.mode === 'create'
-                        ? 'admin.mailMarketing.subscribers.messages.created'
-                        : 'admin.mailMarketing.subscribers.messages.updated'
-                );
                 this.#dialogRef.close(true);
             },
-            error: (error) => {
+            error: (error: any) => {
                 this.isSubmittingSig.set(false);
-                const errorMessage =
-                    error?.error?.message ||
-                    'admin.mailMarketing.subscribers.messages.saveFailed';
-                this.#notificationService.alert(errorMessage);
+                this.#notificationService.alert(error?.error?.message ?? '');
             },
         });
     }
@@ -235,9 +230,10 @@ export class MailSubscriberEditDialogComponent {
             templateType: String(
                 group.get('templateType')?.value ?? ''
             ).toUpperCase(),
-            preferredLanguage: String(
-                group.get('preferredLanguage')?.value ?? 'EN'
-            ).toUpperCase(),
+            preferredLanguage: this.#normalizeLanguage(
+                group.get('preferredLanguage')?.value ??
+                    this.#translocoService.getActiveLang()
+            ),
             source: this.#normalizeSource(group.get('source')?.value),
             permission: !!group.get('permission')?.value,
         }));
@@ -268,7 +264,10 @@ export class MailSubscriberEditDialogComponent {
         return this.#fb.group({
             templateType: [subscription.templateType, [Validators.required]],
             preferredLanguage: [
-                (subscription.preferredLanguage || 'EN').toUpperCase(),
+                this.#normalizeLanguage(
+                    subscription.preferredLanguage ??
+                        this.#translocoService.getActiveLang()
+                ),
                 [Validators.required],
             ],
             source: [subscription.source ?? '', [Validators.maxLength(120)]],
@@ -280,7 +279,9 @@ export class MailSubscriberEditDialogComponent {
         return {
             templateType:
                 this.templateTypeOptions[0]?.value ?? 'NEWSLETTER_DEFAULT',
-            preferredLanguage: 'EN',
+            preferredLanguage: this.#normalizeLanguage(
+                this.#translocoService.getActiveLang()
+            ),
             source: null,
             permission: true,
         };
@@ -289,5 +290,13 @@ export class MailSubscriberEditDialogComponent {
     #normalizeSource(rawValue: unknown): string | null {
         const value = String(rawValue ?? '').trim();
         return value.length ? value : null;
+    }
+
+    #normalizeLanguage(language: unknown): SupportedLanguage {
+        return String(language ?? '')
+            .trim()
+            .toUpperCase() === 'TR'
+            ? 'TR'
+            : 'EN';
     }
 }

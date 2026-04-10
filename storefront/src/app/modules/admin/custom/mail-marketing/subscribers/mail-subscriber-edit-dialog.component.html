@@ -48,19 +48,24 @@
             </div>
 
             <div class="subscription-list" formArrayName="subscriptions">
-                @for (group of subscriptionsArray.controls; track $index) {
-                    <article class="subscription-card" [formGroupName]="$index">
+                @for (group of subscriptionsArray.controls; track group; let index = $index) {
+                    <article class="subscription-card" [formGroupName]="index">
                         <div class="subscription-card__header">
-                            <span class="subscription-card__binding-title">Binding</span>
+                            <span class="subscription-card__binding-title">
+                                {{ 'admin.mailMarketing.subscribers.fields.binding' | transloco }}
+                            </span>
 
                             <button
                                 mat-icon-button
                                 class="subscription-card__delete"
                                 color="warn"
                                 type="button"
-                                (click)="removeSubscription($index)"
+                                (click)="removeSubscription(index)"
                                 [disabled]="subscriptionsArray.length <= 1"
-                                [attr.aria-label]="'Delete binding ' + ($index + 1)"
+                                [attr.aria-label]="
+                                    'admin.mailMarketing.subscribers.actions.deleteBindingAria'
+                                        | transloco: { index: index + 1 }
+                                "
                             >
                                 <mat-icon [svgIcon]="'heroicons_outline:trash'" class="icon-size-5" aria-hidden="true"></mat-icon>
                             </button>
@@ -71,7 +76,7 @@
                                 class="subscription-card__field subscription-card__field--template"
                                 formControlName="templateType"
                                 [label]="'admin.mailMarketing.fields.templateType' | transloco"
-                                [options]="templateOptionsFor($index)"
+                                [options]="templateOptionsFor(index)"
                             >
                             </spa-select>
 
