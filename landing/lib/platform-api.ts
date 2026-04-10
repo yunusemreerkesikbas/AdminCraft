@@ -184,6 +184,68 @@ function loadRecaptchaScript(siteKey: string): Promise<void> {
   });
 }
 
+export type NewsletterSubscribeErrorReason = "network" | "http";
+
+export class NewsletterSubscribeError extends Error {
+  readonly reason: NewsletterSubscribeErrorReason;
+  readonly status: number;
+  readonly apiMessage: string | null;
+
+  constructor(reason: NewsletterSubscribeErrorReason, status: number, apiMessage: string | null) {
+    super(apiMessage ?? reason);
+    this.name = "NewsletterSubscribeError";
+    this.reason = reason;
+    this.status = status;
+    this.apiMessage = apiMessage;
+  }
+
+  static is(e: unknown): e is NewsletterSubscribeError {
+    return e instanceof NewsletterSubscribeError;
+  }
+}
+
+export type NewsletterSubscribeResult = {
+  message: string;
+};
+
+export async function subscribePlatformNewsletter(
+  email: string,
+  locale: string,
+  honeypot: string,
+  formStartedAt: number,
+): Promise<NewsletterSubscribeResult> {
+  const origin = getCraftiveApiOrigin();
+  if (!origin) {
+    throw new NewsletterSubscribeError("network", 0, null);
+  }
+  const lang = locale.trim() || "en";
+  let res: Response;
+  try {
+    res = await fetch(craftiveApiUrl("/platform/public/newsletter/subscribe"), {
+      method: "POST",
+      headers: platformJsonHeaders(lang),
+      body: JSON.stringify({
+        email,
+        templateType: "PLATFORM_NEWSLETTER",
+        source: "landing",
+        locale,
+        honeypot,
+        formStartedAt,
+      }),
+    });
+  } catch {
+    throw new NewsletterSubscribeError("network", 0, null);
+  }
+
+  const body = await readApiEnvelope(res);
+
+  if (res.ok && body?.result === "SUCCESS") {
+    return { message: (body.message ?? "").trim() };
+  }
+
+  throw new NewsletterSubscribeError("http", res.status, body?.message?.trim() ?? null);
+}
+
 export type DemoRequestPayload = {
   fullName: string;
   email: string;
